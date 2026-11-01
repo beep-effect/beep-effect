@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. P0–P2 done 2026-10-28; https://beep-effect.com is live. P3 in progress (2026-10-31): environment and secrets set; workflow staged for operator install. The first green run happens on the merge push to `main`.
+Status: `active`. P0–P4 done; https://beep-effect.com deploys from CI on every `main` push that touches the app (first green run 41244684210, 2026-10-31). P5 Close in progress.
 
 ## Phases
 
@@ -11,9 +11,9 @@ Status: `active`. P0–P2 done 2026-10-28; https://beep-effect.com is live. P3 i
 | P0 Research | complete | Alchemy fit, zone snapshot, grill decisions. | `research/alchemy-fit-2026-10-28.md` plus the SPEC Decision Log. |
 | P1 Scaffold | complete | `bun run beep create-package beep-effect-web --type app --app-kind vite`, then convert it to TanStack Start (Cloudflare-compatible starter), add `.alchemy/` to `.gitignore`, add pinned `alchemy` and `@alchemy.run/cloudflare`, and write `alchemy.run.ts` (Stack `BeepEffectWeb`, `Cloudflare.Website.Vite` with `rootDir` anchored; prod-only `domain`). | Package verify passes; the app serves locally (`alchemy dev` waits for P2 because it bootstraps the cloud state store). |
 | P2 First deploy (local) | complete | Check the IaC token's permissions (Workers Scripts, Workers custom domains, DNS edit, Secrets Store edit). Export the zone DNS to `history/`. `op run -- alchemy state bootstrap --backend cloudflare`; `plan --stage prod`; `deploy --stage prod --adopt` scoped to the apex/www records; redeploy as a no-op check. | Apex 200, www 301, browser QA evidence in `history/`. |
-| P3 CI deploy | in-progress | GitHub Actions workflow on `main` (paths `apps/beep-effect-web/**`), with `CLOUDFLARE_*` secrets, `CI=true`, and concurrency group `alchemy-beep-effect-web-prod`. | One green deploy run recorded. |
-| P4 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable. | Merge gate passes. |
-| P5 Close | pending | Closeout reflection and packet state flip. | Reflection exists and completion refresh verifies. |
+| P3 CI deploy | complete | GitHub Actions workflow on `main` (paths `apps/beep-effect-web/**`), with `CLOUDFLARE_*` secrets, `CI=true`, and concurrency group `alchemy-beep-effect-web-prod`. | One green deploy run recorded. |
+| P4 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable. | Merge gate passes. |
+| P5 Close | in-progress | Closeout reflection and packet state flip. | Reflection exists and completion refresh verifies. |
 
 ## Current Blockers
 

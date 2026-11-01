@@ -1,0 +1,50 @@
+{
+  "recordedAt": "2026-10-29T04:07:37.125316+00:00",
+  "result": "actual read-only root probe and human inventory report passed",
+  "syntheticOnly": false,
+  "reads": "Explicit Git roots only; no transcripts or prompts",
+  "productionRollout": false,
+  "collectionStarted": false,
+  "goalComplete": false,
+  "scope": {
+    "hosts": 1,
+    "declaredRoots": 28,
+    "availability": {
+      "present": 27,
+      "unreachable": 1
+    },
+    "harnessRoutes": 7,
+    "unknownLaunchRoutes": 7,
+    "unknownEventRoutes": 7,
+    "exhaustiveFleetInventory": false
+  },
+  "privacy": {
+    "rawPathsAbsent": true,
+    "hostnameAbsent": true,
+    "configuredSaltAbsent": true,
+    "configuredSaltNonblankAndNotSmokeDefault": true
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-root-probe.ts": "61db51ca3e2c218c650a22aaec2fbb72b1a67be133c7354cb623712c30593837",
+    "packages/tooling/library/ai-metrics/src/git-root-evidence.ts": "235b7c129379077e5033b948c83f39fa78572ea58643362cfc43c362880854b4",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": "73a3505af561b07e1802cfa086f763954c9cc4b1edc2a4cee244c75c93563359",
+    "goals/agent-observability-foundation/ops/workstation-root-probe.json": "41056de4f1201d4da42a1694a8aeb47b8274e024e3ec98a4fcf55ff18445bbac",
+    "goals/agent-observability-foundation/ops/workstation-root-inventory.json": "ac4876ce1d2d13e332f3db017d7d765733d88014152a87dc79d0ffc3428c2d6d",
+    "goals/agent-observability-foundation/ops/workstation-root-inventory.txt": "56887438973a840e1fe7b01295299458f042a61c41d1d8655172d6d229294407"
+  },
+  "probeResourceGuard": "goals/agent-observability-foundation/ops/workstation-root-probe-resource-guard.json",
+  "humanReportResourceGuard": {
+    "initialHostAvailableBytes": 49568841728,
+    "stopReason": null,
+    "peakObservedBytes": 294723584,
+    "minimumHostAvailableBytes": 49138356224,
+    "exitCode": 0,
+    "finalState": {
+      "ActiveState": "inactive",
+      "MainPID": "0",
+      "Result": "success",
+      "MemoryCurrent": "[not set]",
+      "MemoryPeak": "[not set]"
+    }
+  }
+}

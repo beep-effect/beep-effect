@@ -1,0 +1,169 @@
+{
+  "scope": "disposable synthetic worker only",
+  "productionRollout": false,
+  "fixtureSha256": "2d5cc21ae80fdeba90781777f8fc002d72a72585ef70cb36f250ea8e32e9e6cb",
+  "runs": [
+    {
+      "unit": "beep-observation-proof-8698e49ccdfa.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "bodyLimitBytes": 262144,
+      "oversizedBodyStatus": 413,
+      "configuredHeaderLimitBytes": 16384,
+      "oversizedHeaderProbeBytes": 25000,
+      "oversizedHeaderStatus": 431,
+      "incompleteHeaderClosedSeconds": 2.001,
+      "incompleteBodyRefusedSeconds": 1.005,
+      "incompleteBodyStatus": 503,
+      "fileDescriptorExhaustion": {
+        "opened": 245,
+        "exhausted": true
+      },
+      "cpuBurnDelta": {
+        "usage_usec": 1004648,
+        "nr_throttled": 20,
+        "throttled_usec": 987164
+      },
+      "memoryTermination": {
+        "Result": "oom-kill",
+        "MemoryPeak": "536870912",
+        "ExecMainCode": "2",
+        "ExecMainStatus": "9"
+      }
+    },
+    {
+      "unit": "beep-observation-proof-83164c414c84.service",
+      "observedCgroupLimits": {
+        "memory.max": "536870912",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "50000 100000"
+      },
+      "kernelLockOwnerVerified": true,
+      "secondOwnerExit": 73,
+      "startsPaused": true,
+      "exactReceiptReplayAfterOOM": true,
+      "priorJournalIntegrity": true,
+      "explicitResumeRequired": true
+    }
+  ],
+  "proxies": [
+    {
+      "unit": "beep-observation-proxy-proof-a001155e4dae.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "effectiveConfigurationSha256": "083974b94b89dedf79e328a5bbce03c02fc8b99071bc9fbdac0b60011e91f9fd",
+      "listener": {
+        "address": "127.0.0.1, exclusive ephemeral port",
+        "protocols": ["h1"],
+        "adminEnabled": false,
+        "readHeaderTimeout": "2s",
+        "readTimeout": "4s",
+        "writeTimeout": "8s",
+        "idleTimeout": "2s",
+        "maxHeaderBytes": 16384,
+        "upstream": "owned private Unix socket, mode 0600",
+        "automaticHttps": false
+      }
+    },
+    {
+      "unit": "beep-observation-proxy-proof-a6836e68ccd3.service",
+      "observedCgroupLimits": {
+        "memory.max": "134217728",
+        "memory.swap.max": "0",
+        "pids.max": "64",
+        "cpu.max": "25000 100000"
+      },
+      "observedFileDescriptorLimit": 128,
+      "coreDumpsDisabled": true,
+      "noNewPrivileges": true,
+      "loopbackListenerOwnerVerified": true,
+      "effectiveConfigurationSha256": "f95f5c44c95234db5a312a4e696f56b699be5a3b2ef98a9be98035e5f20c901b",
+      "listener": {
+        "address": "127.0.0.1, exclusive ephemeral port",
+        "protocols": ["h1"],
+        "adminEnabled": false,
+        "readHeaderTimeout": "2s",
+        "readTimeout": "4s",
+        "writeTimeout": "8s",
+        "idleTimeout": "2s",
+        "maxHeaderBytes": 16384,
+        "upstream": "owned private Unix socket, mode 0600",
+        "automaticHttps": false
+      }
+    }
+  ],
+  "proxyBinary": {
+    "version": "2.11.7",
+    "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "archiveSha256": "727b91701a392de6ebc5027509f548bf39979e5216340d0faed8fa5e69c84f8b"
+  },
+  "result": "passed",
+  "aggregateMemoryCeilingBytes": 671088640,
+  "aggregateCpuQuotaPercent": 75,
+  "aggregateTasksCeiling": 128,
+  "databaseCeilingBytes": 1048576,
+  "perFileCeilingBytes": 2097152,
+  "aggregateFilesystemQuotaQualified": false,
+  "backendDeliveryQualified": false,
+  "runtimeEntrypoint": "test fixture only; not production launcher",
+  "receiptSha256": "baf7181d7e265d9c7d72de940eec01470320007204308d3a6fefa0f1d0887f80",
+  "cleanup": [
+    {
+      "unit": "beep-observation-proof-8698e49ccdfa.service",
+      "mainPID": "0",
+      "activeState": "failed",
+      "result": "oom-kill",
+      "exitStatus": "9"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-a001155e4dae.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proof-83164c414c84.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    },
+    {
+      "unit": "beep-observation-proxy-proof-a6836e68ccd3.service",
+      "mainPID": "0",
+      "activeState": "inactive",
+      "result": "success",
+      "exitStatus": "0"
+    }
+  ],
+  "ownedWorkersStopped": true,
+  "sourceReceiptSha256": "5c02b8b9fd9cf6db9bc122e1aaa547777661f9d70ee06c76dfa4bab0c04a220d",
+  "verifierSha256": "287ae5403979f9550f951623263ec42ef6aef30013aa1b62d559f5c7b2a3edd8",
+  "cleanupInterpretation": "Reported systemd properties after synchronous stop; inactive transient units may already be unloaded, resetting reported exit status. MainPID zero confirms no remaining main process; deliberate OOM status was separately observed before cleanup.",
+  "upstreamAcknowledgmentBoundary": "The metadata journal transaction commits before the worker returns a receipt. Proxy receipt forwarding is not backend delivery; traffic lost before local acceptance is outside the durable ledger.",
+  "unknowns": [
+    "No production launcher or fleet enrollment",
+    "No independent physical database backup/restore",
+    "No aggregate filesystem quota",
+    "No historical swap/VMA fault root-cause qualification",
+    "Proxy connections bounded by descriptor and memory ceilings; no exact connection-count admission policy",
+    "Process-kill proof is not power-loss or storage-device-failure proof"
+  ]
+}

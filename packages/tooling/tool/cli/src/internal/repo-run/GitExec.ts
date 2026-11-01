@@ -35,11 +35,12 @@ import {
   repoRunOutputBound,
   runCaptured,
   runCapturedStreams,
+  runFoldedStdout,
 } from "../process/StepExec.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RunCapturedOptions, RunCapturedStreamsOptions } from "../process/StepExec.ts";
+import type { RunCapturedOptions, RunCapturedStreamsOptions, RunFoldedStdoutOptions } from "../process/StepExec.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/GitExec");
 
@@ -527,6 +528,66 @@ export const runGitRawOutput = Effect.fn("GitExec.runGitRawOutput")(function* <E
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runGitStructured(args, adapter, { cwd, stdin: "ignore" });
+});
+
+/**
+ * Runs a git command and folds its stdout while it streams instead of capturing it.
+ *
+ * **Details**
+ *
+ * For output that can exceed any capture bound but is only needed reduced, such as a digest of a
+ * whole diff. stdout never enters a buffer, so no truncation is possible and `adapter.onTruncated`
+ * is never consulted; stderr is bounded and used only for the nonzero-exit message.
+ *
+ * **Example** (Count diff bytes without capturing them)
+ *
+ * ```ts
+ * import { runGitFoldedStdout } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as Stream from "effect/Stream"
+ *
+ * const size = runGitFoldedStdout(
+ *   process.cwd(),
+ *   ["diff", "HEAD~1", "HEAD"],
+ *   {
+ *     onSpawnFailure: (commandLine) => (cause) => new Error(`${commandLine}: ${String(cause)}`),
+ *     onNonZeroExit: ({ commandLine, exitCode }) => new Error(`${commandLine} exit ${exitCode}`),
+ *     onTruncated: O.none()
+ *   },
+ *   (stdout) =>
+ *     stdout.pipe(
+ *       Stream.runFold(() => 0, (total: number, chunk: Uint8Array) => total + chunk.length),
+ *       Effect.map(String)
+ *     )
+ * )
+ *
+ * console.log(Effect.isEffect(size)) // true
+ * ```
+ *
+ * @param cwd - Working directory.
+ * @param args - Git arguments, excluding the `git` executable.
+ * @param adapter - Error adapter for the calling command group.
+ * @param fold - Reduces the streamed stdout bytes to one value.
+ * @returns The folded value on a zero exit.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runGitFoldedStdout = Effect.fn("GitExec.runGitFoldedStdout")(function* <E>(
+  cwd: string,
+  args: ReadonlyArray<string>,
+  adapter: GitCommandErrorAdapter<E>,
+  fold: RunFoldedStdoutOptions["fold"]
+): Effect.fn.Return<string, E, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  const commandLine = formatCommandLine("git", args);
+  const folded = yield* runFoldedStdout({ command: "git", args, cwd, extendEnv: true, stdin: "ignore", fold }).pipe(
+    Effect.mapError(adapter.onSpawnFailure(commandLine))
+  );
+  return yield* failFromOutcome(
+    { exitCode: folded.exitCode, parsed: folded.value, failureOutput: folded.stderr, truncated: false },
+    commandLine,
+    adapter
+  );
 });
 
 /** Resolve a ref to a verified commit without allowing option reinterpretation. @category execution @since 0.0.0 */

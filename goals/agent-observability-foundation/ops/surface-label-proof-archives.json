@@ -1,0 +1,236 @@
+{
+  "result": "passed",
+  "records": [
+    {
+      "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-3w9fbmjc",
+      "sameHostOnly": true,
+      "doNotRunRetainedBundles": true,
+      "files": [
+        {
+          "path": "artifacts space/caddy",
+          "bytes": 51953826,
+          "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+        },
+        {
+          "path": "artifacts space/intake.json",
+          "bytes": 1068,
+          "sha256": "8eb2f28dda2feac0e10639a91d3653cb994667bc356f50507bc2038413d0c4cd"
+        },
+        {
+          "path": "artifacts space/intake.sha256",
+          "bytes": 232,
+          "sha256": "54ef0f2acc66bbcd83dd0f0f6641e9bcf82332902f512bb643231bb6f7ff8f28"
+        },
+        {
+          "path": "artifacts space/worker.mjs",
+          "bytes": 1319733,
+          "sha256": "214bc53997d588717f33f012dc1835cb10abb64d78a386a0b81a0d95375ec54b"
+        },
+        {
+          "path": "artifacts space/worker.sha256",
+          "bytes": 379,
+          "sha256": "bc5dbbfe1ee2398d6d1c7ae3acb0bb038ec1a0f572b0867cd7bab0a38d041d34"
+        },
+        {
+          "path": "bundle-build.log",
+          "bytes": 68,
+          "sha256": "696a173d7afaed6cb80a058287b68cb6b00ca4127ea30183f996401fc2b6f3e7"
+        },
+        {
+          "path": "collector.yaml",
+          "bytes": 3825,
+          "sha256": "885f3eab1d11e22a0a126689759838cb8161718f42cc11c08669da2894690306"
+        },
+        {
+          "path": "deployment-request.json",
+          "bytes": 456,
+          "sha256": "b66ebb79d24bb7611ae7fea10f3d019fa3842571148ce08b27b99b79aa3d8e7a"
+        },
+        {
+          "path": "evidence.json",
+          "bytes": 14679,
+          "sha256": "749be1e1f52cb4a6b51ffecc5d02ab9d8b24fe117ea3da2e86510796955cf96c"
+        },
+        {
+          "path": "queue/exporter_otlphttp_phoenix_traces",
+          "bytes": 32768,
+          "sha256": "f42791637a8d85c16923457973eab01ee4b836742beeaa52d207f32974e0059f"
+        },
+        {
+          "path": "state/backup-0/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "91d32f6c57352ddf0b40d4a33a08f12484c438c649ded88f90ad1fb9f18358ba"
+        },
+        {
+          "path": "state/backup-0/manifest.json",
+          "bytes": 399,
+          "sha256": "d2cb592f8874685405a2d1d90fb2086c14a3a48f1424de4117dd793e821b87c1"
+        },
+        {
+          "path": "state/frontend-data/caddy/instance.uuid",
+          "bytes": 36,
+          "sha256": "27a194ec573fa3730d8423cc3474fa0ef87e49ce87496fa17dce340d18bbc266"
+        },
+        {
+          "path": "state/frontend-data/caddy/last_clean.json",
+          "bytes": 112,
+          "sha256": "70015f33b846bf1270714e91caab863807e3f73ca2c6bcb245b00c8aa9ed2e4e"
+        },
+        {
+          "path": "state/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "61422f97c0e1da8553e3debad56095a38bb08c54fe7e5dbf4b16a0b033532ea2"
+        },
+        {
+          "path": "state/worker.json",
+          "bytes": 1459,
+          "sha256": "24d78ce6d4190cd5edcad874b3b9a74c928fdcff7187d4db895f73fc5c46af21"
+        },
+        {
+          "path": "state/worker.lock",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "synthetic-input.json",
+          "bytes": 1136,
+          "sha256": "4fb2b83f9c50ff4ad388240f513bce454998f8f7bddfe2f984eb4aee8e013850"
+        },
+        {
+          "path": "synthetic-salt",
+          "bytes": 27,
+          "sha256": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8"
+        }
+      ],
+      "totalBytes": 53649691
+    },
+    {
+      "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-n37n8w3m",
+      "sameHostOnly": true,
+      "doNotRunRetainedBundles": true,
+      "files": [
+        {
+          "path": "artifacts space/caddy",
+          "bytes": 51953826,
+          "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+        },
+        {
+          "path": "artifacts space/intake.json",
+          "bytes": 1068,
+          "sha256": "49bd1ab19e15ccedf2b36368b22ea25e15362052495dbb6672a7bb909b3feebd"
+        },
+        {
+          "path": "artifacts space/intake.sha256",
+          "bytes": 232,
+          "sha256": "662921f7f3b8a769ab0c54890302b24dedb0c9ae27bcfc105c9e6d167e589120"
+        },
+        {
+          "path": "artifacts space/worker.mjs",
+          "bytes": 1320246,
+          "sha256": "751b1e88a0496e18851500b0098d2d0e43e42a1a950a0077e7f50127ca4b347f"
+        },
+        {
+          "path": "artifacts space/worker.sha256",
+          "bytes": 379,
+          "sha256": "a2741fc96a94e22ece08a3d095df9ebbe2656b4b24c2581c2de7b4461235bd4b"
+        },
+        {
+          "path": "bundle-build.log",
+          "bytes": 68,
+          "sha256": "05dbb50cd8915c54d9c7f2954d79d3711f97f26f17ab2e46f3cdfa4fb21c5731"
+        },
+        {
+          "path": "collector.yaml",
+          "bytes": 3825,
+          "sha256": "e4058cae7324c0ddfb6c6d494bc058fe4a88fe7ea21a911a6cba38c7f99aadce"
+        },
+        {
+          "path": "deployment-request.json",
+          "bytes": 456,
+          "sha256": "39020c48f00c80b5b58250ddaebe7081c7a0278411a33da43f6e1dc330d4e2f2"
+        },
+        {
+          "path": "evidence.json",
+          "bytes": 20806,
+          "sha256": "f87c519358925913c03076cde94a67096d8d2a20c985bf553ea224108ecb02d0"
+        },
+        {
+          "path": "health-tsdb/queries.active",
+          "bytes": 20001,
+          "sha256": "4d53b2cb8f39eaa2434c0c213d53ac997b1075226374d30a40504f33caf8d8f7"
+        },
+        {
+          "path": "health-tsdb/wal/00000000",
+          "bytes": 32768,
+          "sha256": "222b551f5b674ce49a04757300f0c311d68b20714a2b97c6f85cfddae1ef3130"
+        },
+        {
+          "path": "queue/exporter_otlphttp_phoenix_traces",
+          "bytes": 32768,
+          "sha256": "ac2c9c52a5389fc15f1a5ea4599d2927de12449e5ad2dbcd6e4787c32006b9a1"
+        },
+        {
+          "path": "state/backup-0/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "05ab49534f8ceef0221eccb96a5333a0f74c6f49099f05594471abf127300b42"
+        },
+        {
+          "path": "state/backup-0/manifest.json",
+          "bytes": 399,
+          "sha256": "96cabadd0709b1d09f18b0d7d41440097fa6357a4a3ec9f3f2016b0f74adbd6f"
+        },
+        {
+          "path": "state/frontend-data/caddy/instance.uuid",
+          "bytes": 36,
+          "sha256": "aff4a062a83ad8e3fa5a5f3ac08ec00338a0c2d1861e03d578bccc1a2a548c66"
+        },
+        {
+          "path": "state/frontend-data/caddy/last_clean.json",
+          "bytes": 112,
+          "sha256": "68084f1ba5b6f314f1b7874a4f11ddc84fd4e3dc4f2e12a815279743840ba7e0"
+        },
+        {
+          "path": "state/journal.sqlite",
+          "bytes": 159744,
+          "sha256": "469e0fcafa46cabd78ef4ac6147edd701b753eeb27ab247fcdc9bc1411cbd1e9"
+        },
+        {
+          "path": "state/worker.json",
+          "bytes": 1459,
+          "sha256": "9a0c18083e79d43ed1d9d62a6e9e47af28ba4724536d6f4e093f6014a1d59ce2"
+        },
+        {
+          "path": "state/worker.lock",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "synthetic-input.json",
+          "bytes": 1136,
+          "sha256": "c60936ccfc7c70779398672960be827bd183c535488408059d4e89e02d0f6e66"
+        },
+        {
+          "path": "synthetic-salt",
+          "bytes": 27,
+          "sha256": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8"
+        },
+        {
+          "path": "worker-health-prometheus.yml",
+          "bytes": 291,
+          "sha256": "eb59b8b54dcd193effa1514fb8614dc22e53685af9303632aed402924531d3a7"
+        },
+        {
+          "path": "worker-health-rules.yml",
+          "bytes": 4432,
+          "sha256": "faae46e301eb777d4c247f5293a22b6b36d66ccb3b35eef38351b305f0a89ffe"
+        },
+        {
+          "path": "worker-health.prom",
+          "bytes": 1425,
+          "sha256": "6943aa03792a46c4d8a3eca62c7cb344a746903ecb069b4b6e9a045fd5c4121d"
+        }
+      ],
+      "totalBytes": 53715248
+    }
+  ]
+}

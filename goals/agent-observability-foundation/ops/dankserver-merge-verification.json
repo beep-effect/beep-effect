@@ -1,0 +1,22 @@
+{
+  "recordedAt": "2026-10-29T20:50:32.484367+00:00",
+  "url": "https://github.com/kriegcloud/dankserver/pull/3",
+  "reviewedHead": "470ddf6594762203e4181c06eb621d62cdaa2ed4",
+  "mergeCommit": "f6e2bae77d205f228c4ebf9e3e8adcebb4b94d45",
+  "mergedAt": "2026-10-29T20:50:20Z",
+  "apiState": "MERGED",
+  "preMerge": {
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "CLEAN",
+    "unresolvedReviewThreads": 0,
+    "all25ReceiptSourceHashesMatch": true,
+    "CodeRabbit": "SUCCESS",
+    "hostedTestJobConfigured": false,
+    "readyAt": "2026-10-29T20:30:41Z",
+    "readyElapsedSeconds": 1179
+  },
+  "sourceVerification": "dankserver-current-verification.json",
+  "independentReview": "../research/DANKSERVER-CONTENT-FINAL-REVIEW.md",
+  "deployment": "not performed; legacy default and explicit metadata opt-in retained",
+  "recoveryHold": "preserved"
+}

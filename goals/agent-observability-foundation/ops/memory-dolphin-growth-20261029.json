@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-10-29T17:21:12.461137+00:00",
+  "pid": 164671,
+  "unit": "app-org.kde.dolphin@41aaf8bf814747f8b0d1106e7084d0a9.service",
+  "invocationId": "48ef1e1716af46fba35bef63152f7de4",
+  "start": "2026-10-29T12:08:38-05:00",
+  "origin": "not established; outside proof service group; no command-line targets",
+  "action": "Read-only investigation. Operator was asked about active work before closing; process exited before any action. No pending close operation.",
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 51353190400,
+    "SwapTotal": 51539603456,
+    "SwapFree": 6778990592
+  },
+  "processExited": true,
+  "exitObservedAt": "2026-10-29T12:20:47-05:00",
+  "agentClosedProcess": false,
+  "newKernelOomRecorded": false,
+  "reportedServiceMemoryPeak": "45.6 GiB",
+  "reportedServiceSwapPeak": "5.8 GiB",
+  "elapsedServiceLifetime": "12 minutes 9.066 seconds",
+  "observedSamples": [
+    {
+      "order": 1,
+      "source": "ps RSS",
+      "rssBytes": 32277303296
+    },
+    {
+      "order": 2,
+      "source": "proc status",
+      "rssBytes": 37377187840,
+      "swapBytes": 748834816
+    },
+    {
+      "order": 3,
+      "source": "smaps_rollup",
+      "rssBytes": 45398528000,
+      "privateDirtyBytes": 45354971136,
+      "swapBytes": 3675832320,
+      "serviceMemoryCurrentBytes": 46511697920,
+      "serviceMemoryPeakBytes": 47408340992
+    }
+  ],
+  "journalLeads": [
+    "Repeated libpng IDAT CRC errors and bad adaptive filter values in service processes.",
+    "Dolphin logged a portal Invalid transfer error."
+  ],
+  "cause": "Not established. Image/thumbnail decoding or a large file-manager workload are leads only."
+}

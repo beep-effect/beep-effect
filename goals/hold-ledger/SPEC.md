@@ -89,13 +89,14 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] The `HoldProposition` schema exists with the fields and tagged unions
+- [x] The `HoldProposition` schema exists with the fields and tagged unions
       above, plus unit tests for the verdict rules (a passing control gives
       `ProbeBroken`; one passing run is not a flip; two are).
-- [ ] The jsdom hold record runs end to end through
-      `beep holds probe jsdom-vitest-eventtarget`. It reproduces the
-      `EventTarget` signature at 30.1.0 under `vitest --bun` and reports a
-      verdict for npm latest.
+- [x] The statelyai hold record runs end to end through
+      `beep holds probe statelyai-model-testing-404`. It reproduces the
+      `@statelyai/model-testing` 404 at 0.15.0 with `bun install` and reports
+      a verdict for npm latest. (Changed from the jsdom hold on 2026-10-31; see
+      the Decision Log.)
 - [ ] syncpack's held list is derived from the ledger, and `syncpack lint`
       passes with an identical ignore set before and after.
 - [ ] Every row in the manual hold register and every dependency-shaped site
@@ -122,7 +123,7 @@ Higher sources outrank lower sources when they conflict.
 | Whitespace | `git diff --check -- goals/hold-ledger` | Passes |
 | Package handoff | `bun run beep quality package-verify @beep/repo-cli` | Passes |
 | Holds lint | `bun run beep holds lint # this goal creates the command` | Passes on the PR head |
-| jsdom probe receipt | `bun run beep holds probe jsdom-vitest-eventtarget # this goal creates the command` output, attached in `history/` | Control reproduces the signature |
+| statelyai probe receipt | `bun run beep holds probe statelyai-model-testing-404 # this goal creates the command` output, attached in `history/` | Control reproduces the signature |
 
 ## Stop Conditions
 
@@ -138,6 +139,10 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-10-31 | The first slice moves from the jsdom hold to the statelyai hold. The jsdom hold is reported as `probe-broken` and goes to its own unpin PR. | Manual probes ([receipt](history/receipts/2026-10-31-first-manual-probes.md)): jsdom's control (30.1.0) no longer reproduces, and repo jsdom suites pass on 30.1.3 under `--bun`. statelyai's control (0.15.0) fails `bun install` deterministically with the recorded 404, and latest (0.19.0) installs. A slice needs a control that reproduces. | Restore the jsdom slice if a later run reproduces its signature again. |
+| 2026-10-31 | The ledger lives in a top-level `hold-ledger/` directory: `claims.jsonl` holds append-only `HoldClaimVersion` rows and `runs.jsonl` holds `ProbeRun` rows. | `harness-ledger/` is the precedent for a tracked top-level ledger. A goal packet is temporary; `research/ledger/` belongs to the nightly routine as its single writer. | Move the two files and update the `Holds` paths. |
+| 2026-10-31 | A probe run has three outcomes: `Reproduced` (the signature appeared), `Passed` (exit 0, no signature) and `Inconclusive` (anything else). A passing control gives `probe-broken`. A flip needs the two newest runs to both be `candidate-passed`. | An inconclusive run must never count as a pass, the same rule as skulk's "a failed check is never a change". | Change `judgeProbeRun` and `confirmHoldVerdict` and their tests. |
+| 2026-10-31 | `@beep/repo-cli` depends on `@beep/epistemics` for the claim envelope. | Tooling may depend on foundation; the envelope is reused, not copied. | Drop the dependency and inline a hold-only version schema. |
 | 2026-10-31 | The unit is a hold on `makeClaimEnvelope`; the ledger lives in the repo; wave 1 is dependency-shaped holds; renewal needs evidence plus a 180-day maximum; probes need a control and two passes; the `Holds` command group lives in the repo CLI; `deps:update` re-checks holds; the first slice is jsdom. | Settled in the exploration align and shape rounds, [`DECISIONS.md`](../../explorations/expiring-repo-facts/DECISIONS.md). | Reopen the exploration at `align`. |
 
 ## Exception Ledger

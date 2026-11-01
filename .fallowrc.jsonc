@@ -5,6 +5,8 @@
   // files, Vite/Tauri main.tsx, proof-app index.ts, Storybook config) so app code is
   // reachable instead of invisible (goals/fallow-zero-dead-code).
   "entry": [
+    // Launched by verify-worker-entrypoint.py as a standalone synthetic process.
+    "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "packages/**/src/*.ts",
     "packages/**/src/*/index.ts",
     // Standalone operator command invoked from the retention report runbook.
@@ -138,6 +140,8 @@
     // so nothing in the workspace import graph reaches it.
     "infra/lambda/**",
     "**/test/fixtures/**",
+    // Preserve dependency ownership for this externally launched proof fixture.
+    "!packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts",
     "**/examples/**",
     "**/postcss.config.*",
     // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,
@@ -368,6 +372,49 @@
       "scratchpad/.jsdoc-loop/census.ts"
     ],
     "thresholdOverrides": [
+      // Fallow reports CRAP at or above the cutoff. The .01 cutoffs below
+      // admit the reviewed integer scores without admitting the next integer.
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts"
+        ],
+        "functions": ["read"],
+        "maxCrap": 156.01,
+        "reason": "Cohesive private credential refusal boundary, including systemd 0400 credentials; splitting risks changing pre-journal refusal order. Current installed and optional-credential proof: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts"
+        ],
+        "functions": ["secrets"],
+        "maxCrap": 132.01,
+        "reason": "Cohesive credential-source selection and refusal ordering: an invalid present credential directory cannot fall back to ambient values. Current installed and optional-credential proof: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/library/ai-metrics/test/fixtures/managed-observation-process.ts"
+        ],
+        "functions": ["program"],
+        "maxCrap": 56.01,
+        "reason": "External process fixture keeps initialize/retry, lost-ack recovery, restart reconciliation and no-relaunch lifecycle together. Actual entrypoint proof invokes this exact fixture: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/ownership/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts"
+        ],
+        "functions": ["registerManagedSessionCases"],
+        "maxCognitive": 9,
+        "maxCrap": 32,
+        "reason": "This callback registers nine finite case matrices in one serial test-layer scope; it is not one long runtime scenario. Only the outer registration callback is named for this selector. Independent adjudication: goals/agent-observability-foundation/research/REMAINING-COMPLEXITY-ADJUDICATION.md. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/scope/protocol changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
+      {
+        "files": [
+          "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts"
+        ],
+        "functions": ["observeCloneWorktreeEvidence"],
+        "maxCrap": 38,
+        "reason": "One actual Git clone/worktree scenario retains independent identity, unknown-population and privacy assertions. Full AI-metrics audit evidence: goals/agent-observability-foundation/ops/boundary-predicates-verification.json; independent adjudication: research/REMAINING-COMPLEXITY-ADJUDICATION.md in that packet. Fallow coverage is estimated, not measured. Review by 2026-11-30 or sooner on body/selector/identity changes, measured coverage, or a simpler equivalent design; lower/remove when no longer needed."
+      },
       {
         "files": [
           "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts"

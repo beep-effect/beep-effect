@@ -34,12 +34,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — in progress. Schemas and verdict rules landed on `feat/hold-ledger`; `beep holds probe` and the statelyai record are next.
 
 ## Latest Evidence
 
-Not started.
+- 2026-10-31: [first manual probes](history/receipts/2026-10-31-first-manual-probes.md). The jsdom hold is `probe-broken` (control no longer reproduces; repo jsdom suites pass on 30.1.3 under `--bun`). The statelyai control reproduces the npm 404 deterministically, and latest installs.
 
 ## Notes
 
-Holds come first: start with the jsdom slice in `SPEC.md`. The wake service depends on this ledger.
+Holds come first: start with the statelyai slice in `SPEC.md` (moved from jsdom on 2026-10-31). The wake service depends on this ledger.

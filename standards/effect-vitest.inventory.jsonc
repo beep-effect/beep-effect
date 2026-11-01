@@ -1571,6 +1571,27 @@
       "reason": "Owner: @beep/law-practice-server. The failure injection writes a carry into brokenBundle, a directory the body creates with a corrupt practice.duckdb after its carry writes over target, and asserts the typed failure. it.layer cannot take a path the body creates mid-test. Exit: retire when the broken-bundle case splits into its own test over a nested it.layer(Layer.unwrap(...)), or when EV002 recognises this shape (#1855 wave 4 register)."
     },
     {
+      "id": "EV002:packages/tooling/library/ai-metrics/test/native-intake.test.ts:265:provideScopedLayer@8#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/native-intake.test.ts",
+      "line": 265,
+      "endLine": 265,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:263b0efd356079a03fb2765bd67009b3f6bd2c72500ae1931d4f1b2db0bf2810",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer(SqliteClient.layer({ filename: files[0].file }).pipe(Layer.provide(Reactivity.layer)))",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:112:provideScopedLayer@8#1",
       "lens": "resource",
       "ruleId": "EV002",
@@ -3241,6 +3262,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV004:packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts:302:scoped@9#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts",
+      "line": 302,
+      "endLine": 302,
+      "symbol": "scoped",
+      "occurrence": "v2:907bbef7229c80e04acce77cf08ee674ae1cadc156df81f99e1c710b5068b97e",
+      "class": "inner-helper-scope-lifetime-review",
+      "evidence": "Effect.scoped",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/worktree-command.test.ts:211:scoped@2#1",
@@ -4959,13 +5001,13 @@
       "reason": "Native Bun child spawning, piped stdio and real termination and exit codes are the subjects; NodeServices supplies the native process and path services. Owner: @beep/acp. Exit: retire when the protocol cases run against a scripted spawner."
     },
     {
-      "id": "EV010:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:9:@effect/platform-node/NodeServices@0#1",
+      "id": "EV010:packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts:10:@effect/platform-node/NodeServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/ai-provider-cli",
       "file": "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts",
-      "line": 9,
-      "endLine": 9,
+      "line": 10,
+      "endLine": 10,
       "symbol": "@effect/platform-node/NodeServices",
       "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
       "class": "platform-resource-provenance-review",
@@ -5971,6 +6013,27 @@
       "reason": "Real directory trees and delegated stat paths exercise repository boundaries, bounded walking and truncation. Owner: @beep/repo-ai-metrics. Exit: retire when MemoryFileSystem's stat matches the delegated stat paths and the walk cases move to it."
     },
     {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/delivery-ledger-crash.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/delivery-ledger-crash.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/library/ai-metrics/test/duckdb.test.ts:4:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -5993,6 +6056,48 @@
       "reason": "The native DuckDB driver consumes physical temporary database paths. Owner: @beep/repo-ai-metrics. Exit: retire when the driver cases run on an in-memory DuckDB database."
     },
     {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/evidence-retention-crash.test.ts:5:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/evidence-retention-crash.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/git-root-evidence.test.ts:8:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/git-root-evidence.test.ts",
+      "line": 8,
+      "endLine": 8,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:731ad383cdd87b8d4b6d4977537e89416be45b76ed55c14730261db60ed3c5e7",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import { NodeFileSystem, NodePath, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:17:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -6013,6 +6118,237 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native atomic renames, lock contention and stale-lock behavior need real files, and two live-clock cases keep bounded retry deadlines. Owner: @beep/repo-ai-metrics. Exit: retire when MemoryFileSystem models rename races and lock contention and the registry cases move to it."
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/native-delivery-crash.test.ts:7:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/native-delivery-crash.test.ts",
+      "line": 7,
+      "endLine": 7,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/native-http-crash.test.ts:5:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/native-http-crash.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-claim-population.test.ts:11:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-claim-population.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-file.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-file.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims-crash.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-launch-claims-restore.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims-restore.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-launch-claims.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-claims.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-launch-outbox.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-outbox.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts:10:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts",
+      "line": 10,
+      "endLine": 10,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/observation-worker.test.ts:31:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+      "line": 31,
+      "endLine": 31,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/payload-reclamation-crash.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/payload-reclamation-crash.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/retention.test.ts:14:@effect/platform-node@0#1",
@@ -6079,6 +6415,48 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Physical telemetry artifacts, temporary paths and scoped platform services keep the real filesystem semantics. Owner: @beep/repo-ai-metrics. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/transcript-discovery.test.ts:13:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/transcript-discovery.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV010:packages/tooling/library/ai-metrics/test/transcript-intake-crash.test.ts:5:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/transcript-intake-crash.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/library/ai-sync/test/ai-sync.test.ts:41:@effect/platform-node@0#1",
@@ -6453,6 +6831,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Private file permissions, file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup are the subjects in both Node and Bun runners. Owner: @beep/repo-cli. Exit: retire when the attached cases run over an in-memory SQLite store and a memory volume that models modes and realPath."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.observation.test.ts:25:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts",
+      "line": 25,
+      "endLine": 25,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:20:@effect/platform-node@0#1",
@@ -8677,6 +9076,27 @@
       "reason": "This regression exercises real Node process exit and HTTP server port-lock cleanup: the child reads the bundled setup/probe from a native temporary directory, creates real reservation files, and the parent verifies their removal after natural child exit. MemoryFileSystem would hide the child's files and change the subject. NodeServices.layer is scoped by it.layer; no worker is terminated. Owner: @beep/repo-cli. Retire this exception when the native Bun shim and its port-reservation filesystem contract retire."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts:4:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/vitest-bun-serve-shim.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:50:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -9555,6 +9975,174 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The hoisted mock controls the plain findRepoRoot module function that command dispatch calls; it is not a Context.Service, and the selection resets and real-child cases keep both boundaries (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when lint dispatch resolves the repository root through an injected service (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/native-http.test.ts:256:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/native-http.test.ts",
+      "line": 256,
+      "endLine": 259,
+      "symbol": "retry-loop",
+      "occurrence": "v2:3ff4fc9051adefdf3c2497cd0f920c42877f7cf519a04b36505dd551bf9516ca",
+      "class": "retry-loop-candidate",
+      "evidence": "for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) { yield* Effect.sleep(\"5 millis\"); busy = (yield* post()).status; }",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/native-schedule.test.ts:243:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/native-schedule.test.ts",
+      "line": 243,
+      "endLine": 247,
+      "symbol": "retry-loop",
+      "occurrence": "v2:79fa9eaa6469bfa0d458bea23409d9c6624eb9bcef32dc0fcafd51627f8314c8",
+      "class": "retry-loop-candidate",
+      "evidence": "for (let attempt = 0; attempt < 8; attempt++) { const scheduler = yield* f.reopen(policy); expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: \"Sent\" }] }); yield* Effect.sleep(120); }",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts:167:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-launch-http.test.ts",
+      "line": 167,
+      "endLine": 170,
+      "symbol": "retry-loop",
+      "occurrence": "v2:84fb16959afbca9de249bbe5aacc4f3ac96c7e5f2fae26106b6df46ab26e7bb5",
+      "class": "retry-loop-candidate",
+      "evidence": "for (let attempt = 0; attempt < 20 && busy !== 503; attempt++) { yield* Effect.sleep(\"5 millis\"); busy = (yield* f.post(\"{}\")).status; }",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/observation-worker.test.ts:434:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+      "line": 434,
+      "endLine": 434,
+      "symbol": "retry-loop",
+      "occurrence": "v2:5aa8878d5118d2ff6a583cc6b0c3ee1186313d56c067910e5fec724e12d7e98e",
+      "class": "retry-loop-candidate",
+      "evidence": "while (O.isNone((yield* runtime.health).lastCycle)) yield* Effect.sleep(5);",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/observation-worker.test.ts:440:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/observation-worker.test.ts",
+      "line": 440,
+      "endLine": 444,
+      "symbol": "retry-loop",
+      "occurrence": "v2:5aa8878d5118d2ff6a583cc6b0c3ee1186313d56c067910e5fec724e12d7e98e",
+      "class": "retry-loop-candidate",
+      "evidence": "while (true) { const state = yield* f.worker.eventState(eventId); if (O.isSome(state) && state.value.state === \"accepted-unverified\") break; yield* Effect.sleep(5); }",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts:130:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts",
+      "line": 130,
+      "endLine": 134,
+      "symbol": "retry-loop",
+      "occurrence": "v2:799b10ee916a363c4c0af73758b1adb5a1fea752439256ee0015457eecb93fd7",
+      "class": "retry-loop-candidate",
+      "evidence": "for (const eventId of eventIds) expect(yield* f.ledger.state(eventId)).toMatchObject({ _tag: \"Some\", value: { state: \"visible\", attempts: 1 }, });",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts:293:retry-loop@6#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/payload-reclamation.test.ts",
+      "line": 293,
+      "endLine": 297,
+      "symbol": "retry-loop",
+      "occurrence": "v2:897a5a437b8627ff9227ba05e26e4a81b087c73da81324bcd4de068e8aa25f5b",
+      "class": "retry-loop-candidate",
+      "evidence": "for (const eventId of attempt.eventIds) expect(yield* f.ledger.state(eventId)).toMatchObject({ _tag: \"Some\", value: { state: \"visible\", attempts: 2, ambiguousAttempts: 2 }, });",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
+      "id": "EV013:packages/tooling/library/ai-metrics/test/transcript-export.test.ts:343:retry-loop@8#1",
+      "lens": "resource",
+      "ruleId": "EV013",
+      "package": "@beep/repo-ai-metrics",
+      "file": "packages/tooling/library/ai-metrics/test/transcript-export.test.ts",
+      "line": 343,
+      "endLine": 346,
+      "symbol": "retry-loop",
+      "occurrence": "v2:2e51a2578928a2143f780cc69ae77ad4c22ce7eaa81ba9cee3e2974fe54e4047",
+      "class": "retry-loop-candidate",
+      "evidence": "for (const frame of f.frames) expect(yield* f.sender.ledger.state(frame.occurrenceId)).toMatchObject({ value: { state: \"accepted-unverified\", attempts: 1 }, });",
+      "replacement": {
+        "primitive": "it.flakyTest",
+        "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     }
   ]
 }

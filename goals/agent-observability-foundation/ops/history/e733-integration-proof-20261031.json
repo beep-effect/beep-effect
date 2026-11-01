@@ -1,0 +1,219 @@
+{
+  "kind": "accepted-e733-main-integration-and-goal-ops-proof",
+  "incomingMain": "e733f61bbb39ed1cb0740643f4a53e745312789c",
+  "goalOps": {
+    "initialErrors": 9,
+    "file": "goals/agent-observability-foundation/ops/forwarder-compatibility-fixture.ts",
+    "repair": "Require historical module argument; validate callable capabilities, schema-construct input, decode exactly one nonnegative-integer count row. Existing assertions/order/layers/measurements retained.",
+    "reviewedPreFormatSha256": "02bc499a9eee16393a27139cb5882fbf6ab5f75c11466687aebd1ccc5582a8a4",
+    "currentFormattedSha256": "473ebbdcc1dd48a2798a9fa39d9d758ef4f2ce0f839b4816db3ec3b560e8257f",
+    "formatOnlyDifferenceVerified": true,
+    "wholeGoalsCompilerPassed": true,
+    "compilerGuard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-e733-ops-check3-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 40428314624,
+      "peakObservedBytes": 2410881024,
+      "minimumAvailableBytes": 40258936832,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 10,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "freshRuntime": {
+      "result": "passed",
+      "currentSelected": 1,
+      "previousSelected": 1,
+      "cursorRows": 1,
+      "oldImplementationPreservedCursorTable": true,
+      "sourceRowsBefore": 1,
+      "sourceRowsAfter": 2,
+      "realSourcesRead": false,
+      "historicalDatabaseOpened": false,
+      "servicesChanged": false
+    },
+    "runtimeGuard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-forwarder-compatibility4-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 63697367040,
+      "peakObservedBytes": 168550400,
+      "minimumAvailableBytes": 53006544896,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 19,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    },
+    "historicalSource": {
+      "baseHead": "bea57177a342284007f242a65a126c029791aea8",
+      "originalForwarderSha256": "76b293507936f041936317196f008b1956ef412e6272440f86ef112eced3c33f",
+      "adaptedForwarderSha256": "5cde4188e07eaff4f936d4d44438d747ef386f766671d4699c117d4ca33af8f0",
+      "onlyTransformation": "Relative import specifiers rebound to current dependency files; reverse transformation reproduces exact original Git blob.",
+      "syntheticInputFiles": 2,
+      "originalSyntheticInputRootPreserved": true,
+      "freshDataRoot": true,
+      "fixtureSha256": "473ebbdcc1dd48a2798a9fa39d9d758ef4f2ce0f839b4816db3ec3b560e8257f"
+    },
+    "privateArtifact": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/forwarder-compatibility-formatted",
+    "scope": "Historical forwarder file with explicitly rebound current dependencies on fresh synthetic Git root/storage; not whole historical binary rollback. Original root/database/receipts preserved."
+  },
+  "cli": {
+    "typecheckConfigurationsPassed": 3,
+    "nodeRuntime": "22.23.4",
+    "testsPassed": 35,
+    "filesPassed": 5,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-e733-cli-proof2-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 67440197632,
+      "peakObservedBytes": 4543078400,
+      "minimumAvailableBytes": 54112321536,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 121,
+      "pidsLimitEvents": 0,
+      "observedPhases": [
+        {
+          "phase": "beep:check",
+          "observedAtEpochSeconds": 1793456569.0401213
+        }
+      ],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "jsdoc": {
+    "packages": 183,
+    "openExports": 97,
+    "noOpenGrowth": true,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-e733-jsdoc-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 45270814720,
+      "peakObservedBytes": 5411930112,
+      "minimumAvailableBytes": 21330046976,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 69,
+      "pidsLimitEvents": 0,
+      "observedPhases": [],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "cache": {
+    "subjects": ["@beep/repo-ai-metrics"],
+    "changedComputations": [
+      {
+        "computation": "@beep/repo-ai-metrics#audit",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#build",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#check",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#coverage",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#lint:deprecated-apis",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#package-test-typecheck",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#test",
+        "fields": ["dependencies"]
+      },
+      {
+        "computation": "@beep/repo-ai-metrics#test:property",
+        "fields": ["dependencies"]
+      }
+    ],
+    "unaffectedReviewsPreserved": 188,
+    "metadataFromIncomingMain": {
+      "scope": [
+        "@beep/identity#lint",
+        "@beep/types#lint",
+        "@beep/fc-runs#lint",
+        "@beep/test-runner#lint"
+      ],
+      "profile": "local-linux-x64-bun1.4.4",
+      "epoch": "qualification-v3"
+    },
+    "globalConfigurationUnchanged": true,
+    "nodeSetUnchanged": true,
+    "allCacheFlagsAndConfigurationsUnchanged": true,
+    "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+    "auditBlockingFindings": 0,
+    "unassessedComputations": 1655,
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-e733-cache-sync3-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 68633133056,
+      "peakObservedBytes": 2364039168,
+      "minimumAvailableBytes": 54112321536,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 19,
+      "pidsLimitEvents": 0,
+      "observedPhases": [
+        {
+          "phase": "docgen",
+          "observedAtEpochSeconds": 1793456551.6692536
+        }
+      ],
+      "exitCode": 0,
+      "orphanCleanup": []
+    }
+  },
+  "interruptedAttempts": {
+    "firstPreparation": "Missing private parent directory; fixture did not execute. Retained exit127, not proof.",
+    "secondPreparation": "Synthetic repository was not a Git root; product identity guard refused. Created a new positive Git-root fixture for subsequent successful runs; no guard weakened.",
+    "firstCacheWriter": "Host-reserve stop before baseline write. Exact baseline unchanged. Inspected terminated owned unit, zero live matching writers, empty mutex; quarantined exact orphan inode and retained raw inspection privately. No live writer displaced or qualification changed.",
+    "nextCacheWriter": "Refused existing mutex; no write.",
+    "firstCliReplay": "Refused before launch below24GiB initial floor; subsequent bounded run passed."
+  },
+  "currentCanaryBindings": [
+    {
+      "stage": "current-disposable",
+      "bindings": 88,
+      "mismatches": []
+    },
+    {
+      "stage": "current-live",
+      "bindings": 87,
+      "mismatches": []
+    }
+  ],
+  "independentReview": "Named Astra accepted bounded fixture repair and exact single-subject cache request; format-only difference verified and formatted runtime rerun passed.",
+  "recoveryHold": "Preserved; service/timer remain masked/inactive; no production enrollment.",
+  "goalComplete": false
+}

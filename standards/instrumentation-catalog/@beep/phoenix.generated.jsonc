@@ -17,6 +17,8 @@
     {"name":"Phoenix.getDatasetInfo","owner":"@beep/phoenix","family":"driver","conforms":true},
     {"name":"Phoenix.getExperimentInfo","owner":"@beep/phoenix","family":"driver","conforms":true},
     {"name":"Phoenix.getPrompt","owner":"@beep/phoenix","family":"driver","conforms":true},
-    {"name":"Phoenix.makePhoenixFromEnvironment","owner":"@beep/phoenix","family":"driver","conforms":true}
+    {"name":"Phoenix.makePhoenixFromEnvironment","owner":"@beep/phoenix","family":"driver","conforms":true},
+    {"name":"Phoenix.makeSpanReader","owner":"@beep/phoenix","family":"driver","conforms":true},
+    {"name":"Phoenix.spanReader.lookup","owner":"@beep/phoenix","family":"driver","conforms":false}
   ]
 }

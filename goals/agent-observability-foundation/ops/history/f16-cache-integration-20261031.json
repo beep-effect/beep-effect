@@ -1,0 +1,51 @@
+{
+  "kind": "accepted-f16-main-cache-integration",
+  "incomingMain": "f16d82e9f16d72f64d42b40284bf2867566e796b",
+  "baselineSha256": "653a4a0617f60f5c039293bd1291f923258b7f53445c88240639d069ce283df9",
+  "baselineWriterRun": false,
+  "blockingFindings": 0,
+  "findings": 0,
+  "unassessedCachedComputations": 1655,
+  "changedComputations": [
+    "@beep/repo-ai-metrics#audit",
+    "@beep/repo-ai-metrics#build",
+    "@beep/repo-ai-metrics#check",
+    "@beep/repo-ai-metrics#coverage",
+    "@beep/repo-ai-metrics#lint:deprecated-apis",
+    "@beep/repo-ai-metrics#package-test-typecheck",
+    "@beep/repo-ai-metrics#test",
+    "@beep/repo-ai-metrics#test:property"
+  ],
+  "changedFields": ["dependencies"],
+  "preservedOtherReviews": 188,
+  "globalConfigurationUnchanged": true,
+  "sourcesUnchanged": true,
+  "nodeMembershipUnchanged": true,
+  "configurationAndCommandsUnchanged": true,
+  "metadataUnchanged": true,
+  "priorReviewedBasis": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
+  "scope": "Accepted main auto-merge retains the previously reviewed AI-metrics dependency deltas. No re-recording, qualification, cache-flag or exception growth. An unassessed computation is not qualified by this zero-blocking audit.",
+  "guard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-f16-cache-audit-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 34857459712,
+    "peakObservedBytes": 1983410176,
+    "minimumAvailableBytes": 26552659968,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 18,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "docgen",
+        "observedAtEpochSeconds": 1793460784.850794
+      }
+    ],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "privateArtifacts": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/worker-followup"
+}

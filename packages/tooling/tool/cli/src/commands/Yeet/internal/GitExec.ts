@@ -18,6 +18,7 @@ import {
   currentBranch,
   isSafeOriginBranch,
   originBranchFromBase,
+  runGitFoldedStdout as runSharedGitFoldedStdout,
   runGitOutput as runSharedGitOutput,
   runGitPathList as runSharedGitPathList,
   safeOriginBranchFromBase,
@@ -25,6 +26,7 @@ import {
 import { YeetCommandError } from "../Yeet.errors.ts";
 import type * as Crypto from "effect/Crypto";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
@@ -66,6 +68,40 @@ export const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
   args: ReadonlyArray<string>
 ): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* runSharedGitOutput(repoRoot, args, gitErrorAdapter);
+});
+
+/**
+ * Run Git with Yeet's error wording and fold its stdout while it streams.
+ *
+ * **Details**
+ *
+ * The unbounded counterpart of {@link runGitOutput} for output Yeet only needs reduced, such as a
+ * digest of a diff larger than the repo-run capture limit.
+ *
+ * **Example** (Count diff bytes)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import * as Stream from "effect/Stream";
+ * import { runGitFoldedStdout } from "@beep/repo-cli/test/Yeet"
+ *
+ * const size = runGitFoldedStdout(".", ["diff", "HEAD~1", "HEAD"], (stdout) =>
+ *   stdout.pipe(
+ *     Stream.runFold(() => 0, (total: number, chunk: Uint8Array) => total + chunk.length),
+ *     Effect.map(String)
+ *   )
+ * )
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const runGitFoldedStdout = Effect.fn("Yeet.runGitFoldedStdout")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  fold: RunFoldedStdoutOptions["fold"]
+): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+  return yield* runSharedGitFoldedStdout(repoRoot, args, gitErrorAdapter, fold);
 });
 
 /**

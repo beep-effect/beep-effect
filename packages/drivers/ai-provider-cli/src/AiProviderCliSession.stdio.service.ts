@@ -23,6 +23,7 @@ import * as Str from "effect/String";
 import { codexArguments, negotiateCodex } from "./AiProviderCliSession.codex.service.ts";
 import { cursorArguments, verifyCursor } from "./AiProviderCliSession.cursor.service.ts";
 import { grokArguments, verifyGrok } from "./AiProviderCliSession.grok.service.ts";
+import { observeStartedManagedProcess } from "./AiProviderCliSession.lifecycle.ts";
 import { ManagedSessionEvent, ManagedTerminalEvidence, ManagedTurnResult } from "./AiProviderCliSession.models.ts";
 import { collectStderr, failure, logStderrExcerpt, transportFailure } from "./AiProviderCliSession.profile.service.ts";
 import {
@@ -39,6 +40,7 @@ import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { ManagedSessionError } from "./AiProviderCliSession.errors.ts";
+import type { ManagedSessionObserver } from "./AiProviderCliSession.lifecycle.ts";
 import type {
   ManagedLaunchProfile,
   ManagedSessionMessage,
@@ -78,7 +80,8 @@ const decodeSteeredTurn = S.decodeUnknownEffect(SteeredTurn);
  */
 export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
   profile: ManagedLaunchProfile,
-  sandboxHash: string
+  sandboxHash: string,
+  observer?: ManagedSessionObserver
 ): Effect.fn.Return<
   ManagedSession,
   ManagedSessionError,
@@ -99,6 +102,7 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
     stderr: "pipe",
     forceKillAfter: Duration.seconds(3),
   }).pipe(transportFailure("spawn"));
+  const process = yield* observeStartedManagedProcess(handle, observer);
   const stderrTail = yield* handle.stderr.pipe(collectStderr(profile));
   // Grok and Cursor pin ACP generation 1 and send a pure v1 `initialize`. Their managed paths call
   // methods that generation 2 removed: Grok `authenticate` with `cached_token`, Cursor
@@ -376,6 +380,7 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
   });
   yield* Effect.addFinalizer(() => close.pipe(Effect.ignore));
   return {
+    process,
     identity,
     events: Stream.fromPubSub(events),
     prompt: Effect.fn("ManagedSession.submit")(function* (message: ManagedSessionMessage) {

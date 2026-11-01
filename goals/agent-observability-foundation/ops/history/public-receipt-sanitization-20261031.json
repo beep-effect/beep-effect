@@ -1,0 +1,318 @@
+{
+  "kind": "public-receipt-sanitization",
+  "recordedAt": "2026-10-31",
+  "policy": "AGENTS.md public friction-receipt minimization",
+  "privateOriginalArchive": "~/.local/state/beep/observation-proof-archive/pr2364-resume-20261031-bz70bj4o/publication-originals",
+  "originalPreservation": {
+    "verifiedRelocationOriginals": 90,
+    "allOriginalHashesMatch": true,
+    "changedOriginalsRetained": 49
+  },
+  "changes": [
+    "Normalize operator home prefix to ~ in historical receipts and authored research.",
+    "Replace raw OOM/journal lines with minimal structured failure/resource facts; omit machine/session/process identities and unrelated workload locations.",
+    "Preserve measurements, error classifications, timestamps, source/event digests, synthetic event identities and explicit unknowns.",
+    "Pseudonymize per-user cgroup prefixes and agent-session scope identities in five resource/friction receipts; preserve same-vs-distinct scope relationships and measurements.",
+    "Omit historical admission, review-session and monitor run handles; retain original bytes privately. These identities are distinct from synthetic event identities and source hashes.",
+    "Pseudonymize six exact systemd invocation handles with explicit labels tied to their redacted session scopes, preserving relationships and resource facts."
+  ],
+  "proofBoundary": "Public derivatives are navigation and review evidence, not newly executed proofs. Existing private source-bound canary evidence remains unchanged. No production service, recovery hold, queue, protected telemetry archive or Git history was modified.",
+  "reviewerHold": "Correction awaits hold-holder disposition; this record does not release the hold.",
+  "entries": [
+    {
+      "path": "goals/agent-observability-foundation/ops/history/cli-audit-host-pressure-attribution.json",
+      "originalSha256": "e22268093adb6f2d630cd79de56efe9ffc20a75a106fb513323ace14eee40a2b",
+      "publicSha256": "3a5d3637ff13029f15a7dfec7d587d1dd88311a7b8bae55c362cb9709f9a8c0a",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/committed-source-binding-verification.json",
+      "originalSha256": "8699a3ee936967fbfad3170eae6f7e0d441b55f89dd385beefb7fefe92a621c6",
+      "publicSha256": "3e52edb1c6c12f725330406e3328dd2d865fc2d4501bcd4377d5864c68386909",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/credential-health-archive.json",
+      "originalSha256": "692e8298b470874e9c2acad5c02d90b74aea6fc048cc56d07f09cd79d40c6d7f",
+      "publicSha256": "42b25784ff3bf27a0d8ee3448f6d3578c42f5a0428fb1a1c8c44e46a39989de4",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/current-test-proof-20261031.json",
+      "originalSha256": "60c197db63b9cbe5523b54e04cef5275415d03e9a5559a524746b45c5b0035ff",
+      "publicSha256": "5cfad1b50f71f727d76288d6b51f00d8fbdc0ff5042b4f3d6d4ace6a41523acf",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/declared-canary-root-v3-preparation-verification.json",
+      "originalSha256": "9ec329286b73c3813d5a3bfdf47db63418f747d7b1a4e7f7f5b3fbbdd821d4d2",
+      "publicSha256": "e6b64667e67a62d86a1683bf247730ef2dcce9295aa37a83aedf94fbb1fe9140",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/declared-current-stages-20261031.json",
+      "originalSha256": "a0a44da36a71a73dc6f72676c0481c3ccf735272205e2a30dcff08df1eff825a",
+      "publicSha256": "5288f16909204674e66cb635df50b7080348cbedb0abdff02e3924b4dc2e2826",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/declared-route-stages-verification.json",
+      "originalSha256": "04ef3ad367713d1840fcb4a27b179b902343241a156e312ca1290902b442b60c",
+      "publicSha256": "8000b01387bd9a3c9740ed5d4dbb986092d527d3be5d66f10b34fe6ea6211fce",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-boundary-structure-verification.json",
+      "originalSha256": "450fbc237e144cabb77569fc02112e1084aa93fad327d23e57526e6934e8ad63",
+      "publicSha256": "0fa93a8e6d27afcbb6deab5ab332e4af214802f4311f986e4c3fed90f78e8a93",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-cache-base-sync-verification.json",
+      "originalSha256": "42dd364f02e259b693924e6a4808cdb097e9bb8fd5b950ca5a164e0ae227e307",
+      "publicSha256": "9f61a4f9041780dd54e328518629e609ddf23f6d7b36b0e6995ca8c35692cb11",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-client-readback-structure-verification.json",
+      "originalSha256": "c8ce78c5e4a75ddda764f4f0204a25af8fd9f243ae173b7b5bd994447215a488",
+      "publicSha256": "7ceb1e901500aa4bd8cd24151183463d90204b002cd99a7093736ac404bb19c1",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-collected-verification.json",
+      "originalSha256": "96023661126faeae73180646d46410f995eaf66c9b922040c00d08619dd6e6f8",
+      "publicSha256": "fcd1599b6a00b192a4d17ba0cc1e000c700ce9793aa8f7775d4201abf0415ecc",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-discovery-structure-verification.json",
+      "originalSha256": "56b3674798fb9ad8890eb65767278bffef2911cdd65f8a251f155b45019faac0",
+      "publicSha256": "3a6cc5390aa76ccdc755982a66ccf6977357873801bf9fb62e1098e71c8d60b5",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-guard-correction.json",
+      "originalSha256": "5ed610ee005439652518018cbbcafcc15cb0160667156794d8f671aa49123212",
+      "publicSha256": "b5cff0f1871f295717bb7954d14605826a14fcf10f1629b38daddf286cde3917",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-guard-sibling-verification.json",
+      "originalSha256": "5ae2917a74dc59365f44e0e191de7653006fb2595fc7465f71ab3d06d7406076",
+      "publicSha256": "52706b1f9d7ad3e89807c8e64383fee9870e410dac101c1aebdbc4eb38df20c8",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-http-intake-verification.json",
+      "originalSha256": "2a856d18fd2638232e0c5973c358ebc89d6b7e5d8ef80f957231bc3d2d00537c",
+      "publicSha256": "5ad4c39a85f2d323133002b6bfd73e8f1c4d907c7ba0da90e9a49f8d78d120ca",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-intake-boundaries-verification.json",
+      "originalSha256": "516166a7ffa03c939652eaefdbb789e128944a0aa9cc7d28eed7c0c6fe62af63",
+      "publicSha256": "691933a831d7cbfb3801a1e86f19d313337cbf8c872a9e6a8fd816edc99e6d27",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-ledger-launch-verification.json",
+      "originalSha256": "b36912e3fc77a0c69a2d323a48cdd36490bdfc1a14e19db6847b2673045905e7",
+      "publicSha256": "9f8857a40afb4201653c56cc8f1e40a9dd7f9ee9ac411ad7960fbc5b464d9fee",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-native-projection-verification.json",
+      "originalSha256": "58520ef0f9651443e5ad9a92d00c249bcd988023ba5a6ed9eb0cd8bd91c3d4b0",
+      "publicSha256": "33357a2fc9f1f61a3494ebda7dd77057c14ecadcb6dda935320065bae07c8856",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-owner-sentinel-verification.json",
+      "originalSha256": "cceb525701ffb114ef17425b3a493f1d16dca20111f2ab2e610e28e43675e9cf",
+      "publicSha256": "5607c6fc487b7480fc131be194e6e3390a7c53ff36799f92446b4417e82951dc",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-payload-runtime-verification.json",
+      "originalSha256": "6aa7f4001194725bf99d918229ba6634ebeecee89220c1167916921c27a77f9a",
+      "publicSha256": "1336222b4cd7ca5e04c0c081ff3090572a179d6b9f0c73cbed3eb0b79f9e85f5",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-policy-verification.json",
+      "originalSha256": "07a2c787ee5bb4cb0e7cd37cdfc871006797735ca3a3049c0d8f793523bb7027",
+      "publicSha256": "b6c69fa300ab1a35a94d542287fd1035cbdb71bc59ea3c752cbeb0c604d5528a",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-preflight-repair-verification.json",
+      "originalSha256": "d1bab429cab0ec9dd0734c2995413b675791ea40f04cd9c713972b3d7095dc52",
+      "publicSha256": "c3cb01164e8fbdf93c68deed7fc7ade8c2b0b42b2f4ee81899fb268676fa7879",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-preflight-verification.json",
+      "originalSha256": "b5c5cfdd424994541ef6f1a995e39b2a666f1a347b05786f8be9345996420eb4",
+      "publicSha256": "91c3b27257fde93759b0b983e4514347cc230ce49fd2fc62005e97b048042dd9",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-reader-readback-verification.json",
+      "originalSha256": "e969f9026f239a96930296cf60a9e4951979e8ade9ebc438c1a94d0c4c62b7f4",
+      "publicSha256": "cb379f9a312d1192011af2d4db780a1c45e8c5475e9f76e0c8d9ce35e06a677a",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-recovery-scheduler-verification.json",
+      "originalSha256": "9ec52db8eea4175447905c69147650aaee3fa875bb51d0a12f2c071edd284970",
+      "publicSha256": "c6769aeea67bca3164ae8e232c4c1a67aa1733af6d641346dabee20f62ae2299",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-retirement-verification.json",
+      "originalSha256": "261921459871b5fb48b75607fab6acc94ba514605fab3654c0a2d12ce3d06407",
+      "publicSha256": "09336dcad9d4efac201f0cfac66949757f79cf03dd014ac8bf25f409a6491b16",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-schema-policy-verification.json",
+      "originalSha256": "e3d1a92bed845145d9480a8911e7cddd6e1defa62f22185ffc22c2079eba8527",
+      "publicSha256": "8da6ce7147f346dbc2af4b700a72594f2aaa7624ae00f1ec4fec3dde8619f879",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-transcript-verification.json",
+      "originalSha256": "cbd446b09bc251279e0393d9e1dfd0b81602fe6bb25a9bf9809c4f86beade7cf",
+      "publicSha256": "d1dc3d762d135324475b85c981865f6aa941857a414823b0caaca6483c26b934",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/delivery-worker-qualification-verification.json",
+      "originalSha256": "350ddd7d04ea35b43019579a6554146d442c9983bb0487a74a1b0f49ea5615b9",
+      "publicSha256": "10fd176999dda43f3ed343d32f47496bc98b48d5a426151dab285849d6944d5f",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/forwarder-schema-compatibility.json",
+      "originalSha256": "65828e98b4ab1dda44179e487c032923f3a54c1ba97c293cb678f82fd2c25369",
+      "publicSha256": "eba0400b33a8f3ce9f5de487337b0dd8a6b955326d7cb744d7a4ba038e0d6dff",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/hosted-build-repair-verification.json",
+      "originalSha256": "cb4a4d51817fa64ef49ca61a621cb929e8e96f43702dc01e97680ac8cd9fd262",
+      "publicSha256": "115d6f6cf30eda5a9776a5474adc10026ed254add2f0e7069c1108224e432501",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/independent-health-archive.json",
+      "originalSha256": "5de71aa0dec1e772ce0a8e12ac1cb494da2430b66d9d03433abb6b5e6130b53c",
+      "publicSha256": "3cdd344b332b2a1bfb4113a3c250f0b52e3661aa9d212609c26842f77d1e4c82",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-1315.json",
+      "originalSha256": "9928e6c6cb38269fbd6f956c9ec37d5378572e2cce87ad0d5138c793affaea7d",
+      "publicSha256": "5e8720e4e69e64d1e10fa811e8f4f61e7893c2435607450bc958a9d03edbf04d",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-1552.json",
+      "originalSha256": "8790defb1ae921628f1d1b1a63bc657002d8b59af2a78cb3363d2d5e8e890557",
+      "publicSha256": "9a6db893ebdbb76310546f7bd406985d1f0564994e37f35a679fbcee61596005",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/memory-notification-followup-20261029-late.json",
+      "originalSha256": "b5153e9c0d0085b03adce160d70730f1cd5a5c31ec0db30a37d2e225557ffce7",
+      "publicSha256": "285428c66cf1403a3ab53ff7d3f3bd1c80b3fd23e5324ddbf766c98c1675e749",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/pr2364-hosted-followup-20261031.json",
+      "originalSha256": "72ab4d12b75d9736a8e4d30f9f4cc18b6efc6c558efa161b223cf1af66696ae5",
+      "publicSha256": "43dfdfecba1c04889a443505966da43498f8c3a59989ab26b727c01d0d970008",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/pr2364-repair-verification-20261031.json",
+      "originalSha256": "1a5eec8599794dfd6b37530055a801791c7c899f31637efa3a0019add899187e",
+      "publicSha256": "b5a4aab03bc99d62f40f2bbcae5a239d525bf9ec77c9c669ac11ed177df56910",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/publication-resource-fallback.json",
+      "originalSha256": "fa84e6efa014dc07effd51b21750ccc66a7d507a4a72d18370eb0f23a6d3dca7",
+      "publicSha256": "a710ec5c4c1a4605bd00fc52477996722faf8a0bd68a9dda9196b089acca0213",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/query-backoff-proof-archive.json",
+      "originalSha256": "edfe408078cd9f51ed10c8b679c691537c2a3a354b571c19b852e6bee4ed9e0a",
+      "publicSha256": "946c7e92350f73c1f20377c230d8b6e067871b3312fb5771f20cc83625e01328",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/receipt-relocation-20261031.json",
+      "originalSha256": "8b6fd79a5f9df92a9b802ad8fbd6b84926fe5f1908a407629720ad73238c91da",
+      "publicSha256": "349776803da9d201279049ce54458b83ce6c775f5eb42cfca0c1187b3663371a",
+      "representation": "historical-relocation-record-with-supersession-notice"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/retirement-proof-archive.json",
+      "originalSha256": "91b04c75917bb0c994c5a6b81d15b1f8aac762ac8c1f92c63b34fd5d512750f1",
+      "publicSha256": "80eaff8572142780e764aa575a506a1a8ca89db06cb434eb6a2cb202d861e1a1",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/review-panel-launches.json",
+      "originalSha256": "1d765504412142a9babad509ec3e2a89bb11578ba135f579e83d6fc3795370b5",
+      "publicSha256": "bdc956520fcb262c6e9f56c84206ecf1566b565ac3b6fc1702511fd86135a486",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/whole-cli-guard-race-verification.json",
+      "originalSha256": "ff3534fedbb925c1a20c61bbcc1b1a0642a8a0f549e3e29536a0f8f0625163f1",
+      "publicSha256": "f7a8326c59cf8acde8a35f7b6f62e3cf01f88dae4a5077bd16e624322e178b84",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/whole-cli-timeout-attribution.json",
+      "originalSha256": "2e6fb3e479713b3d1414e29e473be8532ea8d8bb44d504c0760a04686030ee7a",
+      "publicSha256": "aca08acca3eeecb934adf1492540b7611097640875d70170e0fbb365918cff60",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/worker-resource-controlled-stop-verification.json",
+      "originalSha256": "3e04791fc06770ab348a25eb616adeb0b6e831acf5a09a4ca3a69a623ba7aed2",
+      "publicSha256": "49d03b711c19ba2e941d06a0b9df7afed73455f6cb35af4d4e71947aa996bbb0",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/worker-scheduled-resource-verification.json",
+      "originalSha256": "b95c156531b66e0118b5365af5f2899dc4f350304257e30eb663df20aa1b4087",
+      "publicSha256": "facf4195553608c5548c909f3dc4e696ef667d3cfec034f1117567104762dff3",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/ops/history/yeet-attribution-delivery.json",
+      "originalSha256": "8a41385248c2b735c3dfdb81fb0fdf46888bc6f2a6d3babe5fa77b888c31fc0a",
+      "publicSha256": "1a8730a1487971dc438e297860acedb2c5bd723a66a2f1b9b01d67cc5b980642",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/research/MEMORY-NOTIFICATION-INVESTIGATION.md",
+      "originalSha256": "823cf89dca6066266fe757cde3c7784ad36dddaa5f02539c4f55fab1349b695b",
+      "publicSha256": "bac3858d98084166e09db6272a451415cc93f3e6d6f516ed4bdf059da1f6c387",
+      "representation": "sanitized-derivative"
+    },
+    {
+      "path": "goals/agent-observability-foundation/research/review-panel-astra.md",
+      "originalSha256": "59fba78fc53fd74724819ba9d8d96d4bf5a1b11f21a45fadc4a51498ceacef23",
+      "publicSha256": "c23e6343bb269d767f0ece17c184ce997bfb9eb4993c6c00eab0c8a41fb01f17",
+      "representation": "sanitized-derivative"
+    }
+  ],
+  "identityLabelPolicy": "Bracketed session labels and cgroup markers are redaction pseudonyms, not literal executable service identities; labels are consistent across this correction."
+}

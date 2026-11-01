@@ -1,0 +1,31 @@
+{
+  "result": "passed",
+  "focusedProjectionTests": 19,
+  "focusedReadbackTests": 8,
+  "backendReceipt": "surface-rounded-recovery-verification.json",
+  "backendNativeFixtureRemainderNanoseconds": 870,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/native-trace.ts": "7893fc7617b525d438a0161075994836810fb3151518b002bd2a21eac2379c4c",
+    "packages/tooling/library/ai-metrics/src/native-export.ts": "69114c19cf1a313b1e4db29c6c367d73dc613c0f5f5540c107831af466139551",
+    "packages/tooling/library/ai-metrics/src/native-http.ts": "2b377713771e5ccb8168e73f74518c7dfd5a0113af2e1ba7529894ba9fc95114",
+    "packages/tooling/library/ai-metrics/src/native-readback.ts": "a813c80509f30727e0776d60df24a3dd00ab514b91290a0fdde7517d65307b79",
+    "packages/tooling/library/ai-metrics/src/observation-launch.ts": "9940f6311a60366ea2cd9d2c13a3e55561deaf67632cb202342c37cb2707600d",
+    "packages/tooling/library/ai-metrics/test/native-trace.test.ts": "4e8fef5be5533b6c6bd51cbae10d27299e006cd50ea3fc3ecebf92ea131292f7",
+    "packages/tooling/library/ai-metrics/test/native-export.test.ts": "e1273775c769d0a376507c81947a552cc418530a630533e5ed871cad7a6eb90c",
+    "packages/tooling/library/ai-metrics/test/native-readback.test.ts": "6efcd6105cc17702a32d14b72e46b1ddbaef79ce1cac89ba2d9e5b0886e77472",
+    "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts": "7abb10d7abf18d3b8d8df04483eede6748e87382643262eef0b013b1a1febba4",
+    "goals/agent-observability-foundation/ops/verify-native-collector-route.py": "3cb3444d9c2c354eb0c4dd223bc671ca7747430fce83a5e464f3f2727f7686a2",
+    "goals/agent-observability-foundation/ops/verify-phoenix-native-proof.py": "5f49564366417203a87d84249e335cc97b8971f0f43bc6aa31df561ba9f3d34a",
+    "goals/agent-observability-foundation/ops/live_canary_support.py": "cb14b4f17f386252848f84c25efad37f7671664f092d0269c54cf303042334df"
+  },
+  "dankserverSourceSha256": {
+    "ansible/roles/monitoring/templates/otel-config.yaml.j2": "3fc0c430c00ba2b0261a67f67fec8fa55d3d5a040004b8f7f6baa24900ef91ac",
+    "ansible/roles/monitoring/tests/test_otel_config.py": "42697fc5cdc412031c51ace7d2d07afdb5b153a32b17c5d2c18b63939a990a6e"
+  },
+  "collectorRenderAndActualImageTests": {
+    "passed": 2,
+    "command": "FOUNDATION_OTEL_INTEGRATION=1 /usr/bin/python -m unittest discover -s ansible/roles/monitoring/tests -p test_otel_config.py -v"
+  },
+  "productionCollectorChanged": false,
+  "goalComplete": false
+}
