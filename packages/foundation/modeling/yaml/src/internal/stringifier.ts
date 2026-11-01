@@ -307,16 +307,47 @@ const TIMESTAMP_11_RE =
 
 /**
  * Returns true if a string value would be resolved as a non-string type by a
- * YAML 1.1 parser. The delta over {@link wouldBeResolved}: null spellings are
- * identical in both editions (and already covered), so only the boolean,
- * integer, float and timestamp families are tested here.
+ * YAML 1.1 parser.
+ *
+ * **Details**
+ *
+ * The delta over the YAML 1.2 Core Schema patterns: null spellings are
+ * identical in both editions (and already covered there), so only the
+ * boolean, integer, float and timestamp families are tested here.
+ *
+ * **Example** (Spot YAML 1.1 coercions)
+ *
+ * ```ts
+ * import { wouldBeResolved11 } from "@beep/yaml/internal/stringifier"
+ *
+ * console.log(wouldBeResolved11("on"), wouldBeResolved11("1:30"), wouldBeResolved11("redis")) // true true false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
-function wouldBeResolved11(s: string): boolean {
+export function wouldBeResolved11(s: string): boolean {
   return matchesAny(YAML_11_RES, s);
 }
 
+// The reference `yaml` package's 1.1-schema float and sexagesimal patterns,
+// looser than the spec's in three places the patterns above do not cover: the
+// integer part is optional (a lone `.`, `+.`, `._` and a dotless exponent like
+// `e5` or `.e5` all resolve to floats), and a sexagesimal number may start
+// with `0` (`0:30`). Kept verbatim so the union stays a superset of the
+// reference reader.
+const FLOAT_11_REFERENCE_RE = /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$|^[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*$/;
+const SEXAGESIMAL_11_REFERENCE_RE = /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+(?:\.[0-9_]*)?$/;
+
 /** The YAML 1.1 implicit-resolver delta patterns, in test order. */
-const YAML_11_RES: ReadonlyArray<RegExp> = [BOOL_11_RE, INT_11_RE, FLOAT_11_RE, TIMESTAMP_11_RE];
+const YAML_11_RES: ReadonlyArray<RegExp> = [
+  BOOL_11_RE,
+  INT_11_RE,
+  FLOAT_11_RE,
+  FLOAT_11_REFERENCE_RE,
+  SEXAGESIMAL_11_REFERENCE_RE,
+  TIMESTAMP_11_RE,
+];
 
 /**
  * Returns true if a string requires quoting to be safely represented as a plain scalar.

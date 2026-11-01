@@ -27,7 +27,7 @@ import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import { dual, pipe } from "effect/Function";
+import { dual, identity, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -48,12 +48,14 @@ import {
   stringifyDocument,
   stringifyValue,
   stripNodeComments,
+  wouldBeResolved11,
 } from "./internal/stringifier.ts";
 import { YamlStringifyOptions } from "./Yaml.ts";
 import { YamlDiagnostic } from "./YamlDiagnostic.ts";
 import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
+import type { RawDirective } from "./internal/raw-document.ts";
 import type { YamlPath } from "./YamlEdit.ts";
 import type { QuoteStyle, YamlNode } from "./YamlNode.ts";
 
@@ -1136,6 +1138,160 @@ const bodyAfterPrologue = (doc: RawYamlDocument, contents: YamlNode | null): Raw
   return { ...framing, contents, hasDocumentStart: false, hasDocumentStartTab: false };
 };
 
+// ── modify: declared YAML version ────────────────────────────────────
+
+/** The version a `%YAML` directive declares, or none without one. */
+const declaredYamlVersion = (directives: ReadonlyArray<RawDirective>): O.Option<string> =>
+  pipe(
+    A.findFirst(directives, (directive) => directive.name === "YAML"),
+    O.flatMap((directive) => A.head(directive.parameters))
+  );
+
+/**
+ * Whether `scalar` is a fresh plain string — synthesized by the lowering,
+ * so its span is empty and it carries no tag — that a YAML 1.1 reader would
+ * resolve to a non-string (`on`, `yes`, `0777`, `1:30`, `2026-10-31`), or
+ * the `<<` a 1.1 reader takes for a merge key.
+ */
+const isCoercedFreshScalar11 = (scalar: YamlScalar): boolean =>
+  scalar.length === 0 &&
+  scalar.tag === undefined &&
+  scalar.style === "plain" &&
+  P.isString(scalar.value) &&
+  (scalar.value === "<<" || wouldBeResolved11(scalar.value));
+
+/** `scalar` quoted per `quoteStyle` when a YAML 1.1 reader would coerce it, otherwise unchanged. */
+const quoteFreshScalar11 = (scalar: YamlScalar, quoteStyle: QuoteStyle): YamlScalar =>
+  isCoercedFreshScalar11(scalar)
+    ? YamlScalar.make({
+        value: scalar.value,
+        style: fallbackQuoteStyle(`${scalar.value}`, quoteStyle) === "double" ? "double-quoted" : "single-quoted",
+        ...definedFields({ anchor: scalar.anchor }),
+        offset: scalar.offset,
+        length: scalar.length,
+      })
+    : scalar;
+
+/**
+ * Give every fresh scalar under `node` (values and mapping keys) that a
+ * YAML 1.1 reader would coerce an explicit quoted style, so the document
+ * written under a `%YAML 1.1` directive reads back the strings the caller
+ * wrote. Source nodes, which have real spans, are left alone.
+ */
+const quoteFreshYaml11 = (node: YamlNode, quoteStyle: QuoteStyle): YamlNode =>
+  Match.valueTags(node, {
+    YamlScalar: (scalar) => quoteFreshScalar11(scalar, quoteStyle),
+    YamlSeq: (seq) =>
+      rebuildSeq(
+        seq,
+        A.map(seq.items, (item) => quoteFreshYaml11(item, quoteStyle))
+      ),
+    YamlMap: (map) =>
+      rebuildMap(
+        map,
+        A.map(map.items, (pair) =>
+          YamlPair.make({
+            key: quoteFreshYaml11(pair.key, quoteStyle),
+            value: pair.value === null ? null : quoteFreshYaml11(pair.value, quoteStyle),
+          })
+        )
+      ),
+    YamlAlias: identity,
+  });
+
+// ── modify: whole-document pipeline ──────────────────────────────────
+
+/** A typed `modify` refusal carrying one diagnostic at the start of `text`. */
+const modifyRefusal = (
+  text: string,
+  index: ReturnType<typeof YamlDiagnostic.positionIndex>,
+  path: YamlPath,
+  code: "UnsupportedYamlVersion" | "DirectiveCarryingDocument",
+  message: string
+): YamlModificationError =>
+  YamlModificationError.make({
+    path: echoErrorPath(path),
+    diagnostics: [YamlDiagnostic.fromRaw({ code, message, offset: 0, length: 0 }, text, index)],
+  });
+
+/** The inputs of {@link rewriteWholeDocument}: the composed source and the requested edit. */
+type WholeDocumentEdit = {
+  readonly text: string;
+  readonly index: ReturnType<typeof YamlDiagnostic.positionIndex>;
+  readonly doc: RawYamlDocument;
+  readonly path: YamlPath;
+  readonly value: unknown;
+  readonly options: YamlStringifyOptions | undefined;
+  readonly yaml11: boolean;
+};
+
+/**
+ * The whole-document `modify` pipeline: apply the edit to the composed AST,
+ * re-stringify, and diff against the source. Directives are not rendered:
+ * the source's directive prologue is kept verbatim and the body rendered
+ * after it. Under `%YAML 1.1` only the fresh nodes take the 1.1 quoting, so
+ * a source plain `on` keeps its bytes, and with them its meaning to a 1.1
+ * reader.
+ */
+const rewriteWholeDocument = Effect.fnUntraced(function* ({
+  text,
+  index,
+  doc,
+  path,
+  value,
+  options,
+  yaml11,
+}: WholeDocumentEdit) {
+  const prologue = A.isReadonlyArrayEmpty(doc.directives) ? "" : directivePrologue(text);
+  if (prologue === undefined) {
+    return yield* modifyRefusal(
+      text,
+      index,
+      path,
+      "DirectiveCarryingDocument",
+      "Cannot modify a document whose directive-ending --- line carries content: modify keeps the %YAML/%TAG prologue verbatim only up to a bare --- marker, and dropping a %TAG orphans the shorthand tags that depend on it"
+    );
+  }
+
+  const newContents = yield* Effect.try({
+    try: () => modifyDocument(doc, path, value),
+    catch: (err) => {
+      if (!isModifyFailure(err)) throw err;
+      return YamlModificationError.make({
+        path: echoErrorPath(path),
+        diagnostics: [
+          YamlDiagnostic.fromRaw(
+            { code: err.code, message: err.message, offset: err.offset, length: err.length },
+            text,
+            index
+          ),
+        ],
+      });
+    },
+  });
+
+  const contents =
+    yaml11 && newContents !== null ? quoteFreshYaml11(newContents, options?.quoteStyle ?? "single") : newContents;
+  const outputDoc = prologue === "" ? { ...doc, contents } : bodyAfterPrologue(doc, contents);
+  const formatted = yield* Effect.try({
+    try: () => `${prologue}${stringifyDocument(outputDoc, StringifyOptionsInput.fromOptions(options))}`,
+    catch: (defect) => {
+      if (!isStringifyDepthExceeded(defect)) throw defect;
+      return YamlModificationError.make({
+        path: echoErrorPath(path),
+        diagnostics: [
+          YamlDiagnostic.fromRaw(
+            { code: "NestingDepthExceeded", message: defect.message, offset: 0, length: 0 },
+            text,
+            index
+          ),
+        ],
+      });
+    },
+  });
+  return A.map(computeEdits(text, withSourceBom(text, formatted)), (e) => YamlEdit.make(e));
+});
+
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
@@ -1348,7 +1504,7 @@ export class YamlFormat {
    * caller's value and renders as a single line; a no-op replacement yields
    * no edits. Anything else — removals (`value === undefined`), nulls,
    * insertions, object/array values, block or multi-line scalars, tagged
-   * targets, or any document-shaping / explicit-style option
+   * targets, aliases, or any document-shaping / explicit-style option
    * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
    * `indentSequences`, `finalNewline`) — falls back to re-serialising the
    * whole document, which normalises line endings to LF, applies those
@@ -1382,6 +1538,14 @@ export class YamlFormat {
    * split from the prologue and the pipeline fails with
    * {@link YamlModificationError} carrying a `DirectiveCarryingDocument`
    * diagnostic. A literal `%TAG` inside a scalar is content, not a directive.
+   *
+   * **The declared YAML version governs fresh quoting.** modify writes YAML
+   * 1.2. Under a `%YAML 1.1` directive it also quotes every string it writes
+   * that a YAML 1.1 reader would resolve to a non-string (`on`, `yes`,
+   * `0777`, `1:30`, a date), on the splice and the whole-document path alike
+   * and for inserted keys too, while source scalars keep their bytes. Any
+   * other declared version fails with an `UnsupportedYamlVersion` diagnostic
+   * rather than guessing its resolution rules.
    *
    * `options` is a bare {@link YamlStringifyOptions} — it controls only the
    * internal re-stringify step, not a range (there is no range to restrict
@@ -1456,73 +1620,38 @@ export class YamlFormat {
           diagnostics: YamlDiagnostic.fromRawBatch(fatal, text, index),
         });
       }
+      // modify writes YAML 1.2; a `%YAML 1.1` document also needs every fresh
+      // string a 1.1 reader would coerce quoted, and any other declared
+      // version has no known resolution rules to write against.
+      const version = declaredYamlVersion(doc.directives);
+      if (O.isSome(version) && version.value !== "1.1" && version.value !== "1.2") {
+        return yield* modifyRefusal(
+          text,
+          index,
+          path,
+          "UnsupportedYamlVersion",
+          `Cannot modify a %YAML ${version.value} document: modify writes YAML 1.2, and YAML 1.1 under a %YAML 1.1 directive`
+        );
+      }
+      const yaml11 = O.contains(version, "1.1");
+
       // Region-confined scalar replacement: when the target is an
       // existing single-line untagged scalar and the value is scalar-shaped,
       // splice just its span — quote style preserved, CRLFs and every other
       // byte outside the span untouched. Any precondition miss falls through
-      // to the whole-document pipeline below, unchanged.
-      const regional = tryRegionalScalarEdit(text, doc, path, value, options);
+      // to the whole-document pipeline, unchanged. The splice renders only
+      // the fresh value, so the 1.1 quoting rules apply to all of it.
+      const regional = tryRegionalScalarEdit(
+        text,
+        doc,
+        path,
+        value,
+        yaml11 ? YamlStringifyOptions.make({ ...options, quoteCompat: "yaml-1.1" }) : options
+      );
       if (regional !== undefined) {
         return A.map(regional, (e) => YamlEdit.make(e));
       }
-
-      // The whole-document pipeline does not render directives: it keeps the
-      // source's directive prologue verbatim and renders the body after it.
-      const prologue = A.isReadonlyArrayEmpty(doc.directives) ? "" : directivePrologue(text);
-      if (prologue === undefined) {
-        return yield* YamlModificationError.make({
-          path: echoErrorPath(path),
-          diagnostics: [
-            YamlDiagnostic.fromRaw(
-              {
-                code: "DirectiveCarryingDocument",
-                message:
-                  "Cannot modify a document whose directive-ending --- line carries content: modify keeps the %YAML/%TAG prologue verbatim only up to a bare --- marker, and dropping a %TAG orphans the shorthand tags that depend on it",
-                offset: 0,
-                length: 0,
-              },
-              text,
-              index
-            ),
-          ],
-        });
-      }
-
-      const newContents = yield* Effect.try({
-        try: () => modifyDocument(doc, path, value),
-        catch: (err) => {
-          if (!isModifyFailure(err)) throw err;
-          return YamlModificationError.make({
-            path: echoErrorPath(path),
-            diagnostics: [
-              YamlDiagnostic.fromRaw(
-                { code: err.code, message: err.message, offset: err.offset, length: err.length },
-                text,
-                index
-              ),
-            ],
-          });
-        },
-      });
-
-      const outputDoc = prologue === "" ? { ...doc, contents: newContents } : bodyAfterPrologue(doc, newContents);
-      const formatted = yield* Effect.try({
-        try: () => `${prologue}${stringifyDocument(outputDoc, StringifyOptionsInput.fromOptions(options))}`,
-        catch: (defect) => {
-          if (!isStringifyDepthExceeded(defect)) throw defect;
-          return YamlModificationError.make({
-            path: echoErrorPath(path),
-            diagnostics: [
-              YamlDiagnostic.fromRaw(
-                { code: "NestingDepthExceeded", message: defect.message, offset: 0, length: 0 },
-                text,
-                index
-              ),
-            ],
-          });
-        },
-      });
-      return A.map(computeEdits(text, withSourceBom(text, formatted)), (e) => YamlEdit.make(e));
+      return yield* rewriteWholeDocument({ text, index, doc, path, value, options, yaml11 });
     })
   );
 

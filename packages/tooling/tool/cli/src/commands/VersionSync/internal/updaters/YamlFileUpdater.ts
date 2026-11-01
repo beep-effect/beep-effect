@@ -111,7 +111,7 @@ type UpdateYamlValueOptions = {
  *
  * An existing single-line scalar is spliced in place: only its bytes change.
  * When the kit cannot splice (the key is missing, so the edit is an
- * insertion; or the target is a block, multi-line, tagged or anchored scalar,
+ * insertion; or the target is a block, multi-line or tagged scalar, an alias,
  * or a collection), the whole document is re-serialized in the `yaml` npm
  * layout: sequences indented under their key, quotes chosen per value.
  * Comments survive both paths, and an anchored target keeps its anchor, so an

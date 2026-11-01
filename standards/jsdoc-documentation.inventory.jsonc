@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T05:48:57.997Z",
+  "generatedAt": "2026-11-01T06:33:31.725Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -71128,8 +71128,8 @@
           "exportKind": "type",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 94,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-94-yamlrangelike",
+          "line": 96,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-96-yamlrangelike",
           "currentTags": [
             "@public",
             "@category",
@@ -71151,8 +71151,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 142,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-142-yamlformattingoptions",
+          "line": 144,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-144-yamlformattingoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -71174,8 +71174,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 247,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-247-yamlmodificationerror",
+          "line": 249,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-249-yamlmodificationerror",
           "currentTags": [
             "@public",
             "@category",
@@ -71197,8 +71197,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 1193,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1193-yamlformat",
+          "line": 1349,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1349-yamlformat",
           "currentTags": [
             "@public",
             "@category",
