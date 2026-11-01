@@ -1154,6 +1154,36 @@ export type RunCapturedStreamsOptions = SpawnFields & {
   readonly trim?: boolean | undefined;
 };
 
+// Spawns an admitted child with piped stdout and stderr and drains both under
+// the shared pipe deadline: stdout through the caller's collector, stderr into
+// bounded text, alongside the exit code.
+const runPipedChild = <A>(
+  options: SpawnFields & { readonly command: string; readonly args: ReadonlyArray<string> },
+  collectStdout: (
+    stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>
+  ) => Effect.Effect<A, PlatformError.PlatformError>,
+  stderrBound: OutputBound | undefined
+) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* makeAdmittedChild(options, {
+        stdin: options.stdin ?? "ignore",
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
+      const [stdout, stderr, exitCode] = yield* Effect.all(
+        [
+          collectStdout(handle.stdout.pipe(Stream.interruptWhen(deadline))),
+          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), stderrBound, false),
+          handle.exitCode,
+        ],
+        { concurrency: "unbounded" }
+      );
+      return { stdout, stderr, exitCode };
+    })
+  );
+
 /**
  * Spawn a command and capture stdout and stderr as separate strings.
  *
@@ -1191,38 +1221,17 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* makeAdmittedChild(options, {
-        stdin: options.stdin ?? "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [
-          foldDecodedText(
-            decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)),
-            options.stdoutBound ?? options.bound,
-            false
-          ),
-          foldDecodedText(
-            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
-            options.stderrBound ?? options.bound,
-            false
-          ),
-          handle.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      return CapturedStreams.make({
-        exitCode,
-        stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
-        stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
-        truncated: stdout.truncated || stderr.truncated,
-      });
-    })
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    (stream) => foldDecodedText(decodedText(stream), options.stdoutBound ?? options.bound, false),
+    options.stderrBound ?? options.bound
   );
+  return CapturedStreams.make({
+    exitCode,
+    stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
+    stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
+    truncated: stdout.truncated || stderr.truncated,
+  });
 });
 
 /**
@@ -1313,29 +1322,12 @@ export const runFoldedStdout = Effect.fn("StepExec.runFoldedStdout")(function* (
   PlatformError.PlatformError | AdmissionWorkloadRegistrationError,
   Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* makeAdmittedChild(options, {
-        stdin: options.stdin ?? "ignore",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
-      const [value, stderr, exitCode] = yield* Effect.all(
-        [
-          options.fold(handle.stdout.pipe(Stream.interruptWhen(deadline))),
-          foldDecodedText(
-            decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)),
-            options.stderrBound ?? repoRunOutputBound,
-            false
-          ),
-          handle.exitCode,
-        ],
-        { concurrency: "unbounded" }
-      );
-      return FoldedStdout.make({ exitCode, value, stderr: stderr.text, truncated: stderr.truncated });
-    })
+  const { stdout, stderr, exitCode } = yield* runPipedChild(
+    options,
+    options.fold,
+    options.stderrBound ?? repoRunOutputBound
   );
+  return FoldedStdout.make({ exitCode, value: stdout, stderr: stderr.text, truncated: stderr.truncated });
 });
 
 /**
