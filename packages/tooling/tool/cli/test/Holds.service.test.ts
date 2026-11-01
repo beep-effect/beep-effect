@@ -649,6 +649,34 @@ layer(layerFor({ "hold-ledger/claims.jsonl": `${expiredClaim}\n` }), { timeout: 
   }
 );
 
+layer(
+  layerFor({
+    "hold-ledger/claims.jsonl": `${A.join(
+      [
+        jsdomHold,
+        holdLine({
+          holdId: "jsdom-hold",
+          packageName: "jsdom",
+          anchors: '[{"_tag":"CatalogEntry","packageName":"jsdom"}]',
+          falsifier: judgement,
+          version: 2,
+          supersedes: "jsdom-hold@1",
+          review: '{"_tag":"Retracted","reason":"Exit done in the unpin PR.","at":0}',
+        }),
+      ],
+      "\n"
+    )}\n`,
+    "hold-ledger/runs.jsonl": "{not a run\n",
+  }),
+  { timeout: "30 seconds" }
+)("explaining a retired hold with damaged run history", (it) => {
+  it.effect("still shows why the hold ended", () =>
+    Effect.map(runHoldsWhy("jsdom"), (lines) =>
+      expect(lines[0]).toBe("[holds] jsdom-hold (override, jsdom): tombstoned 1970-01-01: Exit done in the unpin PR.")
+    )
+  );
+});
+
 describe("holdsPlatformError", () => {
   it("keeps the platform message after the context", () => {
     const error = holdsPlatformError("Could not read the ledger")(

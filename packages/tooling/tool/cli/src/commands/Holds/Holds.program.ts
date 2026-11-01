@@ -458,14 +458,14 @@ const falsifierText = (version: HoldClaimVersion): string =>
 const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, versionCount: number) {
   const ledger = yield* HoldLedger;
   const proposition = head.proposition;
-  const runs = yield* ledger.runsFor(head);
-  // Same liveness as `liveHoldVersions`: an expired, unretracted head is not live either.
+  // Same liveness as `liveHoldVersions`; only a live head reads probe runs, so damaged run history cannot hide a retirement.
   const status =
     head.review._tag === "Retracted"
       ? `tombstoned ${head.review.at.pipe(DateTime.formatIso, Str.slice(0, 10))}: ${head.review.reason}`
-      : O.match(head.knowledge.expiredAt, {
-          onSome: (at) => `expired ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}, not live`,
-          onNone: () => `live, ${leaseText(head)}, confirmed ${confirmHoldRuns(runs)}`,
+      : yield* O.match(head.knowledge.expiredAt, {
+          onSome: (at) => Effect.succeed(`expired ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}, not live`),
+          onNone: () =>
+            Effect.map(ledger.runsFor(head), (runs) => `live, ${leaseText(head)}, confirmed ${confirmHoldRuns(runs)}`),
         });
   return [
     `[holds] ${proposition.holdId} (${proposition.kind}, ${A.join(proposition.subject.packages, ", ")}): ${status}`,
