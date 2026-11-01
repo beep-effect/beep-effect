@@ -1,17 +1,5 @@
 import { $RepoCliId } from "@beep/identity/packages";
-import { PacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/Migration.schemas";
-import { applyPacketGenesisSeed } from "@beep/repo-cli/commands/Goals/Migration/PacketMutation";
-import {
-  PacketEvent,
-  PacketEventStore,
-  PacketEventStoreLive,
-  PacketForkRepairApplier,
-  PacketForkRepairApplierLive,
-  PacketStreamLocator,
-  packetEventDigest,
-  packetEventFileName,
-  renderPacketEventFile,
-} from "@beep/repo-cli/test/Goals";
+import { PacketEvent, PacketEventStore, PacketEventStoreLive, PacketStreamLocator } from "@beep/repo-cli/test/Goals";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { BunRuntime } from "@effect/platform-bun";
 import { NodeServices } from "@effect/platform-node";
@@ -30,15 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("test/fixtures/packet-core/concurrent-writer");
-const PausePoint = LiteralKit([
-  "none",
-  "afterRead",
-  "beforePublish",
-  "afterPublish",
-  "beforeGenesisPublish",
-  "afterGenesisPublish",
-  "afterForkBackup",
-]).pipe(
+const PausePoint = LiteralKit(["none", "afterRead", "beforePublish", "afterPublish"]).pipe(
   $I.annoteSchema("PausePoint", {
     description: "Real filesystem boundary at which a packet writer waits for its test parent.",
   })
@@ -71,42 +51,12 @@ const main = Effect.gen(function* () {
       if (publishesEvent && PausePoint.is.beforePublish(pausePoint)) {
         yield* pause();
       }
-      if (Eq.equals(target, eventsPath) && PausePoint.is.beforeGenesisPublish(pausePoint)) yield* pause();
       yield* fs.rename(source, target);
-      if (Eq.equals(source, eventsPath) && PausePoint.is.afterForkBackup(pausePoint)) yield* pause();
-      if (Eq.equals(target, eventsPath) && PausePoint.is.afterGenesisPublish(pausePoint)) yield* pause();
       if (publishesEvent && PausePoint.is.afterPublish(pausePoint)) {
         yield* pause();
       }
     }),
   });
-
-  if (PausePoint.is.afterForkBackup(pausePoint)) {
-    const applier = Context.get(
-      yield* Layer.build(PacketForkRepairApplierLive.pipe(Layer.provide(PacketEventStoreLive))).pipe(
-        Effect.provideService(FileSystem.FileSystem, pausedFs)
-      ),
-      PacketForkRepairApplier
-    );
-    yield* applier.apply(PacketStreamLocator.make({ packet: event.packet, root: event.root, packetPath }));
-    yield* Console.log("COMMITTED");
-    return;
-  }
-
-  if (PausePoint.is.beforeGenesisPublish(pausePoint) || PausePoint.is.afterGenesisPublish(pausePoint)) {
-    yield* applyPacketGenesisSeed(
-      PacketGenesisSeed.make({
-        slug: event.packet,
-        eventsDirectory: eventsPath,
-        eventFileName: packetEventFileName(event, yield* packetEventDigest(event)),
-        eventText: yield* renderPacketEventFile(event),
-        tracePath: path.join(packetPath, "ops", "trace.json"),
-        traceText: "{}\n",
-      })
-    ).pipe(Effect.provideService(FileSystem.FileSystem, pausedFs));
-    yield* Console.log("COMMITTED");
-    return;
-  }
 
   const store = Context.get(
     yield* Layer.build(PacketEventStoreLive).pipe(Effect.provideService(FileSystem.FileSystem, pausedFs)),

@@ -229,7 +229,6 @@ const seedBindings: ReadonlyArray<ModelBinding> = [
   binding("cursor.review", "cursor-seat", "claude-opus-5-5-high", O.none(), ["claude-opus-5-thinking-high"]),
   binding("cursor.mechanical", "cursor-seat", "composer-2.5", O.none()),
   binding("qa.judge", "claude-code", "claude-opus-5-5", O.none(), [], opusChildren),
-  binding("jsdoc.migrate-titles", "grok-cli", "grok-4.7", O.none(), ["grok-4.6", "grok-4.5"]),
   binding("deprecated.routable", "proxy-workflow", "gpt-daybreak-blue-latest", O.none()),
 ];
 
@@ -321,20 +320,6 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   target("repo.skills.oracle", "repo", ".claude/skills/oracle/SKILL.md", false, [
     block("codex-heavy", onlyRoles(["codex.heavy"]), false),
   ]),
-  target(
-    "repo.code.jsdoc-migrate-titles",
-    "repo",
-    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts",
-    false,
-    [
-      {
-        _tag: "ts-literal",
-        binding: at("jsdoc.migrate-titles", "grok-cli", "model"),
-        render: verbatim,
-        symbol: "defaultJSDocMigrateTitlesModel",
-      },
-    ]
-  ),
 
   // ── Home doctrine (R7 + home sweep) ───────────────────────────────────────
   target("home.claude.doctrine", "home", "$HOME/.claude/CLAUDE.md", true, [
@@ -481,7 +466,6 @@ const seedTargets: ReadonlyArray<ModelSyncTarget> = [
   exampleModels("repo.examples.qa-render", "Qa/Qa.render.ts", "qa.judge", "claude-code"),
   exampleModels("repo.examples.yeet-provenance", "Yeet/internal/Provenance.ts", "codex.heavy", "codex-plugin"),
   exampleModels("repo.examples.yeet-resume", "Yeet/internal/Resume.ts", "codex.heavy", "codex-plugin"),
-  exampleModels("repo.examples.docgen-worker", "Docgen/internal/QualityWorkerEval.ts", "codex.heavy", "codex-plugin"),
   target("repo.code.qa-judge-pack", "repo", "packages/tooling/tool/cli/src/commands/Qa/JudgePack.ts", false, [
     {
       _tag: "line-value",

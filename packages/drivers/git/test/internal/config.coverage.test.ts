@@ -131,8 +131,8 @@ describe("git config scanner boundary coverage", () => {
   it.effect("rejects subsection escapes ending at EOF, LF or CR and recovers at the next header", () =>
     Effect.gen(function* () {
       for (const suffix of ["", "\n", "\r\n"]) {
-        const malformed = '[remote "origin\\' + suffix;
-        const text = suffix === "" ? malformed : malformed + "[core]\nbare\n";
+        const malformed = `[remote "origin\\${suffix}`;
+        const text = suffix === "" ? malformed : `${malformed}[core]\nbare\n`;
         const parsed = scan(text);
         assert.deepStrictEqual(parsed.diagnostics, [
           RawDiagnostic.make({
