@@ -1,11 +1,11 @@
 {
-  "previous": "eb9d388c021f53ce50f5fb3725bedd86478fa732057f16345db6da53073f1900",
+  "previous": "d71a187f4ce9c9da50ea08a185ac700d78d51df5529b3b1487a2b3ac54ff582f",
   "review": {
     "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R4, refactor/yaml-out-of-repo-cli)",
     "reason": "Record the R4 manifest edit that drops the npm yaml dependency from @beep/repo-ai-metrics and adds the @beep/yaml workspace dependency (compose.ts renders through the kit); the turbo coupling is measured in the review; no qualification is granted.",
     "basis": {
       "path": "goals/effected-promotion/research/cache-baseline-review-r4.md",
-      "sha256": "a4049db126e3ccd017cd871670e5ffab6b5527634ab4466f459fd14e89961316"
+      "sha256": "31974755f50e99301f06881fdedc498ab837ca6a7b842ef210aa109f5f771af7"
     }
   },
   "scope": [

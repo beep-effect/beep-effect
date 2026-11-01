@@ -1134,7 +1134,7 @@
       "reason": "Record the R4 manifest edit that drops the npm yaml dependency from @beep/repo-ai-metrics and adds the @beep/yaml workspace dependency (compose.ts renders through the kit); the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
         "path": "goals/effected-promotion/research/cache-baseline-review-r4.md",
-        "sha256": "a4049db126e3ccd017cd871670e5ffab6b5527634ab4466f459fd14e89961316"
+        "sha256": "31974755f50e99301f06881fdedc498ab837ca6a7b842ef210aa109f5f771af7"
       }
     },
     "@beep/repo-cli": {
