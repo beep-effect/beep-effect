@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T23:23:50.896Z
+Generated: 2026-10-31T23:52:15.437Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3619 |
-| publicExports | 25586 |
+| publicModules | 3621 |
+| publicExports | 25588 |
 | openModules | 165 |
 | openExports | 97 |
 | missingExportExamples | 3 |
@@ -124,7 +124,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 66 | `@beep/commands` | `packages/drivers/commands` | clean | 8 | 58 | 0 | 0 |
 | 67 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 65 | 809 | 0 | 0 |
 | 68 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
-| 69 | `@beep/git` | `packages/drivers/git` | clean | 5 | 44 | 0 | 0 |
+| 69 | `@beep/git` | `packages/drivers/git` | clean | 7 | 46 | 0 | 0 |
 | 70 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
 | 71 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
 | 72 | `@beep/pretext` | `packages/drivers/pretext` | clean | 6 | 36 | 0 | 0 |
