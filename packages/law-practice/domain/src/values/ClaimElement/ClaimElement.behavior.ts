@@ -8,7 +8,7 @@
  * limitations and colon sub-limitations, scans each element for
  * determiner-bearing terms, and links them with `part-of`,
  * `depends-on-element` and intra-claim `antecedent` edges. Functional
- * relations are not emitted yet.
+ * relations preserve ordered terms and connecting source spans.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -17,7 +17,8 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, identity, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -28,8 +29,14 @@ import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { ClaimDecompositionError } from "./ClaimElement.errors.ts";
 import { ClaimTermDeterminer } from "./ClaimElement.model.ts";
 import { ClaimElementTree } from "./ClaimElement.tree.model.ts";
+import {
+  isCountedHead,
+  isDesignatedHead,
+  isExplicitAbbreviatedHead,
+  isSingleModifiedHead,
+} from "./ClaimTerm.compatibility.ts";
 import type { PatentClaims } from "../PatentDocument/PatentDocument.model.ts";
-import type { ClaimElementEdge } from "./ClaimElement.edge.model.ts";
+import type { ClaimElementEdge, ClaimFunctionalPart } from "./ClaimElement.edge.model.ts";
 import type { ClaimElement, ClaimElementKind, ClaimTerm } from "./ClaimElement.model.ts";
 
 const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimElement.behavior");
@@ -207,19 +214,31 @@ const matchesIn =
     );
 
 const indexFrom = (text: string, search: string, from: number): O.Option<number> =>
-  O.map(Str.indexOf(search)(Str.slice(from)(text)), (index) => from + index);
+  O.map(Str.indexOf(Str.toLowerCase(search))(Str.toLowerCase(Str.slice(from)(text))), (index) => from + index);
 
 // Forward cursor: preamble, then transition, then body, each searched from the end of the previous part.
 const locateParts = ({
   claimText,
   preamble,
-  transition,
   body,
+  claimType,
+  transition,
 }: PatentClaim): O.Option<{ readonly preamble: Span; readonly body: Span }> =>
   O.flatMap(indexFrom(claimText, preamble, 0), (preambleStart) =>
     pipe(
-      indexFrom(claimText, transition, preambleStart + Str.length(preamble)),
-      O.flatMap((transitionStart) => indexFrom(claimText, body, transitionStart + Str.length(transition))),
+      O.some(preambleStart + Str.length(preamble)),
+      O.flatMap((preambleEnd) => indexFrom(claimText, body, preambleEnd)),
+      O.filter(
+        (bodyStart) =>
+          O.isSome(
+            Str.match(
+              /\b(?:consisting essentially of|consisting of|comprising|comprises|comprised of|including|includes|having|wherein|where|(?:(?:is|being)\s+)?characteri[sz]ed (?:in that|by(?: the fact that| the steps of)?)|in which(?: method)?)\b/iu
+            )(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))
+          ) ||
+          (claimType === "dependent" &&
+            transition === "wherein" &&
+            O.isSome(Str.match(/^\s*,\s*$/u)(Str.slice(preambleStart + Str.length(preamble), bodyStart)(claimText))))
+      ),
       O.map((bodyStart) => ({
         preamble: { start: preambleStart, text: preamble },
         body: { start: bodyStart, text: body },
@@ -229,7 +248,9 @@ const locateParts = ({
 
 // Top-level separators: `;` ends a segment and is dropped; a `:` followed by
 // whitespace or the end of the body ends a segment and stays with it.
-const separatorPattern = /[;()[\]]|:(?=\s|$)/gu;
+const separatorPattern = /[,;()[\]]|:(?=\s|$)/gu;
+const clauseStartPattern =
+  /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing|placing|threading|stretching|turning)\b)/iu;
 
 const splitBody = (body: Span): ReadonlyArray<Span> => {
   const split = A.reduce(
@@ -242,7 +263,9 @@ const splitBody = (body: Span): ReadonlyArray<Span> => {
         Match.orElse((separator) => {
           const at = mark.start - body.start;
           const end = separator === ":" ? at + 1 : at;
-          return state.depth > 0
+          const isClauseComma =
+            separator !== "," || O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text))));
+          return state.depth > 0 || !isClauseComma
             ? state
             : { depth: 0, from: at + 1, segments: A.append(state.segments, sliceSpan(body, state.from, end)) };
         })
@@ -253,9 +276,9 @@ const splitBody = (body: Span): ReadonlyArray<Span> => {
 
 const cleanSegment = flow(
   trimSpan,
-  dropPrefix(["and ", "or "]),
+  dropPrefix(["and, ", "and ", "or "]),
   trimSpan,
-  dropSuffix([";", ".", ", and", ", or"]),
+  dropSuffix([";", ".", ", and", ", or", ", respectively", " respectively"]),
   trimSpan
 );
 
@@ -293,16 +316,81 @@ const romanSegment = (value: number): string =>
     roman: `${roman}${Str.repeat((rest - (rest % digit)) / digit)(symbol)}`,
   })).roman;
 
-const tokenPattern = /[A-Za-z0-9-]+|[,;:.()[\]]/gu;
+const tokenPattern = /[\p{L}\p{N}]+(?:[-’'/][\p{L}\p{N}]+)*|[“”"‘’]|[,;:.()[\]]/gu;
 const digitsPattern = /^[0-9]+$/u;
 const punctuation = HashSet.make(",", ";", ":", ".", "(", ")", "[", "]");
 const boundaryWords = HashSet.fromIterable(
   Str.split(
-    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an",
+    "that which wherein whereby where when configured adapted operable arranged having comprising comprises including includes containing contains being is are was were has have to for in on of at by with from into onto between through via and or such so than as each said the a an its their according claim claims they it we them can may shall must should will would be been not apart respectively further out along below above beyond across",
     " "
   )
 );
-const HEAD_TOKEN_CAP = 5;
+// Closed grammatical separators, not a lexical token cap or suffix guess.
+const predicateWords = HashSet.fromIterable(
+  Str.split(
+    "irradiates switching reconstructs detects indicates controls samples outputs detect provide support accommodate allow allows determines invokes transmits triggering avoiding facing wired operates configuring comprised flushing provides passes determining acts formed couple depressed spaced bending skip start passed received transmitted assigned generated allocated chosen configured adapted operable arranged connected coupled mounted attached positioned located disposed formed extending extends comprises includes contains comprising including containing detects detecting based before after during upon under over near within without until than whose respectively either both such",
+    " "
+  )
+);
+const nominalFollowers = HashSet.fromIterable(
+  Str.split(
+    "unit units condition conditions device devices circuit circuits member members portion portions surface surfaces means system systems apparatus assembly assemblies mechanism mechanisms strip strips rod rods bracket brackets",
+    " "
+  )
+);
+const isPurposePredicate = (tokens: ReadonlyArray<Span>, index: number, participle: boolean): boolean =>
+  surfaceAt(tokens, index + 1)(["for"]) &&
+  (surfaceAt(tokens, index)(["used"]) || (participle && surfaceAt(tokens, index - 1)(["be"])));
+
+const isPredicateToken = (tokens: ReadonlyArray<Span>, index: number): boolean => {
+  const current = O.map(A.get(tokens, index), ({ text }) => Str.toLowerCase(text));
+  const next = O.map(A.get(tokens, index + 1), ({ text }) => Str.toLowerCase(text));
+  const previous = O.map(A.get(tokens, index - 1), ({ text }) => Str.toLowerCase(text));
+  const participle = O.exists(
+    current,
+    (word) => Str.length(word) > 4 && (Str.endsWith("ed")(word) || Str.endsWith("ing")(word))
+  );
+  const complement = O.exists(next, (word) =>
+    HashSet.has(
+      HashSet.make("to", "in", "into", "on", "with", "by", "the", "a", "an", "said", "its", "their", "them"),
+      word
+    )
+  );
+  const quantifiedObject = A.some(
+    [
+      ["at", "least", "one"],
+      ["one", "or", "more"],
+    ],
+    surfaceAt(tokens, index + 1)
+  );
+  const nominal = O.exists(previous, (word) =>
+    HashSet.has(HashSet.make("a", "an", "the", "said", "its", "their"), word)
+  );
+  const finite = O.exists(current, (word) =>
+    A.some([word, Str.replace(/s$/u, "")(word), Str.replace(/es$/u, "")(word)], (base) =>
+      HashSet.has(HashSet.make("display", "extend", "mesh", "embed", "include", "incorporate"), base)
+    )
+  );
+  const clauseVerb = O.exists(previous, (word) => HashSet.has(HashSet.make("to", "that", "which"), word));
+  const purposeParticiple = isPurposePredicate(tokens, index, participle);
+  const relational = O.contains(current, "responsive") && O.contains(next, "to");
+  const formingInfinitive = O.contains(previous, "to") && O.contains(current, "form");
+  return (
+    A.some(
+      [
+        O.exists(current, (word) => HashSet.has(predicateWords, word)),
+        finite,
+        purposeParticiple,
+        relational,
+        formingInfinitive,
+        participle && (complement || quantifiedObject),
+      ],
+      identity
+    ) &&
+    (!O.exists(next, (word) => HashSet.has(nominalFollowers, word)) || clauseVerb) &&
+    !nominal
+  );
+};
 
 // Longest surface first, so "a plurality of" wins over "a".
 const determinerSurfaces: ReadonlyArray<readonly [ReadonlyArray<string>, ClaimTermDeterminer]> = [
@@ -314,6 +402,10 @@ const determinerSurfaces: ReadonlyArray<readonly [ReadonlyArray<string>, ClaimTe
   [["a"], "a"],
   [["the"], "the"],
   [["said"], "said"],
+  // Preserve unsupported possessives as spans; the policy abstains explicitly.
+  [["each"], "bare"],
+  [["its"], "bare"],
+  [["their"], "bare"],
 ];
 
 const quantifierSurfaces: ReadonlyArray<ReadonlyArray<string>> = [
@@ -348,21 +440,78 @@ const quantifierWidthAt = (tokens: ReadonlyArray<Span>, index: number): number =
     O.getOrElse(() => 0)
   );
 
-// Rule `participle-boundary`: after the first head token, an -ed or -ing word
-// ends the head. Words of four letters or fewer ("bed", "ring") and -eed words
-// ("speed", "feed") are not participles.
-const isParticiple = (word: string): boolean =>
-  Str.length(word) > 4 && (Str.endsWith("ing")(word) || (Str.endsWith("ed")(word) && !Str.endsWith("eed")(word)));
+// Participial modifiers such as "detecting unit" and "scanning condition"
+// belong to the noun phrase. Predicate words end it only outside that context.
+const abbreviationAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+  O.exists(A.get(tokens, index), ({ text }) => text === "(") &&
+  O.exists(A.get(tokens, index + 1), ({ text }) => O.isSome(Str.match(/^[A-Z][A-Z0-9-]+$/u)(text))) &&
+  O.exists(A.get(tokens, index + 2), ({ text }) => text === ")");
 
-const isHeadToken = ({ text }: Span, position: number): boolean => {
-  const word = Str.toLowerCase(text);
-  return (
-    !HashSet.has(punctuation, text) && !HashSet.has(boundaryWords, word) && (position === 0 || !isParticiple(word))
+const ordinalWords = HashSet.make(
+  "first",
+  "second",
+  "third",
+  "fourth",
+  "fifth",
+  "sixth",
+  "seventh",
+  "eighth",
+  "ninth",
+  "tenth"
+);
+
+const continuesHeadAt = (tokens: ReadonlyArray<Span>, position: number): boolean =>
+  O.exists(
+    A.get(tokens, position),
+    ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)) && !HashSet.has(punctuation, text)
+  ) && !isPredicateToken(tokens, position);
+
+const isCoordinatedOrdinal = (tokens: ReadonlyArray<Span>, index: number, offset: number): boolean =>
+  offset > 0 &&
+  A.every(A.take(A.drop(tokens, index), offset), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text))) &&
+  O.exists(A.get(tokens, index + offset + 1), ({ text }) => HashSet.has(ordinalWords, Str.toLowerCase(text)));
+
+const isSelectorHead = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+  surfaceAt(tokens, index - 2)(["one", "of"]) && !surfaceAt(tokens, index - 4)(["at", "least"]);
+
+const hasPartitiveHead = (tokens: ReadonlyArray<Span>, index: number, offset: number): boolean =>
+  A.some(A.take(A.drop(tokens, index), offset), ({ text }) =>
+    HashSet.has(HashSet.make("pair", "set", "group", "series", "number"), Str.toLowerCase(text))
+  ) && O.exists(A.get(tokens, index + offset + 1), ({ text }) => !HashSet.has(boundaryWords, Str.toLowerCase(text)));
+
+const permitsHeadBoundary = (tokens: ReadonlyArray<Span>, index: number, offset: number, word: string): boolean => {
+  const position = index + offset;
+  return A.some(
+    [
+      word === "of" && hasPartitiveHead(tokens, index, offset),
+      word === "and" && isCoordinatedOrdinal(tokens, index, offset),
+      word === "or" && offset > 0 && continuesHeadAt(tokens, position + 1),
+      word === "through" && offset === 0 && surfaceAt(tokens, position + 1)(["hole"]),
+      word === "further" && offset === 0 && !isPredicateToken(tokens, position + 1),
+    ],
+    identity
   );
 };
 
+const permitsAdverbHead = (tokens: ReadonlyArray<Span>, position: number, offset: number, word: string): boolean =>
+  A.some(
+    [!Str.endsWith("ly")(word), Str.endsWith("assembly")(word), offset === 0 && continuesHeadAt(tokens, position + 1)],
+    identity
+  );
+
 const headAt = (tokens: ReadonlyArray<Span>, index: number): ReadonlyArray<Span> =>
-  A.take(A.takeWhile(A.drop(tokens, index), isHeadToken), HEAD_TOKEN_CAP);
+  A.takeWhile(A.drop(tokens, index), ({ text }, offset) => {
+    const word = Str.toLowerCase(text);
+    const position = index + offset;
+    if (A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at))) return true;
+    if (isSelectorHead(tokens, index) && HashSet.has(HashSet.make(",", "or", "and"), word)) return true;
+    return (
+      !HashSet.has(punctuation, text) &&
+      (!HashSet.has(boundaryWords, word) || permitsHeadBoundary(tokens, index, offset, word)) &&
+      !isPredicateToken(tokens, position) &&
+      permitsAdverbHead(tokens, position, offset, word)
+    );
+  });
 
 // Rule `claim-reference`: "the claim 1" names a claim, not a claim term.
 const isClaimReference = (head: ReadonlyArray<Span>): boolean =>
@@ -380,9 +529,11 @@ const termOf = (
   return {
     anchor: { startChar: start, endChar, quote: Str.slice(start, endChar)(claimText) },
     determiner,
-    head: A.join(
-      A.map(head, ({ text }) => Str.toLowerCase(text)),
-      " "
+    head: pipe(
+      Str.slice(A.headNonEmpty(head).start, endChar)(claimText),
+      Str.toLowerCase,
+      Str.replace(/\s+/gu, " "),
+      Str.trim
     ),
   };
 };
@@ -394,11 +545,43 @@ const scanStepOf = (term: O.Option<EncodedTerm>, resumeAt: number): ScanStep => 
 // One scan step from `index`: the term found there, if any, and where the scan resumes.
 const scanStep =
   (claimText: string, tokens: ReadonlyArray<Span>) =>
-  (index: number): ScanStep =>
-    pipe(
+  (index: number): ScanStep => {
+    const idiom = A.findFirst(
+      [
+        ["by", "means", "of"],
+        ["side", "by", "side"],
+        ["in", "association", "with"],
+        ["in", "response", "to"],
+        ["at", "least", "by", "means", "of"],
+      ],
+      (words) => surfaceAt(tokens, index)(words)
+    );
+    if (O.isSome(idiom)) return scanStepOf(O.none(), index + idiom.value.length);
+    if (surfaceAt(tokens, index)(["one", "of"])) return scanStepOf(O.none(), index + 2);
+    if (
+      surfaceAt(tokens, index)(["at", "least"]) &&
+      O.exists(A.get(tokens, index + 2), ({ text }) =>
+        HashSet.has(HashSet.make("the", "said", "a", "an", "each"), Str.toLowerCase(text))
+      )
+    )
+      return scanStepOf(O.none(), index + 2);
+    return pipe(
       determinerAt(tokens, index),
       O.match({
-        onNone: () => scanStepOf(O.none(), index + 1),
+        onNone: () => {
+          const head = headAt(tokens, index);
+          const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
+          const isReferenceNumber =
+            O.exists(previous, (word) =>
+              HashSet.has(HashSet.make("is", "are", "was", "were"), Str.toLowerCase(word))
+            ) ||
+            O.contains(previous, "(") ||
+            O.contains(previous, "[") ||
+            O.exists(A.head(head), ({ text }) => O.isSome(Str.match(digitsPattern)(text)));
+          return A.isReadonlyArrayNonEmpty(head) && !isReferenceNumber && !isClaimReference(head)
+            ? scanStepOf(O.some(termOf(claimText, A.headNonEmpty(head).start, "bare", head)), index + head.length)
+            : scanStepOf(O.none(), index + 1);
+        },
         onSome: ({ determiner, start, width }) => {
           const headStart =
             index + width + (isReferringDeterminer(determiner) ? quantifierWidthAt(tokens, index + width) : 0);
@@ -409,51 +592,204 @@ const scanStep =
         },
       })
     );
+  };
 
 const termsIn =
   (claimText: string) =>
   (span: Span): ReadonlyArray<EncodedTerm> => {
-    const tokens = matchesIn(tokenPattern)(span);
+    const material = Str.match(
+      /\b(?:is|are|was|were)\s+(?:formed|made|composed)\s+(?:of|from)\s+(?!a\b|an\b|the\b|said\b)([^,;]+)$/iu
+    )(span.text).pipe(
+      O.filter((match) =>
+        O.exists(A.get(match, 1), (tail) => O.isNone(Str.match(/\b(?:a|an|the|said|its|their)\b/iu)(tail)))
+      )
+    );
+    const entitySpan = O.match(material, {
+      onNone: () => span,
+      onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(span.text.length))),
+    });
+    const tokens = matchesIn(tokenPattern)(entitySpan);
     const step = scanStep(claimText, tokens);
     return A.getSomes(A.unfold(0, (index) => (index < A.length(tokens) ? O.some(step(index)) : O.none())));
   };
 
 const elementOf =
   (claimText: string, kind: ClaimElementKind) =>
-  (path: string, span: Span): EncodedElement => ({
-    path,
-    anchor: anchorOf(span),
-    kind,
-    terms: termsIn(claimText)(span),
-  });
+  (path: string, span: Span): EncodedElement => {
+    const tokens = matchesIn(tokenPattern)(span);
+    return {
+      path,
+      anchor: anchorOf(span),
+      kind:
+        kind !== "preamble-subject" &&
+        (A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
+          O.isSome(
+            Str.match(
+              /\b(?:that|which|wherein|configured|adapted|coupled|connected|mounted|attached|wired|facing|having|includes|comprises|is|are|extends|extending|for)\b/iu
+            )(span.text)
+          ))
+          ? "functional-relation"
+          : kind,
+      terms: termsIn(claimText)(
+        kind === "preamble-subject"
+          ? O.match(
+              Str.match(
+                /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
+              )(span.text),
+              {
+                onNone: () => span,
+                onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
+              }
+            )
+          : span
+      ),
+    };
+  };
 
-const antecedentEdges = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<EncodedEdge> => {
-  const located = A.flatMap(elements, ({ path, terms }) => A.map(terms, (term) => ({ path, term })));
+const antecedentEdges = (
+  elements: ReadonlyArray<EncodedElement>,
+  ancestors: ReadonlyArray<EncodedElement> = []
+): ReadonlyArray<EncodedEdge> => {
+  const located = A.flatMap(A.appendAll(elements, ancestors), (element: EncodedElement) =>
+    A.map(element.terms, (term) => ({ path: element.path, term }))
+  );
+  const local = (path: string) => A.some(elements, (element) => element.path === path);
+  const root = (path: string) => O.exists(A.head(elements), (element) => element.path === path);
+  const referringTerms = A.filter(
+    located,
+    ({ path, term }) =>
+      local(path) &&
+      (isReferringDeterminer(term.determiner) ||
+        (ancestors.length > 0 &&
+          root(path) &&
+          (isIntroducingDeterminer(term.determiner) || term.determiner === "bare")))
+  );
   return A.getSomes(
-    A.map(
-      A.filter(located, ({ term }) => isReferringDeterminer(term.determiner)),
-      (referring) => {
-        const introductions = A.filter(
-          located,
-          ({ term }) =>
-            isIntroducingDeterminer(term.determiner) &&
-            Str.Equivalence(term.head, referring.term.head) &&
-            term.anchor.startChar < referring.term.anchor.startChar
-        );
-        return pipe(
-          A.length(introductions) === 1 ? A.head(introductions) : O.none(),
-          O.map(
-            (introducing): EncodedEdge => ({
-              kind: "antecedent",
-              referring: { path: referring.path, anchor: referring.term.anchor },
-              introducing: { path: introducing.path, anchor: introducing.term.anchor },
-            })
+    A.map(referringTerms, (referring) => {
+      const before = A.filter(
+        located,
+        ({ path, term }) => !local(path) || term.anchor.startChar < referring.term.anchor.startChar
+      );
+      const introductionsBefore = A.filter(
+        before,
+        ({ path, term }) =>
+          isIntroducingDeterminer(term.determiner) ||
+          (root(referring.path) &&
+            term.determiner === "bare" &&
+            A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
+      );
+      const eligible = root(referring.path)
+        ? introductionsBefore
+        : A.filter(
+            introductionsBefore,
+            ({ path, term }) =>
+              !A.some(
+                A.appendAll(elements, ancestors),
+                (element) =>
+                  element.path === path &&
+                  element.kind === "preamble-subject" &&
+                  O.exists(A.head(element.terms), (first) => first.anchor.startChar === term.anchor.startChar) &&
+                  O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)) &&
+                  A.some(
+                    ancestors,
+                    (origin) =>
+                      origin.path !== path &&
+                      origin.kind === "preamble-subject" &&
+                      A.some(origin.terms, (first) => first.head === term.head)
+                  )
+              )
+          );
+      const exact = A.filter(eligible, ({ term }) => term.head === referring.term.head);
+      const abbreviated = A.filter(eligible, ({ term }) => isExplicitAbbreviatedHead(referring.term.head)(term.head));
+      const counted = A.filter(eligible, ({ term }) => isCountedHead(referring.term.head)(term.head));
+      const modified = A.filter(eligible, ({ term }) => isSingleModifiedHead(referring.term.head)(term.head));
+      // A unique exact earlier mention is a structural back-reference, even if its
+      // original definite wording still requires a legal antecedent-basis warning.
+      const mentions = A.filter(
+        before,
+        ({ path, term }) =>
+          term.head === referring.term.head &&
+          (!root(referring.path) ||
+            A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject"))
+      );
+      const bareMentions = A.filter(mentions, ({ term }) => term.determiner === "bare");
+      const localDesignated = A.filter(
+        before,
+        ({ path, term }) => local(path) && isDesignatedHead(referring.term.head)(term.head)
+      );
+      const designated = A.filter(before, ({ term }) => isDesignatedHead(referring.term.head)(term.head));
+      const modifiedMentions = A.filter(
+        before,
+        ({ path, term }) => !local(path) && isSingleModifiedHead(referring.term.head)(term.head)
+      );
+      const rootShortened = root(referring.path)
+        ? A.filter(
+            eligible,
+            ({ path, term }) =>
+              Str.endsWith(` ${referring.term.head}`)(term.head) &&
+              A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject")
           )
-        );
-      }
-    )
+        : [];
+      const introductions = O.getOrElse(
+        A.findFirst(
+          [
+            localDesignated,
+            exact,
+            abbreviated,
+            counted,
+            designated,
+            rootShortened,
+            modified,
+            bareMentions,
+            mentions,
+            modifiedMentions,
+          ],
+          A.isReadonlyArrayNonEmpty
+        ),
+        () => []
+      );
+      return O.map(
+        A.length(introductions) === 1 ? A.head(introductions) : O.none(),
+        (introducing): EncodedEdge => ({
+          kind: "antecedent",
+          referring: { path: referring.path, anchor: referring.term.anchor },
+          introducing: { path: introducing.path, anchor: introducing.term.anchor },
+        })
+      );
+    })
   );
 };
+
+const functionalEdges = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<EncodedEdge> =>
+  A.map(
+    A.filter(elements, (element) => element.kind === "functional-relation"),
+    (element): EncodedEdge => {
+      const parts: Array<typeof ClaimFunctionalPart.Encoded> = [];
+      let cursor = element.anchor.startChar;
+      const textPart = (end: number) => {
+        if (end > cursor)
+          parts.push({
+            kind: "text",
+            anchor: {
+              startChar: cursor,
+              endChar: end,
+              quote: Str.slice(cursor - element.anchor.startChar, end - element.anchor.startChar)(element.anchor.quote),
+            },
+          });
+      };
+      for (const term of element.terms) {
+        textPart(term.anchor.startChar);
+        parts.push({ kind: "term", term: { path: element.path, anchor: term.anchor } });
+        cursor = term.anchor.endChar;
+      }
+      textPart(element.anchor.endChar);
+      return {
+        kind: "functional",
+        element: element.path,
+        parts: A.isArrayNonEmpty(parts) ? parts : [{ kind: "text", anchor: element.anchor }],
+      };
+    }
+  );
 
 const referencesOf = (claim: PatentClaim): ReadonlyArray<number> =>
   PatentClaim.match(claim, {
@@ -466,7 +802,18 @@ const treeInput = (
   parts: { readonly preamble: Span; readonly body: Span }
 ): typeof ClaimElementTree.Encoded => {
   const root = `${claim.claimNumber}`;
-  const segments = A.filter(A.map(splitBody(parts.body), cleanSegment), isContentSegment);
+  const methodFrame = O.isSome(Str.match(/^(?::\s*)?(?:the\s+)?following steps\s*:/iu)(Str.trimStart(parts.body.text)));
+  const segments = A.filter(
+    A.map(splitBody(parts.body), (segment) => {
+      const cleaned = cleanSegment(segment);
+      return claim.transition === "wherein" ||
+        methodFrame ||
+        O.isSome(Str.match(/\bfurther\s+(?:comprising|including|having)\b/iu)(claim.claimText))
+        ? pipe(cleaned, dropPrefix(["wherein "]), trimSpan)
+        : cleaned;
+    }),
+    (span) => isContentSegment(span) && !O.isSome(Str.match(/^(?:the\s+)?following steps\s*:$/iu)(span.text))
+  );
   // Rule `colon-sublist`: the first limitation ending in ":" absorbs every later segment.
   const [beforeColon, fromColon] = A.span(segments, (segment) => !endsWithColon(segment));
   const limitations = A.map(A.appendAll(beforeColon, A.take(fromColon, 1)), (span, index) => ({
@@ -492,15 +839,15 @@ const treeInput = (
     edges: [
       ...A.map(limitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent: root })),
       ...A.map(subLimitations, ({ path }): EncodedEdge => ({ kind: "part-of", child: path, parent })),
-      ...A.map(
-        referencesOf(claim),
-        (ancestor): EncodedEdge => ({
-          kind: "depends-on-element",
-          dependent: root,
-          ancestor: `${ancestor}`,
-        })
-      ),
+      ...A.flatMap(referencesOf(claim), (ancestor) => {
+        const explicit = A.filter(elements, (element) => O.isSome(Str.match(/\bclaims?\s+\d/iu)(element.anchor.quote)));
+        return A.map(
+          A.isArrayNonEmpty(explicit) ? A.map(explicit, (element) => element.path) : [root],
+          (dependent): EncodedEdge => ({ kind: "depends-on-element", dependent, ancestor: `${ancestor}` })
+        );
+      }),
       ...antecedentEdges(elements),
+      ...functionalEdges(elements),
     ],
   };
 };
@@ -521,13 +868,12 @@ const decodeTree = S.decodeEffect(ClaimElementTree);
  *   also ends a segment and stays with it; the first limitation ending in `:`
  *   absorbs every later segment as sub-limitations `"<n>.<x>.i"`,
  *   `"<n>.<x>.ii"`, and so on.
- * - Each element is scanned for determiners (`a`, `an`, `the`, `said`,
- *   `at least one`, `one or more`, `a plurality of`); the head is at most five
- *   words and stops at punctuation, connective words, or an `-ed`/`-ing` word
- *   after its first word.
+ * - Elements retain determiner-bearing and explicit bare noun phrases without
+ *   a token cap. Participial modifiers are retained before nominal heads.
+ *   Source predicates and grammatical separators delimit phrase boundaries.
  * - Edges: `part-of` to each parent, `depends-on-element` from the root to each
- *   referenced claim's root, and an intra-claim `antecedent` edge when a
- *   `the`/`said` term has exactly one earlier introduction with the same head.
+ *   referenced claim's root, unique antecedents in this claim or dependency
+ *   ancestors, and ordered source-anchored functional parts.
  *
  * Fails with `unsupported-claim-text` when a part is missing from the text,
  * `claim-not-in-claims` when the claim or a referenced claim is absent from the
@@ -554,10 +900,10 @@ const decodeTree = S.decodeEffect(ClaimElementTree);
  * })
  * const tree = Effect.runSync(decomposeClaim(claim, [claim]))
  * console.log(A.map(tree.elements, ({ path }) => path)) // ["1", "1.a", "1.b"]
- * console.log(A.map(tree.edges, ({ kind }) => kind)) // ["part-of", "part-of", "antecedent"]
+ * console.log(A.some(tree.edges, ({ kind }) => kind === "functional")) // true
  * ```
  *
- * @category domain-logic
+ * @category parsing
  * @since 0.0.0
  */
 export const decomposeClaim: {
@@ -591,7 +937,145 @@ export const decomposeClaim: {
         reason: "claim-not-in-claims",
       });
     }
-    return yield* decodeTree(treeInput(claim, parts)).pipe(
+    const input = treeInput(claim, parts);
+    // A term must resolve on every alternative dependency route. Intersect
+    // branch ancestry instead of treating the union as one fictitious chain.
+    let commonByClaim = HashMap.empty<number, HashSet.HashSet<number>>();
+    for (const earlier of A.sort(claims, (left: PatentClaim, right: PatentClaim) =>
+      Num.Order(left.claimNumber, right.claimNumber)
+    )) {
+      const branches = A.map(referencesOf(earlier), (parent) =>
+        HashSet.add(O.getOrElse(HashMap.get(commonByClaim, parent), HashSet.empty<number>), parent)
+      );
+      const common = O.match(A.head(branches), {
+        onNone: () => HashSet.empty<number>(),
+        onSome: (first) =>
+          A.reduce(A.drop(branches, 1), first, (shared, branch) => HashSet.intersection(shared, branch)),
+      });
+      commonByClaim = HashMap.set(commonByClaim, earlier.claimNumber, common);
+    }
+    const ancestorNumbers = O.getOrElse(HashMap.get(commonByClaim, claimNumber), HashSet.empty<number>);
+    const ancestors = A.flatMap(
+      A.filter(claims, (candidate: PatentClaim) => HashSet.has(ancestorNumbers, candidate.claimNumber)),
+      (candidate: PatentClaim) =>
+        O.match(locateParts(candidate), {
+          onNone: () => [],
+          onSome: (located) => treeInput(candidate, located).elements,
+        })
+    );
+    const antecedents = antecedentEdges(input.elements, ancestors);
+    const bodyDependencies = A.flatMap(antecedents, (edge): ReadonlyArray<EncodedEdge> => {
+      if (
+        edge.kind !== "antecedent" ||
+        edge.referring.path === `${claimNumber}` ||
+        !Str.includes(".")(edge.introducing.path)
+      )
+        return [];
+      const parent = A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(edge.introducing.path));
+      const subject = A.some(
+        input.elements,
+        (element) =>
+          element.path === edge.referring.path &&
+          O.exists(A.head(element.terms), (term) => {
+            if (term.anchor.startChar !== element.anchor.startChar) return false;
+            const partOwner =
+              isIntroducingDeterminer(term.determiner) &&
+              O.isSome(Str.match(/\b(?:portion|surface|edge|end|region|area|section|side)$/u)(term.head)) &&
+              Str.trim(Str.slice(term.anchor.endChar, edge.referring.anchor.startChar)(claim.claimText)) === "of";
+            if (term.anchor.startChar !== edge.referring.anchor.startChar && !partOwner) return false;
+            return A.some(
+              ancestors,
+              (ancestor) =>
+                ancestor.path === edge.introducing.path &&
+                A.some(
+                  ancestor.terms,
+                  (introduced) =>
+                    introduced.anchor.startChar === edge.introducing.anchor.startChar &&
+                    isIntroducingDeterminer(introduced.determiner) &&
+                    (partOwner || introduced.head === term.head)
+                )
+            );
+          })
+      );
+      return parent && subject
+        ? [{ kind: "depends-on-element", dependent: edge.referring.path, ancestor: edge.introducing.path }]
+        : [];
+    });
+    // A bare object explicitly defined by `to form` is a structural result,
+    // even though bare wording does not establish legal antecedent basis.
+    // Later limitations may refine that result through an immediate parent.
+    const resultDependencies = A.flatMap(
+      input.elements,
+      (element): ReadonlyArray<EncodedEdge> =>
+        O.match(
+          O.filter(
+            A.head(element.terms),
+            (term) =>
+              element.kind === "functional-relation" &&
+              term.anchor.startChar === element.anchor.startChar &&
+              isReferringDeterminer(term.determiner)
+          ),
+          {
+            onNone: () => [],
+            onSome: (subject) => {
+              const origins = A.flatMap(ancestors, (ancestor) =>
+                A.map(
+                  A.filter(
+                    ancestor.terms,
+                    (term) =>
+                      term.determiner === "bare" &&
+                      term.head === subject.head &&
+                      O.isSome(
+                        Str.match(/\bto form\s*$/iu)(
+                          Str.slice(0, term.anchor.startChar - ancestor.anchor.startChar)(ancestor.anchor.quote)
+                        )
+                      ) &&
+                      A.some(
+                        antecedents,
+                        (edge) =>
+                          edge.kind === "antecedent" &&
+                          edge.referring.path === element.path &&
+                          edge.referring.anchor.startChar === subject.anchor.startChar &&
+                          edge.introducing.path === ancestor.path &&
+                          edge.introducing.anchor.startChar === term.anchor.startChar
+                      )
+                  ),
+                  () => ancestor
+                )
+              );
+              if (origins.length !== 1) return [];
+              const origin = O.getOrThrow(A.head(origins));
+              const parents = A.filter(
+                ancestors,
+                (ancestor) =>
+                  A.some(referencesOf(claim), (number) => Str.startsWith(`${number}.`)(ancestor.path)) &&
+                  (ancestor.path === origin.path ||
+                    (ancestor.kind === "functional-relation" &&
+                      O.exists(
+                        A.head(ancestor.terms),
+                        (term) => term.anchor.startChar === ancestor.anchor.startChar && term.head === subject.head
+                      )))
+              );
+              return O.match(parents.length === 1 ? A.head(parents) : O.none(), {
+                onNone: () => [],
+                onSome: (parent): ReadonlyArray<EncodedEdge> => [
+                  { kind: "depends-on-element", dependent: element.path, ancestor: parent.path },
+                ],
+              });
+            },
+          }
+        )
+    );
+    const linked = {
+      ...input,
+      edges: [
+        ...A.filter(input.edges, (edge) => edge.kind !== "antecedent"),
+        ...antecedents,
+        ...bodyDependencies,
+        ...resultDependencies,
+      ],
+    };
+    return yield* decodeTree(linked).pipe(
       Effect.mapError((error) =>
         ClaimDecompositionError.make({
           claimNumber,

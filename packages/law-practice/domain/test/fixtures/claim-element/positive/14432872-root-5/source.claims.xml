@@ -1,0 +1,35 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A device for treating truncal and/or collateral varicose veins (<b>1</b>), formed by a conduct (<b>2</b>) housing a generally coated optical fiber (<b>3</b>), wherein, at the distal end (<b>20</b>) thereof, there is an opening (<b>21</b>), the shape of the distal end (<b>20</b>) being variable and said device being characterized in that it comprises:
+<claim-text>a channel (<b>4</b>), which constitutes the space between the optical fiber (<b>3</b>) and the outer coating (<b>22</b>) along the length of the entire conduct (<b>2</b>), forming a double-part conduct;</claim-text>
+<claim-text>a “T” shaped connection, which is located at a distance (d) comprised between 25 and 65 cm away from the distal end (<b>20</b>) of the conduct (<b>2</b>), wherein a key (<b>52</b>) that connects to the channel (<b>4</b>) is coupled to said connection;</claim-text>
+<claim-text>a number “n” of small holes (<b>6</b>) or openings located such that they are parallel to each side of the outer coating (<b>22</b>), which facilitate the output of the medication (<b>51</b>) in the form of foam, where 1≦n≦10.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The device for treating truncal and/or collateral varicose veins according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that there is a distance (b) comprised between 0.4 cm and 1.1 cm between the hole (<b>6</b>) closest to the distal end (<b>20</b>) of the conduct (<b>2</b>) and said distal end (<b>20</b>).</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The device for treating truncal and/or collateral varicose veins (<b>1</b>) according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that that the “n” holes (<b>6</b>) are separated (a) at a distance comprised between 0.15 mm and 0.55 mm.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The device for treating truncal and/or collateral varicose veins (<b>1</b>) according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the diameter of the hole (<b>6</b>) will be comprised between 0.05 mm and 0.5 mm.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A physio-chemical method for use with the device for treating truncal and/or collateral varicose veins, characterized in that it comprises the following steps:
+<claim-text>a) Introducing the conduct (<b>2</b>) housing the optical fiber (<b>3</b>) into the inside of the vein or varicose vein (<b>1</b>) until reaching the area to be acted upon, this process being controlled by means of echography;</claim-text>
+<claim-text>b) Introducing components and medication into the three-way key (<b>52</b>), mixing said components and introducing them via the “T” shaped connection (<b>5</b>) for said medication (<b>51</b>) in the form of foam, inside the channel (<b>4</b>) of the conduct (<b>2</b>);</claim-text>
+<claim-text>c) Injecting the medication (<b>51</b>) in the form of foam by means of pressure, it thus passing through the small holes (<b>6</b>) and the front opening (<b>21</b>) in the conduct (<b>2</b>), thereby giving rise to a venous spasm and irritating the venous endothelium, before immediately and/or synergistically firing the laser (<b>31</b>) through the front opening (<b>21</b>) so as to remove the vein (<b>1</b>) by means of heat and subsequently seal it;</claim-text>
+<claim-text>d) Removing between 1 and 2 mm of the conduct (<b>2</b>), once again repeating the above step c), i.e. injecting medication (<b>51</b>) and immediately firing the laser (<b>31</b>), continuing to do so until treatment of the vein or varicose vein (<b>1</b>) area to be acted upon has been completed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The physio-chemical method for use with the device for treating varicose veins according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein step b) is characterized in that a mixture of 3 cc to 5 cc of sclerosant substance is prepared with 1.5 cc to 3 cc of air, in order to produce 8 cc to 10 cc of medication (<b>51</b>).</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The physio-chemical method for use with the device for treating varicose veins according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein step c) is characterized in that between 0.2 and 0.5 cc of medication (<b>51</b>) are injected and the laser (<b>31</b>) is fired continuously at between 1.5 and 5 Watts, for a time period of between 3 and 4 seconds.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The physio-chemical method for use with the device for treating varicose veins according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein step c) is characterized in that between 0.2 and 0.5 cc of medication (<b>51</b>) are injected and the laser (<b>31</b>) is fired in pulses at 60 ms to 100 ms for a time period of between 3 to 4 seconds at 4 Watts, the administration of the pulses depending on the type of laser.</claim-text>
+</claim>
+</claims>

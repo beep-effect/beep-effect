@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "claim-inherited-policy-checkpoint/v1",
+  "claimHead": "74d81eaff6b3ec47e369b3152439b72f5192060a",
+  "mainReproductionHead": "b30cd9e6dd",
+  "publicationJobId": "af9b6200-a305-401a-aa47-d9fe479d14cf",
+  "publicationOutcome": "failed-before-push",
+  "passedGates": 23,
+  "failedGates": [
+    {
+      "id": "lint:schema-first",
+      "cleanMainFindings": 5,
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts"
+    },
+    {
+      "id": "lint:effect-vitest",
+      "cleanMainFindings": 8,
+      "file": "packages/tooling/tool/cli/test/policy-fingerprint-closure.test.ts"
+    }
+  ],
+  "repairBranch": "fix/policy-closure-quality",
+  "repairStatus": "separate-lane-in-progress",
+  "repairedChecksPassed": [
+    "lint:schema-first",
+    "lint:effect-vitest",
+    "lint:policy-fingerprint"
+  ],
+  "focusedPolicyTestsPassed": 10,
+  "runtimeFreezeFilesChecked": 20,
+  "runtimeFreezeHashMismatches": 0,
+  "protectedHistoricalFilesChecked": 631,
+  "protectedHistoricalHashMismatches": 0,
+  "strictMatches": 37,
+  "totalSelectedClaims": 538,
+  "all34ProtectedPassesRetained": true,
+  "attorneyAttendanceRequired": false,
+  "actualAttorneyReview": false,
+  "goalComplete": false
+}

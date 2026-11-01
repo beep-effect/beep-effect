@@ -1,0 +1,3395 @@
+[
+  {
+    "claimNumber": 19,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "19",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 436,
+          "quote": "A method of performing a manufacturing operation on a wind turbine blade having a longitudinal axis, a tip, an outer circumferential surface, an inner circumferential surface defining a cavity, and a root end, using a robotic assembly, said robotic assembly including a robotic arm, a first remote sensor capable of sensing twist and a second remote sensor, at least one sensor located on said robotic arm, and a controller, said method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 23,
+              "endChar": 48,
+              "quote": "a manufacturing operation"
+            },
+            "determiner": "a",
+            "head": "manufacturing operation"
+          },
+          {
+            "anchor": {
+              "startChar": 52,
+              "endChar": 72,
+              "quote": "a wind turbine blade"
+            },
+            "determiner": "a",
+            "head": "wind turbine blade"
+          },
+          {
+            "anchor": {
+              "startChar": 425,
+              "endChar": 436,
+              "quote": "said method"
+            },
+            "determiner": "said",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "19.a",
+        "anchor": {
+          "startChar": 73,
+          "endChar": 208,
+          "quote": "having a longitudinal axis, a tip, an outer circumferential surface, an inner circumferential surface defining a cavity, and a root end"
+        },
+        "kind": "limitation",
+        "terms": []
+      },
+      {
+        "path": "19.a.i",
+        "anchor": {
+          "startChar": 80,
+          "endChar": 99,
+          "quote": "a longitudinal axis"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 99,
+              "quote": "a longitudinal axis"
+            },
+            "determiner": "a",
+            "head": "longitudinal axis"
+          }
+        ]
+      },
+      {
+        "path": "19.a.ii",
+        "anchor": {
+          "startChar": 101,
+          "endChar": 106,
+          "quote": "a tip"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 106,
+              "quote": "a tip"
+            },
+            "determiner": "a",
+            "head": "tip"
+          }
+        ]
+      },
+      {
+        "path": "19.a.iii",
+        "anchor": {
+          "startChar": 108,
+          "endChar": 140,
+          "quote": "an outer circumferential surface"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 140,
+              "quote": "an outer circumferential surface"
+            },
+            "determiner": "an",
+            "head": "outer circumferential surface"
+          }
+        ]
+      },
+      {
+        "path": "19.a.iv",
+        "anchor": {
+          "startChar": 142,
+          "endChar": 192,
+          "quote": "an inner circumferential surface defining a cavity"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 174,
+              "quote": "an inner circumferential surface"
+            },
+            "determiner": "an",
+            "head": "inner circumferential surface"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 192,
+              "quote": "a cavity"
+            },
+            "determiner": "a",
+            "head": "cavity"
+          }
+        ]
+      },
+      {
+        "path": "19.a.v",
+        "anchor": {
+          "startChar": 198,
+          "endChar": 208,
+          "quote": "a root end"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 198,
+              "endChar": 208,
+              "quote": "a root end"
+            },
+            "determiner": "a",
+            "head": "root end"
+          }
+        ]
+      },
+      {
+        "path": "19.b",
+        "anchor": {
+          "startChar": 210,
+          "endChar": 423,
+          "quote": "using a robotic assembly, said robotic assembly including a robotic arm, a first remote sensor capable of sensing twist and a second remote sensor, at least one sensor located on said robotic arm, and a controller"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 234,
+              "quote": "a robotic assembly"
+            },
+            "determiner": "a",
+            "head": "robotic assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 257,
+              "quote": "said robotic assembly"
+            },
+            "determiner": "said",
+            "head": "robotic assembly"
+          }
+        ]
+      },
+      {
+        "path": "19.b.i",
+        "anchor": {
+          "startChar": 268,
+          "endChar": 281,
+          "quote": "a robotic arm"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 268,
+              "endChar": 281,
+              "quote": "a robotic arm"
+            },
+            "determiner": "a",
+            "head": "robotic arm"
+          }
+        ]
+      },
+      {
+        "path": "19.b.ii",
+        "anchor": {
+          "startChar": 283,
+          "endChar": 329,
+          "quote": "a first remote sensor capable of sensing twist"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 283,
+              "endChar": 304,
+              "quote": "a first remote sensor"
+            },
+            "determiner": "a",
+            "head": "first remote sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 324,
+              "endChar": 329,
+              "quote": "twist"
+            },
+            "determiner": "bare",
+            "head": "twist"
+          }
+        ]
+      },
+      {
+        "path": "19.b.iii",
+        "anchor": {
+          "startChar": 334,
+          "endChar": 356,
+          "quote": "a second remote sensor"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 356,
+              "quote": "a second remote sensor"
+            },
+            "determiner": "a",
+            "head": "second remote sensor"
+          }
+        ]
+      },
+      {
+        "path": "19.b.iv",
+        "anchor": {
+          "startChar": 358,
+          "endChar": 405,
+          "quote": "at least one sensor located on said robotic arm"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 358,
+              "endChar": 377,
+              "quote": "at least one sensor"
+            },
+            "determiner": "at-least-one",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 389,
+              "endChar": 405,
+              "quote": "said robotic arm"
+            },
+            "determiner": "said",
+            "head": "robotic arm"
+          }
+        ]
+      },
+      {
+        "path": "19.b.v",
+        "anchor": {
+          "startChar": 411,
+          "endChar": 423,
+          "quote": "a controller"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 411,
+              "endChar": 423,
+              "quote": "a controller"
+            },
+            "determiner": "a",
+            "head": "controller"
+          }
+        ]
+      },
+      {
+        "path": "19.c",
+        "anchor": {
+          "startChar": 462,
+          "endChar": 685,
+          "quote": "directing the sensor on the robotic arm proximate to a first measurement position proximate to the root end based upon an expected location of one of said outer circumferential surface and said inner circumferential surface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 472,
+              "endChar": 482,
+              "quote": "the sensor"
+            },
+            "determiner": "the",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 486,
+              "endChar": 501,
+              "quote": "the robotic arm"
+            },
+            "determiner": "the",
+            "head": "robotic arm"
+          },
+          {
+            "anchor": {
+              "startChar": 515,
+              "endChar": 543,
+              "quote": "a first measurement position"
+            },
+            "determiner": "a",
+            "head": "first measurement position"
+          },
+          {
+            "anchor": {
+              "startChar": 557,
+              "endChar": 569,
+              "quote": "the root end"
+            },
+            "determiner": "the",
+            "head": "root end"
+          },
+          {
+            "anchor": {
+              "startChar": 581,
+              "endChar": 601,
+              "quote": "an expected location"
+            },
+            "determiner": "an",
+            "head": "expected location"
+          },
+          {
+            "anchor": {
+              "startChar": 612,
+              "endChar": 646,
+              "quote": "said outer circumferential surface"
+            },
+            "determiner": "said",
+            "head": "outer circumferential surface"
+          },
+          {
+            "anchor": {
+              "startChar": 651,
+              "endChar": 685,
+              "quote": "said inner circumferential surface"
+            },
+            "determiner": "said",
+            "head": "inner circumferential surface"
+          }
+        ]
+      },
+      {
+        "path": "19.d",
+        "anchor": {
+          "startChar": 687,
+          "endChar": 891,
+          "quote": "sensing the actual location of a first location on the at least one of the outer circumferential surface and the inner circumferential surface proximate to the root end using the sensor on the robotic arm"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 695,
+              "endChar": 714,
+              "quote": "the actual location"
+            },
+            "determiner": "the",
+            "head": "actual location"
+          },
+          {
+            "anchor": {
+              "startChar": 718,
+              "endChar": 734,
+              "quote": "a first location"
+            },
+            "determiner": "a",
+            "head": "first location"
+          },
+          {
+            "anchor": {
+              "startChar": 738,
+              "endChar": 754,
+              "quote": "the at least one"
+            },
+            "determiner": "the",
+            "head": "at least one"
+          },
+          {
+            "anchor": {
+              "startChar": 758,
+              "endChar": 791,
+              "quote": "the outer circumferential surface"
+            },
+            "determiner": "the",
+            "head": "outer circumferential surface"
+          },
+          {
+            "anchor": {
+              "startChar": 796,
+              "endChar": 829,
+              "quote": "the inner circumferential surface"
+            },
+            "determiner": "the",
+            "head": "inner circumferential surface"
+          },
+          {
+            "anchor": {
+              "startChar": 843,
+              "endChar": 855,
+              "quote": "the root end"
+            },
+            "determiner": "the",
+            "head": "root end"
+          },
+          {
+            "anchor": {
+              "startChar": 862,
+              "endChar": 872,
+              "quote": "the sensor"
+            },
+            "determiner": "the",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 876,
+              "endChar": 891,
+              "quote": "the robotic arm"
+            },
+            "determiner": "the",
+            "head": "robotic arm"
+          }
+        ]
+      },
+      {
+        "path": "19.e",
+        "anchor": {
+          "startChar": 893,
+          "endChar": 972,
+          "quote": "moving the sensor on the robotic arm proximate to a second measurement position"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 900,
+              "endChar": 910,
+              "quote": "the sensor"
+            },
+            "determiner": "the",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 914,
+              "endChar": 929,
+              "quote": "the robotic arm"
+            },
+            "determiner": "the",
+            "head": "robotic arm"
+          },
+          {
+            "anchor": {
+              "startChar": 943,
+              "endChar": 972,
+              "quote": "a second measurement position"
+            },
+            "determiner": "a",
+            "head": "second measurement position"
+          }
+        ]
+      },
+      {
+        "path": "19.f",
+        "anchor": {
+          "startChar": 974,
+          "endChar": 1022,
+          "quote": "sensing the actual location of a second location"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 982,
+              "endChar": 1001,
+              "quote": "the actual location"
+            },
+            "determiner": "the",
+            "head": "actual location"
+          },
+          {
+            "anchor": {
+              "startChar": 1005,
+              "endChar": 1022,
+              "quote": "a second location"
+            },
+            "determiner": "a",
+            "head": "second location"
+          }
+        ]
+      },
+      {
+        "path": "19.g",
+        "anchor": {
+          "startChar": 1024,
+          "endChar": 1134,
+          "quote": "determining a first estimated root end center based upon the actual location of the first and second locations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1036,
+              "endChar": 1069,
+              "quote": "a first estimated root end center"
+            },
+            "determiner": "a",
+            "head": "first estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 1081,
+              "endChar": 1100,
+              "quote": "the actual location"
+            },
+            "determiner": "the",
+            "head": "actual location"
+          },
+          {
+            "anchor": {
+              "startChar": 1104,
+              "endChar": 1134,
+              "quote": "the first and second locations"
+            },
+            "determiner": "the",
+            "head": "first and second locations"
+          }
+        ]
+      },
+      {
+        "path": "19.h",
+        "anchor": {
+          "startChar": 1136,
+          "endChar": 1276,
+          "quote": "continue measuring additional locations on at least one of the surface of the outer circumference and the surface of the inner circumference"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1155,
+              "endChar": 1175,
+              "quote": "additional locations"
+            },
+            "determiner": "bare",
+            "head": "additional locations"
+          },
+          {
+            "anchor": {
+              "startChar": 1179,
+              "endChar": 1191,
+              "quote": "at least one"
+            },
+            "determiner": "bare",
+            "head": "at least one"
+          },
+          {
+            "anchor": {
+              "startChar": 1195,
+              "endChar": 1206,
+              "quote": "the surface"
+            },
+            "determiner": "the",
+            "head": "surface"
+          },
+          {
+            "anchor": {
+              "startChar": 1210,
+              "endChar": 1233,
+              "quote": "the outer circumference"
+            },
+            "determiner": "the",
+            "head": "outer circumference"
+          },
+          {
+            "anchor": {
+              "startChar": 1238,
+              "endChar": 1249,
+              "quote": "the surface"
+            },
+            "determiner": "the",
+            "head": "surface"
+          },
+          {
+            "anchor": {
+              "startChar": 1253,
+              "endChar": 1276,
+              "quote": "the inner circumference"
+            },
+            "determiner": "the",
+            "head": "inner circumference"
+          }
+        ]
+      },
+      {
+        "path": "19.i",
+        "anchor": {
+          "startChar": 1278,
+          "endChar": 1444,
+          "quote": "determining based upon said additional locations additional estimated root end centers, until the last estimated root end center is within a specified tolerance level"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1301,
+              "endChar": 1326,
+              "quote": "said additional locations"
+            },
+            "determiner": "said",
+            "head": "additional locations"
+          },
+          {
+            "anchor": {
+              "startChar": 1327,
+              "endChar": 1364,
+              "quote": "additional estimated root end centers"
+            },
+            "determiner": "bare",
+            "head": "additional estimated root end centers"
+          },
+          {
+            "anchor": {
+              "startChar": 1372,
+              "endChar": 1406,
+              "quote": "the last estimated root end center"
+            },
+            "determiner": "the",
+            "head": "last estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 1417,
+              "endChar": 1444,
+              "quote": "a specified tolerance level"
+            },
+            "determiner": "a",
+            "head": "specified tolerance level"
+          }
+        ]
+      },
+      {
+        "path": "19.j",
+        "anchor": {
+          "startChar": 1446,
+          "endChar": 1484,
+          "quote": "determining the twist of the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1458,
+              "endChar": 1467,
+              "quote": "the twist"
+            },
+            "determiner": "the",
+            "head": "twist"
+          },
+          {
+            "anchor": {
+              "startChar": 1471,
+              "endChar": 1484,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      },
+      {
+        "path": "19.k",
+        "anchor": {
+          "startChar": 1490,
+          "endChar": 1548,
+          "quote": "determining the location of tip of the elongated workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1502,
+              "endChar": 1514,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 1518,
+              "endChar": 1521,
+              "quote": "tip"
+            },
+            "determiner": "bare",
+            "head": "tip"
+          },
+          {
+            "anchor": {
+              "startChar": 1525,
+              "endChar": 1548,
+              "quote": "the elongated workpiece"
+            },
+            "determiner": "the",
+            "head": "elongated workpiece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "19.a",
+        "parent": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.i",
+        "parent": "19.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.ii",
+        "parent": "19.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.iii",
+        "parent": "19.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.iv",
+        "parent": "19.a"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.iv",
+              "anchor": {
+                "startChar": 142,
+                "endChar": 174,
+                "quote": "an inner circumferential surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 174,
+              "endChar": 184,
+              "quote": " defining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a.iv",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 192,
+                "quote": "a cavity"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a.v",
+        "parent": "19.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b",
+        "parent": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b.i",
+        "parent": "19.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b.ii",
+        "parent": "19.b"
+      },
+      {
+        "kind": "functional",
+        "element": "19.b.ii",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.b.ii",
+              "anchor": {
+                "startChar": 283,
+                "endChar": 304,
+                "quote": "a first remote sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 304,
+              "endChar": 324,
+              "quote": " capable of sensing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.b.ii",
+              "anchor": {
+                "startChar": 324,
+                "endChar": 329,
+                "quote": "twist"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b.iii",
+        "parent": "19.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b.iv",
+        "parent": "19.b"
+      },
+      {
+        "kind": "functional",
+        "element": "19.b.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.b.iv",
+              "anchor": {
+                "startChar": 358,
+                "endChar": 377,
+                "quote": "at least one sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 377,
+              "endChar": 389,
+              "quote": " located on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.b.iv",
+              "anchor": {
+                "startChar": 389,
+                "endChar": 405,
+                "quote": "said robotic arm"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.b.v",
+        "parent": "19.b"
+      },
+      {
+        "kind": "part-of",
+        "child": "19.c",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 472,
+              "quote": "directing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 472,
+                "endChar": 482,
+                "quote": "the sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 482,
+              "endChar": 486,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 486,
+                "endChar": 501,
+                "quote": "the robotic arm"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 501,
+              "endChar": 515,
+              "quote": " proximate to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 515,
+                "endChar": 543,
+                "quote": "a first measurement position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 543,
+              "endChar": 557,
+              "quote": " proximate to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 557,
+                "endChar": 569,
+                "quote": "the root end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 569,
+              "endChar": 581,
+              "quote": " based upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 581,
+                "endChar": 601,
+                "quote": "an expected location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 601,
+              "endChar": 612,
+              "quote": " of one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 612,
+                "endChar": 646,
+                "quote": "said outer circumferential surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 646,
+              "endChar": 651,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.c",
+              "anchor": {
+                "startChar": 651,
+                "endChar": 685,
+                "quote": "said inner circumferential surface"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.d",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 687,
+              "endChar": 695,
+              "quote": "sensing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 695,
+                "endChar": 714,
+                "quote": "the actual location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 714,
+              "endChar": 718,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 718,
+                "endChar": 734,
+                "quote": "a first location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 734,
+              "endChar": 738,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 738,
+                "endChar": 754,
+                "quote": "the at least one"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 754,
+              "endChar": 758,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 758,
+                "endChar": 791,
+                "quote": "the outer circumferential surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 791,
+              "endChar": 796,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 796,
+                "endChar": 829,
+                "quote": "the inner circumferential surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 829,
+              "endChar": 843,
+              "quote": " proximate to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 843,
+                "endChar": 855,
+                "quote": "the root end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 855,
+              "endChar": 862,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 862,
+                "endChar": 872,
+                "quote": "the sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 872,
+              "endChar": 876,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.d",
+              "anchor": {
+                "startChar": 876,
+                "endChar": 891,
+                "quote": "the robotic arm"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.e",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 893,
+              "endChar": 900,
+              "quote": "moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.e",
+              "anchor": {
+                "startChar": 900,
+                "endChar": 910,
+                "quote": "the sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 910,
+              "endChar": 914,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.e",
+              "anchor": {
+                "startChar": 914,
+                "endChar": 929,
+                "quote": "the robotic arm"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 929,
+              "endChar": 943,
+              "quote": " proximate to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.e",
+              "anchor": {
+                "startChar": 943,
+                "endChar": 972,
+                "quote": "a second measurement position"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.f",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 974,
+              "endChar": 982,
+              "quote": "sensing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.f",
+              "anchor": {
+                "startChar": 982,
+                "endChar": 1001,
+                "quote": "the actual location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1001,
+              "endChar": 1005,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.f",
+              "anchor": {
+                "startChar": 1005,
+                "endChar": 1022,
+                "quote": "a second location"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.g",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1024,
+              "endChar": 1036,
+              "quote": "determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.g",
+              "anchor": {
+                "startChar": 1036,
+                "endChar": 1069,
+                "quote": "a first estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1069,
+              "endChar": 1081,
+              "quote": " based upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.g",
+              "anchor": {
+                "startChar": 1081,
+                "endChar": 1100,
+                "quote": "the actual location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1100,
+              "endChar": 1104,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.g",
+              "anchor": {
+                "startChar": 1104,
+                "endChar": 1134,
+                "quote": "the first and second locations"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.h",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.h",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1136,
+              "endChar": 1155,
+              "quote": "continue measuring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1155,
+                "endChar": 1175,
+                "quote": "additional locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1175,
+              "endChar": 1179,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1179,
+                "endChar": 1191,
+                "quote": "at least one"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1191,
+              "endChar": 1195,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1195,
+                "endChar": 1206,
+                "quote": "the surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1206,
+              "endChar": 1210,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1210,
+                "endChar": 1233,
+                "quote": "the outer circumference"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1233,
+              "endChar": 1238,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1238,
+                "endChar": 1249,
+                "quote": "the surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1249,
+              "endChar": 1253,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.h",
+              "anchor": {
+                "startChar": 1253,
+                "endChar": 1276,
+                "quote": "the inner circumference"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.i",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1278,
+              "endChar": 1301,
+              "quote": "determining based upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.i",
+              "anchor": {
+                "startChar": 1301,
+                "endChar": 1326,
+                "quote": "said additional locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1326,
+              "endChar": 1327,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.i",
+              "anchor": {
+                "startChar": 1327,
+                "endChar": 1364,
+                "quote": "additional estimated root end centers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1364,
+              "endChar": 1372,
+              "quote": ", until "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.i",
+              "anchor": {
+                "startChar": 1372,
+                "endChar": 1406,
+                "quote": "the last estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1406,
+              "endChar": 1417,
+              "quote": " is within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.i",
+              "anchor": {
+                "startChar": 1417,
+                "endChar": 1444,
+                "quote": "a specified tolerance level"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.j",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.j",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1446,
+              "endChar": 1458,
+              "quote": "determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.j",
+              "anchor": {
+                "startChar": 1458,
+                "endChar": 1467,
+                "quote": "the twist"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1467,
+              "endChar": 1471,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.j",
+              "anchor": {
+                "startChar": 1471,
+                "endChar": 1484,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "19.k",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.k",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1490,
+              "endChar": 1502,
+              "quote": "determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.k",
+              "anchor": {
+                "startChar": 1502,
+                "endChar": 1514,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1514,
+              "endChar": 1518,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.k",
+              "anchor": {
+                "startChar": 1518,
+                "endChar": 1521,
+                "quote": "tip"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1521,
+              "endChar": 1525,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.k",
+              "anchor": {
+                "startChar": 1525,
+                "endChar": 1548,
+                "quote": "the elongated workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19",
+          "anchor": {
+            "startChar": 425,
+            "endChar": 436,
+            "quote": "said method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.b",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 257,
+            "quote": "said robotic assembly"
+          }
+        },
+        "introducing": {
+          "path": "19.b",
+          "anchor": {
+            "startChar": 216,
+            "endChar": 234,
+            "quote": "a robotic assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.b.iv",
+          "anchor": {
+            "startChar": 389,
+            "endChar": 405,
+            "quote": "said robotic arm"
+          }
+        },
+        "introducing": {
+          "path": "19.b.i",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 281,
+            "quote": "a robotic arm"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.c",
+          "anchor": {
+            "startChar": 472,
+            "endChar": 482,
+            "quote": "the sensor"
+          }
+        },
+        "introducing": {
+          "path": "19.b.iv",
+          "anchor": {
+            "startChar": 358,
+            "endChar": 377,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.c",
+          "anchor": {
+            "startChar": 486,
+            "endChar": 501,
+            "quote": "the robotic arm"
+          }
+        },
+        "introducing": {
+          "path": "19.b.i",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 281,
+            "quote": "a robotic arm"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.c",
+          "anchor": {
+            "startChar": 557,
+            "endChar": 569,
+            "quote": "the root end"
+          }
+        },
+        "introducing": {
+          "path": "19.a.v",
+          "anchor": {
+            "startChar": 198,
+            "endChar": 208,
+            "quote": "a root end"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.c",
+          "anchor": {
+            "startChar": 612,
+            "endChar": 646,
+            "quote": "said outer circumferential surface"
+          }
+        },
+        "introducing": {
+          "path": "19.a.iii",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 140,
+            "quote": "an outer circumferential surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.c",
+          "anchor": {
+            "startChar": 651,
+            "endChar": 685,
+            "quote": "said inner circumferential surface"
+          }
+        },
+        "introducing": {
+          "path": "19.a.iv",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 174,
+            "quote": "an inner circumferential surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.d",
+          "anchor": {
+            "startChar": 758,
+            "endChar": 791,
+            "quote": "the outer circumferential surface"
+          }
+        },
+        "introducing": {
+          "path": "19.a.iii",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 140,
+            "quote": "an outer circumferential surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.d",
+          "anchor": {
+            "startChar": 796,
+            "endChar": 829,
+            "quote": "the inner circumferential surface"
+          }
+        },
+        "introducing": {
+          "path": "19.a.iv",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 174,
+            "quote": "an inner circumferential surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.d",
+          "anchor": {
+            "startChar": 843,
+            "endChar": 855,
+            "quote": "the root end"
+          }
+        },
+        "introducing": {
+          "path": "19.a.v",
+          "anchor": {
+            "startChar": 198,
+            "endChar": 208,
+            "quote": "a root end"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.d",
+          "anchor": {
+            "startChar": 862,
+            "endChar": 872,
+            "quote": "the sensor"
+          }
+        },
+        "introducing": {
+          "path": "19.b.iv",
+          "anchor": {
+            "startChar": 358,
+            "endChar": 377,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.d",
+          "anchor": {
+            "startChar": 876,
+            "endChar": 891,
+            "quote": "the robotic arm"
+          }
+        },
+        "introducing": {
+          "path": "19.b.i",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 281,
+            "quote": "a robotic arm"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.e",
+          "anchor": {
+            "startChar": 900,
+            "endChar": 910,
+            "quote": "the sensor"
+          }
+        },
+        "introducing": {
+          "path": "19.b.iv",
+          "anchor": {
+            "startChar": 358,
+            "endChar": 377,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.e",
+          "anchor": {
+            "startChar": 914,
+            "endChar": 929,
+            "quote": "the robotic arm"
+          }
+        },
+        "introducing": {
+          "path": "19.b.i",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 281,
+            "quote": "a robotic arm"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.i",
+          "anchor": {
+            "startChar": 1301,
+            "endChar": 1326,
+            "quote": "said additional locations"
+          }
+        },
+        "introducing": {
+          "path": "19.h",
+          "anchor": {
+            "startChar": 1155,
+            "endChar": 1175,
+            "quote": "additional locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.j",
+          "anchor": {
+            "startChar": 1458,
+            "endChar": 1467,
+            "quote": "the twist"
+          }
+        },
+        "introducing": {
+          "path": "19.b.ii",
+          "anchor": {
+            "startChar": 324,
+            "endChar": 329,
+            "quote": "twist"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.j",
+          "anchor": {
+            "startChar": 1471,
+            "endChar": 1484,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 72,
+            "quote": "a wind turbine blade"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.k",
+          "anchor": {
+            "startChar": 1518,
+            "endChar": 1521,
+            "quote": "tip"
+          }
+        },
+        "introducing": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 106,
+            "quote": "a tip"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19.k",
+          "anchor": {
+            "startChar": 1525,
+            "endChar": 1548,
+            "quote": "the elongated workpiece"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 72,
+            "quote": "a wind turbine blade"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 31,
+          "endChar": 427,
+          "quote": "said step of determining based upon said additional locations additional estimated root end centers, until the last estimated root end center is within a specified tolerance level further includes the step of determining the difference between the last estimated root end center and the estimated root end center previous to said last estimated root end center is less than a predetermined amount"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 40,
+              "quote": "said step"
+            },
+            "determiner": "said",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 67,
+              "endChar": 92,
+              "quote": "said additional locations"
+            },
+            "determiner": "said",
+            "head": "additional locations"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 130,
+              "quote": "additional estimated root end centers"
+            },
+            "determiner": "bare",
+            "head": "additional estimated root end centers"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 172,
+              "quote": "the last estimated root end center"
+            },
+            "determiner": "the",
+            "head": "last estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 183,
+              "endChar": 210,
+              "quote": "a specified tolerance level"
+            },
+            "determiner": "a",
+            "head": "specified tolerance level"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 236,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 252,
+              "endChar": 266,
+              "quote": "the difference"
+            },
+            "determiner": "the",
+            "head": "difference"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 309,
+              "quote": "the last estimated root end center"
+            },
+            "determiner": "the",
+            "head": "last estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 343,
+              "quote": "the estimated root end center"
+            },
+            "determiner": "the",
+            "head": "estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 391,
+              "quote": "said last estimated root end center"
+            },
+            "determiner": "said",
+            "head": "last estimated root end center"
+          },
+          {
+            "anchor": {
+              "startChar": 405,
+              "endChar": 427,
+              "quote": "a predetermined amount"
+            },
+            "determiner": "a",
+            "head": "predetermined amount"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "20",
+        "ancestor": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 31,
+                "endChar": 40,
+                "quote": "said step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 40,
+              "endChar": 67,
+              "quote": " of determining based upon "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 67,
+                "endChar": 92,
+                "quote": "said additional locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 93,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 130,
+                "quote": "additional estimated root end centers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 130,
+              "endChar": 138,
+              "quote": ", until "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 138,
+                "endChar": 172,
+                "quote": "the last estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 183,
+              "quote": " is within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 183,
+                "endChar": 210,
+                "quote": "a specified tolerance level"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 228,
+              "quote": " further includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 236,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 236,
+              "endChar": 252,
+              "quote": " of determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 252,
+                "endChar": 266,
+                "quote": "the difference"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 266,
+              "endChar": 275,
+              "quote": " between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 309,
+                "quote": "the last estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 314,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 343,
+                "quote": "the estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 343,
+              "endChar": 356,
+              "quote": " previous to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 391,
+                "quote": "said last estimated root end center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 391,
+              "endChar": 405,
+              "quote": " is less than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 405,
+                "endChar": 427,
+                "quote": "a predetermined amount"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 67,
+            "endChar": 92,
+            "quote": "said additional locations"
+          }
+        },
+        "introducing": {
+          "path": "19.h",
+          "anchor": {
+            "startChar": 1155,
+            "endChar": 1175,
+            "quote": "additional locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20.a",
+          "anchor": {
+            "startChar": 93,
+            "endChar": 130,
+            "quote": "additional estimated root end centers"
+          }
+        },
+        "introducing": {
+          "path": "19.i",
+          "anchor": {
+            "startChar": 1327,
+            "endChar": 1364,
+            "quote": "additional estimated root end centers"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20.a",
+        "ancestor": "19.i"
+      }
+    ]
+  },
+  {
+    "claimNumber": 21,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "21",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "21.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 150,
+          "quote": "the step of determining a hub surface after determining the location of the tip of the elongated work surface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 78,
+              "quote": "a hub surface"
+            },
+            "determiner": "a",
+            "head": "hub surface"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 109,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 120,
+              "quote": "the tip"
+            },
+            "determiner": "the",
+            "head": "tip"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 150,
+              "quote": "the elongated work surface"
+            },
+            "determiner": "the",
+            "head": "elongated work surface"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "21",
+        "ancestor": "19"
+      },
+      {
+        "kind": "part-of",
+        "child": "21.a",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 65,
+              "quote": " of determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 78,
+                "quote": "a hub surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 97,
+              "quote": " after determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 109,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 113,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 120,
+                "quote": "the tip"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 124,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 150,
+                "quote": "the elongated work surface"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 120,
+            "quote": "the tip"
+          }
+        },
+        "introducing": {
+          "path": "19.a.ii",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 106,
+            "quote": "a tip"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 22,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "22",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 21"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "22.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 103,
+          "quote": "the step of sawing said workpiece parallel to said hub surface"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 60,
+              "endChar": 74,
+              "quote": "said workpiece"
+            },
+            "determiner": "said",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 103,
+              "quote": "said hub surface"
+            },
+            "determiner": "said",
+            "head": "hub surface"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "22",
+        "ancestor": "21"
+      },
+      {
+        "kind": "part-of",
+        "child": "22.a",
+        "parent": "22"
+      },
+      {
+        "kind": "functional",
+        "element": "22.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 60,
+              "quote": " of sawing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 60,
+                "endChar": 74,
+                "quote": "said workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 74,
+              "endChar": 87,
+              "quote": " parallel to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 103,
+                "quote": "said hub surface"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 60,
+            "endChar": 74,
+            "quote": "said workpiece"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 72,
+            "quote": "a wind turbine blade"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 103,
+            "quote": "said hub surface"
+          }
+        },
+        "introducing": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 78,
+            "quote": "a hub surface"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 23,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "23",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 22"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "23.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 77,
+          "quote": "the step of machining said workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 63,
+              "endChar": 77,
+              "quote": "said workpiece"
+            },
+            "determiner": "said",
+            "head": "workpiece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "23",
+        "ancestor": "22"
+      },
+      {
+        "kind": "part-of",
+        "child": "23.a",
+        "parent": "23"
+      },
+      {
+        "kind": "functional",
+        "element": "23.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 63,
+              "quote": " of machining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "23.a",
+              "anchor": {
+                "startChar": 63,
+                "endChar": 77,
+                "quote": "said workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "23.a",
+          "anchor": {
+            "startChar": 63,
+            "endChar": 77,
+            "quote": "said workpiece"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 72,
+            "quote": "a wind turbine blade"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 24,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "24",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The method of claim 23"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "24.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 185,
+          "quote": "the step of determining an estimated root center following each determining actual location of the workpiece using the sensor on the robotic arm"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 49,
+              "quote": "the step"
+            },
+            "determiner": "the",
+            "head": "step"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 89,
+              "quote": "an estimated root center"
+            },
+            "determiner": "an",
+            "head": "estimated root center"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 132,
+              "quote": "actual location"
+            },
+            "determiner": "bare",
+            "head": "actual location"
+          },
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 149,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 166,
+              "quote": "the sensor"
+            },
+            "determiner": "the",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 170,
+              "endChar": 185,
+              "quote": "the robotic arm"
+            },
+            "determiner": "the",
+            "head": "robotic arm"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "24",
+        "ancestor": "23"
+      },
+      {
+        "kind": "part-of",
+        "child": "24.a",
+        "parent": "24"
+      },
+      {
+        "kind": "functional",
+        "element": "24.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 41,
+                "endChar": 49,
+                "quote": "the step"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 49,
+              "endChar": 65,
+              "quote": " of determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 89,
+                "quote": "an estimated root center"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 89,
+              "endChar": 117,
+              "quote": " following each determining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 132,
+                "quote": "actual location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 132,
+              "endChar": 136,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 136,
+                "endChar": 149,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 156,
+              "quote": " using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 166,
+                "quote": "the sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 166,
+              "endChar": 170,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "24.a",
+              "anchor": {
+                "startChar": 170,
+                "endChar": 185,
+                "quote": "the robotic arm"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 136,
+            "endChar": 149,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "19",
+          "anchor": {
+            "startChar": 52,
+            "endChar": 72,
+            "quote": "a wind turbine blade"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 166,
+            "quote": "the sensor"
+          }
+        },
+        "introducing": {
+          "path": "19.b.iv",
+          "anchor": {
+            "startChar": 358,
+            "endChar": 377,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "24.a",
+          "anchor": {
+            "startChar": 170,
+            "endChar": 185,
+            "quote": "the robotic arm"
+          }
+        },
+        "introducing": {
+          "path": "19.b.i",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 281,
+            "quote": "a robotic arm"
+          }
+        }
+      }
+    ]
+  }
+]

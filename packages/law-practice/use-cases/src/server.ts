@@ -22,6 +22,13 @@
  */
 export * as ClaimSelfCheck from "./ClaimSelfCheck/index.ts";
 /**
+ * Local advisory claim self-check tool and source-quoted review envelopes.
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export * from "./ClaimSelfCheck.tools.ts";
+/**
  * Daily notice: the count-only notice email, the notice-mailbox port and the
  * once-a-day notice contract.
  *
@@ -102,7 +109,7 @@ export * from "./PatentClaimCandidate/index.ts";
  * ```ts
  * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
  *
- * console.log(Object.keys(PracticeKgToolkit.tools).length) // 11
+ * console.log(Object.keys(PracticeKgToolkit.tools).length) // 12
  * ```
  *
  * @category tools

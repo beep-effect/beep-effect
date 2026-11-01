@@ -1,0 +1,119 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A jig for use in assisting the orientation and fixing of an insulator to a support comprising:
+<claim-text>a jig frame comprising a top surface, and two sides that define an open volume;</claim-text>
+<claim-text>the two sides have parallel contact edges at ends of the sides;</claim-text>
+<claim-text>at least one of the two sides having an opening therein of at least 1.5 cm in diameter;</claim-text>
+<claim-text>the top surface has two holes passing through the top surface;</claim-text>
+<claim-text>within each of the holes is a hollow guide pipe passing from an exterior surface of the top surface through an interior surface of the top surface;</claim-text>
+<claim-text>the hollow guide pipe passing past the interior surface of the top surface a distance that is less than a distance to plane formed by the two parallel contact edges.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The jig of <claim-ref idref="CLM-00001">claim 1</claim-ref> having a securing element for temporarily securing the jig to a surface to be machined and the opening having a level indicator therein that indicates when the top surface is horizontally level.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The jig of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the securing element comprises an attachment element on the jig between the two guide pipes.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The jig of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the hole has a notch on its circumference or an inwardly facing post and the level indicator respectively has an extension fitting into the notch or a gap in the circumference of the level indicator that receives the post to align the level indicator perpendicular to the top surface.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The jig of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the two guide pipes are each perpendicular to the top surface.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The jig of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein the two guide pipes are each perpendicular to the top surface.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The jig of <claim-ref idref="CLM-00004">claim 4</claim-ref> wherein the two guide pipes are each perpendicular to the top surface and the level indicator comprises a bubble level indicator and the level indicator is removable from the hole and is positionable within the hole only when a post and gap or a notch and extension are aligned.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The jig of <claim-ref idref="CLM-00001">claim 1</claim-ref> having at least one bubble level in the opening oriented perpendicularly to the top surface on the jig.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The jig of <claim-ref idref="CLM-00004">claim 4</claim-ref> having at least one bubble in the opening oriented perpendicularly to the top surface on the jig.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The jig of <claim-ref idref="CLM-00005">claim 5</claim-ref> wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The jig of <claim-ref idref="CLM-00006">claim 6</claim-ref> wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The jig of <claim-ref idref="CLM-00008">claim 8</claim-ref> wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A method of attaching an insulator to a support comprising:
+<claim-text>placing the jig of <claim-ref idref="CLM-00001">claim 1</claim-ref> against a surface to which the insulator is to be attached,</claim-text>
+<claim-text>orienting the two contact portions with a top surface of the support,</claim-text>
+<claim-text>aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position,</claim-text>
+<claim-text>temporarily securing the jig in the aligned position,</claim-text>
+<claim-text>passing a drill bit connected to a drill through the guide tubes to contact the support,</claim-text>
+<claim-text>drilling holes in the support at the specific positions,</claim-text>
+<claim-text>withdrawing the drill bits from the guide wires,</claim-text>
+<claim-text>removing the jig from the support,</claim-text>
+<claim-text>aligning holes in an insulator with the drilled holes in the support, and</claim-text>
+<claim-text>connecting the insulator to the support with connectors that attached through the drilled holes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A method of attaching an insulator to a support comprising:
+<claim-text>placing the jig of <claim-ref idref="CLM-00002">claim 2</claim-ref> against a surface to which the insulator is to be attached,</claim-text>
+<claim-text>orienting the two contact portions with a top surface of the support,</claim-text>
+<claim-text>aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position,</claim-text>
+<claim-text>adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator;</claim-text>
+<claim-text>temporarily securing the jig in the aligned position,</claim-text>
+<claim-text>passing a drill bit connected to a drill through the guide tubes to contact the support,</claim-text>
+<claim-text>drilling holes in the support at the specific positions,</claim-text>
+<claim-text>withdrawing the drill bits from the guide wires,</claim-text>
+<claim-text>removing the jig from the support,</claim-text>
+<claim-text>aligning holes in an insulator with the drilled holes in the support, and</claim-text>
+<claim-text>connecting the insulator to the support with connectors that attached through the drilled holes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A method of attaching an insulator to a support comprising:
+<claim-text>placing the jig of <claim-ref idref="CLM-00004">claim 4</claim-ref> against a surface to which the insulator is to be attached,</claim-text>
+<claim-text>orienting the two contact portions with a top surface of the support,</claim-text>
+<claim-text>aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position,</claim-text>
+<claim-text>adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator;</claim-text>
+<claim-text>temporarily securing the jig in the aligned position,</claim-text>
+<claim-text>passing a drill bit connected to a drill through the guide tubes to contact the support,</claim-text>
+<claim-text>drilling holes in the support at the specific positions,</claim-text>
+<claim-text>withdrawing the drill bits from the guide wires,</claim-text>
+<claim-text>removing the jig from the support,</claim-text>
+<claim-text>aligning holes in an insulator with the drilled holes in the support, and</claim-text>
+<claim-text>connecting the insulator to the support with connectors that attached through the drilled holes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method of attaching an insulator to a support comprising:
+<claim-text>placing the jig of <claim-ref idref="CLM-00007">claim 7</claim-ref> against a surface to which the insulator is to be attached,</claim-text>
+<claim-text>orienting the two contact portions with a top surface of the support,</claim-text>
+<claim-text>aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position,</claim-text>
+<claim-text>adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator;</claim-text>
+<claim-text>temporarily securing the jig in the aligned position,</claim-text>
+<claim-text>passing a drill bit connected to a drill through the guide tubes to contact the support,</claim-text>
+<claim-text>drilling holes in the support at the specific positions,</claim-text>
+<claim-text>withdrawing the drill bits from the guide wires,</claim-text>
+<claim-text>removing the jig from the support,</claim-text>
+<claim-text>aligning holes in an insulator with the drilled holes in the support, and</claim-text>
+<claim-text>connecting the insulator to the support with connectors that attached through the drilled holes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A method of attaching an insulator to a support comprising:
+<claim-text>placing the jig of <claim-ref idref="CLM-00009">claim 9</claim-ref> against a surface to which the insulator is to be attached,</claim-text>
+<claim-text>orienting the two contact portions with a top surface of the support,</claim-text>
+<claim-text>aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position,</claim-text>
+<claim-text>adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator;</claim-text>
+<claim-text>temporarily securing the jig in the aligned position,</claim-text>
+<claim-text>passing a drill bit connected to a drill through the guide tubes to contact the support,</claim-text>
+<claim-text>drilling holes in the support at the specific positions,</claim-text>
+<claim-text>withdrawing the drill bits from the guide wires,</claim-text>
+<claim-text>removing the jig from the support,</claim-text>
+<claim-text>aligning holes in an insulator with the drilled holes in the support, and</claim-text>
+<claim-text>connecting the insulator to the support with connectors that attached through the drilled holes. </claim-text>
+</claim-text>
+</claim>
+</claims>

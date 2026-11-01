@@ -1,0 +1,68 @@
+{
+  "applicationNumber": "12447956",
+  "publicationNumber": "US20100071148A1",
+  "publicationDate": "2010-03-25",
+  "nativeXmlSha256": "d64c88ac15b1e18c1d353b2e3b536f63581e5e425b9c7231e5ef253935d46569",
+  "claimsXmlSha256": "c19301baafcce2ade19dda970b28ea2f19ab830af045cb8e1c92fa857083bd56",
+  "officeActionDocumentIdentifiers": [
+    "GSU9LW9JPPOPPY5"
+  ],
+  "officeActionMailDate": "2011-09-23",
+  "officeActionSection112Text": [
+    "claims 1-18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nin claim 1, line 8, there is no antecedent basis for “the tip”. in line 9, there is no antecedent basis for “the open state”. in line 10, there is no antecedent basis for “the closed state”.\r\nin claim 2, lines 2-3, there is no antecedent basis for the region.\r\nin claim 3, line 2, there is no antecedent basis for “the lower sides”.\r\nin claim 4, line 2, there is no antecedent basis for “the region”.\r\nin claim 5, lines 2-3, there is no antecedent basis for “the inner side”.\r\nin claim 6, line 2, there is no antecedent basis for “the pivoting angle”. in line 3, there is no antecedent basis for “the open position.\r\nin claim 7, line 8, there is no antecedent basis for “the tip”. in line 9, there is no antecedent basis for “the open state”. in line 10, there is no antecedent basis for “the closed state”.\r\nin claim 8, line 2, there is no antecedent basis for the region.\r\nin claim 9, line 2, there is no antecedent basis for “the inner side”.\r\nin claim 10, line 2, there is no antecedent basis for “the open position.\r\nin claim 11, line 2, there is no antecedent basis for “the longitudinal direction” and “the region”.\r\nin claim 12, line 2, there is no antecedent basis for “the lower sides”.\r\nin claim 13, line 2, there is no antecedent basis for “the region”.\r\nin claim 14, line 2, there is no antecedent basis for the inner side.\r\nin claim 15, line 1, there is no antecedent basis for “the pivoting angle”. in line 2, there is no antecedent basis for “the open position”.\r\nin claim 16, line 2, there is no antecedent basis for “the region”.\r\nin claim 17, line 2, there is no antecedent basis for “the inner side”.\r\nin claim 18, line 1, there is no antecedent basis for “the pivoting angle”."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "FU5OT1MZPPOPPY4",
+      "officialDate": "2009-04-30T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "FUCN268SPPOPPY2",
+      "officialDate": "2009-04-30T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "FU5OT1MZPPOPPY4",
+      "officialDate": "2009-04-30T00:00:00.000-0400",
+      "sha256": "7cd968209e55adecc17d9015019fb1bfbe404bfdd7ccfcc3741a5b7ed2a8e8c5",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        3,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "sourceClaimCount": 17
+    },
+    {
+      "documentIdentifier": "FUCN268SPPOPPY2",
+      "officialDate": "2009-04-30T00:00:00.000-0400",
+      "sha256": "c96b82d038df5b5b0f3fd9de6f2bb2dd061d2257ea54eaaa6aa13fb16da84773",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        3
+      ],
+      "sourceClaimCount": 7
+    }
+  ],
+  "documentInventoryCount": 49,
+  "documentInventoryRows": 49,
+  "primaryCpc": "B60S   1/38",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12447956",
+    "https://api.uspto.gov/api/v1/patent/applications/12447956/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,0 +1,52 @@
+{
+  "applicationNumber": "12451999",
+  "publicationNumber": "US20100101243A1",
+  "publicationDate": "2010-04-29",
+  "nativeXmlSha256": "f53a448d8a343db20c3f89d13a5fd99f4562207696b3f7bd1a94ea7ed5cfe4d3",
+  "claimsXmlSha256": "b657f25012192ecd3cb6721a3f9cd49f8d29976b1633fa43e584822eea28386d",
+  "officeActionDocumentIdentifiers": [
+    "HT7HN8AGPXXIFW4"
+  ],
+  "officeActionMailDate": "2014-03-27",
+  "officeActionSection112Text": [
+    "claims 1-21 recites the limitation the run-out, the cold rolling stand, the opposing plate, and the running direction in claim 1 appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 2 recites the limitation the nozzles in line 2, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 3 recites the limitation the running direction in line 4, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 4 recites the limitation the nozzles in line 2, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 5 recites the limitation the cooling capacity,” “the flow velocity,” and “the individual nozzles all appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 9 recites the limitation the border” in line 5, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 10 recites the limitation the upper sides in line 4, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 11 recites the limitation the opposing edges in line 3, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 13 recites the limitation the cold rolling stand in line 3, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 15 recites the limitation the running direction in line 6, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 19 recites the limitation the borders in line 3, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 21 recites the limitation the strips in line 4, appears to lack antecedent basis. there is insufficient antecedent basis for this limitation in the claim."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "G3BGXCE8PPOPPY5",
+      "officialDate": "2009-12-11T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "G3BGXCGDPPOPPY5",
+      "officialDate": "2009-12-11T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "G3BGXCE8PPOPPY5",
+      "officialDate": "2009-12-11T00:00:00.000-0500",
+      "sha256": "f51c4025ab353badcb82d5e02701d5dbff50a775eac240c62f5840bfc2aa7e73",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    },
+    {
+      "documentIdentifier": "G3BGXCGDPPOPPY5",
+      "officialDate": "2009-12-11T00:00:00.000-0500",
+      "sha256": "2ffcb85ac2b20bd39978b9da0fbc9826e8e1ac9de79d8cec53303e3e52c3c97a",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 90,
+  "documentInventoryRows": 90,
+  "primaryCpc": "B21B  27/032",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12451999",
+    "https://api.uspto.gov/api/v1/patent/applications/12451999/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

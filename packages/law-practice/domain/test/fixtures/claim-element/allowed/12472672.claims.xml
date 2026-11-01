@@ -1,0 +1,39 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A three-dimensional forming device comprising; a main housing, wherein a feeding mechanism is provided in the main housing; one end of the main housing is connected to a pen head, and a heating head is provided inside the pen head;
+<claim-text>wherein the feeding mechanism comprises a transmission bracket and a reduction motor;</claim-text>
+<claim-text>one side of the transmission bracket is rotatably provided with a feeding wheel, and a bearing is rotatably provided on one side of the transmission bracket that is close to the feeding wheel configured to clamp raw materials between the feeding wheel and the bearing;</claim-text>
+<claim-text>the reduction motor is connected to the feeding wheel for transmission;</claim-text>
+<claim-text>an outer surface of the feeding wheel is provided with a feeding groove, and an interior of the feeding groove is provided with a plurality sets of convex points;</claim-text>
+<claim-text>wherein a transmission shaft is fixedly provided at a center of the feeding wheel, and the other end of the transmission shaft is connected to a motor shaft for transmission;</claim-text>
+<claim-text>wherein an end of the motor shaft is fixedly connected to a first synchronous wheel, one end of the transmission shaft is fixedly connected to a second synchronous wheel, and a synchronous belt is connected between the second synchronous wheel and the first synchronous wheel.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The three-dimensional forming device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein one end of the motor shaft is fixedly connected to a first sprocket,
+<claim-text>one end of the transmission shaft is fixedly connected to a second sprocket;</claim-text>
+<claim-text>and a chain is connected between the second sprocket and the first sprocket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The three-dimensional forming device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein one end of the main housing is fixedly provided with a heating head fixing piece, and the heating head is provided at a bottom end of the heating head fixing piece;
+<claim-text>the transmission bracket is provided in the main housing through a fastener;</claim-text>
+<claim-text>a bottom end of the transmission bracket is provided with a connection hole, and a guide tube is connected between the connection hole and the heating head fixing piece.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The three-dimensional forming device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the main housing is composed of an upper shell and a lower shell that are spliced together;
+<claim-text>sides of the upper shell and the lower shell close to an installation position of the transmission bracket are provided with two sets of installation slots;</claim-text>
+<claim-text>the two sets of installation slots are combined to form an installation port, and the installation port is provided with a lens cover.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The three-dimensional forming device according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein one side of the upper shell is provided with a lens, a control button, and a push-pull button;
+<claim-text>an inner side of the upper shell is provided with a control main board through the fastener;</claim-text>
+<claim-text>one side of the control main board is respectively provided with a display screen, a power switch, and a control switch corresponding to the lens, the control button, and the push-pull button.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The three-dimensional forming device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the other end of the main housing is connected to a tail cover, an outer side of the tail cover is provided with a feeding hole, and a guide tube connected to the feeding hole is provided on an inner side of the tail cover.</claim-text>
+</claim>
+</claims>

@@ -788,6 +788,34 @@ it.layer(commandTestLayer)("settle-timeout route legality", (it) => {
   );
 });
 
+it.layer(commandTestLayer)("monitor polling interval", (it) => {
+  for (const flags of [[], ["--watch"], ["--detach"]])
+    it.effect(`rejects an interval outside a status loop: ${flags}`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(runYeetCommand(["monitor", "--poll-interval", "60s", ...flags]));
+        expect(failure).toMatchObject({ message: "--poll-interval requires --until-ready or --until-merged." });
+      })
+    );
+  for (const value of ["0s", "-1s", "Infinity", "invalid"])
+    it.effect(`rejects invalid interval ${value} before detached submission`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          runYeetCommand(["monitor", "--until-ready", `--poll-interval=${value}`, "--detach"])
+        );
+        expect(failure).toMatchObject({ message: "--poll-interval requires a positive finite duration." });
+      })
+    );
+  for (const mode of ["--until-ready", "--until-merged"])
+    it.effect(`accepts a positive interval before canonical detached submission: ${mode}`, () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          runYeetCommand(["monitor", mode, "--poll-interval", "60s", "--detach", "--plan"])
+        );
+        expect(failure).toMatchObject({ message: "--detach cannot be combined with --plan." });
+      })
+    );
+});
+
 it.layer(commandTestLayer)("until-ready route legality", (it) => {
   it.each([
     { untilMerged: false, untilEvent: false, watch: false, expected: "ready-loop" },

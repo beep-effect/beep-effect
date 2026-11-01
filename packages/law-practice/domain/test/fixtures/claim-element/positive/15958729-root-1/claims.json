@@ -1,0 +1,57 @@
+{
+  "familyId": "15958729-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for the attachment of a fastener element to a composite workpiece, wherein a hole punch is driven with the piercing body to the fore against a first side of the workpiece while the workpiece is supported at its oppositely disposed side by a piercing die, the hole of which is selected to suit the cross-sectional shape of the piercing body and hereby a piercing slug of the material of the workpiece is cut out, and the sheet metal part is brought into contact against the said first side, and is optionally pressed into the latter in order to bring features providing security against rotation provided at least one of the sheet metal part and at the piercing body into engagement with the workpiece.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A method in accordance with claim 1, wherein said composite workpiece is at least partly formed from a foam material.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A method in accordance with claim 2, wherein said foam material comprises at least one of plastic, aluminum, magnesium and steel.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A method in accordance with claim 2, wherein said foam material is optionally in association with at least one further component.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A method in accordance with claim 2, wherein said foam material comprises a sandwich material having cover layers of other materials.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A method in accordance with claim 5, wherein said sandwich material comprises first and second cover layers and a core of one of foam material cardboard, card or wood.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A method in accordance with claim 1, wherein a plurality of hole punches is supplied in a strip assembly to a piercing head operating in strokes which, for each stroke, presses a hole punch out of the strip assembly and thus pierces the workpiece.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A method in accordance with claim 7, wherein the piercing head simultaneously serves, during the separating out of the hole punch from the strip assembly, for a reshaping of the sheet metal part, to produce features of shape, the features of shape fulfilling at least one of the following functions: bringing about a security against rotation with the workpiece, facilitating separation of the hole punches from the strip assembly and facilitating the coiling up of the strip assembly.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A method in accordance with any claim 1, wherein the method is carried out in a press which is equipped with a progressive tool which carries out a plurality of operations in different stations of the progressive tool for each stroke of the press, with the piercing head being used in one station of the progressive tool.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method in accordance with claim 1, wherein the piercing slug is removed in the same stroke of the piercing head or in a second stroke by means of a plunger which is moved through a bore of the hole punch, i.e. of the sheet metal part and of the piercing body.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

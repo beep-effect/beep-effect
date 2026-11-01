@@ -1,0 +1,104 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A band comprising a pair of cooperating members configured to move between an open position adapted to receive an article in an article receiving channel defined between the pair of cooperating members and a closed position adapted to retain the article within the channel, each of the pair of cooperating members comprising:
+<claim-text>a plurality of bistable compliant links pivotally attached to one another, each of said plurality of links comprising a compliant section,</claim-text>
+<claim-text>wherein when said plurality of links are pivoted with respect to each other past a threshold position toward the closed position, the plurality of links are biased toward the closed position by biasing forces created by the compliant sections of the plurality of links and wherein when said plurality of links are pivoted with respect to each other past the threshold position toward the open position, the plurality of links are biased toward the open position by biasing forces created by the compliant sections of the plurality of links; and</claim-text>
+<claim-text>an actuator linkage pivotally connected to at least one of the plurality of links, each actuator linkage comprising an engagement end protruding into the article receiving channel when the pair of cooperating members are in the open position, wherein movement of the article into the article receiving channel causes the article to contact and exert actuation forces on the engagement end of each actuator linkage, and wherein the actuation forces cause the pair of cooperating members to move from the open position to the closed position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each actuator linkage comprises at least two pivot points pivotably connecting each actuator linkage to the plurality of links.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The band of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein each actuator linkage comprises at least two pivot points pivotably connecting each actuator linkage to at least two different links of the plurality of links.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The band of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein each actuator linkage further comprises a pivot end opposite to the engagement end, wherein a first pivot point of the at least two pivot points is positioned between the engagement end and the pivot end, and wherein a second pivot point of the at least two pivot points is positioned between the first pivot point and the pivot end.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The band of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the first pivot point of the at least two pivot points is positioned substantially midway between the engagement end and the pivot end.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The band of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the pivot ends of the actuator linkages of the pair of cooperating members move closer to one another as the pair of cooperating members move from the open position to the closed position.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the engagement ends of the actuator linkages of the pair of cooperating members move further away from one another as the pair of cooperating members move from the open position to the closed position.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the biasing forces created by the compliant sections biasing the plurality of links toward the closed position and biasing the plurality of links toward the open position are caused by elastic deformation of the compliant sections.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The band of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the biasing forces created by elastic deformation of the compliant sections increase as the plurality of links are pivoted with respect to each other from the open position toward the threshold position and from the closed position toward the threshold position, and wherein the forces created by elastic deformation of the compliant sections decrease as the plurality of links are pivoted with respect to each other from the threshold position toward the open position and from the threshold position toward the closed position.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein each of said compliant sections has an arcuate cross-section.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein the plurality of bistable compliant links define a piece of jewelry or a watch band configured to be attached to a watch body, and wherein the article comprises a body part.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. A band comprising a pair of cooperating members configured to move between an open position adapted to receive an article in an article receiving channel defined between the pair of cooperating members and a closed position adapted to retain the article within the channel, each of the pair of cooperating members comprising:
+<claim-text>a plurality of bistable compliant links pivotally attached to one another, each of said plurality of links comprising:
+<claim-text>a compliant section;</claim-text>
+<claim-text>a first rigid section extending from each compliant section; and</claim-text>
+<claim-text>a second rigid section extending from each compliant section;</claim-text>
+<claim-text>wherein said plurality of links are pivotally attached to one another via the first and second rigid sections;</claim-text>
+<claim-text>wherein when said plurality of links are pivoted with respect to each other past a threshold position toward the closed position, the plurality of links are biased toward the closed position by biasing forces created by the compliant sections of the plurality of links and wherein when said plurality of links are pivoted with respect to each other past the threshold position toward the open position, the plurality of links are biased toward the open position by biasing forces created by the compliant sections of the plurality of links;</claim-text>
+<claim-text>wherein the forces created by the compliant sections biasing the plurality of links toward the closed position and biasing the plurality of links toward the open position are caused by elastic deformation of the compliant sections; and</claim-text>
+</claim-text>
+<claim-text>an actuator linkage pivotally connected to at least one of the plurality of links, each actuator linkage comprising an engagement end protruding into the article receiving channel when the pair of cooperating members are in the open position, wherein movement of the article into the article receiving channel causes the article to contact and exert actuation forces on the engagement end of each actuator linkage, and wherein the actuation forces cause the pair of cooperating members to move from the open position to the closed position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref>,
+<claim-text>wherein the first rigid section of a first link of the plurality of links is pivotally connected to the second rigid section of a second link of the plurality of links;</claim-text>
+<claim-text>wherein the second rigid section of the first link is pivotally connected to the first rigid section of a third link of the plurality of links; and</claim-text>
+<claim-text>wherein the second rigid section of the second link is pivotally connected to the first rigid section of the third link.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein the forces created by elastic deformation of the compliant sections increase as the plurality of links are pivoted with respect to each other from the open position toward the threshold position and from the closed position toward the threshold position, and wherein the forces created by elastic deformation of the compliant sections decrease as the plurality of links are pivoted with respect to each other from the threshold position toward the open position and from the threshold position toward the closed position.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein the compliant section, the first rigid section and the second rigid section of each link are formed as a monolithic unit.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein, for each of said plurality of links, said compliant section, said first rigid section and said second rigid section are formed as separate elements that are connected to one another.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text>17. The band of <claim-ref idref="CLM-00016">claim 16</claim-ref> wherein, for each of said plurality of links:
+<claim-text>said first rigid section is pivotally connected to a first end of said compliant section; and</claim-text>
+<claim-text>said second rigid section is pivotally connected to a second end of said compliant section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text>18. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein each of said compliant sections has an arcuate cross-section.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text>19. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein each of said rigid sections is substantially straight in cross-section.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text>20. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein each of said rigid sections has an arcuate cross-section.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text>21. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein each actuator linkage comprises at least two pivot points pivotably connecting each actuator linkage to the plurality of links.</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text>22. The band of <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein each actuator linkage comprises at least two pivot points pivotably connecting the actuator linkage to at least two different links of the plurality of links.</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text>23. The band of <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein each actuator linkage further comprises a pivot end opposite to the engagement end, wherein a first pivot point of the at least two pivot points is positioned between the engagement end and the pivot end, and wherein a second pivot point of the at least two pivot points is positioned between the first pivot point and the pivot end.</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text>24. The band of <claim-ref idref="CLM-00023">claim 23</claim-ref>, wherein the first pivot point of the at least two pivot points is positioned substantially midway between the engagement end and the pivot end.</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text>25. The band of <claim-ref idref="CLM-00023">claim 23</claim-ref>, wherein the pivot ends of the actuator linkages of the pair of cooperating members move closer to one another as the pair of cooperating members move from the open position to the closed position.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text>26. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the engagement ends of the actuator linkages of the pair of cooperating members move further away from one another as the pair of cooperating members move from the open position to the closed position.</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text>27. The band of <claim-ref idref="CLM-00012">claim 12</claim-ref> wherein the plurality of bistable compliant links define a piece of jewelry or a watch band configured to be attached to a watch body, and wherein the article comprises a body part.</claim-text>
+</claim>
+</claims>

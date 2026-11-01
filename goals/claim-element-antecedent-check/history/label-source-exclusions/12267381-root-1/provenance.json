@@ -1,0 +1,50 @@
+{
+  "applicationNumber": "12267381",
+  "publicationNumber": "US20090114487A1",
+  "publicationDate": "2009-05-07",
+  "nativeXmlSha256": "a6df797456d2db1935e7c95e633904ac9079d2a74023bc6cafbc2a681e0b3154",
+  "claimsXmlSha256": "4330eb8760f199190cfda2f2fb341b50d5aa6c27dfbbffcd66b3e51d0d96a20e",
+  "officeActionDocumentIdentifiers": ["GHFDDI6IPPOPPY5"],
+  "officeActionMailDate": "2010-12-09",
+  "officeActionSection112Text": [
+    "claims 1-11 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\n1) claim 1, line 1, “the hoisting roping” lacks antecedent basis.\r\n2) claim 1, line 3, t elevator' shaft” lacks antecedent basis.\r\n3) claim 1, line 5, “the installation phase” lacks antecedent basis.\r\n4) claim 1, line 7, “the auxiliary hoist” lacks antecedent basis.\r\n5) claim 2, line 1, “the start” lacks antecedent basis.\r\n6) claim 2, line 2, the lower part” lacks antecedent basis.\r\n7) claim 2, line 2, “the free ends” lacks antecedent basis.\r\n8) claim 2, line 3, “the rope reels’ lacks antecedent basis.\r\n9) claim 2, line 3, “the bottommost floor” lacks antecedent basis.\r\n10) claim 2, line 13, “final fixing points and” is not clear.\r\n11) claim 3, line 1, “the starting phase” lacks antecedent basis.\r\n12) claim 3, line 3, “e.g. by means of…” is not definite.\r\n13) claim 3, line 3, “the safety gear” lacks antecedent basis.\r\n14) claim 3, lm 4, ‘the bottommost floor’ lacks antecedent basis.\r\n15) claim 4, line 8, “the first fixing point” lacks antecedent basis.\r\n16) claim 4, line 10, “the roof’ lacks antecedent basis.\r\n17) claim 5, line 2, “the fixing point’ lacks antecedent basis.\r\n18) claim 5, line 5, “the kicking roller’ lacks antecedent basis.\r\n19) claim 5, line 10, two occurrences of “the fixing point” are not clear which is 1st and 2nd fixing point.\r\n20) claim 6, line 1, ‘the starting phase” lacks antecedent basis.\r\n21) claim 6, line 2, “e.g. by means of the safety gear’ is not definite.\r\n22) claim 7, line 9, “the roof’ lacks antecedent basis.\r\n23) claim 8, line 9, “the roof” lacks antecedent basis.\r\n24) claim 9, line 4, “ the kicking roller’ lacks antecedent basis.\r\n25) claim 10, line 4, “ the kicking roller” lacks antecedent basis.\r\n26) claim 11, line 4, “the kicking roller’ lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "FNHIZYSWPPOPPY2",
+      "officialDate": "2008-11-07T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "FN9GI0X2PPOPPY4",
+      "officialDate": "2008-11-07T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "FNHIZYSWPPOPPY2",
+      "officialDate": "2008-11-07T00:00:00.000-0500",
+      "sha256": "d0a65e2caeb1043ce548c484330703c09577f3ecfa81e242865c1591b78c8399",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [6, 8, 10],
+      "sourceClaimCount": 11
+    },
+    {
+      "documentIdentifier": "FN9GI0X2PPOPPY4",
+      "officialDate": "2008-11-07T00:00:00.000-0500",
+      "sha256": "7355f4be33b9e7c943e52ed85b69f5ca465a368e5af75c016cfa497cd13a63f9",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 5
+    }
+  ],
+  "documentInventoryCount": 53,
+  "documentInventoryRows": 53,
+  "primaryCpc": "B66B   7/00",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/12267381",
+    "https://api.uspto.gov/api/v1/patent/applications/12267381/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

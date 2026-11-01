@@ -1,0 +1,67 @@
+{
+  "applicationNumber": "17617663",
+  "publicationNumber": "US20220305549A1",
+  "publicationDate": "2022-09-29",
+  "nativeXmlSha256": "7f59052842ad11070af0e1b00819e556c4bea247639b264230132e067b7060cc",
+  "claimsXmlSha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3",
+  "officeActionDocumentIdentifiers": [
+    "LG26KQHVGREENX3"
+  ],
+  "officeActionMailDate": "2023-04-06",
+  "officeActionSection112Text": [
+    "claims 1-10 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention.\r\nclaim 1 recites the limitation the secondary cooling zone in the 1st line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 1 recites the limitation the outside in the 16th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “an” to obtain proper antecedent basis.\r\nclaim 1 recites the limitation the opening and closing in the 19th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to delete “the” to obtain proper antecedent basis.\r\nclaim 1 recites the limitation the movable joint in the 19th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “joint” with “joints” to obtain proper antecedent basis with “movable joints” in the 10th line.\r\nwith regard to claim 3 (in the last two lines), it is unclear what is meant by “via the disconnecting switch qs, the fuse fu and through the alternating phase conversion circuit at the other end”. correction and clarification are required.\r\nclaim 4 recites the limitation the primary in the 5th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the anodes bridging the 5th and 6th lines. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to delete “the” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the secondary output terminal bridging the 6th and 7th lines. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the cathode in the 7th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the secondary input terminal in the 8th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the cathode in the 10th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the phase sequence in the 12th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 4 recites the limitation the on-off bridging the 14th and 15th lines. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “an” to obtain proper antecedent basis.\r\nclaim 7 recites the limitation the profiles in the last line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 8 recites the limitation the connections in the 3rd line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to delete “the” to obtain proper antecedent basis.\r\nclaim 8 recites the limitation the pair of iron cores in the 3rd line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 9 recites the limitation the same in the 5th line. there is insufficient antecedent basis for this limitation in the claim. in addition, it is unclear what structural feature “the same” refers to.\r\nclaim 9 recites the limitation the opening degree in the 5th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “an” to obtain proper antecedent basis.\r\nclaim 9 recites the limitation the thickness in the 6th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 9 recites the limitation the alternating phase conversion circuit bridging the 7th and 8th lines. there is insufficient antecedent basis for this limitation in the claim.\r\nclaim 9 recites the limitation the molten steel in the 10th line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to delete “the” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the step 2) in the 3rd line. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to delete “the” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the first diode d1 in the 1st line of step 2.1. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the first contactor km1 in the 3rd line of step 2.1. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the three-phase power supply in the 2nd line of step 2.2. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the second diode d2 in the 1st line of step 2.3. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the second contactor km2 in the 3rd line of step 2.3. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the alternating voltage u1 in the 2nd line of step 2.5. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “an” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the phase sequence in the 4th line of step 2.5. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “a” to obtain proper antecedent basis.\r\nclaim 10 recites the limitation the electromagnetic stirring direction in the last line of step 2.5. there is insufficient antecedent basis for this limitation in the claim. in this instance, it is suggested to replace “the” with “an” to obtain proper antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "KWZ805L9LDFLYX9",
+      "officialDate": "2021-12-09T12:14:31.000-0500"
+    },
+    {
+      "documentIdentifier": "KWZ8005CLDFLYX5",
+      "officialDate": "2021-12-09T12:14:28.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "KWZ805L9LDFLYX9",
+      "officialDate": "2021-12-09T12:14:31.000-0500",
+      "sha256": "55ca854127d087db1bf641b32b6f4aa11157ca707134652e78f1c4a1b43049de",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "sourceClaimCount": 10
+    },
+    {
+      "documentIdentifier": "KWZ8005CLDFLYX5",
+      "officialDate": "2021-12-09T12:14:28.000-0500",
+      "sha256": "9b9cf34d724f8b926588a555cb40c72719c95e0610628a27df9ebf8261bf9388",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        6,
+        8,
+        9
+      ],
+      "sourceClaimCount": 10
+    }
+  ],
+  "documentInventoryCount": 84,
+  "documentInventoryRows": 84,
+  "primaryCpc": "B22D  11/115",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/17617663",
+    "https://api.uspto.gov/api/v1/patent/applications/17617663/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-attorney-decision-required"
+}

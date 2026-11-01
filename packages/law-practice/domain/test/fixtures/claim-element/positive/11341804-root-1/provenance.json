@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11341804",
+  "publicationNumber": "US20060119046A1",
+  "publicationDate": "2006-06-08",
+  "nativeXmlSha256": "c3f27a52925956baff2037d9a06e8b2407ca219eb4710170123868680d9712db",
+  "claimsXmlSha256": "f5fdd6c5f938fc2d4c77d249edd92179a6233cc29d55f4e1d52b4aa481f40d90",
+  "officeActionDocumentIdentifiers": [
+    "G1CMQ2ADPPOPPY5"
+  ],
+  "officeActionMailDate": "2009-10-28",
+  "officeActionSection112Text": [
+    "claims 1-24 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\n(1) claim 1, line 1, “means” is not clear.\r\n(2) claim 1, line 4, “the gasket substance” lacks antecedent basis.\r\n(3) claim 1, line 3, “the influence” lacks antecedent basis.\r\n(4) claim 1, line 5, “and/or” lacks antecedent basis.\r\n(5) claim 1, line 6, “and/or” lacks antecedent basis.\r\n(6) claim 2, line 2, “and/or” lacks antecedent basis.\r\n(7) claim 2, line 3, “and/or” lacks antecedent basis.\r\n(8) claim 3, line 2, “and/or” lacks antecedent basis.\r\n(9) claim 4, line 1, “the non-expandable state” lacks antecedent basis.\r\n(10)claim 4, line 3, “the expanded state” lacks antecedent basis.\r\n(11)claim 7, line 3, “cross section (bead, double bead)” is not clear.\r\n(12)claim 8, “means” is not clear.\r\n(13)claim 8, line 2, “and/or” lacks antecedent basis.\r\n(14)claim 8, line 3, “and/or” lacks antecedent basis.\r\n(15)claim 9, line 2, “different (partial” is not clear.\r\n(16)claim 9, line 3, “and/or” lacks antecedent basis.\r\n(17)claim 10, line 1, “means” is not clear.\r\n(18)claim 10, line 3, “the influence” lacks antecedent basis.\r\n(19)claim 10, 4, “the gasket substance” lacks antecedent basis.\r\n(20)claim 10, line 5, “and/or” lacks antecedent basis.\r\n(21)claim 11, line 1, “the expandable particle” lacks antecedent basis.\r\n(22)claim 11, line 1, “the non-expanded state lacks antecedent basis.\r\n(23)claim 14, line 3, “cross section (bead, double bead)” is not clear.\r\n(24)claim 15, line 1,”means” is not clear.\r\n(25)claim 15, line 2, “and/or” lacks antecedent basis.\r\n(25)claim 15, line 3, “and/or” lacks antecedent basis.\r\n(26)claim 16, line 2, “different (partial)' is not clear.\r\n(27)claim 16, line 3, “and/or” lacks antecedent basis.\r\n(28)claim 17, line 3, “the influence” lacks antecedent basis.\r\n(29)claim 19, line 1, “the expandable particles” lacks antecedent basis.\r\n(30)claim 19, line 1, “the non-expanded state’ lacks antecedent basis.\r\n(31)claim 22, line 3, “cross section (bead, double bead) is not clear."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EJ8R8090PP1GUI4",
+      "officialDate": "2006-01-27T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 33,
+  "documentInventoryRows": 33,
+  "primaryCpc": "F16J  15/064",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11341804",
+    "https://api.uspto.gov/api/v1/patent/applications/11341804/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

@@ -1,0 +1,232 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14414970-root-20",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "verdict": "eligible",
+  "reviewedClaimNumbers": [20, 21, 22],
+  "sourceIdentity": {
+    "applicationNumber": "14414970",
+    "publicationNumber": "US20150183022A1",
+    "publicationDate": "20150702"
+  },
+  "digestEvidence": [
+    {
+      "file": "14414970.publication.xml",
+      "sha256": "245f4d92180d7291df3834ddd6f54e8a4f43a22e2a50b5109b32ac858e41e4a8",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "ce5205838a42a5b21490f9b43266f1e754fc79cfd5cf59fc2bca2164265c627f",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14414970.I4YHRUZLPXXIFW3.original.xml",
+      "sha256": "a5e8f54d6ed86f4c8f0900cc2b2f3e57e18204476fa6c246fa3cf4b4f869d87a",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14414970.I4ZKXSVRPXXIFW4.original.xml",
+      "sha256": "364cb57718159e62d8b0ec2408b44c7bd0a59560873f2eb71ac38db586b8e2f9",
+      "matchesProvenance": true
+    }
+  ],
+  "quotedEvidence": [
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the upper surface",
+      "nativeQuote": "the upper surface",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the die side",
+      "nativeQuote": "the die side",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 20,
+      "examinerPhrase": "the effective solid volume",
+      "nativeQuote": "the effective solid volume",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "groundEvidence": {
+    "fullCacheFile": "full-oa-expanded.json",
+    "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+    "documentIdentifier": "J1DIJ7SRRXEAPX5",
+    "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+    "actualNumberedGroundScope": "Claims11–22 are rejected under112(b)/pre-AIAsecondparagraph; selected20 is individually discussed for upper surface,die side,effective solid volume. Selected21/22 are included in blanket scope and dependency, with no separate quoted ground asserted.",
+    "scopeEvidence": "Claims11–22 are rejected under112(b)/pre-AIAsecondparagraph; selected20 is individually discussed for upper surface,die side,effective solid volume. Selected21/22 are included in blanket scope and dependency, with no separate quoted ground asserted.",
+    "individuallyDiscussedSelectedClaimNumbers": [20],
+    "selectedFamilyContextWithoutIndividualQuotedGround": [21, 22]
+  },
+  "inventoryEvidence": {
+    "sha256": "7a82da12db83102009c333b1501cb31ff8acfea09ace6d9e1888e2cfe475102a",
+    "declaredCount": 99,
+    "actualRows": 99,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "I4YHRUZ6PXXIFW3",
+        "documentCode": "A.PE",
+        "officialDate": "2015-01-15T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "I4YHRUZLPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2015-01-15T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "I4YHRUZTPXXIFW3",
+        "documentCode": "REM",
+        "officialDate": "2015-01-15T00:00:00.000-0500"
+      },
+      {
+        "documentIdentifier": "I4ZKXSVRPXXIFW4",
+        "documentCode": "CLM",
+        "officialDate": "2015-01-15T00:00:00.000-0500"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "J1DIJ7SRRXEAPX5",
+        "documentCode": "CTNF",
+        "officialDate": "2017-04-11T00:00:00.000-0400"
+      }
+    ]
+  },
+  "concerns": [
+    "Actual112(b)/secondparagraph rejection11–22 expressly includes selected20–22 and three numbered20 phrases match. Native20 is independent;21→20;22 explicitly includes method20.",
+    "Original I4YHRUZL Claim20 node appends printed21; original I4ZKXSVR Claim21 node appends printed22. All selected native claims remain separately numbered and originals show explicit printed boundaries; source parsing count21 versus22 is explained.",
+    "Marked original22 says (Currently Amended) method of claim20 [[or21]], while unamended says20or21. Clear double-bracket deletion notation corroborates native20-only dependency; no hidden/unreadable strike interpretation. Filed preliminary amendment and full inventory contain no subsequent pre-action CLM/non-entry.",
+    "PDF confirmation of22 double-bracket convention is useful if critic doubts notation; no genuine unreadable limitation identified."
+  ],
+  "pdfNeeds": [],
+  "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+  "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "14414970-root-20",
+      "role": "source-eligibility-extractor",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.95,
+      "verdict": "eligible",
+      "reviewedClaimNumbers": [20, 21, 22],
+      "sourceIdentity": {
+        "applicationNumber": "14414970",
+        "publicationNumber": "US20150183022A1",
+        "publicationDate": "20150702"
+      },
+      "digestEvidence": [
+        {
+          "file": "14414970.publication.xml",
+          "sha256": "245f4d92180d7291df3834ddd6f54e8a4f43a22e2a50b5109b32ac858e41e4a8",
+          "matchesProvenance": true
+        },
+        {
+          "file": "source.claims.xml",
+          "sha256": "ce5205838a42a5b21490f9b43266f1e754fc79cfd5cf59fc2bca2164265c627f",
+          "matchesProvenance": true
+        },
+        {
+          "file": "14414970.I4YHRUZLPXXIFW3.original.xml",
+          "sha256": "a5e8f54d6ed86f4c8f0900cc2b2f3e57e18204476fa6c246fa3cf4b4f869d87a",
+          "matchesProvenance": true
+        },
+        {
+          "file": "14414970.I4ZKXSVRPXXIFW4.original.xml",
+          "sha256": "364cb57718159e62d8b0ec2408b44c7bd0a59560873f2eb71ac38db586b8e2f9",
+          "matchesProvenance": true
+        }
+      ],
+      "quotedEvidence": [
+        {
+          "claimNumber": 20,
+          "examinerPhrase": "the upper surface",
+          "nativeQuote": "the upper surface",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 20,
+          "examinerPhrase": "the die side",
+          "nativeQuote": "the die side",
+          "literalMatchIgnoringCase": true
+        },
+        {
+          "claimNumber": 20,
+          "examinerPhrase": "the effective solid volume",
+          "nativeQuote": "the effective solid volume",
+          "literalMatchIgnoringCase": true
+        }
+      ],
+      "groundEvidence": {
+        "fullCacheFile": "full-oa-expanded.json",
+        "fullCacheSha256": "115c5af3c1f05bfc978b5b0ba07c3fe7e077848170f5dd25880d5713e74bbf56",
+        "documentIdentifier": "J1DIJ7SRRXEAPX5",
+        "minimalStatutoryQuote": "The following is a quotation of 35 U.S.C. 112(b):",
+        "actualNumberedGroundScope": "Numbered antecedent-basis rejections immediately follow112(b)/second-paragraph quotations; selected numbered phrases verified.",
+        "scopeEvidence": "Selected1–9 individually discussed in112(b) section;112(a) discussion occurs separately above."
+      },
+      "inventoryEvidence": {
+        "sha256": "7a82da12db83102009c333b1501cb31ff8acfea09ace6d9e1888e2cfe475102a",
+        "declaredCount": 99,
+        "actualRows": 99,
+        "preOrOnActionClaimAndAmendmentRows": [
+          {
+            "documentIdentifier": "I4YHRUZ6PXXIFW3",
+            "documentCode": "A.PE",
+            "officialDate": "2015-01-15T00:00:00.000-0500"
+          },
+          {
+            "documentIdentifier": "I4YHRUZLPXXIFW3",
+            "documentCode": "CLM",
+            "officialDate": "2015-01-15T00:00:00.000-0500"
+          },
+          {
+            "documentIdentifier": "I4YHRUZTPXXIFW3",
+            "documentCode": "REM",
+            "officialDate": "2015-01-15T00:00:00.000-0500"
+          },
+          {
+            "documentIdentifier": "I4ZKXSVRPXXIFW4",
+            "documentCode": "CLM",
+            "officialDate": "2015-01-15T00:00:00.000-0500"
+          }
+        ],
+        "citedOfficeActionRows": [
+          {
+            "documentIdentifier": "J1DIJ7SRRXEAPX5",
+            "documentCode": "CTNF",
+            "officialDate": "2017-04-11T00:00:00.000-0400"
+          }
+        ]
+      },
+      "concerns": [
+        "Actual112(b)/secondparagraph rejection11–22 expressly includes selected20–22 and three numbered20 phrases match. Native20 is independent;21→20;22 explicitly includes method20.",
+        "Original I4YHRUZL Claim20 node appends printed21; original I4ZKXSVR Claim21 node appends printed22. All selected native claims remain separately numbered and originals show explicit printed boundaries; source parsing count21 versus22 is explained.",
+        "Marked original22 says (Currently Amended) method of claim20 [[or21]], while unamended says20or21. Clear double-bracket deletion notation corroborates native20-only dependency; no hidden/unreadable strike interpretation. Filed preliminary amendment and full inventory contain no subsequent pre-action CLM/non-entry.",
+        "PDF confirmation of22 double-bracket convention is useful if critic doubts notation; no genuine unreadable limitation identified."
+      ],
+      "pdfNeeds": [],
+      "rationale": "Source-only selection audit distinguishes actual numbered statutoryground, native membership, conflicting versions and unreadable original formula. Chronology supports but does not replace exact source evidence. Candidate only; no active slot changed; independent critic and attorney adjudication pending.",
+      "independence": "No structuralexpected/production/rules/predictions, network/secrets/git/delegation. Only this candidate source-audit written."
+    }
+  ],
+  "receiptCorrections": [
+    {
+      "reason": "Independent source critic identified copied generic scope wording. Corrected only ground attribution; source eligibility verdict unchanged.",
+      "fields": [
+        "groundEvidence.scopeEvidence",
+        "groundEvidence.actualNumberedGroundScope"
+      ],
+      "previousRoundPreserved": true
+    }
+  ]
+}

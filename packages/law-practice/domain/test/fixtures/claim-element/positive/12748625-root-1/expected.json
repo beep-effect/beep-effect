@@ -1,0 +1,2908 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 342,
+          "quote": "A method for assessing channel performance in a home communication network, the home communication network operable over a plurality of channels, the home communication network comprising a network controller and a plurality of nodes, each of the network controller and the plurality of nodes in communication over a coax backbone, the method"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 23,
+              "endChar": 42,
+              "quote": "channel performance"
+            },
+            "determiner": "bare",
+            "head": "channel performance"
+          },
+          {
+            "anchor": {
+              "startChar": 46,
+              "endChar": 74,
+              "quote": "a home communication network"
+            },
+            "determiner": "a",
+            "head": "home communication network"
+          },
+          {
+            "anchor": {
+              "startChar": 76,
+              "endChar": 106,
+              "quote": "the home communication network"
+            },
+            "determiner": "the",
+            "head": "home communication network"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 144,
+              "quote": "a plurality of channels"
+            },
+            "determiner": "plurality-of",
+            "head": "channels"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 176,
+              "quote": "the home communication network"
+            },
+            "determiner": "the",
+            "head": "home communication network"
+          },
+          {
+            "anchor": {
+              "startChar": 188,
+              "endChar": 208,
+              "quote": "a network controller"
+            },
+            "determiner": "a",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 213,
+              "endChar": 233,
+              "quote": "a plurality of nodes"
+            },
+            "determiner": "plurality-of",
+            "head": "nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 265,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 292,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 315,
+              "endChar": 330,
+              "quote": "a coax backbone"
+            },
+            "determiner": "a",
+            "head": "coax backbone"
+          },
+          {
+            "anchor": {
+              "startChar": 332,
+              "endChar": 342,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 355,
+          "endChar": 389,
+          "quote": "selecting a channel for assessment"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 365,
+              "endChar": 374,
+              "quote": "a channel"
+            },
+            "determiner": "a",
+            "head": "channel"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 391,
+          "endChar": 461,
+          "quote": "allocating a first probe operation for use with the plurality of nodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 402,
+              "endChar": 425,
+              "quote": "a first probe operation"
+            },
+            "determiner": "a",
+            "head": "first probe operation"
+          },
+          {
+            "anchor": {
+              "startChar": 439,
+              "endChar": 461,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 463,
+          "endChar": 602,
+          "quote": "in response to the allocating, sending a first probe operation report message from each of the plurality of nodes to the network controller"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 478,
+              "endChar": 492,
+              "quote": "the allocating"
+            },
+            "determiner": "the",
+            "head": "allocating"
+          },
+          {
+            "anchor": {
+              "startChar": 502,
+              "endChar": 540,
+              "quote": "a first probe operation report message"
+            },
+            "determiner": "a",
+            "head": "first probe operation report message"
+          },
+          {
+            "anchor": {
+              "startChar": 554,
+              "endChar": 576,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 580,
+              "endChar": 602,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 604,
+          "endChar": 759,
+          "quote": "in response to receiving the first probe operation report messages, using the network controller to select a node to be a channel assessment operation node"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 629,
+              "endChar": 670,
+              "quote": "the first probe operation report messages"
+            },
+            "determiner": "the",
+            "head": "first probe operation report messages"
+          },
+          {
+            "anchor": {
+              "startChar": 678,
+              "endChar": 700,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 711,
+              "endChar": 717,
+              "quote": "a node"
+            },
+            "determiner": "a",
+            "head": "node"
+          },
+          {
+            "anchor": {
+              "startChar": 724,
+              "endChar": 759,
+              "quote": "a channel assessment operation node"
+            },
+            "determiner": "a",
+            "head": "channel assessment operation node"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 761,
+          "endChar": 880,
+          "quote": "selecting at least a portion of the plurality of nodes to participate in a channel assessment operation signal exchange"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 780,
+              "endChar": 789,
+              "quote": "a portion"
+            },
+            "determiner": "a",
+            "head": "portion"
+          },
+          {
+            "anchor": {
+              "startChar": 793,
+              "endChar": 815,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 834,
+              "endChar": 880,
+              "quote": "a channel assessment operation signal exchange"
+            },
+            "determiner": "a",
+            "head": "channel assessment operation signal exchange"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 886,
+          "endChar": 1001,
+          "quote": "moving the selected nodes to a different channel to perform a channel assessment operation on the different channel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 893,
+              "endChar": 911,
+              "quote": "the selected nodes"
+            },
+            "determiner": "the",
+            "head": "selected nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 915,
+              "endChar": 934,
+              "quote": "a different channel"
+            },
+            "determiner": "a",
+            "head": "different channel"
+          },
+          {
+            "anchor": {
+              "startChar": 946,
+              "endChar": 976,
+              "quote": "a channel assessment operation"
+            },
+            "determiner": "a",
+            "head": "channel assessment operation"
+          },
+          {
+            "anchor": {
+              "startChar": 980,
+              "endChar": 1001,
+              "quote": "the different channel"
+            },
+            "determiner": "the",
+            "head": "different channel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 355,
+              "endChar": 365,
+              "quote": "selecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 365,
+                "endChar": 374,
+                "quote": "a channel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 374,
+              "endChar": 389,
+              "quote": " for assessment"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 391,
+              "endChar": 402,
+              "quote": "allocating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 402,
+                "endChar": 425,
+                "quote": "a first probe operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 425,
+              "endChar": 439,
+              "quote": " for use with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 439,
+                "endChar": 461,
+                "quote": "the plurality of nodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 463,
+              "endChar": 478,
+              "quote": "in response to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 478,
+                "endChar": 492,
+                "quote": "the allocating"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 492,
+              "endChar": 502,
+              "quote": ", sending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 502,
+                "endChar": 540,
+                "quote": "a first probe operation report message"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 540,
+              "endChar": 554,
+              "quote": " from each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 554,
+                "endChar": 576,
+                "quote": "the plurality of nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 576,
+              "endChar": 580,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 580,
+                "endChar": 602,
+                "quote": "the network controller"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 604,
+              "endChar": 629,
+              "quote": "in response to receiving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 629,
+                "endChar": 670,
+                "quote": "the first probe operation report messages"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 670,
+              "endChar": 678,
+              "quote": ", using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 678,
+                "endChar": 700,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 700,
+              "endChar": 711,
+              "quote": " to select "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 711,
+                "endChar": 717,
+                "quote": "a node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 717,
+              "endChar": 724,
+              "quote": " to be "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 724,
+                "endChar": 759,
+                "quote": "a channel assessment operation node"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 761,
+              "endChar": 780,
+              "quote": "selecting at least "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 780,
+                "endChar": 789,
+                "quote": "a portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 789,
+              "endChar": 793,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 793,
+                "endChar": 815,
+                "quote": "the plurality of nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 815,
+              "endChar": 834,
+              "quote": " to participate in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 834,
+                "endChar": 880,
+                "quote": "a channel assessment operation signal exchange"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 886,
+              "endChar": 893,
+              "quote": "moving "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 893,
+                "endChar": 911,
+                "quote": "the selected nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 911,
+              "endChar": 915,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 915,
+                "endChar": 934,
+                "quote": "a different channel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 934,
+              "endChar": 946,
+              "quote": " to perform "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 946,
+                "endChar": 976,
+                "quote": "a channel assessment operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 976,
+              "endChar": 980,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 980,
+                "endChar": 1001,
+                "quote": "the different channel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 76,
+            "endChar": 106,
+            "quote": "the home communication network"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 46,
+            "endChar": 74,
+            "quote": "a home communication network"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 146,
+            "endChar": 176,
+            "quote": "the home communication network"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 46,
+            "endChar": 74,
+            "quote": "a home communication network"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 243,
+            "endChar": 265,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 270,
+            "endChar": 292,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 332,
+            "endChar": 342,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 439,
+            "endChar": 461,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 576,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 580,
+            "endChar": 602,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 678,
+            "endChar": 700,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 793,
+            "endChar": 815,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 629,
+            "endChar": 670,
+            "quote": "the first probe operation report messages"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 502,
+            "endChar": 540,
+            "quote": "a first probe operation report message"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 893,
+            "endChar": 911,
+            "quote": "the selected nodes"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 780,
+            "endChar": 789,
+            "quote": "a portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 980,
+            "endChar": 1001,
+            "quote": "the different channel"
+          }
+        },
+        "introducing": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 915,
+            "endChar": 934,
+            "quote": "a different channel"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 174,
+          "quote": "using the network controller to replace the channel assessment node with a second channel assessment node from the plurality of nodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 69,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 108,
+              "quote": "the channel assessment node"
+            },
+            "determiner": "the",
+            "head": "channel assessment node"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 146,
+              "quote": "a second channel assessment node"
+            },
+            "determiner": "a",
+            "head": "second channel assessment node"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 174,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 47,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 69,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 81,
+              "quote": " to replace "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 108,
+                "quote": "the channel assessment node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 114,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 146,
+                "quote": "a second channel assessment node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 146,
+              "endChar": 152,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 152,
+                "endChar": 174,
+                "quote": "the plurality of nodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 69,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 152,
+            "endChar": 174,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 108,
+            "quote": "the channel assessment node"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 724,
+            "endChar": 759,
+            "quote": "a channel assessment operation node"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 150,
+          "quote": "using the second channel assessment node to allocate the second probe operation on each of the selected nodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 81,
+              "quote": "the second channel assessment node"
+            },
+            "determiner": "the",
+            "head": "second channel assessment node"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 120,
+              "quote": "the second probe operation"
+            },
+            "determiner": "the",
+            "head": "second probe operation"
+          },
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 150,
+              "quote": "the selected nodes"
+            },
+            "determiner": "the",
+            "head": "selected nodes"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 47,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 81,
+                "quote": "the second channel assessment node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 81,
+              "endChar": 94,
+              "quote": " to allocate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 120,
+                "quote": "the second probe operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 132,
+              "quote": " on each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 150,
+                "quote": "the selected nodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 81,
+            "quote": "the second channel assessment node"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 146,
+            "quote": "a second channel assessment node"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 150,
+            "quote": "the selected nodes"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 780,
+            "endChar": 789,
+            "quote": "a portion"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 204,
+          "quote": "providing using a second probe report, from the channel assessment node to the network controller, an estimation of the achievable capacity in the assessed channel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 78,
+              "quote": "a second probe report"
+            },
+            "determiner": "a",
+            "head": "second probe report"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 112,
+              "quote": "the channel assessment node"
+            },
+            "determiner": "the",
+            "head": "channel assessment node"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 138,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 153,
+              "quote": "an estimation"
+            },
+            "determiner": "an",
+            "head": "estimation"
+          },
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 180,
+              "quote": "the achievable capacity"
+            },
+            "determiner": "the",
+            "head": "achievable capacity"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 204,
+              "quote": "the assessed channel"
+            },
+            "determiner": "the",
+            "head": "assessed channel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 57,
+              "quote": "providing using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 78,
+                "quote": "a second probe report"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 85,
+              "quote": ", from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 112,
+                "quote": "the channel assessment node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 116,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 138,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 138,
+              "endChar": 140,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 153,
+                "quote": "an estimation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 153,
+              "endChar": 157,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 157,
+                "endChar": 180,
+                "quote": "the achievable capacity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 184,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 204,
+                "quote": "the assessed channel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 116,
+            "endChar": 138,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 211,
+          "quote": "providing using a second probe report, from the second channel assessment node to the network controller, an estimation of the achievable capacity in the assessed channel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 78,
+              "quote": "a second probe report"
+            },
+            "determiner": "a",
+            "head": "second probe report"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 119,
+              "quote": "the second channel assessment node"
+            },
+            "determiner": "the",
+            "head": "second channel assessment node"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 145,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 160,
+              "quote": "an estimation"
+            },
+            "determiner": "an",
+            "head": "estimation"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 187,
+              "quote": "the achievable capacity"
+            },
+            "determiner": "the",
+            "head": "achievable capacity"
+          },
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 211,
+              "quote": "the assessed channel"
+            },
+            "determiner": "the",
+            "head": "assessed channel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 57,
+              "quote": "providing using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 78,
+                "quote": "a second probe report"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 85,
+              "quote": ", from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 119,
+                "quote": "the second channel assessment node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 119,
+              "endChar": 123,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 145,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 145,
+              "endChar": 147,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 147,
+                "endChar": 160,
+                "quote": "an estimation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 164,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 164,
+                "endChar": 187,
+                "quote": "the achievable capacity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 191,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 211,
+                "quote": "the assessed channel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 145,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 119,
+            "quote": "the second channel assessment node"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 146,
+            "quote": "a second channel assessment node"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 110,
+          "quote": "using the network controller to select a third channel for assessment"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 69,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 95,
+              "quote": "a third channel"
+            },
+            "determiner": "a",
+            "head": "third channel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 47,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 69,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 80,
+              "quote": " to select "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 95,
+                "quote": "a third channel"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 95,
+              "endChar": 110,
+              "quote": " for assessment"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 69,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 30,
+          "endChar": 215,
+          "quote": "said allocating a first probe operation comprises using the network controller to prevent the plurality of nodes from sending information on the network during the first probe operation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 30,
+              "endChar": 45,
+              "quote": "said allocating"
+            },
+            "determiner": "said",
+            "head": "allocating"
+          },
+          {
+            "anchor": {
+              "startChar": 46,
+              "endChar": 69,
+              "quote": "a first probe operation"
+            },
+            "determiner": "a",
+            "head": "first probe operation"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 108,
+              "quote": "the network controller"
+            },
+            "determiner": "the",
+            "head": "network controller"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 142,
+              "quote": "the plurality of nodes"
+            },
+            "determiner": "the",
+            "head": "plurality of nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 167,
+              "quote": "information"
+            },
+            "determiner": "bare",
+            "head": "information"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 182,
+              "quote": "the network"
+            },
+            "determiner": "the",
+            "head": "network"
+          },
+          {
+            "anchor": {
+              "startChar": 190,
+              "endChar": 215,
+              "quote": "the first probe operation"
+            },
+            "determiner": "the",
+            "head": "first probe operation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 30,
+                "endChar": 45,
+                "quote": "said allocating"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 45,
+              "endChar": 46,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 46,
+                "endChar": 69,
+                "quote": "a first probe operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 86,
+              "quote": " comprises using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 108,
+                "quote": "the network controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 120,
+              "quote": " to prevent "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 142,
+                "quote": "the plurality of nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 142,
+              "endChar": 156,
+              "quote": " from sending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 167,
+                "quote": "information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 171,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 182,
+                "quote": "the network"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 182,
+              "endChar": 190,
+              "quote": " during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 190,
+                "endChar": 215,
+                "quote": "the first probe operation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "1.b"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 108,
+            "quote": "the network controller"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 188,
+            "endChar": 208,
+            "quote": "a network controller"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 120,
+            "endChar": 142,
+            "quote": "the plurality of nodes"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 213,
+            "endChar": 233,
+            "quote": "a plurality of nodes"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 182,
+            "quote": "the network"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 46,
+            "endChar": 74,
+            "quote": "a home communication network"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 190,
+            "endChar": 215,
+            "quote": "the first probe operation"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 402,
+            "endChar": 425,
+            "quote": "a first probe operation"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 151,
+          "quote": "using the channel assessment operation node to allocate a second probe operation on each of the selected nodes"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 84,
+              "quote": "the channel assessment operation node"
+            },
+            "determiner": "the",
+            "head": "channel assessment operation node"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 121,
+              "quote": "a second probe operation"
+            },
+            "determiner": "a",
+            "head": "second probe operation"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 151,
+              "quote": "the selected nodes"
+            },
+            "determiner": "the",
+            "head": "selected nodes"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 47,
+              "quote": "using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 84,
+                "quote": "the channel assessment operation node"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 97,
+              "quote": " to allocate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 121,
+                "quote": "a second probe operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 121,
+              "endChar": 133,
+              "quote": " on each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 151,
+                "quote": "the selected nodes"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "1.d"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 151,
+            "quote": "the selected nodes"
+          }
+        },
+        "introducing": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 780,
+            "endChar": 789,
+            "quote": "a portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 84,
+            "quote": "the channel assessment operation node"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 724,
+            "endChar": 759,
+            "quote": "a channel assessment operation node"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 21,
+          "quote": "The method of claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The method"
+            },
+            "determiner": "the",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 41,
+          "endChar": 136,
+          "quote": "identifying, in the Media Access Plan (“MAP”), the channel assessment operation as a link state"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 57,
+              "endChar": 78,
+              "quote": "the Media Access Plan"
+            },
+            "determiner": "the",
+            "head": "media access plan"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 120,
+              "quote": "the channel assessment operation"
+            },
+            "determiner": "the",
+            "head": "channel assessment operation"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 136,
+              "quote": "a link state"
+            },
+            "determiner": "a",
+            "head": "link state"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 41,
+              "endChar": 57,
+              "quote": "identifying, in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 57,
+                "endChar": 78,
+                "quote": "the Media Access Plan"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 78,
+              "endChar": 88,
+              "quote": " (“MAP”), "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 120,
+                "quote": "the channel assessment operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 124,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 136,
+                "quote": "a link state"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.a",
+        "ancestor": "1.f"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 120,
+            "quote": "the channel assessment operation"
+          }
+        },
+        "introducing": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 946,
+            "endChar": 976,
+            "quote": "a channel assessment operation"
+          }
+        }
+      }
+    ]
+  }
+]

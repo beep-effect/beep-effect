@@ -1,0 +1,65 @@
+{
+  "familyId": "16628033-root-1",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the upper end",
+      "nativeQuote": "the upper end",
+      "literalMatch": true,
+      "explanation": "Examiner section explicitly marks claim3 and native3 contains exact phrase."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the lower surface",
+      "nativeQuote": "the lower surface",
+      "literalMatch": true,
+      "explanation": "Exact same numbered claim3."
+    }
+  ],
+  "concerns": [
+    "All selected1-10 match original K674EBBMRXEAPX3 exactly apart from whitespace. Source count10 matches.",
+    "OA extracted text loses some subsequent claim headings; do not assign all following quotes to3. Explicitly headed claim3 evidence plus root family rejection suffices. Publication identity/digest and52/52 inventory original2020-02-03 before2021-03-29 OA verified."
+  ],
+  "rationale": "Actual112(b) rejection includes1,3-4,8-10; exact claim3 phrase matches and all selected original versions agree. Natural family refs agree.",
+  "sourceIdentity": {
+    "applicationNumber": "16628033",
+    "publicationNumber": "US20200383794A1",
+    "publicationDate": "2020-12-10",
+    "officeActionMailDate": "2021-03-29",
+    "officeActionDocumentIdentifiers": ["KMUHYPEFLDFLYX7"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20200383794 A1 20201210",
+      "application-reference": "US 16628033 20180629",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "K674EBBMRXEAPX3",
+        "officialDate": "2020-02-03T19:03:43.000-0500"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "K674EBBMRXEAPX3",
+        "officialDate": "2020-02-03T19:03:43.000-0500",
+        "sha256": "d3abe390b7bf08a1f9a03078c1a04a85bba61dd1cc2a13a539170ebdd5d91c15",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "sourceClaimCount": 10
+      }
+    ],
+    "documentInventoryCount": 52,
+    "documentInventoryRows": 52,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

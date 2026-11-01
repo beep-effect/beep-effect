@@ -1,0 +1,112 @@
+{
+  "familyId": "14172895-root-10",
+  "rootClaimNumber": 10,
+  "labelClaimNumbers": [10, 11, 12, 13, 14, 15, 16],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A closed loop method for controlling a drilling attitude of a subterranean borehole, the drilling attitude defined by at least one of a borehole inclination and a borehole azimuth, the method comprising: (a) drilling the subterranean borehole; (b) receiving a demand attitude for subsequent drilling; (c) receiving a measured attitude while drilling in (a); (d) processing the demand attitude and the measured attitude using a model predictive control scheme to obtain an attitude error; (e) processing the attitude error to obtain a corrective setting for a directional drilling tool; and (f) applying the corrective setting to the directional drilling tool to change the drilling attitude.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, wherein the drilling attitude is defined by a borehole inclination and a borehole azimuth; the demand attitude includes a demand inclination and a demand azimuth; the measured attitude includes a measured inclination and a measured azimuth; and the attitude error includes an inclination error and an azimuth error.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, further comprising: (g) continuously repeating (c), (d), (e), and (f) while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}inc=auinc {dot over (x)}azi=cxinc+buazi wherein {dot over (x)}inc and {dot over (x)}azi represent linearized first derivatives of borehole inclination and borehole azimuth with respect to time, uinc and uazi represent inclination and azimuth errors, a=VropKdls, b=acsc{circumflex over (θ)}inc, and c=−acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}azi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 1, wherein the model predictive control scheme has been augmented for feedback delay compensation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 1, wherein a plant model used in the model predictive control scheme has been augmented with linear delay approximations.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 6, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}incv=auinc {dot over (x)}aziv=cxincv+buinc {dot over (x)}incm=[xincv−xincm−λauinc]/λ {dot over (x)}azim=[xaziv−xazim−λ(cxincv+buinc)]/λ wherein xincv and xaziv represent un-delayed inclination and azimuth values, xincm and xazim represent measured inclination and measured azimuth values received in (c), λ represents delay, uinc and uazi represent inclination and azimuth errors, a=VropKdls, b=acsc{circumflex over (θ)}inc, and c=−acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}azi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 1, further comprising: (g) processing the demand attitude using a proportional integral loop to obtain an attitude disturbance; (h) processing the attitude disturbance and the demand attitude to obtain an un-delayed attitude; and wherein (d) comprises processing the demand attitude, the measured attitude, and the un-delayed attitude using a model predictive control scheme to obtain an attitude error.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 1, further comprising: (g) processing the measured attitude received in (c) to obtain a feed forward attitude; (h) combining the feed forward attitude with the attitude error obtained in (d) to obtain a combined attitude error; and wherein (e) comprises processing the combined attitude error obtained in (h) to obtain a corrective setting for the directional drilling tool.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A closed loop method for controlling a drilling attitude of a subterranean borehole, the drilling attitude defined by a borehole inclination and a borehole azimuth, the method comprising: (a) drilling the subterranean borehole; (b) receiving a demand inclination and a demand azimuth for subsequent drilling; (c) receiving a measured inclination and a measured azimuth while drilling in (a); (d) processing the demand inclination and the demand azimuth received in (b) using corresponding proportional integral loops to obtain corresponding drop and turn disturbances; (e) processing the drop and turn disturbances obtained in (d) and the demand inclination and the demand azimuth received in (b) to obtain un-delayed inclination and azimuth values; (f) processing the demand inclination, the demand azimuth, the measured inclination, the measured azimuth, the un-delayed inclination, and the un-delayed azimuth using a model predictive control scheme to obtain an inclination error and an azimuth error; (g) processing the inclination error and the azimuth error to obtain a corrective setting for the directional drilling tool; and (h) applying the corrective setting to a directional drilling tool to change the drilling attitude.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The method of claim 10, further comprising: (g) continuously repeating (c), (d), (e), (f), (g), and (h) while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The method of claim 10, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}inc=auinc+Vdr {dot over (x)}azi=cxinc+buazi+Vtr wherein {dot over (x)}inc and {dot over (x)}azi represent linearized first derivatives of the borehole inclination and borehole azimuth with respect to time, uinc and uazi represent inclination and azimuth errors, Vdr and Vtr represent the drop and turn disturbances, a=Vrop−Kdls, b=acsc{circumflex over (θ)}inc, and c=acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}azi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The method of claim 10, wherein the model predictive control scheme has been augmented for feedback delay compensation.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The method of claim 10, wherein a plant model used in the model predictive control scheme has been augmented with linear delay approximations.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The method of claim 14, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}incv=auinc {dot over (x)}aziv=cxincv+buinc {dot over (x)}incm=[xincv−xincm−λauinc]/λ {dot over (x)}azim=[xaziv−xazim−λ(cxincv+buinc]/λ wherein xincv and xaziv represent un-delayed inclination and azimuth values, xincm and xazim represent the measured inclination and the measured azimuth received in (c), λ represents delay, uinc and uazi represent inclination and azimuth errors, a=VropKdls, b=acsc{circumflex over (θ)}inc, and c=−acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}ozi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [14]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The method of claim 10, further comprising: (g) processing the measured inclination and the measured azimuth received in (c) to obtain a feed forward inclination and a feed forward azimuth; (h) combining the feed forward inclination and the feed forward azimuth with the inclination error and the azimuth error obtained in (d) to obtain combined values; and wherein (e) comprises processing the combined values obtained in (h) to obtain a corrective setting for the directional drilling tool.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A bottom hole assembly comprising: a directional drilling tool configured for coupling with a drill string and controlling a drilling attitude of a subterranean borehole; at least one sensor configured to measure an inclination and an azimuth of a subterranean borehole; and a controller configured to (i) process a demand inclination, a demand azimuth, a measured inclination, and a measured azimuth using a model predictive control scheme to obtain an inclination error and an azimuth error, (ii) process the inclination error and the azimuth error to obtain a corrective setting for the directional drilling tool, and (iii) apply the corrective setting to the directional drilling tool to change a direction of drilling.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The assembly of claim 17, wherein the model predictive control scheme comprises a plant model that has been augmented with linear delay approximations.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The method of claim 18, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}incv=auinc {dot over (x)}aziv=cxincv+buinc {dot over (x)}incm=[xincv−xincm−λauinc]/λ {dot over (x)}azim=[xaziv−xazim−λ(cxincv+buinc]/λ wherein xincv and xaziv represent un-delayed inclination and azimuth values, xincm and xazim represent the measured inclination and the measured azimuth received in (c), λ represents delay, uinc and uazi represent inclination and azimuth errors, a=VropKdls, b=acsc{circumflex over (θ)}inc, and c=−acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}azi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [18]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The assembly of claim 17, wherein the controller is configured to (i) process the demand inclination and the demand azimuth using corresponding proportional integral loops to obtain corresponding drop and turn disturbances, (ii) process the drop and turn disturbances and the demand inclination and the demand azimuth to obtain un-delayed inclination and azimuth values, (iii) process the demand inclination, the demand azimuth, the measured inclination, the measured azimuth, the un-delayed inclination, and the un-delayed azimuth using a model predictive control scheme to obtain an inclination error and an azimuth error, (iv) process the inclination error and the azimuth error to obtain a corrective setting for the directional drilling tool, and (v) apply the corrective setting to the directional drilling tool to change a direction of drilling.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The method of claim 20, wherein the model predictive control scheme comprises the following plant model: {dot over (x)}inc=auinc+Vdr {dot over (x)}azi=cxinc+buazi+Vtr wherein {dot over (x)}inc and {dot over (x)}azi represent linearized first derivatives of the borehole inclination and borehole azimuth with respect to time, uinc and uazi represent inclination and azimuth errors, Vdr and Vtr represent the drop and turn disturbances, a=VropKdls, b=acsc{circumflex over (θ)}inc, and c=−acsc{circumflex over (θ)}inc cot {circumflex over (θ)}azi, Vrop represents a rate of penetration of drilling, Kdls represents a nominal maximum curvature response of the directional drilling tool, and {circumflex over (θ)}inc and {circumflex over (θ)}azi represent measured inclination and azimuth values while drilling in (a).",
+      "sourceXmlParentClaimNumbers": [20]
+    }
+  ]
+}

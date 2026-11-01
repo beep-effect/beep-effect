@@ -1,0 +1,126 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An interactive method, comprising:
+<claim-text>forming, via a system, one or more virtual containers, wherein the one or more virtual containers are managed by at least one of a first terminal associated with a first user or a service provider, wherein managing the virtual containers includes managing a browsing target that includes a target website for browsing online entertainment content;</claim-text>
+<claim-text>appending, via the system, a virtual user identity of a second terminal associated with a second user to the one or more virtual containers, in response to an interactive operation of the second terminal on the one or more virtual containers;</claim-text>
+<claim-text>configuring, via the system, the second terminal to bind to the browsing target, which is the same browsing target as the first terminal;</claim-text>
+<claim-text>sending, via the system, associated resources that are associated with the browsing target to the second terminal, in response to determining the browsing target by the first terminal; and</claim-text>
+<claim-text>in response to determining a first browsing target by the first terminal:
+<claim-text>controlling via the system the second terminal to access the first browsing target according to the associated resources, and</claim-text>
+<claim-text>prompting via the system an interface display of the second terminal to display the online entertainment content according to the first browsing target that is the same as the online entertainment content displayed on at least a part of an interface display of the first terminal.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising, in response to determining a second browsing target by the first terminal:
+<claim-text>controlling, via the system, the second terminal to switch an access browsing target from the first browsing target to the second browsing target; and</claim-text>
+<claim-text>prompting, via the system, an interface display of the second terminal to display the online entertainment content according to the second browsing target.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of sending, via the system, the associated resources that are associated with the browsing target to the second terminal, in response to determining the browsing target by the first terminal includes:
+<claim-text>detecting a URL (Uniform Resource Locator) of a current target accessed by the first terminal;</claim-text>
+<claim-text>when the URL of the current target meets predetermined conditions, confirming that the current target is the browsing target, and obtaining the URL of the browsing target; and</claim-text>
+<claim-text>sending the associated resources containing the URL of the browsing target to the second terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of sending, via the system, the associated resources that are associated with the browsing target to the second terminal, in response to determining the browsing target by the first terminal includes:
+<claim-text>obtaining rendering resources of a target website corresponding to the browsing target; and</claim-text>
+<claim-text>sending the rendering resources of the target website to the second terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more virtual containers are cruise containers that are displayed including a graphical element of a yacht or a ship via at least one of the interface display of the first terminal or the interface display of the second terminal.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the first terminal is associated with a top tipping viewer; and</claim-text>
+<claim-text>the second terminal is associated with an ordinary viewer who provides less tips via the system than the top tipping viewer.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>in response to determining the browsing target by the first terminal, via the system, configuring interactive data for at least one of the first terminal, the second terminal, or a management terminal of a creator of the online entertainment content, wherein the interactive data is configured to interact with the online entertainment content.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The interactive method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the interactive data includes a rewards tip for the creator of the online entertainment content.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The interactive method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the interactive data includes rendering special effects in the interface display of the online entertainment content of a terminal that is accessing the online entertainment content.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The interactive method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the interactive data includes at least one of control permission or synchronous control permission of at least one adult toy of the creator of the online entertainment content.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The interactive method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the interactive data is associated with characteristic data of the one or more virtual containers.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The interactive method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the interactive data is configured to be generated by a content interactive operation between the first terminal and the online entertainment content, and then provided to the second terminal, wherein the content interactive operation between the first terminal and the online entertainment content includes first terminal tips rewards to the creator of the online entertainment content.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more virtual containers are configured to be created by the first terminal via the system.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of determining, via the system, the browsing target by the first terminal includes:
+<claim-text>receiving a request from a creator terminal of a creator of the online entertainment content; and</claim-text>
+<claim-text>in response to the first terminal accepting the request, determining the target website, which is associated with the creator of the online entertainment content, as the browsing target.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of controlling, via the system, the second terminal to access the browsing target according to the associated resources and the step of prompting, via the system, the interface display of the second terminal to display the online entertainment content includes:
+<claim-text>controlling the second terminal to access the browsing target according to the associated resources and prompting the interface display of the second terminal to display the online entertainment content through a preconfigured rendering window or a browser tab of the second terminal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of appending, via the system, the virtual user identity of the second terminal to the one or more virtual containers, in response to the interactive operation of the second terminal on the one or more virtual containers, includes:
+<claim-text>obtaining the virtual user identity of the second terminal;</claim-text>
+<claim-text>obtaining user information associated with the virtual user identity; and</claim-text>
+<claim-text>if the user information meets conditions for joining the one or more virtual containers, appending the virtual user identity of the second terminal to the one or more virtual containers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the second terminal is configured to bind to the interactive operation, which is the same interactive operation as the first terminal, on the online entertainment content; and</claim-text>
+<claim-text>the interactive operation includes at least one of rewarding, following a creator of the online entertainment content, or commenting on the online entertainment content.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The interactive method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising in response to the step of determining the browsing target by the first terminal, via the system, prompting a creator terminal of the online entertainment content to configure an interactive function for use by at least one of the first terminal or the second terminal.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The interactive method of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the interactive function is configured based on interactive data between at least one of the first terminal or the second terminal and the online entertainment content meeting one or more preset conditions.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A system, comprising:
+<claim-text>at least one module comprising computer-executable code stored in non-volatile memory; and</claim-text>
+<claim-text>a memory for storing instructions and a processor for executing the instructions;</claim-text>
+<claim-text>wherein the computer-executable code, when operating on the processor, causes the system to:
+<claim-text>form, via the system, one or more virtual containers, wherein the one or more virtual containers are managed by at least one of a first terminal associated with a first user or a service provider, wherein managing the virtual containers includes managing a browsing target that includes a target website for browsing online entertainment content;</claim-text>
+<claim-text>append, via the system, a virtual user identity of a second terminal associated with a second user to the one or more virtual containers, in response to an interactive operation of the second terminal on the one or more virtual containers;</claim-text>
+<claim-text>configure, via the system, the second terminal to bind to the browsing target, which is the same browsing target as the first terminal;</claim-text>
+<claim-text>send, via the system, associated resources that are associated with the browsing target to the second terminal, in response to determining the browsing target by the first terminal; and</claim-text>
+<claim-text>in response to determining a first browsing target by the first terminal:
+<claim-text>control via the system the second terminal to access the first browsing target according to the associated resources, and</claim-text>
+<claim-text>prompt via the system an interface display of the second terminal to display the online entertainment content according to the first browsing target that is the same as the online entertainment content displayed on at least a part of an interface display of the first terminal.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. A non-transitory computer-readable storage medium, comprising:
+<claim-text>machine-readable instructions,</claim-text>
+<claim-text>wherein the machine-readable instructions, when executed by a processor of a controller, cause the controller to:
+<claim-text>form, via a system, one or more virtual containers, wherein the one or more virtual containers are managed by at least one of a first terminal associated with a first user or a service provider, wherein managing the virtual containers includes managing a browsing target that includes a target website for browsing online entertainment content;</claim-text>
+<claim-text>append, via the system, a virtual user identity of a second terminal associated with a second user to the one or more virtual containers, in response to an interactive operation of the second terminal on the one or more virtual containers;</claim-text>
+<claim-text>configure, via the system, the second terminal to bind to the browsing target, which is the same browsing target as the first terminal;</claim-text>
+<claim-text>send, via the system, associated resources that are associated with the browsing target to the second terminal, in response to determining the browsing target by the first terminal; and</claim-text>
+<claim-text>in response to determining a first browsing target by the first terminal:
+<claim-text>control via the system the second terminal to access the first browsing target according to the associated resources, and</claim-text>
+<claim-text>prompt via the system an interface display of the second terminal to display the online entertainment content according to the first browsing target that is the same as the online entertainment content displayed on at least a part of an interface display of the first terminal.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

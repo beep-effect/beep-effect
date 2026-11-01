@@ -1,0 +1,281 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A sealing performance simulation method for a cement sheath considering wellbore filter cake and fracturing working conditions, comprising:
+<claim-text>S<b>1</b>, establishing a three-dimensional deformable solid model of a borehole based on finite element simulation software, then dividing the model into a casing, the cement sheath, a filter cake and a formation from inside to outside in sequence, and performing mesh division;</claim-text>
+<claim-text>S<b>2</b>, assigning material parameters to the casing, the cement sheath and the formation based on measured values, wherein the material parameters comprise plasticity or elasticity, the formation and the casing are of elastic materials, the cement sheath is of a plastic material, and a plastic damage model of the cement sheath is as follows:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00007" num="00007">
+<math overflow="scroll">
+<mrow>
+<msub>
+<mi>σ</mi>
+<mi>ij</mi>
+</msub>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mn>1</mn>
+<mo>-</mo>
+<msub>
+<mi>d</mi>
+<mi>s</mi>
+</msub>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>⁢</mo>
+<mrow>
+<msubsup>
+<mi>D</mi>
+<mi>ij</mi>
+<mrow>
+<mi>e</mi>
+<mo>⁢</mo>
+<mi>l</mi>
+</mrow>
+</msubsup>
+<mo>(</mo>
+<mrow>
+<msub>
+<mi>ε</mi>
+<mi>ij</mi>
+</msub>
+<mo>-</mo>
+<msubsup>
+<mi>ε</mi>
+<mi>ij</mi>
+<mrow>
+<mi>p</mi>
+<mo>⁢</mo>
+<mi>l</mi>
+</mrow>
+</msubsup>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>wherein, σ<sub>ij </sub>indicates a Cauchy stress; ε<sub>ij </sub>and</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00008" num="00008">
+<math overflow="scroll">
+<msubsup>
+<mi>ε</mi>
+<mi>ij</mi>
+<mrow>
+<mi>p</mi>
+<mo>⁢</mo>
+<mi>l</mi>
+</mrow>
+</msubsup>
+</math>
+</maths>
+</claim-text>
+<claim-text>indicate a total strain and a plastic strain respectively;</claim-text>
+<claim-text>
+<maths id="MATH-US-00009" num="00009">
+<math overflow="scroll">
+<msubsup>
+<mi>D</mi>
+<mi>ij</mi>
+<mi>el</mi>
+</msubsup>
+</math>
+</maths>
+</claim-text>
+<claim-text>indicates elastic stiffness, MPa; and d<sub>s </sub>indicates a damage variable;
+<claim-text>wherein the damage variable d<sub>s </sub>is obtained by following formulas:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00010" num="00010">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<msub>
+<mi>d</mi>
+<mi>s</mi>
+</msub>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<msub>
+<mi>W</mi>
+<mn>0</mn>
+</msub>
+<mo>-</mo>
+<msub>
+<mi>W</mi>
+<mi>ε</mi>
+</msub>
+</mrow>
+<msub>
+<mi>W</mi>
+<mn>0</mn>
+</msub>
+</mfrac>
+</mrow>
+<mo>,</mo>
+<mrow>
+<mrow>
+<msub>
+<mi>W</mi>
+<mn>0</mn>
+</msub>
+<mo>=</mo>
+<mfrac>
+<mrow>
+<msub>
+<mi>E</mi>
+<mn>0</mn>
+</msub>
+<mo>⁢</mo>
+<msup>
+<mi>ε</mi>
+<mn>2</mn>
+</msup>
+</mrow>
+<mn>2</mn>
+</mfrac>
+</mrow>
+<mo>;</mo>
+<mrow>
+<msub>
+<mi>W</mi>
+<mi>ε</mi>
+</msub>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mo>∫</mo>
+<mrow>
+<mi>σ</mi>
+<mo>⁢</mo>
+<mi>d</mi>
+<mo>⁢</mo>
+<mi>ε</mi>
+</mrow>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mo>∫</mo>
+<mrow>
+<mrow>
+<mi>f</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mi>ε</mi>
+<mo>)</mo>
+</mrow>
+<mo>⁢</mo>
+<mi>d</mi>
+<mo>⁢</mo>
+<mi>ε</mi>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+</mrow>
+<mo>,</mo>
+</mrow>
+</math>
+</maths>
+</claim-text>
+<claim-text>in the formulas, W<sub>0 </sub>indicates a strain energy density in a damage-free state; E<sub>0 </sub>indicates an initial elastic modulus; ε indicates a compressive strain; σ indicates a stress tensor; and W<sub>ε</sub> indicates a strain energy density in a damaged state;
+<claim-text>S<b>3</b>, establishing an element set used for defining a filter cake material, then assigning the element set to meshes of the filter cake, and obtaining the material parameters of the filter cake based on a Python code by considering heterogeneity of the filter cake, wherein the step comprises following sub-steps:</claim-text>
+<claim-text>S<b>31</b>, using Tool to create the element set;</claim-text>
+<claim-text>S<b>32</b>, creating a function of the material parameters and elastic properties of the filter cake, dividing the element set into a plurality of element subsets, and randomly assigning, to each of the subset, a cross section containing the material parameters of the filter cake;</claim-text>
+<claim-text>S<b>33</b>, creating a variable p to obtain a model reference, storing in the variable p, and then accessing and operating a component through the p;</claim-text>
+<claim-text>S<b>34</b>, using a for loop to traverse to obtain number of required sets, and simultaneously using a total number of elements in the element set/n+1 as an upper limit of the loop, wherein n represents number of desired elements in each element subset in S<b>32</b>; and</claim-text>
+<claim-text>S<b>35</b>, assigning values to the function and the element subsets in S<b>32</b> based on the measured values of the material parameters and heterogeneity of the filter cake, and then solving by using Python to obtain the material parameters of the filter cake in the model;</claim-text>
+<claim-text>S<b>4</b>, inserting cohesive units into an interface between the casing and the cement sheath, an interface between the cement sheath and the filter cake, and an interface between the filter cake and the formation, and performing linear damage evolution based on a Maxs damage; and</claim-text>
+<claim-text>S<b>5</b>. setting a boundary condition for the model and simultaneously applying a load to the casing based on actual working conditions, and then solving the model to obtain an interface separation situation and an equivalent plastic strain of the cement sheath during a load application process.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a size of the model is at least 10 times an actual size of the borehole.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the material parameters further comprise elastic modulus, yield strength and Poisson's ratio.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein S<b>4</b> comprises following sub-steps: inserting cohesive units into meshes of the interface between the casing and the cement sheath, the interface between the cement sheath and the filter cake, and the interface between the filter cake and the formation and setting properties, then performing damage evolution based on a Maxs damage mechanism, wherein a type of the damage evolution is an Energy type, and performing solving and analyzing based on a Jobs module according to a result of the damage evolution, to obtain an equivalent plastic deformation nephogram and an interface separation situation diagram, thereby obtaining a sealing performance of the cement sheath under an external load condition.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein during the damage evolution, a damage result is obtained based on a current energy release rate and a damage threshold of the interface; and the current energy release rate is obtained by a following formula:</claim-text>
+<claim-text>
+<maths id="MATH-US-00011" num="00011">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mi>G</mi>
+<mo>=</mo>
+<mrow>
+<mfrac>
+<mn>1</mn>
+<mn>2</mn>
+</mfrac>
+<mo>⁢</mo>
+<mrow>
+<mo>(</mo>
+<mrow>
+<mrow>
+<msub>
+<mi>σ</mi>
+<mi>n</mi>
+</msub>
+<mo>⁢</mo>
+<mi>Δ</mi>
+<mo>⁢</mo>
+<msub>
+<mi>ε</mi>
+<mi>n</mi>
+</msub>
+</mrow>
+<mo>+</mo>
+<mrow>
+<msub>
+<mi>σ</mi>
+<mi>S</mi>
+</msub>
+<mo>⁢</mo>
+<msub>
+<mi>Δε</mi>
+<mi>S</mi>
+</msub>
+</mrow>
+<mo>+</mo>
+<mrow>
+<msub>
+<mi>σ</mi>
+<mi>t</mi>
+</msub>
+<mo>⁢</mo>
+<mi>Δ</mi>
+<mo>⁢</mo>
+<msub>
+<mi>ε</mi>
+<mi>t</mi>
+</msub>
+</mrow>
+</mrow>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+<mo>,</mo>
+</mrow>
+</math>
+</maths>
+</claim-text>
+<claim-text>wherein σ<sub>n</sub>, σ<sub>s</sub>, and σ<sub>t </sub>indicate stresses in a normal direction and two tangential directions respectively; and Δε<sub>n</sub>, Δε<sub>s</sub>, and Δε<sub>t </sub>indicate strain increments corresponding to the normal direction and the two tangential directions respectively.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein in S<b>5</b>, the setting the boundary condition and applying the load comprises following sub-steps: creating an analysis step, wherein the analysis step is of a type of a static analysis step, and setting a step length of the analysis step; creating a load, wherein the load is an alternating load, and applying to an inner wall of the casing; and creating the boundary condition, and defining, in the analysis step, three degrees of freedom in three directions of the model.</claim-text>
+</claim>
+</claims>

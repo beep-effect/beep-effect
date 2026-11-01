@@ -1,0 +1,5460 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "17139442-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumber": 1,
+      "quote": "a medical treatment component",
+      "reason": "Root repeats indefinite a medical treatment component, giving two potential components. Seven subsequent outside-clause references in claims1/2/7 do not uniquely select between the two; those antecedent edges are withheld. Local controller-clause reference within1.c remains anchored to its governing component. Both introductions and complete functional text retained."
+    },
+    {
+      "claimNumber": 1,
+      "quote": "the Internet",
+      "reason": "Conventional unique network first recited definitely; no prior introducing term."
+    },
+    {
+      "claimNumber": 2,
+      "quote": "said verifying and identifying",
+      "reason": "Event nominalization refers to actions expressed as verbs; no fabricated term introduction or antecedent edge."
+    }
+  ],
+  "sourceFamilyConcerns": [],
+  "annotationRationale": "Fresh grammatical subject boundaries and substantively separate functional relationships; complete manually selected lexical heads including quantifier phrases, nominalizations, and named authentication alternatives. Every dependent claim expressly depends1; no edges to sibling claims. Source irregularities (input of, during of, indefinite component repetition) preserved. Root component identity warrants independent critic adjudication; current annotations do not silently conflate indefinite introductions.",
+  "independence": "Fresh source-semantic annotations from canonical claims, protocol and schemas only; no production/decomposer, implementation design, predictions, synthetic or conformance labels inspected. Mechanical helper locates manually chosen quotes and validates spans; semantic grouping, terms and antecedents are manually declared. Independent critic pending.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "expected": [
+        {
+          "claimNumber": 1,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 127,
+                "quote": "A dialysis treatment device configured to be used during a treatment session at a first location, the dialysis treatment device"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 27,
+                    "quote": "A dialysis treatment device"
+                  },
+                  "determiner": "a",
+                  "head": "dialysis treatment device"
+                },
+                {
+                  "anchor": {
+                    "startChar": 57,
+                    "endChar": 76,
+                    "quote": "a treatment session"
+                  },
+                  "determiner": "a",
+                  "head": "treatment session"
+                },
+                {
+                  "anchor": {
+                    "startChar": 80,
+                    "endChar": 96,
+                    "quote": "a first location"
+                  },
+                  "determiner": "a",
+                  "head": "first location"
+                },
+                {
+                  "anchor": {
+                    "startChar": 98,
+                    "endChar": 127,
+                    "quote": "the dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 325,
+                "quote": "a medical treatment component configured to perform at least one of hemodialysis, hemofiltration, and peritoneal dialysis on a patient during the treatment session at the first location"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 140,
+                    "endChar": 169,
+                    "quote": "a medical treatment component"
+                  },
+                  "determiner": "a",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 208,
+                    "endChar": 220,
+                    "quote": "hemodialysis"
+                  },
+                  "determiner": "bare",
+                  "head": "hemodialysis"
+                },
+                {
+                  "anchor": {
+                    "startChar": 222,
+                    "endChar": 236,
+                    "quote": "hemofiltration"
+                  },
+                  "determiner": "bare",
+                  "head": "hemofiltration"
+                },
+                {
+                  "anchor": {
+                    "startChar": 242,
+                    "endChar": 261,
+                    "quote": "peritoneal dialysis"
+                  },
+                  "determiner": "bare",
+                  "head": "peritoneal dialysis"
+                },
+                {
+                  "anchor": {
+                    "startChar": 265,
+                    "endChar": 274,
+                    "quote": "a patient"
+                  },
+                  "determiner": "a",
+                  "head": "patient"
+                },
+                {
+                  "anchor": {
+                    "startChar": 282,
+                    "endChar": 303,
+                    "quote": "the treatment session"
+                  },
+                  "determiner": "the",
+                  "head": "treatment session"
+                },
+                {
+                  "anchor": {
+                    "startChar": 307,
+                    "endChar": 325,
+                    "quote": "the first location"
+                  },
+                  "determiner": "the",
+                  "head": "first location"
+                }
+              ]
+            },
+            {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 331,
+                "endChar": 437,
+                "quote": "a monitoring system configured to receive data from one or more sensors connected to the monitoring system"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 331,
+                    "endChar": 350,
+                    "quote": "a monitoring system"
+                  },
+                  "determiner": "a",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 373,
+                    "endChar": 377,
+                    "quote": "data"
+                  },
+                  "determiner": "bare",
+                  "head": "data"
+                },
+                {
+                  "anchor": {
+                    "startChar": 383,
+                    "endChar": 402,
+                    "quote": "one or more sensors"
+                  },
+                  "determiner": "at-least-one",
+                  "head": "sensors"
+                },
+                {
+                  "anchor": {
+                    "startChar": 416,
+                    "endChar": 437,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                }
+              ]
+            },
+            {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 439,
+                "endChar": 759,
+                "quote": "wherein a medical treatment component includes a controller connected to a network or the Internet and communicating with information servers and/or remote terminals, the controller being configured to obtain instructions from the servers, to report status, and/or notify of conditions of the medical treatment component"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 447,
+                    "endChar": 476,
+                    "quote": "a medical treatment component"
+                  },
+                  "determiner": "a",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 486,
+                    "endChar": 498,
+                    "quote": "a controller"
+                  },
+                  "determiner": "a",
+                  "head": "controller"
+                },
+                {
+                  "anchor": {
+                    "startChar": 512,
+                    "endChar": 521,
+                    "quote": "a network"
+                  },
+                  "determiner": "a",
+                  "head": "network"
+                },
+                {
+                  "anchor": {
+                    "startChar": 525,
+                    "endChar": 537,
+                    "quote": "the Internet"
+                  },
+                  "determiner": "the",
+                  "head": "internet"
+                },
+                {
+                  "anchor": {
+                    "startChar": 561,
+                    "endChar": 580,
+                    "quote": "information servers"
+                  },
+                  "determiner": "bare",
+                  "head": "information servers"
+                },
+                {
+                  "anchor": {
+                    "startChar": 588,
+                    "endChar": 604,
+                    "quote": "remote terminals"
+                  },
+                  "determiner": "bare",
+                  "head": "remote terminals"
+                },
+                {
+                  "anchor": {
+                    "startChar": 606,
+                    "endChar": 620,
+                    "quote": "the controller"
+                  },
+                  "determiner": "the",
+                  "head": "controller"
+                },
+                {
+                  "anchor": {
+                    "startChar": 648,
+                    "endChar": 660,
+                    "quote": "instructions"
+                  },
+                  "determiner": "bare",
+                  "head": "instructions"
+                },
+                {
+                  "anchor": {
+                    "startChar": 666,
+                    "endChar": 677,
+                    "quote": "the servers"
+                  },
+                  "determiner": "the",
+                  "head": "servers"
+                },
+                {
+                  "anchor": {
+                    "startChar": 689,
+                    "endChar": 695,
+                    "quote": "status"
+                  },
+                  "determiner": "bare",
+                  "head": "status"
+                },
+                {
+                  "anchor": {
+                    "startChar": 714,
+                    "endChar": 724,
+                    "quote": "conditions"
+                  },
+                  "determiner": "bare",
+                  "head": "conditions"
+                },
+                {
+                  "anchor": {
+                    "startChar": 728,
+                    "endChar": 759,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                }
+              ]
+            },
+            {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 761,
+                "endChar": 923,
+                "quote": "the dialysis treatment device further comprises a user interface adapted for permitting an operator to control functions of the medical treatment device component"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 761,
+                    "endChar": 790,
+                    "quote": "the dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                },
+                {
+                  "anchor": {
+                    "startChar": 809,
+                    "endChar": 825,
+                    "quote": "a user interface"
+                  },
+                  "determiner": "a",
+                  "head": "user interface"
+                },
+                {
+                  "anchor": {
+                    "startChar": 849,
+                    "endChar": 860,
+                    "quote": "an operator"
+                  },
+                  "determiner": "an",
+                  "head": "operator"
+                },
+                {
+                  "anchor": {
+                    "startChar": 872,
+                    "endChar": 881,
+                    "quote": "functions"
+                  },
+                  "determiner": "bare",
+                  "head": "functions"
+                },
+                {
+                  "anchor": {
+                    "startChar": 885,
+                    "endChar": 923,
+                    "quote": "the medical treatment device component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment device component"
+                }
+              ]
+            },
+            {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 929,
+                "endChar": 1068,
+                "quote": "the medical treatment component includes data storage for storing an internal representation of a prescription for treatment of the patient"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 929,
+                    "endChar": 960,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 970,
+                    "endChar": 982,
+                    "quote": "data storage"
+                  },
+                  "determiner": "bare",
+                  "head": "data storage"
+                },
+                {
+                  "anchor": {
+                    "startChar": 995,
+                    "endChar": 1021,
+                    "quote": "an internal representation"
+                  },
+                  "determiner": "an",
+                  "head": "internal representation"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1025,
+                    "endChar": 1039,
+                    "quote": "a prescription"
+                  },
+                  "determiner": "a",
+                  "head": "prescription"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1044,
+                    "endChar": 1053,
+                    "quote": "treatment"
+                  },
+                  "determiner": "bare",
+                  "head": "treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1057,
+                    "endChar": 1068,
+                    "quote": "the patient"
+                  },
+                  "determiner": "the",
+                  "head": "patient"
+                }
+              ]
+            },
+            {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 1074,
+                "endChar": 1213,
+                "quote": "the controller is configured to report a use of the medical treatment component to a remote supervisor by said Internet or remote terminals"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 1074,
+                    "endChar": 1088,
+                    "quote": "the controller"
+                  },
+                  "determiner": "the",
+                  "head": "controller"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1113,
+                    "endChar": 1118,
+                    "quote": "a use"
+                  },
+                  "determiner": "a",
+                  "head": "use"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1122,
+                    "endChar": 1153,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1157,
+                    "endChar": 1176,
+                    "quote": "a remote supervisor"
+                  },
+                  "determiner": "a",
+                  "head": "remote supervisor"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1180,
+                    "endChar": 1193,
+                    "quote": "said Internet"
+                  },
+                  "determiner": "said",
+                  "head": "internet"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1197,
+                    "endChar": 1213,
+                    "quote": "remote terminals"
+                  },
+                  "determiner": "bare",
+                  "head": "remote terminals"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 98,
+                  "endChar": 127,
+                  "quote": "the dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 282,
+                  "endChar": 303,
+                  "quote": "the treatment session"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 76,
+                  "quote": "a treatment session"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 307,
+                  "endChar": 325,
+                  "quote": "the first location"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 96,
+                  "quote": "a first location"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 140,
+                      "endChar": 169,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 169,
+                    "endChar": 208,
+                    "quote": " configured to perform at least one of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 208,
+                      "endChar": 220,
+                      "quote": "hemodialysis"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 220,
+                    "endChar": 222,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 222,
+                      "endChar": 236,
+                      "quote": "hemofiltration"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 236,
+                    "endChar": 242,
+                    "quote": ", and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 242,
+                      "endChar": 261,
+                      "quote": "peritoneal dialysis"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 261,
+                    "endChar": 265,
+                    "quote": " on "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 265,
+                      "endChar": 274,
+                      "quote": "a patient"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 274,
+                    "endChar": 282,
+                    "quote": " during "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 282,
+                      "endChar": 303,
+                      "quote": "the treatment session"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 303,
+                    "endChar": 307,
+                    "quote": " at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 307,
+                      "endChar": 325,
+                      "quote": "the first location"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 416,
+                  "endChar": 437,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.b",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.b",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 331,
+                      "endChar": 350,
+                      "quote": "a monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 350,
+                    "endChar": 373,
+                    "quote": " configured to receive "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 373,
+                      "endChar": 377,
+                      "quote": "data"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 377,
+                    "endChar": 383,
+                    "quote": " from "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 383,
+                      "endChar": 402,
+                      "quote": "one or more sensors"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 402,
+                    "endChar": 416,
+                    "quote": " connected to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.b",
+                    "anchor": {
+                      "startChar": 416,
+                      "endChar": 437,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 606,
+                  "endChar": 620,
+                  "quote": "the controller"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 486,
+                  "endChar": 498,
+                  "quote": "a controller"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 666,
+                  "endChar": 677,
+                  "quote": "the servers"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 561,
+                  "endChar": 580,
+                  "quote": "information servers"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 728,
+                  "endChar": 759,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.c",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.c",
+              "parts": [
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 439,
+                    "endChar": 447,
+                    "quote": "wherein "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 476,
+                    "endChar": 486,
+                    "quote": " includes "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 486,
+                      "endChar": 498,
+                      "quote": "a controller"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 498,
+                    "endChar": 512,
+                    "quote": " connected to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 512,
+                      "endChar": 521,
+                      "quote": "a network"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 521,
+                    "endChar": 525,
+                    "quote": " or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 525,
+                      "endChar": 537,
+                      "quote": "the Internet"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 537,
+                    "endChar": 561,
+                    "quote": " and communicating with "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 561,
+                      "endChar": 580,
+                      "quote": "information servers"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 580,
+                    "endChar": 588,
+                    "quote": " and/or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 588,
+                      "endChar": 604,
+                      "quote": "remote terminals"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 604,
+                    "endChar": 606,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 606,
+                      "endChar": 620,
+                      "quote": "the controller"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 620,
+                    "endChar": 648,
+                    "quote": " being configured to obtain "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 648,
+                      "endChar": 660,
+                      "quote": "instructions"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 660,
+                    "endChar": 666,
+                    "quote": " from "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 666,
+                      "endChar": 677,
+                      "quote": "the servers"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 677,
+                    "endChar": 689,
+                    "quote": ", to report "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 689,
+                      "endChar": 695,
+                      "quote": "status"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 695,
+                    "endChar": 714,
+                    "quote": ", and/or notify of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 714,
+                      "endChar": 724,
+                      "quote": "conditions"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 724,
+                    "endChar": 728,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 728,
+                      "endChar": 759,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.d",
+                "anchor": {
+                  "startChar": 761,
+                  "endChar": 790,
+                  "quote": "the dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.d",
+                "anchor": {
+                  "startChar": 885,
+                  "endChar": 923,
+                  "quote": "the medical treatment device component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.d",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.d",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 761,
+                      "endChar": 790,
+                      "quote": "the dialysis treatment device"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 790,
+                    "endChar": 809,
+                    "quote": " further comprises "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 809,
+                      "endChar": 825,
+                      "quote": "a user interface"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 825,
+                    "endChar": 849,
+                    "quote": " adapted for permitting "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 849,
+                      "endChar": 860,
+                      "quote": "an operator"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 860,
+                    "endChar": 872,
+                    "quote": " to control "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 872,
+                      "endChar": 881,
+                      "quote": "functions"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 881,
+                    "endChar": 885,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 885,
+                      "endChar": 923,
+                      "quote": "the medical treatment device component"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.e",
+                "anchor": {
+                  "startChar": 929,
+                  "endChar": 960,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.e",
+                "anchor": {
+                  "startChar": 1057,
+                  "endChar": 1068,
+                  "quote": "the patient"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 265,
+                  "endChar": 274,
+                  "quote": "a patient"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.e",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.e",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 929,
+                      "endChar": 960,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 960,
+                    "endChar": 970,
+                    "quote": " includes "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 970,
+                      "endChar": 982,
+                      "quote": "data storage"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 982,
+                    "endChar": 995,
+                    "quote": " for storing "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 995,
+                      "endChar": 1021,
+                      "quote": "an internal representation"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1021,
+                    "endChar": 1025,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 1025,
+                      "endChar": 1039,
+                      "quote": "a prescription"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1039,
+                    "endChar": 1044,
+                    "quote": " for "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 1044,
+                      "endChar": 1053,
+                      "quote": "treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1053,
+                    "endChar": 1057,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 1057,
+                      "endChar": 1068,
+                      "quote": "the patient"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.f",
+                "anchor": {
+                  "startChar": 1074,
+                  "endChar": 1088,
+                  "quote": "the controller"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 486,
+                  "endChar": 498,
+                  "quote": "a controller"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.f",
+                "anchor": {
+                  "startChar": 1122,
+                  "endChar": 1153,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.f",
+                "anchor": {
+                  "startChar": 1180,
+                  "endChar": 1193,
+                  "quote": "said Internet"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 525,
+                  "endChar": 537,
+                  "quote": "the Internet"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "1.f",
+                "anchor": {
+                  "startChar": 1197,
+                  "endChar": 1213,
+                  "quote": "remote terminals"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 588,
+                  "endChar": 604,
+                  "quote": "remote terminals"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "1.f",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.f",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1074,
+                      "endChar": 1088,
+                      "quote": "the controller"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1088,
+                    "endChar": 1113,
+                    "quote": " is configured to report "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1113,
+                      "endChar": 1118,
+                      "quote": "a use"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1118,
+                    "endChar": 1122,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1122,
+                      "endChar": 1153,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1153,
+                    "endChar": 1157,
+                    "quote": " to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1157,
+                      "endChar": 1176,
+                      "quote": "a remote supervisor"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1176,
+                    "endChar": 1180,
+                    "quote": " by "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1180,
+                      "endChar": 1193,
+                      "quote": "said Internet"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1193,
+                    "endChar": 1197,
+                    "quote": " or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1197,
+                      "endChar": 1213,
+                      "quote": "remote terminals"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 2,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "2",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 239,
+                "quote": "the monitoring system is configured to confirm presence of a helper at the first location, the helper being different from the patient receiving treatment by the medical treatment component"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 71,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 97,
+                    "endChar": 105,
+                    "quote": "presence"
+                  },
+                  "determiner": "bare",
+                  "head": "presence"
+                },
+                {
+                  "anchor": {
+                    "startChar": 109,
+                    "endChar": 117,
+                    "quote": "a helper"
+                  },
+                  "determiner": "a",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 121,
+                    "endChar": 139,
+                    "quote": "the first location"
+                  },
+                  "determiner": "the",
+                  "head": "first location"
+                },
+                {
+                  "anchor": {
+                    "startChar": 141,
+                    "endChar": 151,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 173,
+                    "endChar": 184,
+                    "quote": "the patient"
+                  },
+                  "determiner": "the",
+                  "head": "patient"
+                },
+                {
+                  "anchor": {
+                    "startChar": 195,
+                    "endChar": 204,
+                    "quote": "treatment"
+                  },
+                  "determiner": "bare",
+                  "head": "treatment"
+                },
+                {
+                  "anchor": {
+                    "startChar": 208,
+                    "endChar": 239,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                }
+              ]
+            },
+            {
+              "path": "2.b",
+              "anchor": {
+                "startChar": 241,
+                "endChar": 762,
+                "quote": "the monitoring system being further configured to automatically and at predefined time intervals during the treatment session, generate one or more verification request signals requesting the helper to manually input of a verification response into a user interface of the monitoring system in response to the one or more verification request signals, the verification response verifying that the helper is present at the first location, and identifying that the helper is an authorized helper to be at the first location"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 241,
+                    "endChar": 262,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 312,
+                    "endChar": 337,
+                    "quote": "predefined time intervals"
+                  },
+                  "determiner": "bare",
+                  "head": "predefined time intervals"
+                },
+                {
+                  "anchor": {
+                    "startChar": 345,
+                    "endChar": 366,
+                    "quote": "the treatment session"
+                  },
+                  "determiner": "the",
+                  "head": "treatment session"
+                },
+                {
+                  "anchor": {
+                    "startChar": 377,
+                    "endChar": 417,
+                    "quote": "one or more verification request signals"
+                  },
+                  "determiner": "at-least-one",
+                  "head": "verification request signals"
+                },
+                {
+                  "anchor": {
+                    "startChar": 429,
+                    "endChar": 439,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 461,
+                    "endChar": 484,
+                    "quote": "a verification response"
+                  },
+                  "determiner": "a",
+                  "head": "verification response"
+                },
+                {
+                  "anchor": {
+                    "startChar": 490,
+                    "endChar": 506,
+                    "quote": "a user interface"
+                  },
+                  "determiner": "a",
+                  "head": "user interface"
+                },
+                {
+                  "anchor": {
+                    "startChar": 510,
+                    "endChar": 531,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 547,
+                    "endChar": 591,
+                    "quote": "the one or more verification request signals"
+                  },
+                  "determiner": "the",
+                  "head": "one or more verification request signals"
+                },
+                {
+                  "anchor": {
+                    "startChar": 593,
+                    "endChar": 618,
+                    "quote": "the verification response"
+                  },
+                  "determiner": "the",
+                  "head": "verification response"
+                },
+                {
+                  "anchor": {
+                    "startChar": 634,
+                    "endChar": 644,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 659,
+                    "endChar": 677,
+                    "quote": "the first location"
+                  },
+                  "determiner": "the",
+                  "head": "first location"
+                },
+                {
+                  "anchor": {
+                    "startChar": 700,
+                    "endChar": 710,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 714,
+                    "endChar": 734,
+                    "quote": "an authorized helper"
+                  },
+                  "determiner": "an",
+                  "head": "authorized helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 744,
+                    "endChar": 762,
+                    "quote": "the first location"
+                  },
+                  "determiner": "the",
+                  "head": "first location"
+                }
+              ]
+            },
+            {
+              "path": "2.c",
+              "anchor": {
+                "startChar": 764,
+                "endChar": 1071,
+                "quote": "the monitoring system being further configured to confirm a pattern of presences of the helper over a plurality of said predefined time intervals during of said treatment session in which said medical treatment component is operative to deliver therapy to the patient based on said verifying and identifying"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 764,
+                    "endChar": 785,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 822,
+                    "endChar": 831,
+                    "quote": "a pattern"
+                  },
+                  "determiner": "a",
+                  "head": "pattern"
+                },
+                {
+                  "anchor": {
+                    "startChar": 835,
+                    "endChar": 844,
+                    "quote": "presences"
+                  },
+                  "determiner": "bare",
+                  "head": "presences"
+                },
+                {
+                  "anchor": {
+                    "startChar": 848,
+                    "endChar": 858,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 864,
+                    "endChar": 909,
+                    "quote": "a plurality of said predefined time intervals"
+                  },
+                  "determiner": "plurality-of",
+                  "head": "said predefined time intervals"
+                },
+                {
+                  "anchor": {
+                    "startChar": 920,
+                    "endChar": 942,
+                    "quote": "said treatment session"
+                  },
+                  "determiner": "said",
+                  "head": "treatment session"
+                },
+                {
+                  "anchor": {
+                    "startChar": 952,
+                    "endChar": 984,
+                    "quote": "said medical treatment component"
+                  },
+                  "determiner": "said",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1009,
+                    "endChar": 1016,
+                    "quote": "therapy"
+                  },
+                  "determiner": "bare",
+                  "head": "therapy"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1020,
+                    "endChar": 1031,
+                    "quote": "the patient"
+                  },
+                  "determiner": "the",
+                  "head": "patient"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1041,
+                    "endChar": 1071,
+                    "quote": "said verifying and identifying"
+                  },
+                  "determiner": "said",
+                  "head": "verifying and identifying"
+                }
+              ]
+            },
+            {
+              "path": "2.d",
+              "anchor": {
+                "startChar": 1077,
+                "endChar": 1370,
+                "quote": "the monitoring system generating a signal indicative of an abnormal condition when the pattern of presences of the authorized helper is not confirmed and causing the medical treatment component to go into a failsafe operational mode to reduce risks to the patient during said treatment session"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 1077,
+                    "endChar": 1098,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1110,
+                    "endChar": 1118,
+                    "quote": "a signal"
+                  },
+                  "determiner": "a",
+                  "head": "signal"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1133,
+                    "endChar": 1154,
+                    "quote": "an abnormal condition"
+                  },
+                  "determiner": "an",
+                  "head": "abnormal condition"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1160,
+                    "endChar": 1171,
+                    "quote": "the pattern"
+                  },
+                  "determiner": "the",
+                  "head": "pattern"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1175,
+                    "endChar": 1184,
+                    "quote": "presences"
+                  },
+                  "determiner": "bare",
+                  "head": "presences"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1188,
+                    "endChar": 1209,
+                    "quote": "the authorized helper"
+                  },
+                  "determiner": "the",
+                  "head": "authorized helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1239,
+                    "endChar": 1270,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1282,
+                    "endChar": 1309,
+                    "quote": "a failsafe operational mode"
+                  },
+                  "determiner": "a",
+                  "head": "failsafe operational mode"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1320,
+                    "endChar": 1325,
+                    "quote": "risks"
+                  },
+                  "determiner": "bare",
+                  "head": "risks"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1329,
+                    "endChar": 1340,
+                    "quote": "the patient"
+                  },
+                  "determiner": "the",
+                  "head": "patient"
+                },
+                {
+                  "anchor": {
+                    "startChar": 1348,
+                    "endChar": 1370,
+                    "quote": "said treatment session"
+                  },
+                  "determiner": "said",
+                  "head": "treatment session"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "2",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 71,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 121,
+                  "endChar": 139,
+                  "quote": "the first location"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 96,
+                  "quote": "a first location"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 141,
+                  "endChar": 151,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 173,
+                  "endChar": 184,
+                  "quote": "the patient"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 265,
+                  "endChar": 274,
+                  "quote": "a patient"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 208,
+                  "endChar": 239,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "2.a",
+              "parent": "2"
+            },
+            {
+              "kind": "functional",
+              "element": "2.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 71,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 97,
+                    "quote": " is configured to confirm "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 97,
+                      "endChar": 105,
+                      "quote": "presence"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 105,
+                    "endChar": 109,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 109,
+                      "endChar": 117,
+                      "quote": "a helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 117,
+                    "endChar": 121,
+                    "quote": " at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 121,
+                      "endChar": 139,
+                      "quote": "the first location"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 139,
+                    "endChar": 141,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 141,
+                      "endChar": 151,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 151,
+                    "endChar": 173,
+                    "quote": " being different from "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 173,
+                      "endChar": 184,
+                      "quote": "the patient"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 184,
+                    "endChar": 195,
+                    "quote": " receiving "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 195,
+                      "endChar": 204,
+                      "quote": "treatment"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 204,
+                    "endChar": 208,
+                    "quote": " by "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 208,
+                      "endChar": 239,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 241,
+                  "endChar": 262,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 345,
+                  "endChar": 366,
+                  "quote": "the treatment session"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 76,
+                  "quote": "a treatment session"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 429,
+                  "endChar": 439,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 510,
+                  "endChar": 531,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 547,
+                  "endChar": 591,
+                  "quote": "the one or more verification request signals"
+                }
+              },
+              "introducing": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 377,
+                  "endChar": 417,
+                  "quote": "one or more verification request signals"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 593,
+                  "endChar": 618,
+                  "quote": "the verification response"
+                }
+              },
+              "introducing": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 461,
+                  "endChar": 484,
+                  "quote": "a verification response"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 634,
+                  "endChar": 644,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 659,
+                  "endChar": 677,
+                  "quote": "the first location"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 96,
+                  "quote": "a first location"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 700,
+                  "endChar": 710,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 744,
+                  "endChar": 762,
+                  "quote": "the first location"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 96,
+                  "quote": "a first location"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "2.b",
+              "parent": "2"
+            },
+            {
+              "kind": "functional",
+              "element": "2.b",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 241,
+                      "endChar": 262,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 262,
+                    "endChar": 312,
+                    "quote": " being further configured to automatically and at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 312,
+                      "endChar": 337,
+                      "quote": "predefined time intervals"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 337,
+                    "endChar": 345,
+                    "quote": " during "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 345,
+                      "endChar": 366,
+                      "quote": "the treatment session"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 366,
+                    "endChar": 377,
+                    "quote": ", generate "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 377,
+                      "endChar": 417,
+                      "quote": "one or more verification request signals"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 417,
+                    "endChar": 429,
+                    "quote": " requesting "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 429,
+                      "endChar": 439,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 439,
+                    "endChar": 461,
+                    "quote": " to manually input of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 461,
+                      "endChar": 484,
+                      "quote": "a verification response"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 484,
+                    "endChar": 490,
+                    "quote": " into "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 490,
+                      "endChar": 506,
+                      "quote": "a user interface"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 506,
+                    "endChar": 510,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 510,
+                      "endChar": 531,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 531,
+                    "endChar": 547,
+                    "quote": " in response to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 547,
+                      "endChar": 591,
+                      "quote": "the one or more verification request signals"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 591,
+                    "endChar": 593,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 593,
+                      "endChar": 618,
+                      "quote": "the verification response"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 618,
+                    "endChar": 634,
+                    "quote": " verifying that "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 634,
+                      "endChar": 644,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 644,
+                    "endChar": 659,
+                    "quote": " is present at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 659,
+                      "endChar": 677,
+                      "quote": "the first location"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 677,
+                    "endChar": 700,
+                    "quote": ", and identifying that "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 700,
+                      "endChar": 710,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 710,
+                    "endChar": 714,
+                    "quote": " is "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 714,
+                      "endChar": 734,
+                      "quote": "an authorized helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 734,
+                    "endChar": 744,
+                    "quote": " to be at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.b",
+                    "anchor": {
+                      "startChar": 744,
+                      "endChar": 762,
+                      "quote": "the first location"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 764,
+                  "endChar": 785,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 848,
+                  "endChar": 858,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 864,
+                  "endChar": 909,
+                  "quote": "a plurality of said predefined time intervals"
+                }
+              },
+              "introducing": {
+                "path": "2.b",
+                "anchor": {
+                  "startChar": 312,
+                  "endChar": 337,
+                  "quote": "predefined time intervals"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 920,
+                  "endChar": 942,
+                  "quote": "said treatment session"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 76,
+                  "quote": "a treatment session"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 952,
+                  "endChar": 984,
+                  "quote": "said medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 1020,
+                  "endChar": 1031,
+                  "quote": "the patient"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 265,
+                  "endChar": 274,
+                  "quote": "a patient"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "2.c",
+              "parent": "2"
+            },
+            {
+              "kind": "functional",
+              "element": "2.c",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 764,
+                      "endChar": 785,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 785,
+                    "endChar": 822,
+                    "quote": " being further configured to confirm "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 822,
+                      "endChar": 831,
+                      "quote": "a pattern"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 831,
+                    "endChar": 835,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 835,
+                      "endChar": 844,
+                      "quote": "presences"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 844,
+                    "endChar": 848,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 848,
+                      "endChar": 858,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 858,
+                    "endChar": 864,
+                    "quote": " over "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 864,
+                      "endChar": 909,
+                      "quote": "a plurality of said predefined time intervals"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 909,
+                    "endChar": 920,
+                    "quote": " during of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 920,
+                      "endChar": 942,
+                      "quote": "said treatment session"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 942,
+                    "endChar": 952,
+                    "quote": " in which "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 952,
+                      "endChar": 984,
+                      "quote": "said medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 984,
+                    "endChar": 1009,
+                    "quote": " is operative to deliver "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 1009,
+                      "endChar": 1016,
+                      "quote": "therapy"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1016,
+                    "endChar": 1020,
+                    "quote": " to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 1020,
+                      "endChar": 1031,
+                      "quote": "the patient"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1031,
+                    "endChar": 1041,
+                    "quote": " based on "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 1041,
+                      "endChar": 1071,
+                      "quote": "said verifying and identifying"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1077,
+                  "endChar": 1098,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1160,
+                  "endChar": 1171,
+                  "quote": "the pattern"
+                }
+              },
+              "introducing": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 822,
+                  "endChar": 831,
+                  "quote": "a pattern"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1175,
+                  "endChar": 1184,
+                  "quote": "presences"
+                }
+              },
+              "introducing": {
+                "path": "2.c",
+                "anchor": {
+                  "startChar": 835,
+                  "endChar": 844,
+                  "quote": "presences"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1188,
+                  "endChar": 1209,
+                  "quote": "the authorized helper"
+                }
+              },
+              "introducing": {
+                "path": "2.a",
+                "anchor": {
+                  "startChar": 109,
+                  "endChar": 117,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1239,
+                  "endChar": 1270,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1329,
+                  "endChar": 1340,
+                  "quote": "the patient"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 265,
+                  "endChar": 274,
+                  "quote": "a patient"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "2.d",
+                "anchor": {
+                  "startChar": 1348,
+                  "endChar": 1370,
+                  "quote": "said treatment session"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 76,
+                  "quote": "a treatment session"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "2.d",
+              "parent": "2"
+            },
+            {
+              "kind": "functional",
+              "element": "2.d",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1077,
+                      "endChar": 1098,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1098,
+                    "endChar": 1110,
+                    "quote": " generating "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1110,
+                      "endChar": 1118,
+                      "quote": "a signal"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1118,
+                    "endChar": 1133,
+                    "quote": " indicative of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1133,
+                      "endChar": 1154,
+                      "quote": "an abnormal condition"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1154,
+                    "endChar": 1160,
+                    "quote": " when "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1160,
+                      "endChar": 1171,
+                      "quote": "the pattern"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1171,
+                    "endChar": 1175,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1175,
+                      "endChar": 1184,
+                      "quote": "presences"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1184,
+                    "endChar": 1188,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1188,
+                      "endChar": 1209,
+                      "quote": "the authorized helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1209,
+                    "endChar": 1239,
+                    "quote": " is not confirmed and causing "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1239,
+                      "endChar": 1270,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1270,
+                    "endChar": 1282,
+                    "quote": " to go into "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1282,
+                      "endChar": 1309,
+                      "quote": "a failsafe operational mode"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1309,
+                    "endChar": 1320,
+                    "quote": " to reduce "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1320,
+                      "endChar": 1325,
+                      "quote": "risks"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1325,
+                    "endChar": 1329,
+                    "quote": " to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1329,
+                      "endChar": 1340,
+                      "quote": "the patient"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 1340,
+                    "endChar": 1348,
+                    "quote": " during "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1348,
+                      "endChar": 1370,
+                      "quote": "said treatment session"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 3,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "3",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 291,
+                "quote": "the monitoring system includes a video camera and a video classification engine that monitors a scene that includes the patient and a helper to confirm that the helper is authorized to be present at the first location and is actually present"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 71,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 81,
+                    "endChar": 95,
+                    "quote": "a video camera"
+                  },
+                  "determiner": "a",
+                  "head": "video camera"
+                },
+                {
+                  "anchor": {
+                    "startChar": 100,
+                    "endChar": 129,
+                    "quote": "a video classification engine"
+                  },
+                  "determiner": "a",
+                  "head": "video classification engine"
+                },
+                {
+                  "anchor": {
+                    "startChar": 144,
+                    "endChar": 151,
+                    "quote": "a scene"
+                  },
+                  "determiner": "a",
+                  "head": "scene"
+                },
+                {
+                  "anchor": {
+                    "startChar": 166,
+                    "endChar": 177,
+                    "quote": "the patient"
+                  },
+                  "determiner": "the",
+                  "head": "patient"
+                },
+                {
+                  "anchor": {
+                    "startChar": 182,
+                    "endChar": 190,
+                    "quote": "a helper"
+                  },
+                  "determiner": "a",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 207,
+                    "endChar": 217,
+                    "quote": "the helper"
+                  },
+                  "determiner": "the",
+                  "head": "helper"
+                },
+                {
+                  "anchor": {
+                    "startChar": 249,
+                    "endChar": 267,
+                    "quote": "the first location"
+                  },
+                  "determiner": "the",
+                  "head": "first location"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "3",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 71,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 166,
+                  "endChar": 177,
+                  "quote": "the patient"
+                }
+              },
+              "introducing": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 265,
+                  "endChar": 274,
+                  "quote": "a patient"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 207,
+                  "endChar": 217,
+                  "quote": "the helper"
+                }
+              },
+              "introducing": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 182,
+                  "endChar": 190,
+                  "quote": "a helper"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "3.a",
+                "anchor": {
+                  "startChar": 249,
+                  "endChar": 267,
+                  "quote": "the first location"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 80,
+                  "endChar": 96,
+                  "quote": "a first location"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "3.a",
+              "parent": "3"
+            },
+            {
+              "kind": "functional",
+              "element": "3.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 71,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 81,
+                    "quote": " includes "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 81,
+                      "endChar": 95,
+                      "quote": "a video camera"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 95,
+                    "endChar": 100,
+                    "quote": " and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 100,
+                      "endChar": 129,
+                      "quote": "a video classification engine"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 129,
+                    "endChar": 144,
+                    "quote": " that monitors "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 144,
+                      "endChar": 151,
+                      "quote": "a scene"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 151,
+                    "endChar": 166,
+                    "quote": " that includes "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 166,
+                      "endChar": 177,
+                      "quote": "the patient"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 177,
+                    "endChar": 182,
+                    "quote": " and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 182,
+                      "endChar": 190,
+                      "quote": "a helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 190,
+                    "endChar": 207,
+                    "quote": " to confirm that "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 207,
+                      "endChar": 217,
+                      "quote": "the helper"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 217,
+                    "endChar": 249,
+                    "quote": " is authorized to be present at "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "3.a",
+                    "anchor": {
+                      "startChar": 249,
+                      "endChar": 267,
+                      "quote": "the first location"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 267,
+                    "endChar": 291,
+                    "quote": " and is actually present"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 4,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "4",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 324,
+                "quote": "the one or more sensors include an authentication device including at least one of a key code receiver, an RFID reader, mechanical lock, a biometric reader, a magnetic stripe reader, a nonvolatile memory card reader, a smart card reader, a video camera, or a bar code reader"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 73,
+                    "quote": "the one or more sensors"
+                  },
+                  "determiner": "the",
+                  "head": "one or more sensors"
+                },
+                {
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 106,
+                    "quote": "an authentication device"
+                  },
+                  "determiner": "an",
+                  "head": "authentication device"
+                },
+                {
+                  "anchor": {
+                    "startChar": 133,
+                    "endChar": 152,
+                    "quote": "a key code receiver"
+                  },
+                  "determiner": "a",
+                  "head": "key code receiver"
+                },
+                {
+                  "anchor": {
+                    "startChar": 154,
+                    "endChar": 168,
+                    "quote": "an RFID reader"
+                  },
+                  "determiner": "an",
+                  "head": "rfid reader"
+                },
+                {
+                  "anchor": {
+                    "startChar": 170,
+                    "endChar": 185,
+                    "quote": "mechanical lock"
+                  },
+                  "determiner": "bare",
+                  "head": "mechanical lock"
+                },
+                {
+                  "anchor": {
+                    "startChar": 187,
+                    "endChar": 205,
+                    "quote": "a biometric reader"
+                  },
+                  "determiner": "a",
+                  "head": "biometric reader"
+                },
+                {
+                  "anchor": {
+                    "startChar": 207,
+                    "endChar": 231,
+                    "quote": "a magnetic stripe reader"
+                  },
+                  "determiner": "a",
+                  "head": "magnetic stripe reader"
+                },
+                {
+                  "anchor": {
+                    "startChar": 233,
+                    "endChar": 265,
+                    "quote": "a nonvolatile memory card reader"
+                  },
+                  "determiner": "a",
+                  "head": "nonvolatile memory card reader"
+                },
+                {
+                  "anchor": {
+                    "startChar": 267,
+                    "endChar": 286,
+                    "quote": "a smart card reader"
+                  },
+                  "determiner": "a",
+                  "head": "smart card reader"
+                },
+                {
+                  "anchor": {
+                    "startChar": 288,
+                    "endChar": 302,
+                    "quote": "a video camera"
+                  },
+                  "determiner": "a",
+                  "head": "video camera"
+                },
+                {
+                  "anchor": {
+                    "startChar": 307,
+                    "endChar": 324,
+                    "quote": "a bar code reader"
+                  },
+                  "determiner": "a",
+                  "head": "bar code reader"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "4",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "4",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "4.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 73,
+                  "quote": "the one or more sensors"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 383,
+                  "endChar": 402,
+                  "quote": "one or more sensors"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "4.a",
+              "parent": "4"
+            },
+            {
+              "kind": "functional",
+              "element": "4.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 73,
+                      "quote": "the one or more sensors"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 73,
+                    "endChar": 82,
+                    "quote": " include "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 82,
+                      "endChar": 106,
+                      "quote": "an authentication device"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 106,
+                    "endChar": 133,
+                    "quote": " including at least one of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 133,
+                      "endChar": 152,
+                      "quote": "a key code receiver"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 152,
+                    "endChar": 154,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 154,
+                      "endChar": 168,
+                      "quote": "an RFID reader"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 168,
+                    "endChar": 170,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 170,
+                      "endChar": 185,
+                      "quote": "mechanical lock"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 185,
+                    "endChar": 187,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 187,
+                      "endChar": 205,
+                      "quote": "a biometric reader"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 205,
+                    "endChar": 207,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 207,
+                      "endChar": 231,
+                      "quote": "a magnetic stripe reader"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 231,
+                    "endChar": 233,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 233,
+                      "endChar": 265,
+                      "quote": "a nonvolatile memory card reader"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 265,
+                    "endChar": 267,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 267,
+                      "endChar": 286,
+                      "quote": "a smart card reader"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 286,
+                    "endChar": 288,
+                    "quote": ", "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 288,
+                      "endChar": 302,
+                      "quote": "a video camera"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 302,
+                    "endChar": 307,
+                    "quote": ", or "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "4.a",
+                    "anchor": {
+                      "startChar": 307,
+                      "endChar": 324,
+                      "quote": "a bar code reader"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 5,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "5",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 146,
+                "quote": "the monitoring system goes into a failsafe operational mode in response to an abnormal condition"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 71,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 109,
+                    "quote": "a failsafe operational mode"
+                  },
+                  "determiner": "a",
+                  "head": "failsafe operational mode"
+                },
+                {
+                  "anchor": {
+                    "startChar": 125,
+                    "endChar": 146,
+                    "quote": "an abnormal condition"
+                  },
+                  "determiner": "an",
+                  "head": "abnormal condition"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "5",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "5",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "5.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 71,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "5.a",
+              "parent": "5"
+            },
+            {
+              "kind": "functional",
+              "element": "5.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 71,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 82,
+                    "quote": " goes into "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 82,
+                      "endChar": 109,
+                      "quote": "a failsafe operational mode"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 109,
+                    "endChar": 125,
+                    "quote": " in response to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "5.a",
+                    "anchor": {
+                      "startChar": 125,
+                      "endChar": 146,
+                      "quote": "an abnormal condition"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 6,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "6",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 134,
+                "quote": "the monitoring system generates an alert signal in response to an abnormal condition"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 71,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 97,
+                    "quote": "an alert signal"
+                  },
+                  "determiner": "an",
+                  "head": "alert signal"
+                },
+                {
+                  "anchor": {
+                    "startChar": 113,
+                    "endChar": 134,
+                    "quote": "an abnormal condition"
+                  },
+                  "determiner": "an",
+                  "head": "abnormal condition"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "6",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "6",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "6.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 71,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "6.a",
+              "parent": "6"
+            },
+            {
+              "kind": "functional",
+              "element": "6.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 71,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 82,
+                    "quote": " generates "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 82,
+                      "endChar": 97,
+                      "quote": "an alert signal"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 97,
+                    "endChar": 113,
+                    "quote": " in response to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "6.a",
+                    "anchor": {
+                      "startChar": 113,
+                      "endChar": 134,
+                      "quote": "an abnormal condition"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "claimNumber": 7,
+          "producer": "llm",
+          "elements": [
+            {
+              "path": "7",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 40,
+                "quote": "The dialysis treatment device of claim 1"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 29,
+                    "quote": "The dialysis treatment device"
+                  },
+                  "determiner": "the",
+                  "head": "dialysis treatment device"
+                }
+              ]
+            },
+            {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 50,
+                "endChar": 184,
+                "quote": "the monitoring system generates an alert signal and waits for a reception of an alert-cancel command after generating the alert signal"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 50,
+                    "endChar": 71,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 82,
+                    "endChar": 97,
+                    "quote": "an alert signal"
+                  },
+                  "determiner": "an",
+                  "head": "alert signal"
+                },
+                {
+                  "anchor": {
+                    "startChar": 112,
+                    "endChar": 123,
+                    "quote": "a reception"
+                  },
+                  "determiner": "a",
+                  "head": "reception"
+                },
+                {
+                  "anchor": {
+                    "startChar": 127,
+                    "endChar": 150,
+                    "quote": "an alert-cancel command"
+                  },
+                  "determiner": "an",
+                  "head": "alert-cancel command"
+                },
+                {
+                  "anchor": {
+                    "startChar": 168,
+                    "endChar": 184,
+                    "quote": "the alert signal"
+                  },
+                  "determiner": "the",
+                  "head": "alert signal"
+                }
+              ]
+            },
+            {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 186,
+                "endChar": 386,
+                "quote": "the monitoring system causing the medical treatment component to go into a failsafe operational mode in response to an abnormal condition and a failure of an alert-cancel signal command being received"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 186,
+                    "endChar": 207,
+                    "quote": "the monitoring system"
+                  },
+                  "determiner": "the",
+                  "head": "monitoring system"
+                },
+                {
+                  "anchor": {
+                    "startChar": 216,
+                    "endChar": 247,
+                    "quote": "the medical treatment component"
+                  },
+                  "determiner": "the",
+                  "head": "medical treatment component"
+                },
+                {
+                  "anchor": {
+                    "startChar": 259,
+                    "endChar": 286,
+                    "quote": "a failsafe operational mode"
+                  },
+                  "determiner": "a",
+                  "head": "failsafe operational mode"
+                },
+                {
+                  "anchor": {
+                    "startChar": 302,
+                    "endChar": 323,
+                    "quote": "an abnormal condition"
+                  },
+                  "determiner": "an",
+                  "head": "abnormal condition"
+                },
+                {
+                  "anchor": {
+                    "startChar": 328,
+                    "endChar": 337,
+                    "quote": "a failure"
+                  },
+                  "determiner": "a",
+                  "head": "failure"
+                },
+                {
+                  "anchor": {
+                    "startChar": 341,
+                    "endChar": 371,
+                    "quote": "an alert-cancel signal command"
+                  },
+                  "determiner": "an",
+                  "head": "alert-cancel signal command"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 29,
+                  "quote": "The dialysis treatment device"
+                }
+              },
+              "introducing": {
+                "path": "1",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 27,
+                  "quote": "A dialysis treatment device"
+                }
+              }
+            },
+            {
+              "kind": "depends-on-element",
+              "dependent": "7",
+              "ancestor": "1"
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7.a",
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 71,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7.a",
+                "anchor": {
+                  "startChar": 168,
+                  "endChar": 184,
+                  "quote": "the alert signal"
+                }
+              },
+              "introducing": {
+                "path": "7.a",
+                "anchor": {
+                  "startChar": 82,
+                  "endChar": 97,
+                  "quote": "an alert signal"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "7.a",
+              "parent": "7"
+            },
+            {
+              "kind": "functional",
+              "element": "7.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 50,
+                      "endChar": 71,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 71,
+                    "endChar": 82,
+                    "quote": " generates "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 82,
+                      "endChar": 97,
+                      "quote": "an alert signal"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 97,
+                    "endChar": 112,
+                    "quote": " and waits for "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 112,
+                      "endChar": 123,
+                      "quote": "a reception"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 123,
+                    "endChar": 127,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 127,
+                      "endChar": 150,
+                      "quote": "an alert-cancel command"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 150,
+                    "endChar": 168,
+                    "quote": " after generating "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.a",
+                    "anchor": {
+                      "startChar": 168,
+                      "endChar": 184,
+                      "quote": "the alert signal"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7.b",
+                "anchor": {
+                  "startChar": 186,
+                  "endChar": 207,
+                  "quote": "the monitoring system"
+                }
+              },
+              "introducing": {
+                "path": "1.b",
+                "anchor": {
+                  "startChar": 331,
+                  "endChar": 350,
+                  "quote": "a monitoring system"
+                }
+              }
+            },
+            {
+              "kind": "antecedent",
+              "referring": {
+                "path": "7.b",
+                "anchor": {
+                  "startChar": 216,
+                  "endChar": 247,
+                  "quote": "the medical treatment component"
+                }
+              },
+              "introducing": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              }
+            },
+            {
+              "kind": "part-of",
+              "child": "7.b",
+              "parent": "7"
+            },
+            {
+              "kind": "functional",
+              "element": "7.b",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 186,
+                      "endChar": 207,
+                      "quote": "the monitoring system"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 207,
+                    "endChar": 216,
+                    "quote": " causing "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 216,
+                      "endChar": 247,
+                      "quote": "the medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 247,
+                    "endChar": 259,
+                    "quote": " to go into "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 259,
+                      "endChar": 286,
+                      "quote": "a failsafe operational mode"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 286,
+                    "endChar": 302,
+                    "quote": " in response to "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 302,
+                      "endChar": 323,
+                      "quote": "an abnormal condition"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 323,
+                    "endChar": 328,
+                    "quote": " and "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 328,
+                      "endChar": 337,
+                      "quote": "a failure"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 337,
+                    "endChar": 341,
+                    "quote": " of "
+                  }
+                },
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 341,
+                      "endChar": 371,
+                      "quote": "an alert-cancel signal command"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 371,
+                    "endChar": 386,
+                    "quote": " being received"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "extractor": {
+        "protocolVersion": "semantic-reference/v2",
+        "familyId": "17139442-root-1",
+        "role": "extractor",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "round": 1,
+        "confidence": 0.95,
+        "resolvedClaimNumbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "unresolved": [],
+        "referenceConcerns": [
+          {
+            "claimNumber": 1,
+            "quote": "a medical treatment component",
+            "reason": "Second indefinite repetition in wherein clause could introduce another medical component. Kept distinct introductions and attach subsequent definite component mentions to nearest introduction; critic should adjudicate whether identity is forced by surrounding device language."
+          },
+          {
+            "claimNumber": 1,
+            "quote": "the Internet",
+            "reason": "Conventional unique network first recited definitely; no prior introducing term."
+          },
+          {
+            "claimNumber": 2,
+            "quote": "said verifying and identifying",
+            "reason": "Event nominalization refers to actions expressed as verbs; no fabricated term introduction or antecedent edge."
+          }
+        ],
+        "sourceFamilyConcerns": [],
+        "annotationRationale": "Fresh grammatical subject boundaries and substantively separate functional relationships; complete manually selected lexical heads including quantifier phrases, nominalizations, and named authentication alternatives. Every dependent claim expressly depends1; no edges to sibling claims. Source irregularities (input of, during of, indefinite component repetition) preserved. Root component identity warrants independent critic adjudication; current annotations do not silently conflate indefinite introductions.",
+        "independence": "Fresh source-semantic annotations from canonical claims, protocol and schemas only; no production/decomposer, implementation design, predictions, synthetic or conformance labels inspected. Mechanical helper locates manually chosen quotes and validates spans; semantic grouping, terms and antecedents are manually declared. Independent critic pending."
+      },
+      "critic": {
+        "protocolVersion": "semantic-reference/v2",
+        "annotationConvention": "entity-mentions/v1",
+        "headConvention": "lexical-head/v1",
+        "familyId": "17139442-root-1",
+        "role": "critic",
+        "model": "gpt-6.1-sol",
+        "effort": "medium",
+        "round": 1,
+        "reviewedClaimNumbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "referenceSha256": "75f2e7433a90998f2a3fb5cb5287b465f81c66a657e8d8750d642ee7247eff54",
+        "extractorSha256": "5d215943808f4c83b9bba3f14df66c15a9d593b030216016a41b22d722865efe",
+        "verification": [
+          "Read all selected canonical source claims, native claims XML, extractor, expected trees, provenance and independent source critic. Read only the ClaimElement model/tree/edge schema files; no behavior, policy, decomposition implementation or predictions. Source qualification remains separately accepted in source-critic.json; no fresh original-PDF or full-inventory authentication claimed.",
+          "Independent mechanical checks passed every UTF-16 source anchor, ordered/nonoverlapping term ownership, normalized head shape, functional full-source reconstruction and exact participating-term ownership, edge endpoint membership, cross-claim ancestor membership, path uniqueness and absence of duplicate typed edges. Native XML digest matches provenance; all native/canonical claims agree after permitted printed-number removal and whitespace normalization. Geometry supplements manual semantic review; no decomposer was called."
+        ],
+        "independence": "Separate GPT-6.1-Sol medium critic session independent of extractor. Only assigned critic.json files written. No production behavior/policy/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Source grammar and protocol determine semantic findings.",
+        "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+        "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion, human agreement or accuracy result claimed.",
+        "confidence": 0.98,
+        "verdict": "changes-required",
+        "reviewScope": {
+          "claimCount": 7,
+          "elementCount": 23,
+          "termCount": 130,
+          "edgeCount": 98,
+          "functionalRelationCount": 16
+        },
+        "findings": [
+          {
+            "id": "component-identity-ambiguity",
+            "claimNumbers": [
+              1,
+              2,
+              7
+            ],
+            "kind": "unsupported-antecedent-choice",
+            "evidence": {
+              "firstIntroduction": {
+                "path": "1.a",
+                "anchor": {
+                  "startChar": 140,
+                  "endChar": 169,
+                  "quote": "a medical treatment component"
+                }
+              },
+              "secondIntroduction": {
+                "path": "1.c",
+                "anchor": {
+                  "startChar": 447,
+                  "endChar": 476,
+                  "quote": "a medical treatment component"
+                }
+              },
+              "affectedEdges": [
+                {
+                  "claimNumber": 1,
+                  "referring": {
+                    "path": "1.d",
+                    "anchor": {
+                      "startChar": 885,
+                      "endChar": 923,
+                      "quote": "the medical treatment device component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 1,
+                  "referring": {
+                    "path": "1.e",
+                    "anchor": {
+                      "startChar": 929,
+                      "endChar": 960,
+                      "quote": "the medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 1,
+                  "referring": {
+                    "path": "1.f",
+                    "anchor": {
+                      "startChar": 1122,
+                      "endChar": 1153,
+                      "quote": "the medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 2,
+                  "referring": {
+                    "path": "2.a",
+                    "anchor": {
+                      "startChar": 208,
+                      "endChar": 239,
+                      "quote": "the medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 2,
+                  "referring": {
+                    "path": "2.c",
+                    "anchor": {
+                      "startChar": 952,
+                      "endChar": 984,
+                      "quote": "said medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 2,
+                  "referring": {
+                    "path": "2.d",
+                    "anchor": {
+                      "startChar": 1239,
+                      "endChar": 1270,
+                      "quote": "the medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                },
+                {
+                  "claimNumber": 7,
+                  "referring": {
+                    "path": "7.b",
+                    "anchor": {
+                      "startChar": 216,
+                      "endChar": 247,
+                      "quote": "the medical treatment component"
+                    }
+                  },
+                  "chosenIntroduction": {
+                    "path": "1.c",
+                    "anchor": {
+                      "startChar": 447,
+                      "endChar": 476,
+                      "quote": "a medical treatment component"
+                    }
+                  }
+                }
+              ]
+            },
+            "reason": "The source repeats an indefinite medical-treatment-component introduction. The extractor explicitly acknowledges that these can be distinct but then uses nearest introduction to choose every subsequent definite component reference outside the local 1.c clause. Proximity does not establish unique identity under protocol rule 4. In particular the patient receiving treatment phrase in 2.a can point to the treatment-performing 1.a component; its current forced edge to 1.c is not unambiguous. The variant medical treatment device component in 1.d also does not resolve this two-introduction ambiguity.",
+            "correction": "Keep both exact introductions and all exact referring terms. Withhold the listed outside-clause antecedent edges and record the source-specific candidate ambiguity unless an explicit grammatical source argument establishes unique identity. Do not conflate the two indefinite introductions or fabricate an identity edge. The local 1.c controller-clause reference is not included in this finding."
+          },
+          {
+            "id": "embedded-said-not-lexical-head",
+            "claimNumbers": [
+              2
+            ],
+            "path": "2.c",
+            "anchor": {
+              "startChar": 864,
+              "endChar": 909,
+              "quote": "a plurality of said predefined time intervals"
+            },
+            "actualHead": "said predefined time intervals",
+            "reason": "In a plurality of said predefined time intervals, said grammatically refers back to the earlier predefined time intervals. It is not a lexical modifier of time intervals. Retaining said in the normalized noun-phrase head conflicts with the head-without-determiner convention, even though the plurality-of tag already accounts for the enclosing opening.",
+            "correction": "Normalize the head to predefined time intervals while preserving the complete exact anchor, plurality-of tag, functional parts and source-supported earlier-interval reference. If the nested determiner construction instead requires separate nonoverlapping terms under the protocol, adjudicate that source-specific representation explicitly; do not treat said as part of the lexical name."
+          }
+        ],
+        "reviewNotes": [
+          "Preamble subject, ordered dialysis/monitoring/controller/UI/storage/reporting relationships and all dependent-claim membership were independently reviewed. Claims 2\u20137 expressly depend on 1. Functional representations preserve source input of and during of irregularities; no wording repair is justified.",
+          "Authentication alternatives remain explicitly enumerated participants; mechanical lock is correctly bare, RFID normalizes to lowercase, and one or more under an outer the remains in that head because the the tag does not encode the quantity. Relative-clause that connectors are represented as functional text with explicit governing entities.",
+          "Alert/cancel, helper-presence, signal/pattern and Internet/server/terminal relationships were reviewed. Said verifying and identifying is anchored event nominalization with no fabricated noun introduction from verbs. The component-identity and embedded-determiner findings prevent acceptance of this round."
+        ],
+        "roundLimit": "Round 1 of at most 3 extractor/critic rounds; return findings to extractor rather than editing expected labels."
+      }
+    }
+  ],
+  "headConvention": "lexical-head/v1",
+  "convention": "entity-mentions/v1",
+  "round2Changes": [
+    {
+      "findingId": "component-identity-ambiguity",
+      "disposition": "accepted",
+      "removedEdges": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.d",
+            "anchor": {
+              "startChar": 885,
+              "endChar": 923,
+              "quote": "the medical treatment device component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.e",
+            "anchor": {
+              "startChar": 929,
+              "endChar": 960,
+              "quote": "the medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "1.f",
+            "anchor": {
+              "startChar": 1122,
+              "endChar": 1153,
+              "quote": "the medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "2.a",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 239,
+              "quote": "the medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "2.c",
+            "anchor": {
+              "startChar": 952,
+              "endChar": 984,
+              "quote": "said medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "2.d",
+            "anchor": {
+              "startChar": 1239,
+              "endChar": 1270,
+              "quote": "the medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        },
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "7.b",
+            "anchor": {
+              "startChar": 216,
+              "endChar": 247,
+              "quote": "the medical treatment component"
+            }
+          },
+          "introducing": {
+            "path": "1.c",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 476,
+              "quote": "a medical treatment component"
+            }
+          }
+        }
+      ],
+      "reason": "Nearest mention alone cannot disambiguate repeated indefinite introductions. All seven outside-clause choices removed while preserving local1.c governing reference."
+    },
+    {
+      "findingId": "embedded-said-not-lexical-head",
+      "disposition": "accepted-nested-representation",
+      "reason": "Applied protocol nonoverlapping nested-NP convention: a plurality is a group NP (head plurality), of stays functional connecting text, and said predefined time intervals is a separate definite NP with the source-supported earlier-interval antecedent. Exact full functional relation and quantity retained; said is no lexical modifier."
+    }
+  ],
+  "criticReview": "Independent round2 critic pending."
+}

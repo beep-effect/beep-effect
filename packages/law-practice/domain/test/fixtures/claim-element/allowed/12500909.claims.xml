@@ -1,0 +1,280 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computing system for electronic message classification comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a memory storing instructions that, when executed by the processor, cause the computing system to:
+<claim-text>receive an electronic message;</claim-text>
+<claim-text>generate, via a threat analysis component configured to analyze multiple threat indicators, threat assessment scores comprising:
+<claim-text>a feature threat score derived from mathematical and structural features;</claim-text>
+<claim-text>an intent threat score derived from semantic analysis of manipulation patterns; and</claim-text>
+<claim-text>a link threat score derived from embedded link analysis,</claim-text>
+</claim-text>
+<claim-text>wherein the threat analysis component includes a feature analysis component that generates the feature threat score, an intent analysis component that generates the intent threat score, and a link analysis component that generates the link threat score, and</claim-text>
+<claim-text>wherein each threat assessment score has a respective associated confidence value;</claim-text>
+<claim-text>compute a combined score based on a weighted combination of the threat assessment scores and respective associated confidence values;</claim-text>
+<claim-text>compare the combined score to a classification threshold;</claim-text>
+<claim-text>generate a classification output based on the comparison, the classification output indicating that the electronic message is one of a malicious message or a benign message;</claim-text>
+<claim-text>in response to the combined score failing to satisfy threshold conditions for direct classification:
+<claim-text>generate contextual prompts using the threat assessment scores and the respective associated confidence values as input parameters; and</claim-text>
+<claim-text>in response to receiving user responses to contextual prompts,</claim-text>
+<claim-text>process the user responses to generate score modification vectors for adjusting the threat assessment scores;</claim-text>
+<claim-text>generate user response context data for adjusting recommendation parameters, wherein a user context component is operable to process the user responses to produce the user response context data;</claim-text>
+<claim-text>apply the score modification vectors to the threat assessment scores to generate updated threat assessment scores, wherein the updated threat assessment scores are adjusted based on the score modification vectors; and</claim-text>
+<claim-text>generate an updated classification output based on the updated threat assessment scores; and</claim-text>
+</claim-text>
+<claim-text>generate, via a recommendation component configured to produce security guidance, security recommendations by:
+<claim-text>in response to the user context component not being invoked, apply recommendation logic to the threat assessment scores and the classification output to generate baseline recommendations; and</claim-text>
+<claim-text>in response to the user context component being invoked, apply recommendation logic to the updated threat assessment scores and the user response context data to generate weighted recommendations.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the classification output comprises:
+<claim-text>applying one of the threat assessment scores or the updated threat assessment scores to the classification threshold;</claim-text>
+<claim-text>determining the classification output including at least one of the malicious message or the benign message based on the combined score;</claim-text>
+<claim-text>identifying diagnostic subcategories via the intent analysis component, wherein the intent analysis component is operable to classify content into subcategories including authority impersonation, urgency manipulation, persuasion tactics, promotional content, transactional communication, or personal communication; and</claim-text>
+<claim-text>generating a structured output containing the classification output and a confidence metric, wherein, in response to identifying diagnostic subcategories incorporating at least one of the diagnostic subcategories into the structured output as supplemental context.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the recommendation component is operable to generate personalized security recommendations by:
+<claim-text>analyzing updated threat assessment scores produced by the threat analysis component, wherein each updated threat assessment score includes diagnostic information comprising the feature threat score with contributing features having a highest weighting in a threat scoring calculation, the intent threat score with identified manipulation patterns, and the link threat score with URL analysis metadata;</claim-text>
+<claim-text>analyzing user response context data produced by the user context component;</claim-text>
+<claim-text>selecting recommendation logic based on the classification output and attributes of the updated threat assessment scores;</claim-text>
+<claim-text>determining recommendation parameters based on the updated threat assessment scores, the diagnostic information included in the threat assessment scores, and the user response context data, wherein specific feature patterns and intent categories contained in the diagnostic information determine one or more recommendation parameters;</claim-text>
+<claim-text>generating personalized security recommendations using the recommendation logic and the recommendation parameters;</claim-text>
+<claim-text>deriving a threat severity metric from the updated threat assessment scores;</claim-text>
+<claim-text>deriving a user awareness metric from the user response context data; and</claim-text>
+<claim-text>prioritizing the personalized security recommendations based on the threat severity metric and the user awareness metric.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the threat analysis component is operable to generate the feature threat score, the intent threat score, and the link threat score by:
+<claim-text>extracting mathematical and structural features from the electronic message;</claim-text>
+<claim-text>generating the feature threat score based on extracted mathematical and structural features;</claim-text>
+<claim-text>performing semantic analysis on the electronic message to identify manipulation patterns;</claim-text>
+<claim-text>generating the intent threat score based on identified manipulation patterns;</claim-text>
+<claim-text>evaluating embedded links in the electronic message using mathematical and semantic analysis; and</claim-text>
+<claim-text>generating the link threat score based on evaluating the embedded links.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The computing system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the threat analysis component is further operable to:
+<claim-text>extract textual features from the electronic message, the textual features including linguistic patterns, urgency indicators, and semantic embeddings;</claim-text>
+<claim-text>extract structural features from the electronic message, the structural features including message formatting, header characteristics, and metadata fields;</claim-text>
+<claim-text>extract behavioral features from the electronic message, the behavioral features including sender activity patterns and recipient relationship indicators; and</claim-text>
+<claim-text>exclude link-based features from textual features, structural features, and behavioral features to prevent overlap with link evaluation processing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The computing system of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the threat analysis component is further operable to generate the link threat score by:
+<claim-text>extracting mathematical link features from embedded links in the electronic message, the mathematical link features including at least one of brand impersonation indicators, structural anomaly scores, path entropy metrics, and domain age values;</claim-text>
+<claim-text>applying a transformer-based semantic model to the embedded links, the transformer-based semantic model trained on link-related manipulation patterns;</claim-text>
+<claim-text>generating a mathematical analysis score based on mathematical link features;</claim-text>
+<claim-text>generating a semantic analysis score based on the transformer-based semantic model;</claim-text>
+<claim-text>computing the combined score based on the mathematical analysis score and the semantic analysis score, the combined score being weighted according to confidence values associated with each analysis type; and</claim-text>
+<claim-text>generating the link threat score based on the combined score, wherein the link threat score is derived from mathematical characteristics extracted from embedded links and manipulation patterns identified using the transformer-based semantic model.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>calculate a plurality of disagreement metrics based on differences between the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assign a confidence value to the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assign a weighting value to the feature threat score, the intent threat score, and the link threat score based on respective disagreement metrics and respective confidence values to generate respective weighting values for the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>compute a weighted combination of the feature threat score, the intent threat score, and the link threat score based on the respective weighting values;</claim-text>
+<claim-text>identify message attributes based on the respective disagreement metrics; and</claim-text>
+<claim-text>in response to the user context component being invoked, generate contextual prompts based on the message attributes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>identify contributing features for at least one threat assessment score based on feature importance data generated by the threat analysis component;</claim-text>
+<claim-text>extract message-specific variables based on the threat assessment scores and the feature importance data;</claim-text>
+<claim-text>generate a contextual prompt based on the message-specific variables; and</claim-text>
+<claim-text>determine a prompt type for at least one contextual prompt based on a combination of the threat assessment scores and the respective associated confidence values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the user context component is operable to:
+<claim-text>generate a score modification vector for adjusting at least one threat assessment score produced by the threat analysis component; and</claim-text>
+<claim-text>generate user response context data for adjusting recommendation parameters used by the recommendation component,</claim-text>
+<claim-text>wherein the score modification vector is applied to refine threat classification, and the user response context data is applied to guide recommendation generation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The computing system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>convert the user responses into structured response vectors using natural language processing;</claim-text>
+<claim-text>apply transformation logic to the structured response vectors to generate score modification vectors for adjusting at least one of the threat assessment scores in a probability-based mathematical representation;</claim-text>
+<claim-text>record, for each adjusted threat assessment score, a modification lineage indicating a magnitude of adjustment and a source of the adjustment; and</claim-text>
+<claim-text>determine a synthesis logic based on whether each threat assessment score was adjusted using the score modification vectors or generated by the threat analysis component.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The computing system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>adjust embeddings based on a user response to produce adjusted embeddings;</claim-text>
+<claim-text>project the adjusted embeddings into a training vector space using embedding realignment logic that preserves relative distances and relationships between the embeddings;</claim-text>
+<claim-text>perform vector normalization on the embeddings adjusted based on the user response to generate normalized embeddings;</claim-text>
+<claim-text>apply the score modification vector to adjust a threat assessment score based on the normalized embeddings; and</claim-text>
+<claim-text>generate a confidence value based on the score modification vector, the confidence value indicating a reliability level of score modification to the threat assessment score based on the user response.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>associate the electronic message, extracted features, contextual prompts, user responses, and classification output as structured training instances;</claim-text>
+<claim-text>annotate each structured training instance with a score modification delta and a confidence improvement metric; and</claim-text>
+<claim-text>store prompt effectiveness data linking individual prompt types to user response quality and classification accuracy.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising an orchestration component operable to:
+<claim-text>maintain threshold parameters that are adjusted during operation based on at least one of message type, user history, and model performance metrics;</claim-text>
+<claim-text>apply different threshold conditions based on combinations of threat assessment scores;</claim-text>
+<claim-text>implement escalation logic that increases threshold requirements for classification of high-risk message categories;</claim-text>
+<claim-text>determine, for each threat assessment score, a respective uncertainty point based on validation data instead of using a fixed threshold;</claim-text>
+<claim-text>adjust respective uncertainty points based on model performance metrics, wherein a distance between each threat assessment score and its respective uncertainty point modulates an influence weighting in computing the combined score.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The computing system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the orchestration component includes a coordination interface operable to:
+<claim-text>manage routing of message-contextualized data between the threat analysis component, the user context component, and the recommendation component;</claim-text>
+<claim-text>transmit, between components, embedding vectors, prompt variable sets, and control metadata encapsulated in coordination payloads;</claim-text>
+<claim-text>tag each coordination payload with an orchestration state lineage and a step identifier; and</claim-text>
+<claim-text>store configuration data for each component, the configuration data including version compatibility, accepted input schemas, and expected response formats.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computing system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the orchestration component further comprises:
+<claim-text>orchestration contract evaluation logic that enforces conditional requirements and processing constraints defined by execution configurations;</claim-text>
+<claim-text>contract metadata defining component selection conditions, score threshold escalation policies, and fallback criteria; and</claim-text>
+<claim-text>dynamic contract instantiation that adjusts component participation requirements based on message type, source characteristics, and threat assessment results.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the classification output by combining the threat assessment scores when the link threat score is present comprises:
+<claim-text>applying a first weighting value to the link threat score when the link threat score exceeds a first threshold and at least one of the feature threat score and the intent threat score is below a second threshold;</claim-text>
+<claim-text>applying a second weighting value to the link threat score when the link threat score, the feature threat score, and the intent threat score each exceed respective thresholds;</claim-text>
+<claim-text>applying a third weighting value to the link threat score when the link threat score is below a third threshold; and</claim-text>
+<claim-text>applying a transformation function to compute a final link weight based on relative differences between the link threat score and one or more of the feature threat score and the intent threat score,</claim-text>
+<claim-text>wherein the first weighting value is greater than the second weighting value, and the second weighting value is greater than the third weighting value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the updated threat assessment scores comprises instructions that, when executed by the processor, cause the computing system to:
+<claim-text>generate a base content score by combining the feature threat score and the intent threat score using confidence-weighted averaging;</claim-text>
+<claim-text>determine whether the electronic message includes link-based features;</claim-text>
+<claim-text>in response to determining that the electronic message includes at least one link-based feature:
+<claim-text>compute a link adjustment value based on a sigmoid transformation of the link threat score, transformation modulated by a distance between the link threat score and a corresponding uncertainty point; and</claim-text>
+<claim-text>apply the link adjustment value to the base content score to generate an updated threat assessment score;</claim-text>
+</claim-text>
+<claim-text>wherein the sigmoid transformation applies a first weighting when increasing the updated threat assessment score and a second weighting, different from the first, when decreasing the updated threat assessment score.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computing system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the memory further stores instructions that, when executed by the processor, cause the computing system to:
+<claim-text>normalize at least one of an email message, a text message, a social media message, or a messaging application message into a standardized format compatible with the threat analysis component;</claim-text>
+<claim-text>extract threat-relevant features from the standardized format using extraction logic that conforms to a format specification associated with a message source; and</claim-text>
+<claim-text>store user response context data in a unified context state structure associated with a user identifier, the unified context state structure being accessible across multiple message sources.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A computer-implemented method for electronic message classification, comprising:
+<claim-text>receiving an electronic message;</claim-text>
+<claim-text>generating a feature threat score based on mathematical and structural features;</claim-text>
+<claim-text>generating an intent threat score based on semantic analysis of manipulation patterns;</claim-text>
+<claim-text>generating a link threat score based on embedded link analysis;</claim-text>
+<claim-text>associating a respective confidence value with each threat assessment score;</claim-text>
+<claim-text>computing a combined score based on a weighted combination of threat assessment scores and respective confidence values;</claim-text>
+<claim-text>comparing the combined score to a classification threshold;</claim-text>
+<claim-text>generating a classification output based on the comparing, the classification output indicating whether the electronic message is malicious or benign;</claim-text>
+<claim-text>in response to the combined score failing to satisfy threshold conditions for direct classification:
+<claim-text>generating contextual prompts using threat assessment scores and respective confidence values as input parameters; and</claim-text>
+<claim-text>in response to receiving user responses to the contextual prompts:
+<claim-text>generating score modification vectors for adjusting the threat assessment scores; and</claim-text>
+<claim-text>generating user response context data for adjusting recommendation parameters;</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>applying the score modification vectors to the threat assessment scores to generate updated threat assessment scores;</claim-text>
+<claim-text>generating an updated classification output based on the updated threat assessment scores; and</claim-text>
+<claim-text>generating security recommendations by:
+<claim-text>in response to not receiving user response context data, applying recommendation logic to the threat assessment scores and the classification output to generate baseline recommendations; and</claim-text>
+<claim-text>in response to receiving user response context data, applying recommendation logic to the updated threat assessment scores and the user response context data to generate weighted recommendations.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computer-implemented method of <claim-ref idref="CLM-00019">claim 19</claim-ref>, comprising:
+<claim-text>calculating a plurality of disagreement metrics based on differences between the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assigning a confidence value to the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assigning a weighting value to the feature threat score, the intent threat score, and the link threat score based on respective disagreement metrics and respective confidence values to generate respective weighting values for the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>computing a weighted combination of the feature threat score, the intent threat score, and the link threat score based on the respective weighting values;</claim-text>
+<claim-text>identifying message attributes based on the respective disagreement metrics; and</claim-text>
+<claim-text>in response to the user responses being received, generating contextual prompts based on the message attributes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. The computer-implemented method of <claim-ref idref="CLM-00019">claim 19</claim-ref>, further comprising:
+<claim-text>identifying contributing features for at least one threat assessment score based on feature importance data;</claim-text>
+<claim-text>extracting message-specific variables based on the threat assessment scores and the feature importance data;</claim-text>
+<claim-text>generating a contextual prompt based on the message-specific variables; and</claim-text>
+<claim-text>determining a prompt type for at least one contextual prompt based on a combination of the threat assessment scores and the respective confidence values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The computer-implemented method of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein generating the score modification vectors comprises:
+<claim-text>converting the user responses into structured response vectors using natural language processing;</claim-text>
+<claim-text>applying transformation logic to the structured response vectors to generate score modification vectors for adjusting at least one of the threat assessment scores in a probability-based mathematical representation;</claim-text>
+<claim-text>recording, for each adjusted threat assessment score, a modification lineage indicating a magnitude of adjustment and a source of the adjustment; and</claim-text>
+<claim-text>determining synthesis logic based on whether at least one of the feature threat score, the intent threat score, and the link threat score is adjusted using the score modification vectors or remains unmodified by user response input.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The computer-implemented method of <claim-ref idref="CLM-00019">claim 19</claim-ref>, further comprising:
+<claim-text>associating the electronic message, extracted features, contextual prompts, user responses, and classification output as structured training instances; and</claim-text>
+<claim-text>annotating each structured training instance with a score modification delta and a confidence improvement metric.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. A non-transitory computer readable storage medium storing instructions that, when executed by at least one processor of a computing system, causes the computing system to:
+<claim-text>receive an electronic message;</claim-text>
+<claim-text>generate a feature threat score based on mathematical and structural features;</claim-text>
+<claim-text>generate an intent threat score based on semantic analysis of manipulation patterns;</claim-text>
+<claim-text>generate a link threat score based on embedded link analysis;</claim-text>
+<claim-text>associate a respective confidence value with each threat assessment score;</claim-text>
+<claim-text>compute a combined score based on a weighted combination of threat assessment scores and respective confidence values;</claim-text>
+<claim-text>compare the combined score to a classification threshold;</claim-text>
+<claim-text>generate a classification output based on the comparing, the classification output indicating whether the electronic message is malicious or benign;</claim-text>
+<claim-text>in response to the combined score failing to satisfy threshold conditions for direct classification:
+<claim-text>generate contextual prompts using threat assessment scores and respective confidence values as input parameters; and</claim-text>
+<claim-text>in response to receiving user responses to the contextual prompts:
+<claim-text>generate score modification vectors for adjusting the threat assessment scores; and</claim-text>
+<claim-text>generate user response context data for adjusting recommendation parameters;</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>apply the score modification vectors to the threat assessment scores to generate updated threat assessment scores;</claim-text>
+<claim-text>generate an updated classification output based on the updated threat assessment scores; and</claim-text>
+<claim-text>generate security recommendations by:
+<claim-text>in response to not receiving user response context data, apply recommendation logic to the threat assessment scores and the classification output to generate baseline recommendations; and</claim-text>
+<claim-text>in response to receiving user response context data, apply recommendation logic to the updated threat assessment scores and the user response context data to generate weighted recommendations.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The non-transitory computer-readable storage medium of <claim-ref idref="CLM-00024">claim 24</claim-ref>, wherein the instructions further cause the computing system to:
+<claim-text>calculating a plurality of disagreement metrics based on differences between the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assigning a confidence value to the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>assigning a weighting value to the feature threat score, the intent threat score, and the link threat score based on respective disagreement metrics and respective confidence values to generate respective weighting values for the feature threat score, the intent threat score, and the link threat score;</claim-text>
+<claim-text>computing a weighted combination of the feature threat score, the intent threat score, and the link threat score based on the respective weighting values;</claim-text>
+<claim-text>identifying message attributes based on the respective disagreement metrics; and</claim-text>
+<claim-text>in response to the user responses being received, generating contextual prompts based on the message attributes.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The non-transitory computer-readable storage medium of <claim-ref idref="CLM-00024">claim 24</claim-ref>, wherein the instructions for generating the contextual prompts cause the computing system to:
+<claim-text>identify contributing features for at least one threat assessment score based on feature importance data;</claim-text>
+<claim-text>extract message-specific variables based on the threat assessment scores and the feature importance data;</claim-text>
+<claim-text>generate a contextual prompt based on the message-specific variables; and</claim-text>
+<claim-text>determine a prompt type for at least one contextual prompt based on a combination of the threat assessment scores and the respective confidence values.</claim-text>
+</claim-text>
+</claim>
+</claims>

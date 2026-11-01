@@ -1,0 +1,58 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A paver comprising: a concrete mixture comprising:
+<claim-text>recycled aggregates;</claim-text>
+<claim-text>cement;</claim-text>
+<claim-text>water; and</claim-text>
+<claim-text>a mattress spring assembly embedded within the concrete mixture, wherein the mattress spring assembly comprises a plurality of interconnected coil springs.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The paver of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the recycled materials comprise at least one of concrete, bricks, and porcelain.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The paver of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the mattress spring assembly comprises at least one of pocket springs, Bonnell springs, Offset springs, and Continuous Wire springs.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The paver of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the paver has dimensions corresponding to standard mattress sizes.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The paver of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the paver has dimensions of approximately 77 inches by 42 inches corresponding to a twin size mattress spring assembly.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The paver of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the paver has dimensions of approximately 85 inches by 64.5 inches corresponding to a queen size mattress spring assembly.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The paver of <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the paver has dimensions of approximately 77 inches by 83 inches corresponding to a king size mattress spring assembly.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The paver of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the recycled materials are crushed to a size of one inch or smaller in diameter.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. A method of manufacturing a paver, the method comprising:
+<claim-text>crushing recycled materials to a size of one inch or smaller in diameter;</claim-text>
+<claim-text>placing a mattress spring assembly into a concrete mold;</claim-text>
+<claim-text>mixing cement with the crushed recycled materials and water to form a concrete mixture;</claim-text>
+<claim-text>pouring the concrete mixture into the concrete mold containing the mattress spring assembly; and</claim-text>
+<claim-text>allowing the concrete mixture to cure; and removing the cured paver from the concrete mold.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein crushing the recycled materials comprises using at least one of a jaw crusher, cone crusher, impact crusher, ball mill, hammer mill, and roll crusher.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein mixing the cement comprises mixing at between 14 and 18 revolutions per minute.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the water has a temperature above 50 degrees Fahrenheit.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising: applying a release agent to the concrete mold prior to placing the mattress spring assembly.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising: spreading the concrete mixture evenly within the mold using at least one of a trowel and vibration to remove air bubbles.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein allowing the concrete mixture to cure comprises curing for three hours.</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "claim-reference-review-packet-audit/v1",
+  "mainHtmlSha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+  "addendumHtmlSha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+  "mainBundleDigest": "1b2f9c790af6bb6ba88eda3c753afc343d323e0c329cfd8ce80f80e01541c096",
+  "addendumBundleDigest": "bc6a2e4d058bb168f29a44e9bc0241450a4f3890a6d5e1d233b9939c00332297",
+  "familyCount": 6,
+  "claimDenominator": 50,
+  "mainAdditionalHeadQuestions": 6,
+  "mainGranularityQuestions": 1,
+  "separateAddendumQuestions": 1,
+  "actualAttorneyAgreementRecorded": false,
+  "agreementFraction": null,
+  "basis": "Read-only source/packet integrity audit; no answers supplied."
+}

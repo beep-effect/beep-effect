@@ -1,14 +1,16 @@
 import { ContentDigest, OperationId } from "@beep/file-processing/Artifact";
 import { UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain/values/CitingApplicationIdentity";
-import { AntecedentFinding } from "@beep/law-practice-domain/values/ClaimElement";
+import { AntecedentFinding, claimNumberOfPath } from "@beep/law-practice-domain/values/ClaimElement";
 import {
   normalizePatentClaims,
   PatentApplicationDocument,
   PatentApplicationSection,
   PatentClaim,
 } from "@beep/law-practice-domain/values/PatentDocument";
+import { ReviewItem } from "@beep/law-practice-domain/values/ReviewItem";
 import {
   ClaimSelfCheck,
+  ClaimSelfCheckCandidates,
   ClaimSelfCheckInput,
   ClaimSelfCheckLive,
   UsptoClaimSet,
@@ -16,13 +18,22 @@ import {
   UsptoClaims,
   UsptoClaimsError,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import { RecordVerdictInput, ReviewQueue, ReviewQueueLive } from "@beep/law-practice-use-cases/ReviewQueue";
+import { ClaimSelfCheckReviewRequest, claimSelfCheckReview } from "@beep/law-practice-use-cases/server";
+import { VerdictLogMemory } from "@beep/law-practice-use-cases/test";
+import { VerdictProjector, VerdictProjectorLive } from "@beep/law-practice-use-cases/VerdictProjector";
+import { Principal } from "@beep/shared-domain/entity/Principal";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 // Synthetic claims written for this test; the source text wraps lines the way a filed document does.
@@ -259,4 +270,138 @@ describe("ClaimSelfCheck", () => {
       );
     }
   );
+});
+
+const reviewItemJson = S.fromJsonString(ReviewItem);
+
+describe("ClaimSelfCheck read-only review items", () => {
+  const testLayer = Layer.mergeAll(
+    ClaimSelfCheckLive.pipe(Layer.provide(inMemoryUsptoClaims)),
+    ReviewQueueLive.pipe(Layer.provide(VerdictLogMemory)),
+    VerdictProjectorLive
+  );
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("refuses amplified review responses explicitly without implying unchecked claims are clean", () =>
+      Effect.gen(function* () {
+        const original = yield* input;
+        const checker = yield* ClaimSelfCheck;
+        const checked = yield* checker.candidates(original);
+        const repeated = yield* Effect.fromOption(A.head(checked.candidates));
+        const result = yield* claimSelfCheckReview(ClaimSelfCheckReviewRequest.make({ input: original })).pipe(
+          Effect.provideService(ClaimSelfCheck, {
+            ...checker,
+            candidates: () =>
+              Effect.succeed(
+                ClaimSelfCheckCandidates.make({
+                  candidates: A.replicate(repeated, 5000),
+                  undecomposed: checked.undecomposed,
+                })
+              ),
+          }),
+          Effect.result
+        );
+        result.pipe(Result.isFailure, assertTrue);
+        if (Result.isFailure(result)) {
+          assert.strictEqual(result.failure.reason, "review-response-too-large");
+          assert.isTrue(Str.includes("All supplied claims still require review")(result.failure.message));
+          assert.isTrue(Str.includes("0 could not be checked")(result.failure.message));
+        }
+      })
+    );
+    it.effect("quotes each actual claim, preserves evidence and round-trips the review envelope", () =>
+      Effect.gen(function* () {
+        const original = yield* input;
+        const result = yield* claimSelfCheckReview(
+          ClaimSelfCheckReviewRequest.make({ input: original, boxFileId: O.some("1234567890") })
+        );
+        assert.strictEqual(result.items.length, 2);
+        assert.strictEqual(result.undecomposed.length, 0);
+        const firstItem = yield* Effect.fromOption(A.head(result.items));
+        assert.isTrue(Str.includes("Claims checked: 2 → 1.")(firstItem.text));
+        for (const [item, mapped] of A.zip(result.items, result.candidates)) {
+          assert.strictEqual(item.claimId, mapped.candidate.id);
+          assert.strictEqual(item.itemId, `claim-finding:${mapped.candidate.publicId}`);
+          assert.strictEqual(mapped.candidate.lifecycle, "candidate");
+          const claim = yield* Effect.fromOption(
+            A.findFirst(
+              original.document.claims,
+              (value) => value.claimNumber === claimNumberOfPath(mapped.finding.referring.path)
+            )
+          );
+          assert.isTrue(Str.includes(claim.claimText)(item.text));
+          assert.isTrue(Str.includes(mapped.finding.referring.anchor.quote)(item.text));
+          const source = yield* Effect.fromOption(A.head(item.sourceRefs));
+          assert.strictEqual(source.boxFileId, "1234567890");
+          assert.strictEqual(source.quote.exact, claim.claimText);
+          const encoded = yield* S.encodeEffect(reviewItemJson)(item);
+          const decoded = yield* S.decodeEffect(reviewItemJson)(encoded);
+          assert.deepStrictEqual(decoded, item);
+        }
+        const other = yield* claimSelfCheckReview(
+          ClaimSelfCheckReviewRequest.make({
+            input: ClaimSelfCheckInput.make({
+              ...original,
+              identityDigest: ContentDigest.make(`sha256:${Str.repeat(64)("c")}`),
+            }),
+          })
+        );
+        assert.deepStrictEqual(
+          A.map(result.candidates, (value) => value.candidate.id),
+          A.map(other.candidates, (value) => value.candidate.id)
+        );
+        assert.isFalse(A.some(A.zip(result.items, other.items), ([first, second]) => first.itemId === second.itemId));
+        assert.isTrue(A.every(other.items, (item) => A.isReadonlyArrayEmpty(item.sourceRefs)));
+      })
+    );
+    it.effect("retains unchecked claims when there are no review findings", () =>
+      Effect.gen(function* () {
+        const result = yield* claimSelfCheckReview(
+          ClaimSelfCheckReviewRequest.make({ input: inputFor(uncoveredDocument) })
+        );
+        assert.deepStrictEqual(result.items, []);
+        assert.deepStrictEqual(result.candidates, []);
+        assert.deepStrictEqual(
+          A.map(result.undecomposed, (error) => error.claimNumber),
+          [1]
+        );
+      })
+    );
+    it.effect("projects actual generated review items from right to active and wrong to rejected", () =>
+      Effect.gen(function* () {
+        const result = yield* claimSelfCheckReview(ClaimSelfCheckReviewRequest.make({ input: yield* input }));
+        const item = yield* Effect.fromOption(A.head(result.items));
+        const queue = yield* ReviewQueue;
+        const projector = yield* VerdictProjector;
+        const principal = yield* S.decodeEffect(Principal)({ kind: "User", userId: 1 });
+        const right = yield* queue.recordVerdict(
+          RecordVerdictInput.make({ itemId: item.itemId, batchId: "synthetic-claim-check", verdict: "right" })
+        );
+        assertSome(
+          O.map(projector.projectItem({ item, resolvedBy: principal, rows: [right] }), (value) => value.status),
+          "active"
+        );
+        const wrong = yield* queue.recordVerdict(
+          RecordVerdictInput.make({
+            itemId: item.itemId,
+            batchId: "synthetic-claim-check",
+            verdict: "wrong",
+            note: O.some("The introduction is supplied by the parent claim."),
+          })
+        );
+        const rejected = projector.projectItem({ item, resolvedBy: principal, rows: [right, wrong] });
+        assertSome(
+          O.map(rejected, (value) => value.status),
+          "rejected"
+        );
+        assertSome(
+          O.map(rejected, (value) => value.claimId),
+          item.claimId
+        );
+        assertSome(
+          O.map(rejected, (value) => value.reason),
+          "The introduction is supplied by the parent claim."
+        );
+      })
+    );
+  });
 });

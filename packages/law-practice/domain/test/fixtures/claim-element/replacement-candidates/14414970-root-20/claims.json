@@ -1,0 +1,117 @@
+{
+  "familyId": "14414970-root-20",
+  "rootClaimNumber": 20,
+  "labelClaimNumbers": [20, 21, 22],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for forming a joint in a stack of at least two sheets of material, at least one of the sheets being a light metal alloy, using a self-piercing rivet comprising the steps of: positioning the material over a die; providing a substantially cylindrical self-piercing rivet that is fully hollow so as to define a bore that extends along its entire length, the rivet having been coated at least along a portion of its bore by a lubricant; positioning the rivet over the sheet material at a position opposite the die; using a punch to set the rivet and force it into the sheet material such that it pierces the upper surface thereof and such that a shank of the rivet deforms outwardly to interlock with the material but without penetration to the die side of the material; wherein the rivet has a shank with an outside diameter of 5.4 mm or less, and the die has a volume that is 60% or less of the effective solid volume of the rivet.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "A method according to claim 1, where the sheets have an ultimate tensile strength in the range of 50-600 MPa.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "A method according to claim 1, wherein the sheets have an ultimate tensile strength in the range of 180 MPa-600 MPa.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "A method according to claim 1, wherein the die has a die cavity having a maximum depth in the range of 0.5 mm to 2.0 mm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "A method according to claim 1, in which the stack of sheet material has a thickness of at least 6.0 mm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "A method according to claim 1, in which the stack of sheet material has a thickness of at least 1.0 mm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "A method according to claim 1, wherein the rivet is coated with lubricant along the full length of its bore.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A method according to claim 7, wherein the rivet is further coated with lubricant on at least part of the exterior surface of a shank of the rivet.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "A method according to claim 1, wherein the lubricant is a dry film.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A method according to claim 1, wherein the sheet material is high strength aluminum alloy having an ultimate tensile strength in the range of 330-600 MPa.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "A method according to claim 1, wherein the sheet material is wrought magnesium alloy having an ultimate tensile strength in the range of 180-440 MPa.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "A method according to claim 1, wherein the diameter of the bore of the rivet is at least 3.1 mm.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A method according to claim 1, wherein the outside diameter of the shank is 3.36 mm or less.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "A method according to claim 13, wherein the inside diameter of the bore of the rivet is at least 2.0 mm.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A method according to claim 1, wherein the rivet has a countersunk head.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A method according to claim 1, wherein the rivet has at least one formation at an upper portion of the bore, the method including allowing the sheet material to deform such that a slug of material from the upper sheet and inside the bore engages with said formation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A method according to claim 1, wherein the formation comprises a groove or recess.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A method according to claim 17, further comprising using a punch to insert the rivet into the sheet material, the punch having a projection that contacts the slug of material so as to deform it outwardly.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A method for manufacturing a component or product including forming a joint in accordance with the method of claim 1.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A method for forming a joint in a stack of at least two sheets material, at least one of the sheets being a light metal alloy, using a self-piercing rivet comprising the steps of: positioning the material over a die; providing a substantially cylindrical self-piercing rivet that is fully hollow so as to define a bore that extends along its entire length, the rivet having been coated at least along a portion of its bore by a lubricant; positioning the rivet over the sheet material at a position opposite the die; using a punch to set the rivet and force it into the sheet material such that it pierces the upper surface thereof and such that a shank of the rivet deforms outwardly to interlock with the material but without penetration to the die side of the material; wherein the die has a volume that is 70% or less of the effective solid volume of the rivet.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "A method according to claim 20, wherein the die volume is 60% or less of the effective solid volume of the rivet.",
+      "sourceXmlParentClaimNumbers": [20]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "A method for manufacturing a component or product including forming a joint in accordance with the method of claim 20.",
+      "sourceXmlParentClaimNumbers": [20]
+    }
+  ]
+}

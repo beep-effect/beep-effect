@@ -1,0 +1,134 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A pipe swivel assembly for joining two pipes, wherein a first pipe can be connected to a first end of the swivel assembly, a second pipe can be connected to a second end of the swivel assembly, and a high pressure fluid can be carried through the swivel assembly from the first pipe to the second pipe, the swivel assembly comprising:
+<claim-text>a body including an annular socket section with internal threads defining a central axis along the axial direction, an annular neck section having a smaller diameter than the socket section and extending axially away from the socket section to a first end, and an annular transition section extending between the socket section and the neck section to define a tapering throat having an internal sealing surface;</claim-text>
+<claim-text>an inner bearing including a plurality of ball bearings configured in an annular arrangement, the inner bearing being disposed within the socket section contacting an axial face of the body adjacent to the throat;</claim-text>
+<claim-text>a stem including an annular nose section having a tapering external surface, an annular stem barrel section extending axially away from the nose section to a second end, and a stem flange extending radially out from the stem barrel section adjacent the nose section;
+<claim-text>wherein the nose section is positioned within the throat of the body at a predetermined distance from the internal sealing surface; and</claim-text>
+<claim-text>wherein an axially-inner face of stem flange contacts the inner bearing;</claim-text>
+</claim-text>
+<claim-text>an outer bearing including a plurality of ball bearings configured in an annular arrangement, the outer bearing being disposed around the stem barrel section and contacting an axially-outer face of the stem flange;</claim-text>
+<claim-text>a locking collar including an annular collar barrel section with external threads and a collar flange extending radially outward from the collar barrel section;
+<claim-text>wherein the collar barrel section is positioned around the stem barrel section of the stem;</claim-text>
+<claim-text>wherein the external threads of the collar barrel section are threadingly engaged with the internal threads of the socket section of the body;</claim-text>
+<claim-text>wherein an axial end of the collar barrel section contacts the outer bearing; and</claim-text>
+</claim-text>
+<claim-text>a primary seal extending the predetermined distance between the tapering nose section of the stem and the tapering internal sealing surface of the body;</claim-text>
+<claim-text>whereby the stem can rotate around the central axis relative to the body without breaking the fluid tight seal between the stem and the body.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the inner bearing consists of a first plurality of caged ball bearings without separate rings and the outer bearings consist of a second plurality of caged ball bearings without separate rings.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>a first raceway is formed on the axial face of the body adjacent to the throat;</claim-text>
+<claim-text>a second raceway is formed on the axially-inner face of the stem flange;</claim-text>
+<claim-text>a third raceway is formed on the axially-outer face of the stem flange; and</claim-text>
+<claim-text>a fourth raceway is formed on the axial end of the collar barrel section.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a plurality of torque features formed on the collar flange of the locking collar; and</claim-text>
+<claim-text>wherein the torque feature are at least one of:
+<claim-text>radial holes formed around the rim of the collar flange;</claim-text>
+<claim-text>notches formed around the rim of the collar flange;</claim-text>
+<claim-text>notches formed on the sides of the collar flange; and</claim-text>
+<claim-text>flat segments formed around the rim of the collar flange.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, further:
+<claim-text>wherein the locking collar is a split collar comprising a plurality of arcuate sub-sections, and</claim-text>
+<claim-text>wherein each sub-section includes a respective portion of the external threads.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the nose section of the stem includes a recessed primary seat for receiving the primary seal.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the nose section of the stem further comprises:
+<claim-text>a first secondary seat formed on a first side of the primary seat for receiving a first secondary seal; and</claim-text>
+<claim-text>a second secondary seat formed on a second side of the primary seat for receiving a second secondary seal.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, further
+<claim-text>wherein the nose section of the stem is angled such that its radially-outward surface is neither perpendicular nor parallel to the central axis;</claim-text>
+<claim-text>wherein the sealing surface of the body is angled such that its radially-inward surface is neither perpendicular nor parallel to the central axis; and</claim-text>
+<claim-text>wherein the recessed primary seat is angled such that its radially-outward surface is neither perpendicular nor parallel to the central axis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the primary seal is configured as a tapered annular shell centered on a seal central axis, the shell including:
+<claim-text>a circular front edge with a first diameter,</claim-text>
+<claim-text>a circular rear edge with a second diameter, wherein the second diameter is greater than the first diameter; and</claim-text>
+<claim-text>a radial thickness compressible from a free thickness to the predetermined distance between the nose section and the sealing surface in the throat of the socket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a threaded passage formed through the socket section radially adjacent to the collar barrel section of the locking collar;</claim-text>
+<claim-text>a set screw threadingly engaged in the threaded passage and selectively extendible and retractable by screwing motion;</claim-text>
+<claim-text>wherein when the set screw is extended to contact the collar barrel section, the locking collar cannot rotate relative to the body; and</claim-text>
+<claim-text>wherein when the set screw is retracted away from the collar barrel, the locking collar can rotate relative to the body.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A pipe swivel assembly for joining two pipes, wherein a first pipe can be connected to a first end of the swivel assembly, a second pipe can be connected to a second end of the swivel assembly, and a high pressure fluid can be carried through the swivel assembly from the first pipe to the second pipe, the swivel assembly comprising:
+<claim-text>a body including an annular socket section with internal threads defining a central axis along the axial direction, an annular neck section having a smaller diameter than the socket section and extending axially away from the socket section to a first end, and an annular transition section extending between the socket section and the neck section to define a tapering throat having an internal sealing surface;</claim-text>
+<claim-text>an inner bearing including a plurality of ball bearings configured in an annular arrangement, the inner bearing being disposed within the socket section contacting an axial face of the body adjacent to the throat;</claim-text>
+<claim-text>a stem including an annular nose section having a tapering external surface, an annular stem barrel section extending axially away from the nose section to a second end, and a stem flange extending radially out from the stem barrel section adjacent the nose section;
+<claim-text>wherein the nose section includes an annular first locating groove formed in the radially-outward surface of the tapered exterior surface, the first locating groove having:
+<claim-text>a first radial depth;</claim-text>
+<claim-text>a first axial width;</claim-text>
+<claim-text>a first bottom end profile; and</claim-text>
+</claim-text>
+<claim-text>wherein the nose section is positioned within the throat of the body at a predetermined distance from the internal sealing surface; and</claim-text>
+<claim-text>wherein an axially-inner face of stem flange contacts the inner bearing;</claim-text>
+</claim-text>
+<claim-text>an outer bearing including a plurality of ball bearings configured in an annular arrangement, the outer bearing being disposed around the stem barrel section and contacting an axially-outer face of the stem flange;</claim-text>
+<claim-text>a locking collar including an annular collar barrel section with external threads and a collar flange extending radially outward from the collar barrel section;
+<claim-text>wherein the collar barrel section is positioned around the stem barrel section of the stem;</claim-text>
+<claim-text>wherein the external threads of the collar barrel section are threadingly engaged with the internal threads of the socket section of the body;</claim-text>
+<claim-text>wherein an axial end of the collar barrel section contacts the outer bearing; and</claim-text>
+</claim-text>
+<claim-text>a primary seal mounted on the tapering nose section of the stem, the primary seal including:
+<claim-text>a seal body positioned on radially-outward surface of the nose and extending radially the predetermined distance to the tapering internal sealing surface of the body;</claim-text>
+<claim-text>a first annular rib extending radially inward from the seal body at a first axial position relative to the front edge of the seal, the first rib having:
+<claim-text>a first radial length;</claim-text>
+<claim-text>a first axial width;</claim-text>
+<claim-text>a first bottom end profile; and</claim-text>
+</claim-text>
+<claim-text>wherein the first annular rib is received in the first locating groove of the nose, thereby holding the seal body in position on the nose;</claim-text>
+</claim-text>
+<claim-text>whereby the stem can rotate around the central axis relative to the body without breaking the fluid tight seal between the stem and the body.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>wherein the nose includes an annular second locating groove formed in the radially-outward surface of the tapered exterior surface, the second locating groove having:
+<claim-text>a second radial depth;</claim-text>
+<claim-text>a second axial width; and</claim-text>
+<claim-text>a second bottom end profile; and</claim-text>
+</claim-text>
+<claim-text>wherein the primary seal includes a second annular rib extending radially inward from the seal body at a second axial position relative to the front edge of the seal, the second rib having:
+<claim-text>a second radial length;</claim-text>
+<claim-text>a second axial width; and</claim-text>
+<claim-text>a second bottom end profile; and</claim-text>
+</claim-text>
+<claim-text>wherein the second annular rib is received in the second locating groove.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A pipe swivel assembly according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising:
+<claim-text>wherein at least one of:
+<claim-text>the second radial length of the second rib is different from the first radial length of the first rib;</claim-text>
+<claim-text>the second axial width of the second rib is different from the first axial width of the first rib; and</claim-text>
+<claim-text>the second bottom end profile of the second rib is different from the first bottom end profile the first rib nose.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

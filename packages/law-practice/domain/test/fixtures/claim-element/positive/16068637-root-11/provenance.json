@@ -1,0 +1,66 @@
+{
+  "applicationNumber": "16068637",
+  "publicationNumber": "US20190039119A1",
+  "publicationDate": "2019-02-07",
+  "nativeXmlSha256": "94fd320fbde49aa0b41957e7a0f94898a9c82c44c6c1336f3b6f04d1b2912428",
+  "claimsXmlSha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+  "officeActionDocumentIdentifiers": [
+    "K2XMF4F4RXEAPX2"
+  ],
+  "officeActionMailDate": "2019-11-14",
+  "officeActionSection112Text": [
+    "claims 1-16 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 3, “the upper end’ lacks antecedent basis.\r\nclaim 2, line 1, “the inner wall” lacks antecedent basis.\r\nclaim 2, line 2, “the outer wall’ lacks antecedent basis.\r\nclaim 3, line 2, “concave or convex surfaces” is not clear. is it for rotary driving structure or positioning structure?\r\nclaim 4, line 3, “the circumferential direction” lacks antecedent basis.\r\nclaim 5, line 3, “the circumferential torque’ lacks antecedent basis.\r\nclaim 9, line 2, ‘the rotation axis’ lacks antecedent basis.\r\nclaim 9, line 3, “the driving torque” lacks antecedent basis.\r\nclaim 10, line 3, “the driving torque’ lacks antecedent basis.\r\nclaim 11, line 2, ‘the rivet’ lacks antecedent basis.\r\nclaim 11, line 5, ‘the bottom end” lacks antecedent basis.\r\nclaim 11, line 7, “the upper end” lacks antecedent basis.\r\nclaim 11, line 15, “the workpiece” lacks antecedent basis.\r\nclaim 11, line 15, “the driving spindle” lacks antecedent basis.\r\nclaim 11, line 16, “the upper surface” lacks antecedent basis.\r\nclaim 12, line 2, “the rotary driving system’ lacks antecedent basis.\r\nclaim 12, line 3, “the circumferential direction” lacks antecedent basis.\r\nclaim 12, line 4, “the bottom” lacks antecedent basis.\r\nclaim 12, line 5, “he wedge-shaped projections” lacks antecedent basis.\r\nclaim 12, line 11, “the positioning groove” lacks antecedent basis.\r\nclaim 14, line 2, “the flow” lacks antecedent basis.\r\nclaim 16, line 4, “the axial translational motion” lacks antecedent basis.\r\nclaim 16, line 6, “a high rate’ is not clear.\r\nclaim 16, line 8, “the central positioning structure” lacks antecedent basis.\r\nclaim 16, line 10, “ the bottom” lacks antecedent basis.\r\nclaim 16, line 12, “the bottom surface’ lacks antecedent basis.\r\nclaim 16, line 14, “ the matting” is not clear.\r\nclaim 16, line 14, the axial pressing force’ lacks antecedent basis.\r\nclaim 16, line 15, “the external resistance” lacks antecedent basis.\r\nclaim 16, line 18, “the speed’ lacks antecedent basis.\r\nclaim 16, line 19, “the required process parameter’ lacks antecedent basis.\r\nclaim 16, line 20, “the setting process parameter” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "JJAKGNS1RXEAPX3",
+      "officialDate": "2018-07-06T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "JJAKGNS1RXEAPX3",
+      "officialDate": "2018-07-06T00:00:00.000-0400",
+      "sha256": "27a64630b3702646da288fbf54febd5572c137383ebeed424a957955ac577151",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        8,
+        9,
+        13,
+        14,
+        15,
+        16
+      ],
+      "sourceClaimCount": 15
+    }
+  ],
+  "documentInventoryCount": 51,
+  "documentInventoryRows": 51,
+  "primaryCpc": "B21J  15/027",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/16068637",
+    "https://api.uspto.gov/api/v1/patent/applications/16068637/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-attorney-decision-required",
+  "originalPdfCorroboration": {
+    "documentIdentifier": "JJAKGNS1RXEAPX3",
+    "sha256": "ba1bf94df37c4613c3e7346296ca95032c642087818a10db7b5c541338b50cae",
+    "format": "PDF",
+    "inspectedPdfPages": [
+      2,
+      3,
+      4
+    ],
+    "purpose": "Independent source critic visual corroboration of native selected claims, not source text for labeling",
+    "reviewReceipt": "source-critic.json",
+    "status": "critic accepted source after rendering; prior extractor uncertainty retained in source-audit.json"
+  }
+}

@@ -1,0 +1,118 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A communication device, comprising:
+<claim-text>a processing system including a processor; and</claim-text>
+<claim-text>a memory that stores executable instructions that, when executed by the processing system, facilitate performance of operations, the operations comprising:
+<claim-text>determining a user associated with the processing system;</claim-text>
+<claim-text>obtaining first viewing information associated with the user, wherein the first viewing information comprises a first probability indicating a probability that a user skips viewing a video, wherein the first viewing information comprises a second probability that a user views an entire video;</claim-text>
+<claim-text>determining available computer resources associated with the processing system;</claim-text>
+<claim-text>selecting a portion of a group of artificial intelligence (AI) models based on the available computer resources, wherein the portion of the group of AI models comprises one or more of the group of AI models;</claim-text>
+<claim-text>determining a first group of videos to request from a server based on the first probability and the second probability utilizing an AI software application, wherein the AI software application implements the portion of the group of AI models, wherein a first number of videos of the first group of videos is calculated according to an equation comprising [(log<sub>10</sub>(1−[(p<sub>1</sub>−p<sub>2</sub>)/P(z)])/log<sub>10</sub>(p<sub>2</sub>/p<sub>1</sub>)]−1, wherein p<sub>1 </sub>is equal to the first probability, wherein p<sub>2 </sub>is equal to the second probability, wherein P(z) is a probability of no videos are stored in a video buffer of the processing system and the user skips viewing a current video;</claim-text>
+<claim-text>requesting, over a communication network, the first group of videos from a server;</claim-text>
+<claim-text>receiving, over the communication network, the first group of videos from the server;</claim-text>
+<claim-text>storing the first group of videos in the video buffer of the processing system; and</claim-text>
+<claim-text>presenting a first video from the first group of videos to the user on a display of the processing system.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first group of videos are associated with a social media application.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the server comprises a social media server.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first viewing information is stored in the memory, wherein the obtaining of the first viewing information comprises obtaining the first viewing information from the memory.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the obtaining of the first viewing information comprises obtaining, over the communication network, the first viewing information from the server.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations comprise determining a device type associated with the communication device, wherein the determining of the first group of videos comprises determining the first group of videos based on the device type.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations comprise determining a group of network conditions associated with the communication network, wherein the determining of the first group of videos comprises determining the first group of videos based on the group of network conditions.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations comprise determining a location of the communication device, wherein the determining of the first group of videos comprises determining the first group of videos based on the location of the communication device.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The communication device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the operations comprise:
+<claim-text>obtaining, over the communication network, second viewing information associated with a group of users from the server, wherein the second viewing information comprises a third probability indicating a probability that the group of users skips viewing a video, wherein the second viewing information comprises a fourth probability that the group of users views an entire video;</claim-text>
+<claim-text>determining a second group of videos to request from the server based on the third probability and the fourth probability, wherein a second number of videos of the second group of videos is calculated according to a second equation comprising [(log<sub>10</sub>(1−[(p<sub>3</sub>−p<sub>4</sub>)/P(z)])/log<sub>10</sub>(p<sub>4</sub>/p<sub>3</sub>)]−1, wherein p<sub>3 </sub>is equal to the third probability, wherein p<sub>4 </sub>is equal to the fourth probability, wherein the P(z) is the probability of no videos are stored in the video buffer of the communication device and the user skips viewing the current video;</claim-text>
+<claim-text>requesting, over the communication network, the second group of videos from the server;</claim-text>
+<claim-text>receiving, over the communication network, the second group of videos from the server;</claim-text>
+<claim-text>storing the second group of videos in the video buffer of the communication device; and</claim-text>
+<claim-text>presenting a first video from the second group of videos to the user on the display of the communication device.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The communication device of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the determining of the second group of videos comprises determining the second group of videos utilizing the AI software application.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A non-transitory machine-readable medium, comprising executable instructions that, when executed by a processing system including a processor, facilitate performance of operations, the operations comprising:
+<claim-text>determining a user associated with the processing system;</claim-text>
+<claim-text>obtaining first viewing information associated with the user, wherein the first viewing information comprises a first probability indicating a probability that a user skips viewing a video, wherein the first viewing information comprises a second probability that a user views an entire video;</claim-text>
+<claim-text>determining available computer resources associated with the processing system;</claim-text>
+<claim-text>selecting a portion of a group of artificial intelligence (AI) models based on the available computer resources, wherein the portion of the group of AI models comprises one or more of the group of AI models;</claim-text>
+<claim-text>determining a first group of videos to request from a server based on the first probability and the second probability utilizing an AI software application, wherein the AI software application implements the portion of the group of AI models, wherein a first number of videos of the first group of videos is calculated according to an equation comprising [(log<sub>10</sub>(1−[(p<sub>1</sub>−p<sub>2</sub>)/P(z)])/log<sub>10</sub>(p<sub>2</sub>/p<sub>1</sub>)]−1, wherein p<sub>1 </sub>is equal to the first probability, wherein p<sub>2 </sub>is equal to the second probability, wherein P(z) is a probability of no videos are stored in a video buffer of the processing system and the user skips viewing a current video;</claim-text>
+<claim-text>requesting, over a communication network, the first group of videos from a server;</claim-text>
+<claim-text>receiving, over the communication network, the first group of videos from the server;</claim-text>
+<claim-text>storing the first group of videos in the video buffer of the processing system; and</claim-text>
+<claim-text>presenting a first video from the first group of videos to the user on a display of the processing system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the first group of videos are associated with a social media application.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the server comprises a social media server.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the first viewing information is stored in memory associated with the processing system, wherein the obtaining of the first viewing information comprises obtaining the first viewing information from the memory.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the obtaining of the first viewing information comprises obtaining, over the communication network, the first viewing information from the server.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the operations comprise:
+<claim-text>obtaining, over the communication network, second viewing information associated with a group of users from the server, wherein the second viewing information comprises a third probability indicating a probability that the group of users skips viewing a video, wherein the second viewing information comprises a fourth probability that the group of users views an entire video;</claim-text>
+<claim-text>determining a second group of videos to request from the server based on the third probability and the fourth probability, wherein a second number of videos of the second group of videos is calculated according to a second equation comprising [(log<sub>10</sub>(1−[(p<sub>3</sub>−p<sub>4</sub>)/P(z)])/log<sub>10</sub>(p<sub>4</sub>/p<sub>3</sub>)]−1, wherein p<sub>3 </sub>is equal to the third probability, wherein p<sub>4 </sub>is equal to the fourth probability, wherein P(z) is the probability of no videos are store in the video buffer of the processing system and the user skips viewing the current video;</claim-text>
+<claim-text>requesting, over the communication network, the second group of videos from the server;</claim-text>
+<claim-text>receiving, over the communication network, the second group of videos from the server;</claim-text>
+<claim-text>storing the second group of videos in the video buffer of the processing system; and</claim-text>
+<claim-text>presenting a first video from the second group of videos to the user on the display of the processing system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the determining of the second group of videos comprises determining the second group of videos utilizing the AI software application.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein a communication device comprises the processing system.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The non-transitory machine-readable medium of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the communication device comprises a mobile device.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A communication device, comprising:
+<claim-text>a processing system including a processor; and</claim-text>
+<claim-text>a memory that stores executable instructions that, when executed by the processing system, facilitate performance of operations, the operations comprising:</claim-text>
+<claim-text>determining a user of the communication device;</claim-text>
+<claim-text>obtaining first viewing information associated with the user, wherein the first viewing information comprises a first probability indicating a probability that a user skips viewing a video, wherein the first viewing information comprises a second probability that a user views an entire video;</claim-text>
+<claim-text>determining available computer resources associated with the communication device;</claim-text>
+<claim-text>selecting a portion of a group of artificial intelligence (AI) models based on the available computer resources, wherein the portion of the group of AI models comprises one or more of the group of AI models;</claim-text>
+<claim-text>determining a first group of videos to request from a server based on the first probability and the second probability utilizing an AI software application, wherein the AI software application implements the portion of the group of AI models, wherein a first number of videos of the first group of videos is calculated according to a first equation comprising [(log<sub>10</sub>(1−[(p<sub>1</sub>−p<sub>2</sub>)/P(z)])/log<sub>10</sub>(p<sub>2</sub>/p<sub>1</sub>)]−1, wherein p<sub>1 </sub>is equal to the first probability, wherein p<sub>2 </sub>is equal to the second probability, wherein P(z) is a probability of no videos are stored in a video buffer of the communication device and the user skips viewing a current video;</claim-text>
+<claim-text>obtaining, over a communication network, second viewing information associated with a group of users from a social media server, wherein the second viewing information comprises a third probability indicating a probability that the group of users skips viewing a video, wherein the second viewing information comprises a fourth probability that the group of users views an entire video;</claim-text>
+<claim-text>determining a second group of videos to request from the server based on the third probability and the fourth probability utilizing the AI software application, wherein a second number of videos of the second group of videos is calculated according to a second equation comprising [(log<sub>10</sub>(1−[(p<sub>3</sub>−p<sub>4</sub>)/P(z)])/log<sub>10</sub>(p<sub>4</sub>/p<sub>3</sub>)]−1, wherein p<sub>3 </sub>is equal to the third probability, wherein p<sub>4 </sub>is equal to the fourth probability, wherein the P(z) is the probability of no videos are stored in the video buffer of the communication device and the user skips viewing the current video (p<sub>3</sub>);</claim-text>
+<claim-text>determining a device type associated with the communication device;</claim-text>
+<claim-text>determining a group of network conditions associated with the communication network;</claim-text>
+<claim-text>determining a location of the communication device;</claim-text>
+<claim-text>determining a time of day associated with the communication device;</claim-text>
+<claim-text>determining a third group of videos to request from the server based on the first group of videos, the second group of videos, the device type associated with the communication device, the group of network conditions, the location of the communication device, the time of day associated with the communication device, and the available computer resources associated with the communication device utilizing the AI software application;</claim-text>
+<claim-text>requesting, over a communication network, the third group of videos from a social media server;</claim-text>
+<claim-text>receiving, over the communication network, the third group of videos from the social media server;</claim-text>
+<claim-text>storing the third group of videos in the video buffer of the communication device; and</claim-text>
+<claim-text>presenting a first video from the third group of videos to the user on a display of the communication device utilizing a social media software application associated with the social media server.</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,65 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. An implantable flexible electrode, comprising:
+<claim-text>an implantation assembly, the implantation assembly comprising a flexible substrate having an auxiliary implantation portion, a microelectrode portion, a macroelectrode portion, a lead portion and a proximal contact portion sequentially;</claim-text>
+<claim-text>wherein the auxiliary implantation portion is configured to implant the implantation assembly toward a target area;</claim-text>
+<claim-text>wherein the microelectrode portion comprises at least one microelectrode for recording single-unit action potential from the target area;</claim-text>
+<claim-text>wherein the macroelectrode portion adjacent to the microelectrode portion comprises at least one macroelectrode for recording local field potential information from the target site;</claim-text>
+<claim-text>wherein the lead portion comprises leads configured to electrically connect each of the at least one microelectrode and the at least one macroelectrode to a proximal contact part of the proximal contact portion;</claim-text>
+<claim-text>wherein a width perpendicular to a longitudinal axis of the flexible substrate at an end of the microelectrode portion adjacent to the macroelectrode portion ranges from 100 micrometers to 1 millimeter; and</claim-text>
+<claim-text>wherein the width of the microelectrode portion tapers from the end adjacent to the macroelectrode portion to an end adjacent to the auxiliary implantation portion; and</claim-text>
+<claim-text>wherein the area of the at least one macroelectrode is not greater than 5000 square micrometers and the at least one microelectrode is smaller in size than the at least one macroelectrode.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the proximal contact part comprises a plurality of electrode contacts respectively corresponding to the at least one macroelectrode and the at least one microelectrode, and the plurality of electrode contacts are electrically connected to the at least one macroelectrode and the at least one microelectrode through the leads of the lead portion.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the flexible substrate comprises a first flexible insulating layer, a second flexible insulating layer and a conductive layer along its thickness direction, the conductive layer is provided between the first flexible insulating layer and the second flexible insulating layer, a first through hole is formed on the first flexible insulating layer and the second flexible insulating layer, and the conductive layer is exposed from the first through hole of the first flexible insulating layer and the first through hole of the second flexible insulating layer to form the at least one macroelectrode and the at least one microelectrode.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The implantable flexible electrode according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the first flexible insulating layer and the second flexible insulating layer are made of one material or a combination of multiple materials selected from SU-8 photoresist, poly-p-xylylene, fluorinated polymer, and polyimide; and/or,
+<claim-text>the conductive layer is made of a metal material.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The implantable flexible electrode according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the conductive layer comprises a first conductive layer bonded to the first flexible insulating layer and a second conductive layer bonded to the second flexible insulating layer, the implantation assembly also has a third flexible insulating layer along its thickness direction, and the third flexible insulating layer is provided between the first conductive layer and the second conductive layer.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The implantable flexible electrode according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, further comprising a plurality of first conductive layers, the plurality of first conductive layers provided in parallel, and a fourth flexible insulating layer provided between adjacent first conductive layers; and/or
+<claim-text>a plurality of second conductive layers, and the plurality of second conductive layers provided in parallel, and a fourth flexible insulating layer provided between adjacent second conductive layers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The implantable flexible electrode according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein a second through hole is provided on the third flexible insulating layer, and the second through hole electrically connects the first conductive layer and the second conductive layer.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a thickness of the implantation assembly is not greater than 50 micrometers.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the auxiliary implantation part is configured as an auxiliary implantation hole or a groove.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a shape of the at least one microelectrode is one of multiple shapes selected from the following: circular, elliptical, and polygonal; and/or a shape of the at least one macroelectrode site is one of multiple shapes selected from the following: circular, elliptical, and polygonal.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The implantable flexible electrode according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the proximal contact part is electrically connected to a neural signal acquisition device to transmit the local field potential information and single-unit action potential information to the neural signal acquisition device.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. The implantable flexible electrode device according to <claim-ref idref="CLM-00001">claim 1</claim-ref>,
+<claim-text>wherein it comprises the implantable flexible electrode in any one of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a traction member, a distal end of the traction member forms a traction part, and the traction part acts on the auxiliary implantation part of the implantable flexible electrode to implant the implantation assembly toward a target area via the auxiliary implantation part.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The implantable flexible electrode device according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the traction member is used to drive the traction part to disengage from the auxiliary implantation part when subjected to a force acting toward a proximal end.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. An implantable flexible electrode kit, comprising the implantable flexible electrode device according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, and further comprises comprising a sleeve body, the sleeve body has a through cavity along its length direction, the sleeve body is sleeved over the traction member, at least a part of the traction part extends through the through cavity and protrudes beyond a distal end of the sleeve body, and the distal end of the sleeve body is formed with a tapered outer diameter structure.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The implantable flexible electrode kit according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein a length of the tapered outer diameter structure of the sleeve body along its longitudinal direction is set in correspondence with a length of the microelectrode part of the implantable flexible electrode along its longitudinal direction.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The implantable flexible electrode kit according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the distal end of the sleeve body abuts against the auxiliary implantation part of the implantable flexible electrode, such that when the traction member moves in a direction disengaging from the auxiliary implantation part, the sleeve body presses and limits against the auxiliary implantation part.</claim-text>
+</claim>
+</claims>

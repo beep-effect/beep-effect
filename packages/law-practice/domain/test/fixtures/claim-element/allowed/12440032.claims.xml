@@ -1,0 +1,40 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A chaise chair for improved functionality, the chaise chair comprises:
+<claim-text>a seating assembly that has a seat member, a backrest member with a headrest section, a right armrest member, a left armrest member <b>14</b><i>b </i>and a leg rest member;</claim-text>
+<claim-text>a support system for the seating assembly; and</claim-text>
+<claim-text>an upper cover assembly that has a frontal panel and an overhead panel, the frontal panel defines a proximal end, a frontal surface and a rear surface, and extends over and parallel to the backrest member of the seating assembly, the frontal surface is configured to face a seated user of the chaise chair and to receive a smart device with a display, the overhead panel spans between the proximal end a and the seating assembly above the headrest section, the frontal panel and the overhead panel are each opaque;</claim-text>
+<claim-text>wherein the upper cover assembly is configured to provide adequate visibility of the display of the smart device, which is otherwise impaired due to insufficient display luminance to overcome bright light reflections, and to allow the seated user of the chaise chair to directly view the display of the smart device without requiring upward or downward adjustment of their line of sight.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The chaise chair for improved functionality of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the rear surface of the frontal panel of the upper cover assembly integrates a solar power generation system configured to supply electrical power to the chaise chair, the chaise chair further comprises at least one of a multi-function interface port and a wireless power transfer module configured to enable data communication, power delivery or a combination thereof to the smart device, and a wireless communication module configured to support wireless internet connectivity, short-range device communication, or both.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the chaise chair further comprises a right side cover panel and a left side cover panel configured to improve the visibility of the display of the smart device, the right side cover panel extends from a right side of the overhead panel of the upper cover assembly to the right armrest member of the seating assembly, the left side cover panel extends from a left side of the overhead panel of the upper cover assembly to the left armrest member of the seating assembly, the right and left side cover panels are each made of a material that is partially light-transmissive and air-permeable, thereby reducing bright light reflections that impair visibility of the display of the smart device while still allowing ambient airflow through.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The chaise chair for improved functionality of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the right and left side cover panels are collapsible.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the support system for the seating assembly consists of a leg member and a leg rest member extension.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the multi-function interface port is a USB port.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the chaise chair further comprises a power interface port configured to transfer electrical power to a battery, the battery is configured to supply supplemental electrical power to the chaise chair as needed.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the frontal panel of the upper cover assembly comprises a mist sprayer configured to dispense mist from a water reservoir.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the chaise chair further comprises a speaker assembly to output audio signals.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the chaise chair is configured to adjustably accommodate seated users of different heights.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The chaise chair for improved functionality of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the position of the smart device along the frontal surface of the front panel of the upper cover assembly is adjustable.</claim-text>
+</claim>
+</claims>

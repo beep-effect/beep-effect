@@ -1,0 +1,45 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12451999-root-15",
+  "role": "supplemental-source-clarification-reviewer",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "status": "supplemental evidence; source remains held; not an acceptance round",
+  "priorCriticReceiptUnchanged": true,
+  "pdfEvidence": {
+    "documentIdentifier": "G3BGXCE8PPOPPY5",
+    "sha256": "725fb49cb558334c600c64883b4137372a83a1c7e7d2be162e3f37cf762767bb",
+    "pdfPagesInspected": [5, 6],
+    "printedPages": [6, 7],
+    "purpose": "Independent visual original corroboration only."
+  },
+  "quotes": [
+    {
+      "claimNumber": 19,
+      "nativeQuote": "A method according to claim 15",
+      "originalQuote": "A method according to any one of the claims 15 to 18, characterized in that claim 15, wherein",
+      "originalRendering": "any one of the claims15to18, characterized in that visibly struck; claim15,wherein inserted/underlined."
+    },
+    {
+      "claimNumber": 20,
+      "nativeQuote": "A method according to claim 15",
+      "originalQuote": "A method according to any one of the claims 15 to 19, characterized in that claim 15, wherein",
+      "originalRendering": "Old alternative range visibly struck; claim15,wherein inserted/underlined."
+    },
+    {
+      "claimNumber": 21,
+      "nativeQuote": "A method according to claim 15",
+      "originalQuote": "A method according to any one of the claims 15 to 20, characterized in that claim 15, wherein",
+      "originalRendering": "Old alternative range visibly struck; claim15,wherein inserted/underlined."
+    }
+  ],
+  "resolved": [
+    "Marked PDF directly deletes old alternative dependencies and inserts claim15 for19/20/21.",
+    "Selected15-21 operative dependency choice is corroborated by visible amendment rather than chronology."
+  ],
+  "remainsHeld": [
+    "Actual112(b)/second-paragraph rejection heading/ground is absent from retained office-action excerpt; PDF claims evidence does not establish statutory eligibility."
+  ],
+  "quotationConvention": "Original quotes transcribe the visible amendment including old and new words where relevant; originalRendering explicitly distinguishes deletions/insertions. Mathematical originals use readable Unicode/subscript notation; raw native quotes are exact canonical claims.json substrings checked against raw native XML where the fidelity conflict occurs.",
+  "independence": "No native source/provenance/expected/critic changes, new acceptance round, network, secrets, git or delegation. No attorney agreement claimed."
+}

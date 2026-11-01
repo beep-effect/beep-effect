@@ -1,0 +1,211 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11457178-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20080016330", "A1", "20080117"],
+    "applicationReference": ["US", "11457178", "20060713"],
+    "officeActionDocumentIdentifiers": ["FHXAJQBKPPOPPY5"],
+    "officeActionMailDate": "2008-06-26"
+  },
+  "digestEvidence": [
+    {
+      "file": "11457178.publication.xml",
+      "sha256": "60e68d7a2fd427511bf0b0832a6215037636eaa2a423ec76965f735b0af3b9d6",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11457178.claims.xml",
+      "sha256": "7fbb9123ce720029a6c7c988c769da93df48208d0fb53b6624856ad6b6630889",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "7fbb9123ce720029a6c7c988c769da93df48208d0fb53b6624856ad6b6630889",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "EPLA14J8PPOPPY2",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 52,
+    "actualRows": 52,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2006-07-13T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "EPLA14J8PPOPPY2"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 4-8, 10-18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the first pattern",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first pattern"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the first history table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first history table"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the preset order",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the preset order"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second history table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second history table"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the second sequential table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second sequential table"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the corresponding index",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the corresponding index"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plurality of indices",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the plurality of indices"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the current index",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the current index"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the next history table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the next history table"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the pattern",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the pattern"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the stream detection logic",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the stream detection logic"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "each set of index bits",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "each set of index bits"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "each set of index bits",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "each set of index bits"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the prefetch logic",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the prefetch logic"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the second table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second table"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the first table",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first table"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the corresponding register",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the corresponding register"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the previous address received",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the previous address received"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the second register",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second register"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the third address",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the third address"
+    }
+  ],
+  "assessment": "Original PDF1-4 (printed13-16) corroborates complete selected1-10 text/dependencies. Actual second-paragraph ground covers4-8/10-18; selected1-3/9 are meaningful dependency context.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "pdfCorroboration": {
+    "documentIdentifier": "EPLA14J8PPOPPY2",
+    "sha256": "ba0493aee08fcf5800b1c27913ff3108e243ab7538a50b11e430c4b03fd44860",
+    "pdfPagesInspected": [1, 2, 3, 4],
+    "printedPages": [13, 14, 15, 16],
+    "purpose": "Independent visual corroboration only."
+  }
+}

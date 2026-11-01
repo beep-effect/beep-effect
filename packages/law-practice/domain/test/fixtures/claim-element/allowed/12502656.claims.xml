@@ -1,0 +1,107 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An ethylene polymer having:
+<claim-text>a melt index (MI) in a range from 0.1 to 1 g/10 min and/or a high load melt index (HLMI) in a range from 10 to 80 g/10 min;</claim-text>
+<claim-text>a density in a range from 0.93 to 0.96 g/cm<sup>3</sup>; and</claim-text>
+<claim-text>a total film gel count of less than or equal to 40 gels per ft<sup>2 </sup>of 25 micron thick film, wherein film gels encompass a size in diameter of greater than 200 μm;</claim-text>
+<claim-text>wherein the ethylene polymer contains:
+<claim-text>from 150 to 680 ppm silica;</claim-text>
+<claim-text>from 1.5 to 6.8 ppm chromium; and</claim-text>
+<claim-text>from 1.5 to 40 ppm titanium.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer has the MI in the range from 0.1 to 1 g/10 min.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer has the HLMI in the range from 10 to 80 g/10 min.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the density is in a range from 0.93 to 0.956 g/cm<sup>3</sup>.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the total film gel count is less than or equal to 10 gels per ft<sup>2 </sup>of 25 micron thick film.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer has a catalyst particle gel count of less than or equal to 10 gels per ft<sup>2 </sup>of 25 micron thick film, wherein catalyst particle gels encompass a size in diameter of greater than 200 μm and are caused by catalyst particles.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer contains:
+<claim-text>from 200 to 600 ppm of silica; or</claim-text>
+<claim-text>from 2 to 6 ppm of chromium; or</claim-text>
+<claim-text>from 3 to 30 ppm of titanium; or</claim-text>
+<claim-text>any combination thereof.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer contains, independently, less than 0.1 ppm by weight of Mg, V, Zr, or Hf.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer comprises an ethylene homopolymer, an ethylene/1-butene copolymer, an ethylene/1-hexene copolymer, and/or an ethylene/1-octene copolymer.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer has:
+<claim-text>the MI in a range from 0.1 to 0.75 g/10 min; and</claim-text>
+<claim-text>the HLMI in a range from 20 to 50 g/10 min.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The polymer of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the ethylene polymer is further characterized by:
+<claim-text>a Mn in a range from 3,000 to 25,000 g/mol;</claim-text>
+<claim-text>a Mw in a range from 100,000 to 250,000 g/mol; and</claim-text>
+<claim-text>a Mz in a range from 500,000 to 2,000,000 g/mol.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The polymer of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the ethylene polymer is further characterized by a CY-a parameter in a range from 0.13 to 0.2.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The polymer of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the ethylene polymer is further characterized by:
+<claim-text>a ratio of Mw/Mn in a range from 7 to 20; and</claim-text>
+<claim-text>a ratio of Mz/Mw in a range from 5 to 10.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer contains:
+<claim-text>from 200 to 600 ppm of silica;</claim-text>
+<claim-text>from 2 to 6 ppm of chromium; and</claim-text>
+<claim-text>from 3 to 30 ppm of titanium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The polymer of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the ethylene polymer is further characterized by:
+<claim-text>a Mn in a range from 10,000 to 18,000 g/mol;</claim-text>
+<claim-text>a Mw in a range from 140,000 to 180,000 g/mol; and</claim-text>
+<claim-text>a Mz in a range from 600,000 to 1,500,000 g/mol.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The polymer of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the ethylene polymer is further characterized by a CY-a parameter in a range from 0.13 to 0.17.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The polymer of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the ethylene polymer is further characterized by:
+<claim-text>a ratio of Mw/Mn in a range from 9 to 15; and</claim-text>
+<claim-text>a ratio of Mz/Mw in a range from 5 to 9.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the ethylene polymer contains:
+<claim-text>from 200 to 400 ppm of silica;</claim-text>
+<claim-text>from 2 to 5 ppm of chromium; and</claim-text>
+<claim-text>from 7 to 17 ppm of titanium.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The polymer of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the ethylene polymer has:
+<claim-text>the MI in a range from 0.1 to 0.75 g/10 min; and</claim-text>
+<claim-text>the HLMI in a range from 20 to 50 g/10 min.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The polymer of <claim-ref idref="CLM-00019">claim 19</claim-ref>, wherein the total film gel count is less than or equal to 20 gels per ft<sup>2 </sup>of 25 micron thick film.</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. An article of manufacture comprising the polymer of <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+</claims>

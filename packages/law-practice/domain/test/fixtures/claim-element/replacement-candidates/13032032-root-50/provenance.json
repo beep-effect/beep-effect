@@ -1,0 +1,38 @@
+{
+  "applicationNumber": "13032032",
+  "publicationNumber": "US20110203791A1",
+  "publicationDate": "2011-08-25",
+  "nativeXmlSha256": "c94f554c02bdcdf778eff105d3c516618637dd7aa6ca912edb6837093e3f59ec",
+  "claimsXmlSha256": "a406b097ec38535309ec661e002242e38c73e448288975293b4a13e7af53f19a",
+  "officeActionDocumentIdentifiers": ["HEIH22TUPXXIFW4"],
+  "officeActionMailDate": "2013-03-22",
+  "officeActionSection112Text": [
+    "claims 1-188 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nin claim 1, line 3, no antecedent basis could be found for “the outer diameter or inner diameter”. in claim 1, line 5, no antecedent basis could be found for “the exposed outer surface”. in claim 7, line 2, no antecedent basis could be found for “the interfaces”. in claim 10, line 1, “wherein at least” should be –wherein the at least--. in claim 16, line 1, no antecedent basis could be found for “the water contact angle”. in claims 17-19, line 1, no antecedent basis could be found for “the thickness”. in claim 50, line 4, no antecedent basis could be found for “the outer surface”. in claim 52, line 2, no antecedent basis could be found for “the interfaces”. in claim 58, line 2, no antecedent basis could be found for “the exposed outer surface”. in claim 59, line 1, no antecedent basis could be found for “the coefficient of friction”. in claim 61, line 1, no antecedent basis could be found for “the water contact angle”. in claims 62-64, line 1, no antecedent basis could be found for “the thickness”. in claim 93, line 4, no antecedent basis could be found for “the outer diameter”. in claim 93, line 5, no antecedent basis could be found for “the exposed outer surface”. in claim 96, line 1, no antecedent basis could be found for “the recessed features”. in claim 106, line 1, no antecedent basis could be found for “the coefficient of friction”. in claim 108, line 1, no antecedent basis could be found for “the water contact angle”. in claims 109-111, line 1, no antecedent basis could be found for “the thickness”. in claim 144, line 5, no antecedent basis could be found for “the outer surface”. in claim 146, line 2, no antecedent basis could be found for “the interfaces”. in claim 153, line 1, no antecedent basis could be found for “the coefficient of friction”. in claim 155, line 1, no antecedent basis could be found for “the water contact angle”. in claims 156-158, line 1, no antecedent basis could be found for “the thickness”. in claim 164, line 1, no antecedent basis could be found for “the recessed features”."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "GKH9GCWSPPOPPY2",
+      "officialDate": "2011-02-22T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "GKH9GCWSPPOPPY2",
+      "officialDate": "2011-02-22T00:00:00.000-0500",
+      "sha256": "15be1a5ea88d95e58f32fb7451af772c2077ef25589a418672c08d72b09831fa",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 78,
+  "documentInventoryRows": 78,
+  "primaryCpc": "E21B  17/042",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13032032",
+    "https://api.uspto.gov/api/v1/patent/applications/13032032/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "not in active sample; source extractor/critic and semantic review pending"
+}

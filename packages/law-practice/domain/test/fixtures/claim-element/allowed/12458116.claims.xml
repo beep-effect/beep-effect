@@ -1,0 +1,87 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A band configured to wrap around and be secured to an object, said band comprising:
+<claim-text>at least three members pivotably connected to one another so as to be pivotable with respect to each other between an open position and a closed position, the first member comprising an outwardly disposed face defining an imaginary plane and each of the second and third members comprising an actuator prong that extends outwardly beyond the imaginary plane when the second and third members are in the open position and that is retracted to no longer extend outwardly beyond the imaginary plane when the second and third members are in the closed position;</claim-text>
+<claim-text>wherein the first and second members are configured such that when the first and second members are pivoted with respect to each other past a threshold position toward the closed position, the first and second members are biased toward the closed position by biasing forces created by at least one permanent magnet disposed on at least one of the first and second members and when the first and second members are pivoted with respect to each other past the threshold position toward the open position, the first and second members are biased toward the open position by biasing forces created by the at least one permanent magnet disposed on at least one of the first and second members;</claim-text>
+<claim-text>wherein the first and third members are configured such that when the first and third members are pivoted with respect to each other past a threshold position toward the closed position, the first and third members are biased toward the closed position by biasing forces created by at least one permanent magnet disposed on at least one of the first and third members and when the first and third members are pivoted with respect to each other past the threshold position toward the open position, the first and third members are biased toward the open position by biasing forces created by the least one permanent magnet disposed on at least one of the first and third members; and</claim-text>
+<claim-text>wherein movement of the object into contact with the first member so as to exert actuation forces toward the outwardly disposed face when the actuator prongs of the second and third members are in contact with a surface causes the second and third members to move from the open position to the closed position due to forces created between the actuator prongs and the surface.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>:
+<claim-text>wherein the at least one permanent magnet disposed on at least one of the first and second members and the at least one permanent magnet disposed on at least one of the first and third members comprise a first permanent magnet and a second permanent magnet disposed at opposite ends of the first member, a third permanent magnet disposed on the second member and a fourth permanent magnet disposed on the third member;</claim-text>
+<claim-text>wherein the biasing forces biasing the first and second members toward the closed position and biasing the first and second members toward the open position are created by the first and third magnets; and</claim-text>
+<claim-text>wherein the biasing forces biasing the first and third members toward the closed position and biasing the first and third members toward the open position are created by the second and fourth magnets.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The band of <claim-ref idref="CLM-00002">claim 2</claim-ref> wherein each of the first, second, third and fourth magnets comprises a diametrically magnetized magnet.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The band of <claim-ref idref="CLM-00003">claim 3</claim-ref> wherein each of the first, second, third and fourth magnets is configured as a rectangular prism.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The band of <claim-ref idref="CLM-00003">claim 3</claim-ref> wherein each of the first, second, third and fourth magnets is configured as a cylinder.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second and third members are pivotably connected to the first member at opposite ends thereof.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The band of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the first member comprises a watch body and the outwardly disposed face comprises a watch face, wherein the second member comprises a first watch strap, and wherein the third member comprises a second watch strap, whereby the band comprises a watch.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising a closure affixing the second member and the third member together when the second and third members are in the closed position.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The band of <claim-ref idref="CLM-00008">claim 8</claim-ref> wherein the closure comprises a magnetic closure.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein at least one of the second member and the third member comprises a flexible material.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> wherein at least one of the second member and the third member comprises a plurality of links.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The band of <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein at least some of the plurality of links comprise bistable compliant links.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The band of <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein at least some of the plurality of links comprise passive links.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The band of <claim-ref idref="CLM-00011">claim 11</claim-ref> wherein the plurality of links comprise a combination of bistable compliant links and passive links.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the open position and the closed position comprise stable positions such that the open position and the closed position are maintained without external forces being applied thereto.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The band of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein rotational positions of the first and second members with respect to each other and rotational positions of the first and third members with respect to each other between the open position and the closed position comprise unstable positions.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref>:
+<claim-text>wherein the first member comprises a first planar surface and a second planar surface at a first end thereof, the first and second planar surfaces defining an angle therebetween;</claim-text>
+<claim-text>wherein the first member comprises a third planar surface and a fourth planar surface at a second end thereof, the third and fourth planar surfaces defining an angle therebetween;</claim-text>
+<claim-text>wherein the second member comprises a planar surface;</claim-text>
+<claim-text>wherein the third member comprises a planar surface;</claim-text>
+<claim-text>wherein the planar surface of the second member abuts the first planar surface of the first member when in the open position and the planar surface of the second member abuts the second planar surface of the first member when in the closed position; and</claim-text>
+<claim-text>wherein the planar surface of the third member abuts the third planar surface of the first member when in the open position and the planar surface of the third member abuts the fourth planar surface of the first member when in the closed position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The band of <claim-ref idref="CLM-00017">claim 17</claim-ref> wherein the angle between the first and second planar surfaces of the first member is 90 degrees and the angle between the third and fourth planar surfaces of the first member is 90 degrees.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The band of <claim-ref idref="CLM-00001">claim 1</claim-ref> further comprising:
+<claim-text>a first pivot element configured to allow the first and second members to pivot with respect to one another, while preventing the first and second members from separating; and</claim-text>
+<claim-text>a second pivot element configured to allow the first and third members to pivot with respect to one another, while preventing the first and third members from separating.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A band configured to wrap around and be secured to an object, said band comprising:
+<claim-text>at least three members pivotably connected to one another so as to be pivotable with respect to each other between an open position and a closed position, the first member comprising an outwardly disposed face defining an imaginary plane and each of the second and third members comprising an actuator prong that extends outwardly beyond the imaginary plane when the second and third members are in the open position and that is retracted to no longer extend outwardly beyond the imaginary plane when the second and third members are in the closed position;</claim-text>
+<claim-text>wherein a first member of said at least three members comprises a first diametrically magnetized magnet and a second diametrically magnetized magnet disposed at opposite ends thereof, wherein a second member of said at least three members comprises a third diametrically magnetized magnet and wherein a third member of said at least three members comprises a fourth diametrically magnetized magnet;</claim-text>
+<claim-text>wherein the first and second members are configured such that when the first and second members are pivoted with respect to each other past a threshold position toward the closed position, the first and second members are biased toward the closed position by forces created by the first and third magnets and when the first and second members are pivoted with respect to each other past the threshold position toward the open position, the first and second members are biased toward the open position by forces created by the first and third magnets;</claim-text>
+<claim-text>wherein the first and third members are configured such that when the first and third members are pivoted with respect to each other past a threshold position toward the closed position, the first and third members are biased toward the closed position by forces created by the second and fourth magnets and when the first and third members are pivoted with respect to each other past the threshold position toward the open position, the first and third members are biased toward the open position by forces created by the second and fourth magnets; and</claim-text>
+<claim-text>wherein movement of the object into contact with the first member so as to exert actuation forces toward the outwardly disposed face when the actuator prongs of the second and third members are in contact with a surface causes the second and third members to move from the open position to the closed position due to forces created between the actuator prongs and the surface.</claim-text>
+</claim-text>
+</claim>
+</claims>

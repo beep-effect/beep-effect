@@ -1,0 +1,127 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12656234-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "changes-required",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "reviewScope": {
+    "claimCount": 10,
+    "elementCount": 52,
+    "termCount": 372,
+    "edgeCount": 177,
+    "functionalRelationCount": 33
+  },
+  "previousRoundReceipt": "critic.round1.json",
+  "priorFindingsAssessment": [
+    {
+      "id": "missing-local-semantic-references",
+      "disposition": "resolved",
+      "verifiedCaseCount": 15,
+      "reason": "All15 added edges match exact prior cases and are supported by unique local/per-transaction/qualified-interval/code-value/level/collection/gradient/member grammar. No donor crosses actual ancestry or conflates a buy/sell subset with an aggregate."
+    },
+    {
+      "id": "outer-each-in-bare-heads",
+      "disposition": "resolved",
+      "verifiedCaseCount": 10,
+      "reason": "All10 heads remove only outer distributive each; exact quotes, substantive qualifiers, counts, term ownership and function parts are unchanged."
+    }
+  ],
+  "findings": [
+    {
+      "id": "missing-possessive-determiner-in-source-anchors",
+      "kind": "incomplete-entity-anchor",
+      "cases": [
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "requiredAnchor": {
+            "startChar": 379,
+            "endChar": 390,
+            "quote": "whose value"
+          },
+          "currentAnchor": {
+            "startChar": 385,
+            "endChar": 390,
+            "quote": "value"
+          }
+        },
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "requiredAnchor": {
+            "startChar": 468,
+            "endChar": 487,
+            "quote": "whose date and time"
+          },
+          "currentAnchor": {
+            "startChar": 474,
+            "endChar": 487,
+            "quote": "date and time"
+          }
+        },
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "requiredAnchor": {
+            "startChar": 614,
+            "endChar": 625,
+            "quote": "whose value"
+          },
+          "currentAnchor": {
+            "startChar": 620,
+            "endChar": 625,
+            "quote": "value"
+          }
+        },
+        {
+          "claimNumber": 2,
+          "path": "2.b",
+          "requiredAnchor": {
+            "startChar": 704,
+            "endChar": 723,
+            "quote": "whose date and time"
+          },
+          "currentAnchor": {
+            "startChar": 710,
+            "endChar": 723,
+            "quote": "date and time"
+          }
+        }
+      ],
+      "reason": "These four source phrases are possessive noun phrases introduced by whose, not relative pronouns alone serving as connectors. Current terms start only at value or date and time, dropping the explicit outer possessive determiner from the noun-phrase anchor. Protocol rule3 retains possessive entity phrases; lexical-head/v1 removes outer pronominal determiners from the normalized head while explicitly retaining the complete source anchor. Retaining whose solely as adjacent functional text fails that anchor convention for the actual entity mention.",
+      "correction": "Extend the four term anchors to the exact required spans, retaining bare tag and normalized heads value / date and time. Update their functional-term parts and shorten neighboring connecting-text spans to preserve contiguous exact reconstruction. Do not infer new property/owner antecedents, conflate buy/sell populations, change source wording or formula text."
+    }
+  ],
+  "reviewNotes": [
+    "Independent second-session review: canonical selected/context sources, full current52elements/372terms/177edges, prior critic1 and extractor2 reviewed. Exact delta consists of15 added antecedents and10 lexical-head normalizations, with no element/anchor/functional-part mutation. All requested changes are accepted on their source grammar.",
+    "Fresh noun-phrase audit found four omitted possessive determiner surfaces in claim2, beyond the resolved earlier cases. This concrete anchor finding prevents acceptance; maximum remaining round is3.",
+    "MathML coverage remains intact. Native mfrac/msqrt, indices, private-use glyphs and canonical flattened formula strings are retained without reconstructing ratio/fraction/radical operators. Accepted independent source critic2 corroborates native formulas against originalPDF; no new original-PDF/inventory authentication claimed.",
+    "Generic-versus-concrete transactions, member roles, pressure/volume/gradient populations, and partial pie/quadrant collections retain disclosed ambiguity. No financial interpretation, arbitrary member selection, whole-group/subset identity, sibling/context-root donation or source repair is justified."
+  ],
+  "verification": [
+    "All10 trees decoded through ClaimElementTree. ExactUTF16 source anchors, nonoverlapping term ownership, full contiguous functional reconstruction, term endpoints and actual dependency ancestry, duplicate-edge absence and exact selected scope passed.",
+    "Native source XML SHA256 matches provenance; all12 canonical/context claim strings match native after printed-number and whitespace normalization. Mechanical checks supplement semantic review and never invoke a decomposer."
+  ],
+  "referenceSha256": "eb48f9471a6a8a63ca4ef08154629231c270cd7f490b15fd996bfdb64bb9f40b",
+  "extractorSha256": "da3966b930893e09afe65dfe6dea36ab5e4634a2b32fc5a833255c572f4a6032",
+  "independence": "Separate GPT-6.1-Sol medium critic session; did not extract this family. Read only canonical/native source, provenance/source critic, protocol/schema contracts and extraction/review receipts. No production/decomposer/P2-DESIGN/predictions/synthetic/conformance inspection. Only assigned critic.json and preserved critic.round1.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Reference review only; no active admission, accuracy or human agreement claim."
+}

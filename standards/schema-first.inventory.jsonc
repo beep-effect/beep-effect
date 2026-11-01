@@ -572,6 +572,16 @@
       "reason": "Transport port carrying an Effect writer and a Stream of lines (runtime-bound), not data; the identity half (McpClientOptions) is an annotated S.Class."
     },
     {
+      "file": "packages/foundation/capability/mcp-kit/test/SanitizedToolkit.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 44,
+      "owner": "@beep/mcp-kit",
+      "reason": "Golden MCP dispatch regression verifies annotated scalar/union/template fragments against exact valid and invalid tool messages. Arbitrary payloads would not establish the named-fragment compiler failure. Owner: @beep/mcp-kit. Exit: retire when template-fragment compiler property tests cover this named annotation boundary independently."
+    },
+    {
       "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
       "symbol": "NLPBackendShape",
       "kind": "exported-interface",
@@ -1426,6 +1436,36 @@
       "reason": "In-memory repository proof decodes fixed fixture wires to assert append/read-back, filing scope isolation and id ordering; schema-derived Arbitrary round-trips for PatentCitationEvent, CandorDisposition and IdsSubmissionFact live in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
+      "file": "packages/law-practice/server/test/ClaimElement.reference.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 108,
+      "owner": "@beep/law-practice-server",
+      "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
+    },
+    {
+      "file": "packages/law-practice/server/test/ClaimSelfCheck.corpus.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 42,
+      "owner": "@beep/law-practice-server",
+      "reason": "Golden source-cohort integrity checks bind exact public native XML, source hashes, CPC quotas and selected claim numbers. Arbitrary records cannot replace provenance or frozen denominators. Owner: @beep/law-practice-server. Exit: retire when the detector recognizes source inventory integrity tests."
+    },
+    {
+      "file": "packages/law-practice/server/test/ClaimSelfCheck.public.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 78,
+      "owner": "@beep/law-practice-server",
+      "reason": "Owner: @beep/law-practice-server. Fixed public USPTO integration witnesses verify native XML, exact operative-source text, recorded office-action identifiers/date/rejection phrases, and full frozen-tree equality. Generated arbitrary payloads cannot establish those real-record facts. This is intentionally golden/source-integrity coverage, not a new codec-law suite. Exit: retire when the detector recognizes native public-slice regression subjects or equivalent source-integrity property coverage becomes meaningful."
+    },
+    {
       "file": "packages/law-practice/server/test/CompetencyQuestions.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1462,6 +1502,16 @@
       "line": 43,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/ClaimSelfCheck.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 336,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Service integration regression checks exact source-bound advisory items and their ReviewItem wire round-trip, alongside runtime errors and verdict projection. It does not define a new ReviewItem codec; the schema belongs to domain. Owner: @beep/law-practice-use-cases. Exit: retire when the detector excludes consumer integration round-trips or shared ReviewItem property coverage is directly recognized."
     },
     {
       "file": "packages/shared/domain/src/entity/Principal.ts",

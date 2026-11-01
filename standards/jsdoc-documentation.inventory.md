@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T00:45:23.390Z
+Generated: 2026-11-01T00:59:36.970Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3625 |
-| publicExports | 25628 |
+| publicModules | 3627 |
+| publicExports | 25639 |
 | openModules | 161 |
 | openExports | 97 |
 | missingExportExamples | 3 |
@@ -133,7 +133,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 75 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 76 | `@beep/tsconfig` | `packages/foundation/modeling/tsconfig` | clean | 8 | 67 | 0 | 0 |
 | 77 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 557 | 0 | 0 |
-| 78 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 25 | 0 | 0 |
+| 78 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 27 | 0 | 0 |
 | 79 | `@beep/walker` | `packages/foundation/capability/walker` | clean | 4 | 24 | 0 | 0 |
 | 80 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 18 | 96 | 0 | 0 |
 | 81 | `@beep/box-provisioning` | `packages/drivers/box-provisioning` | clean | 15 | 184 | 0 | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
 | 136 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
 | 137 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
-| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 251 | 949 | 0 | 0 |
+| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 252 | 953 | 0 | 0 |
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
@@ -221,7 +221,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
 | 164 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 165 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
-| 166 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 103 | 651 | 0 | 0 |
+| 166 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 656 | 0 | 0 |
 | 167 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 168 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
 | 169 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |

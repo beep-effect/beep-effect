@@ -1,0 +1,2323 @@
+[
+  {
+    "claimNumber": 16,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "16",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 118,
+          "quote": "A system for determining an ablation lesion zone (width or depth) projected onto an electro-anatomical map, the system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "determiner": "a",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 25,
+              "endChar": 48,
+              "quote": "an ablation lesion zone"
+            },
+            "determiner": "an",
+            "head": "ablation lesion zone"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 106,
+              "quote": "an electro-anatomical map"
+            },
+            "determiner": "an",
+            "head": "electro-anatomical map"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 118,
+              "quote": "the system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "16.a",
+        "anchor": {
+          "startChar": 131,
+          "endChar": 151,
+          "quote": "an ablation catheter"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 131,
+              "endChar": 151,
+              "quote": "an ablation catheter"
+            },
+            "determiner": "an",
+            "head": "ablation catheter"
+          }
+        ]
+      },
+      {
+        "path": "16.b",
+        "anchor": {
+          "startChar": 153,
+          "endChar": 300,
+          "quote": "at least one sensor operating in conjunction with the ablation catheter and communicatively connected via hardware including at least one processor"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 153,
+              "endChar": 172,
+              "quote": "at least one sensor"
+            },
+            "determiner": "at-least-one",
+            "head": "sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 224,
+              "quote": "the ablation catheter"
+            },
+            "determiner": "the",
+            "head": "ablation catheter"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 267,
+              "quote": "hardware"
+            },
+            "determiner": "bare",
+            "head": "hardware"
+          },
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 300,
+              "quote": "at least one processor"
+            },
+            "determiner": "at-least-one",
+            "head": "processor"
+          }
+        ]
+      },
+      {
+        "path": "16.c",
+        "anchor": {
+          "startChar": 306,
+          "endChar": 417,
+          "quote": "a monitor communicatively coupled to the controller operating the ablation catheter and the at least one sensor"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 306,
+              "endChar": 315,
+              "quote": "a monitor"
+            },
+            "determiner": "a",
+            "head": "monitor"
+          },
+          {
+            "anchor": {
+              "startChar": 343,
+              "endChar": 357,
+              "quote": "the controller"
+            },
+            "determiner": "the",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 368,
+              "endChar": 389,
+              "quote": "the ablation catheter"
+            },
+            "determiner": "the",
+            "head": "ablation catheter"
+          },
+          {
+            "anchor": {
+              "startChar": 394,
+              "endChar": 417,
+              "quote": "the at least one sensor"
+            },
+            "determiner": "the",
+            "head": "at least one sensor"
+          }
+        ]
+      },
+      {
+        "path": "16.d",
+        "anchor": {
+          "startChar": 419,
+          "endChar": 580,
+          "quote": "storage to store information representing contact force as applied by at least two electrodes on biological tissues and the number of times energy were delivered"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 419,
+              "endChar": 426,
+              "quote": "storage"
+            },
+            "determiner": "bare",
+            "head": "storage"
+          },
+          {
+            "anchor": {
+              "startChar": 436,
+              "endChar": 447,
+              "quote": "information"
+            },
+            "determiner": "bare",
+            "head": "information"
+          },
+          {
+            "anchor": {
+              "startChar": 461,
+              "endChar": 474,
+              "quote": "contact force"
+            },
+            "determiner": "bare",
+            "head": "contact force"
+          },
+          {
+            "anchor": {
+              "startChar": 489,
+              "endChar": 512,
+              "quote": "at least two electrodes"
+            },
+            "determiner": "bare",
+            "head": "at least two electrodes"
+          },
+          {
+            "anchor": {
+              "startChar": 516,
+              "endChar": 534,
+              "quote": "biological tissues"
+            },
+            "determiner": "bare",
+            "head": "biological tissues"
+          },
+          {
+            "anchor": {
+              "startChar": 539,
+              "endChar": 549,
+              "quote": "the number"
+            },
+            "determiner": "the",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 553,
+              "endChar": 558,
+              "quote": "times"
+            },
+            "determiner": "bare",
+            "head": "times"
+          },
+          {
+            "anchor": {
+              "startChar": 559,
+              "endChar": 565,
+              "quote": "energy"
+            },
+            "determiner": "bare",
+            "head": "energy"
+          }
+        ]
+      },
+      {
+        "path": "16.e",
+        "anchor": {
+          "startChar": 582,
+          "endChar": 724,
+          "quote": "a controller to calculate one or more zones of electroporation based on a magnitude of contact force and number of times energy were delivered"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 582,
+              "endChar": 594,
+              "quote": "a controller"
+            },
+            "determiner": "a",
+            "head": "controller"
+          },
+          {
+            "anchor": {
+              "startChar": 608,
+              "endChar": 625,
+              "quote": "one or more zones"
+            },
+            "determiner": "at-least-one",
+            "head": "zones"
+          },
+          {
+            "anchor": {
+              "startChar": 629,
+              "endChar": 644,
+              "quote": "electroporation"
+            },
+            "determiner": "bare",
+            "head": "electroporation"
+          },
+          {
+            "anchor": {
+              "startChar": 654,
+              "endChar": 665,
+              "quote": "a magnitude"
+            },
+            "determiner": "a",
+            "head": "magnitude"
+          },
+          {
+            "anchor": {
+              "startChar": 669,
+              "endChar": 682,
+              "quote": "contact force"
+            },
+            "determiner": "bare",
+            "head": "contact force"
+          },
+          {
+            "anchor": {
+              "startChar": 687,
+              "endChar": 693,
+              "quote": "number"
+            },
+            "determiner": "bare",
+            "head": "number"
+          },
+          {
+            "anchor": {
+              "startChar": 697,
+              "endChar": 702,
+              "quote": "times"
+            },
+            "determiner": "bare",
+            "head": "times"
+          },
+          {
+            "anchor": {
+              "startChar": 703,
+              "endChar": 709,
+              "quote": "energy"
+            },
+            "determiner": "bare",
+            "head": "energy"
+          }
+        ]
+      },
+      {
+        "path": "16.f",
+        "anchor": {
+          "startChar": 726,
+          "endChar": 821,
+          "quote": "the monitor projecting the determined one or more ablation zones onto an electro-anatomical map"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 726,
+              "endChar": 737,
+              "quote": "the monitor"
+            },
+            "determiner": "the",
+            "head": "monitor"
+          },
+          {
+            "anchor": {
+              "startChar": 749,
+              "endChar": 790,
+              "quote": "the determined one or more ablation zones"
+            },
+            "determiner": "the",
+            "head": "determined one or more ablation zones"
+          },
+          {
+            "anchor": {
+              "startChar": 796,
+              "endChar": 821,
+              "quote": "an electro-anatomical map"
+            },
+            "determiner": "an",
+            "head": "electro-anatomical map"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 118,
+            "quote": "the system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "16.a",
+        "parent": "16"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 203,
+            "endChar": 224,
+            "quote": "the ablation catheter"
+          }
+        },
+        "introducing": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 151,
+            "quote": "an ablation catheter"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "16.b",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 153,
+                "endChar": 172,
+                "quote": "at least one sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 203,
+              "quote": " operating in conjunction with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 203,
+                "endChar": 224,
+                "quote": "the ablation catheter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 259,
+              "quote": " and communicatively connected via "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 267,
+                "quote": "hardware"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 267,
+              "endChar": 278,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.b",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 300,
+                "quote": "at least one processor"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.c",
+          "anchor": {
+            "startChar": 368,
+            "endChar": 389,
+            "quote": "the ablation catheter"
+          }
+        },
+        "introducing": {
+          "path": "16.a",
+          "anchor": {
+            "startChar": 131,
+            "endChar": 151,
+            "quote": "an ablation catheter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.c",
+          "anchor": {
+            "startChar": 394,
+            "endChar": 417,
+            "quote": "the at least one sensor"
+          }
+        },
+        "introducing": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 153,
+            "endChar": 172,
+            "quote": "at least one sensor"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "16.c",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.c",
+              "anchor": {
+                "startChar": 306,
+                "endChar": 315,
+                "quote": "a monitor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 315,
+              "endChar": 343,
+              "quote": " communicatively coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.c",
+              "anchor": {
+                "startChar": 343,
+                "endChar": 357,
+                "quote": "the controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 357,
+              "endChar": 368,
+              "quote": " operating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.c",
+              "anchor": {
+                "startChar": 368,
+                "endChar": 389,
+                "quote": "the ablation catheter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 389,
+              "endChar": 394,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.c",
+              "anchor": {
+                "startChar": 394,
+                "endChar": 417,
+                "quote": "the at least one sensor"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "16.d",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 419,
+                "endChar": 426,
+                "quote": "storage"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 426,
+              "endChar": 436,
+              "quote": " to store "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 436,
+                "endChar": 447,
+                "quote": "information"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 447,
+              "endChar": 461,
+              "quote": " representing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 461,
+                "endChar": 474,
+                "quote": "contact force"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 474,
+              "endChar": 489,
+              "quote": " as applied by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 489,
+                "endChar": 512,
+                "quote": "at least two electrodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 512,
+              "endChar": 516,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 516,
+                "endChar": 534,
+                "quote": "biological tissues"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 534,
+              "endChar": 539,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 539,
+                "endChar": 549,
+                "quote": "the number"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 549,
+              "endChar": 553,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 553,
+                "endChar": 558,
+                "quote": "times"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 558,
+              "endChar": 559,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.d",
+              "anchor": {
+                "startChar": 559,
+                "endChar": 565,
+                "quote": "energy"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 565,
+              "endChar": 580,
+              "quote": " were delivered"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.e",
+          "anchor": {
+            "startChar": 669,
+            "endChar": 682,
+            "quote": "contact force"
+          }
+        },
+        "introducing": {
+          "path": "16.d",
+          "anchor": {
+            "startChar": 461,
+            "endChar": 474,
+            "quote": "contact force"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "16.e",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 582,
+                "endChar": 594,
+                "quote": "a controller"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 594,
+              "endChar": 608,
+              "quote": " to calculate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 608,
+                "endChar": 625,
+                "quote": "one or more zones"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 625,
+              "endChar": 629,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 629,
+                "endChar": 644,
+                "quote": "electroporation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 644,
+              "endChar": 654,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 654,
+                "endChar": 665,
+                "quote": "a magnitude"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 665,
+              "endChar": 669,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 669,
+                "endChar": 682,
+                "quote": "contact force"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 682,
+              "endChar": 687,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 687,
+                "endChar": 693,
+                "quote": "number"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 693,
+              "endChar": 697,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 697,
+                "endChar": 702,
+                "quote": "times"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 702,
+              "endChar": 703,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.e",
+              "anchor": {
+                "startChar": 703,
+                "endChar": 709,
+                "quote": "energy"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 709,
+              "endChar": 724,
+              "quote": " were delivered"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "16.f",
+          "anchor": {
+            "startChar": 726,
+            "endChar": 737,
+            "quote": "the monitor"
+          }
+        },
+        "introducing": {
+          "path": "16.c",
+          "anchor": {
+            "startChar": 306,
+            "endChar": 315,
+            "quote": "a monitor"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "16.f",
+        "parent": "16"
+      },
+      {
+        "kind": "functional",
+        "element": "16.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.f",
+              "anchor": {
+                "startChar": 726,
+                "endChar": 737,
+                "quote": "the monitor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 737,
+              "endChar": 749,
+              "quote": " projecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.f",
+              "anchor": {
+                "startChar": 749,
+                "endChar": 790,
+                "quote": "the determined one or more ablation zones"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 790,
+              "endChar": 796,
+              "quote": " onto "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "16.f",
+              "anchor": {
+                "startChar": 796,
+                "endChar": 821,
+                "quote": "an electro-anatomical map"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 17,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "17",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 16"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "17.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 120,
+          "quote": "wherein the processor conducts a multi-parameter regression from predetermined pre-clinical data"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 45,
+              "quote": "the processor"
+            },
+            "determiner": "the",
+            "head": "processor"
+          },
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 83,
+              "quote": "a multi-parameter regression"
+            },
+            "determiner": "a",
+            "head": "multi-parameter regression"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 120,
+              "quote": "predetermined pre-clinical data"
+            },
+            "determiner": "bare",
+            "head": "predetermined pre-clinical data"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "17.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 45,
+            "quote": "the processor"
+          }
+        },
+        "introducing": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 300,
+            "quote": "at least one processor"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "17.a",
+        "parent": "17"
+      },
+      {
+        "kind": "functional",
+        "element": "17.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 45,
+                "quote": "the processor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 45,
+              "endChar": 55,
+              "quote": " conducts "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 83,
+                "quote": "a multi-parameter regression"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 89,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "17.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 120,
+                "quote": "predetermined pre-clinical data"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "17",
+        "ancestor": "16"
+      }
+    ]
+  },
+  {
+    "claimNumber": 18,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "18",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 16"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "18.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 121,
+          "quote": "wherein the processor conducts a single-parameter regression from predetermined pre-clinical data"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 45,
+              "quote": "the processor"
+            },
+            "determiner": "the",
+            "head": "processor"
+          },
+          {
+            "anchor": {
+              "startChar": 55,
+              "endChar": 84,
+              "quote": "a single-parameter regression"
+            },
+            "determiner": "a",
+            "head": "single-parameter regression"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 121,
+              "quote": "predetermined pre-clinical data"
+            },
+            "determiner": "bare",
+            "head": "predetermined pre-clinical data"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "18.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 45,
+            "quote": "the processor"
+          }
+        },
+        "introducing": {
+          "path": "16.b",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 300,
+            "quote": "at least one processor"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "18.a",
+        "parent": "18"
+      },
+      {
+        "kind": "functional",
+        "element": "18.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 45,
+                "quote": "the processor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 45,
+              "endChar": 55,
+              "quote": " conducts "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 55,
+                "endChar": 84,
+                "quote": "a single-parameter regression"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 90,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "18.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 121,
+                "quote": "predetermined pre-clinical data"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "18",
+        "ancestor": "16"
+      }
+    ]
+  },
+  {
+    "claimNumber": 19,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "19",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 16"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "19.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 199,
+          "quote": "wherein the projecting provides a viewer of the map with a visual of the ablation lesion including lesion width, lesion depth and cardiac tissue in the zone of electroporation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "the projecting"
+            },
+            "determiner": "the",
+            "head": "projecting"
+          },
+          {
+            "anchor": {
+              "startChar": 56,
+              "endChar": 64,
+              "quote": "a viewer"
+            },
+            "determiner": "a",
+            "head": "viewer"
+          },
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 75,
+              "quote": "the map"
+            },
+            "determiner": "the",
+            "head": "map"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 89,
+              "quote": "a visual"
+            },
+            "determiner": "a",
+            "head": "visual"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 112,
+              "quote": "the ablation lesion"
+            },
+            "determiner": "the",
+            "head": "ablation lesion"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 135,
+              "quote": "lesion width"
+            },
+            "determiner": "bare",
+            "head": "lesion width"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 149,
+              "quote": "lesion depth"
+            },
+            "determiner": "bare",
+            "head": "lesion depth"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 168,
+              "quote": "cardiac tissue"
+            },
+            "determiner": "bare",
+            "head": "cardiac tissue"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 180,
+              "quote": "the zone"
+            },
+            "determiner": "the",
+            "head": "zone"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 199,
+              "quote": "electroporation"
+            },
+            "determiner": "bare",
+            "head": "electroporation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "19",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "19.a",
+        "parent": "19"
+      },
+      {
+        "kind": "functional",
+        "element": "19.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "the projecting"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 56,
+              "quote": " provides "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 64,
+                "quote": "a viewer"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 64,
+              "endChar": 68,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 75,
+                "quote": "the map"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 81,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 89,
+                "quote": "a visual"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 89,
+              "endChar": 93,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 112,
+                "quote": "the ablation lesion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 123,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 135,
+                "quote": "lesion width"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 137,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 149,
+                "quote": "lesion depth"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 154,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 168,
+                "quote": "cardiac tissue"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 172,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 180,
+                "quote": "the zone"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 184,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "19.a",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 199,
+                "quote": "electroporation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "19",
+        "ancestor": "16"
+      }
+    ]
+  },
+  {
+    "claimNumber": 20,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "20",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "20.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 99,
+          "quote": "wherein the projecting further includes color coding of the ablation lesion"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "the projecting"
+            },
+            "determiner": "the",
+            "head": "projecting"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 76,
+              "quote": "color coding"
+            },
+            "determiner": "bare",
+            "head": "color coding"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 99,
+              "quote": "the ablation lesion"
+            },
+            "determiner": "the",
+            "head": "ablation lesion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "20",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "20.a",
+        "parent": "20"
+      },
+      {
+        "kind": "functional",
+        "element": "20.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "the projecting"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 64,
+              "quote": " further includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 64,
+                "endChar": 76,
+                "quote": "color coding"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 80,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "20.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 99,
+                "quote": "the ablation lesion"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "20",
+        "ancestor": "19"
+      }
+    ]
+  },
+  {
+    "claimNumber": 21,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "21",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 19"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "21.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 116,
+          "quote": "wherein the size of the visual of the ablation lesion correlates with the size of the lesion"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 40,
+              "quote": "the size"
+            },
+            "determiner": "the",
+            "head": "size"
+          },
+          {
+            "anchor": {
+              "startChar": 44,
+              "endChar": 54,
+              "quote": "the visual"
+            },
+            "determiner": "the",
+            "head": "visual"
+          },
+          {
+            "anchor": {
+              "startChar": 58,
+              "endChar": 77,
+              "quote": "the ablation lesion"
+            },
+            "determiner": "the",
+            "head": "ablation lesion"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 102,
+              "quote": "the size"
+            },
+            "determiner": "the",
+            "head": "size"
+          },
+          {
+            "anchor": {
+              "startChar": 106,
+              "endChar": 116,
+              "quote": "the lesion"
+            },
+            "determiner": "the",
+            "head": "lesion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "21.a",
+          "anchor": {
+            "startChar": 44,
+            "endChar": 54,
+            "quote": "the visual"
+          }
+        },
+        "introducing": {
+          "path": "19.a",
+          "anchor": {
+            "startChar": 81,
+            "endChar": 89,
+            "quote": "a visual"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "21.a",
+        "parent": "21"
+      },
+      {
+        "kind": "functional",
+        "element": "21.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 40,
+                "quote": "the size"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 40,
+              "endChar": 44,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 44,
+                "endChar": 54,
+                "quote": "the visual"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 58,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 58,
+                "endChar": 77,
+                "quote": "the ablation lesion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 94,
+              "quote": " correlates with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 102,
+                "quote": "the size"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 106,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "21.a",
+              "anchor": {
+                "startChar": 106,
+                "endChar": 116,
+                "quote": "the lesion"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "21",
+        "ancestor": "19"
+      }
+    ]
+  },
+  {
+    "claimNumber": 22,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "22",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 16"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "22.a",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 150,
+          "quote": "wherein the performed regression includes pre-clinical work that relates the ablation parameters to the lesion depth and width"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 56,
+              "quote": "the performed regression"
+            },
+            "determiner": "the",
+            "head": "performed regression"
+          },
+          {
+            "anchor": {
+              "startChar": 66,
+              "endChar": 83,
+              "quote": "pre-clinical work"
+            },
+            "determiner": "bare",
+            "head": "pre-clinical work"
+          },
+          {
+            "anchor": {
+              "startChar": 97,
+              "endChar": 120,
+              "quote": "the ablation parameters"
+            },
+            "determiner": "the",
+            "head": "ablation parameters"
+          },
+          {
+            "anchor": {
+              "startChar": 124,
+              "endChar": 150,
+              "quote": "the lesion depth and width"
+            },
+            "determiner": "the",
+            "head": "lesion depth and width"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "22",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "16",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "22.a",
+        "parent": "22"
+      },
+      {
+        "kind": "functional",
+        "element": "22.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 32,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 56,
+                "quote": "the performed regression"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 56,
+              "endChar": 66,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 66,
+                "endChar": 83,
+                "quote": "pre-clinical work"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 97,
+              "quote": " that relates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 97,
+                "endChar": 120,
+                "quote": "the ablation parameters"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 120,
+              "endChar": 124,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "22.a",
+              "anchor": {
+                "startChar": 124,
+                "endChar": 150,
+                "quote": "the lesion depth and width"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "22",
+        "ancestor": "16"
+      }
+    ]
+  }
+]

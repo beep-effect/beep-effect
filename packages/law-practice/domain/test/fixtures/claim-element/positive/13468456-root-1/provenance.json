@@ -1,0 +1,40 @@
+{
+  "applicationNumber": "13468456",
+  "publicationNumber": "US20120285386A1",
+  "publicationDate": "2012-11-15",
+  "nativeXmlSha256": "d37600bf4330043e1d7b0aba7ecaaebc561b37a0c9700627e5590e15398496c9",
+  "claimsXmlSha256": "88043ab35ea67aebb158c152d1ee49bb9548e4f5d4c0713adae6213a4cc05112",
+  "officeActionDocumentIdentifiers": [
+    "HQF9BZD8PXXIFW4"
+  ],
+  "officeActionMailDate": "2014-01-16",
+  "officeActionSection112Text": [
+    "claims 1-28 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nfor claim 1, line 4, “the surface lacks prior antecedent basis.\r\nfor claim 3, line 2, “the lower portion” lacks prior antecedent basis.\r\nfor claim 4, line 1, “said perches lacks prior antecedent basis.\r\nfor claim 5, line 1, “said perches lacks prior antecedent basis.\r\nfor claim 7, line 1, “the bottom lacks prior antecedent basis.\r\nfor claim 9, line 1, “the upper rim” lacks prior antecedent basis.\r\nfor claim 10, line 2, “may be” is indefinite because is the hanger or post support attached between the edges of the plates or is it not? in addition, “the edges” lacks prior antecedent basis.\r\nfor claim 12, line 2, “said feed portals” lacks prior antecedent basis.\r\nfor claim 13, line 4, “the surface” lacks prior antecedent basis. in line 9, “the feeding portals” lacks prior antecedent basis. in line 10, “the external surface” lacks prior antecedent basis.\r\nfor claim 15, line 2, “the lower portion” lacks prior antecedent basis.\r\nfor claim 16, line 1, “said perches” lacks prior antecedent basis.\r\nfor claim 17, line 1, “said perches” lacks prior antecedent basis.\r\nfor claim 19, line 1, “the bottom lacks prior antecedent basis.\r\nfor claim 21, line 1, “the upper rim” lacks prior antecedent basis.\r\nfor claim 22, line 2, “the attach cord or post attachment” lacks prior antecedent basis.\r\nfor claim 24, line 2, “said feed portals lacks prior antecedent basis.\r\nfor claim 25, line 1, “said aversive agent lacks prior antecedent basis. in addition, it appears that applicant is attempting to claim a process, i.e. painting, in an apparatus claim, which is unclear."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "H227VJM9PXXIFW3",
+      "officialDate": "2012-05-10T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "H227VJM9PXXIFW3",
+      "officialDate": "2012-05-10T00:00:00.000-0400",
+      "sha256": "ed941a96e3ac5b5678fb6201b2a9f39afc9b9df3a71950375e90db9e60e52a3b",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 16,
+  "documentInventoryRows": 16,
+  "primaryCpc": "A01K  39/0113",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13468456",
+    "https://api.uspto.gov/api/v1/patent/applications/13468456/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}
