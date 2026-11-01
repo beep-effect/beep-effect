@@ -7,13 +7,22 @@ carries the probe that would show it is no longer needed. Contract:
 
 | File | Contents | Writers |
 | --- | --- | --- |
-| `claims.jsonl` | Append-only `HoldClaimVersion` rows (`@beep/repo-cli/commands/Holds`). A renewal appends a version that `supersedes` the previous one; the old row gets an `expiredAt`. | Agents, through reviewed PRs |
+| `claims.jsonl` | Append-only `HoldClaimVersion` rows (`@beep/repo-cli/commands/Holds`). A renewal appends a version that `supersedes` the previous one; a tombstone is a superseding version with `review: Retracted`. A hold is live when no later row supersedes it. | Agents, through reviewed PRs; `beep holds lint --write` for tombstones |
 | `runs.jsonl` | Append-only `ProbeRun` rows, one per `beep holds probe` run. | `bun run beep holds probe <hold-id>` |
+| `syncpack-held.generated.json` | The dependency patterns `deps:update` must not touch: every `SyncpackHeld` anchor of a live hold, sorted. `syncpack.config.ts` imports it. | `bun run beep holds lint --write` |
 
 ```sh
 bun run beep holds list
 bun run beep holds probe statelyai-model-testing-404 --dry-run
+bun run beep holds lint          # cheap gate: config and ledger agree
+bun run beep holds lint --write  # tombstone orphans, regenerate the held list
 ```
+
+Every root override, patched dependency and OSV package override needs a live
+hold whose anchors name it, and every anchor of a live hold must still exist
+(a catalog entry, a manifest dependency or a syncpack version-group label).
+A new hold-shaped config entry therefore fails the cheap gate until its record
+lands in the same PR.
 
 `beep holds probe` installs each side in a scratch directory under
 `~/.cache/beep/holds/<hold-id>/`. The control must still reproduce the

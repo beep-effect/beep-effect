@@ -1356,6 +1356,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
+        "lint:holds",
         "lint:schema-first",
         "lint:effect-vitest",
         "lint:allowlist",
@@ -4057,6 +4058,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:retired-iri-authorities",
         "lint:schema-tag-idioms",
+        "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
@@ -4110,7 +4112,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:test-tsgo",
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
-        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(15)),
+        ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
         ...pipe(A.get(local, 2), O.getOrThrow, taskNames),
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
@@ -4209,6 +4211,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-effect-paths",
           "lint:retired-iri-authorities",
           "lint:schema-tag-idioms",
+          "lint:holds",
           "quality:test-tsgo",
           "knowledge:doctor",
         ];

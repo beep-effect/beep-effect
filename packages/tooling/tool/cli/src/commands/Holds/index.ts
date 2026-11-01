@@ -25,6 +25,7 @@ export * from "./Holds.command.ts";
  * @since 0.0.0
  */
 export * from "./Holds.errors.ts";
+export * from "./Holds.inventory.ts";
 /**
  * Public hold ledger list and probe programs.
  *
@@ -40,6 +41,7 @@ export * from "./Holds.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Holds.service.ts";
+export * from "./Holds.sites.ts";
 /**
  * Public hold probe verdict rules.
  *

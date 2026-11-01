@@ -13,7 +13,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -22,6 +21,7 @@ import { repoRunOutputBound, runCaptured } from "../../internal/process/StepExec
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { partitionJsonLines } from "../../internal/state/JsonLinesStore.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
+import { liveHoldVersions } from "./Holds.inventory.ts";
 import {
   HoldClaimVersion,
   HoldProposition,
@@ -32,6 +32,7 @@ import {
 } from "./Holds.schemas.ts";
 import { judgeProbeRun } from "./Holds.verdict.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as O from "effect/Option";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.service");
@@ -52,7 +53,24 @@ const $I = $RepoCliId.create("commands/Holds/Holds.service");
  */
 export const holdLedgerDirectory = "hold-ledger";
 
+/**
+ * File name, inside {@link holdLedgerDirectory}, of the generated syncpack held list.
+ *
+ * **Example** (Read the held list file name)
+ *
+ * ```ts
+ * import { syncpackHeldListFile } from "@beep/repo-cli/commands/Holds"
+ *
+ * console.log(syncpackHeldListFile) // "syncpack-held.generated.json"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const syncpackHeldListFile = "syncpack-held.generated.json";
+
 const HoldClaimVersionJson = JsonStringCodec(HoldClaimVersion);
+const encodeHeldList = S.encodeUnknownEffect(S.fromJsonString(S.Array(S.String), { space: 2 }));
 const ProbeRunJson = JsonStringCodec(ProbeRun);
 
 /**
@@ -71,12 +89,18 @@ const ProbeRunJson = JsonStringCodec(ProbeRun);
  * @since 0.0.0
  */
 export interface HoldLedgerShape {
+  /** Every claim version in file order, superseded and retracted rows included. */
+  readonly allVersions: Effect.Effect<ReadonlyArray<HoldClaimVersion>, HoldsError>;
   /** Append one probe run. */
   readonly appendRun: (run: ProbeRun) => Effect.Effect<void, HoldsError>;
-  /** Current hold versions: the rows whose knowledge interval is still open. */
+  /** Append claim versions, such as tombstones, in order. */
+  readonly appendVersions: (versions: ReadonlyArray<HoldClaimVersion>) => Effect.Effect<void, HoldsError>;
+  /** Current hold versions: not superseded, retracted or expired. */
   readonly currentVersions: Effect.Effect<ReadonlyArray<HoldClaimVersion>, HoldsError>;
   /** Probe runs recorded against one claim version, newest first; a changed probe starts with no evidence. */
   readonly runsFor: (version: HoldClaimVersion) => Effect.Effect<ReadonlyArray<ProbeRun>, HoldsError>;
+  /** Replace the generated syncpack held list. */
+  readonly writeHeldList: (heldList: ReadonlyArray<string>) => Effect.Effect<void, HoldsError>;
 }
 
 /**
@@ -121,6 +145,7 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
   const directory = path.join(repoRoot, holdLedgerDirectory);
   const claimsFile = path.join(directory, "claims.jsonl");
   const runsFile = path.join(directory, "runs.jsonl");
+  const heldListFile = path.join(directory, syncpackHeldListFile);
 
   const readLines = Effect.fn("HoldLedger.readLines")(function* (file: string) {
     const exists = yield* fs.exists(file).pipe(Effect.mapError(holdsPlatformError(`Could not stat ${file}`)));
@@ -145,9 +170,8 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
       })
     );
 
-  const currentVersions = strictRows(claimsFile, HoldClaimVersionJson.decodeOption).pipe(
-    Effect.map(A.filter((version: HoldClaimVersion) => O.isNone(version.knowledge.expiredAt)))
-  );
+  const allVersions = strictRows(claimsFile, HoldClaimVersionJson.decodeOption);
+  const currentVersions = Effect.map(allVersions, liveHoldVersions);
 
   const runsFor = Effect.fn("HoldLedger.runsFor")(function* (version: HoldClaimVersion) {
     const rows = yield* strictRows(runsFile, ProbeRunJson.decodeOption);
@@ -157,22 +181,44 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     );
   });
 
-  const appendRun = Effect.fn("HoldLedger.appendRun")(function* (run: ProbeRun) {
-    const line = yield* ProbeRunJson.encode(run).pipe(
-      Effect.mapError((cause) => HoldsError.make({ reason: "decode", message: "Could not encode a probe run.", cause }))
-    );
+  const appendLines = Effect.fn("HoldLedger.appendLines")(function* (file: string, lines: ReadonlyArray<string>) {
     yield* fs
       .makeDirectory(directory, { recursive: true })
       .pipe(Effect.mapError(holdsPlatformError(`Could not create ${directory}`)));
     // A hand-edited ledger may lack its trailing newline; start a new row instead of joining the last one.
-    const existing = yield* readLines(runsFile);
+    const existing = yield* readLines(file);
     const separator = Str.isEmpty(existing) || Str.endsWith("\n")(existing) ? "" : "\n";
     yield* fs
-      .writeFileString(runsFile, `${separator}${line}\n`, { flag: "a" })
-      .pipe(Effect.mapError(holdsPlatformError(`Could not append to ${runsFile}`)));
+      .writeFileString(file, `${separator}${A.join(lines, "\n")}\n`, { flag: "a" })
+      .pipe(Effect.mapError(holdsPlatformError(`Could not append to ${file}`)));
   });
 
-  return HoldLedger.of({ currentVersions, runsFor, appendRun });
+  const encodeFailure = (what: string) => (cause: unknown) =>
+    HoldsError.make({ reason: "decode", message: `Could not encode ${what}.`, cause });
+
+  const appendRun = Effect.fn("HoldLedger.appendRun")(function* (run: ProbeRun) {
+    const line = yield* ProbeRunJson.encode(run).pipe(Effect.mapError(encodeFailure("a probe run")));
+    yield* appendLines(runsFile, [line]);
+  });
+
+  const appendVersions = Effect.fn("HoldLedger.appendVersions")(function* (versions: ReadonlyArray<HoldClaimVersion>) {
+    if (A.isReadonlyArrayEmpty(versions)) {
+      return;
+    }
+    const lines = yield* Effect.forEach(versions, (version) =>
+      HoldClaimVersionJson.encode(version).pipe(Effect.mapError(encodeFailure("a hold claim version")))
+    );
+    yield* appendLines(claimsFile, lines);
+  });
+
+  const writeHeldList = Effect.fn("HoldLedger.writeHeldList")(function* (heldList: ReadonlyArray<string>) {
+    const text = yield* encodeHeldList(heldList).pipe(Effect.mapError(encodeFailure("the syncpack held list")));
+    yield* fs
+      .writeFileString(heldListFile, `${text}\n`)
+      .pipe(Effect.mapError(holdsPlatformError(`Could not write ${heldListFile}`)));
+  });
+
+  return HoldLedger.of({ allVersions, currentVersions, runsFor, appendRun, appendVersions, writeHeldList });
 });
 
 /**

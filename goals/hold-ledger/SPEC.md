@@ -97,13 +97,13 @@ Higher sources outrank lower sources when they conflict.
       `@statelyai/model-testing` 404 at 0.15.0 with `bun install` and reports
       a verdict for npm latest. (Changed from the jsdom hold on 2026-10-31; see
       the Decision Log.)
-- [ ] syncpack's held list is derived from the ledger, and `syncpack lint`
+- [x] syncpack's held list is derived from the ledger, and `syncpack lint`
       passes with an identical ignore set before and after.
-- [ ] Every row in the manual hold register and every dependency-shaped site
+- [x] Every row in the manual hold register and every dependency-shaped site
       (held group, exact pins including `statelyai`, overrides, patches, OSV
       exceptions) has a live record with an exit condition. The register file
       points to the ledger.
-- [ ] `beep holds lint` runs in the cheap gate and fails on an unrecorded
+- [x] `beep holds lint` runs in the cheap gate and fails on an unrecorded
       hold-shaped entry and on an orphaned record.
 - [ ] `bun run deps:update` runs due probes first, and unpins and tombstones a
       flipped hold in the same commit. A fixture test covers a flipped hold
@@ -139,6 +139,11 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-10-31 | `HoldAnchor` is a tagged union of typed config sites (`CatalogEntry`, `ManifestDependency`, `SyncpackHeld`, `SyncpackVersionGroup`, `RootOverride`, `PatchedDependency`, `OsvPackageOverride`). The single slice-1 statelyai row was rewritten in place to the typed form, keeping its id so its two probe runs stay bound. | Free-text `{file, key}` anchors could not be linted, and the slice-1 key (`workspaces.catalog.statelyai`) was already wrong: the catalog is top-level. No consumer read the ledger between the two slices. | Restore the `{file, key}` struct and the slice-1 line from git. |
+| 2026-10-31 | A live hold is a ledger row that no later row names in `supersedes`, that is not `Retracted` and whose knowledge interval is open. A tombstone is a superseding row with `review: Retracted`. | Slice 1 filtered on `knowledge.expiredAt`, which an append-only file never sets on the row a renewal replaces, so a renewal would have left two current versions. | Revert `liveHoldVersions` to the `expiredAt` filter. |
+| 2026-10-31 | Required sites are root overrides, patched dependencies and OSV package overrides; catalog entries, manifest dependencies and syncpack version-group labels are anchor-only. Exact catalog pins are not enumerated. | The catalog pins every version exactly as policy, so an exact pin is hold-shaped only when it is also held from `deps:update`; those holds carry a `SyncpackHeld` anchor. | Add a site kind to `HoldSites.snapshot` and its lint rule. |
+| 2026-10-31 | syncpack reads `hold-ledger/syncpack-held.generated.json` (written by `beep holds lint --write`, excluded from Biome like the fallow boundaries file) and omits the held group when the list is empty. | An empty `dependencies` array makes syncpack match every dependency; the control run with `[]` held back the whole catalog. | Inline the list in `syncpack.config.ts` again and drop the projection. |
+| 2026-10-31 | The infra TypeScript 6 version group is a hold of kind `version-group`. | The hold register already tracked it as a held pin with an exit (Pulumi supports the TypeScript 7 API). | Drop the kind and the record. |
 | 2026-10-31 | The first slice moves from the jsdom hold to the statelyai hold. The jsdom hold is reported as `probe-broken` and goes to its own unpin PR. | Manual probes ([receipt](history/receipts/2026-10-31-first-manual-probes.md)): jsdom's control (30.1.0) no longer reproduces, and repo jsdom suites pass on 30.1.3 under `--bun`. statelyai's control (0.15.0) fails `bun install` deterministically with the recorded 404, and latest (0.19.0) installs. A slice needs a control that reproduces. | Restore the jsdom slice if a later run reproduces its signature again. |
 | 2026-10-31 | The ledger lives in a top-level `hold-ledger/` directory: `claims.jsonl` holds append-only `HoldClaimVersion` rows and `runs.jsonl` holds `ProbeRun` rows. | `harness-ledger/` is the precedent for a tracked top-level ledger. A goal packet is temporary; `research/ledger/` belongs to the nightly routine as its single writer. | Move the two files and update the `Holds` paths. |
 | 2026-10-31 | A probe run has three outcomes: `Reproduced` (the signature appeared), `Passed` (exit 0, no signature) and `Inconclusive` (anything else). A passing control gives `probe-broken`. A flip needs the two newest runs to both be `candidate-passed`. | An inconclusive run must never count as a pass, the same rule as skulk's "a failed check is never a change". | Change `judgeProbeRun` and `confirmHoldVerdict` and their tests. |
