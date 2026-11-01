@@ -123,6 +123,19 @@ Patch package metadata.
   );
 
   it.effect(
+    "fails typed with the file and the parser cause on malformed changeset frontmatter",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(
+        changesetPackageReferencesFromText(".changeset/x.md", `---\n"@beep/schema": [patch\n---\n\nBroken.\n`)
+      );
+
+      expect(error).toBeInstanceOf(ChangesetGraphError);
+      expect(error.file).toBe(".changeset/x.md");
+      expect(error.message).toMatch(/^Invalid changeset frontmatter in \.changeset\/x\.md: \S/);
+    })
+  );
+
+  it.effect(
     "treats empty changeset frontmatter as a valid no-op",
     Effect.fnUntraced(function* () {
       const references = yield* changesetPackageReferencesFromText(

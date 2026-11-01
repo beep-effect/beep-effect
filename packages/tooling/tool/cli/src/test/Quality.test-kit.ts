@@ -62,6 +62,7 @@ export { effectDiagnosticsAffectedPackages, effectDiagnosticsProjects } from "..
 export {
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
+  workflowYamlValueForTesting,
 } from "../commands/Quality/FallowQuality.command.ts";
 export * from "../commands/Quality/internal/CheckCensusOutput.ts";
 export * from "../commands/Quality/internal/CoverageArtifacts.schemas.ts";

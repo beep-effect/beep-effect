@@ -496,6 +496,32 @@ const yamlDocumentValue = Effect.fn("FallowQuality.yamlDocumentValue")(function*
   });
 });
 
+/**
+ * Reads a workflow file's YAML text into a plain value, the step the Fallow CI
+ * contract check runs before it inspects the workflow.
+ *
+ * **Details**
+ *
+ * The test seam exposes the parse failure: malformed YAML fails with a
+ * `QualityScriptCommandError` whose message is
+ * `Invalid workflow YAML <file>: <cause>` and whose `exitCode` is 1.
+ *
+ * **Example** (Read a workflow value)
+ *
+ * ```ts
+ * import { workflowYamlValueForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ * import * as Effect from "effect/Effect"
+ *
+ * const value = Effect.runSync(workflowYamlValueForTesting(".github/workflows/check.yml", "name: Check\n"))
+ * console.log(value) // { name: "Check" }
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const workflowYamlValueForTesting = yamlDocumentValue;
+
 const countFor = (findings: ReadonlyArray<FallowFinding>, attribution: typeof FindingAttributionKind.Type): number =>
   pipe(
     findings,

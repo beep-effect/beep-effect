@@ -249,22 +249,6 @@ const unsupportedOccurrence = (
   );
 };
 
-// Every node of a YAML subtree, mapping keys included (the nodes a document
-// visitor reaches).
-const yamlNodesOf = (node: YamlNode): ReadonlyArray<YamlNode> =>
-  Match.valueTags(node, {
-    YamlMap: (map) =>
-      A.prepend(
-        A.flatMap(map.items, (pair) =>
-          A.appendAll(yamlNodesOf(pair.key), P.isNull(pair.value) ? A.empty<YamlNode>() : yamlNodesOf(pair.value))
-        ),
-        map
-      ),
-    YamlSeq: (seq) => A.prepend(A.flatMap(seq.items, yamlNodesOf), seq),
-    YamlScalar: A.of<YamlNode>,
-    YamlAlias: A.of<YamlNode>,
-  });
-
 // Only simple block mappings are modeled: block maps with plain scalar keys
 // and non-block scalars, with no anchor or tag. Sequences and aliases are not.
 const isSimpleYamlNode = (node: YamlNode): boolean =>
@@ -283,23 +267,38 @@ const isSimpleYamlNode = (node: YamlNode): boolean =>
     YamlAlias: () => false,
   });
 
+// Whether a composed YAML subtree holds only the simple forms, mapping keys
+// included (the nodes the retired `visit` check reached). Only a simple map has
+// children to descend into, so the walk stops at the first unsupported node.
+const isSimpleYamlTree = (node: YamlNode): boolean =>
+  isSimpleYamlNode(node) &&
+  (node._tag !== "YamlMap" ||
+    A.every(
+      node.items,
+      (pair) => isSimpleYamlTree(pair.key) && (P.isNull(pair.value) || isSimpleYamlTree(pair.value))
+    ));
+
 const yamlNodeAt = (document: YamlDocument, path: YamlPath): O.Option<YamlNode> =>
   pipe(
     O.fromNullishOr(document.contents),
     O.flatMap((root) => root.find(path))
   );
 
-const yamlKeyRange = (
-  document: YamlDocument,
-  path: YamlPath,
-  depth: number,
-  segment: string | number
-): O.Option<readonly [number, number]> =>
+// The source range of every key along `path`, in one descent from `node`; it
+// ends at the first segment that is not a key of a mapping.
+const yamlKeyRanges = (node: YamlNode | null, path: YamlPath): ReadonlyArray<readonly [number, number]> =>
   pipe(
-    yamlNodeAt(document, A.take(path, depth)),
-    O.flatMap((parent) => (parent._tag === "YamlMap" ? O.some(parent.items) : O.none())),
-    O.flatMap(A.findFirst(({ key }) => key._tag === "YamlScalar" && key.value === segment)),
-    O.map(({ key }) => Tuple.make(key.offset, key.offset + key.length))
+    A.head(path),
+    O.flatMap((segment) =>
+      P.isNotNull(node) && node._tag === "YamlMap"
+        ? A.findFirst(node.items, ({ key }) => key._tag === "YamlScalar" && key.value === segment)
+        : O.none()
+    ),
+    O.match({
+      onNone: A.empty<readonly [number, number]>,
+      onSome: ({ key, value }) =>
+        A.prepend(yamlKeyRanges(value, A.drop(path, 1)), Tuple.make(key.offset, key.offset + key.length)),
+    })
   );
 
 const readYamlPath = (content: string, path: YamlPath): Effect.Effect<O.Option<string>> =>
@@ -315,15 +314,11 @@ const readYamlPath = (content: string, path: YamlPath): Effect.Effect<O.Option<s
         (parsed) =>
           A.isReadonlyArrayEmpty(parsed.errors) &&
           A.isReadonlyArrayEmpty(parsed.warnings) &&
-          A.every(
-            O.match(O.fromNullishOr(parsed.contents), { onNone: A.empty<YamlNode>, onSome: yamlNodesOf }),
-            isSimpleYamlNode
-          )
+          (P.isNull(parsed.contents) || isSimpleYamlTree(parsed.contents))
       );
       const ranges = O.match(supported, {
         onNone: A.empty<readonly [number, number]>,
-        onSome: (parsed) =>
-          A.getSomes(A.map(A.entries(path), ([depth, segment]) => yamlKeyRange(parsed, path, depth, segment))),
+        onSome: (parsed) => yamlKeyRanges(parsed.contents, path),
       });
       const unsupported = unsupportedOccurrence(content, names, ranges, "YAML");
       if (O.isSome(unsupported)) return unsupported;
