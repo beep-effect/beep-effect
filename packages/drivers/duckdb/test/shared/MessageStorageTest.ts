@@ -9,7 +9,7 @@ import * as DuckDbMessageStorage from "@beep/duckdb/DuckDbMessageStorage";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 // beep: Use the repository Effect test runner.
-import { describe, expect } from "@effect/vitest";
+import { describe, expect, expectTypeOf } from "@effect/vitest";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as Context from "effect/Context";
 // beep: Effect public leaf imports replace upstream barrels.
@@ -47,6 +47,35 @@ const MemoryLayer = DuckDbMessageStorage.layer.pipe(
 );
 
 describe("MessageStorage", () => {
+  // beep: Pin valid fixture RPCs and rejected payload/chunk combinations in the package typecheck.
+  it.effect("fixture request type contracts", () =>
+    Effect.sync(() => {
+      expectTypeOf(makeRequest({ rpc: LongKeyRpc, payload: { id: "key" } })).toExtend<
+        Effect.Effect<Message.OutgoingRequest<typeof LongKeyRpc>, never, Snowflake.Generator>
+      >();
+      expectTypeOf(makeRequest({ rpc: PrimaryKeyTest, payload: { id: 123 } })).toExtend<
+        Effect.Effect<Message.OutgoingRequest<typeof PrimaryKeyTest>, never, Snowflake.Generator>
+      >();
+      expectTypeOf(Effect.flatMap(makeRequest({ rpc: StreamRpc, payload: { id: 123 } }), makeChunkReply)).toExtend<
+        Effect.Effect<Reply.ReplyWithContext<typeof StreamRpc>, never, Snowflake.Generator>
+      >();
+      // @ts-expect-error -- LongKeyRpc requires a string id. Owner: @beep/duckdb. Exit: change only with its payload schema.
+      const invalidLong = makeRequest({ rpc: LongKeyRpc, payload: { id: 123 } });
+      // @ts-expect-error -- LongKeyRpc cannot use the default numeric payload. Owner: @beep/duckdb. Exit: change only with its payload schema.
+      const missingLongPayload = makeRequest({ rpc: LongKeyRpc });
+      // @ts-expect-error -- GetUser requires a numeric id. Owner: @beep/duckdb. Exit: change only with its payload schema.
+      const invalidDefault = makeRequest({ payload: { id: "key" } });
+      // @ts-expect-error -- Non-stream requests cannot construct chunks. Owner: @beep/duckdb. Exit: change only with its success schema.
+      const invalidChunk = Effect.flatMap(makeRequest(), makeChunkReply);
+      // @ts-expect-error -- StreamRpc requires a numeric id. Owner: @beep/duckdb. Exit: change only with its payload schema.
+      const invalidStream = makeRequest({ rpc: StreamRpc, payload: { id: "key" } });
+      expectTypeOf(invalidLong).toBeObject();
+      expectTypeOf(missingLongPayload).toBeObject();
+      expectTypeOf(invalidDefault).toBeObject();
+      expectTypeOf(invalidChunk).toBeObject();
+      expectTypeOf(invalidStream).toBeObject();
+    })
+  );
   describe("memory", () => {
     it.layer(MemoryLayer)((it) => {
       it.effect("saves a request", () =>
@@ -142,16 +171,50 @@ export const GetUserRpc = Rpc.make("GetUser", {
   payload: { id: Schema.Finite },
 });
 
-export const makeRequest = Effect.fnUntraced(function* (options?: {
-  readonly rpc?: Rpc.AnyWithProps;
-  readonly payload?: any;
+// beep: Derive payload, context and reply types from the four schema-backed fixture RPCs.
+type FixtureRpc = typeof GetUserRpc | typeof PrimaryKeyTest | typeof LongKeyRpc | typeof StreamRpc;
+
+// beep: The fixture constructor accepts all fixture replies and retains the selected RPC schema.
+type FixtureOutgoingRequest<R extends FixtureRpc> = Message.OutgoingRequest<R> & Message.OutgoingRequest<FixtureRpc>;
+
+type FixtureRequestLocation = {
   readonly entityId?: string;
   readonly shardId?: ShardId.ShardId;
-}) {
+};
+type FixtureRequestOptions<R extends FixtureRpc = FixtureRpc> = R extends typeof GetUserRpc
+  ? FixtureRequestLocation & { readonly rpc?: R; readonly payload?: Rpc.Payload<R> }
+  : FixtureRequestLocation & { readonly rpc: R; readonly payload: Rpc.Payload<R> };
+type FixtureRequest = Pick<Message.OutgoingRequest<FixtureRpc>, "context" | "rpc"> & {
+  readonly envelope: Pick<Envelope.Request<FixtureRpc>, "requestId" | "address">;
+};
+
+/**
+ * Construct a storage request with the selected fixture RPC's payload type.
+ *
+ * **Example** (Create a streaming fixture request)
+ *
+ * ```ts
+ * const request = makeRequest({ rpc: StreamRpc, payload: { id: 123 } });
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export function makeRequest(
+  options?: FixtureRequestOptions<typeof GetUserRpc>
+): Effect.Effect<FixtureOutgoingRequest<typeof GetUserRpc>, never, Snowflake.Generator>;
+export function makeRequest<Options extends FixtureRequestOptions & { readonly rpc: FixtureRpc }>(
+  options: Options
+): Effect.Effect<FixtureOutgoingRequest<Options["rpc"]>, never, Snowflake.Generator>;
+export function makeRequest(options?: FixtureRequestOptions): Effect.Effect<unknown, never, Snowflake.Generator> {
+  return makeRequestEffect(options);
+}
+
+const makeRequestEffect = Effect.fnUntraced(function* (options?: FixtureRequestOptions) {
   const snowflake = yield* Snowflake.Generator;
   const rpc = options?.rpc ?? GetUserRpc;
-  return new Message.OutgoingRequest({
-    envelope: Envelope.makeRequest<any>({
+  return new Message.OutgoingRequest<FixtureRpc>({
+    envelope: Envelope.makeRequest<FixtureRpc>({
       requestId: snowflake.nextUnsafe(),
       address: EntityAddress.make({
         shardId: options?.shardId ?? ShardId.make("default", 1),
@@ -166,7 +229,7 @@ export const makeRequest = Effect.fnUntraced(function* (options?: {
       headers: Headers.empty,
     }),
     annotations: rpc.annotations,
-    context: Context.empty() as any,
+    context: Context.empty(),
     rpc,
     lastReceivedReply: Option.none(),
     respond() {
@@ -197,22 +260,46 @@ export class StreamRpc extends Rpc.make("StreamTest", {
   primaryKey: (value) => value.id.toString(),
 }) {}
 
-export const makeReply = Effect.fnUntraced(function* (request: Message.OutgoingRequest<any>) {
+/**
+ * Construct the exit reply that completes a fixture request.
+ *
+ * **Example** (Complete a fixture request)
+ *
+ * ```ts
+ * const reply = Effect.flatMap(makeRequest(), makeReply);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeReply = Effect.fnUntraced(function* (request: FixtureRequest) {
   const snowflake = yield* Snowflake.Generator;
-  return new Reply.ReplyWithContext({
-    reply: new Reply.WithExit({
+  return new Reply.ReplyWithContext<FixtureRpc>({
+    reply: new Reply.WithExit<FixtureRpc>({
       id: snowflake.nextUnsafe(),
       requestId: request.envelope.requestId,
-      exit: Exit.void as any,
+      exit: Exit.void,
     }),
     context: request.context,
     rpc: request.rpc,
   });
 });
 
+/**
+ * Construct the envelope that acknowledges one reply chunk of a fixture request.
+ *
+ * **Example** (Acknowledge a streamed chunk)
+ *
+ * ```ts
+ * const ack = makeAckChunk(request, chunk);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
 export const makeAckChunk = Effect.fnUntraced(function* (
-  request: Message.OutgoingRequest<any>,
-  chunk: Reply.ReplyWithContext<any>
+  request: FixtureRequest,
+  chunk: { readonly reply: Pick<Reply.Reply<FixtureRpc>, "requestId" | "id"> }
 ) {
   const snowflake = yield* Snowflake.Generator;
   return new Message.OutgoingEnvelope({
@@ -227,10 +314,25 @@ export const makeAckChunk = Effect.fnUntraced(function* (
   });
 });
 
-export const makeChunkReply = Effect.fnUntraced(function* (request: Message.OutgoingRequest<any>, sequence = 0) {
+/**
+ * Construct a chunk reply for a streaming fixture request at the given sequence.
+ *
+ * **Example** (Reply with the first stream chunk)
+ *
+ * ```ts
+ * const chunk = Effect.flatMap(makeRequest({ rpc: StreamRpc, payload: { id: 123 } }), makeChunkReply);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const makeChunkReply = Effect.fnUntraced(function* (
+  request: FixtureRequest & { readonly rpc: typeof StreamRpc },
+  sequence = 0
+) {
   const snowflake = yield* Snowflake.Generator;
-  return new Reply.ReplyWithContext({
-    reply: new Reply.Chunk({
+  return new Reply.ReplyWithContext<typeof StreamRpc>({
+    reply: new Reply.Chunk<typeof StreamRpc>({
       id: snowflake.nextUnsafe(),
       requestId: request.envelope.requestId,
       sequence,
