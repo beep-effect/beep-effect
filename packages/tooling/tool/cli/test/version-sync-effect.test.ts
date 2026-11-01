@@ -8,6 +8,9 @@ import {
   buildTurboReport,
   CategorySelectionService,
   CategorySelectionServiceLive,
+  EffectCatalogState,
+  EffectSourcePin,
+  effectSourceTargetVersion,
   exactVersionFromSpecifier,
   extractBunArchiveChecksum,
   ReportRendererService,
@@ -34,6 +37,7 @@ import {
   VersionSyncOptions,
   VersionSyncReport,
   VersionSyncResolution,
+  withEffectReleaseCommit,
 } from "@beep/repo-cli/test/VersionSync";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { SemVer } from "@beep/semver/SemVer";
@@ -70,6 +74,8 @@ const decodeBunVersionStateEffect = S.decodeEffect(BunVersionState);
 const encodeBunVersionStateEffect = S.encodeEffect(BunVersionState);
 
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 
 const PlatformLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
@@ -1270,6 +1276,231 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync shared lo
         );
         expect(parse).toHaveBeenCalledTimes(expectedCalls);
       }
+    })
+  );
+});
+
+// Ground truth: `git -C .repos/effect rev-parse 'effect@4.1.1^{commit}'` and the 4.1.0 equivalent.
+const EFFECT_4_1_1_COMMIT = "bc492f0965dc0f6a83cefd141071c5ead10f7efa";
+const EFFECT_4_1_0_COMMIT = "9a91b1926a5fbfaffd302a7a41a94d4d53a1154e";
+const EFFECT_COMMITS_URL = "https://api.github.com/repos/Effect-TS/effect/commits/";
+
+// A GitHub stand-in that knows the release tags in `commits` and answers 404 for any other ref.
+const releaseCommitClient = (commits: Readonly<Record<string, string>>, requested: Array<string>) =>
+  HttpClient.make((request) => {
+    requested.push(request.url);
+    const ref = Str.replace(EFFECT_COMMITS_URL, "")(request.url);
+    const sha = commits[ref];
+    return Effect.succeed(
+      HttpClientResponse.fromWeb(
+        request,
+        sha === undefined
+          ? new Response(JSON.stringify({ message: "No commit found for SHA" }), { status: 404 })
+          : new Response(JSON.stringify({ sha, commit: { message: "release" } }), {
+              status: 200,
+              headers: { "content-type": "application/json" },
+            })
+      )
+    );
+  });
+
+const unreachableClient = HttpClient.make(() => Effect.die("version-sync made a network request it should not make"));
+
+const effectSourceManifest = (
+  effect: string,
+  effectSource: O.Option<{ readonly version: string; readonly commit: string }>
+) =>
+  `${JSON.stringify(
+    {
+      name: "@beep/test-root",
+      catalog: { effect, "@effect/vitest": effect },
+      ...O.match(effectSource, { onNone: () => ({}), onSome: (source) => ({ config: { effectSource: source } }) }),
+    },
+    null,
+    2
+  )}\n`;
+
+it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect source pin", (it) => {
+  const writeManifest = Effect.fn(function* (
+    effect: string,
+    effectSource: O.Option<{ readonly version: string; readonly commit: string }>
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const tmpDir = yield* fs.makeTempDirectoryScoped();
+    const packageJsonPath = path.join(tmpDir, "package.json");
+    const text = effectSourceManifest(effect, effectSource);
+    yield* fs.writeFileString(packageJsonPath, text);
+    return { tmpDir, packageJsonPath, text };
+  });
+
+  const stale = O.some({ version: "4.1.0", commit: EFFECT_4_1_0_COMMIT });
+
+  it("targets only bare published catalog versions", () => {
+    assertSome(effectSourceTargetVersion(EffectCatalogState.make({ canonicalSpecifier: "4.1.1" })), "4.1.1");
+    assertNone(effectSourceTargetVersion(EffectCatalogState.make({ canonicalSpecifier: "^4.1.1" })));
+    assertNone(
+      effectSourceTargetVersion(
+        EffectCatalogState.make({
+          canonicalSpecifier: `https://pkg.pr.new/Effect-TS/effect/effect@${EFFECT_4_1_1_COMMIT}`,
+        })
+      )
+    );
+  });
+
+  it.effect(
+    "reports version and commit drift against the resolved release tag commit",
+    Effect.fn(function* () {
+      const { tmpDir } = yield* writeManifest("4.1.1", stale);
+      const requested: Array<string> = [];
+      const state = yield* resolveEffectCatalog(tmpDir);
+      deepStrictEqual(
+        state.effectSource,
+        O.some(EffectSourcePin.make({ version: "4.1.0", commit: EFFECT_4_1_0_COMMIT }))
+      );
+
+      const resolved = yield* withEffectReleaseCommit(state, false).pipe(
+        Effect.provideService(
+          HttpClient.HttpClient,
+          releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, requested)
+        )
+      );
+      const report = buildEffectReport(resolved);
+
+      expect(requested).toEqual([`${EFFECT_COMMITS_URL}effect@4.1.1`]);
+      strictEqual(report.status, "drift");
+      assertNone(report.error);
+      expect(A.map(report.items, (item) => [item.field, item.current, item.expected])).toEqual([
+        ["config.effectSource.version", "4.1.0", "4.1.1"],
+        ["config.effectSource.commit", EFFECT_4_1_0_COMMIT, EFFECT_4_1_1_COMMIT],
+      ]);
+    })
+  );
+
+  it.effect(
+    "reports a commit that does not match the release tag even when the version agrees",
+    Effect.fn(function* () {
+      const { tmpDir } = yield* writeManifest("4.1.1", O.some({ version: "4.1.1", commit: EFFECT_4_1_0_COMMIT }));
+      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+        Effect.provideService(HttpClient.HttpClient, releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, []))
+      );
+      const report = buildEffectReport(resolved);
+
+      strictEqual(report.status, "drift");
+      expect(A.map(report.items, (item) => [item.field, item.expected])).toEqual([
+        ["config.effectSource.commit", EFFECT_4_1_1_COMMIT],
+      ]);
+    })
+  );
+
+  it.effect(
+    "is ok when config.effectSource already matches the catalog version and its release commit",
+    Effect.fn(function* () {
+      const { tmpDir } = yield* writeManifest("4.1.1", O.some({ version: "4.1.1", commit: EFFECT_4_1_1_COMMIT }));
+      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+        Effect.provideService(HttpClient.HttpClient, releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, []))
+      );
+      const report = buildEffectReport(resolved);
+
+      strictEqual(report.status, "ok");
+      expect(report.items).toEqual([]);
+      assertNone(report.error);
+    })
+  );
+
+  it.effect(
+    "reports the version drift as an unresolved error under skip-network and never writes it",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { tmpDir, packageJsonPath, text } = yield* writeManifest("4.1.1", stale);
+      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), true).pipe(
+        Effect.provideService(HttpClient.HttpClient, unreachableClient)
+      );
+      const report = buildEffectReport(resolved);
+
+      strictEqual(report.status, "error");
+      expect(A.map(report.items, (item) => [item.field, item.expected])).toEqual([
+        ["config.effectSource.version", "4.1.1"],
+      ]);
+      report.error.pipe(O.exists(Str.includes("effect@4.1.1 release commit")), assertTrue);
+
+      const updater = yield* UpdateApplierService;
+      const applied = yield* updater.apply(
+        tmpDir,
+        VersionSyncResolution.make({
+          report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+          nodeLocations: [],
+        })
+      );
+      strictEqual(applied, 0);
+      strictEqual(yield* fs.readFileString(packageJsonPath), text);
+    })
+  );
+
+  it.effect(
+    "reports the pin as unresolved when the release tag lookup fails",
+    Effect.fn(function* () {
+      const { tmpDir } = yield* writeManifest("4.1.1", stale);
+      const requested: Array<string> = [];
+      const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+        Effect.provideService(HttpClient.HttpClient, releaseCommitClient({}, requested))
+      );
+
+      expect(requested).toHaveLength(1);
+      assertNone(resolved.releaseCommit);
+      strictEqual(buildEffectReport(resolved).status, "error");
+    })
+  );
+
+  it.effect(
+    "needs no effectSource for snapshot catalogs or manifests without the pin",
+    Effect.fn(function* () {
+      const snapshot = `https://pkg.pr.new/Effect-TS/effect/effect@${EFFECT_4_1_1_COMMIT}`;
+      for (const [effect, effectSource] of [
+        [snapshot, stale],
+        [snapshot, O.none()],
+        ["4.1.1", O.none()],
+      ] as const) {
+        const { tmpDir } = yield* writeManifest(effect, effectSource);
+        const resolved = yield* withEffectReleaseCommit(yield* resolveEffectCatalog(tmpDir), false).pipe(
+          Effect.provideService(HttpClient.HttpClient, unreachableClient)
+        );
+        const report = buildEffectReport(resolved);
+        expect(A.filter(report.items, (item) => Str.startsWith("config.")(item.field))).toEqual([]);
+        assertNone(report.error);
+      }
+    })
+  );
+
+  it.effect(
+    "writes the version and its release commit through the resolver and preserves formatting",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { tmpDir, packageJsonPath, text } = yield* writeManifest("4.1.1", stale);
+      const client = releaseCommitClient({ "effect@4.1.1": EFFECT_4_1_1_COMMIT }, []);
+      const resolver = yield* ResolverService;
+      const updater = yield* UpdateApplierService;
+      const options = VersionSyncOptions.cases.write.make({ effectOnly: true, skipNetwork: false });
+
+      const resolution = yield* resolver
+        .resolve(tmpDir, options)
+        .pipe(Effect.provideService(HttpClient.HttpClient, client));
+      strictEqual(resolution.report.hasDrift, true);
+      strictEqual(yield* updater.apply(tmpDir, resolution), 2);
+
+      strictEqual(
+        yield* fs.readFileString(packageJsonPath),
+        Str.replace(
+          `"commit": "${EFFECT_4_1_0_COMMIT}"`,
+          `"commit": "${EFFECT_4_1_1_COMMIT}"`
+        )(Str.replace(`"version": "4.1.0"`, `"version": "4.1.1"`)(text))
+      );
+
+      const rerun = yield* resolver.resolve(tmpDir, options).pipe(Effect.provideService(HttpClient.HttpClient, client));
+      deepStrictEqual(
+        A.map(rerun.report.categories, (category) => category.status),
+        ["ok"]
+      );
     })
   );
 });
