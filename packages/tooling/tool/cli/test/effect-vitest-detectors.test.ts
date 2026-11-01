@@ -2141,6 +2141,37 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("treats a SQLite database file the test opens as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as FileSystem from "effect/FileSystem"; import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; const dir = yield* fs.makeTempDirectoryScoped(); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite("const sql = yield* SqliteClient.make({ filename: `${dir}/journal.sqlite` });")}`,
+        `${imports} ${suite("const file = `${dir}/journal.sqlite`; yield* Fx.provide(program, SqliteClient.layer({ filename: file }));")}`,
+        `${imports} const reopen = Fx.fnUntraced(function* (file) { return yield* SqliteClient.make({ filename: file }); }); ${suite("yield* reopen(`${dir}/a.sqlite`);")}`,
+        `${Str.replace("sql-sqlite-node", "sql-sqlite-bun")(imports)} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('yield* SqliteClient.make({ filename: ":memory:" });')}`,
+        `${imports} ${suite("yield* SqliteClient.make(options);")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ ...options });")}`,
+        `${imports} import * as Fake from "@beep/fake/SqliteClient"; ${suite("yield* Fake.make({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.other({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")} ${suite('yield* fs.readFileString("a");')}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
   it.effect("follows same-file helpers that read FileSystem in the harness context", () =>
     Effect.gen(function* () {
       const harness = 'import { layer } from "@effect/vitest";';
