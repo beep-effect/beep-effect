@@ -4540,6 +4540,7 @@
         "from": "@beep/repo-configs",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/repo-configs",
           "@beep/schema",
           "@beep/semver",
@@ -4549,6 +4550,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/repo-configs",
           "@beep/schema",
           "@beep/semver",

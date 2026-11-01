@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { JsoncFormatter } from "@beep/jsonc/JsoncFormatter";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -16,7 +17,6 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as jsonc from "jsonc-parser";
 
 const repoRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 const tscBinPath = NodeURL.fileURLToPath(new URL("../../../../../node_modules/.bin/tsc", import.meta.url));
@@ -51,12 +51,9 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
 const writeJsonFile = Effect.fn(function* (filePath: string, value: unknown) {
   const fs = yield* FileSystem.FileSystem;
   const encoded = encodeJson(value);
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
+  const formatted = JsoncFormatter.formatToString(encoded, undefined, { tabSize: 2, insertSpaces: true });
 
-  yield* fs.writeFileString(filePath, `${jsonc.applyEdits(encoded, edits)}\n`);
+  yield* fs.writeFileString(filePath, `${formatted}\n`);
 });
 
 const writeProjectFile = Effect.fn(function* (projectDir: string, relativePath: string, content: string) {

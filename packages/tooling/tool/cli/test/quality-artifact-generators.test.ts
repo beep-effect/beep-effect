@@ -1,3 +1,4 @@
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
   JSDocDocumentationInventoryOptions,
@@ -26,7 +27,6 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const PlatformLayer = Layer.mergeAll(
@@ -96,16 +96,7 @@ export const demoValue = "demo";
 const writeJsonFile = (filePath: string, value: unknown) =>
   FileSystem.FileSystem.pipe(Effect.flatMap((fs) => fs.writeFileString(filePath, `${encodeJson(value)}\n`)));
 
-const parseJsoncText = (text: string): unknown => {
-  const errors: Array<jsonc.ParseError> = [];
-  const parsed = jsonc.parse(text, errors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
-
-  expect(errors).toEqual([]);
-  return parsed;
-};
+const parseJsoncText = (text: string): unknown => Result.getOrThrow(Jsonc.parseResult(text));
 
 const acquireFixtureRepo = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;

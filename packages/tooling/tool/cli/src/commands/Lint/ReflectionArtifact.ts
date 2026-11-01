@@ -15,6 +15,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { Frontmatter } from "@beep/markdown/MarkdownNode";
 import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
@@ -29,9 +30,9 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { parse } from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
@@ -294,7 +295,7 @@ const inspectCompletedReflection = Effect.fnUntraced(function* (
     return { advisories: [], blocking: [] };
   }
 
-  const manifestJson: unknown = parse(manifestRead.value);
+  const manifestJson: unknown = Result.getOrUndefined(Jsonc.parseResult(manifestRead.value));
   const { status } = readManifestStatus(manifestJson);
   if (!COMPLETED_STATUS_TOKENS.includes(status)) {
     return { advisories: [], blocking: [] };

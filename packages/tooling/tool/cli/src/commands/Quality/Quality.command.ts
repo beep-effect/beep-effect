@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc, JsoncParseOptions } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
@@ -31,9 +32,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
-import { parse } from "jsonc-parser";
 import { configStringOption } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
@@ -123,10 +124,10 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
+import type { JsoncParseError } from "@beep/jsonc/Jsonc";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ParseError } from "jsonc-parser";
 import type { AdmissionSnapshot } from "../../internal/repo-run/index.ts";
 import type {
   GithubCheckFailurePolicy as GithubCheckFailurePolicyType,
@@ -135,6 +136,16 @@ import type {
   QualityProfileDetectionInput as QualityProfileDetectionInputType,
 } from "./Quality.schemas.ts";
 import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
+
+// Strict JSON for the generated Vitest aliases: no comments, no trailing commas.
+const strictJsonWithoutComments = JsoncParseOptions.make({ disallowComments: true, allowTrailingComma: false });
+
+// One `parse error <code> at offset <n>` line per recovered parse error.
+const parseErrorLines = (error: JsoncParseError): string =>
+  A.join(
+    A.map(error.errors, (detail) => `parse error ${detail.code} at offset ${detail.offset}`),
+    "\n"
+  );
 
 const encodeUnknownResidueReapReport = S.encodeUnknownEffect(ResidueReapReport);
 
@@ -1569,25 +1580,17 @@ const readGithubChecksFallowFeatureMatrix = Effect.fn("QualityScriptCommands.rea
     const text = yield* fs
       .readFileString(absolutePath)
       .pipe(QualityScriptCommandError.mapError(`Failed to read ${featureMatrixPath}.`));
-    const parseErrors: Array<ParseError> = [];
-    const parsed = parse(text, parseErrors, {
-      allowTrailingComma: true,
-      disallowComments: false,
-    });
+    const parseResult = Jsonc.parseResult(text);
 
-    if (A.isReadonlyArrayNonEmpty(parseErrors)) {
+    if (Result.isFailure(parseResult)) {
       yield* Console.error(`[github-checks] failed to parse ${featureMatrixPath}`);
-      yield* Console.error(
-        A.join(
-          A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
-          "\n"
-        )
-      );
+      yield* parseResult.failure.pipe(parseErrorLines, Console.error);
       return yield* QualityScriptCommandError.make({
         message: `${featureMatrixPath} is not valid JSONC.`,
         exitCode: 1,
       });
     }
+    const parsed = parseResult.success;
 
     return yield* decodeGithubChecksFallowFeatureMatrix(parsed).pipe(
       QualityScriptCommandError.mapError(`Failed to decode ${featureMatrixPath}.`)
@@ -2043,11 +2046,7 @@ const extractEffectTsgoReadmeRuleNames = flow(
 
 // A README whose example config no longer parses cleanly must read as "no catalog", not as
 // whatever partial record the tolerant parser recovered before the first error.
-const parseEffectTsgoExampleConfig = (jsonc: string): O.Option<unknown> => {
-  const errors: Array<ParseError> = [];
-  const config: unknown = parse(jsonc, errors, { allowTrailingComma: true, disallowComments: false });
-  return A.isReadonlyArrayEmpty(errors) ? O.some(config) : O.none();
-};
+const parseEffectTsgoExampleConfig = (jsonc: string): O.Option<unknown> => Result.getSuccess(Jsonc.parseResult(jsonc));
 
 const extractEffectTsgoExampleConfigFragment = (readme: string): O.Option<string> => {
   const start = O.getOrElse(Str.indexOf(effectTsgoExampleConfigStartMarker)(readme), constant(-1));
@@ -2690,14 +2689,14 @@ const collectWorkspaceTsconfigProfileDiagnostics = Effect.fn(
       const text = yield* fs
         .readFileString(filePath)
         .pipe(QualityScriptCommandError.mapError(`Failed to read ${filePath}.`));
-      const errors: Array<ParseError> = [];
-      const parsed = parse(text, errors, { allowTrailingComma: true, disallowComments: false });
-      if (A.isReadonlyArrayNonEmpty(errors)) {
-        return yield* QualityScriptCommandError.make({
-          message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
-          exitCode: 1,
-        });
-      }
+      const parsed = yield* Jsonc.parse(text).pipe(
+        Effect.mapError(() =>
+          QualityScriptCommandError.make({
+            message: `${normalizePath(path.relative(repoRoot, filePath))} is not valid JSONC.`,
+            exitCode: 1,
+          })
+        )
+      );
       return [normalizePath(path.relative(repoRoot, filePath)), parsed] as const;
     }),
     { concurrency: 8 }
@@ -2877,52 +2876,35 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   const configText = yield* fs
     .readFileString(tsconfigPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${tsconfigPath}.`));
-  const parseErrors: Array<ParseError> = [];
-  const config = parse(configText, parseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  const configResult = Jsonc.parseResult(configText);
 
   const rootTsconfigText = yield* fs
     .readFileString(rootTsconfigPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${rootTsconfigPath}.`));
-  const rootTsconfigParseErrors: Array<ParseError> = [];
-  const rootTsconfig = parse(rootTsconfigText, rootTsconfigParseErrors, {
-    allowTrailingComma: true,
-    disallowComments: false,
-  });
+  const rootTsconfigResult = Jsonc.parseResult(rootTsconfigText);
   const generatedVitestAliasesText = yield* fs
     .readFileString(generatedVitestAliasesPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${generatedVitestAliasesPath}.`));
-  const generatedVitestAliasesParseErrors: Array<ParseError> = [];
-  const generatedVitestAliases = parse(generatedVitestAliasesText, generatedVitestAliasesParseErrors, {
-    allowTrailingComma: false,
-    disallowComments: true,
-  });
+  const generatedVitestAliasesResult = Jsonc.parseResult(generatedVitestAliasesText, strictJsonWithoutComments);
 
-  if (A.isReadonlyArrayNonEmpty(parseErrors)) {
+  if (Result.isFailure(configResult)) {
     yield* Console.error("[lint:tsgo-rules] failed to parse tsconfig.base.json");
-    yield* Console.error(
-      A.join(
-        A.map(parseErrors, (error) => `parse error ${error.error} at offset ${error.offset}`),
-        "\n"
-      )
-    );
+    yield* configResult.failure.pipe(parseErrorLines, Console.error);
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is not valid JSONC.",
       exitCode: 1,
     });
   }
 
-  if (
-    A.isReadonlyArrayNonEmpty(rootTsconfigParseErrors) ||
-    A.isReadonlyArrayNonEmpty(generatedVitestAliasesParseErrors)
-  ) {
+  if (Result.isFailure(rootTsconfigResult) || Result.isFailure(generatedVitestAliasesResult)) {
     return yield* QualityScriptCommandError.make({
       message: "Root tsconfig or generated Vitest aliases are not valid JSONC.",
       exitCode: 1,
     });
   }
+  const config = configResult.success;
+  const rootTsconfig = rootTsconfigResult.success;
+  const generatedVitestAliases = generatedVitestAliasesResult.success;
 
   const rootEffectPlugins = findEffectLanguageServicePlugins(config);
   if (A.length(rootEffectPlugins) !== 1) {
