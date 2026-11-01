@@ -270,6 +270,31 @@ describe("MailTagging attachment filer", () => {
 
   it.layer(
     scenario({
+      envelopes: [usptoMail],
+      attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "notice.pdf", bytes: pdf })]]],
+      truncatedDigests: [Digest.sha256],
+    }),
+    { timeout: "30 seconds" }
+  )("malformed hash", (it) => {
+    it.effect(
+      "reports a malformed SHA-256 digest as a typed hasher failure and files nothing",
+      Effect.fnUntraced(function* () {
+        const state = yield* World;
+        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+
+        assertInstanceOf(failure, MailTaggingPortError);
+        expect([failure.port, failure.operation, failure.reason]).toStrictEqual([
+          "ContentHasher",
+          "sha256",
+          "sha256 digest failed",
+        ]);
+        expect(yield* Ref.get(state.writes)).toStrictEqual([]);
+      })
+    );
+  });
+
+  it.layer(
+    scenario({
       envelopes: [usptoMail, strangerMail],
       attachments: [
         [
