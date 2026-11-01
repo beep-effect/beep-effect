@@ -7,7 +7,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -24,6 +24,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
+import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import { renderDocgenIssueText } from "../../Docgen/internal/Local.ts";
 import {
@@ -33,7 +34,7 @@ import {
 } from "../../Docgen/internal/Operations.ts";
 import { recordYeetLocalShardOutcome, YeetLocalShardOutcome } from "../../Yeet/internal/LocalShardPoison.ts";
 import { QualityScriptCommandError } from "../Quality.errors.ts";
-import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
+import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -588,8 +589,8 @@ export const collectWorkspaces = Effect.fn("PackageVerify.collectWorkspaces")(fu
   QualityScriptCommandError,
   FsUtils | FileSystem.FileSystem | Path.Path
 > {
-  const workspaceDirs = yield* resolveWorkspaceDirs(repoRoot).pipe(
-    Effect.mapError((error: DomainError | NoSuchFileError) =>
+  const workspaceDirs = yield* workspaceDirectories(repoRoot).pipe(
+    Effect.mapError((error) =>
       QualityScriptCommandError.make({
         cause: error,
         message: "Failed to resolve workspace package directories.",

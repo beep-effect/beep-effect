@@ -43,6 +43,11 @@ export interface FileSystemOptions {
    * an empty file.
    */
   readonly unreadableFiles?: ReadonlyArray<string>;
+  /**
+   * Paths whose `stat` fails with `PermissionDenied` — the case a "any failed
+   * stat means absent" probe turns into a missing directory.
+   */
+  readonly unreadableStat?: ReadonlyArray<string>;
 }
 
 /**
@@ -50,7 +55,7 @@ export interface FileSystemOptions {
  * this package uses: `exists`, `readFileString`, `readDirectory`, `stat`.
  */
 const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<FileSystem.FileSystem> => {
-  const { unreadable = [], unreadableFiles = [], unreadableExists = [] } = options;
+  const { unreadable = [], unreadableFiles = [], unreadableExists = [], unreadableStat = [] } = options;
 
   // The v4 constructor is `PlatformError.systemError`, not a `new SystemError` —
   // `SystemError` is the reason payload, `PlatformError` is the failure.
@@ -73,6 +78,7 @@ const fileSystem = (tree: Tree, options: FileSystemOptions = {}): Layer.Layer<Fi
       readFileString: (path: string) =>
         A.contains(unreadableFiles, path) ? denied("readFileString", path) : undefined,
       readDirectory: (path: string) => (A.contains(unreadable, path) ? denied("readDirectory", path) : undefined),
+      stat: (path: string) => (A.contains(unreadableStat, path) ? denied("stat", path) : undefined),
     },
   });
 };

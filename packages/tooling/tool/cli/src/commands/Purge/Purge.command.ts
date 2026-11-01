@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { DomainError, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
@@ -19,6 +19,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as Num from "effect/Number";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { workspaceDirectories } from "../../internal/RepoWorkspaces.ts";
 
 const $I = $RepoCliId.create("purge");
 /**
@@ -170,7 +171,9 @@ export class PurgeSummary extends S.Opaque<PurgeSummary, { readonly brand: uniqu
  */
 const buildPurgeTargets = Effect.fn(function* (rootDir: string, removeLock: boolean) {
   const path = yield* Path.Path;
-  const workspaceDirsByName = yield* resolveWorkspaceDirs(rootDir);
+  const workspaceDirsByName = yield* workspaceDirectories(rootDir).pipe(
+    Effect.mapError(DomainError.newCause("Failed to discover workspace packages"))
+  );
 
   const targets = MutableHashSet.empty<string>();
 

@@ -9,6 +9,7 @@ import {
   WorkspaceRoot,
   WorkspaceRootNotFoundError,
 } from "@beep/repo-workspaces";
+import { WorkspaceDiscoveryOptions } from "@beep/repo-workspaces/WorkspaceDiscovery";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { assertExitFailure, assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -29,14 +30,18 @@ const discoveryOver = (
   tree: Tree,
   options?: {
     readonly maxDepth?: number;
+    readonly skipDirectoryNames?: ReadonlyArray<string>;
+    readonly skipMissingBaseDirs?: boolean;
     readonly unreadable?: ReadonlyArray<string>;
     readonly unreadableFiles?: ReadonlyArray<string>;
+    readonly unreadableStat?: ReadonlyArray<string>;
   }
 ) => {
-  const { unreadable, unreadableFiles, ...discoveryOptions } = options ?? {};
+  const { unreadable, unreadableFiles, unreadableStat, ...discoveryOptions } = options ?? {};
   const base = platformWith({
     ...(unreadable === undefined ? {} : { unreadable }),
     ...(unreadableFiles === undefined ? {} : { unreadableFiles }),
+    ...(unreadableStat === undefined ? {} : { unreadableStat }),
   })(tree);
   const roots = WorkspaceRoot.layer.pipe(Layer.provide(base));
   return Layer.mergeAll(
@@ -304,6 +309,160 @@ describe("WorkspaceDiscovery — a pattern naming a missing directory fails type
         assert.instanceOf(error, WorkspacePatternError);
         assert.strictEqual(error.kind, "missingBaseDir");
         assert.strictEqual(error.pattern, "apps/*");
+      })
+    );
+  });
+});
+
+describe("WorkspaceDiscovery — skipMissingBaseDirs lets a missing base select nothing", () => {
+  it("admits the option as an absent key or a boolean and rejects an explicit undefined (EF-40)", () => {
+    const is = S.is(WorkspaceDiscoveryOptions);
+    assert.isTrue(is({}));
+    assert.isTrue(is({ skipMissingBaseDirs: true }));
+    assert.isFalse(is({ skipMissingBaseDirs: undefined }));
+  });
+
+  layer(discoveryOver(missingBase, { skipMissingBaseDirs: false }), { timeout: "30 seconds" })((it) => {
+    it.effect("false fails typed, as when the option is absent", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const error = yield* Effect.flip(discovery.listPackages);
+        assert.instanceOf(error, WorkspacePatternError);
+        assert.strictEqual(error.kind, "missingBaseDir");
+      })
+    );
+  });
+
+  layer(discoveryOver(missingBase, { skipMissingBaseDirs: true }), { timeout: "30 seconds" })((it) => {
+    it.effect("true enumerates the other patterns and selects nothing for the missing base", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/alpha=packages/alpha"]
+        );
+      })
+    );
+  });
+});
+
+// `apps` exists, but its `stat` fails `PermissionDenied`: not an absent base.
+const unreadableBase: Tree = {
+  ...missingBase,
+  "/repo/apps/web/package.json": manifest("@x/web"),
+};
+
+// The NotFound half (a missing base selects nothing) is the `skipMissingBaseDirs: true` suite above.
+describe("WorkspaceDiscovery — skipMissingBaseDirs skips only a confirmed absence", () => {
+  for (const skipMissingBaseDirs of [true, false]) {
+    layer(discoveryOver(unreadableBase, { skipMissingBaseDirs, unreadableStat: ["/repo/apps"] }), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(
+        `a base whose stat fails otherwise is unreadableDirectory (skipMissingBaseDirs: ${skipMissingBaseDirs})`,
+        () =>
+          Effect.gen(function* () {
+            const discovery = yield* WorkspaceDiscovery;
+            const error = yield* Effect.flip(discovery.listPackages);
+            assert.instanceOf(error, WorkspacePatternError);
+            assert.strictEqual(error.kind, "unreadableDirectory");
+            assert.strictEqual(error.pattern, "apps/*");
+            assert.strictEqual(error.detail, "apps");
+          })
+      );
+    });
+  }
+});
+
+// Generated directories a pattern selects, each holding a manifest that is not
+// a valid member: an empty object and text that is not JSON.
+const generated: Tree = {
+  "/repo/package.json": rootManifest(["packages/*", "packages/*/coverage", "dist/*", "packages/alpha/build"]),
+  "/repo/packages/alpha/package.json": manifest("@x/alpha"),
+  "/repo/packages/alpha/coverage/package.json": "{}",
+  "/repo/packages/alpha/build/package.json": "{}",
+  "/repo/dist/out/package.json": "{ not json",
+};
+
+describe("WorkspaceDiscovery — skipDirectoryNames skips a directory before reading its manifest", () => {
+  it("admits the option as an absent key or a string list and rejects an explicit undefined (EF-40)", () => {
+    const is = S.is(WorkspaceDiscoveryOptions);
+    assert.isTrue(is({ skipDirectoryNames: ["dist"] }));
+    assert.isFalse(is({ skipDirectoryNames: undefined }));
+  });
+
+  layer(discoveryOver(generated), { timeout: "30 seconds" })((it) => {
+    it.effect("without the option, a malformed generated manifest fails discovery", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        assert.instanceOf(yield* Effect.flip(discovery.listPackages), WorkspaceDiscoveryError);
+      })
+    );
+  });
+
+  layer(discoveryOver(generated, { skipDirectoryNames: ["dist", "build", "coverage"] }), { timeout: "30 seconds" })(
+    (it) => {
+      it.effect("with it, the literal, the wildcard base and the listed directory are skipped unread", () =>
+        Effect.gen(function* () {
+          const discovery = yield* WorkspaceDiscovery;
+          const packages = yield* discovery.listPackages;
+          assert.deepStrictEqual(
+            A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+            ["root=.", "@x/alpha=packages/alpha"]
+          );
+        })
+      );
+    }
+  );
+});
+
+// Declared with trailing slashes, as package managers accept them.
+const trailingSlashes: Tree = {
+  "/repo/package.json": rootManifest(["packages/*/", "packages/alpha/", "tools/core/", "apps//"]),
+  "/repo/packages/alpha/package.json": manifest("@x/alpha"),
+  "/repo/packages/beta/package.json": manifest("@x/beta"),
+  "/repo/tools/core/package.json": manifest("@x/core"),
+  "/repo/apps/package.json": manifest("@x/apps"),
+};
+
+describe("WorkspaceDiscovery — a trailing slash on a pattern is dropped before matching", () => {
+  layer(discoveryOver(trailingSlashes), { timeout: "30 seconds" })((it) => {
+    it.effect("a slashed wildcard and slashed literals select their members at unslashed paths", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/apps=apps", "@x/alpha=packages/alpha", "@x/beta=packages/beta", "@x/core=tools/core"]
+        );
+        const info = yield* discovery.info;
+        assert.deepStrictEqual(info.patterns, ["packages/*/", "packages/alpha/", "tools/core/", "apps//"]);
+      })
+    );
+  });
+});
+
+// A `/**` include selects its base, and a `./` exclusion (or a `/**` one) excludes its directory.
+const globstarBases: Tree = {
+  "/repo/package.json": rootManifest(["tools/core/**", "packages/*", "!./packages/beta", "!packages/legacy/**"]),
+  "/repo/tools/core/package.json": manifest("@x/core"),
+  "/repo/tools/core/nested/package.json": manifest("@x/nested"),
+  "/repo/packages/alpha/package.json": manifest("@x/alpha"),
+  "/repo/packages/beta/package.json": manifest("@x/beta"),
+  "/repo/packages/legacy/package.json": manifest("@x/legacy"),
+};
+
+describe("WorkspaceDiscovery — a /** pattern covers its base and a ./ exclusion applies", () => {
+  layer(discoveryOver(globstarBases), { timeout: "30 seconds" })((it) => {
+    it.effect("selects tools/core itself, and excludes packages/beta and packages/legacy", () =>
+      Effect.gen(function* () {
+        const discovery = yield* WorkspaceDiscovery;
+        const packages = yield* discovery.listPackages;
+        assert.deepStrictEqual(
+          A.map(packages, (pkg) => `${pkg.name}=${pkg.relativePath}`),
+          ["root=.", "@x/alpha=packages/alpha", "@x/core=tools/core", "@x/nested=tools/core/nested"]
+        );
       })
     );
   });

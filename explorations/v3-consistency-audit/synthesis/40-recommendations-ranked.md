@@ -45,7 +45,7 @@
   regression gate. The only way "habit" becomes "law" for parallel agents.
 - **Sketch:** new subcommand in `Architecture.command.ts` beside `check`:
   `audit [--slice] [--tier] [--json] [--write-baseline]`. Walk packages via
-  `@beep/repo-utils` `resolveWorkspaceDirs` / `resolveWorkspacePackages` (`Workspaces.ts` L120/L303 — the brick Fallow already walks with; the earlier NET-NEW extraction of `Lint/PackageTestImports.ts`'s private `collectPackageSourceRoots` is withdrawn) and `Lint/Lint.command.ts:collectTypeScriptFiles` (symlink-safe,
+  repo-cli `workspaceDirectories` / `workspaceManifests` (`packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts`, over `@beep/repo-workspaces` `WorkspaceDiscovery`; 4-A3 retired repo-utils `Workspaces.ts` — the brick Fallow already walks with; the earlier NET-NEW extraction of `Lint/PackageTestImports.ts`'s private `collectPackageSourceRoots` is withdrawn) and `Lint/Lint.command.ts:collectTypeScriptFiles` (symlink-safe,
   excludes `coverage/`/`dist/`); classify tier via
   `Fallow.command.ts:classifyWorkspaceRole` (extend with `use-cases`, `client`,
   `config`). Rules are pure functions `(PackageView) => ReadonlyArray<Finding>`

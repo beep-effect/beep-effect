@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
+import { toSortedRecord } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -21,6 +21,7 @@ import * as Str from "effect/String";
 import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
 import { runCaptured } from "../../internal/process/StepExec.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import {
   CoverageProducerCompareOptions,
   CoverageProducerPackage,
@@ -326,7 +327,7 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
   shard?: CiLanePartitionShard
 ) {
   const path = yield* Path.Path;
-  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
     CiCommandError.mapError("Failed to read coverage test owners.")
   );
   const selections = yield* Effect.forEach(
@@ -617,7 +618,7 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
   options: CiLaneRunOptions
 ) {
   const plan = yield* ciCoveragePlan(repoRoot, options);
-  const workspaces = yield* resolveWorkspacePackages(repoRoot).pipe(
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
     CiCommandError.mapError("Failed to read coverage partition inventory.")
   );
   const path = yield* Path.Path;

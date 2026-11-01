@@ -6,6 +6,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 
 const literals = Array.from({ length: 24 }, (_, index) => `packages/pkg-${index}`);
@@ -52,6 +53,54 @@ describe("enumerate — literal pattern probes", () => {
           [...literals].sort()
         );
         assert.isAbove(maxInFlight, 1, "expected literal package checks to overlap");
+      })
+    );
+  });
+});
+
+describe("enumerate — skipMissingBaseDirs skips only a base whose stat fails NotFound", () => {
+  const baseTree: Record<string, string> = {
+    "/repo/package.json": '{ "name": "root", "version": "1.0.0" }',
+    "/repo/packages/a/package.json": '{ "name": "@x/a", "version": "1.0.0" }',
+    "/repo/apps/web/package.json": '{ "name": "@x/web", "version": "1.0.0" }',
+  };
+  // `apps` exists; only its `stat` fails, so it is unreadable, not absent.
+  const DeniedApps = Layer.mergeAll(
+    MemoryFileSystem.layerWith(baseTree, {
+      faults: {
+        stat: (path: string) =>
+          path === "/repo/apps"
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "stat",
+                  pathOrDescriptor: path,
+                })
+              )
+            : undefined,
+      },
+    }),
+    Path.layer
+  );
+
+  it.layer(DeniedApps, { timeout: "30 seconds" })((it) => {
+    it.effect("selects nothing for a missing base", () =>
+      Effect.gen(function* () {
+        const globs = yield* GlobSet.compile(["packages/*", "missing/*"]);
+        const directories = yield* enumerate("/repo", globs, { skipMissingBaseDirs: true });
+        assert.deepStrictEqual(
+          A.map(directories, (directory) => directory.relativePath),
+          ["packages/a"]
+        );
+      })
+    );
+
+    it.effect("reports a base whose stat fails otherwise as unreadableDirectory", () =>
+      Effect.gen(function* () {
+        const globs = yield* GlobSet.compile(["packages/*", "apps/*"]);
+        const failure = yield* Effect.flip(enumerate("/repo", globs, { skipMissingBaseDirs: true }));
+        assert.deepStrictEqual(failure, { kind: "unreadableDirectory", pattern: "apps/*", detail: "apps" });
       })
     );
   });

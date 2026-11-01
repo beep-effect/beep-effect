@@ -20,10 +20,13 @@ held list from that file. Their commands, outputs, environment, dependency edges
 and cache flags are unchanged. No qualification scope, profile, epoch or
 qualification state changes, and no computation becomes cached.
 
+Re-stamped after merging `main` at 8143d4e70d (#2445, #2447): the drift is the same
+root-input-bytes change on the same root computations.
+
 This reviews the declared configuration change only. It is not evidence that
 any computation is newly qualified or that a quality gate has passed.
 
-Current `turbo.json` SHA-256: `8394d5889a14c5d566de601d4ea5d15f5c505f9f0732c8d79d6892226809a1b1`.
+Current `turbo.json` SHA-256: `cb83aa39d2b8a9be408efc5387b6be4cd7720f2945c0bc10fae701289717909e`.
 
 Drifted computations (subject `//`, root input bytes only):
 

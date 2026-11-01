@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { FsUtils, GlobOptions, jsonStringifyPretty, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { FsUtils, GlobOptions, jsonStringifyPretty } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -20,6 +20,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { doctestSourceMarker, isDoctestSourcePath } from "../jsdoc/DoctestSource.ts";
+import { workspaceDirectories } from "../RepoWorkspaces.ts";
 import {
   CheckerScriptName,
   CodegenGeneratorPackage,
@@ -327,8 +328,9 @@ export class PackageScriptsPolicy extends Context.Service<PackageScriptsPolicy, 
       const path = yield* Path.Path;
       const fsUtils = yield* FsUtils;
       const workspaces = (repoRoot: string) =>
-        resolveWorkspaceDirs(repoRoot).pipe(
-          Effect.provideService(FsUtils, fsUtils),
+        workspaceDirectories(repoRoot).pipe(
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Path.Path, path),
           Effect.mapError(policyError("Cannot discover workspaces"))
         );
       const kindOf = Effect.fn("PackageScriptsPolicy.kindOf")(function* (manifestPath: string) {

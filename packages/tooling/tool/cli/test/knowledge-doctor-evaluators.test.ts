@@ -17,9 +17,9 @@ import {
   scanKnowledgeDoctorTree,
   scanKnowledgeFileExports,
 } from "@beep/repo-cli/commands/Knowledge";
+import { workspaceDirectories } from "@beep/repo-cli/test/SharedInternals";
 import { findRepoRoot } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe } from "@effect/vitest";
@@ -525,7 +525,7 @@ describe("knowledge doctor domain evaluators on this checkout", () => {
             ),
             Str.Order
           );
-          const livePackages = yield* resolveWorkspaceDirs(repoRoot).pipe(
+          const livePackages = yield* workspaceDirectories(repoRoot).pipe(
             Effect.map(HashMap.keys),
             Effect.map((names) => A.sort(A.filter(A.fromIterable(names), Str.startsWith("@beep/")), Str.Order))
           );
