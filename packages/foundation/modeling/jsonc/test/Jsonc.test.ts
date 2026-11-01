@@ -12,6 +12,7 @@ import {
 } from "@beep/jsonc";
 import { accumulation } from "@beep/jsonc/internal/accumulation";
 import { ParseFlags, parseTree as parseTreeRaw, parseValue as parseValueRaw } from "@beep/jsonc/internal/parser";
+import * as Text from "@beep/utils/Text";
 import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertExitFailure, assertFailure, assertNone, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -44,6 +45,20 @@ const parseCodes = (text: string): ReadonlyArray<string> => Jsonc.parseResult(te
 const parseTreeCodes = (text: string): ReadonlyArray<string> => Jsonc.parseTreeResult(text).pipe(failure, codes);
 
 describe("Jsonc", () => {
+  it("retains every recovered error and its position across a large mixed-newline input", () => {
+    const text = `[${Str.repeat(256)("?\r\n,?\r,?\n,?\u2028,?\u2029,")}]`;
+    const raw = parseValueRaw(text, ParseFlags.make({})).errors;
+    assert.isAbove(raw.length, 2000);
+    const expected = A.map(raw, (error) =>
+      JsoncParseErrorDetail.make({
+        ...error,
+        ...Text.lineCharacterAt(text, error.offset, { unicodeSeparators: true }),
+      })
+    );
+    assert.deepStrictEqual(failure(Jsonc.parseResult(text)).errors, expected);
+    assert.deepStrictEqual(failure(Jsonc.parseTreeResult(text)).errors, expected);
+  });
+
   describe("schemas", () => {
     it("JsoncParseOptions defaults to the JSONC convention", () => {
       assert.deepStrictEqual(

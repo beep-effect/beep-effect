@@ -383,11 +383,10 @@ const lineGrammar = { unicodeSeparators: true } as const;
 const toDetails: {
   (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail>;
   (errors: ReadonlyArray<RawParseError>): (text: string) => ReadonlyArray<JsoncParseErrorDetail>;
-} = dual(
-  2,
-  (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail> =>
-    A.map(errors, (e) => JsoncParseErrorDetail.make({ ...e, ...Text.lineCharacterAt(text, e.offset, lineGrammar) }))
-);
+} = dual(2, (text: string, errors: ReadonlyArray<RawParseError>): ReadonlyArray<JsoncParseErrorDetail> => {
+  const position = Text.lineCharacterIndex(text, lineGrammar);
+  return A.map(errors, (e) => JsoncParseErrorDetail.make({ ...e, ...position(e.offset) }));
+});
 
 const aggregate: {
   (text: string, errors: ReadonlyArray<RawParseError>): O.Option<JsoncParseError>;

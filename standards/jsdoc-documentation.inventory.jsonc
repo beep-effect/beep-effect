@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-10-31T23:52:15.437Z",
+  "generatedAt": "2026-11-01T00:15:28.295Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 166,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
-    "publicModules": 3621,
-    "publicExports": 25588,
+    "publicModules": 3622,
+    "publicExports": 25590,
     "openModules": 165,
     "openExports": 97,
     "missingExportExamples": 3,
@@ -7536,7 +7536,7 @@
         "srcDir": "src",
         "sourceFileCount": 29,
         "publicModuleCount": 29,
-        "publicExportCount": 228
+        "publicExportCount": 229
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -8142,7 +8142,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -12085,6 +12085,30 @@
           "repoPath": "packages/foundation/modeling/utils/src/Text.ts",
           "line": 155,
           "anchor": "packages-foundation-modeling-utils-src-text-ts-155-linecharacterat",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "lineCharacterIndex",
+          "exportKind": "const",
+          "filePath": "src/Text.ts",
+          "repoPath": "packages/foundation/modeling/utils/src/Text.ts",
+          "line": 205,
+          "anchor": "packages-foundation-modeling-utils-src-text-ts-205-linecharacterindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -46691,8 +46715,8 @@
           "exportKind": "interface",
           "filePath": "src/Jsonc.ts",
           "repoPath": "packages/foundation/modeling/jsonc/src/Jsonc.ts",
-          "line": 484,
-          "anchor": "packages-foundation-modeling-jsonc-src-jsonc-ts-484-jsoncboundcodec",
+          "line": 483,
+          "anchor": "packages-foundation-modeling-jsonc-src-jsonc-ts-483-jsoncboundcodec",
           "currentTags": [
             "@see",
             "@category",
@@ -46714,8 +46738,8 @@
           "exportKind": "class",
           "filePath": "src/Jsonc.ts",
           "repoPath": "packages/foundation/modeling/jsonc/src/Jsonc.ts",
-          "line": 511,
-          "anchor": "packages-foundation-modeling-jsonc-src-jsonc-ts-511-jsonc",
+          "line": 510,
+          "anchor": "packages-foundation-modeling-jsonc-src-jsonc-ts-510-jsonc",
           "currentTags": [
             "@category",
             "@since"
@@ -267413,8 +267437,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 48,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-48-observationlagsummary",
+          "line": 49,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-49-observationlagsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -267435,8 +267459,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 102,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-102-idempotentreplaypolicy",
+          "line": 103,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-103-idempotentreplaypolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -267457,8 +267481,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 130,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-130-nativeschedulepolicy",
+          "line": 131,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-131-nativeschedulepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -267479,8 +267503,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 167,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-167-nativescheduleoutcome",
+          "line": 168,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-168-nativescheduleoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -267501,8 +267525,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 200,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-200-nativescheduletick",
+          "line": 201,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-201-nativescheduletick",
           "currentTags": [
             "@category",
             "@since"
@@ -267523,8 +267547,8 @@
           "exportKind": "class",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 218,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-218-nativescheduleerror",
+          "line": 219,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-219-nativescheduleerror",
           "currentTags": [
             "@category",
             "@since"
@@ -267545,8 +267569,8 @@
           "exportKind": "const",
           "filePath": "src/native-schedule.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/native-schedule.ts",
-          "line": 274,
-          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-274-makenativedeliveryscheduler",
+          "line": 275,
+          "anchor": "packages-tooling-library-ai-metrics-src-native-schedule-ts-275-makenativedeliveryscheduler",
           "currentTags": [
             "@category",
             "@since"
@@ -282489,9 +282513,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 5,
-        "publicModuleCount": 5,
-        "publicExportCount": 111
+        "sourceFileCount": 6,
+        "publicModuleCount": 6,
+        "publicExportCount": 112
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -282550,6 +282574,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 44,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 1,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 17,
           "remediationStatus": "resolved"
         },
         {
@@ -282615,7 +282661,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 22,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -283611,6 +283657,380 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "FormatFrameFileNameOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 40,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-40-formatframefilenameoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "formatFrameFileName",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 91,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-91-formatframefilename",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildFfprobeArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 110,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-110-buildffprobeargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildExtractFramesArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 143,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-143-buildextractframesargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildExtractFramesArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 198,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-198-buildextractframesargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildExtractFrameAtArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 236,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-236-buildextractframeatargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildExtractFrameAtArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 305,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-305-buildextractframeatargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildExtractClipArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 353,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-353-buildextractclipargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildExtractClipArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 427,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-427-buildextractclipargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildRenderGifArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 470,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-470-buildrendergifargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildRenderGifArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 551,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-551-buildrendergifargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildRenderContactSheetArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 592,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-592-buildrendercontactsheetargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildRenderContactSheetArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 671,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-671-buildrendercontactsheetargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildWriteContainerMetadataArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 707,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-707-buildwritecontainermetadataargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildWriteContainerMetadataArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 773,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-773-buildwritecontainermetadataargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildProbeRegionLuminanceArgsOptions",
+          "exportKind": "class",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 811,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-811-buildproberegionluminanceargsoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildProbeRegionLuminanceArgs",
+          "exportKind": "const",
+          "filePath": "src/FFmpeg.command.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
+          "line": 884,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-command-ts-884-buildproberegionluminanceargs",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "ProcessExitCode",
           "exportKind": "const",
           "filePath": "src/FFmpeg.errors.ts",
@@ -284513,12 +284933,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./FFmpeg.command.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/FFmpeg.service.ts",
+          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+          "line": 100,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-100-export-from-ffmpeg-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "FFmpegEventSink",
           "exportKind": "type",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 154,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-154-ffmpegeventsink",
+          "line": 174,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-174-ffmpegeventsink",
           "currentTags": [
             "@category",
             "@since"
@@ -284539,8 +284981,8 @@
           "exportKind": "interface",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 181,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-181-ffmpegshape",
+          "line": 201,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-201-ffmpegshape",
           "currentTags": [
             "@category",
             "@since"
@@ -284561,8 +285003,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 264,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-264-plannedframecommit",
+          "line": 284,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-284-plannedframecommit",
           "currentTags": [
             "@category",
             "@since"
@@ -284583,382 +285025,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 297,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-297-progressstate",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "FormatFrameFileNameOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 448,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-448-formatframefilenameoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "formatFrameFileName",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 499,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-499-formatframefilename",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildFfprobeArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 518,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-518-buildffprobeargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildExtractFramesArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 551,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-551-buildextractframesargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildExtractFramesArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 606,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-606-buildextractframesargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildExtractFrameAtArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 644,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-644-buildextractframeatargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildExtractFrameAtArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 713,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-713-buildextractframeatargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildExtractClipArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 761,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-761-buildextractclipargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildExtractClipArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 835,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-835-buildextractclipargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildRenderGifArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 878,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-878-buildrendergifargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildRenderGifArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 959,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-959-buildrendergifargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildRenderContactSheetArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1000,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1000-buildrendercontactsheetargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildRenderContactSheetArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1079,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1079-buildrendercontactsheetargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildWriteContainerMetadataArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1115,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1115-buildwritecontainermetadataargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildWriteContainerMetadataArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1181,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1181-buildwritecontainermetadataargs",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "BuildProbeRegionLuminanceArgsOptions",
-          "exportKind": "class",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1219,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1219-buildproberegionluminanceargsoptions",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildProbeRegionLuminanceArgs",
-          "exportKind": "const",
-          "filePath": "src/FFmpeg.service.ts",
-          "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 1292,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1292-buildproberegionluminanceargs",
+          "line": 317,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-317-progressstate",
           "currentTags": [
             "@category",
             "@since"
@@ -284979,8 +285047,8 @@
           "exportKind": "class",
           "filePath": "src/FFmpeg.service.ts",
           "repoPath": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-          "line": 2601,
-          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-2601-ffmpeg",
+          "line": 1808,
+          "anchor": "packages-drivers-ffmpeg-src-ffmpeg-service-ts-1808-ffmpeg",
           "currentTags": [
             "@category",
             "@since"
