@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T05:22:34.860Z",
+  "generatedAt": "2026-11-01T05:48:57.997Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -71174,8 +71174,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 246,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-246-yamlmodificationerror",
+          "line": 247,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-247-yamlmodificationerror",
           "currentTags": [
             "@public",
             "@category",
@@ -71197,8 +71197,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 1149,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1149-yamlformat",
+          "line": 1193,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1193-yamlformat",
           "currentTags": [
             "@public",
             "@category",

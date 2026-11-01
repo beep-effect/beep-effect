@@ -124,6 +124,24 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     })
   );
 
+  it.effect("updates an image pin under a %YAML 1.2 directive and keeps the prologue byte for byte", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const source = A.join(["%YAML 1.2", "---", compose], "\n");
+      const file = yield* writeFixture("docker-compose.yml", source);
+      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
+      strictEqual(yield* fs.readFileString(file), Str.replace("redis:8.10.3", "redis:8.12.0")(source));
+
+      // A missing key is an insertion: the whole document re-renders after the verbatim prologue.
+      assertTrue(yield* updateYamlValue(file, ["services", "redis", "restart"], { value: "always" }));
+      const inserted = yield* fs.readFileString(file);
+      assertTrue(Str.startsWith("%YAML 1.2\n---\nservices:\n")(inserted));
+      expect(yield* Yaml.parse(inserted)).toMatchObject({
+        services: { redis: { image: "redis:8.12.0", ports: ["6379:6379"], restart: "always" } },
+      });
+    })
+  );
+
   it.effect("reads an aliased value through its anchor before deciding to update", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

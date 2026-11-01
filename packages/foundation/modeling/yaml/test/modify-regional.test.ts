@@ -212,6 +212,44 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     })
   );
 
+  it.effect("keeps an anchored empty-string replacement a quoted empty string", () =>
+    Effect.gen(function* () {
+      // The fresh node carrying the anchor has a synthetic zero-length span;
+      // it must render its quotes, not the bare `&an` an empty source node
+      // (null) renders as.
+      const spliced = yield* modifyToString("a: &an x\nb: *an\n", ["a"], "");
+      assert.strictEqual(spliced, "a: &an ''\nb: *an\n");
+      assert.deepStrictEqual(yield* Yaml.parse(spliced), { a: "", b: "" });
+
+      const block = yield* modifyToString("a: &an |\n  x\nb: *an\n", ["a"], "");
+      assert.strictEqual(block, "a: &an ''\nb: *an\n");
+      assert.deepStrictEqual(yield* Yaml.parse(block), { a: "", b: "" });
+
+      // A document-shaping option forces the whole-document pipeline on a
+      // spliceable target too.
+      const rewritten = yield* modifyToString(
+        "a: &an x\nb: *an\n",
+        ["a"],
+        "",
+        YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" })
+      );
+      assert.strictEqual(rewritten, 'a: &an ""\nb: *an\n');
+      assert.deepStrictEqual(yield* Yaml.parse(rewritten), { a: "", b: "" });
+
+      // An anchor over an empty source node still reads null, and a tag still fixes its value.
+      assert.deepStrictEqual(yield* Yaml.parse(yield* modifyToString("a: &an\nb: *an\n", ["c"], 1)), {
+        a: null,
+        b: null,
+        c: 1,
+      });
+      assert.deepStrictEqual(yield* Yaml.parse(yield* modifyToString("a: &an !!str\nb: *an\n", ["c"], 1)), {
+        a: "",
+        b: "",
+        c: 1,
+      });
+    })
+  );
+
   it.effect("falls back for a multi-line quoted span", () =>
     Effect.gen(function* () {
       const text = "a: 'one\n  two'\nb: 1\n";
@@ -304,14 +342,13 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     })
   );
 
-  it.effect("still refuses multi-document streams and directives on the fast path shape", () =>
+  it.effect("still refuses multi-document streams on the fast path shape and splices under directives", () =>
     Effect.gen(function* () {
       const stream = "a: '1'\n---\na: '2'\n";
       const streamResult = yield* Effect.exit(YamlFormat.modify(stream, ["a"], "x"));
       assertExitFailure(streamResult, streamResult.pipe(Exit.getCause, O.getOrThrow));
-      const directives = "%YAML 1.2\n---\na: '1'\n";
-      const directiveResult = yield* Effect.exit(YamlFormat.modify(directives, ["a"], "x"));
-      assertExitFailure(directiveResult, directiveResult.pipe(Exit.getCause, O.getOrThrow));
+      // The splice touches only the target span, so the directive prologue keeps its bytes.
+      assert.strictEqual(yield* modifyToString("%YAML 1.2\n---\na: '1'\n", ["a"], "x"), "%YAML 1.2\n---\na: 'x'\n");
     })
   );
 

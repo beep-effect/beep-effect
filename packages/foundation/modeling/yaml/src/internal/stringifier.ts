@@ -1467,7 +1467,7 @@ const stringifyScalarNodeLines: {
 } = dual(3, (node: YamlScalar, ctx: StringifyContext, depth: number): string[] => {
   // Empty scalar (zero-length in source) with tag or anchor: render just tag/anchor
   const isEmpty = isEmptySourceScalar(node);
-  if (isEmpty && (isNonEmptyText(node.tag) || isNonEmptyText(node.anchor))) {
+  if (isEmpty && rendersAsMetadataOnly(node)) {
     return [scalarMetadataOnly(node)];
   }
   const lines = renderScalarNodeValueLines(node, ctx, depth, isEmpty);
@@ -1481,6 +1481,16 @@ const isNonEmptyText = (text: string | undefined): text is string => text !== un
 /** A zero-length source scalar with no value (null, undefined or the empty string). */
 const isEmptySourceScalar = (node: YamlScalar): boolean =>
   node.length === 0 && (node.value === null || node.value === undefined || node.value === "");
+
+/**
+ * Whether a zero-length scalar reads back as its tag/anchor alone. A tag
+ * fixes the empty node's value (`!!str` reads `""`), and an anchor alone
+ * reads null; an anchored empty string with no tag is not an empty source
+ * node — `modify` carries a replaced node's anchor onto a fresh `""`, whose
+ * span is synthetic — so it renders its quotes (`&an ''`), not `&an` (null).
+ */
+const rendersAsMetadataOnly = (node: YamlScalar): boolean =>
+  isNonEmptyText(node.tag) || (isNonEmptyText(node.anchor) && P.isNullish(node.value));
 
 /** The `tag &anchor` rendering of an empty scalar that carries only metadata. */
 function scalarMetadataOnly(node: YamlScalar): string {

@@ -213,9 +213,10 @@ const echoErrorPath = (path: YamlPath) =>
  * the composed AST (a structural mismatch), the source fails to parse, the
  * source is a multi-document stream (`MultiDocumentStream` — a path names no
  * particular document of a stream, so modify refuses rather than guessing),
- * or the document carries `%YAML`/`%TAG` directives
- * (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and
- * dropping a `%TAG` would orphan the shorthand tags that depend on it).
+ * or the document's directives end in a `---` line that carries content
+ * (`DirectiveCarryingDocument` — modify keeps the `%YAML`/`%TAG` prologue
+ * verbatim only up to a bare or commented `---` marker, and dropping a `%TAG`
+ * would orphan the shorthand tags that depend on it).
  *
  * **Details**
  *
@@ -263,7 +264,7 @@ export class YamlModificationError extends S.TaggedError<YamlModificationError, 
   },
   $I.annoteError<YamlModificationError>("YamlModificationError", {
     description:
-      "Raised when `YamlFormat.modify` cannot navigate the requested path against the composed AST (a structural mismatch), the source fails to parse, the source is a multi-document stream (`MultiDocumentStream` — a path names no particular document of a stream, so modify refuses rather than guessing), or the document carries `%YAML`/`%TAG` directives (`DirectiveCarryingDocument` — modify does not re-emit directive lines, and dropping a `%TAG` would orphan the shorthand tags that depend on it). Carries structured YamlDiagnostic entries — never a collapsed `reason` string (the structure-preserving-errors house rule). The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure.",
+      "Raised when `YamlFormat.modify` cannot navigate the requested path against the composed AST (a structural mismatch), the source fails to parse, the source is a multi-document stream (`MultiDocumentStream` — a path names no particular document of a stream, so modify refuses rather than guessing), or the document's directives end in a `---` line that carries content (`DirectiveCarryingDocument` — modify keeps the `%YAML`/`%TAG` prologue verbatim only up to a bare or commented `---` marker, and dropping a `%TAG` would orphan the shorthand tags that depend on it). Carries structured YamlDiagnostic entries — never a collapsed `reason` string (the structure-preserving-errors house rule). The error itself has no `code` field: read the code from the diagnostics — `error.diagnostics[0].code` is the primary failure.",
   })
 ) {
   /**
@@ -1093,6 +1094,48 @@ const tryRegionalScalarEdit: {
   }
 );
 
+// ── modify: directive prologue ───────────────────────────────────────
+
+/**
+ * Directive, comment and blank lines up to and including the `---` marker
+ * that ends them (`head`), the rest of the marker line (`rest`: blanks and an
+ * optional comment) and its line ending (`eol`). A marker line carrying
+ * anything else — a node property, a flow collection, a block scalar header
+ * — does not match.
+ */
+const DIRECTIVE_PROLOGUE =
+  /^(?<head>(?:(?:%[^\n]*|[ \t]*(?:#[^\n]*)?)\r?\n)*---)(?<rest>(?:[ \t]+(?:#[^\n]*)?)?)(?<eol>\r?\n|$)/u;
+
+/**
+ * The directive prologue of `text` (after any BOM), kept byte for byte by the
+ * whole-document pipeline, or `undefined` when the `---` line that ends the
+ * directives carries content that cannot be split from the body.
+ *
+ * A comment on the marker line belongs to the body: the composer stores it as
+ * the root's leading comment, which the body renders on its own line below
+ * the marker, as the pipeline does for a directive-less `--- # comment`. A
+ * bare marker line keeps its own trailing blanks and line ending.
+ */
+const directivePrologue = (text: string): string | undefined =>
+  O.getOrUndefined(
+    O.map(O.fromNullishOr(DIRECTIVE_PROLOGUE.exec(Str.replace(/^\uFEFF/u, "")(text))?.groups), (groups) => {
+      const rest = groups.rest ?? "";
+      const eol = groups.eol ?? "";
+      const bare = Str.isEmpty(Str.trim(rest)) && Str.isNonEmpty(eol);
+      return bare ? `${groups.head}${rest}${eol}` : `${groups.head}\n`;
+    })
+  );
+
+/**
+ * `doc` with `contents`, framed to render after a verbatim directive
+ * prologue: the prologue already holds the comments before the marker and
+ * the marker itself, so the body carries neither.
+ */
+const bodyAfterPrologue = (doc: RawYamlDocument, contents: YamlNode | null): RawYamlDocument => {
+  const { commentBefore: _commentBefore, ...framing } = doc;
+  return { ...framing, contents, hasDocumentStart: false, hasDocumentStartTab: false };
+};
+
 // ── Facade ──────────────────────────────────────────────────────────────────
 
 /**
@@ -1118,14 +1161,15 @@ const tryRegionalScalarEdit: {
  * guessing. Parse a stream with {@link Yaml.parseAll} /
  * `Yaml.parseAllResult`.
  *
- * **Directive-carrying input is refused on every path.** The stringifier does
- * not re-emit `%YAML`/`%TAG` directive lines, and re-emitting a document
- * without its `%TAG` while keeping the shorthand tags that depend on it
- * (`!e!foo`) turns a valid file into one no parser can read. So
- * `format`/`formatToString` leave such input byte-identical (no edits), and
- * `modify`/`modifyToString` fail typed with a `DirectiveCarryingDocument`
- * diagnostic. Directive re-emission is unimplemented, and the refusal is what
- * stops the corruption.
+ * **Directive-carrying input keeps its prologue.** The stringifier does not
+ * re-emit `%YAML`/`%TAG` directive lines, and re-emitting a document without
+ * its `%TAG` while keeping the shorthand tags that depend on it (`!e!foo`)
+ * turns a valid file into one no parser can read. So `format`/`formatToString`
+ * leave such input byte-identical (no edits), and `modify`/`modifyToString`
+ * keep the directive prologue — every line up to the `---` that ends it —
+ * byte for byte, editing only the body after it. A document whose `---` line
+ * carries content (`--- !!map`, `--- [1]`) cannot be split there and fails
+ * typed with a `DirectiveCarryingDocument` diagnostic.
  *
  * **Example** (Format YAML and update a value while preserving comments)
  *
@@ -1326,14 +1370,18 @@ export class YamlFormat {
    * formatting needs no target). Detection is CST-level: a `---` inside a
    * block scalar or quoted string is content, not a document boundary.
    *
-   * **Directive-carrying documents are refused.** A document carrying
-   * `%YAML`/`%TAG` directives fails with {@link YamlModificationError}
-   * carrying a `DirectiveCarryingDocument` diagnostic: modify re-emits the
-   * whole document and does not re-emit directive lines, so applying it
-   * would drop the `%TAG` while keeping the shorthand tags that depend on
-   * it — unparseable output. A typed refusal beats silent corruption;
-   * directive re-emission is unimplemented, not undesired. A literal
-   * `%TAG` inside a scalar is content and does not trigger the refusal.
+   * **Directive prologues are kept verbatim.** A document carrying
+   * `%YAML`/`%TAG` directives keeps its prologue — the directive, comment
+   * and blank lines through the `---` marker that ends them — byte for byte:
+   * a splice touches only its target span, and the whole-document pipeline
+   * renders only the body and re-prepends the source prologue, so no `%TAG`
+   * is lost from under the shorthand tags that depend on it. A comment on the
+   * marker line belongs to the body, which renders it on its own line below
+   * the marker, as it does for a directive-less `--- # comment`. When that
+   * `---` line carries content (`--- !!map`, `--- [1]`), the body cannot be
+   * split from the prologue and the pipeline fails with
+   * {@link YamlModificationError} carrying a `DirectiveCarryingDocument`
+   * diagnostic. A literal `%TAG` inside a scalar is content, not a directive.
    *
    * `options` is a bare {@link YamlStringifyOptions} — it controls only the
    * internal re-stringify step, not a range (there is no range to restrict
@@ -1408,25 +1456,6 @@ export class YamlFormat {
           diagnostics: YamlDiagnostic.fromRawBatch(fatal, text, index),
         });
       }
-      if (doc.directives.length > 0) {
-        return yield* YamlModificationError.make({
-          path: echoErrorPath(path),
-          diagnostics: [
-            YamlDiagnostic.fromRaw(
-              {
-                code: "DirectiveCarryingDocument",
-                message:
-                  "Cannot modify a document carrying %YAML/%TAG directives: modify does not re-emit directive lines, and dropping a %TAG orphans the shorthand tags that depend on it",
-                offset: 0,
-                length: 0,
-              },
-              text,
-              index
-            ),
-          ],
-        });
-      }
-
       // Region-confined scalar replacement: when the target is an
       // existing single-line untagged scalar and the value is scalar-shaped,
       // splice just its span — quote style preserved, CRLFs and every other
@@ -1435,6 +1464,28 @@ export class YamlFormat {
       const regional = tryRegionalScalarEdit(text, doc, path, value, options);
       if (regional !== undefined) {
         return A.map(regional, (e) => YamlEdit.make(e));
+      }
+
+      // The whole-document pipeline does not render directives: it keeps the
+      // source's directive prologue verbatim and renders the body after it.
+      const prologue = A.isReadonlyArrayEmpty(doc.directives) ? "" : directivePrologue(text);
+      if (prologue === undefined) {
+        return yield* YamlModificationError.make({
+          path: echoErrorPath(path),
+          diagnostics: [
+            YamlDiagnostic.fromRaw(
+              {
+                code: "DirectiveCarryingDocument",
+                message:
+                  "Cannot modify a document whose directive-ending --- line carries content: modify keeps the %YAML/%TAG prologue verbatim only up to a bare --- marker, and dropping a %TAG orphans the shorthand tags that depend on it",
+                offset: 0,
+                length: 0,
+              },
+              text,
+              index
+            ),
+          ],
+        });
       }
 
       const newContents = yield* Effect.try({
@@ -1454,9 +1505,9 @@ export class YamlFormat {
         },
       });
 
-      const outputDoc: RawYamlDocument = { ...doc, contents: newContents };
+      const outputDoc = prologue === "" ? { ...doc, contents: newContents } : bodyAfterPrologue(doc, newContents);
       const formatted = yield* Effect.try({
-        try: () => stringifyDocument(outputDoc, StringifyOptionsInput.fromOptions(options)),
+        try: () => `${prologue}${stringifyDocument(outputDoc, StringifyOptionsInput.fromOptions(options))}`,
         catch: (defect) => {
           if (!isStringifyDepthExceeded(defect)) throw defect;
           return YamlModificationError.make({
@@ -1480,7 +1531,7 @@ export class YamlFormat {
    * (`YamlEdit.applyAll ∘ modify`). Inherits the {@link YamlFormat.modify}
    * error channel, including the single-document contract's
    * `MultiDocumentStream` refusal and the `DirectiveCarryingDocument`
-   * refusal of `%YAML`/`%TAG`-carrying documents.
+   * refusal of a directive prologue whose `---` line carries content.
    *
    * **Example** (Update a value and keep its comment)
    *

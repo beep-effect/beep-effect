@@ -116,7 +116,8 @@ type UpdateYamlValueOptions = {
  * layout: sequences indented under their key, quotes chosen per value.
  * Comments survive both paths, and an anchored target keeps its anchor, so an
  * alias to it reads the new value. The current value is read with aliases
- * resolved, so an alias that already resolves to `value` is no change.
+ * resolved, so an alias that already resolves to `value` is no change. A
+ * `%YAML`/`%TAG` directive prologue keeps its bytes on both paths.
  *
  * @category utilities
  * @since 0.0.0
