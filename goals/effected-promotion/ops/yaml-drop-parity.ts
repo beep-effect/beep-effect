@@ -11,9 +11,10 @@
  *    manifest writer (`ModelsManifestStore.init` into a temporary directory) over the operator manifest at
  *    `$HOME/.config/beep/models.yaml` and `seedModelsManifest`; Research `renderCard` over every knowledge card in
  *    the operator vault whose frontmatter decodes as `KnowledgeCardFrontmatter`, plus an edge corpus. A difference
- *    is `quote-choice` (intended) only when every differing line is a scalar the legacy writer single-quoted because
- *    it holds a double quote and no single quote, the kit double-quotes it with the same value, and both texts parse
- *    to the same value; anything else is unclassified.
+ *    is `scalar-quoting` (intended) only when the line counts match, every differing line differs only in how its
+ *    trailing string scalar is quoted (the same string read back from both), and both texts parse to the same
+ *    value: the kit double-quotes where `yaml` chose single quotes for a value holding `"`, and it double-quotes a
+ *    value holding a tab that `yaml` left plain. Anything else is unclassified.
  * 2. **parse** (value parity): the frozen legacy reads (`YAML.parse` for Runners, `parseDocument(...).toJSON()`
  *    with the error check for ChangesetGraph, FallowQuality and the workflow tests) against `effect/encoding/Yaml`
  *    `parse`, over every tracked `.github/**` workflow and action file, every `.changeset/*.md` frontmatter, the
@@ -23,9 +24,13 @@
  * 3. **edit** (VersionSync `YamlFileUpdater`): `updateYamlValue` on every `services.<name>.image` of
  *    `docker-compose.yml` and on the top-level `name` of every workflow, and `replaceNodeVersionWithFile` on every
  *    `with.node-version` path in the tracked workflow and action files, each on a temporary copy. A difference is
- *    `byte-minimal` (intended) when the current output parses to the same value as the legacy output and every
- *    line outside the edited keys' lines is byte-identical to the input; the legacy writer re-rendered the whole
- *    document.
+ *    `byte-minimal` (intended) when the current output parses to the same value as the legacy output and a minimal
+ *    line diff against the input touches only the edited keys' lines (the legacy writer re-rendered the whole
+ *    document: flow collections respaced, long scalars folded at 80 columns). `replaceNodeVersionWithFile` removes
+ *    and inserts a key, which re-serializes the whole document under both writers; there a difference is
+ *    `document-rerender` (intended) when the values match and every comment of the input survives. No live
+ *    location reaches `replaceNodeVersionWithFile` today (the Node resolver skips the reviewed pins and templated
+ *    values), so this corpus feeds every `with.node-version` path to it directly.
  * 4. **locator** (Models `yaml-path`): `modelsReadLocator` against a frozen copy of the retired `readYamlPath`
  *    (the `parseDocument` + `visit` simple-form check and the key-range reconciliation) over the fixture, the
  *    unsupported-form corpus from `models-locators.test.ts` and every scalar leaf path of the repository inputs.
@@ -43,6 +48,10 @@
  *   bun goals/effected-promotion/ops/yaml-drop-parity.ts [--out <report.json>] [--before <baseline.json>] [--vault <dir>]
  *
  * Exit status is non-zero when a case is unclassified or the baseline comparison fails.
+ *
+ * The before report (`research/yaml-drop-parity-r4-before.json`) was recorded by this script at its first commit,
+ * b4ce85b425, where `renderCard` still returned a string; R4 made it an Effect (the kit stringifier has a typed
+ * error channel), and this copy yields it.
  */
 import * as NodeURL from "node:url";
 import {
@@ -163,26 +172,46 @@ const parseOutcome = (legacy: O.Option<unknown>, current: O.Option<unknown>): st
       ? "identical"
       : "unclassified";
 
-// Single-quoted scalar body to its value, and that value as the kit writes it double-quoted.
-const SINGLE_QUOTED_TAIL = /^(?<prefix>.*?)'(?<body>(?:[^']|'')*)'$/u;
-const doubleQuoted = (value: string): string => `"${value.replaceAll("\\", "\\\\").replaceAll('"', '\\"')}"`;
-const isQuoteChoiceLine = (legacy: string, current: string): boolean => {
-  const match = SINGLE_QUOTED_TAIL.exec(legacy);
-  if (match?.groups === undefined) return false;
-  const value = (match.groups.body ?? "").replaceAll("''", "'");
-  return (
-    Str.includes('"')(value) && !Str.includes("'")(value) && current === `${match.groups.prefix}${doubleQuoted(value)}`
+// Two renderings of one line that differ only in how the trailing scalar is quoted: the common head runs to the
+// scalar's start (after `: ` or `- `), and both tails read back as the same string.
+const scalarTail = (line: string, from: number): string => {
+  const head = line.slice(0, from);
+  const start = Math.max(
+    head.lastIndexOf(": ") + 2,
+    head.lastIndexOf("- ") + 2,
+    line.length - Str.trimStart(line).length
   );
+  return line.slice(start);
 };
+const isScalarQuotingLine = (legacy: string, current: string): boolean => {
+  let from = 0;
+  while (from < legacy.length && from < current.length && legacy[from] === current[from]) from++;
+  const left = scalarTail(legacy, from);
+  const right = scalarTail(current, from);
+  if (legacy.slice(0, legacy.length - left.length) !== current.slice(0, current.length - right.length)) return false;
+  try {
+    const leftValue: unknown = legacyParse(`v: ${left}`);
+    const rightValue: unknown = legacyParse(`v: ${right}`);
+    return P.isObject(leftValue) && P.isString(Reflect.get(leftValue, "v")) && sameJson(leftValue, rightValue);
+  } catch {
+    return false;
+  }
+};
+
+// The YAML a rendered text carries: a card's frontmatter block, or the whole text.
+const CARD_FRONTMATTER = /^---\n(?<yaml>[\s\S]*?\n)---\n/u;
+const yamlOf = (text: string): string => CARD_FRONTMATTER.exec(text)?.groups?.yaml ?? text;
 const stringifyOutcome = (legacy: string, current: string): string => {
   if (legacy === current) return "identical";
   const legacyLines = Str.split(legacy, "\n");
   const currentLines = Str.split(current, "\n");
   if (A.length(legacyLines) !== A.length(currentLines)) return "unclassified";
-  const quoteOnly = A.every(A.zip(legacyLines, currentLines), ([left, right]) =>
-    left === right ? true : isQuoteChoiceLine(left, right)
+  const quotingOnly = A.every(A.zip(legacyLines, currentLines), ([left, right]) =>
+    left === right ? true : isScalarQuotingLine(left, right)
   );
-  return quoteOnly && sameJson(legacyParse(legacy), legacyParse(current)) ? "quote-choice" : "unclassified";
+  return quotingOnly && sameJson(legacyParse(yamlOf(legacy)), legacyParse(yamlOf(current)))
+    ? "scalar-quoting"
+    : "unclassified";
 };
 
 const gitFiles = Effect.fn("gitFiles")(function* (patterns: ReadonlyArray<string>) {
@@ -347,19 +376,21 @@ const stringifyLeg = Effect.fn("stringifyLeg")(function* (home: string) {
     : [];
   const vaultCases = yield* Effect.forEach(A.sort(cardFiles, Order.String), (relative) =>
     fs.readFileString(path.join(root, relative)).pipe(
-      Effect.map((text): O.Option<Case> => {
-        const match = FRONTMATTER_BLOCK.exec(text);
-        if (match?.groups === undefined) return O.none();
-        const raw = legacyDocumentValue(match.groups.yaml ?? "");
-        const card = O.flatMap(O.filter(raw, P.isObject), (value) => cardFrom(value as Record<string, unknown>));
-        if (O.isNone(card)) return O.none();
-        const body = match.groups.body ?? "";
-        return O.some({
-          site: "repo-cli Research/internal/Vault.ts",
-          id: `vault:${short(relative)}`,
-          outcome: stringifyOutcome(legacyRenderCard(card.value, body), renderCard(card.value, body)),
-        });
-      }),
+      Effect.flatMap(
+        Effect.fnUntraced(function* (text) {
+          const match = FRONTMATTER_BLOCK.exec(text);
+          if (match?.groups === undefined) return O.none<Case>();
+          const raw = legacyDocumentValue(match.groups.yaml ?? "");
+          const card = O.flatMap(O.filter(raw, P.isObject), (value) => cardFrom(value as Record<string, unknown>));
+          if (O.isNone(card)) return O.none<Case>();
+          const body = match.groups.body ?? "";
+          return O.some<Case>({
+            site: "repo-cli Research/internal/Vault.ts",
+            id: `vault:${short(relative)}`,
+            outcome: stringifyOutcome(legacyRenderCard(card.value, body), yield* renderCard(card.value, body)),
+          });
+        })
+      ),
       Effect.orElseSucceed(() => O.none<Case>())
     )
   );
@@ -373,7 +404,7 @@ const stringifyLeg = Effect.fn("stringifyLeg")(function* (home: string) {
     cases.push({
       site: "repo-cli Research/internal/Vault.ts",
       id: `edge-${index}`,
-      outcome: stringifyOutcome(legacyRenderCard(card.value, "Body."), renderCard(card.value, "Body.")),
+      outcome: stringifyOutcome(legacyRenderCard(card.value, "Body."), yield* renderCard(card.value, "Body.")),
     });
   }
   return cases;
@@ -505,28 +536,65 @@ const legacyReplaceNodeVersion = (original: string, paths: ReadonlyArray<Readonl
   return changed ? doc.toString() : original;
 };
 
-// Lines that differ between `original` and `current` after trimming the common head and tail.
+// The lines a minimal line diff removes from `original` or adds in `current` (longest common subsequence).
 const changedLines = (original: string, current: string): ReadonlyArray<string> => {
   const before = Str.split(original, "\n");
   const after = Str.split(current, "\n");
-  let head = 0;
-  while (head < before.length && head < after.length && before[head] === after[head]) head++;
-  let tail = 0;
-  while (
-    tail < before.length - head &&
-    tail < after.length - head &&
-    before[before.length - 1 - tail] === after[after.length - 1 - tail]
-  )
-    tail++;
-  return [...before.slice(head, before.length - tail), ...after.slice(head, after.length - tail)];
+  const rows = before.length + 1;
+  const cols = after.length + 1;
+  const table = new Uint32Array(rows * cols);
+  for (let i = before.length - 1; i >= 0; i--) {
+    for (let j = after.length - 1; j >= 0; j--) {
+      table[i * cols + j] =
+        before[i] === after[j]
+          ? (table[(i + 1) * cols + j + 1] ?? 0) + 1
+          : Math.max(table[(i + 1) * cols + j] ?? 0, table[i * cols + j + 1] ?? 0);
+    }
+  }
+  const changed: Array<string> = [];
+  let i = 0;
+  let j = 0;
+  while (i < before.length || j < after.length) {
+    if (i < before.length && j < after.length && before[i] === after[j]) {
+      i++;
+      j++;
+    } else if (
+      j < after.length &&
+      (i === before.length || (table[i * cols + j + 1] ?? 0) >= (table[(i + 1) * cols + j] ?? 0))
+    ) {
+      changed.push(after[j] ?? "");
+      j++;
+    } else {
+      changed.push(before[i] ?? "");
+      i++;
+    }
+  }
+  return changed;
 };
-const editOutcome = (original: string, legacy: string, current: string, keys: ReadonlyArray<string>): string => {
+// Every comment of `original` (a `#` that opens the line or follows a space) survives somewhere in `current`.
+const COMMENT = /(?:^|\s)(#.*)$/u;
+const commentsSurvive = (original: string, current: string): boolean =>
+  A.every(Str.split(original, "\n"), (line) => {
+    const comment = COMMENT.exec(line)?.[1];
+    return P.isUndefined(comment) || Str.includes(comment)(current);
+  });
+const editOutcome = (
+  original: string,
+  legacy: string,
+  current: string,
+  keys: ReadonlyArray<string>,
+  restructures: boolean
+): string => {
   if (legacy === current) return "identical";
   const sameValue = O.isSome(legacyDocumentValue(current)) && sameJson(legacyParse(legacy), legacyParse(current));
+  if (!sameValue) return "unclassified";
   const confined = A.every(changedLines(original, current), (line) =>
     A.some(keys, (key) => Str.startsWith(`${key}:`)(Str.trimStart(Str.replace(/^- /u, "")(Str.trimStart(line)))))
   );
-  return sameValue && confined ? "byte-minimal" : "unclassified";
+  if (confined) return "byte-minimal";
+  // A removal or an insertion re-serializes the whole document under both writers; the legacy one folded long
+  // scalars at 80 columns, the kit never folds. Same value and every comment kept is the intended outcome.
+  return restructures && commentsSurvive(original, current) ? "document-rerender" : "unclassified";
 };
 
 const editLeg = Effect.fn("editLeg")(function* (repoFiles: ReadonlyArray<string>) {
@@ -546,7 +614,9 @@ const editLeg = Effect.fn("editLeg")(function* (repoFiles: ReadonlyArray<string>
     yield* fs.writeFileString(target, original);
     const outcome = yield* apply(target).pipe(
       Effect.flatMap(() => fs.readFileString(target)),
-      Effect.map((current) => editOutcome(original, legacy, current, keys)),
+      Effect.map((current) =>
+        editOutcome(original, legacy, current, keys, Str.endsWith("replaceNodeVersionWithFile")(site))
+      ),
       Effect.orElseSucceed(() => "unclassified")
     );
     cases.push({ site, id, outcome });
