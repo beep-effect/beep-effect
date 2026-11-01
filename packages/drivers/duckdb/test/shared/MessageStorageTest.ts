@@ -260,6 +260,18 @@ export class StreamRpc extends Rpc.make("StreamTest", {
   primaryKey: (value) => value.id.toString(),
 }) {}
 
+/**
+ * Construct the exit reply that completes a fixture request.
+ *
+ * **Example** (Complete a fixture request)
+ *
+ * ```ts
+ * const reply = Effect.flatMap(makeRequest(), makeReply);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
 export const makeReply = Effect.fnUntraced(function* (request: FixtureRequest) {
   const snowflake = yield* Snowflake.Generator;
   return new Reply.ReplyWithContext<FixtureRpc>({
@@ -273,6 +285,18 @@ export const makeReply = Effect.fnUntraced(function* (request: FixtureRequest) {
   });
 });
 
+/**
+ * Construct the envelope that acknowledges one reply chunk of a fixture request.
+ *
+ * **Example** (Acknowledge a streamed chunk)
+ *
+ * ```ts
+ * const ack = makeAckChunk(request, chunk);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
 export const makeAckChunk = Effect.fnUntraced(function* (
   request: FixtureRequest,
   chunk: { readonly reply: Pick<Reply.Reply<FixtureRpc>, "requestId" | "id"> }
@@ -290,6 +314,18 @@ export const makeAckChunk = Effect.fnUntraced(function* (
   });
 });
 
+/**
+ * Construct a chunk reply for a streaming fixture request at the given sequence.
+ *
+ * **Example** (Reply with the first stream chunk)
+ *
+ * ```ts
+ * const chunk = Effect.flatMap(makeRequest({ rpc: StreamRpc, payload: { id: 123 } }), makeChunkReply);
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
 export const makeChunkReply = Effect.fnUntraced(function* (
   request: FixtureRequest & { readonly rpc: typeof StreamRpc },
   sequence = 0
