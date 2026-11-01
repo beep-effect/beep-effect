@@ -48,9 +48,16 @@ const nodeAtPath = (document: YamlDocument, yamlPath: YamlPath): O.Option<YamlNo
     O.flatMap((root) => root.find(yamlPath))
   );
 
-// The resolved value at `yamlPath`, or none when the path is absent.
+// One path step into a resolved plain value: a mapping key or a sequence index.
+const childValue = (value: unknown, segment: YamlPath[number]): unknown =>
+  P.hasProperty(value, segment) ? value[segment] : undefined;
+
+// The value at `yamlPath`, or none when the path is absent. The value is read
+// from the whole document's resolved value, so an alias (`node-version:
+// *runtime`) yields its anchor's value rather than the `null` an alias node
+// resolves to on its own, without the anchors defined elsewhere in the file.
 const valueAtPath = (document: YamlDocument, yamlPath: YamlPath): O.Option<unknown> =>
-  O.map(nodeAtPath(document, yamlPath), (node) => node.toValue());
+  O.map(nodeAtPath(document, yamlPath), () => A.reduce(yamlPath, document.toValue(), childValue));
 
 // Whether `updated` keeps every byte of `original` outside `node`'s source span.
 const changesOnlySpan = (original: string, updated: string, node: YamlNode): boolean => {
@@ -107,7 +114,9 @@ type UpdateYamlValueOptions = {
  * insertion; or the target is a block, multi-line, tagged or anchored scalar,
  * or a collection), the whole document is re-serialized in the `yaml` npm
  * layout: sequences indented under their key, quotes chosen per value.
- * Comments survive both paths.
+ * Comments survive both paths, and an anchored target keeps its anchor, so an
+ * alias to it reads the new value. The current value is read with aliases
+ * resolved, so an alias that already resolves to `value` is no change.
  *
  * @category utilities
  * @since 0.0.0
@@ -133,7 +142,7 @@ export const updateYamlValue: {
 
     const document = yield* parseYamlFile(filePath, original);
     const target = nodeAtPath(document, yamlPath);
-    const currentValue = O.getOrUndefined(O.map(target, (node) => node.toValue()));
+    const currentValue = O.getOrUndefined(valueAtPath(document, yamlPath));
 
     if (Str.equivalence(yamlNodeValueAsString(currentValue), options.value)) {
       return false;

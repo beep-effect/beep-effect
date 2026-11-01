@@ -648,6 +648,29 @@ function lowerValue(value: unknown): YamlNode {
   return jsValueToNode(value, [], 0);
 }
 
+/**
+ * Lower the replacement for an existing `previous` node, carrying its anchor
+ * onto the fresh node. An alias elsewhere in the document that names the
+ * anchor then resolves to the new value, where dropping the anchor would leave
+ * the alias undefined and the edited text unparseable. Tags and comments are
+ * not carried: they describe the replaced value, not the slot.
+ */
+function lowerReplacement(previous: YamlNode | null, value: unknown): YamlNode {
+  const lowered = lowerValue(value);
+  const anchor = previous === null || previous._tag === "YamlAlias" ? undefined : previous.anchor;
+  return anchor === undefined
+    ? lowered
+    : Match.valueTags(lowered, {
+        YamlScalar: (node) =>
+          YamlScalar.make({ value: node.value, style: node.style, anchor, offset: node.offset, length: node.length }),
+        YamlSeq: (node) =>
+          YamlSeq.make({ items: node.items, style: node.style, anchor, offset: node.offset, length: node.length }),
+        YamlMap: (node) =>
+          YamlMap.make({ items: node.items, style: node.style, anchor, offset: node.offset, length: node.length }),
+        YamlAlias: (node) => node,
+      });
+}
+
 const modifyDocument: {
   (doc: RawYamlDocument, path: YamlPath, value: unknown): YamlNode | null;
   (path: YamlPath, value: unknown): (doc: RawYamlDocument) => YamlNode | null;
@@ -712,20 +735,24 @@ function setMapEntry(
   if (value === undefined) {
     return O.isNone(pairIndex) ? node : rebuildMap(node, removeAt(node.items, pairIndex.value)); // Nothing to remove when absent
   }
-  const newValueNode = lowerValue(value);
   if (O.isSome(pairIndex)) {
     const oldPair = A.getUnsafe(node.items, pairIndex.value);
     // Comments live on the key and value nodes, so the key carries its
     // own through unchanged; the replacement value is a fresh node and
-    // deliberately starts with no comments of its own.
+    // deliberately starts with no comments of its own, but keeps the
+    // replaced value's anchor.
     return rebuildMap(
       node,
-      replaceAt(node.items, pairIndex.value, YamlPair.make({ key: oldPair.key, value: newValueNode }))
+      replaceAt(
+        node.items,
+        pairIndex.value,
+        YamlPair.make({ key: oldPair.key, value: lowerReplacement(oldPair.value, value) })
+      )
     );
   }
   // Insert new key — appends after the last pair.
   const keyNode = YamlScalar.make({ value: String(segment), style: "plain", offset: 0, length: 0 });
-  return rebuildMap(node, [...node.items, YamlPair.make({ key: keyNode, value: newValueNode })]);
+  return rebuildMap(node, [...node.items, YamlPair.make({ key: keyNode, value: lowerValue(value) })]);
 }
 
 function descendMapEntry(
@@ -779,7 +806,9 @@ function setSeqItem(node: YamlSeq, idx: number, value: unknown): YamlSeq {
   }
   return rebuildSeq(
     node,
-    value === undefined ? removeAt(node.items, idx) : replaceAt(node.items, idx, lowerValue(value))
+    value === undefined
+      ? removeAt(node.items, idx)
+      : replaceAt(node.items, idx, lowerReplacement(A.getUnsafe(node.items, idx), value))
   );
 }
 
@@ -1000,14 +1029,14 @@ const isRegionalStyle = (style: YamlScalar["style"]): boolean =>
 /**
  * Whether `target` is a scalar whose byte range can be replaced in place: a
  * synthesised empty span (`key:` with no value) is an insertion site, not a
- * replaceable range; tags, anchors, block styles and multi-line sources keep
- * the whole-document pipeline.
+ * replaceable range; tags, block styles and multi-line sources keep the
+ * whole-document pipeline. An anchor sits before the scalar's span, so the
+ * splice leaves it (and every alias naming it) in place.
  */
 const isSpliceableScalar = (target: YamlNode | null): target is YamlScalar =>
   isYamlScalar(target) &&
   target.length > 0 &&
   target.tag === undefined &&
-  target.anchor === undefined &&
   isRegionalStyle(target.style) &&
   target.sourceMultiline !== true;
 
@@ -1264,7 +1293,7 @@ export class YamlFormat {
    *
    * **Scalar replacement is region-confined and quote-preserving.**
    * When the path resolves to an existing single-line `plain`,
-   * `single-quoted`, or `double-quoted` scalar with no tag or anchor, and
+   * `single-quoted`, or `double-quoted` scalar with no tag, and
    * the replacement is a string, number, or boolean, `modify` splices
    * ONLY the target scalar's source span and emits a single edit: a string
    * into a quoted scalar keeps the original quote character, a non-string
@@ -1274,12 +1303,15 @@ export class YamlFormat {
    * splice is taken only when the rendered text re-parses to exactly the
    * caller's value and renders as a single line; a no-op replacement yields
    * no edits. Anything else — removals (`value === undefined`), nulls,
-   * insertions, object/array values, block or multi-line scalars, tagged or anchored
+   * insertions, object/array values, block or multi-line scalars, tagged
    * targets, or any document-shaping / explicit-style option
    * (`defaultScalarStyle`, `forceDefaultStyles`, `sortKeys`, `indent`,
    * `indentSequences`, `finalNewline`) — falls back to re-serialising the
    * whole document, which normalises line endings to LF, applies those
    * options, and renders the replacement in the stringifier's styles.
+   * A replaced node's anchor (never its tag) is carried onto the
+   * replacement, so an alias that names it resolves to the new value instead
+   * of dangling.
    *
    * Two replacement values have no finite rendering and fail typed rather
    * than hanging or overflowing the stack: one containing a circular

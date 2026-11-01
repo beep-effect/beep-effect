@@ -9,8 +9,9 @@
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { replaceNodeVersionWithFile, updateYamlValue } from "@beep/repo-cli/test/VersionSync";
 import { it } from "@beep/test-runner";
+import { Yaml } from "@beep/yaml/Yaml";
 import { expect } from "@effect/vitest";
-import { assertFalse, assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -106,6 +107,36 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
     })
   );
 
+  it.effect("keeps an anchored image's anchor so its aliases read the new value", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const source = A.join(
+        ["services:", "  redis:", "    image: &redis redis:8.10.3 # pinned", "  replica:", "    image: *redis", ""],
+        "\n"
+      );
+      const file = yield* writeFixture("docker-compose.yml", source);
+      assertTrue(yield* updateYamlValue(file, ["services", "redis", "image"], { value: "redis:8.12.0" }));
+      const updated = yield* fs.readFileString(file);
+      strictEqual(updated, Str.replace("redis:8.10.3", "redis:8.12.0")(source));
+      deepStrictEqual(yield* Yaml.parse(updated), {
+        services: { redis: { image: "redis:8.12.0" }, replica: { image: "redis:8.12.0" } },
+      });
+    })
+  );
+
+  it.effect("reads an aliased value through its anchor before deciding to update", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const source = A.join(
+        ["services:", "  redis:", "    image: &redis redis:8.10.3", "  replica:", "    image: *redis", ""],
+        "\n"
+      );
+      const file = yield* writeFixture("docker-compose.yml", source);
+      assertFalse(yield* updateYamlValue(file, ["services", "replica", "image"], { value: "redis:8.10.3" }));
+      strictEqual(yield* fs.readFileString(file), source);
+    })
+  );
+
   it.effect("fails typed on a file that is not YAML", () =>
     Effect.gen(function* () {
       const file = yield* writeFixture("broken.yml", "services: [unclosed\n");
@@ -130,6 +161,51 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "30 seco
             "  test:",
             "    steps:",
             "      # pin the runtime",
+            "      - uses: actions/setup-node@v4",
+            "        with:",
+            "          cache: bun",
+            "          node-version-file: .nvmrc",
+            "",
+          ],
+          "\n"
+        )
+      );
+    })
+  );
+
+  it.effect("replaces an aliased node-version pin like a literal one", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const file = yield* writeFixture(
+        "check.yml",
+        A.join(
+          [
+            "env:",
+            '  NODE: &runtime "22.23.4"',
+            "jobs:",
+            "  test:",
+            "    steps:",
+            "      - uses: actions/setup-node@v4",
+            "        with:",
+            "          node-version: *runtime",
+            "          cache: bun",
+            "",
+          ],
+          "\n"
+        )
+      );
+      assertTrue(
+        yield* replaceNodeVersionWithFile(file, [{ yamlPath: ["jobs", "test", "steps", 0, "with", "node-version"] }])
+      );
+      strictEqual(
+        yield* fs.readFileString(file),
+        A.join(
+          [
+            "env:",
+            '  NODE: &runtime "22.23.4"',
+            "jobs:",
+            "  test:",
+            "    steps:",
             "      - uses: actions/setup-node@v4",
             "        with:",
             "          cache: bun",

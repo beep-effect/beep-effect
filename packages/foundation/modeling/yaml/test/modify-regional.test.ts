@@ -4,7 +4,7 @@
 // outside the span untouched — and anything outside the fast path's
 // preconditions keeps the whole-document pipeline's existing behavior.
 
-import { YamlStringifyOptions } from "@beep/yaml";
+import { Yaml, YamlStringifyOptions } from "@beep/yaml";
 import { YamlFormat, YamlModificationError } from "@beep/yaml/YamlFormat";
 import { assert, describe, it } from "@effect/vitest";
 import { assertExitFailure } from "@effect/vitest/utils";
@@ -176,14 +176,39 @@ describe("YamlFormat.modify region-confined scalar replacement (#659)", () => {
     })
   );
 
-  it.effect("falls back for tagged and anchored targets", () =>
+  it.effect("falls back for tagged targets and splices anchored ones", () =>
     Effect.gen(function* () {
       // The fallback re-serialises from the composed value: the replacement
-      // scalar takes the stringifier's own rendering, with no tag or anchor
-      // carried over from the replaced target. Exact outputs pin the
-      // tag/anchor bail precondition — includes() would pass under either path.
+      // scalar takes the stringifier's own rendering, with no tag carried
+      // over from the replaced target. An anchor precedes the scalar's span,
+      // so an anchored target splices and keeps its anchor and quote. Exact
+      // outputs pin the tag bail precondition — includes() would pass under
+      // either path.
       assert.strictEqual(yield* modifyToString("a: !str 'x'\nb: 1\n", ["a"], "y"), "a: y\nb: 1\n");
-      assert.strictEqual(yield* modifyToString("a: &an 'x'\nb: 1\n", ["a"], "y"), "a: y\nb: 1\n");
+      assert.strictEqual(yield* modifyToString("a: &an 'x' # c\nb: 1\n", ["a"], "y"), "a: &an 'y' # c\nb: 1\n");
+    })
+  );
+
+  it.effect("keeps a replaced anchor so aliases resolve to the new value", () =>
+    Effect.gen(function* () {
+      const mapping = yield* modifyToString("a: &an x # c\nb: *an\n", ["a"], "y");
+      assert.strictEqual(mapping, "a: &an y # c\nb: *an\n");
+      assert.deepStrictEqual(yield* Yaml.parse(mapping), { a: "y", b: "y" });
+
+      const sequence = yield* modifyToString("- &an x\n- *an\n", [0], "y");
+      assert.strictEqual(sequence, "- &an y\n- *an\n");
+      assert.deepStrictEqual(yield* Yaml.parse(sequence), ["y", "y"]);
+
+      // A block scalar takes the whole-document pipeline, which carries the
+      // anchor onto the fresh replacement node.
+      const block = yield* modifyToString("a: &an |\n  x\nb: *an\n", ["a"], "y");
+      assert.strictEqual(block, "a: &an y\nb: *an\n");
+      assert.deepStrictEqual(yield* Yaml.parse(block), { a: "y", b: "y" });
+
+      const collection = yield* modifyToString("a: &an\n  k: 1\nb: *an\n", ["a"], { k: 2 });
+      assert.deepStrictEqual(yield* Yaml.parse(collection), { a: { k: 2 }, b: { k: 2 } });
+      const listed = yield* modifyToString("- &an x\n- *an\n", [0], ["y"]);
+      assert.deepStrictEqual(yield* Yaml.parse(listed), [["y"], ["y"]]);
     })
   );
 
