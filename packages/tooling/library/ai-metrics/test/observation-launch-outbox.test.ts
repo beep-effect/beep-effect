@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { makeObservationClaims } from "@beep/repo-ai-metrics/observation-launch-claims";
 import {
   makeObservationLaunchFacts,
@@ -16,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -23,6 +25,8 @@ import * as TestClock from "effect/testing/TestClock";
 import { claimFixture, claimId, claimSubmission } from "./fixtures/observation-claims.ts";
 
 const layer = Layer.mergeAll(NodeServices.layer, Reactivity.layer);
+// Suites that never open the SQLite journal check claim-file metadata, which the memory filesystem models.
+const memoryLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, Reactivity.layer);
 const input = claimSubmission();
 const started = ObservationLaunchSubmission.make({
   ...input,
@@ -36,7 +40,7 @@ const finished = ObservationLaunchSubmission.make({
   ...input,
   fact: ObservationLaunchFact.cases.Finished.make({ launchId: input.fact.launchId, outcome: "cancelled" }),
 });
-const backend = Effect.gen(function* () {
+const backend = Effect.fn("ObservationLaunchOutboxTest.backend")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "obs-outbox-sql-" });
   const sql = yield* SqliteClient.make({ filename: `${directory}/journal.sqlite` });
@@ -56,7 +60,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const f = yield* claimFixture();
       const claims = yield* makeObservationClaims(f.policy, f.uid);
-      const facts = yield* backend;
+      const facts = yield* backend();
       const count = yield* Ref.make(0);
       yield* claims.runOnce(input, () => Ref.update(count, (n) => n + 1));
       yield* claims.appendObservation(started);
@@ -98,7 +102,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(layer, { timeout: "30 seconds" })((it) =>
+it.layer(memoryLayer, { timeout: "30 seconds" })((it) =>
   it.effect(
     "refuses unclaimed, changed-epoch, conflicting and impossible observations without rewriting evidence",
     () =>
@@ -140,7 +144,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const f = yield* claimFixture();
       const claims = yield* makeObservationClaims(f.policy, f.uid);
-      const facts = yield* backend;
+      const facts = yield* backend();
       yield* claims.runOnce(input, () => Effect.void);
       const original = yield* claims.reconcile(input.fact.launchId, (submission) =>
         facts.record(submission.fact, submission.evidenceEpoch)
@@ -168,7 +172,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const f = yield* claimFixture();
       const claims = yield* makeObservationClaims(f.policy, f.uid);
-      const facts = yield* backend;
+      const facts = yield* backend();
       yield* claims.runOnce(input, () => Effect.void);
       expect(
         (yield* claims
@@ -190,7 +194,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const f = yield* claimFixture();
       const claims = yield* makeObservationClaims(f.policy, f.uid);
-      const facts = yield* backend;
+      const facts = yield* backend();
       yield* claims.runOnce(input, () => Effect.void);
       expect((yield* claims.readOutbox(input.fact.launchId)).submissions).toEqual([input]);
       yield* f.fs.writeFileString(`${f.policy.directory}/fact-0-1.json`, "", { mode: 0o600 });
@@ -205,7 +209,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(layer, { timeout: "30 seconds" })((it) =>
+it.layer(memoryLayer, { timeout: "30 seconds" })((it) =>
   it.effect("bounds reconciliation time and rejects overlapping local mutation while transport is pending", () =>
     Effect.gen(function* () {
       const f = yield* claimFixture();
@@ -225,7 +229,7 @@ it.layer(layer, { timeout: "30 seconds" })((it) =>
   )
 );
 
-it.layer(layer, { timeout: "30 seconds" })((it) =>
+it.layer(memoryLayer, { timeout: "30 seconds" })((it) =>
   it.effect("a torn transport receipt does not prevent later local lifecycle observations", () =>
     Effect.gen(function* () {
       const f = yield* claimFixture();

@@ -19,7 +19,12 @@ import {
   SourceProcessingRecord,
   TextSpan,
 } from "@beep/file-processing/Extraction";
-import { ExtractFileOperation, ProcessFileOperation } from "@beep/file-processing/Operation";
+import {
+  deriveArchiveChildArtifact,
+  ExportArchiveOperation,
+  ExtractFileOperation,
+  ProcessFileOperation,
+} from "@beep/file-processing/Operation";
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service";
 import {
@@ -132,6 +137,28 @@ describe("@beep/file-processing", () => {
 
         expect(childId).not.toBe(ids.artifactId);
         expect(Str.startsWith("artifact:")(childId)).toBe(true);
+      })
+    );
+
+    it.effect(
+      "rejects a backslash archive child path as an export failure",
+      Effect.fnUntraced(function* () {
+        const ids = yield* fixtureIds;
+        const operation = ExportArchiveOperation.make({
+          format: "pst",
+          operationId: ids.operationId,
+          operationKind: "export-archive",
+          preference: { engine: "test" },
+          source: yield* makeSource(ids, "pst"),
+        });
+        const failure = yield* Effect.flip(
+          deriveArchiveChildArtifact(operation, "children\\windows-message.txt", {
+            subject: "Synthetic",
+            engine: "test",
+          })
+        );
+
+        expect(failure.message).toContain("Synthetic child artifact path was not POSIX-normalized.");
       })
     );
   });

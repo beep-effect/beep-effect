@@ -2110,6 +2110,68 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("treats a spawned process the test kills as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as ChildProcess from "effect/process/ChildProcess"; import * as FileSystem from "effect/FileSystem";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", ["fixture.ts"]); yield* child.kill({ killSignal: "SIGKILL" });')}`,
+        `${imports} const run = Fx.fnUntraced(function* () { const child = yield* ChildProcess.make("bun", []); yield* child.kill(); }); ${suite("yield* run();")}`,
+        `${imports} ${suite('const spawn = (mode) => ChildProcess.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", []); expect(yield* child.exitCode).toBe(0);')}`,
+        `${imports} ${suite('const child = yield* Fake.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite("const other = makeFake(); yield* other.kill();")}`,
+        `${imports} ${suite('let child = yield* ChildProcess.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite('const spawn = (mode) => Fake.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); yield* ChildProcess.make("bun", []); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
+  it.effect("treats a SQLite database file the test opens as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as FileSystem from "effect/FileSystem"; import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; const dir = yield* fs.makeTempDirectoryScoped(); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite("const sql = yield* SqliteClient.make({ filename: `${dir}/journal.sqlite` });")}`,
+        `${imports} ${suite("const file = `${dir}/journal.sqlite`; yield* Fx.provide(program, SqliteClient.layer({ filename: file }));")}`,
+        `${imports} const reopen = Fx.fnUntraced(function* (file) { return yield* SqliteClient.make({ filename: file }); }); ${suite("yield* reopen(`${dir}/a.sqlite`);")}`,
+        `${Str.replace("sql-sqlite-node", "sql-sqlite-bun")(imports)} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('yield* SqliteClient.make({ filename: ":memory:" });')}`,
+        `${imports} ${suite("yield* SqliteClient.make(options);")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ ...options });")}`,
+        `${imports} import * as Fake from "@beep/fake/SqliteClient"; ${suite("yield* Fake.make({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.other({ filename: `${dir}/a.sqlite` });")}`,
+        `${imports} ${suite("yield* SqliteClient.make({ filename: `${dir}/a.sqlite` });")} ${suite('yield* fs.readFileString("a");')}`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
   it.effect("follows same-file helpers that read FileSystem in the harness context", () =>
     Effect.gen(function* () {
       const harness = 'import { layer } from "@effect/vitest";';

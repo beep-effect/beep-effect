@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T02:47:36.155Z",
+  "generatedAt": "2026-11-01T03:23:21.734Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
     "publicModules": 3639,
-    "publicExports": 25757,
+    "publicExports": 25767,
     "openModules": 161,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -45924,8 +45924,8 @@
           "exportKind": "class",
           "filePath": "src/ScriptedSpawner.ts",
           "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 308,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-308-spawnrecord",
+          "line": 314,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-314-spawnrecord",
           "currentTags": [
             "@public",
             "@category",
@@ -45947,8 +45947,8 @@
           "exportKind": "class",
           "filePath": "src/ScriptedSpawner.ts",
           "repoPath": "packages/drivers/commands/src/ScriptedSpawner.ts",
-          "line": 400,
-          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-400-scriptedspawner",
+          "line": 406,
+          "anchor": "packages-drivers-commands-src-scriptedspawner-ts-406-scriptedspawner",
           "currentTags": [
             "@public",
             "@category",
@@ -447563,7 +447563,7 @@
         "srcDir": "src",
         "sourceFileCount": 500,
         "publicModuleCount": 497,
-        "publicExportCount": 4624
+        "publicExportCount": 4634
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -449939,7 +449939,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -452672,7 +452672,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -452716,7 +452716,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -452738,7 +452738,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -478001,9 +478001,56 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-333-ciroutecommand",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-336-ciroutecommand",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRouteServices",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 354,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-354-cirouteservices",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCiRouteCommandForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 373,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-373-makeciroutecommandfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@internal",
             "@category",
             "@since"
           ],
@@ -504656,8 +504703,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 66,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-66-holdslistcommand",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-79-holdslistcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504678,8 +504725,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-87-holdsprobecommand",
+          "line": 100,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-100-holdsprobecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504700,8 +504747,52 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 122,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-122-holdslintcommand",
+          "line": 134,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-134-holdslintcommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsUpdateCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-163-holdsupdatecommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsWhyCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-195-holdswhycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504722,8 +504813,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-150-holdscommand",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-218-holdscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -504834,8 +504925,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 33,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-33-anchorkey",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-34-anchorkey",
           "currentTags": [
             "@param",
             "@returns",
@@ -504858,8 +504949,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-67-liveholdversions",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-68-liveholdversions",
           "currentTags": [
             "@param",
             "@returns",
@@ -504882,8 +504973,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 94,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-94-heldlistfor",
+          "line": 95,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-95-heldlistfor",
           "currentTags": [
             "@param",
             "@returns",
@@ -504906,8 +504997,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 121,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-121-liveanchorvalues",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-122-liveanchorvalues",
           "currentTags": [
             "@param",
             "@returns",
@@ -504930,8 +505021,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 156,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-156-lintholds",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-157-lintholds",
           "currentTags": [
             "@param",
             "@returns",
@@ -504954,8 +505045,80 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.inventory.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-204-holdlintfindingtext",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-205-holdlintfindingtext",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isProbeDue",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 236,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-236-isprobedue",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isUnpinnedByCatalogBump",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 277,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-277-isunpinnedbycatalogbump",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdPackageMatches",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+          "line": 306,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-inventory-ts-306-holdpackagematches",
           "currentTags": [
             "@param",
             "@returns",
@@ -504978,8 +505141,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 47,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-47-runholdslist",
+          "line": 57,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-57-runholdslist",
           "currentTags": [
             "@category",
             "@since"
@@ -505000,8 +505163,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 77,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-77-holdsprobeinput",
+          "line": 87,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-87-holdsprobeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -505022,8 +505185,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 108,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-108-runholdsprobe",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-118-runholdsprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -505044,8 +505207,78 @@
           "exportKind": "const",
           "filePath": "src/commands/Holds/Holds.program.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-249-runholdslint",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-260-runholdslint",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldsUpdateInput",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 293,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-293-holdsupdateinput",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runHoldsUpdate",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 388,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-388-runholdsupdate",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runHoldsWhy",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 497,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-497-runholdswhy",
           "currentTags": [
             "@param",
             "@returns",
@@ -610763,8 +610996,8 @@
           "exportKind": "const",
           "filePath": "src/MailTagging/MailTagging.filer.ts",
           "repoPath": "packages/law-practice/use-cases/src/MailTagging/MailTagging.filer.ts",
-          "line": 285,
-          "anchor": "packages-law-practice-use-cases-src-mailtagging-mailtagging-filer-ts-285-makeattachmentfiler",
+          "line": 284,
+          "anchor": "packages-law-practice-use-cases-src-mailtagging-mailtagging-filer-ts-284-makeattachmentfiler",
           "currentTags": [
             "@category",
             "@since"

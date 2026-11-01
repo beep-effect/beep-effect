@@ -225,6 +225,12 @@ const Environment = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
     description: "Platform environment values, including explicitly undefined entries.",
   })
 );
+/** Core command environments may carry `Redacted` words, which the spawner unwraps before the child sees them. */
+const CommandEnvironment = S.Record(S.String, S.UndefinedOr(S.Union([S.String, S.Redacted(S.String)]))).pipe(
+  $I.annoteSchema("CommandEnvironment", {
+    description: "Platform command environment values, including redacted and explicitly undefined entries.",
+  })
+);
 const wordValue = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
 const envValue = (value: CommandLine.Word | undefined): string | undefined =>
   P.isUndefined(value) ? value : wordValue(value);
@@ -250,7 +256,7 @@ const CommandOptions = S.Struct({
   killSignal: S.optionalKey(Signal),
   forceKillAfter: RunOptions.fields.timeout,
   cwd: S.optionalKey(S.String),
-  env: S.optionalKey(Environment),
+  env: S.optionalKey(CommandEnvironment),
   extendEnv: S.optionalKey(S.Boolean),
   shell: S.optionalKey(S.Union([S.Boolean, S.String])),
   detached: S.optionalKey(S.Boolean),
