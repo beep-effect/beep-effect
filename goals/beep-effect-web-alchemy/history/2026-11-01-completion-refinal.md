@@ -19,7 +19,8 @@
 
 ## Remedy
 
-This closeout PR carries only this note and the manifest change pointing `proposedCloseout` and
-the final `pullRequests` entry at it, with #2435 and #2444 as supporting PRs. The orchestrator
+This closeout PR carries this note, a README evidence line pointing at it, and the manifest
+change pointing `proposedCloseout` and the final `pullRequests` entry at it, with #2435 and #2444
+as supporting PRs. The orchestrator
 merges it through the strict gate (every required check green), so the merge-push rule suite
 passes and the refresh can verify.
