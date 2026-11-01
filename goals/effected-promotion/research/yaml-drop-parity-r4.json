@@ -1,0 +1,2404 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/yaml-drop-parity.ts",
+  "commit": "0434216aac966e5b86f87b79a2dd9536a57a67aa",
+  "stringify": {
+    "sites": [
+      {
+        "site": "ai-metrics compose.ts",
+        "cases": 1,
+        "outcomes": {
+          "identical": 1
+        }
+      },
+      {
+        "site": "repo-cli Models.manifest.service.ts",
+        "cases": 2,
+        "outcomes": {
+          "scalar-quoting": 2
+        }
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "cases": 4159,
+        "outcomes": {
+          "identical": 3730,
+          "scalar-quoting": 429
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "site": "repo-cli Models.manifest.service.ts",
+        "id": "home-manifest",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Models.manifest.service.ts",
+        "id": "seed",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7ffcd4ff5a57",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4715e275accb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:706118a4ed9c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8b10034cff22",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4ec6499dc607",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4706230ae08b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c5e37c59c61f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4d361ba99e1e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:769555dd165e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b652c0a15116",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:21c028012bb1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:74076f11ee8e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3fde44ef8987",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:fe6c2e725b43",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:63571b1de96e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a7dd67baae21",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8c4395361935",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9332b85b7c9d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:31153a665ead",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a4c69599b56a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3eb7652214ea",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:33671f225c6f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0e58a9bd5f28",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2bd0b4a5aeec",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3159cd33e11d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6cae517ba2b2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ae3de7824a90",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:62585e3b0311",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:39302b5f479a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:11e1e66ef3b8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:40201d60e3c4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:27ffff48476e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8d42a3c687c2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:84e09a074b43",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:91d25e229c89",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:34799dadc51c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7d3fceb4694b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:911c4c5fca2d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:108a0a2f44f0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7c0d61e41341",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:099b0ea9ac34",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3dbe2dc850e0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:66397832ee66",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f684eca8e2cc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bbb6de3c2265",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:423b4bd6e42b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:87b68ae0bcd6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f10efb6402ff",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7640e4be1eb7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6c7735dcf0b9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:405dfc3ae36e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d278c9cc3267",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4817c7609093",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:85bf4a9538f5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:69e0dd1bc66b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:db07b2d3839e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:16dda4f3d9d5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6eae03c5e85c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:045a7fb393a2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:aa982d7041e6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e5c697456619",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:926e59b9661a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c4470422989b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7c3e0d31339e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9a96f5112bdd",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c024c6de22c9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b47f7d13beab",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:65914ef75a43",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9303ee7d8356",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:56c4b941af67",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7cb9389b0679",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bc1e7035d9cb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a6d8ce7e1221",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:75c19114b34a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:08326b9341ac",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e1e56c9280e1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5531f3d7e3c1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4eafc0bb85d5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ca9148e536aa",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8857b2ca83f1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:feb23e0d3bf8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:60f68ef260ec",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:36e9c76aef9c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e88081f7ee71",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e8116fe80cf6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c254c7bb47c9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5165d996c5c1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:68b3cd655911",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6f570d07b7c8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f62c0bd555fe",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0f4c93f9de1d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:dc4050315605",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c623e6f21226",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2453c36cef68",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f02114004314",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:dc32462f5cfe",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e7df7106cbe2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:766830386a76",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:133ea0ac8ed0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6ca7bcb0217d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:840e6876fc68",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3f7cc8d3b65c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:da5d3f7bc0be",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:eeb22010a28d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:19a06ea9c7b5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0c4b1aa522fd",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6d0246b5259c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:48ceba5348f2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7b24ac06035c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:07a274c68cb8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:040d095fe741",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e111c8bbe7be",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b16132f01955",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0416dba5c2f4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:26a871d5a1c8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:df7a793b8f25",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2b0b903b721b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d2de2672047a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d0a51e40eaf9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5fdde52a3ff7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a6f72a5e4e7a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:93b9a8b9a1be",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:063de9d37a28",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d357e1b1147a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:55e3f6d1dc8e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:51b735ca6077",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:08fcb2bee7cb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b0fe74206634",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5b83c39e3577",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:55f54f7ac40a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a4e0efe592d2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c483f3c74d75",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7bd6aea2e590",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:da8107b5b85c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:35bbe7dc334e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6f84b1c9853f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b7d19bb4a049",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:236d07eb0274",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a0f0280b0441",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e057a1190dc3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a4f831060636",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d7c87eaf1b6a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d615d3712097",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a73c3f29d2ed",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:57a4deb3a6e1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:49bd04fd01c3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9abfd17734f3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:395c9f1aad4d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:fb0d799a384f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:654ae147cb58",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d57214246854",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0e570f429648",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7ed70cb43de4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:322cc59da8d1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:57c22464ebfe",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:92fb4363d7c4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c758ab1e0cbf",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d58c343c2177",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:768be48cc63f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9fccede3f95d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a7e3adf978f3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:739cb577e3b6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e336f282e0ae",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1ce62664d0d7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:73a539511ef2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3dff0bdc8054",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5425767e4a4e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4986dd78b628",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6078d2de235c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e8aafea4b0f5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f463c47da748",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2ea6a370129b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:de6d36bcf34a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0e2a0dbaf9cb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:cf583e70d6a0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ed200e391260",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1ba5afc66cc5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1b6cc667556a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:45c4850734b5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e8dbb3afd13c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0027adaccd2e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7fe2846e28fb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bceda7a8ea4c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a2454d26b46f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:383a62c0a923",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e28bcac8e6f7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b845749e81a4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4becbe478c21",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:17bce9eb8ac3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:97096c78c692",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:02bdd1c94149",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ec9a25518516",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c63b376ffa65",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9420373d46d7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bacdb3e766ca",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c717b26db589",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3b9fedf22c06",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ebaf7dcb1072",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f4bb1ad950b1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:43819b9244a7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:eb35ae510abf",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:36a4d9cb381b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:75c3aecb70b5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4dcd89fc0451",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:228106b60301",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:82c9c2321489",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:60d268f40297",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c00270cab66e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:407fee7d2d2a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:428a990eb0af",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b69a2379c997",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f7931ab9757c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4d2b8ff45c30",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8d4f114d4baa",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b6fcaee7bdc8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:499d2608a4d3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3a61552caedd",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9697615af461",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f5feca527f63",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:de10390f1908",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:04b233a727f1",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:dfe8112055f9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:592ce6243ac3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:af77e5a1f0cd",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8e2c92c2dbef",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6d56f986d60e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:934e08e80024",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:cb234081abe5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6fef151fc1ab",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e827b493abf7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ae99c2d73c54",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:828c5bf4bec7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b609711a1c44",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:894dd8caf969",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0f8f01f90aab",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d629573449af",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b781caf7a134",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:754130718418",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:872fa51a8b97",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f8e6b00f47e9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e1cb4bd3ed83",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ebf627b29175",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6ef0285060fa",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:30d8854b76bc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:900b4d47b94f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a40a6abe42e8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e4da125bf5d2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1e915b740a2b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:00bac3ac654e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5c8a78f4a882",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:50ca79e223f2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:08f31d5f8eac",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4ac10e8fe359",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:137a6bf5fc0d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3df2d245a8b3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:04a89b0c1a08",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f32cce0e97d4",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c76e415939b8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:51cdb322c18a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e49d4a94aaa5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:df149a82bb4e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:85d0e1017f14",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6f60521ff987",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:420ecea6a837",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f96f1bb69b5c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8d08c0ca4635",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6d9d8aa48934",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9a22a8b139ed",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f37e04b9341c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7ac978ca2d39",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:29fa56a9bafc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:13312cea96b6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bd4ab965e992",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2fe1875e2c6a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:66d18868b312",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:78a7107df1eb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:cbe11761b8c2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e6917be0bbed",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7aa69d994471",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1ee10e46a22b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:12f83f304384",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c48be9dc7b48",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:71727bf9e1db",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d312d91ee7af",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d04a14a0417c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9cd6b4204315",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:373c55c7db4f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d2144cd30177",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:35794543e06e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:23cfc85c55df",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f6406e9bff74",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1bca12229003",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6d07f2b1adbe",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c95f659962ad",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0296ae8c0b64",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7848c36bfb29",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:98b303c74a06",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b2b8533a93a6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:61fe6f683428",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:50bc398e91ae",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c7756b343e5b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ea4f5aae1cd0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ac5fc176ab7f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8b536a82610f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:90749f7c7822",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:dfd3632dab49",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:63edaa84ccf2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:40e7a7a43793",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5bd8a1dc0e9f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0f7d19a72e8a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f0dae0f74fef",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ffbdc5913e20",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:00d890680026",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:42662d5668ce",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5c98419d9cfc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:25c44abe4f20",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f6d596e03123",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3ae0c918e1c7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c3e9a2223342",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1b131bd1adf8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:971a37dac454",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8418b3f950f9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a01d0c3ce5c3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f03f9ad33d7d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2e6dbaa15e61",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:90802ac09649",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d43fe9ac0552",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:09506fc7c04a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:24f7518fcff5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:23c27d936e7d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c593572fcb7e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:31ed6f66544d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:20fccb124a58",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6857b4faea5c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a2c4bdbf56a3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6065099917b6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3852ba4459b8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4de7c18cf97d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b28be9ea7c8e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:bc45bef6e70c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b27e0a1fd3d3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:198ce440f827",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a421665f617f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ad7842e06652",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:178d83dc0604",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e80d1f8b21f9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1d2e3440a538",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0798531cb7e7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:31e0b32231d0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:3164cc857891",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d72693f4846f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:082826d62fac",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7a8c9e698a59",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7527c672e215",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:114131ef9b6b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e083e32cda22",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8ee7cd8dc7c6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:30df047cdc6b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c51a7d64fb00",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:09b6beb867d3",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:6021e1e81bc9",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d788c4dfee5b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:510bfe291520",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:05677db6e144",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ace094c75457",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9df56261f626",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1fd0f257ee4f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f30c59769b9e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:57f686416c85",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:75c7b4ce0377",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9b649295fc11",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:fde4754fd2f0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d7102a26985b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:045f4a0616af",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:17f8ef42f2fa",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:21af394f5342",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f5316ef74741",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:827ad28a17a2",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:2f2668b71fd6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0fbd00e7ab6e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:d9ade8fa5602",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0ac8bb22e37d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c009f9d0cf94",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:817afbb1ea40",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8c1c405e2b37",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b56d490dd9f5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f075d8a3382c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8b92180316dd",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4a056eaf096f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:1ff6e770eb5d",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:13c5923130f7",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0d5d83b65890",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:03859e4c9a87",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:8af1734c7ce0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e733d38ac561",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b95e04de9fd0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:adf10a14b79a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:5ced40f4342c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:08c5679d4091",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:92e0477974bc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:a3096d1e8b32",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:98b2785e49c8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ed4db8c89ccb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:f85960c5185a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:68a313c5492c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ec0d2f30466a",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4479ccd308fe",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9e35576d2820",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:28b4e7dd55cb",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:88c2a49419c8",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:e0a8495b0c63",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0badf48add57",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:7793324fe8a0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:45cc1e4279cf",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:b9a38b9215e5",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:ed02b133713c",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0ad8fd65952b",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:370fafd4f364",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c126866ad582",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:32b7284a936e",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:9f5d92501fd6",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:4944c39c6633",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:41dfe4103870",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:75ef151add42",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:69e4eacc5e50",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:0b9ae1fcefdc",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "vault:c170106d262f",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "edge-0",
+        "outcome": "scalar-quoting"
+      },
+      {
+        "site": "repo-cli Research/internal/Vault.ts",
+        "id": "edge-20",
+        "outcome": "scalar-quoting"
+      }
+    ],
+    "unclassified": 0
+  },
+  "parse": {
+    "sites": [
+      {
+        "site": "repo-cli FallowQuality + workflow tests",
+        "cases": 18,
+        "outcomes": {
+          "identical": 18
+        }
+      },
+      {
+        "site": "repo-cli VersionSync compose read",
+        "cases": 1,
+        "outcomes": {
+          "identical": 1
+        }
+      },
+      {
+        "site": "repo-cli Runners.service.ts",
+        "cases": 2,
+        "outcomes": {
+          "identical": 2
+        }
+      },
+      {
+        "site": "repo-cli ChangesetGraph.ts",
+        "cases": 9,
+        "outcomes": {
+          "identical": 8,
+          "both-reject": 1
+        }
+      },
+      {
+        "site": "negative corpus",
+        "cases": 6,
+        "outcomes": {
+          "both-reject": 6
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "site": "repo-cli ChangesetGraph.ts",
+        "id": "corpus-6",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-0",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-1",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-2",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-3",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-4",
+        "outcome": "both-reject"
+      },
+      {
+        "site": "negative corpus",
+        "id": "negative-5",
+        "outcome": "both-reject"
+      }
+    ],
+    "unclassified": 0
+  },
+  "edit": {
+    "sites": [
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "cases": 20,
+        "outcomes": {
+          "byte-minimal": 14,
+          "identical": 6
+        }
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "cases": 2,
+        "outcomes": {
+          "document-rerender": 1,
+          "byte-minimal": 1
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/actions/setup-monorepo-ci/action.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "id": ".github/actions/setup-monorepo-ci/action.yml#node-version",
+        "outcome": "document-rerender"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/check.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.replaceNodeVersionWithFile",
+        "id": ".github/workflows/check.yml#node-version",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/data-sync.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/deploy-beep-effect-web.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/fleet-lane-probe.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/heavy-admit.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/heavy.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/hub-pipe-security.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/knowledge-baseline-mint.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/property-laws-nightly.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/release-desktop.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/rerun-runner-loss.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/skills-update-train.yml#name",
+        "outcome": "byte-minimal"
+      },
+      {
+        "site": "repo-cli YamlFileUpdater.updateYamlValue",
+        "id": ".github/workflows/storybook.yml#name",
+        "outcome": "byte-minimal"
+      }
+    ],
+    "unclassified": 0
+  },
+  "locator": {
+    "sites": [
+      {
+        "site": "repo-cli Models.locator.service.ts",
+        "cases": 429,
+        "outcomes": {
+          "identical": 429
+        }
+      }
+    ],
+    "nonIdentical": [],
+    "unclassified": 0
+  },
+  "repoInputs": {
+    "count": 27,
+    "sha256": "a50c2a383936c9320fcc87813350fccbaeeaf7a87a445ad640aad3c0dd3adfa3"
+  },
+  "changesetReferences": {
+    "count": 16,
+    "sha256": "0ea6e5965af42c441b811ba76014bfcba04b9a38b8a574b52cc7ff56bc737863"
+  },
+  "cli": [
+    {
+      "command": "beep quality changeset-graph",
+      "exitCode": 0,
+      "stdoutSha256": "f3ffe08401f38f79cae59f6e4e7606070b8ccf0540af9279d251e59b0584072d",
+      "stdoutLines": 1
+    }
+  ],
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/yaml-drop-parity-r4-before.json",
+    "identical": true,
+    "differing": []
+  }
+}
