@@ -55,9 +55,14 @@ export type HoldId = typeof HoldId.Type;
  * @category models
  * @since 0.0.0
  */
-export const HoldKind = LiteralKit(["syncpack-held", "exact-pin", "override", "patch", "osv-exception"]).pipe(
-  $I.annoteSchema("HoldKind", { description: "The config surface that enforces a dependency-shaped hold." })
-);
+export const HoldKind = LiteralKit([
+  "syncpack-held",
+  "exact-pin",
+  "override",
+  "patch",
+  "osv-exception",
+  "version-group",
+]).pipe($I.annoteSchema("HoldKind", { description: "The config surface that enforces a dependency-shaped hold." }));
 
 /**
  * Decoded type of {@link HoldKind}.
@@ -68,30 +73,47 @@ export const HoldKind = LiteralKit(["syncpack-held", "exact-pin", "override", "p
 export type HoldKind = typeof HoldKind.Type;
 
 /**
- * One place in a tracked config file that enforces the hold.
+ * One config site that enforces a hold, typed by the file and section it lives in.
  *
- * **Example** (Anchor a hold to a catalog key)
+ * **Details**
+ *
+ * `SyncpackHeld` names a pattern in the syncpack held list. That list is a
+ * projection of the ledger (`hold-ledger/syncpack-held.generated.json`), so the
+ * anchor feeds the projection rather than pointing at a hand-edited entry.
+ *
+ * **Example** (Anchor a hold to a root catalog entry)
  *
  * ```ts
  * import { HoldAnchor } from "@beep/repo-cli/commands/Holds"
  *
- * const anchor = HoldAnchor.make({ file: "package.json", key: "workspaces.catalog.statelyai" })
- * console.log(anchor.file) // "package.json"
+ * const anchor = HoldAnchor.cases.CatalogEntry.make({ packageName: "statelyai" })
+ * console.log(anchor._tag) // "CatalogEntry"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class HoldAnchor extends S.Opaque<HoldAnchor, { readonly brand: unique symbol }>()(
-  S.Struct({
-    file: S.NonEmptyString,
-    key: S.NonEmptyString,
-  }).pipe(
-    $I.annoteSchema("HoldAnchor", {
-      description: "A tracked file and the key or entry inside it that enforces the hold.",
-    })
-  )
-) {}
+export const HoldAnchor = S.TaggedUnion({
+  CatalogEntry: { packageName: S.NonEmptyString },
+  ManifestDependency: { manifest: S.NonEmptyString, packageName: S.NonEmptyString },
+  SyncpackHeld: { dependency: S.NonEmptyString },
+  SyncpackVersionGroup: { label: S.NonEmptyString },
+  RootOverride: { packageName: S.NonEmptyString },
+  PatchedDependency: { key: S.NonEmptyString },
+  OsvPackageOverride: { packageName: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("HoldAnchor", {
+    description: "A typed config site that enforces a hold: catalog, manifest, syncpack, override, patch or OSV entry.",
+  })
+);
+
+/**
+ * Decoded type of {@link HoldAnchor}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HoldAnchor = typeof HoldAnchor.Type;
 
 /**
  * What a hold governs: the packages held together and every anchor enforcing it.
@@ -103,7 +125,7 @@ export class HoldAnchor extends S.Opaque<HoldAnchor, { readonly brand: unique sy
  *
  * const subject = HoldSubject.make({
  *   packages: ["statelyai"],
- *   anchors: [HoldAnchor.make({ file: "package.json", key: "workspaces.catalog.statelyai" })],
+ *   anchors: [HoldAnchor.cases.CatalogEntry.make({ packageName: "statelyai" })],
  * })
  * console.log(subject.packages[0]) // "statelyai"
  * ```
@@ -547,3 +569,72 @@ export const HoldVerdict = LiteralKit(["StillHolds", "Unconfirmed", "Flipped", "
  * @since 0.0.0
  */
 export type HoldVerdict = typeof HoldVerdict.Type;
+
+/**
+ * The hold-shaped config sites found in one checkout.
+ *
+ * **Details**
+ *
+ * `required` lists the sites that must each be covered by a live hold record
+ * (root overrides, patched dependencies and OSV package overrides). `present`
+ * lists every site a record may anchor to, `required` included. `heldList` is
+ * the syncpack held list currently on disk.
+ *
+ * **Example** (An empty checkout)
+ *
+ * ```ts
+ * import { HoldSiteSnapshot } from "@beep/repo-cli/commands/Holds"
+ *
+ * const snapshot = HoldSiteSnapshot.make({ required: [], present: [], heldList: [] })
+ * console.log(snapshot.heldList.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HoldSiteSnapshot extends S.Opaque<HoldSiteSnapshot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    required: S.Array(HoldAnchor),
+    present: S.Array(HoldAnchor),
+    heldList: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("HoldSiteSnapshot", {
+      description: "Hold-shaped config sites found in one checkout and the syncpack held list on disk.",
+    })
+  )
+) {}
+
+/**
+ * One way the ledger and the checkout's config disagree.
+ *
+ * **Example** (A hold-shaped override with no record)
+ *
+ * ```ts
+ * import { HoldAnchor, HoldLintFinding } from "@beep/repo-cli/commands/Holds"
+ *
+ * const finding = HoldLintFinding.cases.Unrecorded.make({
+ *   anchor: HoldAnchor.cases.RootOverride.make({ packageName: "glob" }),
+ * })
+ * console.log(finding._tag) // "Unrecorded"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HoldLintFinding = S.TaggedUnion({
+  Unrecorded: { anchor: HoldAnchor },
+  Orphaned: { holdId: HoldId, anchor: HoldAnchor },
+  HeldListStale: { expected: S.Array(S.String), actual: S.Array(S.String) },
+}).pipe(
+  $I.annoteSchema("HoldLintFinding", {
+    description: "A hold-shaped site without a live record, a record whose anchor is gone, or a stale held list.",
+  })
+);
+
+/**
+ * Decoded type of {@link HoldLintFinding}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HoldLintFinding = typeof HoldLintFinding.Type;

@@ -60,6 +60,7 @@
       "!**/bun.lock",
       "!**/dist",
       "!standards/fallow.boundaries.generated.jsonc",
+      "!hold-ledger/syncpack-held.generated.json",
       "!standards/instrumentation-catalog",
       "!standards/schema-catalog",
       "!standards/fallow.dead-code.regression-baseline.jsonc",

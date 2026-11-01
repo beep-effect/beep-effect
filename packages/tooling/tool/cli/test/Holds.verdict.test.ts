@@ -25,7 +25,7 @@ const jsdomProposition = {
   kind: "syncpack-held",
   subject: {
     packages: ["jsdom"],
-    anchors: [{ file: "syncpack.config.ts", key: "Held back — do not auto-update/jsdom" }],
+    anchors: [{ _tag: "SyncpackHeld", dependency: "jsdom" }],
   },
   assertion: "jsdom 30.1.x breaks every vitest jsdom-environment file under the --bun runtime.",
   falsifier: {
