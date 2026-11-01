@@ -19,7 +19,7 @@ import { hashPrivateIdentifier, hashPublicTextSha256 } from "@beep/repo-ai-metri
 import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
 import * as A from "effect/Array";
@@ -449,7 +449,7 @@ const program = Effect.gen(function* () {
   );
 });
 NodeRuntime.runMain(
-  Layer.mergeAll(NodeServices.layer, Reactivity.layer, NodeHttpClient.layerNodeHttp).pipe(
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Reactivity.layer, NodeHttpClient.layerNodeHttp).pipe(
     Layer.build,
     Effect.flatMap((context) => Effect.provide(program, context)),
     Effect.scoped

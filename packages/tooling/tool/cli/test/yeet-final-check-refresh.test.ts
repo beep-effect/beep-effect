@@ -557,7 +557,7 @@ const countBytes = <E>(stdout: Stream.Stream<Uint8Array, E>) =>
     Effect.map(String)
   );
 
-it.layer(NodeServices.layer, { timeout: "120 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 seconds" })(
   "checkFinalCheckRefresh on a patch past the capture limit",
   (it) => {
     it.effect("passes the same large patch on a moved base without hitting the capture limit", () =>

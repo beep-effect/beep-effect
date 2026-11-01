@@ -779,9 +779,6 @@
       "@beep/schema/Html": [
         "./packages/foundation/modeling/schema/src/Html.ts"
       ],
-      "@beep/schema/Jsonc": [
-        "./packages/foundation/modeling/schema/src/Jsonc.ts"
-      ],
       "@beep/schema/LocalDate": [
         "./packages/foundation/modeling/schema/src/LocalDate/index.ts"
       ],
@@ -2454,6 +2451,9 @@
       ],
       "@beep/law-practice-domain/test": [
         "./packages/law-practice/domain/src/test.ts"
+      ],
+      "@beep/repo-cli/commands/Holds": [
+        "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
       ]
     }
   }

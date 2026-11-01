@@ -32,6 +32,7 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
@@ -3599,7 +3600,8 @@ describe("Git — remaining tiers (round 2)", () => {
             return args[2] === "core.sshCommand" ? { stdout: `ssh -i ${options.cwd}/key-${version}\n` } : { exit: 1 };
           }
           if (args[0] === "ls-remote") {
-            network.push({ cwd: options.cwd, ssh: options.env?.GIT_SSH_COMMAND });
+            const ssh = options.env?.GIT_SSH_COMMAND;
+            network.push({ cwd: options.cwd, ssh: Redacted.isRedacted(ssh) ? Redacted.value(ssh) : ssh });
             return { stdout: "abc\trefs/heads/main\n" };
           }
           return { stdout: "abc\n" };

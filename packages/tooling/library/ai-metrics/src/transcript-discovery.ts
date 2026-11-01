@@ -172,8 +172,7 @@ const openRoot = Effect.fn("AiMetrics.discovery.openRoot")(function* (
     return {
       scope,
       next: pull.pipe(
-        Effect.map((items) => items[0]),
-        Effect.mapError(() => failure("unavailable")),
+        Effect.mapBoth({ onSuccess: (items) => items[0], onFailure: () => failure("unavailable") }),
         Effect.timeoutOrElse({ duration: "5 seconds", orElse: () => Effect.fail(failure("unavailable")) })
       ),
     };
