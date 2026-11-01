@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/yaml-drop-parity.ts",
-  "commit": "3671975af8f76b38bc70cd182ab4f93b36b28055",
+  "commit": "b57f716c40ed007ba154b24202062c21fc057685",
   "stringify": {
     "sites": [
       {
@@ -28,6 +28,10 @@
     ],
     "nonIdentical": [],
     "unclassified": 0
+  },
+  "vaultSkips": {
+    "unreadable": 0,
+    "undecodable": 135
   },
   "parse": {
     "sites": [
