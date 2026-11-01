@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T08:30:42.163Z",
+  "generatedAt": "2026-11-01T09:17:36.428Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -52427,8 +52427,8 @@
           "exportKind": "class",
           "filePath": "src/JsoncModifier.ts",
           "repoPath": "packages/foundation/modeling/jsonc/src/JsoncModifier.ts",
-          "line": 584,
-          "anchor": "packages-foundation-modeling-jsonc-src-jsoncmodifier-ts-584-jsoncmodifier",
+          "line": 586,
+          "anchor": "packages-foundation-modeling-jsonc-src-jsoncmodifier-ts-586-jsoncmodifier",
           "currentTags": [
             "@category",
             "@since"
@@ -522155,8 +522155,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 389,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-389-runreflectionartifactlint",
+          "line": 404,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-404-runreflectionartifactlint",
           "currentTags": [
             "@category",
             "@since"
@@ -522177,8 +522177,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 422,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-422-lintreflectionartifactscommand",
+          "line": 437,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-437-lintreflectionartifactscommand",
           "currentTags": [
             "@category",
             "@since"

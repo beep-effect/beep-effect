@@ -14,7 +14,9 @@
  * 2. **edit** (byte parity): the facade's `applyJsoncModification` against the frozen `jsonc.modify` + `applyEdits`
  *    with the facade's 2-space options, over every corpus object document: replace, wrap in a new object, delete,
  *    nested insert, nested delete and set, create missing parents, array append, insert, replace and delete, and a
- *    top-level insert. Both throwing is `both-reject`. `PolicyFingerprintJson.modifyJson` runs against a frozen copy
+ *    top-level insert. Both throwing is `both-reject`. A last-element delete that differs is
+ *    `intended:last-element-delete` only when the kit's output reads back as the document without that element:
+ *    `jsonc-parser` ends that removal two characters before the bracket and joins `[1,2]` into `[12]`. `PolicyFingerprintJson.modifyJson` runs against a frozen copy
  *    of its `jsonc-parser` body over `turbo.json` and the root `package.json` with the policy-fingerprint edit
  *    shapes (seal task insert after its owned siblings, delete, inputs and dependsOn rewrite, seal script insert).
  * 3. **parse** (value parity): each parse profile the retired sites used (`jsonc-parser` defaults: comments allowed,
@@ -373,29 +375,53 @@ const editOps = (document: Readonly<Record<string, unknown>>): ReadonlyArray<Edi
 
 const isOwnedSeal = (name: string): boolean => Str.startsWith("policy-seal:")(name);
 
+// The kit ends a last-element delete at the element, where jsonc-parser cuts the two characters before the
+// parent's end (`[1,2]` becomes `[12]`). A differing case is intended only when the kit's output reads back as the
+// document without that element.
+const isLastElementDeleteFix = (
+  document: Readonly<Record<string, unknown>>,
+  op: EditOp,
+  current: Result.Result<string, string>
+): boolean => {
+  if (op.id !== "array-delete-last" || Result.isFailure(current)) return false;
+  const key = String(op.path[0]);
+  const member = document[key];
+  if (!A.isArray(member)) return false;
+  const read = legacyParse(current.success, { allowTrailingComma: true });
+  return (
+    O.isSome(read) && JSON.stringify(read.value) === JSON.stringify({ ...document, [key]: A.dropRight(member, 1) })
+  );
+};
+
 const runEdit = (corpus: ReadonlyArray<Document>): Leg => {
   const cases: Array<Case> = [];
   for (const { path, text } of corpus) {
     const parsed = legacyParse(text, { allowTrailingComma: true });
     if (O.isNone(parsed) || !P.isObject(parsed.value) || parsed.value === null || A.isArray(parsed.value)) continue;
-    for (const op of editOps(parsed.value as Record<string, unknown>)) {
+    const document = parsed.value as Record<string, unknown>;
+    for (const op of editOps(document)) {
+      const current = attempt(() =>
+        applyJsoncModification(
+          JsoncModification.make({
+            content: text,
+            path: op.path as never,
+            value: op.value,
+            ...(op.isArrayInsertion ? { isArrayInsertion: true } : {}),
+          })
+        )
+      );
+      const outcome = byteOutcome(
+        attempt(() => legacyModify(text, [...op.path], op.value, op.isArrayInsertion)),
+        current
+      );
       cases.push({
         leg: "edit",
         site: "applyJsoncModification",
         id: `${path}#${op.id}:${JSON.stringify(op.path)}`,
-        outcome: byteOutcome(
-          attempt(() => legacyModify(text, [...op.path], op.value, op.isArrayInsertion)),
-          attempt(() =>
-            applyJsoncModification(
-              JsoncModification.make({
-                content: text,
-                path: op.path as never,
-                value: op.value,
-                ...(op.isArrayInsertion ? { isArrayInsertion: true } : {}),
-              })
-            )
-          )
-        ),
+        outcome:
+          outcome === "unclassified" && isLastElementDeleteFix(document, op, current)
+            ? "intended:last-element-delete"
+            : outcome,
       });
     }
   }
