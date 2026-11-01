@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T00:59:36.970Z
+Generated: 2026-11-01T01:13:35.216Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3627 |
-| publicExports | 25639 |
+| publicModules | 3634 |
+| publicExports | 25728 |
 | openModules | 161 |
 | openExports | 97 |
 | missingExportExamples | 3 |
@@ -197,7 +197,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 488 | 4515 | 46 | 35 |
+| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 495 | 4604 | 46 | 35 |
 | 143 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 144 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 145 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
