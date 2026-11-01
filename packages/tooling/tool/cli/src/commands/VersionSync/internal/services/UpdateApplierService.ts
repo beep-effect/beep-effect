@@ -10,13 +10,13 @@ import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
 import { EFFECT_SOURCE_FIELD_PREFIX } from "../resolvers/EffectResolver.ts";
@@ -31,7 +31,12 @@ import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
 import { updateVercelBunVersion } from "../updaters/VercelJsonUpdater.ts";
 import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.ts";
 import type * as FileSystem from "effect/FileSystem";
-import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.ts";
+import type {
+  VersionCategoryReport,
+  VersionDriftItem,
+  VersionSyncError,
+  VersionSyncResolution,
+} from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/UpdateApplierService");
 const VersionCategoryName = LiteralKit(["bun", "node", "docker", "biome", "effect", "turbo"]).pipe(
@@ -51,6 +56,55 @@ const noChanges = Effect.succeed(0);
 const noChangesThunk = () => noChanges;
 
 const countChangedFile = (count: number, changed: boolean): number => Num.sum(count, changed ? 1 : 0);
+
+/**
+ * Run one updater per drift item, in report order, and count the items whose
+ * updater changed a file.
+ *
+ * **Details**
+ *
+ * Items run sequentially; an updater answering `false` (unmatched or already
+ * correct) adds nothing. The first failing updater fails the whole run and
+ * later items are not attempted.
+ *
+ * **Example** (Count changed items)
+ *
+ * ```ts
+ * import { countItemUpdates, VersionCategoryReport, VersionDriftItem } from "@beep/repo-cli/test/VersionSync"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const item = (field: string) =>
+ *   VersionDriftItem.make({ file: "package.json", field, current: "1", expected: "2", line: O.none() })
+ * const report = VersionCategoryReport.cases.effect.make({ status: "drift", items: [item("a"), item("b")] })
+ *
+ * console.log(Effect.runSync(countItemUpdates(report, (entry) => Effect.succeed(entry.field === "a")))) // 1
+ * ```
+ *
+ * @param report - The category report whose drift items are applied.
+ * @param updateItem - Applies one item and answers whether a file changed.
+ * @returns The number of items that changed a file.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const countItemUpdates: {
+  <E, R>(
+    updateItem: (item: VersionDriftItem) => Effect.Effect<boolean, E, R>
+  ): (report: VersionCategoryReport) => Effect.Effect<number, E, R>;
+  <E, R>(
+    report: VersionCategoryReport,
+    updateItem: (item: VersionDriftItem) => Effect.Effect<boolean, E, R>
+  ): Effect.Effect<number, E, R>;
+} = dual(
+  2,
+  <E, R>(
+    report: VersionCategoryReport,
+    updateItem: (item: VersionDriftItem) => Effect.Effect<boolean, E, R>
+  ): Effect.Effect<number, E, R> =>
+    Effect.reduce(report.items, constant(0), (count, item) =>
+      Effect.map(updateItem(item), (changed) => countChangedFile(count, changed))
+    )
+);
 
 /**
  * Service contract for applying report-driven file updates.
@@ -75,33 +129,35 @@ export class UpdateApplierService extends Context.Service<UpdateApplierService, 
   $I`UpdateApplierService`
 ) {}
 
-const applyBunUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
-  const path = yield* Path.Path;
-  let filesChanged = 0;
+type ItemUpdates = Readonly<Record<string, () => Effect.Effect<boolean, VersionSyncError, UpdateApplierEnvironment>>>;
 
-  for (const item of report.items) {
-    const changed = yield* Match.value(`${item.file}:${item.field}`).pipe(
-      Match.when(".bun-version:version", () => updatePlainTextFile(path.join(repoRoot, ".bun-version"), item.expected)),
-      Match.when("package.json:packageManager", () =>
-        updatePackageManagerField(path.join(repoRoot, "package.json"), Str.replace(/^bun@/, "")(item.expected))
-      ),
-      Match.when("apps/oip-web/vercel.json:installCommand Bun version", () =>
-        updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "installCommand", item.expected)
-      ),
-      Match.when("apps/oip-web/vercel.json:buildCommand Bun version", () =>
-        updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "buildCommand", item.expected)
-      ),
-      Match.when(".bun-linux-x64.sha256:bun-linux-x64.zip sha256", () =>
-        updatePlainTextFile(path.join(repoRoot, ".bun-linux-x64.sha256"), item.expected)
-      ),
-      Match.orElse(() => Effect.succeed(false))
+// Applies each drift item through the updater keyed by `<file>:<field>`;
+// items without an updater count as unchanged.
+const applyKeyedUpdates = (
+  updatesFor: (repoRoot: string, path: Path.Path, item: VersionDriftItem) => ItemUpdates
+): CategoryReportUpdater =>
+  Effect.fn(function* (repoRoot, report) {
+    const path = yield* Path.Path;
+
+    return yield* countItemUpdates(report, (item) =>
+      O.match(R.get(updatesFor(repoRoot, path, item), `${item.file}:${item.field}`), {
+        onNone: () => Effect.succeed(false),
+        onSome: (update) => update(),
+      })
     );
+  });
 
-    filesChanged = countChangedFile(filesChanged, changed);
-  }
-
-  return filesChanged;
-});
+const applyBunUpdates = applyKeyedUpdates((repoRoot, path, item) => ({
+  ".bun-version:version": () => updatePlainTextFile(path.join(repoRoot, ".bun-version"), item.expected),
+  "package.json:packageManager": () =>
+    updatePackageManagerField(path.join(repoRoot, "package.json"), Str.replace(/^bun@/, "")(item.expected)),
+  "apps/oip-web/vercel.json:installCommand Bun version": () =>
+    updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "installCommand", item.expected),
+  "apps/oip-web/vercel.json:buildCommand Bun version": () =>
+    updateVercelBunVersion(path.join(repoRoot, "apps", "oip-web", "vercel.json"), "buildCommand", item.expected),
+  ".bun-linux-x64.sha256:bun-linux-x64.zip sha256": () =>
+    updatePlainTextFile(path.join(repoRoot, ".bun-linux-x64.sha256"), item.expected),
+}));
 
 const applyNodeUpdates = Effect.fn(function* (
   repoRoot: string,
@@ -161,79 +217,49 @@ const applyDockerUpdates = Effect.fn(function* (repoRoot: string, report: Versio
   return filesChanged;
 });
 
-const applyBiomeUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
-  const path = yield* Path.Path;
-  let filesChanged = 0;
-
-  for (const item of report.items) {
-    const changed = yield* Match.value(`${item.file}:${item.field}`).pipe(
-      Match.when("biome.jsonc:$schema version", () =>
-        updateBiomeSchema(path.join(repoRoot, "biome.jsonc"), item.expected)
-      ),
-      Match.orElse(() => Effect.succeed(false))
-    );
-    filesChanged = countChangedFile(filesChanged, changed);
-  }
-
-  return filesChanged;
-});
+const applyBiomeUpdates = applyKeyedUpdates((repoRoot, path, item) => ({
+  "biome.jsonc:$schema version": () => updateBiomeSchema(path.join(repoRoot, "biome.jsonc"), item.expected),
+}));
 
 const applyTurboUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
   const path = yield* Path.Path;
-  let filesChanged = 0;
 
-  for (const item of report.items) {
-    if (!Str.equivalence(item.field, TURBO_SCHEMA_FIELD)) {
-      continue;
-    }
-
-    const changed = yield* updateJsoncSchemaUrl(path.join(repoRoot, item.file), item.expected);
-    filesChanged = countChangedFile(filesChanged, changed);
-  }
-
-  return filesChanged;
+  return yield* countItemUpdates(report, (item) =>
+    Str.equivalence(item.field, TURBO_SCHEMA_FIELD)
+      ? updateJsoncSchemaUrl(path.join(repoRoot, item.file), item.expected)
+      : Effect.succeed(false)
+  );
 });
 
 const EFFECT_CATALOG_FIELD_PREFIX = "catalog.";
 
+// An errored report means the release commit is unknown, so its
+// `config.effectSource` items are skipped: writing the version alone would
+// pair it with a stale commit.
+const updateEffectSourceItem = (packageJsonPath: string, report: VersionCategoryReport, item: VersionDriftItem) =>
+  O.isSome(report.error)
+    ? Effect.succeed(false)
+    : updateEffectSourceField(packageJsonPath, Str.slice(EFFECT_SOURCE_FIELD_PREFIX.length)(item.field), item.expected);
+
+const updateEffectCatalogItem = (packageJsonPath: string, item: VersionDriftItem) => {
+  const dependencyName = Str.startsWith(EFFECT_CATALOG_FIELD_PREFIX)(item.field)
+    ? Str.slice(EFFECT_CATALOG_FIELD_PREFIX.length)(item.field)
+    : "";
+
+  return Str.isEmpty(dependencyName)
+    ? Effect.succeed(false)
+    : updateCatalogEntry(packageJsonPath, dependencyName, { versionSpecifier: item.expected });
+};
+
 const applyEffectUpdates = Effect.fn(function* (repoRoot: string, report: VersionCategoryReport) {
   const path = yield* Path.Path;
   const packageJsonPath = path.join(repoRoot, "package.json");
-  let filesChanged = 0;
 
-  for (const item of report.items) {
-    if (Str.startsWith(EFFECT_SOURCE_FIELD_PREFIX)(item.field)) {
-      // An errored report means the release commit is unknown; writing the
-      // version alone would pair it with a stale commit.
-      if (O.isSome(report.error)) {
-        continue;
-      }
-
-      const changed = yield* updateEffectSourceField(
-        packageJsonPath,
-        Str.slice(EFFECT_SOURCE_FIELD_PREFIX.length)(item.field),
-        item.expected
-      );
-      filesChanged = countChangedFile(filesChanged, changed);
-      continue;
-    }
-
-    if (!Str.startsWith(EFFECT_CATALOG_FIELD_PREFIX)(item.field)) {
-      continue;
-    }
-
-    const dependencyName = Str.slice(EFFECT_CATALOG_FIELD_PREFIX.length)(item.field);
-    if (Str.isEmpty(dependencyName)) {
-      continue;
-    }
-
-    const changed = yield* updateCatalogEntry(packageJsonPath, dependencyName, {
-      versionSpecifier: item.expected,
-    });
-    filesChanged = countChangedFile(filesChanged, changed);
-  }
-
-  return filesChanged;
+  return yield* countItemUpdates(report, (item) =>
+    Str.startsWith(EFFECT_SOURCE_FIELD_PREFIX)(item.field)
+      ? updateEffectSourceItem(packageJsonPath, report, item)
+      : updateEffectCatalogItem(packageJsonPath, item)
+  );
 });
 
 const applyReportUpdates = (

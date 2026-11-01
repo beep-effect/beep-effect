@@ -206,6 +206,21 @@ const isSnapshotLockstepEffectPackage = (packageName: string): boolean => {
   );
 };
 
+// A snapshot canonical tracks every lockstep `@effect/*` package; a published
+// canonical tracks the `@effect/*` packages on its major; anything else
+// tracks nothing.
+const isLockstepCatalogEntry =
+  (canonicalSpecifier: string) =>
+  ([packageName, versionSpecifier]: readonly [string, string]): boolean =>
+    O.match(splitSnapshotSpecifier(canonicalSpecifier), {
+      onSome: () => isSnapshotLockstepEffectPackage(packageName),
+      onNone: () =>
+        O.exists(
+          O.flatMap(splitVersionSpecifier(canonicalSpecifier), (parts) => parseMajorVersion(parts.exact)),
+          (major) => isPublishedLockstepEffectPackage(packageName, versionSpecifier, major)
+        ),
+    });
+
 const byPackageName = Order.mapInput(Order.String, ([packageName]: readonly [string, string]) => packageName);
 
 /**
@@ -222,27 +237,10 @@ export const resolveEffectCatalog: (
     const catalog = O.getOrElse(O.fromUndefinedOr(pkgJson.catalog), R.empty<string, string>);
 
     const canonicalSpecifier = O.getOrElse(R.get(catalog, "effect"), thunkEmptyStr);
-    const canonicalMajor = O.flatMap(splitVersionSpecifier(canonicalSpecifier), (parts) =>
-      parseMajorVersion(parts.exact)
+    const packages = A.map(
+      A.filter(A.sort(R.toEntries(catalog), byPackageName), isLockstepCatalogEntry(canonicalSpecifier)),
+      ([name, versionSpecifier]) => EffectCatalogPackage.make({ name, versionSpecifier })
     );
-    const canonicalSnapshot = splitSnapshotSpecifier(canonicalSpecifier);
-    let packages = A.empty<EffectCatalogPackage>();
-
-    for (const [packageName, versionSpecifier] of A.sort(R.toEntries(catalog), byPackageName)) {
-      if (O.isSome(canonicalSnapshot)) {
-        if (!isSnapshotLockstepEffectPackage(packageName)) {
-          continue;
-        }
-      } else if (O.isSome(canonicalMajor)) {
-        if (!isPublishedLockstepEffectPackage(packageName, versionSpecifier, canonicalMajor.value)) {
-          continue;
-        }
-      } else {
-        continue;
-      }
-
-      packages = A.append(packages, EffectCatalogPackage.make({ name: packageName, versionSpecifier }));
-    }
 
     const rootConfig = yield* Effect.transposeOption(
       O.map(O.fromUndefinedOr(pkgJson.config), (config) =>
@@ -298,7 +296,7 @@ export const effectSourceTargetVersion = (state: EffectCatalogState): O.Option<s
  * failure, or a body without a 40-character lowercase sha fails with
  * {@link NetworkUnavailableError}.
  *
- * **Example** (Resolve the effect@4.1.1 commit)
+ * **Example** (Resolve the 4.1.1 release commit)
  *
  * ```ts
  * import { fetchEffectReleaseCommit } from "@beep/repo-cli/test/VersionSync"
