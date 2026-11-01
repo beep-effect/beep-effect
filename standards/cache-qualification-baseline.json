@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "GPT-6.1-Sol independent parent review (approved PR2413 main sync)",
-      "reason": "Reapply only previously reviewed Git owner closures and generated doctest scripts after taking protected-producer main baseline; no qualification or other subject changes.",
+      "reviewer": "Codex native reviewer /root/policy_pr (gpt-6.1-sol, medium)",
+      "reason": "Record only the root judge-rubric policy fingerprint task adding FFmpeg.command.ts to generated inputs after the command-builder extraction, retaining accepted main qualification-v3/profile state; no command/cache/qualification change.",
       "basis": {
-        "path": "docs/reports/git-main-sync-cache-review-2026-10-31.md",
-        "sha256": "7a6c6ad266b2500bce43892d81997070adf60f37a4d25f762a721d7fcaa81bc2"
+        "path": "docs/reports/ffmpeg-judge-cache-input-review-2026-10-31.md",
+        "sha256": "8b690b19f6f7ec42f39e26dc37049a241c40493a895883ccc1a9cc2ea1c3855b"
       }
     },
     "@beep/acp": {
@@ -5358,6 +5358,7 @@
             "./tsconfig.packages.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+            "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
@@ -135150,7 +135151,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "64444c02445b3fe8a55923b801e3eb7571370f7420cab869e9520ffcec636950"
+        "sha256": "c553c634a62b2267a43251769e656bd90d94aee970ffbeb3431d70c1d8f8b52d"
       }
     ]
   }
