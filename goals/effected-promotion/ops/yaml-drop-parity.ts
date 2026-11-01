@@ -10,11 +10,9 @@
  * 1. **stringify** (byte parity): `renderAiMetricsLocalPhoenixCompose` over the default local install spec for the operator home; the models
  *    manifest writer (`ModelsManifestStore.init` into a temporary directory) over the operator manifest at
  *    `$HOME/.config/beep/models.yaml` and `seedModelsManifest`; Research `renderCard` over every knowledge card in
- *    the operator vault whose frontmatter decodes as `KnowledgeCardFrontmatter`, plus an edge corpus. A difference
- *    is `scalar-quoting` (intended) only when the line counts match, every differing line differs only in how its
- *    trailing string scalar is quoted (the same string read back from both), and both texts parse to the same
- *    value: the kit double-quotes where `yaml` chose single quotes for a value holding `"`, and it double-quotes a
- *    value holding a tab that `yaml` left plain. Anything else is unclassified.
+ *    the operator vault whose frontmatter decodes as `KnowledgeCardFrontmatter`, plus an edge corpus. The writers
+ *    use `@beep/yaml`'s `quoteStyle: "auto"` (the `yaml` npm package's per-value quote choice), so every case must
+ *    be `identical`; any difference is unclassified.
  * 2. **parse** (value parity): the frozen legacy reads (`YAML.parse` for Runners, `parseDocument(...).toJSON()`
  *    with the error check for ChangesetGraph, FallowQuality and the workflow tests) against `effect/encoding/Yaml`
  *    `parse`, over every tracked `.github/**` workflow and action file, every `.changeset/*.md` frontmatter, the
@@ -172,47 +170,10 @@ const parseOutcome = (legacy: O.Option<unknown>, current: O.Option<unknown>): st
       ? "identical"
       : "unclassified";
 
-// Two renderings of one line that differ only in how the trailing scalar is quoted: the common head runs to the
-// scalar's start (after `: ` or `- `), and both tails read back as the same string.
-const scalarTail = (line: string, from: number): string => {
-  const head = line.slice(0, from);
-  const start = Math.max(
-    head.lastIndexOf(": ") + 2,
-    head.lastIndexOf("- ") + 2,
-    line.length - Str.trimStart(line).length
-  );
-  return line.slice(start);
-};
-const isScalarQuotingLine = (legacy: string, current: string): boolean => {
-  let from = 0;
-  while (from < legacy.length && from < current.length && legacy[from] === current[from]) from++;
-  const left = scalarTail(legacy, from);
-  const right = scalarTail(current, from);
-  if (legacy.slice(0, legacy.length - left.length) !== current.slice(0, current.length - right.length)) return false;
-  try {
-    const leftValue: unknown = legacyParse(`v: ${left}`);
-    const rightValue: unknown = legacyParse(`v: ${right}`);
-    return P.isObject(leftValue) && P.isString(Reflect.get(leftValue, "v")) && sameJson(leftValue, rightValue);
-  } catch {
-    return false;
-  }
-};
-
-// The YAML a rendered text carries: a card's frontmatter block, or the whole text.
-const CARD_FRONTMATTER = /^---\n(?<yaml>[\s\S]*?\n)---\n/u;
-const yamlOf = (text: string): string => CARD_FRONTMATTER.exec(text)?.groups?.yaml ?? text;
-const stringifyOutcome = (legacy: string, current: string): string => {
-  if (legacy === current) return "identical";
-  const legacyLines = Str.split(legacy, "\n");
-  const currentLines = Str.split(current, "\n");
-  if (A.length(legacyLines) !== A.length(currentLines)) return "unclassified";
-  const quotingOnly = A.every(A.zip(legacyLines, currentLines), ([left, right]) =>
-    left === right ? true : isScalarQuotingLine(left, right)
-  );
-  return quotingOnly && sameJson(legacyParse(yamlOf(legacy)), legacyParse(yamlOf(current)))
-    ? "scalar-quoting"
-    : "unclassified";
-};
+// Stringify is byte parity: since the writers use `@beep/yaml`'s `auto` quote style, the `yaml` npm package's own
+// per-value quote choice, every rendering must match the retired writer byte for byte.
+const stringifyOutcome = (legacy: string, current: string): string =>
+  legacy === current ? "identical" : "unclassified";
 
 const gitFiles = Effect.fn("gitFiles")(function* (patterns: ReadonlyArray<string>) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
