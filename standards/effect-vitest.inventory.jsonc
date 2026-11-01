@@ -2305,7 +2305,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Owner: @beep/law-practice-server. Executable offline evaluation main, registered as a Fallow entrypoint and invoked by the fixed replay protocol. Per-source scoped live adapter layers and exact on-disk hash checks are the subject; this is not an it test. Moving the command into it.layer would remove its CLI contract. Exit: retire when the detector excludes CLI evaluation entrypoints or the evaluator becomes a dedicated command package."
     },
     {
       "id": "EV003:packages/law-practice/server/test/evaluation/positive.main.ts:85:program@27#1",
@@ -2326,7 +2327,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Owner: @beep/law-practice-server. Executable offline evaluation main, registered as a Fallow entrypoint and invoked by the fixed replay protocol. Per-source scoped live adapter layers and exact on-disk hash checks are the subject; this is not an it test. Moving the command into it.layer would remove its CLI contract. Exit: retire when the detector excludes CLI evaluation entrypoints or the evaluator becomes a dedicated command package."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/AgentMessage.layer.test.ts:10:query@55#1",
@@ -7211,7 +7213,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Private file permissions, file-backed SQLite grants and dispatch, hashed correlation checkpoints, canonical workspace realPath checks and cleanup are the subjects in both Node and Bun runners. Owner: @beep/repo-cli. Exit: retire when the attached cases run over an in-memory SQLite store and a memory volume that models modes and realPath."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.observation.test.ts:25:@effect/platform-node@0#1",
@@ -7341,7 +7344,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The plan is checked against the committed accepted-work-item manifest under the real checkout root (new URL(\"../../../../..\", import.meta.url)), and Bun.spawnSync probes real paths. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the manifest is read from a seeded volume and the path probes go through FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts:2:@effect/platform-node@0#1",
@@ -7384,7 +7388,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Child processes run the real Node and Bun binaries against the root compatibility shim; memory cannot represent OS child environments or executable identity (research/spawn-env-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the spawn environment parity check moves out of the unit suite."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-acceptance.test.ts:45:@effect/platform-node@0#1",
@@ -7471,7 +7476,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lab builds its corpus from the real checkout (buildCacheConformanceCorpus(repoRoot)) and serves it from the loopback cache-conformance-server. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus is seeded into memory and the lab server reads it through FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance.test.ts:14:@effect/platform-node@0#1",
@@ -7492,7 +7498,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "buildCacheConformanceCorpus(repoRoot) walks the real checkout to build the corpus under test. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus builder takes a seeded root instead of the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:6:@effect/platform-node@0#1",
@@ -7557,7 +7564,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The strict hosted verifier consumes real ZIP files through a bounded native parser, including malformed members, symlinks, size and deadline controls. Metadata is controlled; filesystem/parser behavior remains real. All 32 hosted cases pass under Node and Bun in the 222-case combined suite (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when platform provenance is understood by the detector or these native parser subjects move to another retained test."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:49:@effect/platform-node@0#1",
@@ -7754,7 +7762,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The release-path tests run real git against scoped temporary repository files, and TestConsole captures the real command error. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/check-census.test.ts:8:@effect/platform-node@0#1",
@@ -7775,7 +7784,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The census runs the checkout's installed tsgo (found from findRepoRoot) over a fixture tree, and the shim resolves the compiler from the spawn cwd. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the census accepts a stub compiler service instead of the installed binary."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-command.test.ts:6:@effect/platform-node@0#1",
@@ -7796,7 +7806,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "A native git exit-128 is the subject, through the real filesystem and process services, with a scoped layer and TestConsole per scenario. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:22:@effect/platform-node@0#1",
@@ -7817,7 +7828,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The ci admission command path resolves the checkout with findRepoRoot() before reading the event payload. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the admission command takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-lane.test.ts:36:@effect/platform-node@0#1",
@@ -7838,7 +7850,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lane runner calls process.chdir(directory) and restores it, and reads the committed branch-protection contexts through import.meta.url. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the lane runner takes its working directory as a parameter."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/ci-rerun-runner-loss.test.ts:30:@effect/platform-node@0#1",
@@ -7859,7 +7872,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test reads committed sources at path.join(findRepoRoot(), relative) to pin the rerun contract. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the pinned sources are passed as fixture text instead of read from the checkout."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/cli-kits.test.ts:35:@effect/platform-node@0#1",
@@ -7924,7 +7938,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native inode, hash, archive, process and DuckDB fixture boundaries are the subjects (research/cli-nine-applied-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the corpus command cases run over in-memory engines and a scripted spawner, with the inode cases in a dedicated native block."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-preservation.test.ts:42:@effect/platform-node@0#1",
@@ -7945,7 +7960,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "CapacityPreflightServiceLive probes free space with a child process over the real archive root, and the manifest rows carry native mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when every block provides a scripted capacity spawner and reads seeded timestamps."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:27:@effect/platform-bun@0#1",
@@ -8074,7 +8090,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native ChildProcessSpawner and process-tree ps/procfs diagnostics are the subject, alongside real repository-root discovery. Owner: @beep/repo-cli. Exit: retire when the watchdog's process-tree probes become an injected service."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/drawings-command.test.ts:47:@effect/platform-node@0#1",
@@ -8095,7 +8112,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "PdfBackendToolsLive renders and rasterizes real PDFs through poppler binaries. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the PDF backend is replaced by a recording double."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-fn.test.ts:5:@effect/platform-node@0#1",
@@ -8116,7 +8134,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test chdirs into a temp directory before running the CLI entry point through Bun.spawnSync. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the effect-fn command takes its root as an argument instead of process.cwd()."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-schema-inventory-fixture.test.ts:16:@effect/platform-node@0#1",
@@ -8137,7 +8156,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed effect-schema inventory fixture and the root package.json are read under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixture tree is seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-contract.test.ts:32:@effect/platform-node@0#1",
@@ -8158,7 +8178,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The contract scans the committed standards/effect-vitest.inventory.jsonc and test files under the checkout root from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the scan accepts a seeded repository volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/effect-vitest-primitives.test.ts:17:@effect/platform-node@0#1",
@@ -8179,7 +8200,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test reads the committed fixtures/effect-vitest-406 tree and the package and repository roots resolved from import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the fixtures are seeded into memory and the roots are injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-check.test.ts:14:@effect/platform-node@0#1",
@@ -8200,7 +8222,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The command scans temporary goal and exploration directories and writes packet event files. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/explore-graduate-plan.test.ts:13:@effect/platform-node@0#1",
@@ -8221,7 +8244,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The command reads a temporary exploration manifest and goal packets, the same boundary the snapshot reader crosses in production. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/gate-order-handoff.test.ts:32:@effect/platform-node@0#1",
@@ -8242,7 +8266,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The committed fixtures/gate-order-handoff-knip-retired.json is read at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the handoff fixture is seeded into a MemoryFileSystem volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-doctor-path-security.test.ts:3:@effect/platform-node@0#1",
@@ -8263,7 +8288,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "temporaryWorkingDirectory from support/CommandTest.ts chdirs into a temp project before goals doctor runs. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals doctor resolves its root from an injected path instead of process.cwd()."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-graph.test.ts:26:@effect/platform-node@0#1",
@@ -8284,7 +8310,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The graph command runs in a temp working directory and git status --porcelain spawns in the checkout. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the graph takes an injected root and the git probe runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:11:@effect/platform-node@0#1",
@@ -8305,7 +8332,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test runs git ls-files at findRepoRoot() and the command resolves its root from the working directory. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the manifest list is read from a seeded volume and the root is injected."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/goals-set-risk-tier.test.ts:13:@effect/platform-node@0#1",
@@ -8326,7 +8354,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "withTempWorkingDirectory from support/CommandTest.ts chdirs into each temp project. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when goals set-risk-tier resolves its root from an injected path."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/identity-registration-removal.test.ts:14:@effect/platform-node@0#1",
@@ -8347,7 +8376,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The subject changes the process-global working directory with process.chdir, which needs the directory on the real filesystem. #1875 wave 7 memory trial (H3): fails with ENOENT on chdir into the temp directory. Owner: @beep/repo-cli. Exit: retire when the command takes its working directory from an injected service instead of process.chdir (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/jsdoc-inventory-detector-fixes.test.ts:10:@effect/platform-node/NodeFileSystem@0#1",
@@ -8566,7 +8596,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Physical source and config reads and TSMorph project loading, preload and cache behavior are the integration subjects (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the laws package loads its compiler projects through the Effect FileSystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-judge-rubric.test.ts:17:@effect/platform-node/NodeFileSystem@0#1",
@@ -8609,7 +8640,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The allowlist is checked against the real packages/tooling/tool/cli/src tree at findRepoRoot(). The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the allowlist check reads a seeded source tree."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/lint-workers.test.ts:7:@effect/platform-node@0#1",
@@ -8630,7 +8662,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real Bun CLI child processes read representative on-disk compiler projects, which memory cannot supply to a child (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when the lint workers run in process."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/match-person-model-store.test.ts:5:@effect/platform-node@0#1",
@@ -8695,7 +8728,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The prefix check reads the real checkout at findRepoRoot() through FsUtilsLive. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the check runs over a seeded workspace volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/package-scripts.policy.test.ts:11:@effect/platform-node@0#1",
@@ -8738,7 +8772,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The live parcel command needs ChildProcessSpawner at runtime and writes collector state under a temp HOME. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the command's process probes take a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
@@ -8803,7 +8838,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test writes systemd-run, systemctl and busctl shims on PATH and spawns them. #1875 wave 7 memory trial (H4): fails on the spawned shims. Owner: @beep/repo-cli. Exit: retire when the proof job resolves systemd-run, systemctl and busctl through Config or an injected executable path (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/proof-ledger.test.ts:18:@effect/platform-node/NodeFileSystem@0#1",
@@ -8912,7 +8948,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The subject opens DuckDB on a path in the temp root, natively and not through FileSystem. #1875 wave 7 memory trial (H5): fails with \"Failed to open DuckDB connection\". Owner: @beep/repo-cli. Exit: retire when DuckDB accepts an in-memory database for the sift, or EV010 recognises DuckDB-file suites as a native-engine subject (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/research-library-acquisition.test.ts:34:@effect/platform-node@0#1",
@@ -8977,7 +9014,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real filesystem hashing, symlink containment, immutable and atomic artifact publication and scoped cleanup are the subjects of the views fixture. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlink containment and the views cases move to it."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:19:@effect/platform-node@0#1",
@@ -8998,7 +9036,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native descriptor and inode containment, procfs, symlinks, chmod, git and GNU touch/find are the subjects (research/residue-reap-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the reaper's OS probes become injected services."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:12:@effect/platform-node@0#1",
@@ -9019,7 +9058,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The subject verifies writer boot identity from /proc/sys/kernel/random/boot_id, fsyncs archive directories, probes destination capacity and uses real hard links, symlinks and spawned children. Memory trial (#1855 wave 8): 6 of 14 fail (boot_id NotFound, directory sync BadResource EISDIR, capacity probe failure). Owner: @beep/repo-cli. Exit: retire when the corpus writer reads boot identity, directory sync and capacity through an injected platform service (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/runners-bake.test.ts:28:@effect/platform-node/NodeFileSystem@0#1",
@@ -9062,7 +9102,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The lint command runs in a temp working directory whose root marker findRepoRoot resolves. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the schema-catalog lint takes an injected root."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-first-parity.test.ts:17:@effect/platform-node@0#1",
@@ -9083,7 +9124,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The parity test calls process.chdir(directory) inside an acquireRelease. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the parity check takes its root as a parameter."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/schema-topology.test.ts:4:@effect/platform-node@0#1",
@@ -9126,7 +9168,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native git subprocesses, linked worktrees, chmod/stat and real path semantics are the subjects. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner over a memory volume."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/single-project-emit.test.ts:4:@effect/platform-node@0#1",
@@ -9257,7 +9300,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The live blocks spawn real echo, sh and nested bun -e children and read /proc/<pid>/stat process groups. Memory trial (#1855 wave 8): 4 of 22 fail (Service not found: ChildProcessSpawner); with NodeChildProcessSpawner over memory, the cross-process nested process-group test still fails, hanging past its 14.75 s watchdog in three of three runs. Owner: @beep/repo-cli. Exit: retire when EV010 recognises excludeTestServices blocks whose subject is a real child process (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts:16:@effect/platform-node/NodeFileSystem@0#1",
@@ -9300,7 +9344,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test runs real git over scratch repositories. #1875 wave 7 memory trial (H4): fails with posix_spawn 'git' against a directory that exists only in memory. Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/stream-console.test.ts:16:@effect/platform-node@0#1",
@@ -9321,7 +9366,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "One test of 28 runs src/internal/cli/Stdout.ts in a bun child to observe real stdout. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when that case moves to its own block and the import no longer serves the in-process cases."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:36:@effect/platform-node@0#1",
@@ -9386,7 +9432,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The reaper spawns lsof and git through runCommand, reads /proc/locks, and walks real symlinks and directory mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the reaper's process and procfs probes become injected services."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/tsconfig-sync.test.ts:13:@effect/platform-node/NodeFileSystem@0#1",
@@ -9429,7 +9476,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Native modification times choose the newest turbo summary: the test sets utimes on stale and fresh files, and the #1875 wave 7 memory trial failed its newest-per-task assertions. Owner: @beep/repo-cli. Exit: retire when the digest reads timestamps from the summaries instead of file mtimes."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/vitest-bun-exit-cleanup.test.ts:2:@effect/platform-node@0#1",
@@ -9515,7 +9563,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The fence runs real git and holders, reads /proc/<pid>/cwd and changes the working directory with process.chdir. #1875 wave 7 memory trial (H4): fails on the spawned git and holders. Owner: @beep/repo-cli. Exit: retire when the fence takes the invoking process's working directory as an injected input and EV010 recognises real-git suites (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-artifact-writers.test.ts:34:@effect/platform-node@0#1",
@@ -9536,7 +9585,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Physical verdict, status and closeout artifacts and exactly-once terminal journal persistence are read back through production codecs; this is a disk-integration boundary, not a claim that memory cannot implement the writer (research/cli-continuation-nine-proof.md). Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:58:@effect/platform-node/NodeFileSystem@0#1",
@@ -9601,7 +9651,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The wiring tests chdir into a temp checkout, run git through ChildProcess, and read the committed fixtures/yeet-publish-plan plans. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the publish wiring takes an injected root, a scripted git spawner and seeded plans."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-comment-actor.test.ts:14:@effect/platform-node/NodeFileSystem@0#1",
@@ -9666,7 +9717,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The subject is the real Git commit graph across a main merge, with receipt files read by the same checkout. Native Git subprocesses cannot observe an in-memory filesystem. Each test owns a scoped temporary repository; only NodeServices is shared. Owner: @beep/repo-cli. Exit: retire when native Git repository behavior is no longer the subject."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-inbox-hook-adapter.test.ts:11:@effect/platform-node@0#1",
@@ -9753,7 +9805,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The gate decodes committed fixtures/yeet-merge-gate JSON and runs bunx commitlint through the spawner. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when commitlint runs behind a scripted spawner and the fixtures are seeded."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-monitor-check-registration.test.ts:16:@effect/platform-node/NodeFileSystem@0#1",
@@ -9884,7 +9937,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The gate runs git through ChildProcess.make against real temp repositories. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-remediation.test.ts:29:@effect/platform-node/NodeFileSystem@0#1",
@@ -9949,7 +10003,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The resume tests create real git repositories with Bun.spawnSync(git init, git remote add). A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the resume reads git state through a scripted spawner."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-review-body-signal.test.ts:8:@effect/platform-node@0#1",
@@ -10058,7 +10113,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test builds real bare remotes, clones and worktrees with git and retires them. Memory trial (#1855 wave 8): 37 of 45 fail without a spawner (Service not found: ChildProcessSpawner), and with NodeChildProcessSpawner over memory the same 37 fail with posix_spawn 'git' ENOENT (git init --bare). Owner: @beep/repo-cli. Exit: retire when EV010 recognises real-git suites as a native-process subject (#1855 wave 8 register)."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/yeet-watch-mode.test.ts:30:@effect/platform-node/NodeFileSystem@0#1",
@@ -10510,825 +10566,6 @@
         "sketch": "it.flakyTest: Use for retry-loop-candidate judgments (EV013, candidate class retry-loop-candidate) only after TestClock, event-driven waits, and scope ownership are ruled out; record external nondeterminism, a reason row, and a follow-up."
       },
       "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:infra/test/OpenClaw.test.ts:248:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 248,
-      "endLine": 248,
-      "symbol": "it.layer",
-      "occurrence": "v2:1f6a99d9a101a4324c7ebecd0f3cc0ab18f210170e9acb62318b1c527eb28cef",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestPlatform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:infra/test/OpenClaw.test.ts:489:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 489,
-      "endLine": 489,
-      "symbol": "it.layer",
-      "occurrence": "v2:688de9f33df4d6821d107eaa7a299cbfc3c30ff61ec3b0bc99054005577c7a14",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestPlatform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:infra/test/OpenClaw.test.ts:504:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 504,
-      "endLine": 504,
-      "symbol": "it.layer",
-      "occurrence": "v2:e5789d33d3bcfb294a06fe1becde60daa6454c65743d4dc72d7d908fa5ef5361",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestPlatform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:infra/test/OpenClaw.test.ts:518:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 518,
-      "endLine": 518,
-      "symbol": "it.layer",
-      "occurrence": "v2:2a0465b93ff6df2ab818a36291a2475f44cac456c42f277eeb614d9dd32593b2",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestPlatform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:infra/test/OpenClaw.test.ts:956:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/infra",
-      "file": "infra/test/OpenClaw.test.ts",
-      "line": 956,
-      "endLine": 956,
-      "symbol": "it.layer",
-      "occurrence": "v2:b48f17d15a92e27fd60797a300d35c795a857edbdd8214cd5799f8bbaf9c2999",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestPlatform)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1125:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1125,
-      "endLine": 1125,
-      "symbol": "it.layer",
-      "occurrence": "v2:4f4b2a6b3604a7e3792aa71deadd1722d30808a1d05d5793792c91c51402bb95",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1145:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1145,
-      "endLine": 1145,
-      "symbol": "it.layer",
-      "occurrence": "v2:ee76360e0ad622f00e64f94b0dac645f159f000da7396a8f77168e918ba925c7",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices, { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1240:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1240,
-      "endLine": 1240,
-      "symbol": "it.layer",
-      "occurrence": "v2:7ec0433b4b5f4f3e1eeee85a6455c3c6b1449ea0ab919dd5194db936ee6552ab",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1261:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1261,
-      "endLine": 1261,
-      "symbol": "it.layer",
-      "occurrence": "v2:c4facee16d2c774424bddeda27ccfcaa826008422c5dfc57b2beccf61f5b0757",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1312:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1312,
-      "endLine": 1312,
-      "symbol": "it.layer",
-      "occurrence": "v2:782d849d7cc371bd86337193c24cf5399af4fafd2f2ae3d172ab76bd7bd41bc4",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1443:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1443,
-      "endLine": 1443,
-      "symbol": "it.layer",
-      "occurrence": "v2:95fa7d4030c57469750cd3bafd781c26f3fc1f038dfcfab1047a30ca382ccd4f",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1459:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1459,
-      "endLine": 1459,
-      "symbol": "it.layer",
-      "occurrence": "v2:91994707b66de53ad8ddf8ee1a3f750dcfc713bc0e1338f1612d0b0b3fd827c5",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1480:it.layer@4#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1480,
-      "endLine": 1480,
-      "symbol": "it.layer",
-      "occurrence": "v2:931ed29e92994fb4e6467043c2f27ead509625f208bf4293112f90fcdab77551",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1530:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1530,
-      "endLine": 1530,
-      "symbol": "it.layer",
-      "occurrence": "v2:53990a36ff273978db49ffb794beafb647a2ed1dfd9af55a75530caea16abbb5",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1549:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1549,
-      "endLine": 1549,
-      "symbol": "it.layer",
-      "occurrence": "v2:31218375b9e909fff0a5de832a66ccf8c46fd7f755960304f00f2f2c2514785e",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1565:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1565,
-      "endLine": 1565,
-      "symbol": "it.layer",
-      "occurrence": "v2:98e43bd3ca6c7c51c360cfcc60288358df2b09f0a39153f2c7ac2dbee7eb6de3",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1582:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1582,
-      "endLine": 1582,
-      "symbol": "it.layer",
-      "occurrence": "v2:3ea9dd9427fa93fe4dd786b3965078906bea707efb181943ea211017db80e6e6",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:1604:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 1604,
-      "endLine": 1604,
-      "symbol": "it.layer",
-      "occurrence": "v2:f72f7ca59f7cd2926e8d0b24df79145b54f80699cab19ecab24b69fef19c7197",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:385:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 385,
-      "endLine": 385,
-      "symbol": "it.layer",
-      "occurrence": "v2:b2d7ecc83b3a778e0e4e49bc22a33943490cdb5c7c425b9ff67ed1a46d911fef",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:409:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 409,
-      "endLine": 409,
-      "symbol": "it.layer",
-      "occurrence": "v2:9c4c39c5b9726a35c92acefb515e47d4e17828a3aedbe44d7b3d1f1d87465153",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices, { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:442:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 442,
-      "endLine": 442,
-      "symbol": "it.layer",
-      "occurrence": "v2:f8c50a5cb03212949e07443a2574d8bdadb3fb495880cd828c6b3c283258db25",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:546:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 546,
-      "endLine": 546,
-      "symbol": "it.layer",
-      "occurrence": "v2:e6cb867f1159dca57ac0eab821565e137918cc77373c9d4da044ebbffad82ec6",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:574:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 574,
-      "endLine": 574,
-      "symbol": "it.layer",
-      "occurrence": "v2:6a9b8fa46eb385aab935c48168a586180328f0fa964626f90c2149b1c0959c37",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:622:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 622,
-      "endLine": 622,
-      "symbol": "it.layer",
-      "occurrence": "v2:188452b1271d727e3d7eef421256e808a08fab33f83488fd1a42852f082f2559",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices, { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:687:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 687,
-      "endLine": 687,
-      "symbol": "it.layer",
-      "occurrence": "v2:dc47f044661f4830db3d45c944942f401bffbf262ea8e20cfd9799d16e1920d6",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:738:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 738,
-      "endLine": 738,
-      "symbol": "it.layer",
-      "occurrence": "v2:d3b7c00522ea90f25e59f12eeccb52460c4b98d77792104e7714249b37af9609",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:772:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 772,
-      "endLine": 772,
-      "symbol": "it.layer",
-      "occurrence": "v2:b53d2ae9cbe7ffeb13cc552be4fbf6b5afe7c2d32dff1651e59de78e90002582",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:805:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 805,
-      "endLine": 805,
-      "symbol": "it.layer",
-      "occurrence": "v2:f6e46e4b40dbf5bce17871f0fed20e4ed5acdd6cb6edbb31b87c0f4deadb1560",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.pffexport.test.ts:883:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.pffexport.test.ts",
-      "line": 883,
-      "endLine": 883,
-      "symbol": "it.layer",
-      "occurrence": "v2:0159ac3d47b118ab5eebde2addc5d043f4efee07e12deb95e6e524b7b9fe192e",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.service.test.ts:170:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
-      "line": 170,
-      "endLine": 170,
-      "symbol": "it.layer",
-      "occurrence": "v2:b3b61cec5aaede699791765f43b420af22faf4d936aec2e50ab31c73bb98ae08",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/Libpff.service.test.ts:185:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
-      "line": 185,
-      "endLine": 185,
-      "symbol": "it.layer",
-      "occurrence": "v2:5deba692d743d0d6258d4a8e0782892b146cedbe2d8a056843335b649ba8ef28",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts:171:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
-      "line": 171,
-      "endLine": 171,
-      "symbol": "it.layer",
-      "occurrence": "v2:3f364b629d5f990aac69b1ce51c2f02196ac9e869f0b021eecd3662cbbd1f937",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices, { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts:90:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/libpff",
-      "file": "packages/drivers/libpff/test/integration/Libpff.pffexport.live.test.ts",
-      "line": 90,
-      "endLine": 90,
-      "symbol": "it.layer",
-      "occurrence": "v2:5a71ae08e3b74e6975d1cb0cc6be85e09f5b3fdd6dae57cc7f3c2a1ce1d7bad0",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(TestServices, { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/openclaw/test/OpenclawRender.test.ts:101:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/openclaw",
-      "file": "packages/drivers/openclaw/test/OpenclawRender.test.ts",
-      "line": 101,
-      "endLine": 101,
-      "symbol": "it.layer",
-      "occurrence": "v2:c8c87043165cfab8e01939496ff0b8eed608cbe2b78c572cf9deeeacf5736fa2",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(NodeCrypto.layer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/drivers/tika/test/Tika.tikaapp.test.ts:93:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/tika",
-      "file": "packages/drivers/tika/test/Tika.tikaapp.test.ts",
-      "line": 93,
-      "endLine": 93,
-      "symbol": "it.layer",
-      "occurrence": "v2:7d84e04fa3c936262a23fd9c9660c08192fcff670bf41089d7d936cf4c59817f",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest), { excludeTestServices: true })",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/foundation/modeling/jsonc/test/JsoncFingerprint.test.ts:465:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/jsonc",
-      "file": "packages/foundation/modeling/jsonc/test/JsoncFingerprint.test.ts",
-      "line": 465,
-      "endLine": 465,
-      "symbol": "it.layer",
-      "occurrence": "v2:35040b04a6a773c6a51ac363233b2a9bfa41f4f1670c7dbad04ac279436c3a17",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(CryptoTest)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/foundation/modeling/jsonc/test/Properties.test.ts:531:it.layer@4#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/jsonc",
-      "file": "packages/foundation/modeling/jsonc/test/Properties.test.ts",
-      "line": 531,
-      "endLine": 531,
-      "symbol": "it.layer",
-      "occurrence": "v2:adf80bf963c96be35fe967e8ccdbf68b4d18ce4a19c9fd9f8f2cb12d0eea0c3a",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(CryptoTest)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/foundation/modeling/lockfiles/test/fixtures.test.ts:19:it.layer@2#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/lockfiles",
-      "file": "packages/foundation/modeling/lockfiles/test/fixtures.test.ts",
-      "line": 19,
-      "endLine": 19,
-      "symbol": "it.layer",
-      "occurrence": "v2:f2cf455eab8e2b3778c5f57edaf733c8d8f9f2d07cdce41abf9e90aa00f0c26f",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "layer(WebCrypto)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV014:packages/tooling/tool/docgen/test/ProofManifest.test.ts:48:it.layer@0#1",
-      "lens": "resource",
-      "ruleId": "EV014",
-      "package": "@beep/repo-docgen",
-      "file": "packages/tooling/tool/docgen/test/ProofManifest.test.ts",
-      "line": 48,
-      "endLine": 48,
-      "symbol": "it.layer",
-      "occurrence": "v2:0b9e0ed763dd4509cadba645c1f5215bbf0500562bcd69ca7c1c237f1346d47d",
-      "class": "resource-layer-without-hook-timeout",
-      "evidence": "it.layer(testLayer)",
-      "replacement": {
-        "primitive": "it.layer.option.timeout",
-        "sketch": "it.layer.option.timeout: Use for resource-layer-without-hook-timeout findings (EV014, candidate class resource-layer-without-hook-timeout). layer.option.timeout: Use for resource-layer-without-hook-timeout judgments (EV014, candidate class resource-layer-without-hook-timeout) at standalone layer(resource, { timeout }) acquisition when the resource needs an explicit hook budget. Diagnose slow or hung acquisition/release before selecting that budget."
-      },
-      "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "open"
