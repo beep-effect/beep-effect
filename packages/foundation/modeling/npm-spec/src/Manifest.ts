@@ -184,7 +184,7 @@ const DEPENDENCY_FIELDS = HashSet.fromIterable<string>(DependencyField.literals)
 // Build the open-record ↔ class wire codec: on decode the four dependency
 // field names become typed members and everything else lands in `rest`; on
 // encode `rest` flattens back to top-level keys so the wire shape never
-// carries a literal `rest` key. Mirrors `@beep/scratchpad/effected/package-json`'s wire
+// carries a literal `rest` key. Mirrors `@beep/package-json`'s wire
 // transform at a smaller scale, without taking the dependency.
 const makeWire = (
   Class: S.Codec<Manifest, Record<string, unknown> & { readonly rest?: Record<string, unknown> }>
@@ -227,7 +227,7 @@ const makeWire = (
  * This is deliberately NOT a strict package.json model — the input to
  * manifest-level resolution is an arbitrary user manifest mid-build, and a
  * strict decode would reject manifests this module has no business
- * validating. Use `@beep/scratchpad/effected/package-json`'s `Package` when you want the
+ * validating. Use `@beep/package-json`'s `Package` when you want the
  * strict model.
  *
  * {@link Manifest.decode} decodes any unknown record through the tolerant
@@ -397,7 +397,7 @@ export class Manifest extends S.Class<Manifest, { readonly brand: unique symbol 
    * **Details**
    *
    * Fails typed on unresolvable entries. For the leave-unchanged policy over
-   * the strict package.json model, see `@beep/scratchpad/effected/package-json`'s
+   * the strict package.json model, see `@beep/package-json`'s
    * `Package#resolve`.
    *
    * **Example** (Construct a manifest resolution effect)

@@ -420,7 +420,7 @@ Tests live in `test/` and import package source through `@beep/markdown/<Module>
 
 ## Provenance
 
-Ported from upstream `@effected/markdown` (MIT, C. Spencer Beggs) through the effected port, which landed it as the scratchpad module `scratchpad/effected/markdown`, then promoted into this workspace package by `goals/effected-promotion` (wave 2d-1). The promotion moved the sources to `src/`, the tests to `test/` and the conformance corpora to `data/conformance/`, renamed the schema identities from `@beep/scratchpad/effected/markdown/<Name>` to `@beep/markdown/<Name>`, and changed the node construction model and the export surface as listed under Deviations. A differential over 150,674 inputs shows no parse or stringify behaviour change from the promotion.
+Ported from upstream `@effected/markdown` (MIT, C. Spencer Beggs) through the effected port, which landed it as the scratchpad module `scratchpad/effected/markdown` (last held at `983ac2eaec7707a626151b1037455c0bcd58a785`), then promoted into this workspace package by `goals/effected-promotion` (wave 2d-1). The promotion moved the sources to `src/`, the tests to `test/` and the conformance corpora to `data/conformance/`, renamed the schema identities from `@beep/scratchpad/effected/markdown/<Name>` to `@beep/markdown/<Name>`, and changed the node construction model and the export surface as listed under Deviations. A differential over 150,674 inputs shows no parse or stringify behaviour change from the promotion.
 
 ### Attribution
 

@@ -151,17 +151,19 @@ manifest and records the schema, NTIA and byte-stability verdicts
 ## Provenance
 
 `@beep/sbom` is ported from upstream `@effected/sbom` 0.10.0 (MIT, C. Spencer Beggs) at commit
-`af7566a9da2eff169cb74955efcc5ede1e5de9f8`. It was carried through the effected port in `scratchpad/effected/sbom`,
-and its pure half was promoted into this workspace package by `goals/effected-promotion` (wave 4-S, SPEC W4-b); the
-Sigstore signer stays in `scratchpad/effected/sbom` as the deferred `@beep/sigstore` half. The package
-[LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md)
-holds the upstream knowledge bundle verbatim; its relative links point into the upstream checkout. The port reviews
-stay with the lab signer; the lab's canon exceptions are archived under `goals/effected-promotion/history/`.
+`af7566a9da2eff169cb74955efcc5ede1e5de9f8`. It was carried through the effected port in `scratchpad/effected/sbom`
+(pure half last held at `a6ca837ca9d641e797833ff43d18e192a428c7d4`), and its pure half was promoted into this
+workspace package by `goals/effected-promotion` (wave 4-S, SPEC W4-b); the Sigstore signer is the deferred
+`@beep/sigstore` half, deleted from the lab when the packet closed (restore it from
+`bb2134fcb952e07580c4cebf2586c901f090ef5b`). The package [LICENSE](./LICENSE) carries both the beep-effect and the
+upstream copyright notices. [KNOWLEDGE.md](./KNOWLEDGE.md) holds the upstream knowledge bundle verbatim; its relative
+links point into the upstream checkout. The port reviews left with the deferred signer; the lab's canon exceptions are
+archived under `goals/effected-promotion/history/`.
 
 Promotion changes, beyond the lab port recorded below:
 
 - The root barrel no longer exports `SigstoreSigner`, `SigningError`, `SigningErrorKind` or
-  `SIGSTORE_OIDC_AUDIENCE`; they stay in the lab signer, and nothing in this package reaches `@sigstore/*`.
+  `SIGSTORE_OIDC_AUDIENCE`; they belong to the deferred `@beep/sigstore` signer, and nothing in this package reaches `@sigstore/*`.
 - The ten member-less model classes, the two static-only records (`InTotoSubject`, `SlsaProvenance`) and the eight
   option and input structs are branded `S.Opaque`; `InTotoStatement` and `NtiaReport` stay `S.Class`. Values are
   plain objects: membership is the structural `S.is`, and `make` validates and copies, so no caller may rely on
@@ -197,9 +199,10 @@ with an `Encoded` companion type.
 ### Deviations
 
 One entry per class of change (law- or ruling-forced) and one per behavioural divergence, each with the tests in this
-package that pin it. The `sbom` row of `scratchpad/effected/PORT_LEDGER.json` keeps the lab-era evidence under the
-pre-promotion `scratchpad/test/sbom/` paths, and the port reviews stay in `scratchpad/effected/sbom/.review` with the
-signer.
+package that pin it. The `sbom` row of the lab ledger
+(`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/PORT_LEDGER.json`) keeps the lab-era evidence under the
+pre-promotion `scratchpad/test/sbom/` paths, which resolve at `a6ca837ca9d641e797833ff43d18e192a428c7d4`; the port
+reviews left the lab with the signer (`bb2134fcb952e07580c4cebf2586c901f090ef5b:scratchpad/effected/sbom/.review`).
 
 - **native-runtime** — The lab replaces upstream `Object.entries`, `Date.parse`, `Object.assign` schema statics and native `Error` with Effect Record/Schema facilities, `S.Opaque` statics and a tagged error. (test/Sbom.test.ts; test/NtiaReport.test.ts; test/InTotoStatement.test.ts)
 - **identity-keys** — The lab registers `IdentityToken` with a package `IdentityComposer` key instead of the upstream `@effected/sbom` service key. (test/IdentityToken.test.ts)

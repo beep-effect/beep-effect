@@ -17,7 +17,7 @@
  *
  * `CorepackIntegrityHash` is the one narrowing the kit needs: the pin tail
  * `<name>@<version>+<integrity>` only ever carries the corepack form, and both
- * schemas that model it (`PackageManagerPin` here, `@beep/scratchpad/effected/package-json`'s
+ * schemas that model it (`PackageManagerPin` here, `@beep/package-json`'s
  * `PackageManager`) consume that export rather than restricting the brand
  * themselves. It also carries the bridge between the two textual forms the kit
  * meets at the registry boundary: `CorepackIntegrityHash.FromSri` decodes
@@ -738,7 +738,7 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  *
  * The corepack pin tail (`<name>@<version>+<integrity>`) is the one place the
  * kit meets this form, and two schemas name it: `PackageManagerPin.integrity`
- * here and `@beep/scratchpad/effected/package-json`'s `PackageManager.integrity`. Both consume
+ * here and `@beep/package-json`'s `PackageManager.integrity`. Both consume
  * **this** schema, so a value validated by one is accepted by the other.
  *
  * It decodes to the same {@link IntegrityHashBrand} the unrestricted schema
@@ -756,7 +756,7 @@ const CorepackIntegrityHashBase: Omit<S.Opaque<IntegrityHashBrand, typeof corepa
  * consumer's suite asserts its field schema IS this export
  * (`PackageManagerPin.fields.integrity.schema === CorepackIntegrityHash`, and
  * `PackageManager.fields.integrity.value === CorepackIntegrityHash` on the
- * `@beep/scratchpad/effected/package-json` side), each with a control against the unrestricted
+ * `@beep/package-json` side), each with a control against the unrestricted
  * brand. Do not replace those with a behavioural test, which cannot fail.
  *
  * **Example** (Accept corepack hashes and reject SRI hashes)

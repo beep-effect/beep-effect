@@ -8,7 +8,7 @@ request changes, merge, administer rulesets, or write repository contents.
 The implementation uses Bun's WebCrypto RS256 signer. PKCS#1 RSA keys are wrapped
 as PKCS#8 in memory. There are no new dependencies and no compiler, make, g++,
 OpenSSL executable, key file, or token file requirement. The existing App prototype
-in `scratchpad/effected/github/GitHubApp.ts` establishes the redacted credential,
+in `packages/drivers/github/src/GitHubApp.ts` (`@beep/github`) establishes the redacted credential,
 installation-token and early-refresh pattern; this CLI uses a separate cache with
 the requested five-minute margin and repository-scoped token request.
 

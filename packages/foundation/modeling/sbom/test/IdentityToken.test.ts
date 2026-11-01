@@ -61,7 +61,7 @@ describe("IdentityToken doubles", () => {
   it.layer(IdentityToken.layerTest(), { timeout: "10 seconds" })("the default double", (it) => {
     it.effect("answers rather than dying — a test token is a real answer", () =>
       Effect.gen(function* () {
-        // Contrast the lab signer's `SigstoreSigner.makeTest`, which dies: a
+        // Contrast the deferred signer's `SigstoreSigner.makeTest`, which dies: a
         // fabricated OIDC token is a legitimate test answer, a fabricated
         // signature is a lie.
         const identity = yield* IdentityToken;

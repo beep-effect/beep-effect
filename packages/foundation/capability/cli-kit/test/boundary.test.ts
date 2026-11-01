@@ -2,8 +2,8 @@
 //
 // Vite inlines every `src` module's raw text at transform time, so these walks touch no file system and run the same
 // under Node and Bun. Every specifier counts, `import type` included: a type-only import of `ink` would still make the
-// root's declarations need it. The `./ui` half of the port stays in the lab until C (W4-m); the lab's own
-// boundary.test.ts holds the ui rules.
+// root's declarations need it. The `./ui` half of the port is deferred as `@beep/ink` (W4-m) and left the lab
+// with its own boundary.test.ts ui rules.
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

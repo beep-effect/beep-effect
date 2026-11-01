@@ -188,7 +188,7 @@ export class IdentityToken extends Context.Service<IdentityToken, IdentityTokenS
    *
    * **Details**
    *
-   * Unlike the lab signer's `SigstoreSigner.makeTest`, this one **answers** rather
+   * Unlike the deferred signer's `SigstoreSigner.makeTest`, this one **answers** rather
    * than dying: a fabricated OIDC token is a real answer to "give me a token" in a
    * test, where a fabricated signature would be a lie about cryptography.
    *

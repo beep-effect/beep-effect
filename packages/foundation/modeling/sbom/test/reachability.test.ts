@@ -2,8 +2,8 @@
 //
 // Emitting an SBOM is pure computation over a manifest; signing is
 // network-bound cryptography against Fulcio and Rekor. This package is the
-// first half only: the Sigstore signer stays in the effected lab (deferred
-// `@beep/sigstore`), so no module here may reach `@sigstore/*`, a `node:*`
+// first half only: the Sigstore signer is deferred as `@beep/sigstore`, so
+// no module here may reach `@sigstore/*`, a `node:*`
 // builtin, or the runtime half of `@beep/package-json`.
 //
 // The claim is checked structurally, by walking the RUNTIME import graph of

@@ -212,4 +212,4 @@ bun run beep quality package-verify @beep/github-references   # from the reposit
 
 ## Provenance
 
-Ported from upstream `@effected/github-references` 0.7.0 (MIT, C. Spencer Beggs) through the effected port, then promoted from `scratchpad/effected/github-references` into this workspace package by `goals/effected-promotion`. The package [LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices. The upstream design notes are kept verbatim in [KNOWLEDGE.md](./KNOWLEDGE.md).
+Ported from upstream `@effected/github-references` 0.7.0 (MIT, C. Spencer Beggs) through the effected port, then promoted from `scratchpad/effected/github-references` (last held at `3c931bbaefd4e860cbb7cbb5dae01064e0b3c8bb`) into this workspace package by `goals/effected-promotion`. The package [LICENSE](./LICENSE) carries both the beep-effect and the upstream copyright notices. The upstream design notes are kept verbatim in [KNOWLEDGE.md](./KNOWLEDGE.md).
