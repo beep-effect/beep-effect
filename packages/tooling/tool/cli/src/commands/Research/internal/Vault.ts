@@ -175,8 +175,9 @@ export const slugFor = Effect.fn("ResearchVault.slugFor")(function* (
 });
 
 // The `yaml` npm writer's layout the vault cards were written in: sequences
-// indented under their key, double quotes when quoting is needed, no folding.
-const cardYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
+// indented under their key, quotes chosen per value as that package chooses
+// them, no folding.
+const cardYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
 
 /**
  * Render a knowledge card as YAML frontmatter followed by a markdown body.
@@ -184,7 +185,8 @@ const cardYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quote
  * @internal
  * @param frontmatter - Structured frontmatter to render.
  * @param body - Markdown body content.
- * @returns Complete markdown card content.
+ * @returns An Effect that succeeds with the complete markdown card content, or fails with
+ * `ResearchCommandError` when the frontmatter cannot be serialized.
  * @category utilities
  */
 export const renderCard: {

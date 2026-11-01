@@ -2745,6 +2745,7 @@
     {"name":"ResearchTimers.readRecordedResearchTimer","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchTimers.runSystemctl","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchTimers.uninstallResearchTimers","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"ResearchVault.renderCard","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchVault.resolveVaultRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchVault.sha256HexOf","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ResearchVault.slugFor","owner":"@beep/repo-cli","family":"tooling","conforms":true},

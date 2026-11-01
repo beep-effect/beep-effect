@@ -16,7 +16,7 @@ import {
   ModelsManifestStoreLive,
   seedModelsManifest,
 } from "@beep/repo-cli/commands/Models";
-import { Yaml } from "@beep/yaml/Yaml";
+import { Yaml, YamlStringifyOptions } from "@beep/yaml/Yaml";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -58,6 +58,12 @@ const freshTarget = Effect.fnUntraced(function* () {
 });
 
 const storeLayer = Layer.provide(ModelsManifestStoreLive, NodeServices.layer);
+
+// The retired-role cases stand in for a manifest already on disk, which the
+// npm `yaml` writer produced before R4. These options reproduce that layout
+// byte for byte (sequences indented under their key, quotes chosen per value;
+// the R4 parity oracle pins it), so the fixtures keep the on-disk shape.
+const legacyLayout = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
 
 layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })(
   "models manifest store on config-file",
@@ -118,7 +124,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           bindings: [...seed.bindings, retiredBinding],
           targets: [...seed.targets, retiredTarget],
         };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
         expect(yield* encodeManifest(loaded)).toEqual(seed);
       })
     );
@@ -142,7 +148,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           ],
         };
         const legacy = { ...seed, targets: [...seed.targets, retiredTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
         expect(yield* encodeManifest(loaded)).toEqual(seed);
       })
     );
@@ -181,7 +187,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           locators: [block("retired-only", ["jsdoc.migrate-titles"])],
         };
         const legacy = { ...seed, targets: [...seed.targets, mixedTarget, retiredOnlyTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy, legacyLayout)));
         const expected = {
           ...seed,
           targets: [...seed.targets, { ...mixedTarget, locators: [block("mixed-roles", ["qa.judge"])] }],

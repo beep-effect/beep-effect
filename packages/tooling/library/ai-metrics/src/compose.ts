@@ -17,9 +17,9 @@ import type { AiMetricsInstallSpec, AiMetricsServiceSpec } from "./install.ts";
 const composeFailure = (message: string, cause: unknown): AiMetricsInstallConfigurationError =>
   AiMetricsInstallConfigurationError.make({ cause, message });
 
-// The `yaml` npm writer's layout: sequences indented under their key, double
-// quotes when quoting is needed, no folding.
-const composeYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
+// The `yaml` npm writer's layout: sequences indented under their key, quotes
+// chosen per value as that package chooses them, no folding.
+const composeYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
 
 const phoenixService = (spec: AiMetricsInstallSpec): O.Option<AiMetricsServiceSpec> =>
   pipe(

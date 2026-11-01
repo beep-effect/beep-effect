@@ -34,10 +34,10 @@ const $I = $RepoCliId.create("commands/Models/Models.manifest.service");
 
 const encodeManifest = S.encodeUnknownEffect(ModelsManifest);
 
-// The `yaml` npm writer's layout (sequences indented under their key, double
-// quotes when quoting is needed, no folding), so an adopted manifest keeps the
-// shape the operator already has on disk.
-const manifestYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "double" });
+// The `yaml` npm writer's layout (sequences indented under their key, quotes
+// chosen per value as that package chooses them, no folding), so an adopted
+// manifest keeps the shape the operator already has on disk byte for byte.
+const manifestYamlOptions = YamlStringifyOptions.make({ indentSequences: true, quoteStyle: "auto" });
 
 // ── Manifest store ──────────────────────────────────────────────────────────
 
