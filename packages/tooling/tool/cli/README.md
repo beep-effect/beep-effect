@@ -688,10 +688,12 @@ bun run beep ci append-turbo-summary .turbo/runs/latest.json
 
 ### `codex`
 
-Launch Codex helper workflows from repo-owned prompts.
+Ingest Codex Cloud security findings and run the Codex security scan
+(`docs/runbooks/codex-security.md`).
 
 ```bash
-bun run beep codex quality-review-fix-loop "close the current initiative"
+bun run beep codex findings ingest --from <export.csv>
+bun run beep codex security preflight --output-dir <directory> --max-cost <usd>
 ```
 
 ## License

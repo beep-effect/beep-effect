@@ -33029,30 +33029,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts": {
-          "lines": 74.61,
-          "statements": 75.49,
-          "branches": 69.69,
-          "functions": 63.15,
-          "uncovered": {
-            "lines": 49,
-            "statements": 50,
-            "branches": 10,
-            "functions": 35
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts": {
-          "lines": 68.87,
-          "statements": 69.56,
-          "branches": 43.01,
-          "functions": 55.71,
-          "uncovered": {
-            "lines": 61,
-            "statements": 63,
-            "branches": 53,
-            "functions": 31
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts": {
           "lines": 17.24,
           "statements": 17.24,
@@ -33159,18 +33135,6 @@
             "statements": 29,
             "branches": 42,
             "functions": 10
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Docs/Docs.aggregate.ts": {
-          "lines": 30,
-          "statements": 30,
-          "branches": 0,
-          "functions": 0,
-          "uncovered": {
-            "lines": 14,
-            "statements": 14,
-            "branches": 7,
-            "functions": 9
           }
         },
         "packages/tooling/tool/cli/src/commands/Docs/Docs.command.ts": {
@@ -34073,18 +34037,6 @@
             "functions": 1
           }
         },
-        "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.command.ts": {
-          "lines": 96.63,
-          "statements": 96.51,
-          "branches": 94.89,
-          "functions": 94.36,
-          "uncovered": {
-            "lines": 8,
-            "statements": 9,
-            "branches": 5,
-            "functions": 4
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Goals/Migration/Migration.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -34095,18 +34047,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Goals/Migration/PacketMutation.ts": {
-          "lines": 94.36,
-          "statements": 92.01,
-          "branches": 90.54,
-          "functions": 80.73,
-          "uncovered": {
-            "lines": 21,
-            "statements": 32,
-            "branches": 14,
-            "functions": 21
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.errors.ts": {
@@ -34946,18 +34886,6 @@
             "lines": 0,
             "statements": 1,
             "branches": 2,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Lint/LintGoalPackets.command.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
             "functions": 0
           }
         },
@@ -36425,42 +36353,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts": {
-          "lines": 23.26,
-          "statements": 22.61,
-          "branches": 12.28,
-          "functions": 15.38,
-          "uncovered": {
-            "lines": 188,
-            "statements": 195,
-            "branches": 100,
-            "functions": 33
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateData.ts": {
-          "lines": 20.58,
-          "statements": 20,
-          "branches": 0,
-          "functions": 0,
-          "uncovered": {
-            "lines": 27,
-            "statements": 28,
-            "branches": 10,
-            "functions": 6
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateExtract.ts": {
-          "lines": 54.31,
-          "statements": 52.84,
-          "branches": 38.18,
-          "functions": 46.66,
-          "uncovered": {
-            "lines": 53,
-            "statements": 58,
-            "branches": 34,
-            "functions": 16
-          }
-        },
         "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts": {
           "lines": 95.07,
           "statements": 94.18,
@@ -36471,18 +36363,6 @@
             "statements": 21,
             "branches": 33,
             "functions": 5
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts": {
-          "lines": 40.78,
-          "statements": 40.33,
-          "branches": 27.27,
-          "functions": 22.22,
-          "uncovered": {
-            "lines": 106,
-            "statements": 108,
-            "branches": 64,
-            "functions": 35
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts": {
