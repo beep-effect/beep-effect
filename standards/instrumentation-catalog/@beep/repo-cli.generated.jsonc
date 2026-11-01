@@ -3681,6 +3681,7 @@
     {"name":"YeetMonitorLoop.clearConflictRow","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetMonitorLoop.closeoutHead","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetMonitorLoop.collectFailedJobs","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"YeetMonitorLoop.collectStatus","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetMonitorLoop.convergeBaseConflict","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetMonitorLoop.convergeComments","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetMonitorLoop.convergeInbox","owner":"@beep/repo-cli","family":"tooling","conforms":true},

@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T00:50:26.354Z",
+  "generatedAt": "2026-11-01T01:01:51.378Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -573524,8 +573524,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1033,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1033-yeetmonitorcommandroute",
+          "line": 1037,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1037-yeetmonitorcommandroute",
           "currentTags": [
             "@param",
             "@returns",
@@ -573548,8 +573548,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1368,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1368-yeetcommand",
+          "line": 1387,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1387-yeetcommand",
           "currentTags": [
             "@category",
             "@since"
