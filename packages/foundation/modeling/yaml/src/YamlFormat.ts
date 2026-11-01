@@ -1100,8 +1100,12 @@ const tryRegionalScalarEdit: {
 
 // ── modify: directive prologue ───────────────────────────────────────
 
-/** Directive, comment and blank lines up to and including the `---` marker that ends them. */
-const PROLOGUE_HEAD = "^(?:(?:%[^\\n]*|[ \\t]*(?:#[^\\n]*)?)\\r?\\n)*---";
+/**
+ * Directive, comment and blank lines up to and including the `---` marker that
+ * ends them. A CRLF line's `\r` has one match path (the line body, or the lone
+ * `\r` of a blank line), so a failed match stays linear.
+ */
+const PROLOGUE_HEAD = "^(?:(?:%[^\\n]*|[ \\t]*(?:#[^\\n]*|\\r)?)\\n)*---";
 
 /** A prologue whose `---` line is bare: the marker, its trailing blanks and its line ending. */
 const BARE_DIRECTIVE_PROLOGUE = new RegExp(`${PROLOGUE_HEAD}[ \\t]*\\r?\\n`, "u");

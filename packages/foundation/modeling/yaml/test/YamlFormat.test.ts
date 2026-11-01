@@ -326,6 +326,20 @@ describe("YamlFormat", () => {
       })
     );
 
+    it.effect("modify reads a long CRLF prologue in linear time, refused or kept", () =>
+      Effect.gen(function* () {
+        // Each CRLF directive, comment and blank line has exactly one way to
+        // match, so a refused marker line fails without backtracking 2^n paths.
+        const prologue = `%YAML 1.2\r\n${Str.repeat(40)("# note\r\n\r\n  \r\n")}`;
+        const error = yield* Effect.flip(YamlFormat.modify(`${prologue}--- !!map\r\na: 1\r\n`, ["b"], 2));
+        assert.strictEqual(error.diagnostics[0]?.code, "DirectiveCarryingDocument");
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(`${prologue}---\r\na: 1\r\n`, ["b"], [2]),
+          `${prologue}---\r\na: 1\nb:\n- 2\n`
+        );
+      })
+    );
+
     it("a literal %TAG inside scalar content is content, not a directive — formats normally", () => {
       // The refusal must be directive-token-level, never text scanning: a
       // "%TAG ..." line inside a block scalar and a "%TAG" mid-scalar are
