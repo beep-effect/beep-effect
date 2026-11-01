@@ -65,7 +65,7 @@ import {
   collectUntrackedPaths,
   runGitPathList,
 } from "./GitExec.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetCommandError } from "../Yeet.errors.ts";
@@ -619,7 +619,11 @@ const witnessFile = Effect.fn("Yeet.witnessGateFile")(function* (
  */
 export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPaths")(function* (
   context: RepoRunContext
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
   const committed = yield* runGitPathList(context.repoRoot, [
     "diff",
     "--name-only",
@@ -680,7 +684,7 @@ export const collectYeetGateStaleness = Effect.fn("Yeet.collectYeetGateStaleness
 ): Effect.fn.Return<
   ReadonlyArray<GateStalenessVerdict>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const artifactPaths = [
     ...A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (descriptor) => descriptor.artifactPath),

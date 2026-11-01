@@ -35,7 +35,7 @@ import { DocketRunSelector, listRuns, undoDryRun, undoRun } from "./Undo.ts";
 import type { DocketIntakeJournal } from "@beep/law-practice-server/DocketIntake";
 import type { DocketIntake, DocketIntakeStore } from "@beep/law-practice-use-cases/DocketIntake";
 import type { M365 } from "@beep/m365";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type { DocketIntakeAppConfig } from "./Config.ts";
@@ -69,7 +69,7 @@ export type DocketIntakeWiring<E1, R1, E2, R2, E3, R3> = {
     readonly initialSince: string;
   }) => Layer.Layer<DocketIntake | DocketIntakeJournal | DocketIntakeStore, E1, R1>;
   /** The mailbox connection alone, for `smoke`, `undo` and `backfill-questions`. */
-  readonly mailbox: (config: DocketIntakeAppConfig) => Layer.Layer<Crypto.Crypto | M365, E2, R2>;
+  readonly mailbox: (config: DocketIntakeAppConfig) => Layer.Layer<Digest.Digest | M365, E2, R2>;
 };
 
 const DEFAULT_INTERVAL_MINUTES = 5;

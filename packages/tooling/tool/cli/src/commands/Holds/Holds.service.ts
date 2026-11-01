@@ -31,7 +31,7 @@ import {
   ProbeRunId,
 } from "./Holds.schemas.ts";
 import { judgeProbeRun } from "./Holds.verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Holds/Holds.service");
@@ -414,7 +414,7 @@ const runScriptedProbe = Effect.fn("HoldProbe.scripted")(function* (
  */
 export const makeHoldProbe = Effect.fn("HoldProbe.make")(function* (scratchRoot: string) {
   const context = yield* Effect.context<
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
   >();
   const probe = (request: HoldProbeRequest): Effect.Effect<ProbeRun, HoldsError> =>
     request.proposition.falsifier._tag === "Judgement"

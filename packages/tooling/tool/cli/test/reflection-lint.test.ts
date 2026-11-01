@@ -3,7 +3,7 @@ import { reflectionFrontmatterIsValid } from "@beep/repo-cli/commands/Lint/Refle
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
@@ -35,8 +35,9 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired?: boolean) {

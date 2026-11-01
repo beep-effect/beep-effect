@@ -10,7 +10,8 @@ import { CacheClientChannel } from "@beep/repo-configs/cache";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -139,7 +140,7 @@ const fetchClient = Effect.fn("CacheConformance.fetchClient")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const client = yield* HttpClient.HttpClient;
   const url = registryUrl(pin);
   const response = yield* client.get(url).pipe(CacheCommandError.mapError(`Cannot fetch ${url}.`));
@@ -149,7 +150,7 @@ const fetchClient = Effect.fn("CacheConformance.fetchClient")(function* (
     Effect.timeout(Duration.minutes(5)),
     CacheCommandError.mapError(`Cannot read ${url}.`)
   );
-  const integrity = `sha512-${Base64.encode(yield* crypto.digest("SHA-512", tarball))}`;
+  const integrity = `sha512-${Base64.encode(yield* crypto.digest(Digest.sha512, tarball))}`;
   if (integrity !== pin.platformIntegrity)
     return yield* CacheCommandError.new(`Tarball ${url} does not match the pinned registry integrity.`);
   yield* fs.makeDirectory(directory, { recursive: true });
@@ -673,7 +674,7 @@ export const runCacheConformanceNative = Effect.fn("CacheConformance.runNativeMa
     yield* assertCacheConformanceTargetBoundary(target);
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* SecureRandom.SecureRandom;
     const startedAt = DateTime.formatIso(yield* DateTime.now);
     const executable = yield* verifyExecutable(client.executable, client.pin);
     const random = (bytes: number) => crypto.randomBytes(bytes).pipe(Effect.map(Hex.encode));

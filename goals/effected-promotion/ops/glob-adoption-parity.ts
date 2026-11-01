@@ -55,12 +55,13 @@ import {
 } from "@beep/repo-cli/commands/Laws/EffectImports";
 import { discoverWorkspacePackages } from "@beep/repo-cli/test/Quality";
 import { runGitLines } from "@beep/repo-cli/test/SharedInternals";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -723,4 +724,4 @@ const program = Effect.gen(function* () {
 });
 
 // @effect-diagnostics-next-line strictEffectProvide:off -- this is the script's entry point; the one layer is provided once here. Owner: goals/effected-promotion. Exit: the script is deleted with the packet's closeout.
-NodeRuntime.runMain(program.pipe(Effect.provide(NodeServices.layer)));
+NodeRuntime.runMain(program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))));

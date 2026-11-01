@@ -484,7 +484,7 @@ describe("codex findings preservation-safe refresh", () => {
 
   it.effect("rejects force plus refresh before choosing a destructive mode", () =>
     validateCodexFindingsIngestModes({ force: true, refresh: true }).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason)),
       Effect.map((reason) => assert.strictEqual(reason, "mode-conflict"))
     )
@@ -497,7 +497,7 @@ describe("codex findings preservation-safe refresh", () => {
         const path = yield* Path.Path;
         yield* fs.makeDirectory(path.join(repoRoot, "goals"), { recursive: true });
         const missing = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(missing, "packet-missing");
@@ -505,7 +505,7 @@ describe("codex findings preservation-safe refresh", () => {
         yield* fs.makeDirectory(path.join(repoRoot, `goals/${SLUG}/ops`), { recursive: true });
         yield* fs.writeFileString(path.join(repoRoot, `goals/${SLUG}/ops/triage.json`), "{ malformed");
         const malformed = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(malformed, "ledger-unreadable");
@@ -532,7 +532,7 @@ describe("codex findings preservation-safe refresh", () => {
         );
 
         const reason = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: SLUG }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(reason, "refresh-identity-drift");
@@ -555,7 +555,7 @@ describe("codex findings preservation-safe refresh", () => {
           documents: yield* documentsFor(removalPlan),
           dryRun: true,
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(removal, "refresh-removal");
@@ -569,7 +569,7 @@ describe("codex findings preservation-safe refresh", () => {
           documents: yield* documentsFor(driftPlan),
           dryRun: true,
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(drift, "refresh-identity-drift");
@@ -583,7 +583,7 @@ describe("codex findings preservation-safe refresh", () => {
           documents: yield* documentsFor(countDriftPlan),
           dryRun: true,
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(countDrift, "refresh-metadata-drift");
@@ -611,7 +611,7 @@ describe("codex findings preservation-safe refresh", () => {
           documents: yield* documentsFor(plan),
           dryRun: false,
         }).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(reason, "refresh-metadata-drift");
@@ -701,7 +701,7 @@ describe("codex findings first-capture ingest", () => {
         // than reassign every CSF-NNN from the current sort order.
         yield* fs.writeFileString(path.join(repoRoot, `goals/${SLUG}/ops/triage.json`), "{ malformed");
         const reason = yield* runCodexFindingsIngest(ingestOptions).pipe(
-          Effect.map(() => "accepted"),
+          Effect.as("accepted"),
           Effect.catchTag("CodexFindingsIngestError", (error) => Effect.succeed(error.reason))
         );
         assert.strictEqual(reason, "ledger-unreadable");

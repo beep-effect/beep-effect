@@ -13,9 +13,8 @@ import { $PracticeSetupId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
@@ -292,7 +291,7 @@ interface InstallerDownloadShape {
  * **Details**
  *
  * A mismatched download is never written, so it can never run. The live layer
- * needs `HttpClient`, `Crypto` and `FileSystem`.
+ * needs `HttpClient`, `Digest` and `FileSystem`.
  *
  * **Example** (Compose the live download)
  *
@@ -326,7 +325,7 @@ export class InstallerDownload extends Context.Service<InstallerDownload, Instal
     InstallerDownload,
     Effect.gen(function* () {
       const client = HttpClient.filterStatusOk(yield* HttpClient.HttpClient);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const fs = yield* FileSystem.FileSystem;
 
       return InstallerDownload.of({
@@ -336,7 +335,7 @@ export class InstallerDownload extends Context.Service<InstallerDownload, Instal
           });
           const response = yield* client.get(installer.url).pipe(Effect.mapError(() => unreachable));
           const bytes = new Uint8Array(yield* response.arrayBuffer.pipe(Effect.mapError(() => unreachable)));
-          const digest = yield* crypto.digest("SHA-256", bytes).pipe(Effect.map(Hex.encode), Effect.orDie);
+          const digest = yield* crypto.digestHex(Digest.sha256, bytes);
           if (digest !== installer.sha256) {
             return yield* SetupFailure.make({
               message: "The downloaded Claude installer did not match its expected fingerprint, so it was not run.",

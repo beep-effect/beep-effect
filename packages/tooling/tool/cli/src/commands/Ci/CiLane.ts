@@ -71,7 +71,8 @@ import {
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
 import type { FsUtils } from "@beep/repo-utils";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   CiCoverageArtifactPlan,
@@ -84,11 +85,11 @@ import type { CiLanePartition, PartitionedCiLane } from "./CiLanePartitions.ts";
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
 type CiLaneEnvironment =
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
+  | Digest.Digest
   | FileSystem.FileSystem
   | FsUtils
   | Path.Path
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
@@ -1768,7 +1769,7 @@ const renderStepCommand = (step: QualityTaskStep): string => A.join([step.comman
 
 const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
-): Effect.fn.Return<number, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<number, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const resolved = yield* resolveTurboCacheStep(step);
   const stepEnv = resolved.env ?? {};
   yield* assertCacheRuntimeKeyUnspecified(resolved.command, resolved.args, Bun.env, stepEnv).pipe(
@@ -1899,7 +1900,11 @@ const changedPathsBetween = Effect.fn("CiLane.changedPathsBetween")(function* (
   base: string,
   head: string,
   purpose: string
-): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  CiCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCaptured({
     command: "git",
     args: ["diff", "--name-only", `${base}...${head}`],
@@ -1918,7 +1923,11 @@ const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(
   repoRoot: string,
   base: string,
   head: string
-): Effect.fn.Return<DocgenLaneMode, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  DocgenLaneMode,
+  CiCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "automatic Docgen scope");
   const mode = docgenLaneModeForChangedPaths(changedPaths);
   yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
@@ -1942,7 +1951,7 @@ const isStorybookBuildTask = (entry: TurboDryRunTask): boolean =>
 const resolveStorybookLaneAffected = Effect.fn("CiLane.resolveStorybookLaneAffected")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<boolean, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const probeArgs = storybookAffectedProbeArgs();
   const step = yield* resolveTurboCacheStep(
     QualityTaskStep.make({
@@ -2614,7 +2623,7 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
 
 const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, CiCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* runCaptured({
     command: "git",
     args: ["branch", "--show-current"],

@@ -14,7 +14,7 @@ import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -44,13 +44,7 @@ const emptyPage = ContradictionCandidatePage.make({
   total: S.Natural.make(0),
 });
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (_algorithm, data) => Effect.succeed(data),
-    randomBytes: (size) => new Uint8Array(size).fill(1),
-  })
-);
+const TestCrypto = Layer.mock(Digest.Digest)({ digest: (_algorithm, data) => Effect.succeed(data) });
 
 const TestReviewer = Layer.succeed(
   ContradictionReviewer,

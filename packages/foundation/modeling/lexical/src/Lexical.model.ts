@@ -3104,7 +3104,7 @@ export declare namespace LexicalNodeWire {
    * @category serialization
    * @since 0.0.0
    */
-  export type Encoded = S.Codec.Encoded<typeof LexicalNodeWire>;
+  export type Encoded = typeof LexicalNodeWire.Encoded;
 }
 
 /**

@@ -134,7 +134,7 @@ import type { FileProcessingEngineShape, FileProcessingService } from "@beep/fil
 import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } from "@beep/file-processing/Strategy";
 import type { PopplerError } from "@beep/poppler";
 import type { TesseractScript } from "@beep/tesseract";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CorpusArchiveMoveError } from "../Corpus.errors.ts";
@@ -164,10 +164,10 @@ const retainCorpusProvenanceRecords = (
 const $I = $RepoCliId.create("commands/Corpus/internal/ServicePrograms");
 
 type CorpusCommandServiceRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | Digest.Digest
   | ChildProcessSpawner.ChildProcessSpawner;
 const sqlStringLiteral = (value: string): string => `'${Str.replaceAll("'", "''")(value)}'`;
 
@@ -861,7 +861,7 @@ const jsonlTextEncoder = new TextEncoder();
 
 const deriveCorpusOperationId = Effect.fn("CorpusCommandService.deriveCorpusOperationId")(function* (
   text: string
-): Effect.fn.Return<OperationId, CorpusCommandError, Crypto.Crypto> {
+): Effect.fn.Return<OperationId, CorpusCommandError, Digest.Digest> {
   const digest = yield* decodeSha256FromBytes(operationTextEncoder.encode(text)).pipe(
     CorpusCommandError.mapError("Operation id digest derivation failed.")
   );
@@ -925,7 +925,7 @@ const writeCorpusStringFile = Effect.fn("CorpusCommandService.writeCorpusStringF
 
 const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function* (
   filePath: string
-): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Crypto.Crypto> {
+): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Digest.Digest> {
   return yield* sharedHashFileSha256(filePath, (cause) =>
     CorpusCommandError.make({ cause, message: `Failed hashing file "${filePath}".` })
   );
@@ -1733,7 +1733,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
       readonly relativePath: PosixPath;
     },
     CorpusCommandError,
-    Crypto.Crypto
+    Digest.Digest
   > {
     const sanitizedRelative = Str.replaceAll("\\", "/")(`${record.sourceLabel}/${record.relativePath}`);
     const artifactId = yield* decodeArtifactId(`artifact:${record.sha256}`).pipe(
@@ -1760,7 +1760,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   // artifact) is redone from scratch.
   const readCompletedOutcome = Effect.fn("CorpusCommandService.readCompletedExtractOutcome")(function* (
     record: CorpusProvenanceRecord
-  ): Effect.fn.Return<O.Option<CorpusExtractOutcome>, CorpusCommandError, Crypto.Crypto> {
+  ): Effect.fn.Return<O.Option<CorpusExtractOutcome>, CorpusCommandError, Digest.Digest> {
     const ids = yield* deriveSourceIds(record);
     const markerText = yield* fs.readFileString(outcomeMarkerPath(record.sha256)).pipe(Effect.option);
     const marker = pipe(
@@ -1853,7 +1853,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   ): Effect.fn.Return<
     CorpusExtractOutcome,
     CorpusCommandError,
-    Crypto.Crypto | FileProcessingService | FileSystem.FileSystem | Path.Path
+    Digest.Digest | FileProcessingService | FileSystem.FileSystem | Path.Path
   > {
     const ids = yield* deriveSourceIds(record);
     const { artifactId, digest, operationId } = ids;
@@ -2687,7 +2687,7 @@ const validateArchiveFile = Effect.fn("CorpusCommandService.validateArchiveFile"
   sourcePath: string,
   originPath: string,
   provenanceByOrigin: MutableHashMap.MutableHashMap<string, ArchiveProvenanceMatch>
-): Effect.fn.Return<ArchiveValidatedFile, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ArchiveValidatedFile, CorpusArchiveMoveError, Digest.Digest | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const match = MutableHashMap.get(provenanceByOrigin, originPath);
   if (O.isNone(match)) {
@@ -2739,7 +2739,7 @@ const isCrossDeviceRename = (error: PlatformError.PlatformError): boolean => {
 const copyVerifyAndRemoveFile = Effect.fn("CorpusCommandService.copyVerifyAndRemoveFile")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Digest.Digest | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const sourceSha256 = yield* hashFileSha256(sourcePath);
@@ -2767,7 +2767,7 @@ const copyVerifyAndRemoveFile = Effect.fn("CorpusCommandService.copyVerifyAndRem
 const moveSourceAcrossDevice = Effect.fn("CorpusCommandService.moveSourceAcrossDevice")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Digest.Digest | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* collectArchiveSourceFiles(sourcePath);
@@ -2794,7 +2794,7 @@ const moveSourceAcrossDevice = Effect.fn("CorpusCommandService.moveSourceAcrossD
 const moveArchiveSource = Effect.fn("CorpusCommandService.moveArchiveSource")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Digest.Digest | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.rename(sourcePath, archivePath).pipe(
     Effect.catchTag("PlatformError", (error) =>

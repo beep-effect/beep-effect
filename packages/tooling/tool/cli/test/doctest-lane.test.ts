@@ -3,7 +3,7 @@ import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@bee
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -19,7 +19,7 @@ import * as Str from "effect/String";
 import "vitest/config";
 import { resolveConfig } from "vitest/node";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const fixture = NodeURL.fileURLToPath(new URL("./fixtures/doctest-lane/package/", import.meta.url));
 
 // These configs override test.include (coverage.include is a different selector).

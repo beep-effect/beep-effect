@@ -6,6 +6,7 @@
 
 import { FsUtilsLive } from "@beep/repo-utils";
 import { BunRuntime } from "@effect/platform-bun";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -16,7 +17,7 @@ import { docgenCommand } from "./CLI.ts";
 import * as Domain from "./Domain.ts";
 import * as Version from "./Version.ts";
 
-const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
+const BaseLayers = Layer.mergeAll(BunServices.layer, BunCrypto.layerDigest, Domain.Process.layer);
 
 const DerivedLayers = FsUtilsLive.pipe(Layer.provideMerge(BaseLayers));
 

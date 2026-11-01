@@ -7,7 +7,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -65,8 +65,8 @@ const manifestPin = O.getOrThrow(A.findFirst(kpiSourcePins, (pin) => pin.role ==
 const readText = (path: string) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.readFileString(path));
 
 const sha256Of = Effect.fn("KpiTest.sha256Of")(function* (bytes: Uint8Array) {
-  const crypto = yield* Crypto.Crypto;
-  return Sha256Hex.make(Hex.encode(yield* crypto.digest("SHA-256", bytes)));
+  const crypto = yield* Digest.Digest;
+  return Sha256Hex.make(Hex.encode(yield* crypto.digest(Digest.sha256, bytes)));
 });
 
 // ---- synthetic fold fixtures (every instant inside W and W-b) ----

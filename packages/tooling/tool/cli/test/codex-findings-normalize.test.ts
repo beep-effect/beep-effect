@@ -193,7 +193,7 @@ describe("codex findings severity tallies", () => {
 describe("codex findings payload rejection", () => {
   const rejects = (value: unknown) =>
     decodePayload(value).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.orElseSucceed(() => "rejected")
     );
 
@@ -253,7 +253,7 @@ describe("codex findings payload rejection", () => {
 describe("codex findings reconciliation", () => {
   it.effect("refuses an expired session rather than bootstrapping an empty packet", () =>
     planFrom(payloadOf([], { authState: "expired", expectedCount: 0 })).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason)),
       Effect.map((reason) => {
         expect(reason).toBe("auth-expired");
@@ -263,7 +263,7 @@ describe("codex findings reconciliation", () => {
 
   it.effect("refuses a short read against the dashboard's own reported total", () =>
     planFrom(payloadOf([captureFinding({ codexId: hex("aa", 32) })], { expectedCount: 26 })).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason)),
       Effect.map((reason) => {
         expect(reason).toBe("short-read");
@@ -288,7 +288,7 @@ describe("codex findings reconciliation", () => {
 describe("codex findings ingest options", () => {
   it.effect("rejects a traversal slug supplied on the command line", () =>
     decodeCodexFindingsIngestOptions({ slug: "../../etc" }).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.orElseSucceed(() => "rejected"),
       Effect.map((outcome) => {
         expect(outcome).toBe("rejected");
@@ -298,7 +298,7 @@ describe("codex findings ingest options", () => {
 
   it.effect("rejects a traversal-shaped date override", () =>
     decodeCodexFindingsIngestOptions({ date: "2026-08-04/../.." }).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.orElseSucceed(() => "rejected"),
       Effect.map((outcome) => {
         expect(outcome).toBe("rejected");
@@ -326,7 +326,7 @@ describe("codex findings source identity consistency", () => {
 
   const reasonOf = (value: unknown) =>
     planFrom(value).pipe(
-      Effect.map(() => "accepted"),
+      Effect.as("accepted"),
       Effect.catchTag("CodexFindingsIngestError", (error: CodexFindingsIngestError) => Effect.succeed(error.reason))
     );
 

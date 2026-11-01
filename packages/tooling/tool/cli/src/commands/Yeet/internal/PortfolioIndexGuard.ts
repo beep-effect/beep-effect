@@ -27,7 +27,8 @@ import { buildPortfolioIndexContent, PORTFOLIO_INDEX_PATH } from "../../Goals/Po
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitPathList } from "./GitExec.ts";
 import { failPublishScopeWithPacket } from "./PublishScope.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetStagedPublishIntent } from "../Yeet.schemas.ts";
@@ -204,7 +205,11 @@ export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfol
 ): Effect.fn.Return<
   PortfolioIndexPublishDisposition,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

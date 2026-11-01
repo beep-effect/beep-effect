@@ -1,11 +1,15 @@
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
-import * as Crypto from "effect/Crypto";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import { loadOpenClawStackArgs, makeOpenClawGeneration, OpenClawStack } from "../OpenClaw.ts";
 
 const args = loadOpenClawStackArgs();
 const openClawGeneration = Effect.runSync(
-  makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))
+  NodeCrypto.layerDigest.pipe(
+    Layer.build,
+    Effect.flatMap((context) => makeOpenClawGeneration(args).pipe(Effect.provideContext(context))),
+    Effect.scoped
+  )
 );
 const openclaw = new OpenClawStack("openclaw", args, openClawGeneration);
 

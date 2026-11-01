@@ -19,7 +19,8 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -763,7 +764,7 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  */
 export const readAdmissionProtocol = Effect.fn("AdmissionJournal.readProtocol")(function* (
   root: string
-): Effect.fn.Return<AdmissionProtocol, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<AdmissionProtocol, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const protocolPath = yield* admissionProtocolPath(root);
   const text = yield* fs.readFileString(protocolPath).pipe(Effect.option);
@@ -779,7 +780,7 @@ const prepareAdmissionJournalPaths = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   { readonly journalPath: string; readonly lockPath: string; readonly protocolPath: string },
   QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -797,7 +798,7 @@ const legacyLockOwnerPid = flow(Str.split(":"), A.head, O.flatMap(N.parse));
 
 const lockGenerationIsDead = Effect.fnUntraced(function* (
   generation: AdmissionJournalLockGeneration
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   return ProcessIdentityStatus.is.dead(yield* processIdentityStatus(generation));
 });
 
@@ -819,11 +820,11 @@ const takenJournalLockIsOwned = Effect.fnUntraced(function* (
   });
 });
 
-const randomIdentity = Effect.orDie(Effect.flatMap(Crypto.Crypto, (crypto) => crypto.randomUUIDv4()));
+const randomIdentity = SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
 
 const journalLockReapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = Hex.encode(yield* Effect.orDie(crypto.digest("SHA-256", new TextEncoder().encode(observedToken))));
+  const crypto = yield* Digest.Digest;
+  const digest = Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedToken)));
   return `${lockPath}.reap-${digest}`;
 });
 
@@ -883,7 +884,7 @@ const decodeLegacyReapAdopterGeneration = Effect.fnUntraced(function* (
 
 const pathsWithPrefix = Effect.fnUntraced(function* (
   prefixPath: string
-): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<ReadonlyArray<string>>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.dirname(prefixPath);
@@ -900,7 +901,7 @@ const pathsWithPrefix = Effect.fnUntraced(function* (
 
 const journalLockReapSidecars = (
   lockPath: string
-): Effect.Effect<ReadonlyArray<string>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> =>
+): Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> =>
   pathsWithPrefix(`${lockPath}.reap-`).pipe(Effect.map(O.getOrElse(A.empty<string>)));
 
 const isJournalLockReapTombstone = Str.includes(".tombstone-");
@@ -908,7 +909,7 @@ const isJournalLockReapTombstone = Str.includes(".tombstone-");
 const takeJournalLockGeneration = Effect.fnUntraced(function* (
   lockPath: string,
   tombstonePath: string
-): Effect.fn.Return<O.Option<TakenJournalLockGeneration>, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<O.Option<TakenJournalLockGeneration>, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const moved = yield* fs.rename(lockPath, tombstonePath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
   if (!moved) {
@@ -923,21 +924,21 @@ const takeJournalLockGeneration = Effect.fnUntraced(function* (
 const restoreJournalLockReapTombstone = Effect.fnUntraced(function* (
   lockPath: string,
   tombstonePath: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.link(tombstonePath, lockPath).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
 });
 
 const discardTakenJournalLock = Effect.fnUntraced(function* (
   tombstonePath: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(tombstonePath, { force: true }).pipe(Effect.ignore);
 });
 
 const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
   tombstonePath: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   yield* discardTakenJournalLock(tombstonePath);
   yield* Console.error(
     `[yeet] swept orphaned journal lock tombstone ${tombstonePath}; its displaced writer must reacquire.`
@@ -946,7 +947,7 @@ const discardOrphanJournalLockReapTombstone = Effect.fnUntraced(function* (
 
 const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
   lockPath: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const sidecars = yield* journalLockReapSidecars(lockPath);
   const nowMillis = yield* Clock.currentTimeMillis;
@@ -978,7 +979,7 @@ const reapAdopterMayStillAct = Effect.fnUntraced(function* (
   adopterPath: string,
   claimPath: string,
   nowMillis: number
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const adopter = yield* decodeReapAdopter(adopterPath, claimPath);
   const info = yield* fs.stat(adopterPath).pipe(Effect.option);
@@ -1015,7 +1016,7 @@ type ReapAdopterElection =
 const electReapAdopter = Effect.fnUntraced(function* (
   claimPath: string,
   nowMillis: number
-): Effect.fn.Return<ReapAdopterElection, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ReapAdopterElection, never, FileSystem.FileSystem | Path.Path> {
   const adopterPrefix = journalLockReapAdopterPrefix(claimPath);
   const adopters = yield* pathsWithPrefix(adopterPrefix);
   if (O.isNone(adopters)) {
@@ -1035,7 +1036,7 @@ const electReapAdopter = Effect.fnUntraced(function* (
 
 const makeLockGeneration = Effect.fnUntraced(function* (
   token: string
-): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<O.Option<AdmissionJournalLockGeneration>, never, FileSystem.FileSystem> {
   const procStart = yield* processStartIdentityForPid(process.pid);
   return O.map(procStart, (identity) =>
     AdmissionJournalLockGeneration.make({
@@ -1055,7 +1056,7 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
   claimPath: string,
   observedToken: string,
   nowMillis: number
-): Effect.fn.Return<O.Option<string>, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<O.Option<string>, never, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom> {
   const fs = yield* FileSystem.FileSystem;
   const election = yield* electReapAdopter(claimPath, nowMillis);
   if (election._tag === "blocked") {
@@ -1099,7 +1100,7 @@ const adoptJournalLockReapClaim = Effect.fnUntraced(function* (
 const journalLockReapClaimIsOwned = Effect.fnUntraced(function* (
   adopterPath: string,
   observedToken: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   return O.contains(yield* fs.readFileString(adopterPath).pipe(Effect.option), observedToken);
 });
@@ -1110,7 +1111,7 @@ const reportLostJournalLockReapClaim = (adopterPath: string): Effect.Effect<void
 const releaseJournalLockReapClaim = Effect.fnUntraced(function* (
   adopterPath: string,
   observedToken: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem> {
   if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
     yield* reportLostJournalLockReapClaim(adopterPath);
     return;
@@ -1123,7 +1124,7 @@ const discardReclaimedJournalLock = Effect.fnUntraced(function* (
   tombstonePath: string,
   adopterPath: string,
   observedToken: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
     yield* reportLostJournalLockReapClaim(adopterPath);
     return false;
@@ -1137,7 +1138,7 @@ const restoreDisplacedJournalLock = Effect.fnUntraced(function* (
   tombstonePath: string,
   adopterPath: string,
   observedToken: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
     yield* reportLostJournalLockReapClaim(adopterPath);
     return false;
@@ -1154,7 +1155,7 @@ const finishJournalLockReap = Effect.fnUntraced(function* (
   claimPath: string,
   adopterPath: string,
   observedToken: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | SecureRandom.SecureRandom> {
   const fs = yield* FileSystem.FileSystem;
   if (!(yield* journalLockReapClaimIsOwned(adopterPath, observedToken))) {
     yield* reportLostJournalLockReapClaim(adopterPath);
@@ -1188,7 +1189,7 @@ const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
   claimPath: string,
   observedToken: string,
   nowMillis: number
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom> {
   const adopterPath = yield* adoptJournalLockReapClaim(lockPath, claimPath, observedToken, nowMillis);
   if (O.isSome(adopterPath)) {
     yield* finishJournalLockReap(lockPath, claimPath, adopterPath.value, observedToken);
@@ -1201,7 +1202,7 @@ const claimAndFinishJournalLockReap = Effect.fnUntraced(function* (
 // the suspended owner before the winner touches the published lock generation.
 const reapAbandonedJournalLock = Effect.fnUntraced(function* (
   lockPath: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   if (O.isNone(content)) {
@@ -1246,7 +1247,7 @@ const reapAbandonedJournalLock = Effect.fnUntraced(function* (
 const tryAcquireJournalLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   yield* sweepOrphanJournalLockClaims(lockPath);
   const generation = yield* makeLockGeneration(token);
@@ -1301,7 +1302,7 @@ export const acquireJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string,
   retryAttempts = LOCK_RETRY_ATTEMPTS
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest> {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
     if (yield* tryAcquireJournalLock(lockPath, token)) {
       return true;
@@ -1331,7 +1332,7 @@ export const acquireJournalFileLock = Effect.fnUntraced(function* (
 export const releaseJournalFileLock = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, never, FileSystem.FileSystem | SecureRandom.SecureRandom | Digest.Digest> {
   const tombstonePath = yield* journalLockReapTombstonePath(yield* journalLockReapClaimPath(lockPath, token));
   const taken = yield* takeJournalLockGeneration(lockPath, tombstonePath);
   if (O.isNone(taken)) {
@@ -1392,7 +1393,7 @@ export const finishAdmissionJournalLockReapForTesting = finishJournalLockReap;
 const journalLockIsOwned = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<boolean, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const content = yield* fs.readFileString(lockPath).pipe(Effect.option);
   return yield* takenJournalLockIsOwned(content, token);
@@ -1418,7 +1419,7 @@ const journalLockIsOwned = Effect.fnUntraced(function* (
 export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
   lockPath: string,
   token: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem> {
   if (!(yield* journalLockIsOwned(lockPath, token))) {
     return yield* QualitySchedulerError.make({
       message: `Admission journal lock "${lockPath}" was lost before publication; retry the locked operation.`,
@@ -1430,11 +1431,13 @@ export const assertJournalFileLockOwned = Effect.fnUntraced(function* (
 const acquireFencedGeneration = Effect.fnUntraced(function* (
   lockPath: string,
   busyMessage: string
-): Effect.fn.Return<string, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
-  const crypto = yield* Crypto.Crypto;
-  const identity = yield* crypto
-    .randomUUIDv4()
-    .pipe(Effect.mapError(QualitySchedulerError.new("Failed to create journal lock identity.")));
+): Effect.fn.Return<
+  string,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
+  const crypto = yield* SecureRandom.SecureRandom;
+  const identity = yield* crypto.uuidV4();
   const lockToken = `${process.pid}:${identity}`;
   if (yield* acquireJournalFileLock(lockPath, lockToken)) {
     return lockToken;
@@ -1451,7 +1454,7 @@ const runFencedOperation = Effect.fnUntraced(function* <Success, Failure, Requir
 ): Effect.fn.Return<
   Result.Result<Result.Result<Success, Failure>, QualitySchedulerError>,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | Requirements
+  FileSystem.FileSystem | Path.Path | Requirements | SecureRandom.SecureRandom | Digest.Digest
 > {
   return yield* Effect.acquireUseRelease(
     acquireFencedGeneration(lockPath, busyMessage),
@@ -1501,7 +1504,7 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
 ): Effect.fn.Return<
   Success,
   Failure | QualitySchedulerError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | Requirements
+  FileSystem.FileSystem | Path.Path | Requirements | SecureRandom.SecureRandom | Digest.Digest
 > {
   for (let attempt = 0; attempt < retryAttempts; attempt++) {
     const outcome = yield* runFencedOperation(lockPath, operation, busyMessage);
@@ -1539,7 +1542,11 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
 export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol")(function* (
   root: string,
   eviction: AdmissionEvictionEmission
-): Effect.fn.Return<AdmissionProtocol, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  AdmissionProtocol,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
   const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v2", eviction });
   const content = yield* encodeAdmissionProtocol(protocol).pipe(
@@ -1565,7 +1572,7 @@ const publishJournalAtomic = Effect.fnUntraced(function* (
   lockPath: string,
   lockToken: string,
   content: string
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom> {
   yield* publishJournalTextAtomically(
     journalPath,
     content,
@@ -1602,7 +1609,7 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   event: AdmissionJournalEvent,
   line: string,
   idempotent: boolean
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, QualitySchedulerError, FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom> {
   const fs = yield* FileSystem.FileSystem;
   yield* assertJournalFileLockOwned(lockPath, lockToken);
   const text = yield* fs
@@ -1726,7 +1733,11 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
 export const appendAdmissionJournalEvent = Effect.fn("AdmissionJournal.append")(function* (
   root: string,
   event: AdmissionJournalTransition
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   yield* appendAdmissionJournalEventWithMode(root, event, false);
 });
 
@@ -1734,7 +1745,11 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
   root: string,
   event: AdmissionJournalTransition,
   idempotent: boolean
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission journal event."))
@@ -1772,7 +1787,11 @@ const appendAdmissionJournalEventWithMode = Effect.fnUntraced(function* (
 export const appendAdmissionJournalEventOnce = Effect.fn("AdmissionJournal.appendOnce")(function* (
   root: string,
   event: AdmissionJournalTransition
-): Effect.fn.Return<void, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   yield* appendAdmissionJournalEventWithMode(root, event, true);
 });
 
@@ -1806,7 +1825,11 @@ export const appendAdmissionEvictionJournalEvent = Effect.fn("AdmissionJournal.a
     | AdmissionJournalTicketEvicted
     | AdmissionJournalLeaseEvictedV3
     | AdmissionJournalTicketEvictedV3
-): Effect.fn.Return<boolean, QualitySchedulerError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  boolean,
+  QualitySchedulerError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const { journalPath, lockPath } = yield* prepareAdmissionJournalPaths(root);
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(QualitySchedulerError.new("Failed to encode admission eviction journal event."))

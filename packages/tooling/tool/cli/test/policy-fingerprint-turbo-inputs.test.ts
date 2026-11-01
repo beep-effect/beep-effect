@@ -2,7 +2,7 @@ import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { PolicyToolsFingerprintPolicy, StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -91,7 +91,7 @@ const decodeSummary = S.decodeEffect(S.fromJsonString(FingerprintRunSummary));
 const encodeSummary = S.encodeEffect(S.fromJsonString(FingerprintRunSummary));
 const summaryEquivalent = S.toEquivalence(FingerprintRunSummary);
 const FingerprintRunSummaryArbitrary = Arbitrary.schema(FingerprintRunSummary);
-const platform = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const platform = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 const writeFile = Effect.fn("PolicyFingerprintTurboTest.writeFile")(function* (
   root: string,

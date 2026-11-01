@@ -1,7 +1,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -43,7 +43,7 @@ const BuildConfiguration = S.Struct({
 
 const decodeBaseTsconfig = S.decodeUnknownEffect(BaseTsconfig);
 const decodeBuildConfiguration = S.decodeEffect(S.fromJsonString(BuildConfiguration));
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 const readBaseTsconfig = Effect.fn("BuildTurboOutputsTest.readBaseTsconfig")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;

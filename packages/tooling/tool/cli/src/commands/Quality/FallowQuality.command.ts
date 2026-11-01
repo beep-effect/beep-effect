@@ -56,7 +56,7 @@ import {
   sameFeatureFamily,
 } from "./internal/FallowEnvelope.schema.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ParseError } from "jsonc-parser";
 import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
@@ -401,7 +401,7 @@ type FallowFinding = FallowReportFinding;
 type FallowQualityEnvironment =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 type FallowCommandOptions = {
   readonly advisory: boolean;
@@ -1010,7 +1010,11 @@ const collectProcessOutput = Effect.fn("FallowQuality.collectProcessOutput")(fun
   command: string,
   args: ReadonlyArray<string>,
   env: ProcessEnv = {}
-): Effect.fn.Return<ProcessResult, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ProcessResult,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runCapturedStreams({
     command,
     args,
@@ -1035,7 +1039,7 @@ const collectOptionalOutput = Effect.fn("FallowQuality.collectOptionalOutput")(f
   command: string,
   args: ReadonlyArray<string>,
   fallback: string
-): Effect.fn.Return<string, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* collectProcessOutput(repoRoot, command, args).pipe(Effect.option);
   if (O.isNone(result) || result.value.exitCode !== 0) {
     return fallback;
@@ -1427,7 +1431,7 @@ const writeEnvelope = Effect.fn("FallowQuality.writeEnvelope")(function* (
 
 const dirtyWorktree = Effect.fn("FallowQuality.dirtyWorktree")(function* (
   repoRoot: string
-): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* collectProcessOutput(repoRoot, "git", ["status", "--porcelain"]).pipe(Effect.option);
   return O.isSome(result) && Str.trim(result.value.output).length > 0;
 });
@@ -1435,7 +1439,7 @@ const dirtyWorktree = Effect.fn("FallowQuality.dirtyWorktree")(function* (
 const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<ProcessResult, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<ProcessResult, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* collectProcessOutput(repoRoot, "git", ["rev-parse", "--verify", base]).pipe(
     Effect.orElseSucceed(() => ({
       stdout: "",
@@ -1475,7 +1479,11 @@ export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectA
   base: string,
   context = 3,
   noRenames?: boolean
-): Effect.fn.Return<ProcessResult, QualityScriptCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ProcessResult,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const trackedDiff = yield* collectProcessOutput(repoRoot, "git", [
     "diff",
     "--binary",

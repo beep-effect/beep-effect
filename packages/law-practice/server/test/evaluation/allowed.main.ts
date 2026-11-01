@@ -8,14 +8,14 @@ import {
   UsptoClaimSource,
 } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import { Uspto, UsptoConfigInput } from "@beep/uspto";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -54,15 +54,14 @@ const isCompleteSample = (manifest: typeof AllowedSample.Type): boolean =>
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
-  const crypto = yield* Crypto.Crypto;
+  const digestService = yield* Digest.Digest;
   const output = yield* Config.String("CLAIM_ALLOWED_OUTPUT");
   const implementationFile = yield* Config.String("CLAIM_IMPLEMENTATION_FREEZE");
   const manifestFile = "goals/claim-element-antecedent-check/research/allowed-sampling.json";
   const manifestText = yield* fs.readFileString(manifestFile);
   const manifest = yield* S.decodeEffect(allowedSampleJson)(manifestText);
   const implementation = yield* S.decodeEffect(implementationFreezeJson)(yield* fs.readFileString(implementationFile));
-  const digest = (text: string) =>
-    crypto.digest("SHA-256", new TextEncoder().encode(text)).pipe(Effect.map(Hex.encode));
+  const digest = (text: string) => digestService.digestHex(Digest.sha256, new TextEncoder().encode(text));
   const verifiedText = Effect.fn("AllowedEvaluation.verifiedText")(function* (path: string, expected: string) {
     const text = yield* fs.readFileString(path);
     if ((yield* digest(text)) !== expected)
@@ -177,7 +176,7 @@ const program = Effect.gen(function* () {
 });
 BunRuntime.runMain(
   Effect.gen(function* () {
-    const services = yield* Layer.build(BunServices.layer);
+    const services = yield* Layer.build(Layer.mergeAll(BunServices.layer, BunCrypto.layer));
     yield* program.pipe(Effect.provide(services));
   }).pipe(Effect.scoped)
 );

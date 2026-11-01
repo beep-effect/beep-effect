@@ -7,7 +7,7 @@
  * The pure core is the JCS emitter: compact output, object keys sorted by
  * UTF-16 code units, ECMAScript number serialization, with the package's
  * usual `Result` primitive / spanned `Effect` twin arrangement. Hashing is the
- * one effectful edge: it requires core's `Crypto.Crypto` service and owns no
+ * one effectful edge: it requires core's `Digest.Digest` service and owns no
  * backend, so consumers provide a `Crypto` layer at the application edge.
  *
  * This is a deliberately different contract from `Jsonc.stringify`:
@@ -21,7 +21,7 @@
 import { $JsoncId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, flow, identity } from "effect/Function";
@@ -33,7 +33,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
-import type { PlatformError } from "effect/PlatformError";
 
 const $I = $JsoncId.create("JsoncFingerprint");
 
@@ -388,7 +387,7 @@ const emit: {
 
 const encoder = new TextEncoder();
 
-// SHA-256 produces 32 bytes. The `Crypto.Crypto` path cannot return anything
+// SHA-256 produces 32 bytes. The `Digest.Digest` path cannot return anything
 // else; the caller-supplied `JsoncDigest` can, so the sync twins check it.
 const SHA256_DIGEST_BYTES = 32;
 
@@ -420,8 +419,8 @@ const digestHexResult: {
 );
 
 const digestHex = Effect.fnUntraced(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", encoder.encode(text));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, encoder.encode(text));
   return Hex.encode(digest);
 });
 
@@ -445,7 +444,7 @@ const prepareText: {
  * **Details**
  *
  * Canonicalization is pure. The two hashing statics require core's
- * `Crypto.Crypto` service and own no backend; provide any `Crypto` layer at
+ * `Digest.Digest` service and own no backend; provide any `Crypto` layer at
  * the application edge. Their `Result` twins take the digest as a plain
  * function so a synchronous host hook can fingerprint at all.
  *
@@ -588,24 +587,17 @@ export abstract class JsoncFingerprint {
    * **Details**
    *
    * Values that differ only in object key order fingerprint identically.
-   * Requires core's `Crypto.Crypto` service; the digest can fail with the
-   * platform's `PlatformError`, passed through untranslated. The output is
-   * exactly 64 lowercase hexadecimal characters with no algorithm prefix.
+   * Requires core's `Digest.Digest` service. The output is exactly 64
+   * lowercase hexadecimal characters with no algorithm prefix.
    *
    * **Example** (Fingerprint with a WebCrypto-backed service)
    *
    * ```ts
-   * import * as Crypto from "effect/Crypto"
+   * import * as Digest from "effect/crypto/Digest"
    * import * as Effect from "effect/Effect"
    * import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint"
    *
-   * const WebCrypto = Crypto.make({
-   *   randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-   *   digest: (algorithm, data) =>
-   *     Effect.map(Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))), (buffer) => new Uint8Array(buffer)),
-   * })
-   *
-   * const program = JsoncFingerprint.hash({ b: 2, a: 1 }).pipe(Effect.provideService(Crypto.Crypto, WebCrypto))
+   * const program = JsoncFingerprint.hash({ b: 2, a: 1 }).pipe(Effect.provide(Digest.layerWebCrypto))
    *
    * Effect.runPromise(program).then((hex) => console.log(hex.length)) // 64
    * ```
@@ -613,7 +605,7 @@ export abstract class JsoncFingerprint {
    * @param value - The plain JSON value to fingerprint.
    */
   static readonly hash = Effect.fn("JsoncFingerprint.hash")(
-    (value: unknown): Effect.Effect<string, JsoncCanonicalizeError | PlatformError, Crypto.Crypto> =>
+    (value: unknown): Effect.Effect<string, JsoncCanonicalizeError, Digest.Digest> =>
       Effect.flatMap(Effect.fromResult(JsoncFingerprint.canonicalizeResult(value)), digestHex)
   );
 
@@ -664,24 +656,18 @@ export abstract class JsoncFingerprint {
    *
    * **Details**
    *
-   * Requires core's `Crypto.Crypto` service. The output is exactly 64
+   * Requires core's `Digest.Digest` service. The output is exactly 64
    * lowercase hexadecimal characters with no algorithm prefix.
    *
    * **Example** (Hash text with a WebCrypto-backed service)
    *
    * ```ts
-   * import * as Crypto from "effect/Crypto"
+   * import * as Digest from "effect/crypto/Digest"
    * import * as Effect from "effect/Effect"
    * import { JsoncFingerprint, JsoncTextHashOptions } from "@beep/jsonc/JsoncFingerprint"
    *
-   * const WebCrypto = Crypto.make({
-   *   randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-   *   digest: (algorithm, data) =>
-   *     Effect.map(Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))), (buffer) => new Uint8Array(buffer)),
-   * })
-   *
    * const program = JsoncFingerprint.hashText("line one\r\nline two", JsoncTextHashOptions.make({ normalizeEol: true })).pipe(
-   *   Effect.provideService(Crypto.Crypto, WebCrypto)
+   *   Effect.provide(Digest.layerWebCrypto)
    * )
    *
    * Effect.runPromise(program).then((hex) => console.log(hex.length)) // 64
@@ -691,12 +677,12 @@ export abstract class JsoncFingerprint {
    * @param options - Hash options; omitted fields take their defaults.
    */
   static readonly hashText: {
-    (text: string, options?: JsoncTextHashOptions): Effect.Effect<string, PlatformError, Crypto.Crypto>;
-    (options?: JsoncTextHashOptions): (text: string) => Effect.Effect<string, PlatformError, Crypto.Crypto>;
+    (text: string, options?: JsoncTextHashOptions): Effect.Effect<string, never, Digest.Digest>;
+    (options?: JsoncTextHashOptions): (text: string) => Effect.Effect<string, never, Digest.Digest>;
   } = dual(
     (args) => P.isString(args[0]),
     Effect.fn("JsoncFingerprint.hashText")(
-      (text: string, options?: JsoncTextHashOptions): Effect.Effect<string, PlatformError, Crypto.Crypto> =>
+      (text: string, options?: JsoncTextHashOptions): Effect.Effect<string, never, Digest.Digest> =>
         digestHex(prepareText(text, options))
     )
   );

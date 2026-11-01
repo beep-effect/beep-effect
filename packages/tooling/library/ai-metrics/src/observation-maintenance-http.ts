@@ -5,7 +5,7 @@
  */
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { Sha256Hex } from "@beep/schema";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
@@ -154,12 +154,12 @@ export const makeObservationMaintenanceHttp = Effect.fn("AiMetrics.makeObservati
   const backupPolicy = yield* S.decodeEffect(ObservationBackupPolicy)({
     maxBytes: config.intake.maxDatabasePages * 4096,
   });
-  const crypto = yield* Crypto.Crypto;
+  const random = yield* SecureRandom.SecureRandom;
   const context = ObservationMaintenanceContext.make({
     hostId: config.intake.hostId,
     namespaceId: config.intake.namespaceId,
     targetId: config.ledger.targetId,
-    ownerInstanceId: yield* crypto.randomUUIDv4(),
+    ownerInstanceId: yield* random.uuidV4(),
   });
   const permit = yield* Semaphore.make(1);
   const handler = Effect.gen(function* () {

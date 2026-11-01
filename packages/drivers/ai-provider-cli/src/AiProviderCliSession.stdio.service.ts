@@ -34,7 +34,7 @@ import {
   CodexTurn,
   MessagingToolName,
 } from "./AiProviderCliSession.wire.models.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -85,7 +85,7 @@ export const openStdio = Effect.fn("AiProviderCliSession.openStdio")(function* (
 ): Effect.fn.Return<
   ManagedSession,
   ManagedSessionError,
-  Scope.Scope | Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  Scope.Scope | Digest.Digest | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const args =
     profile.provider === "codex"

@@ -32,7 +32,8 @@ import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedg
 import { mergedPullRequestsForBranch } from "../../Worktree/Worktree.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
 import type * as Config from "effect/Config";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ResidueTerminalLaneProbeShape } from "../../../internal/repo-run/index.ts";
 import type { WorktreeMergedPullRequest } from "../../Worktree/Worktree.service.ts";
@@ -61,11 +62,12 @@ export type ResidueTerminalLanePullRequests = (
 ) => Effect.Effect<
   O.Option<ReadonlyArray<WorktreeMergedPullRequest>>,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  Digest.Digest | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 >;
 
 type ProbeRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | FileSystem.FileSystem
   | Path.Path
@@ -235,5 +237,9 @@ export const makeResidueTerminalLaneProbe = Effect.fnUntraced(function* (
 export const ResidueTerminalLaneProbeLive: Layer.Layer<
   ResidueTerminalLaneProbe,
   Config.ConfigError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | FileSystem.FileSystem
+  | Path.Path
 > = Layer.effect(ResidueTerminalLaneProbe, makeResidueTerminalLaneProbe()).pipe(Layer.provide(layerSessionLedgerLive));

@@ -5,13 +5,16 @@
  * @since 0.0.0
  */
 
-import { ArtifactReference, deriveArtifactId } from "@beep/file-processing/Artifact";
+import { ArtifactReference } from "@beep/file-processing/Artifact";
 import { ArchiveExportResult } from "@beep/file-processing/Extraction";
-import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
+import {
+  DetectionResult,
+  deriveArchiveChildArtifact,
+  FileProcessingOperationError,
+} from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { PosixPath } from "@beep/schema/PosixPath";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import {
@@ -27,10 +30,7 @@ import type {
   ExtractFileOperation,
 } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type * as Crypto from "effect/Crypto";
 import type { LibpffError } from "./Libpff.errors.ts";
-
-const decodePosixPath = S.decodeEffect(PosixPath);
 
 const $I = $LibpffId.create("Libpff.service");
 
@@ -67,38 +67,6 @@ const mapLibpffErrorToOperationError = (
   error: LibpffError,
   operation: ExportArchiveOperation
 ): FileProcessingOperationError => libpffOperationError(operation, error, scaffoldErrorWording);
-
-const decodeLibpffArtifactPath = (
-  path: string,
-  operation: ExportArchiveOperation
-): Effect.Effect<PosixPath, FileProcessingOperationError> =>
-  decodePosixPath(path).pipe(
-    Effect.mapError(() =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff child artifact path was not POSIX-normalized.",
-        operationId: operation.operationId,
-      })
-    )
-  );
-
-const deriveLibpffChildArtifactId = (
-  operation: ExportArchiveOperation,
-  relativePath: PosixPath
-): Effect.Effect<ArtifactReference["id"], FileProcessingOperationError, Crypto.Crypto> =>
-  deriveArtifactId([operation.source.id, relativePath]).pipe(
-    Effect.mapError(() =>
-      FileProcessingOperationError.fromReason("archive-export-failed", {
-        artifactId: operation.source.id,
-        engine: LibpffFileProcessingEngineDescriptor.name,
-        format: operation.format,
-        message: "libpff child artifact id could not be derived.",
-        operationId: operation.operationId,
-      })
-    )
-  );
 
 /**
  * Options for the P1 libpff engine scaffold.
@@ -173,8 +141,11 @@ export const makeLibpffFileProcessingEngine = (
       return yield* mapLibpffErrorToOperationError(makeLibpffError("engine-unavailable"), operation);
     }
 
-    const childRelativePath = yield* decodeLibpffArtifactPath("children/synthetic-libpff-message.txt", operation);
-    const childArtifactId = yield* deriveLibpffChildArtifactId(operation, childRelativePath);
+    const { id: childArtifactId, relativePath: childRelativePath } = yield* deriveArchiveChildArtifact(
+      operation,
+      "children/synthetic-libpff-message.txt",
+      { engine: LibpffFileProcessingEngineDescriptor.name, subject: "libpff" }
+    );
     const child = ArtifactReference.make({
       id: childArtifactId,
       mediaType: "text/plain",

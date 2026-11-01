@@ -1000,7 +1000,7 @@ export declare namespace PackageJson {
    * @category models
    * @since 0.0.0
    */
-  export type Encoded = S.Codec.Encoded<typeof PackageJson>;
+  export type Encoded = typeof PackageJson.Encoded;
 }
 
 /**

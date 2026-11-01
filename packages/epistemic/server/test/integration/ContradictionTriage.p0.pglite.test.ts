@@ -19,7 +19,7 @@ import { assertSome } from "@effect/vitest/utils";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { and, eq, gt, isNull, lte, or, sql } from "drizzle-orm";
 import { bigint, jsonb, pgTable, serial, text, uniqueIndex } from "drizzle-orm/pg-core";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -86,8 +86,8 @@ class CandidatePayloadConflict extends S.TaggedError<CandidatePayloadConflict, {
 ) {}
 
 const sha256Hex = Effect.fnUntraced(function* (value: string) {
-  const crypto = yield* Crypto.Crypto;
-  return Hex.encode(yield* crypto.digest("SHA-256", new TextEncoder().encode(value)));
+  const crypto = yield* Digest.Digest;
+  return Hex.encode(yield* crypto.digest(Digest.sha256, new TextEncoder().encode(value)));
 });
 const encodeBeliefRef = (ref: BeliefRef): string => `${ref.logicalKey}:${ref.edgeVersionId}:${ref.version}`;
 

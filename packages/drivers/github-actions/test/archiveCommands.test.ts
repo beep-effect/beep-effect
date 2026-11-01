@@ -12,6 +12,7 @@ import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { commandArgs } from "./support/commandArgs.ts";
 
 /**
  * The archiver command lines, pinned verbatim.
@@ -126,7 +127,7 @@ describe("archiveCommands", () => {
         destination: "D:\\a\\_temp\\artifact.zip",
         level,
       });
-      const script = command.args[3];
+      const script = commandArgs(command)[3];
       if (script === undefined) {
         assert.fail("expected a PowerShell script argument");
       }
@@ -198,7 +199,7 @@ describe("archiveCommands", () => {
         destination: "D:\\o'brien\\a.zip",
         level: 6,
       });
-      const script = command.args[3];
+      const script = commandArgs(command)[3];
       if (script === undefined) {
         assert.fail("expected a PowerShell script argument");
       }

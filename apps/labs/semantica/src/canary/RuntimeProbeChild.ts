@@ -3,6 +3,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { LiteralKit } from "@beep/schema";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
@@ -130,7 +131,7 @@ const probe = Effect.gen(function* () {
 );
 
 BunRuntime.runMain(
-  BunServices.layer.pipe(
+  Layer.merge(BunServices.layer, BunCrypto.layer).pipe(
     Layer.build,
     Effect.flatMap((context) => Effect.provide(probe, context)),
     Effect.scoped

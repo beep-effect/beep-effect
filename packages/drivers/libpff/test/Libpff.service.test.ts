@@ -19,10 +19,15 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+
+// `NodeServices` no longer bundles crypto; the archive engine hashes through `Digest`.
+const TestServices = Layer.mergeAll(NodeServices.layer, NodeCrypto.layerDigest);
 
 const SourceArtifactArbitrary = Arbitrary.schema(SourceArtifact);
 const ExportArchiveOperationArbitrary = Arbitrary.schema(ExportArchiveOperation);
@@ -162,7 +167,7 @@ describe("@beep/libpff", () => {
     })
   );
 
-  it.layer(NodeServices.layer)("maps unavailable libpff runtime to an operation-level deferral", (it) => {
+  it.layer(TestServices)("maps unavailable libpff runtime to an operation-level deferral", (it) => {
     it.effect(
       "maps unavailable libpff runtime to an operation-level deferral",
       Effect.fnUntraced(function* () {
@@ -177,7 +182,7 @@ describe("@beep/libpff", () => {
     );
   });
 
-  it.layer(NodeServices.layer)("can emit synthetic child artifacts for proof fixtures", (it) => {
+  it.layer(TestServices)("can emit synthetic child artifacts for proof fixtures", (it) => {
     it.effect(
       "can emit synthetic child artifacts for proof fixtures",
       Effect.fnUntraced(function* () {

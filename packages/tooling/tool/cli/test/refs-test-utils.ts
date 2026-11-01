@@ -1,6 +1,6 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -35,7 +35,7 @@ export const fixture = Effect.fn("RefsTest.fixture")(function* () {
 });
 
 export const testPlatform = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(provideScopedLayer(NodeServices.layer));
+  effect.pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 export const workspace = ReferenceWorkspace;
 
@@ -74,4 +74,4 @@ export const referenceFixtureLayer = Layer.unwrap(
     const value = yield* fixture();
     return Layer.mergeAll(Layer.succeed(ReferenceFixture, value), value.service);
   })
-).pipe(Layer.provideMerge(NodeServices.layer));
+).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));

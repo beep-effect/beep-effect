@@ -39,7 +39,7 @@ import {
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
@@ -1007,7 +1007,7 @@ const rewriteSource = (
   file: string,
   source: string,
   plans: ReadonlyArray<MarkPlan>
-): Effect.Effect<string, DoctestRewriteError> => {
+): Effect.Effect<string, DoctestRewriteError, SecureRandom.SecureRandom> => {
   if (A.some(plans, (plan) => plan.sourceDigest !== sourceDigest(source))) {
     return DoctestRewriteError.make({ message: "Source changed after analysis; refusing stale plan.", file });
   }
@@ -1091,7 +1091,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
   DoctestFenceAnalyzer,
   Effect.gen(function* () {
     const context = yield* Effect.context<
-      FileSystem.FileSystem | Path.Path | FsUtils | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+      SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner.ChildProcessSpawner
     >();
     return {
       analyze: Effect.fn("DoctestFenceAnalyzer.analyze")((config) =>
@@ -1119,7 +1119,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
 export const DoctestFenceRewriterLive = Layer.effect(
   DoctestFenceRewriter,
   Effect.gen(function* () {
-    const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | FsUtils>();
+    const context = yield* Effect.context<SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils>();
     return {
       preview: Effect.fn("DoctestFenceRewriter.preview")((plans) =>
         rewriteWithServices(plans, false).pipe(Effect.provide(context))

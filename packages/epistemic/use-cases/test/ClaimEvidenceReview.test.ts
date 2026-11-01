@@ -15,7 +15,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -174,10 +174,10 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation 
   it.effect(
     "snapshots assertion and reviewer before digest computation",
     Effect.fnUntraced(function* () {
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const basis = makeBasis();
       const human = UserPrincipal.make({ kind: "User", userId: SharedIdentity.UserId.make(1) });
-      const mutatingCrypto = Crypto.Crypto.of({
+      const mutatingCrypto = Digest.Digest.of({
         ...crypto,
         digest: Effect.fn("EvidenceReviewTest.mutatingDigest")((algorithm, data) =>
           Effect.sync(() => {
@@ -189,7 +189,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("claim evidence explanation 
       });
       const review = yield* approveClaimEvidence(
         ApproveClaimEvidence.make({ basis, currentSource: basis.source, sourceText: "fact", reviewedBy: human })
-      ).pipe(Effect.provideService(Crypto.Crypto, mutatingCrypto));
+      ).pipe(Effect.provideService(Digest.Digest, mutatingCrypto));
       expect(basis.assertion).toBe("Changed while hashing");
       expect(review.basis.assertion).toBe("The source states fact.");
       expect(review.basis.source.extractor.version).toBe("1");

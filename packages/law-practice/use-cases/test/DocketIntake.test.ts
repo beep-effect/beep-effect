@@ -48,7 +48,7 @@ import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
@@ -73,25 +73,7 @@ import type {
 const TODAY = LocalDate.make({ year: 2030, month: 1, day: 10 });
 const RECEIVED = LocalDate.make({ year: 2030, month: 1, day: 9 });
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          PlatformError.systemError({
-            _tag: "Unknown",
-            cause,
-            description: "Could not compute digest",
-            method: "digest",
-            module: "Crypto",
-          }),
-        try: () =>
-          globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data)).then((buffer) => new Uint8Array(buffer)),
-      }),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+const TestCrypto = Digest.layerWebCrypto;
 
 // The fixture notice states its dates and period in words the extractor can cite.
 const CITED = "Mailed January 8, 2030. A response is due within three months";
@@ -447,21 +429,17 @@ const trackedDatesLayer = Layer.effect(
   })
 );
 
-const FailingCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: () =>
-      Effect.fail(
-        PlatformError.systemError({
-          _tag: "Unknown",
-          description: "digest unavailable",
-          method: "digest",
-          module: "Crypto",
-        })
-      ),
-    randomBytes: (size) => new Uint8Array(size),
-  })
-);
+const FailingCrypto = Layer.mock(Digest.Digest)({
+  digest: () =>
+    Effect.die(
+      PlatformError.systemError({
+        _tag: "Unknown",
+        description: "digest unavailable",
+        method: "digest",
+        module: "Digest",
+      })
+    ),
+});
 
 const oldMessage = (id: string): DocketMessage =>
   DocketMessage.make({
@@ -482,7 +460,7 @@ const messageAt = (id: string, receivedAt: string): DocketMessage =>
 const testLayer = (
   script: Partial<Script> = {},
   config: Partial<Parameters<typeof DocketIntakeConfig.make>[0]> = {},
-  crypto: Layer.Layer<Crypto.Crypto> = TestCrypto
+  crypto: Layer.Layer<Digest.Digest> = TestCrypto
 ) =>
   makeDocketIntakeLayer(DocketIntakeConfig.make({ mailbox: "fixture-mailbox", ...config })).pipe(
     Layer.provide(script.sheet === true ? Layer.merge(portsLayer, trackedDatesLayer) : portsLayer),
@@ -1210,14 +1188,14 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
 
   it.layer(testLayer({}, {}, FailingCrypto), { timeout: "5 seconds" })((it) => {
     it.effect(
-      "fails the message at the calendar stage when no idempotency key can be derived",
+      "dies without creating an entry when no idempotency key can be derived",
       Effect.fnUntraced(function* () {
         const intake = yield* DocketIntake;
         const harness = yield* Harness;
 
-        const outcome = yield* intake.processMessage(message("m1"), TODAY);
+        const exit = yield* Effect.exit(intake.processMessage(message("m1"), TODAY));
 
-        expect(outcome._tag === "IntakeFailed" ? outcome.stage : "unexpected").toBe("calendar");
+        assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
         expect(yield* Ref.get(harness.creates)).toBe(0);
       })
     );

@@ -14,15 +14,20 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type * as CommandLine from "effect/process/CommandLine";
 
 const encoder = new TextEncoder();
 const largeStdout = Str.repeat(1024 * 1024)("x");
 const largeStderr = Str.repeat(1024 * 1024)("e");
 
-const targetPathFrom = (command: ChildProcess.StandardCommand) => O.getOrElse(A.last(command.args), () => "");
+const wordText = (word: CommandLine.Word): string => (Redacted.isRedacted(word) ? Redacted.value(word) : word);
+
+const targetPathFrom = (command: ChildProcess.StandardCommand) =>
+  O.getOrElse(O.map(A.last(command.args), wordText), () => "");
 
 const processHandle = (
   stdout: Stream.Stream<Uint8Array>,

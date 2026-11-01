@@ -27,7 +27,7 @@ import {
   reviewThreadsPageQuery,
 } from "./Gh.schemas.ts";
 import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
@@ -73,7 +73,7 @@ export const closeoutGhOutput = Effect.fn("YeetCloseout.ghOutput")(function* (
   context: RepoRunContext,
   args: ReadonlyArray<string>,
   label: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,
@@ -132,7 +132,7 @@ const ghGraphqlPage = Effect.fn("YeetCloseout.ghGraphqlPage")(function* (
   query: string,
   cursor: O.Option<string>,
   label: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   return yield* closeoutGhOutput(
     context,
     [
@@ -159,7 +159,7 @@ const collectCommentPages = Effect.fn("YeetCloseout.collectCommentPages")(functi
 ): Effect.fn.Return<
   ReadonlyArray<GhComment>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   let cursor = O.none<string>();
   let comments: ReadonlyArray<GhComment> = [];
@@ -189,7 +189,7 @@ const collectReviewThreadPages = (
 ): Effect.Effect<
   ReadonlyArray<GhReviewThread>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > =>
   collectTruncatableThreadPages({
     advance: (pageInfo) => nextCursor("pull request review threads", pageInfo),
@@ -213,7 +213,7 @@ const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function
 ): Effect.fn.Return<
   ReadonlyArray<GhReview>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   let cursor = O.none<string>();
   let reviews: ReadonlyArray<GhReview> = [];
@@ -281,7 +281,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 ): Effect.fn.Return<
   { readonly pullRequest: GhCloseoutPullRequest; readonly pr: GhPrView },
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const pr = yield* closeoutGhOutput(
     context,
@@ -347,14 +347,14 @@ export const performCloseoutWriteActions = Effect.fn("YeetCloseout.performCloseo
 ): Effect.fn.Return<
   ReadonlyArray<PrCloseoutWriteAction>,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const performWriteIntent = Effect.fnUntraced(function* (
     intent: CloseoutWriteIntent
   ): Effect.fn.Return<
     PrCloseoutWriteAction,
     YeetCommandError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const args =
       intent.kind === "reply"

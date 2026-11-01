@@ -19,7 +19,7 @@ import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
@@ -87,8 +87,9 @@ const operationById = (target: RegistrationTarget, surfaceId: string) =>
 
 const commandLayer = Layer.mergeAll(
   NodeServices.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0" });
 

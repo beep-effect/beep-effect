@@ -33,7 +33,8 @@ import {
   CacheHostedProducerUpload,
 } from "./Cache.workflow.github.schemas.ts";
 import { CacheProducerObservation } from "./Cache.workflow.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
 
@@ -145,7 +146,11 @@ export const CacheHostedProducerVerifierLive = Layer.effect(
   CacheHostedProducerVerifier,
   Effect.gen(function* () {
     const platform = yield* Effect.context<
-      FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+      | FileSystem.FileSystem
+      | Path.Path
+      | Digest.Digest
+      | SecureRandom.SecureRandom
+      | ChildProcessSpawner.ChildProcessSpawner
     >();
     return CacheHostedProducerVerifier.of({
       verify: Effect.fn("CacheWorkflow.verifyPublishedAcceptance")(

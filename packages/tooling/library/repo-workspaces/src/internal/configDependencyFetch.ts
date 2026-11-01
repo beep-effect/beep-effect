@@ -660,10 +660,11 @@ export const makeFetchConfigDependency =
           onNone: () => Effect.succeed(registrySettingsOf(undefined)),
           onSome: (text) =>
             Yaml.parse(text).pipe(
-              Effect.map(registrySettingsOf),
-              Effect.mapError((cause) =>
-                failed(`reading the workspace pnpm-workspace.yaml failed: ${messageOf(cause)}`, cause)
-              )
+              Effect.mapBoth({
+                onFailure: (cause) =>
+                  failed(`reading the workspace pnpm-workspace.yaml failed: ${messageOf(cause)}`, cause),
+                onSuccess: registrySettingsOf,
+              })
             ),
         });
         const scratch = yield* Effect.acquireRelease(

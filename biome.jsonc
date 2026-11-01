@@ -265,12 +265,12 @@
           "level": "error",
           "options": {
             "paths": {
-              "uuid": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+              "uuid": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
             },
             "patterns": [
               {
                 "group": ["uuid/**"],
-                "message": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+                "message": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
               }
             ]
           }

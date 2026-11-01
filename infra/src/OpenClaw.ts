@@ -46,7 +46,7 @@ import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, R, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
@@ -227,7 +227,7 @@ const heredocLines = (input: {
 /**
  * Filesystem mode a rendered generation file is materialized with.
  *
- * @example
+ * **Example** (List the file mode literals)
  * ```ts
  * import { OpenClawFileMode } from "@beep/infra"
  *
@@ -247,7 +247,7 @@ export const OpenClawFileMode = OpenClawFileModeBase.pipe(
 /**
  * Runtime type for {@link OpenClawFileMode}.
  *
- * @example
+ * **Example** (Annotate a file mode value)
  * ```ts
  * import type { OpenClawFileMode } from "@beep/infra"
  *
@@ -320,7 +320,7 @@ type OpenClawPulumiConfigInputValues = Omit<
 /**
  * Raw optional Pulumi config values before workstation defaults are applied.
  *
- * @example
+ * **Example** (Reference the raw config schema)
  * ```ts
  * import { OpenClawPulumiConfigValues } from "@beep/infra"
  *
@@ -381,7 +381,7 @@ export const OpenClawPulumiConfigValues = S.Class<OpenClawPulumiConfigValuesFiel
  * incomplete expectation must refuse to render rather than degrade into an
  * empty match.
  *
- * @example
+ * **Example** (Build the expected host identity)
  * ```ts
  * import { OpenClawExpectedIdentity } from "@beep/infra"
  *
@@ -429,7 +429,7 @@ export class OpenClawExpectedIdentity extends S.Opaque<OpenClawExpectedIdentity,
 /**
  * Filesystem layout the workstation applicator owns.
  *
- * @example
+ * **Example** (Read the default config root)
  * ```ts
  * import { OpenClawWorkstationPaths } from "@beep/infra"
  *
@@ -475,7 +475,7 @@ export class OpenClawWorkstationPaths extends S.Opaque<OpenClawWorkstationPaths,
 /**
  * Hosted OpenAI-compatible provider selected as the workstation primary.
  *
- * @example
+ * **Example** (Configure a hosted provider)
  * ```ts
  * import { OpenClawHostedProviderConfig } from "@beep/infra"
  * import { OpenclawSecretReference } from "@beep/openclaw"
@@ -520,7 +520,7 @@ export class OpenClawHostedProviderConfig extends S.Opaque<
 /**
  * Local loopback OpenAI-compatible fallback provider.
  *
- * @example
+ * **Example** (Configure a local Ollama provider)
  * ```ts
  * import { OpenClawLocalProviderConfig } from "@beep/infra"
  *
@@ -559,7 +559,7 @@ const openClawDeploymentConfigGatewayAuthTokenRefDefault = OpenclawSecretReferen
  * Secret material never appears here: `gatewayAuthTokenRef` is an `op://`
  * reference resolved on the workstation at runtime.
  *
- * @example
+ * **Example** (Build a deployment config)
  * ```ts
  * import {
  *   OpenClawDeploymentConfig,
@@ -668,15 +668,15 @@ export class OpenClawDeploymentConfig extends S.Opaque<OpenClawDeploymentConfig,
 const utf8 = new TextEncoder();
 
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", utf8.encode(text));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, utf8.encode(text));
   return Hex.encode(digest);
 });
 
 /**
  * Build the driver deployment intent a deployment config describes.
  *
- * @example
+ * **Example** (Derive the deployment intent)
  * ```ts
  * import {
  *   makeOpenClawDeploymentIntent,
@@ -713,11 +713,11 @@ const sha256Hex = Effect.fnUntraced(function* (text: string) {
 export const makeOpenClawDeploymentIntent: {
   (
     configRoot?: string
-  ): (deployment: OpenClawDeploymentConfig) => Effect.Effect<OpenclawDeploymentIntent, PlatformError, Crypto.Crypto>;
+  ): (deployment: OpenClawDeploymentConfig) => Effect.Effect<OpenclawDeploymentIntent, PlatformError, Digest.Digest>;
   (
     deployment: OpenClawDeploymentConfig,
     configRoot?: string
-  ): Effect.Effect<OpenclawDeploymentIntent, PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<OpenclawDeploymentIntent, PlatformError, Digest.Digest>;
 } = dual(
   (args) => args.length >= 2 || (args.length === 1 && P.isNotUndefined(args[0]) && !Str.isString(args[0])),
   Effect.fn($I`makeOpenClawDeploymentIntent`)(function* (
@@ -822,7 +822,7 @@ export const makeOpenClawDeploymentIntent: {
  * directory, copies an already-encrypted archive into it, and reads back a
  * sha256 receipt. Nothing else on the remote is modified.
  *
- * @example
+ * **Example** (Read the default backup host)
  * ```ts
  * import { OpenClawBackupConfig } from "@beep/infra"
  *
@@ -874,11 +874,10 @@ export class OpenClawBackupConfig extends S.Opaque<OpenClawBackupConfig, { reado
  * directory name, so equal inputs always produce the same generation
  * directory and the applicator becomes idempotent by construction.
  *
- * @example
+ * **Example** (Materialize a generation)
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -899,7 +898,7 @@ export class OpenClawBackupConfig extends S.Opaque<OpenClawBackupConfig, { reado
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const generation = Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)))
+ * const generation = Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer)))
  * console.log(generation.generationId.length) // 64
  * ```
  *
@@ -970,7 +969,7 @@ export class OpenClawGeneration extends S.Opaque<OpenClawGeneration, { readonly 
 /**
  * Content hashes that form an immutable OpenClaw generation identity.
  *
- * @example
+ * **Example** (Build bundle hash inputs)
  * ```ts
  * import { OpenClawBundleHashInput } from "@beep/infra"
  * import { OpenclawSha256Hex } from "@beep/openclaw"
@@ -1009,7 +1008,7 @@ export class OpenClawBundleHashInput extends S.Opaque<OpenClawBundleHashInput, {
  * Shared input for rendered scripts that bind a generation to its expected
  * workstation identity.
  *
- * @example
+ * **Example** (Reference the identity script input schema)
  * ```ts
  * import { OpenClawGenerationIdentityScriptInput } from "@beep/infra"
  *
@@ -1040,7 +1039,7 @@ export class OpenClawGenerationIdentityScriptInput extends S.Opaque<
 /**
  * Input for rendering an encrypted OpenClaw backup shipping script.
  *
- * @example
+ * **Example** (Reference the backup script input schema)
  * ```ts
  * import { OpenClawBackupShipScriptInput } from "@beep/infra"
  *
@@ -1183,7 +1182,7 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
 /**
  * Build the deterministic length-delimited generation bundle hash.
  *
- * @example
+ * **Example** (Hash a bundle from zero hashes)
  * ```ts
  * import { makeOpenClawBundleHash, OpenClawBundleHashInput } from "@beep/infra"
  * import { OpenclawSha256Hex } from "@beep/openclaw"
@@ -1207,10 +1206,10 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
  */
 export const makeOpenClawBundleHash: (
   input: OpenClawBundleHashInput
-) => Effect.Effect<OpenclawSha256Hex, PlatformError, Crypto.Crypto> = Effect.fn($I`makeOpenClawBundleHash`)(function* (
+) => Effect.Effect<OpenclawSha256Hex, PlatformError, Digest.Digest> = Effect.fn($I`makeOpenClawBundleHash`)(function* (
   input: OpenClawBundleHashInput
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const compatibilityId = `${OPENCLAW_COMPATIBILITY_SET.adapterVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawVersion}:${OPENCLAW_COMPATIBILITY_SET.openclawCommit}:${OPENCLAW_COMPATIBILITY_SET.nodeVersion}`;
   const bytes = A.reduce(
     [input.configHash, input.soulHash, input.proofSkillHash, compatibilityId],
@@ -1225,7 +1224,7 @@ export const makeOpenClawBundleHash: (
       return next;
     }
   );
-  const digest = yield* crypto.digest("SHA-256", bytes);
+  const digest = yield* crypto.digest(Digest.sha256, bytes);
   return OpenclawSha256Hex.make(Hex.encode(digest));
 });
 
@@ -1235,9 +1234,9 @@ export const makeOpenClawBundleHash: (
  * The driver render adapter turns the deployment config into canonical
  * `openclaw.json` bytes, then the config and immutable workspace artifact
  * hashes become one length-delimited generation identity. Hashing requires
- * `Crypto`.
+ * `Digest`.
  *
- * @example
+ * **Example** (Build a generation effect)
  * ```ts
  * import { makeOpenClawGeneration, makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  * import * as Effect from "effect/Effect"
@@ -1270,7 +1269,7 @@ export const makeOpenClawBundleHash: (
  */
 export const makeOpenClawGeneration: (
   args: OpenClawStackArgs
-) => Effect.Effect<OpenClawGeneration, PlatformError, Crypto.Crypto> = Effect.fn($I`makeOpenClawGeneration`)(function* (
+) => Effect.Effect<OpenClawGeneration, PlatformError, Digest.Digest> = Effect.fn($I`makeOpenClawGeneration`)(function* (
   args: OpenClawStackArgs
 ) {
   const intent = yield* makeOpenClawDeploymentIntent(
@@ -1319,7 +1318,7 @@ export const makeOpenClawGeneration: (
  * the manager environment, and the scoped 1Password service-account token
  * arrives exclusively through `LoadCredential`.
  *
- * @example
+ * **Example** (Render the systemd unit)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1327,7 +1326,6 @@ export const makeOpenClawGeneration: (
  *   renderOpenClawUnit
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1348,7 +1346,7 @@ export const makeOpenClawGeneration: (
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const unit = renderOpenClawUnit(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const unit = renderOpenClawUnit(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(unit.startsWith("# BEEP_OPENCLAW_MANAGED")) // true
  * ```
  *
@@ -1393,7 +1391,7 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  * `preflight` validates the generation's config with its own binary;
  * `gateway` (the default) starts the gateway.
  *
- * @example
+ * **Example** (Render the run script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1401,7 +1399,6 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  *   renderOpenClawRunScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1422,7 +1419,7 @@ export const renderOpenClawUnit = (generation: OpenClawGeneration): string =>
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const runScript = renderOpenClawRunScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const runScript = renderOpenClawRunScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(runScript.includes("config validate")) // true
  * ```
  *
@@ -1463,7 +1460,7 @@ export const renderOpenClawRunScript = (generation: OpenClawGeneration): string 
 /**
  * Render one generation file with its content and materialization mode.
  *
- * @example
+ * **Example** (Build a generation file)
  * ```ts
  * import { OpenClawGenerationFile } from "@beep/infra"
  *
@@ -1496,7 +1493,7 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
  * not this function — materializes them, which keeps generation rendering
  * testable without a filesystem and reusable by a future remote applicator.
  *
- * @example
+ * **Example** (Render the generation tree)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1504,7 +1501,6 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
  *   renderOpenClawGenerationTree
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1525,7 +1521,7 @@ export class OpenClawGenerationFile extends S.Opaque<OpenClawGenerationFile, { r
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const tree = renderOpenClawGenerationTree(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const tree = renderOpenClawGenerationTree(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(tree["run.sh"]?.mode) // "0755"
  * ```
  *
@@ -1558,7 +1554,7 @@ export const renderOpenClawGenerationTree = (
  * desktops; the manager state is recorded and only rejected outside
  * `running|degraded|maintenance|starting`.
  *
- * @example
+ * **Example** (Render the preflight script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1567,7 +1563,6 @@ export const renderOpenClawGenerationTree = (
  *   renderOpenClawPreflightScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1591,7 +1586,7 @@ export const renderOpenClawGenerationTree = (
  * const identity = args.identity
  * const script = renderOpenClawPreflightScript(
  *   OpenClawGenerationIdentityScriptInput.make({
- *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))),
+ *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))),
  *     identity
  *   })
  * )
@@ -1701,7 +1696,7 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * config is validated by the candidate's own binary before apply is allowed to
  * proceed.
  *
- * @example
+ * **Example** (Render the stage script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1709,7 +1704,6 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  *   renderOpenClawStageScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1730,7 +1724,7 @@ const trustedToolchainLines = (generation: OpenClawGeneration): ReadonlyArray<st
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const script = renderOpenClawStageScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const script = renderOpenClawStageScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(script.includes("STAGE-OK")) // true
  * ```
  *
@@ -1833,7 +1827,7 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  * than the live state, because an old binary cannot safely open migrated
  * state.
  *
- * @example
+ * **Example** (Render the apply script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1841,7 +1835,6 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  *   renderOpenClawApplyScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1862,7 +1855,7 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const script = renderOpenClawApplyScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const script = renderOpenClawApplyScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(script.includes("APPLY-OK")) // true
  * ```
  *
@@ -1955,7 +1948,7 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  * state before switching binaries, which is exactly what makes starting the
  * older binary safe.
  *
- * @example
+ * **Example** (Render the rollback script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -1963,7 +1956,6 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  *   renderOpenClawRollbackScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -1984,7 +1976,7 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const script = renderOpenClawRollbackScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))))
+ * const script = renderOpenClawRollbackScript(Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))))
  * console.log(script.includes("ROLLBACK-OK")) // true
  * ```
  *
@@ -2102,7 +2094,7 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * and reports each divergence as an `ALERT: OPENCLAW_CONFIG_DRIFT` line —
  * repair is an operator redeploy, never an automatic correction.
  *
- * @example
+ * **Example** (Render the drift audit script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2111,7 +2103,6 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  *   renderOpenClawDriftAuditScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -2135,7 +2126,7 @@ const expectedUnitTextLines = (generation: OpenClawGeneration): ReadonlyArray<st
  * const identity = args.identity
  * const script = renderOpenClawDriftAuditScript(
  *   OpenClawGenerationIdentityScriptInput.make({
- *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))),
+ *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))),
  *     identity
  *   })
  * )
@@ -2161,7 +2152,7 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  * surfaces, then fold in the read-only drift inventory so a single command
  * output carries both acceptance evidence and the post-apply drift picture.
  *
- * @example
+ * **Example** (Render the probe script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2170,7 +2161,6 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  *   renderOpenClawProbeScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -2194,7 +2184,7 @@ export const renderOpenClawDriftAuditScript = (input: OpenClawGenerationIdentity
  * const identity = args.identity
  * const script = renderOpenClawProbeScript(
  *   OpenClawGenerationIdentityScriptInput.make({
- *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make))),
+ *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer))),
  *     identity
  *   })
  * )
@@ -2242,7 +2232,7 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  * restore it and run `restored`; the restored phase immediately proves model,
  * local inventory, skill, Telegram send, and channel health.
  *
- * @example
+ * **Example** (Render the live acceptance script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2250,7 +2240,6 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  *   renderOpenClawLiveAcceptanceScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -2271,7 +2260,7 @@ export const renderOpenClawProbeScript = (input: OpenClawGenerationIdentityScrip
  *   localProviderModelName: "Gemma 3 4B",
  *   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token"
  * })
- * const generation = Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)))
+ * const generation = Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer)))
  * const script = renderOpenClawLiveAcceptanceScript(generation)
  * console.log(script.includes("LIVE-ACCEPTANCE-RESTORED PASS")) // true
  * ```
@@ -2339,7 +2328,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * dumb storage: it receives the archive and returns a sha256 receipt that must
  * match the local digest.
  *
- * @example
+ * **Example** (Render the backup ship script)
  * ```ts
  * import {
  *   makeOpenClawGeneration,
@@ -2349,7 +2338,6 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  *   renderOpenClawBackupShipScript
  * } from "@beep/infra"
  * import * as Effect from "effect/Effect"
- * import * as Crypto from "effect/Crypto"
  * import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto"
  *
  * const args = makeOpenClawStackArgsFromConfigValues({
@@ -2373,7 +2361,7 @@ export const renderOpenClawLiveAcceptanceScript = (generation: OpenClawGeneratio
  * const script = renderOpenClawBackupShipScript(
  *   OpenClawBackupShipScriptInput.make({
  *     backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
- *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provideService(Crypto.Crypto, NodeCrypto.make)))
+ *     generation: Effect.runSync(makeOpenClawGeneration(args).pipe(Effect.provide(NodeCrypto.layer)))
  *   })
  * )
  * console.log(script.includes("BACKUP-OK")) // true
@@ -2418,7 +2406,7 @@ export const renderOpenClawBackupShipScript = ({ backup, generation }: OpenClawB
  * `identity` has no default on purpose — the stack must be told which machine
  * it owns before it can render anything.
  *
- * @example
+ * **Example** (Build stack args from config values)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
@@ -2474,7 +2462,7 @@ export class OpenClawStackArgs extends S.Opaque<OpenClawStackArgs, { readonly br
   /**
    * Build component args around a declared workstation identity.
    *
-   * @example
+   * **Example** (Build stack args from identity and deployment)
    * ```ts
    * import { OpenClawExpectedIdentity, OpenClawStackArgs } from "@beep/infra"
    *
@@ -2515,7 +2503,7 @@ export class OpenClawStackArgs extends S.Opaque<OpenClawStackArgs, { readonly br
  * apply against an undeclared machine is the outcome this stack exists to make
  * impossible.
  *
- * @example
+ * **Example** (Map raw config values to stack args)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues } from "@beep/infra"
  *
@@ -2643,7 +2631,7 @@ export const makeOpenClawStackArgsFromConfigValues = ({
 /**
  * Load OpenClaw stack args from Pulumi config.
  *
- * @example
+ * **Example** (Reference the stack args loader)
  * ```ts
  * import { loadOpenClawStackArgs } from "@beep/infra"
  *
@@ -2707,7 +2695,7 @@ export const loadOpenClawStackArgs = (): OpenClawStackArgs => {
  * bodies, which is what makes a changed unit or config re-execute the chain.
  * Nothing is torn down on destroy.
  *
- * @example
+ * **Example** (Declare the OpenClaw stack)
  * ```ts
  * import { makeOpenClawStackArgsFromConfigValues, OpenClawStack } from "@beep/infra"
  *

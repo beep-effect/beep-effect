@@ -34,7 +34,7 @@ import { FilePath } from "@beep/schema";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -638,7 +638,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const storage = yield* StorageService;
     const rdf = yield* RdfBuilder;
     const nlp = yield* NlpService;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     // Registry is optional - only available when ONTOLOGY.REGISTRY_PATH is configured
     const registryOpt = yield* Effect.serviceOption(OntologyRegistryService);
 
@@ -917,7 +917,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const name = yield* decodeIdentity(OntologyName, "name");
         const hash = ContentHash.make(
           Hex.encode(
-            yield* crypto.digest("SHA-256", new TextEncoder().encode(ontologyIri)).pipe(
+            yield* crypto.digest(Digest.sha256, new TextEncoder().encode(ontologyIri)).pipe(
               Effect.mapError((cause) =>
                 OntologyError.make({
                   message: `Failed to hash ontology IRI: ${ontologyIri}`,

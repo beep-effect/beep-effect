@@ -18,7 +18,7 @@ import { $M365McpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -484,12 +484,12 @@ export class OutboxAuditIds extends Context.Service<OutboxAuditIds, OutboxAuditI
    * @category layers
    * @since 0.1.0
    */
-  static readonly layer: Layer.Layer<OutboxAuditIds, never, Crypto.Crypto> = Layer.effect(
+  static readonly layer: Layer.Layer<OutboxAuditIds, never, SecureRandom.SecureRandom> = Layer.effect(
     OutboxAuditIds,
     Effect.gen(function* () {
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* SecureRandom.SecureRandom;
       return OutboxAuditIds.of({
-        next: crypto.randomBytes(AUDIT_ID_BYTES).pipe(Effect.map(Hex.encode), Effect.orDie),
+        next: crypto.randomBytes(AUDIT_ID_BYTES).pipe(Effect.map(Hex.encode)),
       });
     })
   );
@@ -587,8 +587,7 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
 
   const hasRecord = (matches: (record: OutboxAuditRecord) => boolean) =>
     readRecords().pipe(
-      Effect.map(A.some(matches)),
-      Effect.mapError(failure("read", "The audit log could not be read."))
+      Effect.mapBoth({ onFailure: failure("read", "The audit log could not be read."), onSuccess: A.some(matches) })
     );
 
   return OutboxAuditLog.of({

@@ -61,14 +61,14 @@ describe("FileName", () => {
     Effect.fnUntraced(function* () {
       const failure5 = yield* Effect.exit(decodeUnknownFileNameEffect("bad/name.txt"));
       pipe(failure5, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure5)) {
+      if (Exit.isFailure(failure5) && Exit.hasFails(failure5)) {
         expect(pipe(failure5.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "File name stems must not contain /"
         );
       }
       const failure6 = yield* Effect.exit(decodeUnknownFileNameEffect("bad\\name.txt"));
       pipe(failure6, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure6)) {
+      if (Exit.isFailure(failure6) && Exit.hasFails(failure6)) {
         expect(pipe(failure6.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "File name stems must not contain \\"
         );
@@ -81,7 +81,7 @@ describe("FileName", () => {
     Effect.fnUntraced(function* () {
       const failure7 = yield* Effect.exit(decodeUnknownFileNameEffect(`bad\u0000name.txt`));
       pipe(failure7, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure7)) {
+      if (Exit.isFailure(failure7) && Exit.hasFails(failure7)) {
         expect(pipe(failure7.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "File name stems must not contain embedded NUL bytes"
         );
@@ -100,7 +100,7 @@ describe("FileName", () => {
     Effect.fnUntraced(function* () {
       const failure8 = yield* Effect.exit(decodeFileNamePayloadEffect({ fileName: "bad/name.txt" }));
       pipe(failure8, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure8)) {
+      if (Exit.isFailure(failure8) && Exit.hasFails(failure8)) {
         expect(pipe(failure8.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(`at ["fileName"]`);
       }
     })

@@ -18,7 +18,7 @@ import {
   turboLaneDigestPackages,
 } from "@beep/repo-cli/test/Quality";
 import { fcRuns } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, notDeepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -28,6 +28,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { constant, pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
@@ -76,7 +77,7 @@ describe("Turbo lane digests", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
     it.effect(
       "folds selected task hashes by bare name, independent of row order",
       Effect.fnUntraced(function* () {
@@ -114,7 +115,7 @@ describe("Turbo lane digests", () => {
 
   // TTC ruling 72: a selected task folds whatever its exit code, so a red run records the key a
   // green run of the same inputs records; only a selection that matched nothing folds to None.
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })("red-run folding", (it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("red-run folding", (it) => {
     it.effect(
       "folds a failed task's hash as an observation and refuses only an empty selection",
       Effect.fnUntraced(function* () {
@@ -138,7 +139,7 @@ describe("Turbo lane digests", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })("fresh summaries", (it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("fresh summaries", (it) => {
     it.effect(
       "reads only summaries the attempt wrote and skips unreadable files",
       Effect.fnUntraced(function* () {
@@ -203,7 +204,7 @@ describe("Turbo lane digests", () => {
     );
   });
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
     it.effect(
       "does not read historical summaries when collecting a new lane digest",
       Effect.fnUntraced(function* () {
@@ -238,7 +239,7 @@ describe("Turbo lane digests", () => {
     );
   });
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
     it.effect(
       "folds declared digests newest-per-task and round-trips the wrapper lane ledger",
       Effect.fnUntraced(function* () {
@@ -285,7 +286,7 @@ describe("Turbo lane digests", () => {
     );
   });
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
     it.effect(
       "hands a wrapper lane its ledger and folds only what the child declared",
       Effect.fnUntraced(function* () {
@@ -380,7 +381,7 @@ describe("Turbo lane digests", () => {
   // digest folds, by both the wrapper-ledger path and the direct `turbo run --summarize`
   // path, with root tasks contributing nothing. The proof ledger's changed-package
   // tripwire intersects that scope with the attempt's changed packages.
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })("package scope", (it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("package scope", (it) => {
     it.effect(
       "resolves a lane's package scope from its folded Turbo task ids by both digest paths",
       Effect.fnUntraced(function* () {
@@ -476,7 +477,7 @@ describe("Turbo lane digests", () => {
   // which the labs filter makes exactly the lab tasks today. Upstream build/transit work reaches it
   // only through Turbo's dependency hashing, and a run with zero labs declares nothing, so the lane
   // stays green but non-reusable.
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))((it) => {
     it.effect(
       "folds the labs lane digest from lab task rows and leaves zero labs undeclared",
       Effect.fnUntraced(function* () {
@@ -546,58 +547,62 @@ describe("Turbo lane digests", () => {
 
   // TTC ruling 72: the wrapper child (`bun run beep ci lane <id>`) declares a red direct Turbo
   // step's digest too, so the parent resolves a failed wrapper lane to the key a pass records.
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })("red wrapper child", (it) => {
-    it.effect(
-      "declares a red step's digest to the lane ledger and resolves it for the failed wrapper lane",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-red-child-" });
-        const runs = path.join(root, ".turbo", "runs");
-        yield* fs.makeDirectory(runs, { recursive: true });
-        const startedAtIso = "2026-09-28T04:00:00.000Z";
-        const writtenAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso)) + 1_000;
-        const summaryPath = path.join(runs, "red.json");
-        const red = summary("red", writtenAtMillis, [task("@beep/x#check", "hx1", "MISS", 1)]);
-        yield* encodeSummary(red).pipe(Effect.flatMap((text) => fs.writeFileString(summaryPath, text)));
-        yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
-        const failure = O.some(
-          QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
-        );
-        const failedOutcome = (step: QualityTaskStep): StreamingStepOutcome => ({
-          durationMs: 1,
-          startedAt: startedAtIso,
-          endedAt: "2026-09-28T04:00:05.000Z",
-          failure,
-          step,
-        });
-        const child = QualityTaskStep.make({
-          label: "ci:check",
-          command: "bunx",
-          args: ["turbo", "run", "check", "--summarize"],
-          cwd: root,
-        });
-        const ledger = path.join(root, "lane-red", "ledger.jsonl");
-        assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), failedOutcome(child)), true);
-        yield* closeTurboLaneLedger(ledger, 1);
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+    "red wrapper child",
+    (it) => {
+      it.effect(
+        "declares a red step's digest to the lane ledger and resolves it for the failed wrapper lane",
+        Effect.fnUntraced(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-red-child-" });
+          const runs = path.join(root, ".turbo", "runs");
+          yield* fs.makeDirectory(runs, { recursive: true });
+          const startedAtIso = "2026-09-28T04:00:00.000Z";
+          const writtenAtMillis = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso)) + 1_000;
+          const summaryPath = path.join(runs, "red.json");
+          const red = summary("red", writtenAtMillis, [task("@beep/x#check", "hx1", "MISS", 1)]);
+          yield* encodeSummary(red).pipe(Effect.flatMap((text) => fs.writeFileString(summaryPath, text)));
+          yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
+          const failure = O.some(
+            QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
+          );
+          const failedOutcome = (step: QualityTaskStep): StreamingStepOutcome => ({
+            durationMs: 1,
+            startedAt: startedAtIso,
+            endedAt: "2026-09-28T04:00:05.000Z",
+            failure,
+            step,
+          });
+          const child = QualityTaskStep.make({
+            label: "ci:check",
+            command: "bunx",
+            args: ["turbo", "run", "check", "--summarize"],
+            cwd: root,
+          });
+          const ledger = path.join(root, "lane-red", "ledger.jsonl");
+          assertSome(yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), failedOutcome(child)), true);
+          yield* closeTurboLaneLedger(ledger, 1);
 
-        const wrapper = QualityTaskStep.make({
-          label: "quality:check",
-          command: "bun",
-          args: ["run", "beep", "ci", "lane", "check"],
-          cwd: root,
-          env: { [TURBO_LANE_LEDGER_ENV]: ledger },
-        });
-        const resolved = yield* resolveLaneInputDigestForTesting(failedOutcome(wrapper), O.none());
-        // The key is the one a green run of the same task hash records.
-        const green = yield* Effect.fromOption(
-          yield* turboLaneDigestFromSummary(summary("green", writtenAtMillis, [task("@beep/x#check", "hx1", "HIT")]), [
-            "check",
-          ])
-        );
-        assertSome(resolved.inputDigest, green.digest);
-        expect(resolved.inputPackages).toStrictEqual(["@beep/x"]);
-      })
-    );
-  });
+          const wrapper = QualityTaskStep.make({
+            label: "quality:check",
+            command: "bun",
+            args: ["run", "beep", "ci", "lane", "check"],
+            cwd: root,
+            env: { [TURBO_LANE_LEDGER_ENV]: ledger },
+          });
+          const resolved = yield* resolveLaneInputDigestForTesting(failedOutcome(wrapper), O.none());
+          // The key is the one a green run of the same task hash records.
+          const green = yield* Effect.fromOption(
+            yield* turboLaneDigestFromSummary(
+              summary("green", writtenAtMillis, [task("@beep/x#check", "hx1", "HIT")]),
+              ["check"]
+            )
+          );
+          assertSome(resolved.inputDigest, green.digest);
+          expect(resolved.inputPackages).toStrictEqual(["@beep/x"]);
+        })
+      );
+    }
+  );
 });

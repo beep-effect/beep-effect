@@ -25,7 +25,7 @@ import {
   T3CodeWait,
 } from "@beep/t3-code";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as Utils from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -253,340 +253,346 @@ const fixture = Effect.fn("AttachedTest.driver")(function* (
   };
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("Attached T3 and scoped peer boundaries", (it) => {
-  it.effect("refuses foreign host identity, workspace and non-idle enrollment before submission", () =>
-    Effect.forEach(
-      ["identity", "workspace", "not-idle"],
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup();
-          const foreignWorkspace = yield* state.fs.makeTempDirectoryScoped();
-          const { driver, sent } = yield* fixture(state, "ack");
-          const rejected = T3Code.of({
-            ...driver,
-            read: Effect.fn("AttachedTest.foreignRead")((threadId) =>
-              driver.read(threadId).pipe(
-                Effect.map((read) =>
-                  T3CodeRead.make({
-                    ...read,
-                    thread: {
-                      ...read.thread,
-                      projectId: scenario === "identity" ? "foreign" : read.thread.projectId,
-                      status: scenario === "not-idle" ? "failed" : read.thread.status,
-                    },
-                  })
-                )
-              )
-            ),
-            readProject: Effect.fn("AttachedTest.foreignProject")((projectId) =>
-              driver
-                .readProject(projectId)
-                .pipe(
-                  Effect.map((project) =>
-                    scenario === "workspace"
-                      ? T3CodeProject.make({ ...project, workspaceRoot: foreignWorkspace })
-                      : project
-                  )
-                )
-            ),
-          });
-          expect(
-            yield* verifyAttachedT3(state.profile, true).pipe(Effect.provideService(T3Code, rejected), Effect.flip)
-          ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
-          expect(yield* Ref.get(sent)).toBe(0);
-        }),
-      { concurrency: 1 }
-    )
-  );
-
-  it.effect("refuses changed enrollment and receiving grant scope without exposing the queued task", () =>
-    Effect.forEach(
-      ["owner", "conversation"],
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup();
-          const { driver, sent } = yield* fixture(state, "ack");
-          const profile = AttachedT3Profile.make({
-            ...state.profile,
-            ownerId: scenario === "owner" ? "foreign-owner" : state.profile.ownerId,
-            conversationId: scenario === "conversation" ? O.some("foreign-conversation") : state.profile.conversationId,
-          });
-          const dispatch = yield* makeAttachedT3Dispatch(profile, state.directory).pipe(
-            Effect.provideService(AgentMessageStore, state.store),
-            Effect.provideService(T3Code, driver)
-          );
-          expect(yield* dispatch.submit(state.claim)).toBe("failed");
-          expect(yield* Ref.get(sent)).toBe(0);
-          expect(yield* state.store.receipts("incoming")).toHaveLength(2);
-        }),
-      { concurrency: 1 }
-    )
-  );
-
-  it.effect("retains ambiguity for a foreign submitted thread or missing exact-run evidence without resending", () =>
-    Effect.forEach(
-      ["foreign-submission", "missing-run"],
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup();
-          const { driver, sent } = yield* fixture(state, "ack");
-          const inconsistent = T3Code.of({
-            ...driver,
-            sendQueued: Effect.fn("AttachedTest.foreignSubmission")((threadId, text, requestKey) =>
-              driver
-                .sendQueued(threadId, text, requestKey)
-                .pipe(
-                  Effect.map((sent) =>
-                    scenario === "foreign-submission" ? T3CodeSend.make({ ...sent, threadId: "foreign-thread" }) : sent
-                  )
-                )
-            ),
-            read: Effect.fn("AttachedTest.missingRun")((threadId) =>
-              driver
-                .read(threadId)
-                .pipe(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "Attached T3 and scoped peer boundaries",
+  (it) => {
+    it.effect("refuses foreign host identity, workspace and non-idle enrollment before submission", () =>
+      Effect.forEach(
+        ["identity", "workspace", "not-idle"],
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup();
+            const foreignWorkspace = yield* state.fs.makeTempDirectoryScoped();
+            const { driver, sent } = yield* fixture(state, "ack");
+            const rejected = T3Code.of({
+              ...driver,
+              read: Effect.fn("AttachedTest.foreignRead")((threadId) =>
+                driver.read(threadId).pipe(
                   Effect.map((read) =>
-                    scenario === "missing-run" ? T3CodeRead.make({ ...read, recentRuns: [] }) : read
+                    T3CodeRead.make({
+                      ...read,
+                      thread: {
+                        ...read.thread,
+                        projectId: scenario === "identity" ? "foreign" : read.thread.projectId,
+                        status: scenario === "not-idle" ? "failed" : read.thread.status,
+                      },
+                    })
                   )
                 )
-            ),
-          });
-          const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-            Effect.provideService(AgentMessageStore, state.store),
-            Effect.provideService(T3Code, inconsistent)
-          );
-          expect(yield* dispatch.submit(state.claim).pipe(Effect.flip)).toMatchObject({
-            _tag: "RouterError",
-            code: "policyMismatch",
-          });
-          expect(yield* Ref.get(sent)).toBe(1);
-          Utils.assertNone(yield* state.store.claimNext("b", "owner-b", state.now + 10, state.now + 20000));
-        }),
-      { concurrency: 1 }
-    )
-  );
+              ),
+              readProject: Effect.fn("AttachedTest.foreignProject")((projectId) =>
+                driver
+                  .readProject(projectId)
+                  .pipe(
+                    Effect.map((project) =>
+                      scenario === "workspace"
+                        ? T3CodeProject.make({ ...project, workspaceRoot: foreignWorkspace })
+                        : project
+                    )
+                  )
+              ),
+            });
+            expect(
+              yield* verifyAttachedT3(state.profile, true).pipe(Effect.provideService(T3Code, rejected), Effect.flip)
+            ).toMatchObject({ _tag: "RouterError", code: "policyMismatch" });
+            expect(yield* Ref.get(sent)).toBe(0);
+          }),
+        { concurrency: 1 }
+      )
+    );
 
-  it.effect("requires scoped ACK and the exact settled native run", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const { driver, sent } = yield* fixture(state, "ack");
-      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.provideService(T3Code, driver)
-      );
-      expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-      expect(yield* Ref.get(sent)).toBe(1);
-    })
-  );
-  it.effect("settles the exact completed run when a different queued run is active", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const { driver, sent } = yield* fixture(state, "next-active");
-      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.provideService(T3Code, driver)
-      );
-      expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-      expect(yield* Ref.get(sent)).toBe(1);
-    })
-  );
-  it.effect("rejects contradictory active status for the exact completed run without resubmission", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const { driver, sent } = yield* fixture(state, "same-active");
-      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.provideService(T3Code, driver)
-      );
-      const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
-      result.pipe(Result.isFailure, Utils.assertTrue);
-      expect(yield* Ref.get(sent)).toBe(1);
-    })
-  );
-  it.effect("does not treat native completion without participant ACK as consumption", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const { driver } = yield* fixture(state, "no-ack");
-      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.provideService(T3Code, driver)
-      );
-      const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
-      result.pipe(Result.isFailure, Utils.assertTrue);
-    })
-  );
-  it.effect("definite pre-submission failures release the claim without native exposure", () =>
-    Effect.forEach(
-      ["expired-grant", "corrupt-grant", "checkpoint"],
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup(1000);
-          const path = yield* Path.Path;
-          const clock = yield* Clock.Clock;
-          const { driver, sent } = yield* fixture(state, "ack");
-          yield* state.store.complete(state.claim, "failed", state.now + 1);
-          yield* state.store.accept(
-            Envelope.make({ ...state.claim.envelope, messageId: "rejected", idempotencyKey: "rejected" }),
-            state.now + 2
-          );
-          const stateDir = path.join(state.directory, "blocked-checkpoint");
-          yield* Match.value(scenario).pipe(
-            Match.when("expired-grant", () => Effect.void),
-            Match.when("corrupt-grant", () => state.fs.writeFileString(state.grantFile, "{}")),
-            Match.orElse(() => state.fs.writeFileString(stateDir, "checkpoint directory is a file"))
-          );
-          const dispatch = yield* makeAttachedT3Dispatch(
-            state.profile,
-            scenario === "checkpoint" ? stateDir : state.directory
-          ).pipe(Effect.provideService(AgentMessageStore, state.store), Effect.provideService(T3Code, driver));
-          const now = scenario === "expired-grant" ? state.grant.expiresAt : state.now + 3;
-          const router = yield* makeAgentMessageRouter.pipe(
-            Effect.provideService(AgentMessageStore, state.store),
-            Effect.provideService(EndpointDispatch, dispatch)
-          );
-          const receipt = yield* router
-            .dispatchOne("b", "owner-b", now, now + 20000, () => Effect.succeed(now + 1))
-            .pipe(
-              Effect.provideService(Clock.Clock, {
-                ...clock,
-                currentTimeMillis: Effect.succeed(now),
-                currentTimeMillisUnsafe: () => now,
-              })
+    it.effect("refuses changed enrollment and receiving grant scope without exposing the queued task", () =>
+      Effect.forEach(
+        ["owner", "conversation"],
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup();
+            const { driver, sent } = yield* fixture(state, "ack");
+            const profile = AttachedT3Profile.make({
+              ...state.profile,
+              ownerId: scenario === "owner" ? "foreign-owner" : state.profile.ownerId,
+              conversationId:
+                scenario === "conversation" ? O.some("foreign-conversation") : state.profile.conversationId,
+            });
+            const dispatch = yield* makeAttachedT3Dispatch(profile, state.directory).pipe(
+              Effect.provideService(AgentMessageStore, state.store),
+              Effect.provideService(T3Code, driver)
             );
-          Utils.assertSome(
-            O.map(receipt, (receipt) => receipt.status),
-            "failed"
-          );
-          expect(yield* Ref.get(sent)).toBe(0);
-          const later = Envelope.make({
-            ...state.claim.envelope,
-            messageId: "later",
-            idempotencyKey: "later",
-            createdAt: now,
-            expiresAt: now + 30000,
-          });
-          yield* state.store.accept(later, now);
-          Utils.assertSome(
-            O.map(
-              yield* state.store.claimNext("b", "owner-b", now + 1, now + 20000),
-              (claim) => claim.envelope.messageId
-            ),
-            "later"
-          );
-        }),
-      { concurrency: 1 }
-    )
-  );
-  it.effect("drift, stale runs and lost submission receipts fail without resubmission", () =>
-    Effect.forEach(
-      ["drift", "stale", "lost"] satisfies ReadonlyArray<"drift" | "stale" | "lost">,
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup();
-          const { driver, sent } = yield* fixture(state, scenario);
-          const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-            Effect.provideService(AgentMessageStore, state.store),
-            Effect.provideService(T3Code, driver)
-          );
-          const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
-          result.pipe(Result.isFailure, Utils.assertTrue);
-          expect(yield* Ref.get(sent)).toBe(1);
-        }),
-      { concurrency: 1 }
-    )
-  );
-  it.effect("refuses busy enrollment but queues a distinct exact run for an enrolled busy peer", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const { driver, sent } = yield* fixture(state, "busy");
-      const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.provideService(T3Code, driver)
-      );
-      const enrollment = yield* verifyAttachedT3(state.profile, true).pipe(
-        Effect.provideService(T3Code, driver),
-        Effect.result
-      );
-      enrollment.pipe(Result.isFailure, Utils.assertTrue);
-      expect(yield* dispatch.submit(state.claim)).toBe("delivered");
-      expect(yield* Ref.get(sent)).toBe(1);
-    })
-  );
-  it.effect("rejects validly queued foreign conversation and unallowed sender before native exposure", () =>
-    Effect.forEach(
-      ["outside-conversation", "unallowed-peer"],
-      (scenario) =>
-        Effect.gen(function* () {
-          const state = yield* setup();
-          yield* state.store.complete(state.claim, "failed", state.now + 2);
-          const sender = scenario === "unallowed-peer" ? "c" : "a";
-          const conversation = scenario === "outside-conversation" ? "outside" : "conversation";
-          if (sender === "c") yield* state.store.register(binding("c"));
-          const senderGrant = LaunchGrant.make({
-            grantId: "sender-grant",
-            endpointId: sender,
-            generation: 1,
-            ownerId: `owner-${sender}`,
-            repositoryScope: "repo",
-            conversationScope: O.some(conversation),
-            allowedRecipients: ["b"],
-            expiresAt: state.now + 60000,
-            maxMessages: 1,
-          });
-          yield* state.store.registerGrant(senderGrant);
-          const foreign = Envelope.make({
-            ...state.claim.envelope,
-            messageId: "foreign",
-            idempotencyKey: "foreign",
-            from: sender,
-            conversationId: conversation,
-          });
-          expect((yield* state.store.acceptWithGrant(foreign, senderGrant.grantId, state.now + 3)).status).toBe(
-            "accepted"
-          );
-          const claim = O.getOrThrow(yield* state.store.claimNext("b", "owner-b", state.now + 4, state.now + 20000));
-          const { driver, sent } = yield* fixture(state, "ack");
-          const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
-            Effect.provideService(AgentMessageStore, state.store),
-            Effect.provideService(T3Code, driver)
-          );
-          expect(yield* dispatch.submit(claim)).toBe("failed");
-          expect(yield* Ref.get(sent)).toBe(0);
-        }),
-      { concurrency: 1 }
-    )
-  );
-  it.effect("peer handler failures stay failures and persisted conversation/budget limits apply", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const run = (conversationId: string, messageId: string) =>
-        callAgentMessagePeer(state.grantFile, "agent_message_send", {
-          conversationId,
-          messageId,
-          recipient: "a",
-          body: "bounded",
-        }).pipe(Effect.provideService(AgentMessageStore, state.store), Effect.result);
-      yield* run("outside", "denied").pipe(Effect.map(Result.isFailure), Effect.map(Utils.assertTrue));
-      yield* run("conversation", "outbound").pipe(Effect.map(Result.isSuccess), Effect.map(Utils.assertTrue));
-      yield* run("conversation", "outbound").pipe(Effect.map(Result.isSuccess), Effect.map(Utils.assertTrue));
-      const denied = yield* run("conversation", "over-budget");
-      denied.pipe(Result.isFailure, Utils.assertTrue);
-    })
-  );
-  it.effect("expired private grant references cannot acquire sender authority", () =>
-    Effect.gen(function* () {
-      const state = yield* setup();
-      const expired = LaunchGrant.make({ ...state.grant, grantId: "expired", expiresAt: 0 });
-      yield* state.store.registerGrant(expired);
-      yield* state.fs.writeFileString(state.grantFile, yield* S.encodeEffect(GrantJson)(expired), { mode: 0o600 });
-      const result = yield* callAgentMessagePeer(state.grantFile, "agent_message_inbox", {}).pipe(
-        Effect.provideService(AgentMessageStore, state.store),
-        Effect.result
-      );
-      result.pipe(Result.isFailure, Utils.assertTrue);
-    })
-  );
-});
+            expect(yield* dispatch.submit(state.claim)).toBe("failed");
+            expect(yield* Ref.get(sent)).toBe(0);
+            expect(yield* state.store.receipts("incoming")).toHaveLength(2);
+          }),
+        { concurrency: 1 }
+      )
+    );
+
+    it.effect("retains ambiguity for a foreign submitted thread or missing exact-run evidence without resending", () =>
+      Effect.forEach(
+        ["foreign-submission", "missing-run"],
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup();
+            const { driver, sent } = yield* fixture(state, "ack");
+            const inconsistent = T3Code.of({
+              ...driver,
+              sendQueued: Effect.fn("AttachedTest.foreignSubmission")((threadId, text, requestKey) =>
+                driver
+                  .sendQueued(threadId, text, requestKey)
+                  .pipe(
+                    Effect.map((sent) =>
+                      scenario === "foreign-submission"
+                        ? T3CodeSend.make({ ...sent, threadId: "foreign-thread" })
+                        : sent
+                    )
+                  )
+              ),
+              read: Effect.fn("AttachedTest.missingRun")((threadId) =>
+                driver
+                  .read(threadId)
+                  .pipe(
+                    Effect.map((read) =>
+                      scenario === "missing-run" ? T3CodeRead.make({ ...read, recentRuns: [] }) : read
+                    )
+                  )
+              ),
+            });
+            const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+              Effect.provideService(AgentMessageStore, state.store),
+              Effect.provideService(T3Code, inconsistent)
+            );
+            expect(yield* dispatch.submit(state.claim).pipe(Effect.flip)).toMatchObject({
+              _tag: "RouterError",
+              code: "policyMismatch",
+            });
+            expect(yield* Ref.get(sent)).toBe(1);
+            Utils.assertNone(yield* state.store.claimNext("b", "owner-b", state.now + 10, state.now + 20000));
+          }),
+        { concurrency: 1 }
+      )
+    );
+
+    it.effect("requires scoped ACK and the exact settled native run", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const { driver, sent } = yield* fixture(state, "ack");
+        const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.provideService(T3Code, driver)
+        );
+        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
+        expect(yield* Ref.get(sent)).toBe(1);
+      })
+    );
+    it.effect("settles the exact completed run when a different queued run is active", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const { driver, sent } = yield* fixture(state, "next-active");
+        const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.provideService(T3Code, driver)
+        );
+        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
+        expect(yield* Ref.get(sent)).toBe(1);
+      })
+    );
+    it.effect("rejects contradictory active status for the exact completed run without resubmission", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const { driver, sent } = yield* fixture(state, "same-active");
+        const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.provideService(T3Code, driver)
+        );
+        const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
+        result.pipe(Result.isFailure, Utils.assertTrue);
+        expect(yield* Ref.get(sent)).toBe(1);
+      })
+    );
+    it.effect("does not treat native completion without participant ACK as consumption", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const { driver } = yield* fixture(state, "no-ack");
+        const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.provideService(T3Code, driver)
+        );
+        const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
+        result.pipe(Result.isFailure, Utils.assertTrue);
+      })
+    );
+    it.effect("definite pre-submission failures release the claim without native exposure", () =>
+      Effect.forEach(
+        ["expired-grant", "corrupt-grant", "checkpoint"],
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup(1000);
+            const path = yield* Path.Path;
+            const clock = yield* Clock.Clock;
+            const { driver, sent } = yield* fixture(state, "ack");
+            yield* state.store.complete(state.claim, "failed", state.now + 1);
+            yield* state.store.accept(
+              Envelope.make({ ...state.claim.envelope, messageId: "rejected", idempotencyKey: "rejected" }),
+              state.now + 2
+            );
+            const stateDir = path.join(state.directory, "blocked-checkpoint");
+            yield* Match.value(scenario).pipe(
+              Match.when("expired-grant", () => Effect.void),
+              Match.when("corrupt-grant", () => state.fs.writeFileString(state.grantFile, "{}")),
+              Match.orElse(() => state.fs.writeFileString(stateDir, "checkpoint directory is a file"))
+            );
+            const dispatch = yield* makeAttachedT3Dispatch(
+              state.profile,
+              scenario === "checkpoint" ? stateDir : state.directory
+            ).pipe(Effect.provideService(AgentMessageStore, state.store), Effect.provideService(T3Code, driver));
+            const now = scenario === "expired-grant" ? state.grant.expiresAt : state.now + 3;
+            const router = yield* makeAgentMessageRouter.pipe(
+              Effect.provideService(AgentMessageStore, state.store),
+              Effect.provideService(EndpointDispatch, dispatch)
+            );
+            const receipt = yield* router
+              .dispatchOne("b", "owner-b", now, now + 20000, () => Effect.succeed(now + 1))
+              .pipe(
+                Effect.provideService(Clock.Clock, {
+                  ...clock,
+                  currentTimeMillis: Effect.succeed(now),
+                  currentTimeMillisUnsafe: () => now,
+                })
+              );
+            Utils.assertSome(
+              O.map(receipt, (receipt) => receipt.status),
+              "failed"
+            );
+            expect(yield* Ref.get(sent)).toBe(0);
+            const later = Envelope.make({
+              ...state.claim.envelope,
+              messageId: "later",
+              idempotencyKey: "later",
+              createdAt: now,
+              expiresAt: now + 30000,
+            });
+            yield* state.store.accept(later, now);
+            Utils.assertSome(
+              O.map(
+                yield* state.store.claimNext("b", "owner-b", now + 1, now + 20000),
+                (claim) => claim.envelope.messageId
+              ),
+              "later"
+            );
+          }),
+        { concurrency: 1 }
+      )
+    );
+    it.effect("drift, stale runs and lost submission receipts fail without resubmission", () =>
+      Effect.forEach(
+        ["drift", "stale", "lost"] satisfies ReadonlyArray<"drift" | "stale" | "lost">,
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup();
+            const { driver, sent } = yield* fixture(state, scenario);
+            const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+              Effect.provideService(AgentMessageStore, state.store),
+              Effect.provideService(T3Code, driver)
+            );
+            const result = yield* dispatch.submit(state.claim).pipe(Effect.result);
+            result.pipe(Result.isFailure, Utils.assertTrue);
+            expect(yield* Ref.get(sent)).toBe(1);
+          }),
+        { concurrency: 1 }
+      )
+    );
+    it.effect("refuses busy enrollment but queues a distinct exact run for an enrolled busy peer", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const { driver, sent } = yield* fixture(state, "busy");
+        const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.provideService(T3Code, driver)
+        );
+        const enrollment = yield* verifyAttachedT3(state.profile, true).pipe(
+          Effect.provideService(T3Code, driver),
+          Effect.result
+        );
+        enrollment.pipe(Result.isFailure, Utils.assertTrue);
+        expect(yield* dispatch.submit(state.claim)).toBe("delivered");
+        expect(yield* Ref.get(sent)).toBe(1);
+      })
+    );
+    it.effect("rejects validly queued foreign conversation and unallowed sender before native exposure", () =>
+      Effect.forEach(
+        ["outside-conversation", "unallowed-peer"],
+        (scenario) =>
+          Effect.gen(function* () {
+            const state = yield* setup();
+            yield* state.store.complete(state.claim, "failed", state.now + 2);
+            const sender = scenario === "unallowed-peer" ? "c" : "a";
+            const conversation = scenario === "outside-conversation" ? "outside" : "conversation";
+            if (sender === "c") yield* state.store.register(binding("c"));
+            const senderGrant = LaunchGrant.make({
+              grantId: "sender-grant",
+              endpointId: sender,
+              generation: 1,
+              ownerId: `owner-${sender}`,
+              repositoryScope: "repo",
+              conversationScope: O.some(conversation),
+              allowedRecipients: ["b"],
+              expiresAt: state.now + 60000,
+              maxMessages: 1,
+            });
+            yield* state.store.registerGrant(senderGrant);
+            const foreign = Envelope.make({
+              ...state.claim.envelope,
+              messageId: "foreign",
+              idempotencyKey: "foreign",
+              from: sender,
+              conversationId: conversation,
+            });
+            expect((yield* state.store.acceptWithGrant(foreign, senderGrant.grantId, state.now + 3)).status).toBe(
+              "accepted"
+            );
+            const claim = O.getOrThrow(yield* state.store.claimNext("b", "owner-b", state.now + 4, state.now + 20000));
+            const { driver, sent } = yield* fixture(state, "ack");
+            const dispatch = yield* makeAttachedT3Dispatch(state.profile, state.directory).pipe(
+              Effect.provideService(AgentMessageStore, state.store),
+              Effect.provideService(T3Code, driver)
+            );
+            expect(yield* dispatch.submit(claim)).toBe("failed");
+            expect(yield* Ref.get(sent)).toBe(0);
+          }),
+        { concurrency: 1 }
+      )
+    );
+    it.effect("peer handler failures stay failures and persisted conversation/budget limits apply", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const run = (conversationId: string, messageId: string) =>
+          callAgentMessagePeer(state.grantFile, "agent_message_send", {
+            conversationId,
+            messageId,
+            recipient: "a",
+            body: "bounded",
+          }).pipe(Effect.provideService(AgentMessageStore, state.store), Effect.result);
+        yield* run("outside", "denied").pipe(Effect.map(Result.isFailure), Effect.map(Utils.assertTrue));
+        yield* run("conversation", "outbound").pipe(Effect.map(Result.isSuccess), Effect.map(Utils.assertTrue));
+        yield* run("conversation", "outbound").pipe(Effect.map(Result.isSuccess), Effect.map(Utils.assertTrue));
+        const denied = yield* run("conversation", "over-budget");
+        denied.pipe(Result.isFailure, Utils.assertTrue);
+      })
+    );
+    it.effect("expired private grant references cannot acquire sender authority", () =>
+      Effect.gen(function* () {
+        const state = yield* setup();
+        const expired = LaunchGrant.make({ ...state.grant, grantId: "expired", expiresAt: 0 });
+        yield* state.store.registerGrant(expired);
+        yield* state.fs.writeFileString(state.grantFile, yield* S.encodeEffect(GrantJson)(expired), { mode: 0o600 });
+        const result = yield* callAgentMessagePeer(state.grantFile, "agent_message_inbox", {}).pipe(
+          Effect.provideService(AgentMessageStore, state.store),
+          Effect.result
+        );
+        result.pipe(Result.isFailure, Utils.assertTrue);
+      })
+    );
+  }
+);
 
 const ProfileJson = S.fromJsonString(AttachedT3Profile);
 const BaselineJson = S.fromJsonString(AttachedT3NativeBaseline);

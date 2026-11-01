@@ -16,6 +16,7 @@ import * as HashSet from "effect/HashSet";
 import * as Headers from "effect/http/Headers";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as HttpMethod from "effect/http/HttpMethod";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Match from "effect/Match";
@@ -388,6 +389,10 @@ const makeCacheConformanceProxyHandler = Effect.fn("CacheConformance.makeProxyHa
     });
 
   const forward = Effect.fnUntraced(function* (request: HttpServerRequest.HttpServerRequest, body: Uint8Array) {
+    // Server requests carry any method string; only standard methods can be replayed upstream.
+    if (!HttpMethod.isHttpMethod(request.method)) {
+      return { status: O.none<number>(), headers: Headers.empty, body: empty };
+    }
     const base = HttpClientRequest.make(request.method)(`${upstream}${request.url}`).pipe(
       HttpClientRequest.setHeaders(withoutHop(request.headers))
     );

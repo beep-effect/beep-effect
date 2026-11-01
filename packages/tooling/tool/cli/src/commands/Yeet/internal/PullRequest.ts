@@ -35,7 +35,8 @@ import {
   YeetPullRequestTitleSyncStatus,
 } from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -97,7 +98,11 @@ const originPushOwner = Effect.fn("Yeet.originPushOwner")(function* (context: Re
  */
 export const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestViaRest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<GhPrView>,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const headOwner = yield* originPushOwner(context);
   const endpoint = `repos/{owner}/{repo}/pulls?head=${encodeURIComponent(headOwner)}%3A${encodeURIComponent(context.branch)}&state=open&per_page=100`;
   const output = yield* ghOutput({
@@ -177,7 +182,7 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
  */
 export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
-): Effect.fn.Return<GhPrView, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<GhPrView, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // REST first: its budget is separate from the shared GraphQL budget that
   // `gh pr view` spends. `gh pr view` stays as the fallback for a REST failure.
   const viaRest = yield* findOpenPullRequestViaRest(context).pipe(Effect.option, Effect.map(O.flatten));
@@ -233,7 +238,11 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
  */
 export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<O.Option<GhPrView>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  O.Option<GhPrView>,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   // REST first (separate budget); `gh pr view` only when the REST read failed,
   // and a spent GraphQL budget then reports the REST failure, never "no PR".
   const viaRest = yield* Effect.result(findOpenPullRequestViaRest(context));
@@ -248,10 +257,11 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
             : Effect.succeedNone,
       onSuccess: (output) =>
         decodeGhPullRequestView(output).pipe(
-          Effect.map((view) =>
-            view.state === "OPEN" && view.headRefName === context.branch ? O.some(view) : O.none()
-          ),
-          Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
+          Effect.mapBoth({
+            onFailure: YeetCommandError.new("Failed to decode gh pr view JSON."),
+            onSuccess: (view) =>
+              view.state === "OPEN" && view.headRefName === context.branch ? O.some(view) : O.none(),
+          })
         ),
     })
   );
@@ -262,7 +272,7 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 // describe the same commits.
 const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
     Effect.map(Str.trim),
     Effect.orElseSucceed(() => "")
@@ -311,7 +321,11 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
 ): Effect.fn.Return<
   string,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const range = yield* branchCommitRange(context);
   const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
@@ -496,7 +510,11 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const recording = yield* recordCurrentPrSession(context, number, url, state, registry);
   const outcome = O.isSome(recording)
@@ -516,7 +534,11 @@ const finishCreatedPullRequest = Effect.fn("Yeet.finishCreatedPullRequest")(func
   printed: string,
   draft: boolean,
   throughRest: boolean
-): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetEnsuredPullRequest,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log(
     `[yeet] --pr: created ${draft ? "draft " : ""}pull request${throughRest ? " through REST" : ""} -> ${printed}`
   );
@@ -542,7 +564,7 @@ const finishCreatedPullRequest = Effect.fn("Yeet.finishCreatedPullRequest")(func
 const resolveDefaultBranchViaRest = Effect.fn("Yeet.resolveDefaultBranchViaRest")(function* (
   context: RepoRunContext,
   capture: typeof runRepoCommandCapture
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const result = yield* capture(
     "gh",
     ["api", "repos/{owner}/{repo}", "--jq", ".default_branch"],
@@ -574,7 +596,11 @@ const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(func
   capture: typeof runRepoCommandCapture,
   view: NonNullable<EnsurePullRequestDependencies["view"]>,
   input: { readonly title: string; readonly bodyPath: string; readonly draft: boolean; readonly base: string }
-): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetEnsuredPullRequest,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const existing = yield* findOpenPullRequestViaRest(context);
   if (O.isSome(existing)) {
     yield* Console.log(`[yeet] --pr: open pull request #${existing.value.number} already exists for ${context.branch}`);
@@ -633,7 +659,11 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
   const title = resolved.title;
@@ -676,7 +706,7 @@ const editPullRequestTitle = Effect.fn("Yeet.editPullRequestTitle")(function* (
 ): Effect.fn.Return<
   YeetPullRequestTitleSync,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const edited = yield* capture("gh", ["pr", "edit", `${number}`, "--title", title], context.repoRoot).pipe(
     Effect.mapError(YeetCommandError.new("Failed to run gh pr edit --title."))
@@ -717,7 +747,7 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
 ): Effect.fn.Return<
   YeetPullRequestTitleSync,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const current = O.fromUndefinedOr(existing.title);
   if (!O.exists(current, isMergeCommitSubject)) {
@@ -756,7 +786,11 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
   existing: GhPrView,
   message: O.Option<string>,
   capture: typeof runRepoCommandCapture
-): Effect.fn.Return<YeetEnsuredPullRequest, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetEnsuredPullRequest,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   yield* Console.log(
     `[yeet] --pr: open pull request #${existing.number} already exists for ${context.branch}; skipping create`
   );
@@ -839,7 +873,11 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);
@@ -880,7 +918,11 @@ interface HeavyAdmissionLabelDependencies {
   readonly capture?: typeof runRepoCommandCapture;
   readonly changedPaths?: (
     context: RepoRunContext
-  ) => Effect.Effect<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<
+    ReadonlyArray<string>,
+    YeetCommandError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >;
 }
 
 const recordPrLabelLane = (
@@ -956,7 +998,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
   labelStep: O.Option<RepoPlanStep>,
   pullRequest: YeetEnsuredPullRequest,
   dependencies: HeavyAdmissionLabelDependencies = {}
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   if (O.isNone(labelStep)) return;
   if (!pullRequest.created) {
     yield* recordPrLabelLane(
@@ -1029,7 +1071,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
  */
 export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const pullRequest = yield* runGhPullRequestView(context);
 
   if (pullRequest.state !== "OPEN") {

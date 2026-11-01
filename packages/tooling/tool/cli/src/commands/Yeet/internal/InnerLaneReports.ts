@@ -17,7 +17,7 @@ import * as Str from "effect/String";
 import { GithubCheckLaneRunStatus, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Path from "effect/Path";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun } from "../../Quality/Quality.schemas.ts";
@@ -84,7 +84,7 @@ export const readInnerLaneReports = Effect.fn("Yeet.readInnerLaneReports")(funct
 ): Effect.fn.Return<
   ReadonlyArray<QualityTaskLaneRunReport>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const reportPath = yield* runArtifactPathForContext(context, INNER_LANE_REPORT_FILE_NAME);

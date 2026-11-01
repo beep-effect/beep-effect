@@ -8,6 +8,7 @@
  */
 
 import { HostProcessPlatform } from "@beep/utils/HostProcess";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as Console from "effect/Console";
@@ -88,7 +89,7 @@ export const main = (embedded: O.Option<EmbeddedGateway>): void =>
     program,
     Effect.scoped,
     Layer.effectDiscard,
-    Layer.provide(Layer.merge(BunServices.layer, FetchHttpClient.layer)),
+    Layer.provide(Layer.mergeAll(BunServices.layer, BunCrypto.layer, FetchHttpClient.layer)),
     Layer.build,
     Effect.scoped,
     (effect) => BunRuntime.runMain(effect, { disableErrorReporting: true })

@@ -32,8 +32,8 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -95,16 +95,7 @@ export const credentialEnvironment = {
 export const configOf = (values: Readonly<Record<string, string>>) =>
   ConfigProvider.layer(ConfigProvider.fromUnknown(values));
 
-const testCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, Uint8Array.from(data))).pipe(
-        Effect.map((buffer) => new Uint8Array(buffer))
-      ),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+const testCrypto = Digest.layerWebCrypto;
 
 /** Everything the command line needs from a platform, with no real file, terminal, or process. */
 export const Platform = Layer.mergeAll(
@@ -118,6 +109,7 @@ export const Platform = Layer.mergeAll(
     Terminal.make({
       columns: Effect.succeed(80),
       rows: Effect.succeed(24),
+      size: Effect.die("unused"),
       readInput: Effect.die("unused"),
       readLine: Effect.die("unused"),
       display: () => Effect.void,

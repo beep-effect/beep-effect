@@ -7,7 +7,7 @@ import { assertExitFailure, assertNone, assertSome } from "@effect/vitest/utils"
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -21,6 +21,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 import { nativePlatform } from "./support/host.ts";
 import { json, resultsEnv, twirpFetch } from "./support/results.ts";
 import type { FileBlobTransfer } from "@beep/github-actions";
@@ -77,9 +78,9 @@ const live = (fetch: typeof globalThis.fetch, transfer: FileBlobTransfer, env: R
 
 /** The digest `actions/cache` computes for the same path set. */
 const versionOf = (paths: ReadonlyArray<string>) =>
-  Crypto.Crypto.use((crypto) =>
+  Digest.Digest.use((crypto) =>
     crypto
-      .digest("SHA-256", new TextEncoder().encode(A.join([...paths, "gzip", "1.0"], "|")))
+      .digest(Digest.sha256, new TextEncoder().encode(A.join([...paths, "gzip", "1.0"], "|")))
       .pipe(Effect.map(Hex.encode))
   );
 
@@ -905,7 +906,7 @@ describe("ActionCache", () => {
             ) {
               const [command] = spawnArgs;
               if ("args" in command) {
-                const args = [...command.args];
+                const args = [...commandArgs(command)];
                 const flag = args.indexOf("-T");
                 const manifestPath = flag === -1 ? undefined : args[flag + 1];
                 spawns.push({

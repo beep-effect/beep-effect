@@ -23,7 +23,7 @@ import {
   yeetReviewWindowElapsed,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -42,6 +42,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const headSha = "abc1234def";
@@ -169,7 +170,7 @@ const scripted =
     );
   };
 
-const reviewReadPlatform = Layer.mergeAll(NodeServices.layer, MemoryFileSystem.layer);
+const reviewReadPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer);
 
 const readWith = Effect.fn("readWith")(function* (answers: Answers) {
   const calls = yield* Ref.make<ReadonlyArray<string>>([]);
@@ -423,13 +424,13 @@ const ghRunner = (answers: Answers, bucket: "pass" | "pending", restCalls: Ref.R
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
     if (command.command !== "gh") return Effect.succeed(fakeHandle(""));
-    const route = A.join(A.take(command.args, 2), " ");
+    const route = A.join(A.take(commandArgs(command), 2), " ");
     if (route === "pr view") return Effect.succeed(fakeHandle(pullRequestJson));
     if (route === "pr checks") return Effect.succeed(fakeHandle(checksJson(bucket)));
     if (route === "api graphql") return Effect.succeed(fakeHandle(threadsJson));
     if (route === "run list") return Effect.succeed(fakeHandle("[]"));
-    const answer = answerFor(answers, command.args);
-    return Ref.update(restCalls, A.append(A.join(command.args, " "))).pipe(
+    const answer = answerFor(answers, commandArgs(command));
+    return Ref.update(restCalls, A.append(A.join(commandArgs(command), " "))).pipe(
       Effect.as(answer === "fail" ? fakeHandle("gh: API rate limit exceeded", 1) : fakeHandle(answer))
     );
   });

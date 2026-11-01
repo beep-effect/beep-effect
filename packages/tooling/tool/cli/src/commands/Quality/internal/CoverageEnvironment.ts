@@ -5,11 +5,51 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $RepoCliId } from "@beep/identity/packages";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { turboCachePullRequestPosture } from "../../../internal/cli/TurboCache.ts";
-import type * as ChildProcess from "effect/process/ChildProcess";
+
+const $I = $RepoCliId.create("commands/Quality/internal/CoverageEnvironment");
+
+/**
+ * Child-process environment overrides for a coverage run.
+ *
+ * **Details**
+ *
+ * Each entry is spread over the inherited environment at spawn time. A string
+ * value sets the variable; an `undefined` value clears an inherited one, so
+ * the record itself is always present and only its values may be absent.
+ *
+ * **Example** (Accept a clearing override)
+ *
+ * ```ts
+ * import { CoverageEnvironment } from "@beep/repo-cli/commands/Quality/internal/CoverageEnvironment"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CoverageEnvironment)({ CI: "true", TERM_PROGRAM: undefined })) // true
+ * ```
+ *
+ * @internal
+ * @category models
+ * @since 0.0.0
+ */
+export const CoverageEnvironment = S.Record(S.String, S.UndefinedOr(S.String)).pipe(
+  $I.annoteSchema("CoverageEnvironment", {
+    description: "Environment overrides for a coverage child process; an undefined value clears an inherited variable.",
+  })
+);
+
+/**
+ * Decoded {@link CoverageEnvironment} value.
+ *
+ * @internal
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CoverageEnvironment = typeof CoverageEnvironment.Type;
 
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -55,7 +95,7 @@ const coverageFastCheckSeed = (): string =>
  *
  * **Details**
  *
- * The return type derives from the child-process environment contract. An undefined
+ * The return type is the {@link CoverageEnvironment} override record. An undefined
  * entry explicitly clears an inherited variable; the returned environment object is always present.
  *
  * @returns Deterministic hosted environment overrides with the standalone coverage ratchet enabled.
@@ -63,7 +103,7 @@ const coverageFastCheckSeed = (): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const coverageEnvironment = (): NonNullable<ChildProcess.CommandOptions["env"]> => ({
+export const coverageEnvironment = (): CoverageEnvironment => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
   CI: "true",
   GITHUB_ACTIONS: "true",
@@ -92,7 +132,7 @@ export const coverageEnvironment = (): NonNullable<ChildProcess.CommandOptions["
  * @category utilities
  * @since 0.0.0
  */
-export const coverageProducerEnvironment = (): NonNullable<ChildProcess.CommandOptions["env"]> => ({
+export const coverageProducerEnvironment = (): CoverageEnvironment => ({
   ...coverageEnvironment(),
   VITEST_COVERAGE_RATCHET: undefined,
 });

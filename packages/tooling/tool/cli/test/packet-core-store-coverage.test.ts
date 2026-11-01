@@ -6,7 +6,7 @@ import {
   PacketStreamLocator,
   withPacketEventLock,
 } from "@beep/repo-cli/test/Goals";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -16,7 +16,7 @@ import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as Str from "effect/String";
 
-const testLayer = PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer));
+const testLayer = PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 
 const genesis = (actor: string) =>
   PacketEvent.make({

@@ -19,11 +19,10 @@ import { describe, expect } from "@effect/vitest";
 import { assertEquals, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
@@ -43,25 +42,7 @@ const decodeHistoryJson = S.decodeEffect(HistoryJson);
 const encodeHistoryJson = S.encodeEffect(HistoryJson);
 const engine = VerifiedSpanEngine.make({ name: "fixture-extractor", version: "1" });
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          PlatformError.systemError({
-            _tag: "Unknown",
-            cause,
-            description: "Could not compute fixture digest",
-            method: "digest",
-            module: "VerifiedSpanHistoryTest",
-          }),
-        try: () =>
-          globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data)).then((buffer) => new Uint8Array(buffer)),
-      }),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+const TestCrypto = Digest.layerWebCrypto;
 const provideTestCrypto = provideScopedLayer(TestCrypto);
 
 const digestText = Effect.fnUntraced(function* (sourceText: string) {
@@ -299,31 +280,17 @@ describe("verified-span persistence and re-anchor history", () => {
       const sourceText = "alpha beta";
       const source = yield* sourceIdentity(sourceText);
       const digestCalls = yield* Ref.make(0);
-      const CountingCrypto = Layer.succeed(
-        Crypto.Crypto,
-        Crypto.make({
-          digest: (algorithm, data) =>
-            Ref.update(digestCalls, (count) => count + 1).pipe(
-              Effect.andThen(
-                Effect.tryPromise({
-                  catch: (cause) =>
-                    PlatformError.systemError({
-                      _tag: "Unknown",
-                      cause,
-                      description: "Could not compute counted fixture digest",
-                      method: "digest",
-                      module: "VerifiedSpanHistoryTest",
-                    }),
-                  try: () =>
-                    globalThis.crypto.subtle
-                      .digest(algorithm, new Uint8Array(data))
-                      .then((buffer) => new Uint8Array(buffer)),
-                })
-              )
+      const CountingCrypto = Layer.effect(
+        Digest.Digest,
+        Effect.map(Digest.Digest, (digest) =>
+          Digest.Digest.of({
+            ...digest,
+            digest: Effect.fn("VerifiedSpanHistoryTest.countingDigest")((algorithm, data) =>
+              Ref.update(digestCalls, (count) => count + 1).pipe(Effect.andThen(digest.digest(algorithm, data)))
             ),
-          randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-        })
-      );
+          })
+        )
+      ).pipe(Layer.provide(Digest.layerWebCrypto));
       const history = yield* beginVerifiedSpanHistory(
         beginInput(1, [candidate("alpha"), candidate("beta")], source, source, sourceText)
       ).pipe(provideScopedLayer(CountingCrypto));

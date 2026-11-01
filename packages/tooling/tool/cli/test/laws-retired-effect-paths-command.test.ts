@@ -2,7 +2,7 @@ import { lawsCommand, RetiredIriAuthoritiesOptions, runRetiredIriAuthorities } f
 import { RetiredEffectPathsOptions, runRetiredEffectPaths } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -16,7 +16,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const runInProcess = Command.runWith(lawsCommand, { version: "0.0.0" });
 const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 

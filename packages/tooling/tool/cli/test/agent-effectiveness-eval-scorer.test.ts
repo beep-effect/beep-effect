@@ -46,6 +46,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const temporaryFixture = FileSystem.FileSystem.use((fs) =>
   Effect.acquireRelease(fs.makeTempDirectory(), (directory) =>
@@ -165,8 +166,9 @@ const fakeLawSpawner = Effect.fn("AgentEffectivenessEvalScorerTest.fakeLawSpawne
       Match.when("tsgo", () => responses.tsgo ?? {}),
       Match.orElse(() => responses.bun ?? { stdout: scannedFilesLine(["src/Contact.ts"]) })
     );
-    const snapshotConfig = pipe(
-      readConfigArgument(command.args),
+    const snapshotConfig = command.pipe(
+      commandArgs,
+      readConfigArgument,
       O.match({
         onNone: () => Effect.void,
         onSome: (configPath) =>

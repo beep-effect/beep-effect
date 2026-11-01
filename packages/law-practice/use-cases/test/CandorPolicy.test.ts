@@ -4,7 +4,7 @@
  * Every fixture is hand-constructed and slice-isolated: no other slice is
  * booted, no app runtime layer is used, and the only capability the gate
  * reaches for is the `SourceTextResolver` port, satisfied here by a fixture
- * layer. `Crypto.Crypto` comes from a Web Crypto test layer rather than a
+ * layer. `Digest.Digest` comes from the Web Crypto layer rather than a
  * platform package, so this proof adds no dependency to the package. The
  * digests and anchors are real: `verifyTextAnchor` runs a genuine SHA-256 over
  * the resolved text on every covered path.
@@ -30,13 +30,12 @@ import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -55,29 +54,11 @@ const TEXT_A2 = "Smith discloses a hinge assembly with a detent.";
 const TEXT_B = "Jones discloses a latch.";
 
 // ---------------------------------------------------------------------------
-// Crypto: Web Crypto rather than a platform package, so this proof adds no
+// Digest: Web Crypto rather than a platform package, so this proof adds no
 // dependency. `verifyTextAnchor` needs a real SHA-256 or every anchor fails.
 // ---------------------------------------------------------------------------
 
-const TestCrypto = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    digest: (algorithm, data) =>
-      Effect.tryPromise({
-        catch: (cause) =>
-          PlatformError.systemError({
-            _tag: "Unknown",
-            cause,
-            description: "Could not compute digest",
-            method: "digest",
-            module: "Crypto",
-          }),
-        try: () =>
-          globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data)).then((buffer) => new Uint8Array(buffer)),
-      }),
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  })
-);
+const TestCrypto = Digest.layerWebCrypto;
 
 // ---------------------------------------------------------------------------
 // Fixture builders
@@ -216,7 +197,7 @@ const resolverLayer = (fixture: Fixture) =>
     })
   );
 
-const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>) =>
+const scenario = (build: Effect.Effect<Fixture, S.SchemaError, Digest.Digest>) =>
   Layer.unwrap(
     Effect.map(build, (fixture) => Layer.mergeAll(CandorPolicyLive, readerLayer(fixture), resolverLayer(fixture)))
   ).pipe(Layer.provideMerge(TestCrypto));

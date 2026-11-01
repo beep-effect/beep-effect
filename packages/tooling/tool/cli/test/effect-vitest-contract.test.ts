@@ -29,7 +29,7 @@ import {
 import { FsUtils, FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodePath, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodePath, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
@@ -61,7 +61,11 @@ const decodeCensusJson = S.decodeUnknownEffect(S.fromJsonString(S.Array(EffectVi
 const isEffectVitestFinding = S.is(EffectVitestFinding);
 const isEffectVitestPackageTiming = S.is(EffectVitestPackageTiming);
 
-const discoveryLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const discoveryLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+);
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 // A checked-in test whose native-subject EV010 row is a reviewed exception, so the scan
 // below always reports at least one finding for it.
@@ -74,7 +78,7 @@ const fixtureInventoryFileSystem = Effect.fnUntraced(function* () {
   const content = yield* encodeInventoryJson(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.0.6",
+      effectVitestVersion: "4.1.0",
       scope: [],
       findings: [],
     })
@@ -177,7 +181,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         })
       );
       const inventory = yield* readEffectVitestInventory(output).pipe(Effect.map(O.getOrThrow));
-      assertTrue(inventory.effectVitestVersion === "4.0.6");
+      assertTrue(inventory.effectVitestVersion === "4.1.0");
       assertTrue(inventory.findings.length === timing.findingCount);
       assertTrue(A.some(inventory.findings, (row) => row.ruleId === "EV001"));
       const findingIds = A.map(inventory.findings, (row) => row.id);
@@ -253,7 +257,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       );
       assertTrue(failure._tag === "EffectVitestLintError");
       assertTrue(
-        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.0.6")(failure.message),
+        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.1.0")(failure.message),
         failure.message
       );
     })
@@ -424,7 +428,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
   );
 
   it.effect(
-    "rejects an installed Effect Vitest version outside the 4.0.6 pin",
+    "rejects an installed Effect Vitest version outside the 4.1.0 pin",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -436,7 +440,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
 
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
       assertTrue(failure._tag === "EffectVitestLintError");
-      assertTrue(Str.includes("graph pin @effect/vitest@4.0.6 (")(failure.message));
+      assertTrue(Str.includes("graph pin @effect/vitest@4.1.0 (")(failure.message));
     })
   );
 });
@@ -535,7 +539,7 @@ it("preserves a justified exception on the matching live row", () => {
   });
   const document = EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.6",
+    effectVitestVersion: "4.1.0",
     scope: [],
     findings: [baselineFinding],
   });
@@ -567,7 +571,7 @@ const occurrences = Effect.fnUntraced(function* (body: string) {
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.0.6",
+    effectVitestVersion: "4.1.0",
     scope: [],
     findings: A.map(rows, (row, index) =>
       index === 0
@@ -839,7 +843,7 @@ it("keeps indexed legacy membership separate from anchored exception eligibility
   }
 });
 
-it.layer(NodeServices.layer)("round 2 contextual graph routing", (it) => {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("round 2 contextual graph routing", (it) => {
   it.effect(
     "retains primary assertion polarity and uncertainty after graph hydration",
     Effect.fnUntraced(function* () {

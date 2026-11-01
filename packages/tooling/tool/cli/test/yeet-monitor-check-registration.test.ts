@@ -32,6 +32,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 // A7 (ship-velocity): `gh pr checks --watch` reports a head with no check runs
 // as an error — exit 1, "no checks reported on the '<branch>' branch" — and
@@ -215,7 +216,7 @@ const monitorSpawnerLayer = (watch: { readonly exitCode: number; readonly output
         if (!ChildProcess.isStandardCommand(command)) {
           return Effect.die("the monitor phase never spawns a piped command");
         }
-        const line = A.join([command.command, ...command.args], " ");
+        const line = A.join([command.command, ...commandArgs(command)], " ");
         if (Str.includes("pr view")(line)) {
           return Effect.succeed(stubHandle(0, PR_VIEW_JSON));
         }
@@ -378,10 +379,10 @@ const censusSpawner = (
 ) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("expected a standard command");
-    if (A.contains(command.args, "--watch")) {
+    if (A.contains(commandArgs(command), "--watch")) {
       return Ref.updateAndGet(calls, (n) => n + 1).pipe(Effect.as(stubHandle(1, "checks failed")));
     }
-    if (A.contains(command.args, "--required")) {
+    if (A.contains(commandArgs(command), "--required")) {
       return Ref.get(calls).pipe(
         Effect.map((n) => stubHandle(0, required[Math.min(n - 1, required.length - 1)] ?? "invalid"))
       );

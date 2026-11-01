@@ -71,6 +71,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetRunOptions } from "@beep/repo-cli/test/Yeet";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -158,7 +159,7 @@ type Reply = readonly [needle: string, exitCode: number, output: string];
 const scriptedSpawner = (replies: ReadonlyArray<Reply>, commands: Ref.Ref<ReadonlyArray<string>>) =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-    const line = A.join([command.command, ...command.args], " ");
+    const line = A.join([command.command, ...commandArgs(command)], " ");
     const reply = A.findFirst(replies, ([needle]) => pipe(line, Str.includes(needle)));
     return Ref.update(commands, A.append(line)).pipe(
       Effect.andThen(
@@ -1463,27 +1464,30 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
 // runYeetReady locates the checked-out repository from process.cwd(), so this
 // single integration case needs the host filesystem; the scripted gh process
 // still prevents any real GitHub command.
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("yeet ready native repo root", (it) => {
-  it.effect("runs the gate for the checked-out branch and refuses when it has no pull request", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const packetDir = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-command-" });
-      const commands = yield* makeCommands;
-      const error = yield* runYeetReady(
-        YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir, inherited: [] })
-      ).pipe(
-        Effect.flip,
-        withProcesses(
-          [
-            ["gh pr view", 1, "no pull requests found"],
-            ["rev-parse --abbrev-ref HEAD", 0, `${BRANCH}\n`],
-            ["git ", 0, ""],
-          ],
-          commands
-        )
-      );
-      expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
-      expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr ready"))).toBe(false);
-    })
-  );
-});
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "yeet ready native repo root",
+  (it) => {
+    it.effect("runs the gate for the checked-out branch and refuses when it has no pull request", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const packetDir = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-ready-command-" });
+        const commands = yield* makeCommands;
+        const error = yield* runYeetReady(
+          YeetReadyOptions.make({ base: "origin/main", head: "HEAD", packetDir, inherited: [] })
+        ).pipe(
+          Effect.flip,
+          withProcesses(
+            [
+              ["gh pr view", 1, "no pull requests found"],
+              ["rev-parse --abbrev-ref HEAD", 0, `${BRANCH}\n`],
+              ["git ", 0, ""],
+            ],
+            commands
+          )
+        );
+        expect(error).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "pr-open" });
+        expect(A.some(yield* Ref.get(commands), Str.startsWith("gh pr ready"))).toBe(false);
+      })
+    );
+  }
+);

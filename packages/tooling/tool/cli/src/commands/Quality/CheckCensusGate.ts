@@ -25,7 +25,7 @@ import { formatJsonc, readArtifact, writeArtifact } from "../../internal/artifac
 import { runCaptured } from "../../internal/process/index.ts";
 import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Quality/CheckCensusGate");
@@ -1104,7 +1104,7 @@ export interface CheckCensusSamplerShape {
 type CheckCensusSamplerRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner;
 
 const sampleArgs = (tsconfigPath: string, buildInfoPath: string): ReadonlyArray<string> => [
@@ -1122,7 +1122,7 @@ const makeCheckCensusSampler = Effect.fnUntraced(function* (
 ): Effect.fn.Return<CheckCensusSamplerShape, never, CheckCensusSamplerRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const context = yield* Effect.context<Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner>();
+  const context = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
   const scratchParent = path.join(options.repoRoot, ".beep", "quality");
 
   const compilerVersion = runCaptured({

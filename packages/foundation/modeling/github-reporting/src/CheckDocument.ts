@@ -739,8 +739,10 @@ const readCurrent = <E>(context: ReconcileContext<E>): Effect.Effect<string, Che
     onSome: (read) =>
       read.pipe(
         Effect.timeout(context.passTimeout),
-        Effect.mapError((cause) => CheckDocumentError.make({ kind: "read", cause })),
-        Effect.map((text) => text ?? "")
+        Effect.mapBoth({
+          onFailure: (cause) => CheckDocumentError.make({ kind: "read", cause }),
+          onSuccess: (text) => text ?? "",
+        })
       ),
   });
 

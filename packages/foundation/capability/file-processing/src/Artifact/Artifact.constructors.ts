@@ -10,7 +10,7 @@ import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ArtifactId } from "./Artifact.schema.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const deriveArtifactIdDigest = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeDerivedArtifactId = S.decodeUnknownEffect(ArtifactId);
@@ -33,13 +33,13 @@ const artifactIdTextEncoder = new TextEncoder();
  * Effect.runPromise(program.pipe(Effect.provide(BunCrypto.layer))).then((valid) => console.log(valid)) // true
  * ```
  *
- * @effects Requires `Crypto.Crypto` to hash the joined artifact parts and may fail with `SchemaError` when the derived identifier cannot be decoded.
+ * @effects Requires `Digest.Digest` to hash the joined artifact parts and may fail with `SchemaError` when the derived identifier cannot be decoded.
  * @category constructors
  * @since 0.0.0
  */
 export const deriveArtifactId = Effect.fn("Artifact.deriveArtifactId")(function* (
   parts: ReadonlyArray<string>
-): Effect.fn.Return<ArtifactId, S.SchemaError, Crypto.Crypto> {
+): Effect.fn.Return<ArtifactId, S.SchemaError, Digest.Digest> {
   const digest = yield* deriveArtifactIdDigest(artifactIdTextEncoder.encode(A.join("\x1f")(parts)));
   return yield* decodeDerivedArtifactId(`artifact:${digest}`);
 });

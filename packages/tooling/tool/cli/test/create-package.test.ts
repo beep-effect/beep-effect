@@ -5,7 +5,7 @@ import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils"
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Console from "effect/Console";
@@ -23,7 +23,7 @@ import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
+const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),

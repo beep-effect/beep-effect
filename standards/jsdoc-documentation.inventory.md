@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-01T01:28:01.307Z
+Generated: 2026-11-01T01:42:23.964Z
 
 ## Scope
 
@@ -14,11 +14,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 166 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 16 |
-| publicModules | 3634 |
-| publicExports | 25728 |
+| publicModules | 3637 |
+| publicExports | 25737 |
 | openModules | 161 |
-| openExports | 97 |
-| missingExportExamples | 3 |
+| openExports | 94 |
+| missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
@@ -141,7 +141,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 83 | `@beep/dock-react` | `packages/foundation/ui-system/dock-react` | clean | 3 | 12 | 0 | 0 |
 | 84 | `@beep/ecfr` | `packages/drivers/ecfr` | clean | 6 | 172 | 0 | 0 |
 | 85 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | clean | 35 | 131 | 0 | 0 |
-| 86 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 34 | 183 | 0 | 0 |
+| 86 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 35 | 185 | 0 | 0 |
 | 87 | `@beep/github-reporting` | `packages/foundation/modeling/github-reporting` | clean | 5 | 40 | 0 | 0 |
 | 88 | `@beep/govinfo` | `packages/drivers/govinfo` | clean | 32 | 85 | 0 | 0 |
 | 89 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 26 | 131 | 0 | 0 |
@@ -182,7 +182,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 124 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 65 | 809 | 0 | 0 |
 | 125 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 10 | 98 | 0 | 3 |
 | 126 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 8 | 56 | 0 | 0 |
-| 127 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 22 |
+| 127 | `@beep/infra` | `infra` | needs-remediation | 11 | 109 | 3 | 19 |
 | 128 | `@beep/oxigraph` | `packages/drivers/oxigraph` | clean | 3 | 6 | 0 | 0 |
 | 129 | `@beep/palantiri` | `packages/tooling/library/palantiri` | clean | 20 | 156 | 0 | 0 |
 | 130 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | clean | 2 | 2 | 0 | 0 |
@@ -193,7 +193,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 135 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 47 | 0 | 0 |
 | 136 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 81 | 0 | 0 |
 | 137 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 54 | 262 | 0 | 0 |
-| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 252 | 953 | 0 | 0 |
+| 138 | `@beep/law-practice-domain` | `packages/law-practice/domain` | clean | 253 | 954 | 0 | 0 |
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
@@ -221,14 +221,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 163 | `@beep/documents-server` | `packages/documents/server` | needs-remediation | 35 | 123 | 2 | 0 |
 | 164 | `@beep/epistemic-client` | `packages/epistemic/client` | clean | 4 | 24 | 0 | 0 |
 | 165 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 28 | 62 | 0 | 0 |
-| 166 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 656 | 0 | 0 |
+| 166 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 104 | 657 | 0 | 0 |
 | 167 | `@beep/workspace-server` | `packages/workspace/server` | clean | 12 | 31 | 0 | 0 |
 | 168 | `@beep/agents-client` | `packages/agents/client` | clean | 6 | 39 | 0 | 0 |
 | 169 | `@beep/agents-server` | `packages/agents/server` | clean | 11 | 42 | 0 | 0 |
 | 170 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 171 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 6 | 14 | 0 | 0 |
 | 172 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 73 | 346 | 0 | 0 |
-| 173 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 68 | 424 | 46 | 0 |
+| 173 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 69 | 429 | 46 | 0 |
 | 174 | `@beep/docket-intake` | `apps/docket-intake` | clean | 12 | 34 | 0 | 0 |
 | 175 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 92 | 0 | 0 |
 | 176 | `@beep/practice-gateway` | `apps/practice-gateway` | clean | 20 | 143 | 0 | 0 |
@@ -396,28 +396,25 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:657` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:690` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:720` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:402` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:593` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:836` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:909` `OpenClawGeneration` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1271` `makeOpenClawGeneration` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1358` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1432` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1535` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1604` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1740` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1872` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:1994` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2148` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2207` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2282` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2385` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2449` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2536` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
-- `src/OpenClaw.ts:2739` `OpenClawStack` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:908` `OpenClawGeneration` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1270` `makeOpenClawGeneration` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1356` `renderOpenClawUnit` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1429` `renderOpenClawRunScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1531` `renderOpenClawGenerationTree` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1599` `renderOpenClawPreflightScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1734` `renderOpenClawStageScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1865` `renderOpenClawApplyScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:1986` `renderOpenClawRollbackScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2139` `renderOpenClawDriftAuditScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2197` `renderOpenClawProbeScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2271` `renderOpenClawLiveAcceptanceScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2373` `renderOpenClawBackupShipScript` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2437` `OpenClawStackArgs` (class) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2524` `makeOpenClawStackArgsFromConfigValues` (const) - 1 documentation section/link violation(s)
+- `src/OpenClaw.ts:2727` `OpenClawStack` (class) - 1 documentation section/link violation(s)
 
 ### @beep/repo-cli
 
@@ -475,14 +472,14 @@ Export findings:
 - `src/commands/Cache/Cache.command.ts:315` `runCacheWarm` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.command.ts:513` `buildCacheDashboard` (const) - 1 example import violation(s)
 - `src/commands/Cache/Cache.service.ts:111` `encodeCachePolicyBaselineText` (const) - 1 example import violation(s)
-- `src/commands/Ci/CiLane.ts:406` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:1554` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:407` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:1555` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
 - `src/commands/Corpus/Corpus.errors.ts:312` `CorpusArchiveMoveDigestMismatchError` (class) - 1 example import violation(s)
 - `src/commands/CreatePackage/CreatePackage.command.ts:119` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:304` `MessageFacts` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:354` `IntakeRecord` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.intake.schemas.ts:405` `IntakeResult` (class) - 1 example import violation(s)
-- `src/commands/Drawings/Drawings.intake.ts:625` `renderIntakeSummary` (const) - 1 example import violation(s)
+- `src/commands/Drawings/Drawings.intake.ts:627` `renderIntakeSummary` (const) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.measurements.schemas.ts:431` `CriticMeasurements` (class) - 1 example import violation(s)
 - `src/commands/Drawings/Drawings.measurements.ts:910` `measurementsMarkdown` (const) - 1 example import violation(s)
 - `src/commands/Explore/Atlas.ts:787` `explorationProjectionDriftPaths` (const) - 1 example import violation(s)
@@ -491,7 +488,7 @@ Export findings:
 - `src/commands/Qa/JudgeCheck.ts:512` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:628` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:732` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:1045` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:1065` `runBunAudit` (const) - 1 documentation section/link violation(s)
 - `src/commands/Runners/Runners.schemas.ts:120` `BakeConfig` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:167` `BakeReport` (class) - 1 example import violation(s)
 - `src/commands/Runners/Runners.schemas.ts:276` `BakePlan` (class) - 1 example import violation(s)
