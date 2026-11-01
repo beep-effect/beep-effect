@@ -1,0 +1,33 @@
+{
+  "attempt": 1,
+  "conclusion": "failure",
+  "createdAt": "2026-10-27T15:10:05Z",
+  "databaseId": 18890000102,
+  "event": "push",
+  "headBranch": "main",
+  "headSha": "b2f8c4d6e8a0b1c3d5e7f9a2b4c6d8e0f1a3b5c7",
+  "jobs": [
+    {
+      "completedAt": "2026-10-27T15:24:40Z",
+      "conclusion": "failure",
+      "databaseId": 53900000011,
+      "name": "Check / Lint",
+      "startedAt": "2026-10-27T15:10:22Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/18890000102/job/53900000011"
+    },
+    {
+      "completedAt": "0001-01-01T00:00:00Z",
+      "conclusion": "cancelled",
+      "databaseId": 53900000012,
+      "name": "Check / Docgen",
+      "startedAt": "0001-01-01T00:00:00Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/18890000102/job/53900000012"
+    }
+  ],
+  "status": "completed",
+  "workflowName": "Check"
+}

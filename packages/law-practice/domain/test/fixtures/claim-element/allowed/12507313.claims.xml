@@ -1,0 +1,133 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An apparatus comprising:
+<claim-text>at least one processor; and</claim-text>
+<claim-text>at least one memory storing instructions that, when executed by the at least one processor, cause the apparatus at least to:</claim-text>
+<claim-text>determine that data not belonging to Mobile Terminated Small Data Transmission, MT-SDT, bearer is available during an MT-SDT procedure or data belonging to a MT-SDT bearer is available during a Mobile Oriented Small Data Transmission, MO-SDT, procedure; and</claim-text>
+<claim-text>based on the determining, perform at least one of:
+<claim-text>transmitting an indication of presence of the data to a network device, or</claim-text>
+<claim-text>resuming the non-MT-SDT bearer during the MT-SDT procedure or the MT-SDT bearer during the MO-SDT procedure, or</claim-text>
+<claim-text>transmitting the data not belonging to MT-SDT bearer after the MT-SDT procedure is completed or the data belonging to MT-SDT bearer after the MO-SDT procedure is completed.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the data not belonging to the MT-SDT bearer further comprises data belonging to MO-SDT.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the apparatus is further caused to:
+<claim-text>receive, from the network device, a configuration for the indication or the resuming.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The apparatus of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the configuration indicates at least one of the following:
+<claim-text>the apparatus is allowed to transmit the indication,</claim-text>
+<claim-text>the MO-SDT configured bearers are allowed to be resumed during the MT-SDT procedure,</claim-text>
+<claim-text>the MT-SDT configured bearers are allowed to be resumed during the MO-SDT procedure,</claim-text>
+<claim-text>the apparatus is allowed to resume the MO-SDT bearer or transmit data not belonging to the MT-SDT or the MO-SDT bearer during the MT-SDT procedure,</claim-text>
+<claim-text>the apparatus is allowed to resume MT-SDT bearer or transmit data belonging to the MT-SDT during the MO-SDT procedure.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The apparatus of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the configuration is received via at least one of the following:
+<claim-text>a paging message,</claim-text>
+<claim-text>a medium access control, MAC, control element, CE, or</claim-text>
+<claim-text>a radio resource control signaling.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The apparatus of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the configuration indicated by at least one of:
+<claim-text>the MAC CE comprises a header indicating that one or more configured MO-SDT or MT-SDT bearers are to be resumed; or</claim-text>
+<claim-text>the MAC CE indicates respective bearer corresponding to one or more logical channel identifiers to be resumed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the apparatus is further caused to:
+<claim-text>indicate, from a medium access control, MAC, layer of the apparatus to a radio resource control, RRC, layer of the apparatus, to resume the at least one of the MO-SDT or MT-SDT bearers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The apparatus of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the indication further indicates that
+<claim-text>the MO-SDT bearer or MT-SDT bearer is to be resumed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the indication is included in
+<claim-text>a buffer state report, or</claim-text>
+<claim-text>an assistance information message.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The apparatus of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the indication is included in an assistance information message comprises
+<claim-text>new resume cause for MO-SDT or MT-SDT data arrival, or</claim-text>
+<claim-text>new indication of MO-SDT or MT-SDT data.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. An apparatus comprising:
+<claim-text>at least one processor; and</claim-text>
+<claim-text>at least one memory storing instructions that, when executed by the at least one processor, cause the apparatus at least to:</claim-text>
+<claim-text>receive, from a terminal device, at least one of:
+<claim-text>an indication of presence of data not belonging to a Mobile Terminated Small Data Transmission, MT-SDT, bearer is available during an MT-SDT procedure or data belonging to a MT-SDT bearer is available during a Mobile Oriented Small Data Transmission, MO-SDT, procedure, or</claim-text>
+<claim-text>data not belonging to MT-SDT bearer after the MT-SDT procedure is completed or data belonging to MT-SDT bearer after the MO-SDT procedure is completed.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The apparatus of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the data not belonging to the MT-SDT bearer further comprises data belonging to MO-SDT.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The apparatus of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the apparatus is further caused to:
+<claim-text>transmit, to the terminal device, a configuration for the indication or the data not belonging to the MT-SDT bearer after the MT-SDT procedure is completed or the data belonging to the MT-SDT bearer after the MO-SDT procedure is completed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The apparatus of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the configuration indicates at least one of the following:
+<claim-text>the apparatus is allowed to transmit the indication,</claim-text>
+<claim-text>the MO-SDT configured bearers are allowed to be resumed during the MT-SDT procedure,</claim-text>
+<claim-text>the MT-SDT configured bearers are allowed to be resumed during the MO-SDT procedure,</claim-text>
+<claim-text>the apparatus is allowed to resume or transmit the data not belonging to the MT-SDT or the MO-SDT during the MT-SDT procedure, or</claim-text>
+<claim-text>the apparatus is allowed to resume or transmit the data belonging to the MT-SDT during the MO-SDT procedure.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The apparatus of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the configuration is transmitted via at least one of the following:
+<claim-text>a paging message,</claim-text>
+<claim-text>a medium access control, MAC, control element, CE, or</claim-text>
+<claim-text>a radio resource control signaling.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The apparatus of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the configuration indicated by at least one of:
+<claim-text>the MAC CE comprises a header indicating that one or more configured MO-SDT or MT-SDT bearers are to be resumed,</claim-text>
+<claim-text>the MAC CE indicates respective bearer corresponding to one or more logical channel identifiers to be resumed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The apparatus of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the indication further indicates that
+<claim-text>the MO-SDT bearer or MT-SDT bearer is to be resumed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The apparatus of <claim-ref idref="CLM-00017">claim 17</claim-ref>, wherein the indication is included in
+<claim-text>a buffer state report, or</claim-text>
+<claim-text>an assistance information message.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The apparatus of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the indication is included in an assistance information message comprises
+<claim-text>new resume cause for MO-SDT or MT-SDT data arrival, or</claim-text>
+<claim-text>new indication of MO-SDT or MT-SDT data.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method comprising:
+<claim-text>determining, at a terminal device, that data not belonging to Mobile Terminated Small Data Transmission, MT-SDT, bearer is available during an MT-SDT procedure or data belonging to a MT-SDT bearer is available during a Mobile Oriented Small Data Transmission, MO-SDT, procedure; and</claim-text>
+<claim-text>based on the determining, performing at least one of:
+<claim-text>transmitting an indication of presence of the data to a network device, or</claim-text>
+<claim-text>resuming the non-MT-SDT bearer during the MT-SDT procedure or the MT-SDT bearer during the MO-SDT procedure, or</claim-text>
+<claim-text>transmitting the data not belonging to MT-SDT bearer after the MT-SDT procedure is completed or the data belonging to MT-SDT bearer after the MO-SDT procedure is completed.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -319,7 +319,9 @@ export class CommandOutput extends S.Class<CommandOutput, { readonly brand: uniq
 /** The executable and argv an error should report for `command`. */
 const describeCommand = (command: ChildProcess.Command): { command: string; args: ReadonlyArray<string> } => {
   if (ChildProcess.isStandardCommand(command)) {
-    return { command: command.command, args: command.args };
+    // `String` renders a `Redacted` word as its `<redacted>` label, so secrets
+    // never reach an error message.
+    return { command: command.command, args: A.map(command.args, String) };
   }
   const left = describeCommand(command.left);
   const right = describeCommand(command.right);

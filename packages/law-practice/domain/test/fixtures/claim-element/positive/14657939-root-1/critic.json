@@ -1,0 +1,96 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "14657939-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 3,
+    "preservedSemanticReview": "critic.round2.json",
+    "previousRound": 2,
+    "currentRound": 3
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 159,
+        "endChar": 196,
+        "quote": "two to four original chamfered bevels"
+      },
+      "determiner": "bare",
+      "priorHead": "original chamfered bevels",
+      "acceptedHead": "two to four original chamfered bevels",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    },
+    {
+      "claimNumber": 1,
+      "path": "1.d",
+      "anchor": {
+        "startChar": 910,
+        "endChar": 934,
+        "quote": "two larger obtuse angles"
+      },
+      "determiner": "bare",
+      "priorHead": "larger obtuse angles",
+      "acceptedHead": "two larger obtuse angles",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    },
+    {
+      "claimNumber": 2,
+      "path": "2.a",
+      "anchor": {
+        "startChar": 273,
+        "endChar": 293,
+        "quote": "two chamfered bevels"
+      },
+      "determiner": "bare",
+      "priorHead": "chamfered bevels",
+      "acceptedHead": "two chamfered bevels",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "Claim 1 recites both a two-to-four range of original chamfered bevels and two larger obtuse angles; claim 2 recites two chamfered bevels. Each is bare, so the actual range/cardinals must remain with its substantive modifiers. No physical bevel, angle or member is selected by this head correction.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round2.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "3ebe566ad60940f6a5b305d16b7954b3b5b5600c5cfa7ee8b8a3f2646b421ec5",
+  "extractorSha256": "3c87c0de24873867435612ef00e71114bbf8068c054a53b8c215fe8d77ecad34",
+  "headReviewSha256": "4d3fcf006e314ca86cb3b390d7b1ff5f9029ab903bc9006b6e430327809a7c5d",
+  "preservedPriorCritic": {
+    "file": "critic.round2.json",
+    "sha256": "8fb683b30aec747653a461c6413b779d3e6dc6a626af03f43a5e0486603470bc",
+    "round": 2,
+    "verdict": "accepted",
+    "confidence": 0.96
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

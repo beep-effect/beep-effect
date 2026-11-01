@@ -16,7 +16,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -49,7 +49,7 @@ const noLivePid = pidAlive(HashSet.empty());
 
 // Every suite runs without a terminal-lane authority unless a test provides one.
 const ResidueReapTestLayer = Layer.merge(
-  NodeServices.layer,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
   layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)
 );
 
@@ -2179,14 +2179,14 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 const encoded = yield* S.encodeEffect(ResidueInvocationJson)(fixture);
                 const script = `
             import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/RepoRun";
-            import { NodeServices } from "@effect/platform-node";
+            import { NodeCrypto, NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
             import * as Layer from "effect/Layer";
             const options = ${encoded};
             await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
               probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
               archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
-            }).pipe(Effect.provide(Layer.merge(NodeServices.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)))));
+            }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)))));
           `;
                 const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
                   Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })

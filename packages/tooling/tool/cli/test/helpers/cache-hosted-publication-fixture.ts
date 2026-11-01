@@ -39,7 +39,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import type { CacheProducerTrustLocations } from "@beep/repo-cli/test/Cache";
 import type { CacheTaskContract } from "@beep/repo-configs/cache";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
@@ -221,7 +222,11 @@ export const makePublishedAcceptanceFixture = Effect.fn("PublishedAcceptanceTest
   canaryBinding: CacheProducerBinding
 ) {
   const platform = yield* Effect.context<
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    | FileSystem.FileSystem
+    | Path.Path
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | ChildProcessSpawner.ChildProcessSpawner
   >();
   const channels = yield* Effect.all({
     stable: prepareChannel(trust.stable, stable, stableBinding, contract, 11),

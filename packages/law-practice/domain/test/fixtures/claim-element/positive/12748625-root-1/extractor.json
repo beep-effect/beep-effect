@@ -1,0 +1,72 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "12748625-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        7
+      ],
+      "quotes": [
+        "the allocating",
+        "said allocating"
+      ],
+      "reason": "Nominal action reference clearly refers to the earlier allocating step, but no explicit nominal introducing ClaimTerm is recited there. Action text preserved; no invented introduction anchor."
+    },
+    {
+      "claimNumber": 3,
+      "quotes": [
+        "the second probe operation"
+      ],
+      "reason": "No second-probe introduction on chain 3→2→1. Claim 8 introduces one but is a sibling and cannot supply this edge."
+    },
+    {
+      "claimNumber": 4,
+      "quotes": [
+        "the channel assessment node"
+      ],
+      "reason": "Chain includes the original operation node and the second replacement node. Short unqualified phrase does not uniquely choose one after replacement; left unlinked for critic/attorney."
+    },
+    {
+      "claimNumbers": [
+        4,
+        5
+      ],
+      "quotes": [
+        "the achievable capacity",
+        "the assessed channel"
+      ],
+      "reason": "No explicit capacity introduction; a channel is selected for assessment and a different channel receives an operation. The assessed-channel phrase does not uniquely identify one without temporal/operational inference."
+    },
+    {
+      "claimNumber": 9,
+      "quotes": [
+        "the Media Access Plan"
+      ],
+      "reason": "First definite reference has no introduction in claim 1. Parenthetical acronym is preserved in connecting text, not inserted into the lexical head."
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Source audits and independent source critic accepted source identity/version and actual rejection association; this semantic pass relies on those retained qualifications and does not claim fresh PDF/inventory authentication. Examiner wording is evidence, not the semantic reference answer. All unselected claims were context only; no sibling-reference borrowing."
+  ],
+  "annotationRationale": "Fresh source-grammar trees: extended root context includes embedded network comprising but stops at the method main transition. Six actual ordered method steps are functional relations; each dependent retains its natural parent. Full noun heads and exact source anomalies (comprising semicolon, providing using) retained. Selected nodes linked semantically to the explicitly selected node subset; no number or wording repair. No links borrowed from sibling 8 or system family 10. Shortened channel names assessed independently of examiner allegations.",
+  "independence": "Fresh manual semantic extractor. Only exact manually chosen source quote location, serialization, geometry and schema validation helpers used. No production decomposition/policy, P2-DESIGN, predictions, synthetic/conformance fixtures, network, secrets, git or delegation. Agent confidence is not attorney agreement; independent semantic critic is pending."
+}

@@ -53,7 +53,8 @@ import { layerSessionLedgerLive, SessionLedger, sessionCheckoutFacts } from "../
 import { loadYeetInboxView } from "../Yeet/internal/InboxView.ts";
 import { ProofJobLauncher } from "../Yeet/internal/ProofJobLauncher.ts";
 import type { ParcelId, SessionKey } from "@beep/palantiri";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AccountsStatusReport } from "../Accounts/Accounts.schemas.ts";
@@ -526,7 +527,7 @@ export const proofJobInput = (record: ProofJobRecord): O.Option<ProofJobInput> =
 export type CheckoutFactsProbe = Effect.Effect<
   SessionCheckoutFacts,
   SessionLedgerError,
-  ChildProcessSpawner.ChildProcessSpawner | Crypto.Crypto | Path.Path
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Path.Path | Digest.Digest
 >;
 
 const laneRedsFailed = failedFor("lane-reds");
@@ -559,7 +560,12 @@ const laneRedsFailed = failedFor("lane-reds");
  */
 export const makeLaneRedsSource = Effect.fnUntraced(function* (facts: CheckoutFactsProbe) {
   const context = yield* Effect.context<
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SessionLedger
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
+    | SessionLedger
   >();
   const fs = yield* FileSystem.FileSystem;
   const ledger = yield* SessionLedger;
@@ -794,7 +800,11 @@ const sinceLastCheckFailed = failedFor("since-last-check");
  */
 export const makeSinceLastCheckSource = Effect.fnUntraced(function* (facts: CheckoutFactsProbe) {
   const context = yield* Effect.context<
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >();
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

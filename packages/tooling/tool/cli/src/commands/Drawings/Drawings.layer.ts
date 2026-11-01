@@ -48,14 +48,15 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 const engineFromOcct = Effect.fn("DrawingsLayer.engineFromOcct")(function* () {
   const occt = yield* Occt;
   const info = occt.kernel.pipe(
-    Effect.map((kernel) =>
-      EngineInfo.make({
-        name: "replicad/opencascade.js",
-        version: kernel.replicadVersion,
-        binarySha256: kernel.wasmSha256,
-      })
-    ),
-    Effect.mapError((cause) => DrawingError.fromUnknown("geometry", "The kernel could not report itself.", cause))
+    Effect.mapBoth({
+      onFailure: (cause) => DrawingError.fromUnknown("geometry", "The kernel could not report itself.", cause),
+      onSuccess: (kernel) =>
+        EngineInfo.make({
+          name: "replicad/opencascade.js",
+          version: kernel.replicadVersion,
+          binarySha256: kernel.wasmSha256,
+        }),
+    })
   );
   const summarize = Effect.fn("DrawingsLayer.summarize")(function* (model: ModelSpec) {
     return yield* occt

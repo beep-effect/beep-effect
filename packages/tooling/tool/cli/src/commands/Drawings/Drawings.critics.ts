@@ -1381,8 +1381,10 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     return exists
       ? yield* read(loopPath).pipe(
           Effect.flatMap(decodeCriticLoopRecord),
-          Effect.map((record) => record.runs),
-          Effect.mapError(fail(`"${loopPath}" is not a critic loop record.`))
+          Effect.mapBoth({
+            onFailure: fail(`"${loopPath}" is not a critic loop record.`),
+            onSuccess: (record) => record.runs,
+          })
         )
       : A.empty<CriticRunRecord>();
   });

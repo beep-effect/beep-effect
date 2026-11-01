@@ -1,0 +1,4879 @@
+[
+  {
+    "claimNumber": 25,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "25",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 59,
+          "quote": "A system for optimizing the operations of a pipeline system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "determiner": "a",
+            "head": "system"
+          },
+          {
+            "anchor": {
+              "startChar": 24,
+              "endChar": 38,
+              "quote": "the operations"
+            },
+            "determiner": "the",
+            "head": "operations"
+          },
+          {
+            "anchor": {
+              "startChar": 42,
+              "endChar": 59,
+              "quote": "a pipeline system"
+            },
+            "determiner": "a",
+            "head": "pipeline system"
+          }
+        ]
+      },
+      {
+        "path": "25.a",
+        "anchor": {
+          "startChar": 76,
+          "endChar": 87,
+          "quote": "a processor"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 76,
+              "endChar": 87,
+              "quote": "a processor"
+            },
+            "determiner": "a",
+            "head": "processor"
+          }
+        ]
+      },
+      {
+        "path": "25.b",
+        "anchor": {
+          "startChar": 91,
+          "endChar": 170,
+          "quote": "an optimization program, which when executed by the processor, is configured to"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 114,
+              "quote": "an optimization program"
+            },
+            "determiner": "an",
+            "head": "optimization program"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 152,
+              "quote": "the processor"
+            },
+            "determiner": "the",
+            "head": "processor"
+          }
+        ]
+      },
+      {
+        "path": "25.b.i",
+        "anchor": {
+          "startChar": 175,
+          "endChar": 260,
+          "quote": "read input data, wherein the input data describes the pipeline system to be optimized"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 180,
+              "endChar": 190,
+              "quote": "input data"
+            },
+            "determiner": "bare",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 200,
+              "endChar": 214,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 244,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          }
+        ]
+      },
+      {
+        "path": "25.b.ii",
+        "anchor": {
+          "startChar": 266,
+          "endChar": 403,
+          "quote": "generate a population of solutions, wherein each solution in the population specifies a feasible production state for the pipeline system"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 300,
+              "quote": "a population of solutions"
+            },
+            "determiner": "a",
+            "head": "population of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 323,
+              "quote": "each solution"
+            },
+            "determiner": "bare",
+            "head": "each solution"
+          },
+          {
+            "anchor": {
+              "startChar": 327,
+              "endChar": 341,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 352,
+              "endChar": 379,
+              "quote": "a feasible production state"
+            },
+            "determiner": "a",
+            "head": "feasible production state"
+          },
+          {
+            "anchor": {
+              "startChar": 384,
+              "endChar": 403,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          }
+        ]
+      },
+      {
+        "path": "25.b.iii",
+        "anchor": {
+          "startChar": 410,
+          "endChar": 463,
+          "quote": "evaluate each solution in the population of solutions"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 419,
+              "endChar": 432,
+              "quote": "each solution"
+            },
+            "determiner": "bare",
+            "head": "each solution"
+          },
+          {
+            "anchor": {
+              "startChar": 436,
+              "endChar": 463,
+              "quote": "the population of solutions"
+            },
+            "determiner": "the",
+            "head": "population of solutions"
+          }
+        ]
+      },
+      {
+        "path": "25.b.iv",
+        "anchor": {
+          "startChar": 469,
+          "endChar": 596,
+          "quote": "perform a genetic optimization process on the population until a termination condition specified by the input data is satisfied"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 477,
+              "endChar": 507,
+              "quote": "a genetic optimization process"
+            },
+            "determiner": "a",
+            "head": "genetic optimization process"
+          },
+          {
+            "anchor": {
+              "startChar": 511,
+              "endChar": 525,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 532,
+              "endChar": 555,
+              "quote": "a termination condition"
+            },
+            "determiner": "a",
+            "head": "termination condition"
+          },
+          {
+            "anchor": {
+              "startChar": 569,
+              "endChar": 583,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          }
+        ]
+      },
+      {
+        "path": "25.b.v",
+        "anchor": {
+          "startChar": 601,
+          "endChar": 838,
+          "quote": "select an optimized production solution from the population of solutions, wherein the optimized production solution has a highest evaluation, relative to the solutions in the population after the genetic optimization process is performed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 608,
+              "endChar": 640,
+              "quote": "an optimized production solution"
+            },
+            "determiner": "an",
+            "head": "optimized production solution"
+          },
+          {
+            "anchor": {
+              "startChar": 646,
+              "endChar": 673,
+              "quote": "the population of solutions"
+            },
+            "determiner": "the",
+            "head": "population of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 683,
+              "endChar": 716,
+              "quote": "the optimized production solution"
+            },
+            "determiner": "the",
+            "head": "optimized production solution"
+          },
+          {
+            "anchor": {
+              "startChar": 721,
+              "endChar": 741,
+              "quote": "a highest evaluation"
+            },
+            "determiner": "a",
+            "head": "highest evaluation"
+          },
+          {
+            "anchor": {
+              "startChar": 755,
+              "endChar": 768,
+              "quote": "the solutions"
+            },
+            "determiner": "the",
+            "head": "solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 772,
+              "endChar": 786,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 793,
+              "endChar": 825,
+              "quote": "the genetic optimization process"
+            },
+            "determiner": "the",
+            "head": "genetic optimization process"
+          }
+        ]
+      },
+      {
+        "path": "25.b.vi",
+        "anchor": {
+          "startChar": 848,
+          "endChar": 1136,
+          "quote": "generate, for the optimized production solution, an optimized pressure solution specifying an output pressure for one or more delivery points of the pipeline system and an input pressure for one or more production nodes of the pipeline system, using a direct pressure optimization process"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 862,
+              "endChar": 895,
+              "quote": "the optimized production solution"
+            },
+            "determiner": "the",
+            "head": "optimized production solution"
+          },
+          {
+            "anchor": {
+              "startChar": 897,
+              "endChar": 927,
+              "quote": "an optimized pressure solution"
+            },
+            "determiner": "an",
+            "head": "optimized pressure solution"
+          },
+          {
+            "anchor": {
+              "startChar": 939,
+              "endChar": 957,
+              "quote": "an output pressure"
+            },
+            "determiner": "an",
+            "head": "output pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 962,
+              "endChar": 989,
+              "quote": "one or more delivery points"
+            },
+            "determiner": "at-least-one",
+            "head": "delivery points"
+          },
+          {
+            "anchor": {
+              "startChar": 993,
+              "endChar": 1012,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          },
+          {
+            "anchor": {
+              "startChar": 1017,
+              "endChar": 1034,
+              "quote": "an input pressure"
+            },
+            "determiner": "an",
+            "head": "input pressure"
+          },
+          {
+            "anchor": {
+              "startChar": 1039,
+              "endChar": 1067,
+              "quote": "one or more production nodes"
+            },
+            "determiner": "at-least-one",
+            "head": "production nodes"
+          },
+          {
+            "anchor": {
+              "startChar": 1071,
+              "endChar": 1090,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          },
+          {
+            "anchor": {
+              "startChar": 1098,
+              "endChar": 1136,
+              "quote": "a direct pressure optimization process"
+            },
+            "determiner": "a",
+            "head": "direct pressure optimization process"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "25.a",
+        "parent": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b",
+        "parent": "25"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 114,
+                "quote": "an optimization program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 114,
+              "endChar": 139,
+              "quote": ", which when executed by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 152,
+                "quote": "the processor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 170,
+              "quote": ", is configured to"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.i",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 175,
+              "endChar": 180,
+              "quote": "read "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.i",
+              "anchor": {
+                "startChar": 180,
+                "endChar": 190,
+                "quote": "input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 190,
+              "endChar": 200,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.i",
+              "anchor": {
+                "startChar": 200,
+                "endChar": 214,
+                "quote": "the input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 214,
+              "endChar": 225,
+              "quote": " describes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.i",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 244,
+                "quote": "the pipeline system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 260,
+              "quote": " to be optimized"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.ii",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 266,
+              "endChar": 275,
+              "quote": "generate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.ii",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 300,
+                "quote": "a population of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 300,
+              "endChar": 310,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.ii",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 323,
+                "quote": "each solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 323,
+              "endChar": 327,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.ii",
+              "anchor": {
+                "startChar": 327,
+                "endChar": 341,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 341,
+              "endChar": 352,
+              "quote": " specifies "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.ii",
+              "anchor": {
+                "startChar": 352,
+                "endChar": 379,
+                "quote": "a feasible production state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 379,
+              "endChar": 384,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.ii",
+              "anchor": {
+                "startChar": 384,
+                "endChar": 403,
+                "quote": "the pipeline system"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.iii",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 410,
+              "endChar": 419,
+              "quote": "evaluate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iii",
+              "anchor": {
+                "startChar": 419,
+                "endChar": 432,
+                "quote": "each solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 432,
+              "endChar": 436,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iii",
+              "anchor": {
+                "startChar": 436,
+                "endChar": 463,
+                "quote": "the population of solutions"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.iv",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.iv",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 469,
+              "endChar": 477,
+              "quote": "perform "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iv",
+              "anchor": {
+                "startChar": 477,
+                "endChar": 507,
+                "quote": "a genetic optimization process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 507,
+              "endChar": 511,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iv",
+              "anchor": {
+                "startChar": 511,
+                "endChar": 525,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 525,
+              "endChar": 532,
+              "quote": " until "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iv",
+              "anchor": {
+                "startChar": 532,
+                "endChar": 555,
+                "quote": "a termination condition"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 555,
+              "endChar": 569,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.iv",
+              "anchor": {
+                "startChar": 569,
+                "endChar": 583,
+                "quote": "the input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 583,
+              "endChar": 596,
+              "quote": " is satisfied"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.v",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.v",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 601,
+              "endChar": 608,
+              "quote": "select "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 608,
+                "endChar": 640,
+                "quote": "an optimized production solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 640,
+              "endChar": 646,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 646,
+                "endChar": 673,
+                "quote": "the population of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 673,
+              "endChar": 683,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 683,
+                "endChar": 716,
+                "quote": "the optimized production solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 716,
+              "endChar": 721,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 721,
+                "endChar": 741,
+                "quote": "a highest evaluation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 741,
+              "endChar": 755,
+              "quote": ", relative to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 755,
+                "endChar": 768,
+                "quote": "the solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 768,
+              "endChar": 772,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 772,
+                "endChar": 786,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 786,
+              "endChar": 793,
+              "quote": " after "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.v",
+              "anchor": {
+                "startChar": 793,
+                "endChar": 825,
+                "quote": "the genetic optimization process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 825,
+              "endChar": 838,
+              "quote": " is performed"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "25.b.vi",
+        "parent": "25.b"
+      },
+      {
+        "kind": "functional",
+        "element": "25.b.vi",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 848,
+              "endChar": 862,
+              "quote": "generate, for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 862,
+                "endChar": 895,
+                "quote": "the optimized production solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 895,
+              "endChar": 897,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 897,
+                "endChar": 927,
+                "quote": "an optimized pressure solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 927,
+              "endChar": 939,
+              "quote": " specifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 939,
+                "endChar": 957,
+                "quote": "an output pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 957,
+              "endChar": 962,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 962,
+                "endChar": 989,
+                "quote": "one or more delivery points"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 989,
+              "endChar": 993,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 993,
+                "endChar": 1012,
+                "quote": "the pipeline system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1012,
+              "endChar": 1017,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 1017,
+                "endChar": 1034,
+                "quote": "an input pressure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1034,
+              "endChar": 1039,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 1039,
+                "endChar": 1067,
+                "quote": "one or more production nodes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1067,
+              "endChar": 1071,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 1071,
+                "endChar": 1090,
+                "quote": "the pipeline system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1090,
+              "endChar": 1098,
+              "quote": ", using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "25.b.vi",
+              "anchor": {
+                "startChar": 1098,
+                "endChar": 1136,
+                "quote": "a direct pressure optimization process"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 152,
+            "quote": "the processor"
+          }
+        },
+        "introducing": {
+          "path": "25.a",
+          "anchor": {
+            "startChar": 76,
+            "endChar": 87,
+            "quote": "a processor"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 200,
+            "endChar": 214,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 190,
+            "quote": "input data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 225,
+            "endChar": 244,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 327,
+            "endChar": 341,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 384,
+            "endChar": 403,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.iii",
+          "anchor": {
+            "startChar": 419,
+            "endChar": 432,
+            "quote": "each solution"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 323,
+            "quote": "each solution"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.iii",
+          "anchor": {
+            "startChar": 436,
+            "endChar": 463,
+            "quote": "the population of solutions"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.iv",
+          "anchor": {
+            "startChar": 511,
+            "endChar": 525,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.iv",
+          "anchor": {
+            "startChar": 569,
+            "endChar": 583,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 190,
+            "quote": "input data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 646,
+            "endChar": 673,
+            "quote": "the population of solutions"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 683,
+            "endChar": 716,
+            "quote": "the optimized production solution"
+          }
+        },
+        "introducing": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 608,
+            "endChar": 640,
+            "quote": "an optimized production solution"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 772,
+            "endChar": 786,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 793,
+            "endChar": 825,
+            "quote": "the genetic optimization process"
+          }
+        },
+        "introducing": {
+          "path": "25.b.iv",
+          "anchor": {
+            "startChar": 477,
+            "endChar": 507,
+            "quote": "a genetic optimization process"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.vi",
+          "anchor": {
+            "startChar": 862,
+            "endChar": 895,
+            "quote": "the optimized production solution"
+          }
+        },
+        "introducing": {
+          "path": "25.b.v",
+          "anchor": {
+            "startChar": 608,
+            "endChar": 640,
+            "quote": "an optimized production solution"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.vi",
+          "anchor": {
+            "startChar": 993,
+            "endChar": 1012,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "25.b.vi",
+          "anchor": {
+            "startChar": 1071,
+            "endChar": 1090,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 26,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "26",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "26.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 117,
+          "quote": "the optimization program is configured to perform the genetic optimization process by"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 56,
+              "quote": "the optimization program"
+            },
+            "determiner": "the",
+            "head": "optimization program"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 114,
+              "quote": "the genetic optimization process"
+            },
+            "determiner": "the",
+            "head": "genetic optimization process"
+          }
+        ]
+      },
+      {
+        "path": "26.a.i",
+        "anchor": {
+          "startChar": 122,
+          "endChar": 239,
+          "quote": "modifying at least one aspect of the feasible operational state specified by at least one solutions in the population"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 132,
+              "endChar": 151,
+              "quote": "at least one aspect"
+            },
+            "determiner": "at-least-one",
+            "head": "aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 155,
+              "endChar": 185,
+              "quote": "the feasible operational state"
+            },
+            "determiner": "the",
+            "head": "feasible operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 221,
+              "quote": "at least one solutions"
+            },
+            "determiner": "at-least-one",
+            "head": "solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 225,
+              "endChar": 239,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          }
+        ]
+      },
+      {
+        "path": "26.a.ii",
+        "anchor": {
+          "startChar": 244,
+          "endChar": 362,
+          "quote": "simulating the operation of the pipeline system, according to the operational state specified by the modified solution"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 255,
+              "endChar": 268,
+              "quote": "the operation"
+            },
+            "determiner": "the",
+            "head": "operation"
+          },
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 291,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          },
+          {
+            "anchor": {
+              "startChar": 306,
+              "endChar": 327,
+              "quote": "the operational state"
+            },
+            "determiner": "the",
+            "head": "operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 341,
+              "endChar": 362,
+              "quote": "the modified solution"
+            },
+            "determiner": "the",
+            "head": "modified solution"
+          }
+        ]
+      },
+      {
+        "path": "26.a.iii",
+        "anchor": {
+          "startChar": 367,
+          "endChar": 418,
+          "quote": "evaluating the performance of the modified solution"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 378,
+              "endChar": 393,
+              "quote": "the performance"
+            },
+            "determiner": "the",
+            "head": "performance"
+          },
+          {
+            "anchor": {
+              "startChar": 397,
+              "endChar": 418,
+              "quote": "the modified solution"
+            },
+            "determiner": "the",
+            "head": "modified solution"
+          }
+        ]
+      },
+      {
+        "path": "26.a.iv",
+        "anchor": {
+          "startChar": 423,
+          "endChar": 469,
+          "quote": "adding the modified solution to the population"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 430,
+              "endChar": 451,
+              "quote": "the modified solution"
+            },
+            "determiner": "the",
+            "head": "modified solution"
+          },
+          {
+            "anchor": {
+              "startChar": 455,
+              "endChar": 469,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          }
+        ]
+      },
+      {
+        "path": "26.a.v",
+        "anchor": {
+          "startChar": 478,
+          "endChar": 590,
+          "quote": "removing a solution from the population with the poorest evaluation, relative to the solutions in the population"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 487,
+              "endChar": 497,
+              "quote": "a solution"
+            },
+            "determiner": "a",
+            "head": "solution"
+          },
+          {
+            "anchor": {
+              "startChar": 503,
+              "endChar": 517,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 523,
+              "endChar": 545,
+              "quote": "the poorest evaluation"
+            },
+            "determiner": "the",
+            "head": "poorest evaluation"
+          },
+          {
+            "anchor": {
+              "startChar": 559,
+              "endChar": 572,
+              "quote": "the solutions"
+            },
+            "determiner": "the",
+            "head": "solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 576,
+              "endChar": 590,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "26",
+        "ancestor": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a",
+        "parent": "26"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "26.a",
+        "ancestor": "25.b.iv"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 56,
+                "quote": "the optimization program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 56,
+              "endChar": 82,
+              "quote": " is configured to perform "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a",
+              "anchor": {
+                "startChar": 82,
+                "endChar": 114,
+                "quote": "the genetic optimization process"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 114,
+              "endChar": 117,
+              "quote": " by"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.i",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 132,
+              "quote": "modifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 132,
+                "endChar": 151,
+                "quote": "at least one aspect"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 151,
+              "endChar": 155,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 155,
+                "endChar": 185,
+                "quote": "the feasible operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 185,
+              "endChar": 199,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 221,
+                "quote": "at least one solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 225,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.i",
+              "anchor": {
+                "startChar": 225,
+                "endChar": 239,
+                "quote": "the population"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.ii",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 255,
+              "quote": "simulating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 255,
+                "endChar": 268,
+                "quote": "the operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 268,
+              "endChar": 272,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 272,
+                "endChar": 291,
+                "quote": "the pipeline system"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 291,
+              "endChar": 306,
+              "quote": ", according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 306,
+                "endChar": 327,
+                "quote": "the operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 327,
+              "endChar": 341,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.ii",
+              "anchor": {
+                "startChar": 341,
+                "endChar": 362,
+                "quote": "the modified solution"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.iii",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 367,
+              "endChar": 378,
+              "quote": "evaluating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.iii",
+              "anchor": {
+                "startChar": 378,
+                "endChar": 393,
+                "quote": "the performance"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 393,
+              "endChar": 397,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.iii",
+              "anchor": {
+                "startChar": 397,
+                "endChar": 418,
+                "quote": "the modified solution"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.iv",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.iv",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 423,
+              "endChar": 430,
+              "quote": "adding "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.iv",
+              "anchor": {
+                "startChar": 430,
+                "endChar": 451,
+                "quote": "the modified solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 451,
+              "endChar": 455,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.iv",
+              "anchor": {
+                "startChar": 455,
+                "endChar": 469,
+                "quote": "the population"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "26.a.v",
+        "parent": "26.a"
+      },
+      {
+        "kind": "functional",
+        "element": "26.a.v",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 478,
+              "endChar": 487,
+              "quote": "removing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.v",
+              "anchor": {
+                "startChar": 487,
+                "endChar": 497,
+                "quote": "a solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 497,
+              "endChar": 503,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.v",
+              "anchor": {
+                "startChar": 503,
+                "endChar": 517,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 517,
+              "endChar": 523,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.v",
+              "anchor": {
+                "startChar": 523,
+                "endChar": 545,
+                "quote": "the poorest evaluation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 545,
+              "endChar": 559,
+              "quote": ", relative to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.v",
+              "anchor": {
+                "startChar": 559,
+                "endChar": 572,
+                "quote": "the solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 572,
+              "endChar": 576,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "26.a.v",
+              "anchor": {
+                "startChar": 576,
+                "endChar": 590,
+                "quote": "the population"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 56,
+            "quote": "the optimization program"
+          }
+        },
+        "introducing": {
+          "path": "25.b",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 114,
+            "quote": "an optimization program"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a",
+          "anchor": {
+            "startChar": 82,
+            "endChar": 114,
+            "quote": "the genetic optimization process"
+          }
+        },
+        "introducing": {
+          "path": "25.b.iv",
+          "anchor": {
+            "startChar": 477,
+            "endChar": 507,
+            "quote": "a genetic optimization process"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 155,
+            "endChar": 185,
+            "quote": "the feasible operational state"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 379,
+            "quote": "a feasible production state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 225,
+            "endChar": 239,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 291,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.ii",
+          "anchor": {
+            "startChar": 306,
+            "endChar": 327,
+            "quote": "the operational state"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 379,
+            "quote": "a feasible production state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.iv",
+          "anchor": {
+            "startChar": 455,
+            "endChar": 469,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.v",
+          "anchor": {
+            "startChar": 503,
+            "endChar": 517,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "26.a.v",
+          "anchor": {
+            "startChar": 576,
+            "endChar": 590,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 27,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "27",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 26"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "27.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 205,
+          "quote": "the program is configured to modify the at least one aspect of the feasible operational state specified by at least one solution in the population by performing the steps of"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 43,
+              "quote": "the program"
+            },
+            "determiner": "the",
+            "head": "program"
+          },
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 91,
+              "quote": "the at least one aspect"
+            },
+            "determiner": "the",
+            "head": "at least one aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 125,
+              "quote": "the feasible operational state"
+            },
+            "determiner": "the",
+            "head": "feasible operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 160,
+              "quote": "at least one solution"
+            },
+            "determiner": "at-least-one",
+            "head": "solution"
+          },
+          {
+            "anchor": {
+              "startChar": 164,
+              "endChar": 178,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 193,
+              "endChar": 202,
+              "quote": "the steps"
+            },
+            "determiner": "the",
+            "head": "steps"
+          }
+        ]
+      },
+      {
+        "path": "27.a.i",
+        "anchor": {
+          "startChar": 210,
+          "endChar": 253,
+          "quote": "selecting a solution modification technique"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 220,
+              "endChar": 253,
+              "quote": "a solution modification technique"
+            },
+            "determiner": "a",
+            "head": "solution modification technique"
+          }
+        ]
+      },
+      {
+        "path": "27.a.ii",
+        "anchor": {
+          "startChar": 258,
+          "endChar": 323,
+          "quote": "selecting the at least one solution from the population to modify"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 268,
+              "endChar": 293,
+              "quote": "the at least one solution"
+            },
+            "determiner": "the",
+            "head": "at least one solution"
+          },
+          {
+            "anchor": {
+              "startChar": 299,
+              "endChar": 313,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          }
+        ]
+      },
+      {
+        "path": "27.a.iii",
+        "anchor": {
+          "startChar": 332,
+          "endChar": 426,
+          "quote": "modifying the at least one solution, according to the selected solution modification technique"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 342,
+              "endChar": 367,
+              "quote": "the at least one solution"
+            },
+            "determiner": "the",
+            "head": "at least one solution"
+          },
+          {
+            "anchor": {
+              "startChar": 382,
+              "endChar": 426,
+              "quote": "the selected solution modification technique"
+            },
+            "determiner": "the",
+            "head": "selected solution modification technique"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "27",
+        "ancestor": "26"
+      },
+      {
+        "kind": "part-of",
+        "child": "27.a",
+        "parent": "27"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "27.a",
+        "ancestor": "26.a.i"
+      },
+      {
+        "kind": "functional",
+        "element": "27.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 43,
+                "quote": "the program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 43,
+              "endChar": 68,
+              "quote": " is configured to modify "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 68,
+                "endChar": 91,
+                "quote": "the at least one aspect"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 95,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 125,
+                "quote": "the feasible operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 125,
+              "endChar": 139,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 160,
+                "quote": "at least one solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 164,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 164,
+                "endChar": 178,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 193,
+              "quote": " by performing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a",
+              "anchor": {
+                "startChar": 193,
+                "endChar": 202,
+                "quote": "the steps"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 202,
+              "endChar": 205,
+              "quote": " of"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "27.a.i",
+        "parent": "27.a"
+      },
+      {
+        "kind": "functional",
+        "element": "27.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 210,
+              "endChar": 220,
+              "quote": "selecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a.i",
+              "anchor": {
+                "startChar": 220,
+                "endChar": 253,
+                "quote": "a solution modification technique"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "27.a.ii",
+        "parent": "27.a"
+      },
+      {
+        "kind": "functional",
+        "element": "27.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 258,
+              "endChar": 268,
+              "quote": "selecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a.ii",
+              "anchor": {
+                "startChar": 268,
+                "endChar": 293,
+                "quote": "the at least one solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 293,
+              "endChar": 299,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a.ii",
+              "anchor": {
+                "startChar": 299,
+                "endChar": 313,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 313,
+              "endChar": 323,
+              "quote": " to modify"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "27.a.iii",
+        "parent": "27.a"
+      },
+      {
+        "kind": "functional",
+        "element": "27.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 332,
+              "endChar": 342,
+              "quote": "modifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a.iii",
+              "anchor": {
+                "startChar": 342,
+                "endChar": 367,
+                "quote": "the at least one solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 367,
+              "endChar": 382,
+              "quote": ", according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "27.a.iii",
+              "anchor": {
+                "startChar": 382,
+                "endChar": 426,
+                "quote": "the selected solution modification technique"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 43,
+            "quote": "the program"
+          }
+        },
+        "introducing": {
+          "path": "25.b",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 114,
+            "quote": "an optimization program"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 68,
+            "endChar": 91,
+            "quote": "the at least one aspect"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 151,
+            "quote": "at least one aspect"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 95,
+            "endChar": 125,
+            "quote": "the feasible operational state"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 379,
+            "quote": "a feasible production state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 164,
+            "endChar": 178,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a.ii",
+          "anchor": {
+            "startChar": 268,
+            "endChar": 293,
+            "quote": "the at least one solution"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 160,
+            "quote": "at least one solution"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a.ii",
+          "anchor": {
+            "startChar": 299,
+            "endChar": 313,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a.iii",
+          "anchor": {
+            "startChar": 342,
+            "endChar": 367,
+            "quote": "the at least one solution"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 160,
+            "quote": "at least one solution"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "27.a.iii",
+          "anchor": {
+            "startChar": 382,
+            "endChar": 426,
+            "quote": "the selected solution modification technique"
+          }
+        },
+        "introducing": {
+          "path": "27.a.i",
+          "anchor": {
+            "startChar": 220,
+            "endChar": 253,
+            "quote": "a solution modification technique"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 28,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "28",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 27"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "28.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 166,
+          "quote": "the solution modification technique randomly modifies the least one aspect of the feasible operational state specified by the solution"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 67,
+              "quote": "the solution modification technique"
+            },
+            "determiner": "the",
+            "head": "solution modification technique"
+          },
+          {
+            "anchor": {
+              "startChar": 86,
+              "endChar": 106,
+              "quote": "the least one aspect"
+            },
+            "determiner": "the",
+            "head": "least one aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 110,
+              "endChar": 140,
+              "quote": "the feasible operational state"
+            },
+            "determiner": "the",
+            "head": "feasible operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 166,
+              "quote": "the solution"
+            },
+            "determiner": "the",
+            "head": "solution"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "28",
+        "ancestor": "27"
+      },
+      {
+        "kind": "part-of",
+        "child": "28.a",
+        "parent": "28"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "28.a",
+        "ancestor": "27.a.i"
+      },
+      {
+        "kind": "functional",
+        "element": "28.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 67,
+                "quote": "the solution modification technique"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 86,
+              "quote": " randomly modifies "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.a",
+              "anchor": {
+                "startChar": 86,
+                "endChar": 106,
+                "quote": "the least one aspect"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 106,
+              "endChar": 110,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.a",
+              "anchor": {
+                "startChar": 110,
+                "endChar": 140,
+                "quote": "the feasible operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 140,
+              "endChar": 154,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "28.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 166,
+                "quote": "the solution"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 67,
+            "quote": "the solution modification technique"
+          }
+        },
+        "introducing": {
+          "path": "27.a.i",
+          "anchor": {
+            "startChar": 220,
+            "endChar": 253,
+            "quote": "a solution modification technique"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 86,
+            "endChar": 106,
+            "quote": "the least one aspect"
+          }
+        },
+        "introducing": {
+          "path": "26.a.i",
+          "anchor": {
+            "startChar": 132,
+            "endChar": 151,
+            "quote": "at least one aspect"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 110,
+            "endChar": 140,
+            "quote": "the feasible operational state"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 379,
+            "quote": "a feasible production state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "28.a",
+          "anchor": {
+            "startChar": 154,
+            "endChar": 166,
+            "quote": "the solution"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 160,
+            "quote": "at least one solution"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 29,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "29",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 27"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "29.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 132,
+          "quote": "the solution modification technique modifies the at least one solution according to a heuristic rule"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 67,
+              "quote": "the solution modification technique"
+            },
+            "determiner": "the",
+            "head": "solution modification technique"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 102,
+              "quote": "the at least one solution"
+            },
+            "determiner": "the",
+            "head": "at least one solution"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 132,
+              "quote": "a heuristic rule"
+            },
+            "determiner": "a",
+            "head": "heuristic rule"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "29",
+        "ancestor": "27"
+      },
+      {
+        "kind": "part-of",
+        "child": "29.a",
+        "parent": "29"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "29.a",
+        "ancestor": "27.a.i"
+      },
+      {
+        "kind": "functional",
+        "element": "29.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 67,
+                "quote": "the solution modification technique"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 77,
+              "quote": " modifies "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a",
+              "anchor": {
+                "startChar": 77,
+                "endChar": 102,
+                "quote": "the at least one solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 116,
+              "quote": " according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "29.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 132,
+                "quote": "a heuristic rule"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 67,
+            "quote": "the solution modification technique"
+          }
+        },
+        "introducing": {
+          "path": "27.a.i",
+          "anchor": {
+            "startChar": 220,
+            "endChar": 253,
+            "quote": "a solution modification technique"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "29.a",
+          "anchor": {
+            "startChar": 77,
+            "endChar": 102,
+            "quote": "the at least one solution"
+          }
+        },
+        "introducing": {
+          "path": "27.a",
+          "anchor": {
+            "startChar": 139,
+            "endChar": 160,
+            "quote": "at least one solution"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 30,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "30",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 27"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "30.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 136,
+          "quote": "the solution modification technique cross-breeds two or more solutions to generate the modified solution"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 67,
+              "quote": "the solution modification technique"
+            },
+            "determiner": "the",
+            "head": "solution modification technique"
+          },
+          {
+            "anchor": {
+              "startChar": 81,
+              "endChar": 102,
+              "quote": "two or more solutions"
+            },
+            "determiner": "bare",
+            "head": "two or more solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 136,
+              "quote": "the modified solution"
+            },
+            "determiner": "the",
+            "head": "modified solution"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "30",
+        "ancestor": "27"
+      },
+      {
+        "kind": "part-of",
+        "child": "30.a",
+        "parent": "30"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "30.a",
+        "ancestor": "27.a.i"
+      },
+      {
+        "kind": "functional",
+        "element": "30.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 67,
+                "quote": "the solution modification technique"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 81,
+              "quote": " cross-breeds "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 81,
+                "endChar": 102,
+                "quote": "two or more solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 102,
+              "endChar": 115,
+              "quote": " to generate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "30.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 136,
+                "quote": "the modified solution"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "30.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 67,
+            "quote": "the solution modification technique"
+          }
+        },
+        "introducing": {
+          "path": "27.a.i",
+          "anchor": {
+            "startChar": 220,
+            "endChar": 253,
+            "quote": "a solution modification technique"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 31,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "31",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "31.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 359,
+          "quote": "modifying at least one aspect of the feasible operational state specified by at least one of the solutions in the population, comprises probabilistically selecting the one or more solutions, wherein a solution with a superior evaluation is more likely to be selected for modification than a solution with an inferior evaluation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 42,
+              "endChar": 61,
+              "quote": "at least one aspect"
+            },
+            "determiner": "at-least-one",
+            "head": "aspect"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 95,
+              "quote": "the feasible operational state"
+            },
+            "determiner": "the",
+            "head": "feasible operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 125,
+              "endChar": 138,
+              "quote": "the solutions"
+            },
+            "determiner": "the",
+            "head": "solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 142,
+              "endChar": 156,
+              "quote": "the population"
+            },
+            "determiner": "the",
+            "head": "population"
+          },
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 221,
+              "quote": "the one or more solutions"
+            },
+            "determiner": "the",
+            "head": "one or more solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 231,
+              "endChar": 241,
+              "quote": "a solution"
+            },
+            "determiner": "a",
+            "head": "solution"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 268,
+              "quote": "a superior evaluation"
+            },
+            "determiner": "a",
+            "head": "superior evaluation"
+          },
+          {
+            "anchor": {
+              "startChar": 321,
+              "endChar": 331,
+              "quote": "a solution"
+            },
+            "determiner": "a",
+            "head": "solution"
+          },
+          {
+            "anchor": {
+              "startChar": 337,
+              "endChar": 359,
+              "quote": "an inferior evaluation"
+            },
+            "determiner": "an",
+            "head": "inferior evaluation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "31",
+        "ancestor": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "31.a",
+        "parent": "31"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "31.a",
+        "ancestor": "25.b.iv"
+      },
+      {
+        "kind": "functional",
+        "element": "31.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 32,
+              "endChar": 42,
+              "quote": "modifying "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 42,
+                "endChar": 61,
+                "quote": "at least one aspect"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 65,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 95,
+                "quote": "the feasible operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 95,
+              "endChar": 125,
+              "quote": " specified by at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 125,
+                "endChar": 138,
+                "quote": "the solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 138,
+              "endChar": 142,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 142,
+                "endChar": 156,
+                "quote": "the population"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 156,
+              "endChar": 196,
+              "quote": ", comprises probabilistically selecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 221,
+                "quote": "the one or more solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 221,
+              "endChar": 231,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 231,
+                "endChar": 241,
+                "quote": "a solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 241,
+              "endChar": 247,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 247,
+                "endChar": 268,
+                "quote": "a superior evaluation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 268,
+              "endChar": 321,
+              "quote": " is more likely to be selected for modification than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 321,
+                "endChar": 331,
+                "quote": "a solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 331,
+              "endChar": 337,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "31.a",
+              "anchor": {
+                "startChar": 337,
+                "endChar": 359,
+                "quote": "an inferior evaluation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "31",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "31.a",
+          "anchor": {
+            "startChar": 65,
+            "endChar": 95,
+            "quote": "the feasible operational state"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 352,
+            "endChar": 379,
+            "quote": "a feasible production state"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "31.a",
+          "anchor": {
+            "startChar": 142,
+            "endChar": 156,
+            "quote": "the population"
+          }
+        },
+        "introducing": {
+          "path": "25.b.ii",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 300,
+            "quote": "a population of solutions"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 32,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "32",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "32.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 146,
+          "quote": "the termination conditions specified by the input data comprise the termination conditions include at least one of"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 58,
+              "quote": "the termination conditions"
+            },
+            "determiner": "the",
+            "head": "termination conditions"
+          },
+          {
+            "anchor": {
+              "startChar": 72,
+              "endChar": 86,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 122,
+              "quote": "the termination conditions"
+            },
+            "determiner": "the",
+            "head": "termination conditions"
+          }
+        ]
+      },
+      {
+        "path": "32.a.i",
+        "anchor": {
+          "startChar": 147,
+          "endChar": 186,
+          "quote": "a maximum number of solutions generated"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 147,
+              "endChar": 176,
+              "quote": "a maximum number of solutions"
+            },
+            "determiner": "a",
+            "head": "maximum number of solutions"
+          }
+        ]
+      },
+      {
+        "path": "32.a.ii",
+        "anchor": {
+          "startChar": 188,
+          "endChar": 218,
+          "quote": "a maximum amount of time spent"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 188,
+              "endChar": 212,
+              "quote": "a maximum amount of time"
+            },
+            "determiner": "a",
+            "head": "maximum amount of time"
+          }
+        ]
+      },
+      {
+        "path": "32.a.iii",
+        "anchor": {
+          "startChar": 220,
+          "endChar": 251,
+          "quote": "a maximum number of generations"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 220,
+              "endChar": 251,
+              "quote": "a maximum number of generations"
+            },
+            "determiner": "a",
+            "head": "maximum number of generations"
+          }
+        ]
+      },
+      {
+        "path": "32.a.iv",
+        "anchor": {
+          "startChar": 257,
+          "endChar": 321,
+          "quote": "the generation of a solution that exceeds a specified evaluation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 271,
+              "quote": "the generation"
+            },
+            "determiner": "the",
+            "head": "generation"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 285,
+              "quote": "a solution"
+            },
+            "determiner": "a",
+            "head": "solution"
+          },
+          {
+            "anchor": {
+              "startChar": 299,
+              "endChar": 321,
+              "quote": "a specified evaluation"
+            },
+            "determiner": "a",
+            "head": "specified evaluation"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "32",
+        "ancestor": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "32.a",
+        "parent": "32"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "32.a",
+        "ancestor": "25.b.iv"
+      },
+      {
+        "kind": "functional",
+        "element": "32.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 58,
+                "quote": "the termination conditions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 58,
+              "endChar": 72,
+              "quote": " specified by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a",
+              "anchor": {
+                "startChar": 72,
+                "endChar": 86,
+                "quote": "the input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 86,
+              "endChar": 96,
+              "quote": " comprise "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 122,
+                "quote": "the termination conditions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 122,
+              "endChar": 146,
+              "quote": " include at least one of"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "32.a.i",
+        "parent": "32.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "32.a.ii",
+        "parent": "32.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "32.a.iii",
+        "parent": "32.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "32.a.iv",
+        "parent": "32.a"
+      },
+      {
+        "kind": "functional",
+        "element": "32.a.iv",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a.iv",
+              "anchor": {
+                "startChar": 257,
+                "endChar": 271,
+                "quote": "the generation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 271,
+              "endChar": 275,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a.iv",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 285,
+                "quote": "a solution"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 285,
+              "endChar": 299,
+              "quote": " that exceeds "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "32.a.iv",
+              "anchor": {
+                "startChar": 299,
+                "endChar": 321,
+                "quote": "a specified evaluation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "32",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "32.a",
+          "anchor": {
+            "startChar": 72,
+            "endChar": 86,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 190,
+            "quote": "input data"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 33,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "33",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "33.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 341,
+          "quote": "the optimization program is configured to generate a population of solutions by generating a first group of solutions and a second group of solutions, wherein the first group of solutions are generated according to heuristic rules and wherein the second group of solutions are generated using a random process"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 56,
+              "quote": "the optimization program"
+            },
+            "determiner": "the",
+            "head": "optimization program"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 108,
+              "quote": "a population of solutions"
+            },
+            "determiner": "a",
+            "head": "population of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 149,
+              "quote": "a first group of solutions"
+            },
+            "determiner": "a",
+            "head": "first group of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 154,
+              "endChar": 181,
+              "quote": "a second group of solutions"
+            },
+            "determiner": "a",
+            "head": "second group of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 219,
+              "quote": "the first group of solutions"
+            },
+            "determiner": "the",
+            "head": "first group of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 247,
+              "endChar": 262,
+              "quote": "heuristic rules"
+            },
+            "determiner": "bare",
+            "head": "heuristic rules"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 304,
+              "quote": "the second group of solutions"
+            },
+            "determiner": "the",
+            "head": "second group of solutions"
+          },
+          {
+            "anchor": {
+              "startChar": 325,
+              "endChar": 341,
+              "quote": "a random process"
+            },
+            "determiner": "a",
+            "head": "random process"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "33",
+        "ancestor": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "33.a",
+        "parent": "33"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "33.a",
+        "ancestor": "25.b.ii"
+      },
+      {
+        "kind": "functional",
+        "element": "33.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 56,
+                "quote": "the optimization program"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 56,
+              "endChar": 83,
+              "quote": " is configured to generate "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 83,
+                "endChar": 108,
+                "quote": "a population of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 108,
+              "endChar": 123,
+              "quote": " by generating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 149,
+                "quote": "a first group of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 154,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 154,
+                "endChar": 181,
+                "quote": "a second group of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 181,
+              "endChar": 191,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 219,
+                "quote": "the first group of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 219,
+              "endChar": 247,
+              "quote": " are generated according to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 247,
+                "endChar": 262,
+                "quote": "heuristic rules"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 275,
+              "quote": " and wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 304,
+                "quote": "the second group of solutions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 304,
+              "endChar": 325,
+              "quote": " are generated using "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "33.a",
+              "anchor": {
+                "startChar": 325,
+                "endChar": 341,
+                "quote": "a random process"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "33",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "33.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 56,
+            "quote": "the optimization program"
+          }
+        },
+        "introducing": {
+          "path": "25.b",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 114,
+            "quote": "an optimization program"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "33.a",
+          "anchor": {
+            "startChar": 191,
+            "endChar": 219,
+            "quote": "the first group of solutions"
+          }
+        },
+        "introducing": {
+          "path": "33.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 149,
+            "quote": "a first group of solutions"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "33.a",
+          "anchor": {
+            "startChar": 275,
+            "endChar": 304,
+            "quote": "the second group of solutions"
+          }
+        },
+        "introducing": {
+          "path": "33.a",
+          "anchor": {
+            "startChar": 154,
+            "endChar": 181,
+            "quote": "a second group of solutions"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 34,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "34",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 22,
+          "quote": "The system of claim 25"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 10,
+              "quote": "The system"
+            },
+            "determiner": "the",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "34.a",
+        "anchor": {
+          "startChar": 32,
+          "endChar": 154,
+          "quote": "the input data is retrieved from a pipeline status database that stores a current operational state of the pipeline system"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 32,
+              "endChar": 46,
+              "quote": "the input data"
+            },
+            "determiner": "the",
+            "head": "input data"
+          },
+          {
+            "anchor": {
+              "startChar": 65,
+              "endChar": 91,
+              "quote": "a pipeline status database"
+            },
+            "determiner": "a",
+            "head": "pipeline status database"
+          },
+          {
+            "anchor": {
+              "startChar": 104,
+              "endChar": 131,
+              "quote": "a current operational state"
+            },
+            "determiner": "a",
+            "head": "current operational state"
+          },
+          {
+            "anchor": {
+              "startChar": 135,
+              "endChar": 154,
+              "quote": "the pipeline system"
+            },
+            "determiner": "the",
+            "head": "pipeline system"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "34",
+        "ancestor": "25"
+      },
+      {
+        "kind": "part-of",
+        "child": "34.a",
+        "parent": "34"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "34.a",
+        "ancestor": "25.b.i"
+      },
+      {
+        "kind": "functional",
+        "element": "34.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "34.a",
+              "anchor": {
+                "startChar": 32,
+                "endChar": 46,
+                "quote": "the input data"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 46,
+              "endChar": 65,
+              "quote": " is retrieved from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "34.a",
+              "anchor": {
+                "startChar": 65,
+                "endChar": 91,
+                "quote": "a pipeline status database"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 91,
+              "endChar": 104,
+              "quote": " that stores "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "34.a",
+              "anchor": {
+                "startChar": 104,
+                "endChar": 131,
+                "quote": "a current operational state"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 131,
+              "endChar": 135,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "34.a",
+              "anchor": {
+                "startChar": 135,
+                "endChar": 154,
+                "quote": "the pipeline system"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "34",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 10,
+            "quote": "The system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "34.a",
+          "anchor": {
+            "startChar": 32,
+            "endChar": 46,
+            "quote": "the input data"
+          }
+        },
+        "introducing": {
+          "path": "25.b.i",
+          "anchor": {
+            "startChar": 180,
+            "endChar": 190,
+            "quote": "input data"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "34.a",
+          "anchor": {
+            "startChar": 135,
+            "endChar": 154,
+            "quote": "the pipeline system"
+          }
+        },
+        "introducing": {
+          "path": "25",
+          "anchor": {
+            "startChar": 42,
+            "endChar": 59,
+            "quote": "a pipeline system"
+          }
+        }
+      }
+    ]
+  }
+]

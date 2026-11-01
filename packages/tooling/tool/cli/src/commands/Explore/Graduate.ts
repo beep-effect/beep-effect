@@ -82,7 +82,7 @@ import {
   GraduationRequest,
   GraduationResumeReceipt,
 } from "./Graduate.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { MaterializationPlan } from "../Goals/Bootstrap.schemas.ts";
 
@@ -376,10 +376,10 @@ export const compileGraduationPlan: {
   (
     snapshot: ExplorationSnapshot,
     request: GraduationRequest
-  ): Effect.Effect<GraduationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<GraduationPlan, PlatformError.PlatformError, Digest.Digest>;
   (
     request: GraduationRequest
-  ): (snapshot: ExplorationSnapshot) => Effect.Effect<GraduationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): (snapshot: ExplorationSnapshot) => Effect.Effect<GraduationPlan, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
   Effect.fnUntraced(function* (snapshot: ExplorationSnapshot, request: GraduationRequest) {
@@ -964,9 +964,7 @@ export const resumeGraduationEvents = Effect.fn("Explore.resumeGraduationEvents"
   const manifestBytes = yield* fs
     .readFile(path.join(repoRoot, pending.manifestPath))
     .pipe(Effect.mapError(refuse(`Failed to read ${pending.manifestPath}.`)));
-  const manifestDigest = yield* sha256HexBytes(manifestBytes).pipe(
-    Effect.mapError(refuse(`Failed to digest ${pending.manifestPath}.`))
-  );
+  const manifestDigest = yield* sha256HexBytes(manifestBytes);
   if (manifestDigest !== pending.manifestAfterDigest) {
     return yield* refuse(
       `${pending.manifestPath} is not the graduated manifest recorded in ${pendingPath} (expected ${pending.manifestAfterDigest}, found ${manifestDigest}); refusing to append its events.`

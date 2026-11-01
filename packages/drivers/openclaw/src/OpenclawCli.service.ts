@@ -646,8 +646,10 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     }
 
     return yield* decodeGatewayHealthWire(result.stdout).pipe(
-      Effect.mapError(parseFailure(ctx.binaryPath, "gateway call health", result.stdout)),
-      Effect.map(projectGatewayHealth)
+      Effect.mapBoth({
+        onFailure: parseFailure(ctx.binaryPath, "gateway call health", result.stdout),
+        onSuccess: projectGatewayHealth,
+      })
     );
   });
 
@@ -709,8 +711,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
     }
 
     return yield* decodeAgentTurnWire(result.stdout).pipe(
-      Effect.mapError(parseFailure(ctx.binaryPath, "agent", result.stdout)),
-      Effect.map(projectAgentTurn)
+      Effect.mapBoth({ onFailure: parseFailure(ctx.binaryPath, "agent", result.stdout), onSuccess: projectAgentTurn })
     );
   });
 

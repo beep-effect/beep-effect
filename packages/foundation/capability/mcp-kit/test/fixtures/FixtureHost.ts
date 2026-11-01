@@ -91,7 +91,7 @@ export const FixturePromptLive = McpServer.prompt({
  * Registrations only: toolkit plus prompt. Compose with a transport layer
  * (`McpServer.layerHttp` / `layerStdio`) or with `McpServer.McpServer.layer`.
  */
-export const FixtureRegistrationsLive: Layer.Layer<never> = Layer.merge(
+export const FixtureRegistrationsLive: Layer.Layer<never, never, McpServer.McpServer> = Layer.merge(
   sanitizedToolkit(FixtureToolkit).pipe(Layer.provide(FixtureHandlersLive)),
   FixturePromptLive
 );

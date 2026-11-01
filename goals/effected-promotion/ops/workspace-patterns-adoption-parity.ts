@@ -41,7 +41,7 @@
 import * as NodeURL from "node:url";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { StringListField, WorkspacesField } from "@beep/package-json/ManifestFields";
-import { readPackageJsonFile, workspaceGlobsFrom } from "@beep/repo-utils";
+import { readPackageJsonFile } from "@beep/repo-utils";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
@@ -78,7 +78,16 @@ const legacyStrictPatterns = Effect.fn("legacyStrictPatterns")(function* (text: 
   return isWorkspacePatternList(workspaces) ? workspaces : (workspaces.packages ?? A.empty<string>());
 });
 
-// CreatePackage / TsconfigSync: `readPackageJsonFile` then `workspaceGlobsFrom(packageJson.workspaces)`.
+// CreatePackage / TsconfigSync: `readPackageJsonFile` then `workspaceGlobsFrom(packageJson.workspaces)`. 4-A3 retired
+// repo-utils `workspaceGlobsFrom`; this copy reads the field as `unknown` instead of the strict `WorkspacesField`,
+// which is equivalent here because it only receives the field `readPackageJsonFile` already decoded strictly.
+const workspaceGlobsFrom = (workspaces: unknown): ReadonlyArray<string> => {
+  if (A.isArray(workspaces)) return A.filter(workspaces, P.isString);
+  if (P.isObject(workspaces) && P.hasProperty(workspaces, "packages") && A.isArray(workspaces.packages)) {
+    return A.filter(workspaces.packages, P.isString);
+  }
+  return [];
+};
 const legacyRepoUtilsPatterns = Effect.fn("legacyRepoUtilsPatterns")(function* (manifestPath: string) {
   const packageJson = yield* readPackageJsonFile(manifestPath);
   return workspaceGlobsFrom(packageJson.workspaces);

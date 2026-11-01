@@ -1,0 +1,110 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "12656234-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "canonical MathML formula strings",
+      "reason": "Native XML mfrac/msqrt and indices are present and accepted by retained source critic. Canonical text flattens formulas, including OR ratio and radius radical/fraction. Exact canonical strings are anchored as functional text, without inventing missing operators. This is representation/normalization coverage, not source-version or gold uncertainty."
+    },
+    {
+      "quote": "each transaction / the transaction information",
+      "reason": "Generic transaction definition and received concrete transaction remain scoped distinctly. Later1.d/e broad information references are unambiguous continuations of the received per-transaction information and now link to1.b; no transaction/member instance or buy/sell subset identity is fabricated. Qualified book/interface/side aliases remain source-supported."
+    },
+    {
+      "quote": "the first buy level / the first sell level",
+      "reason": "First definite level phrases describe specific book levels. Later identical qualified level mentions refer to those explicit source descriptions; no additional level or buy/sell identity is invented."
+    },
+    {
+      "quote": "said pressure / PR / PRA / volume and gradient properties",
+      "reason": "Distinct pressure measures and price/time indexed quantities retain their source qualification. Formula variables remain exact functional text unless explicitly defined as prose entity mentions. Color values and first-level identifiers are retained without selecting a population member."
+    },
+    {
+      "quote": "the member / the two members",
+      "reason": "Transaction10 has two members; singular member used in per-member computation does not select one global participant. Exact distributed quantifiers and separate indefinite member NPs remain. Distinct quadrants, volume subsets and lower/right proforms are retained without coercing a subset to the entire four-volume/square group."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation of exact canonical/native claims. Explicit manually selected element and noun-phrase spans are serialized; no source decomposition algorithm, production rules, predictions, synthetic fixtures or prior conformance labels used. Complete lexical heads, nested determiner terms, natural dependency and source-supported entity identities retained. Functional edges preserve complete source text and ordered participants. Independent critic pending; agent confidence is not attorney agreement.",
+  "referenceNotes": [
+    "Main metadata list is retained before the method execution sequence. Explicit method steps and parameter definitions are separately source-ordered; all formula strings and condition alternatives remain complete anchored functional text.",
+    "The source includes malformed beingthe, native use graphic interface, y, determinated and private-use math glyphs; none is corrected. No financial recommendation or claim construction is performed."
+  ],
+  "sourceValidation": {
+    "claimsXmlSha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a",
+    "sourceEligibility": "Retained independent source critic accepted. No fresh original-PDF/inventory authentication claimed."
+  },
+  "counts": {
+    "trees": 10,
+    "elements": 52,
+    "terms": 372,
+    "edges": 177
+  },
+  "independence": "Extractor did not read production implementation, decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or prior structural labels for this family. Helpers locate only manually chosen exact source quotes, serialize annotations and validate spans. Only assigned expected.json/extractor.json written.",
+  "attorneyAdjudication": "pending",
+  "validation": {
+    "schema": "All trees decoded through declared ClaimElementTree schema; production decomposer not invoked.",
+    "anchors": "Exact canonical UTF-16 spans, element source order, term nonoverlap/ownership, local/foreign term endpoints and contiguous complete functional reconstruction checked.",
+    "native": "All canonical/context claims equal native claim text under permitted printed-number/whitespace normalization; claims XML digest matches provenance.",
+    "independentSemanticCritic": "Pending; extractor checks do not establish independent acceptance."
+  },
+  "previousRounds": [
+    {
+      "round": 1,
+      "expected": "expected.round1.json",
+      "extractor": "extractor.round1.json",
+      "criticRound": 1,
+      "criticVerdict": "changes-required"
+    },
+    {
+      "round": 2,
+      "expected": "expected.round2.json",
+      "extractor": "extractor.round2.json",
+      "criticRound": 2,
+      "criticVerdict": "changes-required"
+    }
+  ],
+  "criticReview": "Independent final round3 critic pending; maximum three rounds observed.",
+  "round2Changes": [
+    {
+      "findingId": "missing-local-semantic-references",
+      "disposition": "accepted",
+      "caseCount": 15,
+      "reason": "Independently reread exact source scopes. The received transaction information remains one local per-transaction object in1.d/e; named interval t in2/3, side-variable code values1/2 in3, repeated first-level definitions7, repeated local normalized buy/sell collections8, locally calculated/defined gradient9, immediate member subject for it10.g and enumerated full four-volume group10.h each provide unique explicit referents. These links do not identify a specific global member, equate an aggregate to a subset or reconstruct formulas."
+    },
+    {
+      "findingId": "outer-each-in-bare-heads",
+      "disposition": "accepted",
+      "caseCount": 10,
+      "reason": "Each is the outer distributive determiner in these specific phrases, not a lexical count or modifier. Remove only each from normalized heads; complete source anchors and distribution remain in functional text. No cardinal/minimum/ordinal content or other word is removed."
+    }
+  ],
+  "round2Independence": "Original extractor independently adjudicated exact source against critic1 cases and protocol; no production, predictions, formulas reconstruction or generic same-head linking. Only15 manually reviewed edges and10 reviewed lexical heads changed, preserving all anchors/elements/function parts and native MathML coverage disclosure.",
+  "round3Changes": [
+    {
+      "findingId": "missing-possessive-determiner-in-source-anchors",
+      "disposition": "accepted",
+      "caseCount": 4,
+      "reason": "Independently reread full2.b source: whose modifies value/date-and-time nouns as an explicit outer possessive determiner, not a standalone linker. Extended four exact anchors to include whose, retained bare tags and heads value/date and time, and rebuilt adjacent functional parts. No ownership edge, population identity, source or MathML formula changed."
+    }
+  ],
+  "round3Independence": "Original extractor applied only four manually reviewed possessive-anchor corrections after exact source/protocol adjudication. Prior round2 trees/receipt preserved; no implementation, predictions, conformance or formula reconstruction."
+}

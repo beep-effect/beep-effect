@@ -44,6 +44,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const decodeFFmpegErrorFromUnknownOptions = S.decodeUnknownEffect(FFmpegErrorFromUnknownOptions);
 const encodeFFmpegErrorFromUnknownOptions = S.encodeEffect(FFmpegErrorFromUnknownOptions);
@@ -111,6 +112,7 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
             if (!ChildProcess.isStandardCommand(command)) {
               return makeHandle("", "unsupported command", 1);
             }
+            const args = commandArgs(command);
 
             commands[A.length(commands)] = command;
 
@@ -118,7 +120,7 @@ const makeFakeSpawnerLayer = (commands: Array<ChildProcess.StandardCommand>, exi
               return makeHandle(ffprobeJson);
             }
 
-            const pattern = A.get(command.args, A.length(command.args) - 1);
+            const pattern = A.get(args, A.length(args) - 1);
             if (O.isSome(pattern) && exitCode === 0) {
               yield* fs.writeFileString(renderPatternPath(pattern.value, 0), "frame zero");
               yield* fs.writeFileString(renderPatternPath(pattern.value, 1), "frame one");

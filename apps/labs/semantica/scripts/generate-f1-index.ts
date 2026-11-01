@@ -1,9 +1,10 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunRuntime from "@effect/platform-bun/BunRuntime";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -115,7 +116,7 @@ const fixtureSpecs: ReadonlyArray<FixtureSpec> = [
 const F1IndexJson = S.fromJsonString(F1Index, { space: 2 });
 
 const generateF1Index = Effect.gen(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const fixtures = yield* Effect.forEach(
@@ -123,7 +124,7 @@ const generateF1Index = Effect.gen(function* () {
     Effect.fnUntraced(function* (spec) {
       const bytes = yield* fs.readFile(path.join(F1_ROOT, spec.relativePath));
       const sha256 = yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.orDie
       );
       return F1Fixture.make({
@@ -143,7 +144,7 @@ const generateF1Index = Effect.gen(function* () {
 });
 
 if (import.meta.main) {
-  BunServices.layer.pipe(
+  Layer.merge(BunServices.layer, BunCrypto.layer).pipe(
     Layer.build,
     Effect.flatMap((context) => generateF1Index.pipe(Effect.provide(context))),
     Effect.scoped,

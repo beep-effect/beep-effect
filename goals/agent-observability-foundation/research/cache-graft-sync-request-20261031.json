@@ -1,0 +1,20 @@
+{
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.2",
+  "epoch": "qualification-v2",
+  "previous": "b733417d9f3089aae017cf929b3418c3b2aff23872fdb407d50879422c5d4ca5",
+  "subjects": ["//", "@beep/repo-ai-metrics"],
+  "review": {
+    "reviewer": "GPT-6-Astra independent foundation panel",
+    "reason": "Carry reviewed foundation closure/dependency deltas onto accepted Graft-retirement main baseline; exactly11configuration drifts across2subjects, no qualification or exception growth.",
+    "basis": {
+      "path": "goals/agent-observability-foundation/research/CACHE-GRAFT-SYNC-20261031.md",
+      "sha256": "e0f087b467a96dfeab475310d3ae0068b3857e6e4f191d74ac65db6dab20125f"
+    }
+  }
+}

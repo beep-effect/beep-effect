@@ -38,6 +38,7 @@ import { deriveYeetMergeReady, mergeStateIsAcceptable, outstandingThreadCount } 
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
+import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
 import { YEET_STATUS_CHECK_FIELDS } from "./Planner.ts";
@@ -70,7 +71,8 @@ import {
   yeetCheckRecordInstant,
   yeetCheckRecordText,
 } from "./WatchStream.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrCloseoutReport } from "./Closeout.ts";
@@ -284,7 +286,7 @@ export class YeetStatusRemote extends S.Opaque<YeetStatusRemote, { readonly bran
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
-    // None on a successful lookup (including a confirmed absent PR).
+    // None on a complete read (including a confirmed absent PR).
     readFailure: YeetCommandError.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Each check's whole record (signal, link, workflow, GitHub's instants), so
     // a row the merge loop writes carries the same capsule a --watch row does.
@@ -677,14 +679,18 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  */
 const statusPathForContext = Effect.fn("YeetStatus.statusPathForContext")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto | Path.Path> {
+): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | Path.Path | Digest.Digest> {
   return yield* runArtifactPathForContext(context, "status.json");
 });
 
 const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const result = yield* runRepoCommandCapture("git", args, repoRoot).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to run git ${A.join(args, " ")}.`))
   );
@@ -700,7 +706,11 @@ const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
 
 const collectWorktreeStatus = Effect.fn("YeetStatus.collectWorktreeStatus")(function* (
   context: RepoRunContext
-): Effect.fn.Return<YeetStatusWorktree, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetStatusWorktree,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   // The three reads are independent, so they run at once; their outcomes are
   // then surfaced in the old sequential order, so the first failing read still
   // names the error.
@@ -974,7 +984,7 @@ export const summarizeRemoteChecksForTesting: {
  *
  * @param context - Repository context whose current branch identifies the pull request.
  * @param required - Restrict the read to required checks when true; otherwise read all checks.
- * @returns Decoded rows, or None when the response is unreadable or truncated.
+ * @returns Decoded rows (empty when gh reports no checks), or None when the response is unreadable or truncated.
  * @category getters
  * @since 0.0.0
  */
@@ -986,7 +996,7 @@ export const collectRemoteChecks: {
   ) => Effect.Effect<
     O.Option<ReadonlyArray<GhStatusCheck>>,
     YeetCommandError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
   (
     context: RepoRunContext,
@@ -994,7 +1004,7 @@ export const collectRemoteChecks: {
   ): Effect.Effect<
     O.Option<ReadonlyArray<GhStatusCheck>>,
     YeetCommandError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >;
 } = dual(
   2,
@@ -1004,7 +1014,7 @@ export const collectRemoteChecks: {
   ): Effect.fn.Return<
     O.Option<ReadonlyArray<GhStatusCheck>>,
     YeetCommandError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > {
     const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", YEET_STATUS_CHECK_FIELDS];
     const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
@@ -1013,7 +1023,15 @@ export const collectRemoteChecks: {
     if (result.truncated) {
       return O.none();
     }
-    return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+    // gh answers a head with no (required) checks yet in text with exit 1; that
+    // is a complete, empty census, not an unreadable one. JSON decodes first: a
+    // failing check also exits non-zero and its text may carry the same phrase.
+    return yield* decodeGhStatusChecks(result.output).pipe(
+      Effect.asSome,
+      Effect.orElseSucceed(() =>
+        result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output) ? O.some(A.empty<GhStatusCheck>()) : O.none()
+      )
+    );
   })
 );
 
@@ -1040,7 +1058,7 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
 ): Effect.fn.Return<
   GhStatusReviewThreadPages,
   YeetCommandError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const threads: Array<GhStatusReviewThread> = [];
   let pullRequestAuthor = O.none<string>();
@@ -1082,8 +1100,10 @@ const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThre
       return { pullRequestAuthor: O.none<string>(), threads: A.empty<GhStatusReviewThread>() };
     }
     const node = yield* decodeGhStatusReviewThreads(result.success.output).pipe(
-      Effect.map((document) => document.data.node),
-      Effect.mapError(YeetCommandError.new("Failed to decode PR review threads for yeet status."))
+      Effect.mapBoth({
+        onFailure: YeetCommandError.new("Failed to decode PR review threads for yeet status."),
+        onSuccess: (document) => document.data.node,
+      })
     );
     pullRequestAuthor = O.orElse(pullRequestAuthor, () => pullRequestAuthorLogin(node));
     threads.push(...node.reviewThreads.nodes);
@@ -1139,7 +1159,7 @@ export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWork
 ): Effect.fn.Return<
   ReadonlyArray<GhStatusWorkflowRun>,
   never,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const result = yield* runRepoCommandCapture(
     "gh",
@@ -1345,8 +1365,10 @@ export const yeetStatusThreadTriageForTesting = Effect.fn("YeetStatus.yeetStatus
   payload: string
 ): Effect.fn.Return<YeetStatusThreadTriage, YeetCommandError> {
   const node = yield* decodeGhStatusReviewThreads(payload).pipe(
-    Effect.map((document) => document.data.node),
-    Effect.mapError(YeetCommandError.new("Failed to decode PR review threads for yeet status."))
+    Effect.mapBoth({
+      onFailure: YeetCommandError.new("Failed to decode PR review threads for yeet status."),
+      onSuccess: (document) => document.data.node,
+    })
   );
   return classifyReviewThreads(node.reviewThreads.nodes, pullRequestAuthorLogin(node));
 });
@@ -1454,8 +1476,10 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
     return yield* decodeGhStatusPullRequest(output).pipe(
       // REST PR metadata has no review decision. Null from the projection
       // means unread here, whereas GraphQL null means no decision is required.
-      Effect.map((view) => O.some({ ...view, reviewDecision: "UNKNOWN" })),
-      Effect.mapError(YeetCommandError.new("Failed to decode GitHub REST PR status."))
+      Effect.mapBoth({
+        onFailure: YeetCommandError.new("Failed to decode GitHub REST PR status."),
+        onSuccess: (view) => O.some({ ...view, reviewDecision: "UNKNOWN" }),
+      })
     );
   }).pipe(
     Effect.mapError((fallback) =>
@@ -1472,7 +1496,7 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
 const confirmNoReviewComments = Effect.fn("YeetStatus.confirmNoReviewComments")(function* (
   context: RepoRunContext,
   number: number
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const output = yield* ghOutput({
     args: ["api", `repos/{owner}/{repo}/pulls/${number}/comments?per_page=1`],
     cwd: context.repoRoot,
@@ -1490,7 +1514,11 @@ const confirmNoReviewComments = Effect.fn("YeetStatus.confirmNoReviewComments")(
 const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function* (
   context: RepoRunContext,
   remote: boolean
-): Effect.fn.Return<YeetStatusRemote, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetStatusRemote,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   if (!remote) {
     return skippedRemote;
   }
@@ -1519,7 +1547,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
   const threadPagesRead: Effect.Effect<
     GhStatusReviewThreadPages,
     YeetCommandError,
-    Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   > = collectRemoteReviewThreads(context, view.id, view.number);
   const [checksResult, requiredChecksResult, threadPagesResult, workflowRunsResult] = yield* Effect.all(
     [
@@ -1561,6 +1589,11 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     available: true,
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
+    readFailure: O.match(O.all([checks, requiredChecks]), {
+      onNone: () =>
+        O.some(YeetCommandError.make({ message: "Failed to read the complete pull request check census." })),
+      onSome: O.none,
+    }),
     checks: A.map(O.getOrElse(checks, A.empty), (row) =>
       statusWatchCheck(
         row,
@@ -1784,7 +1817,11 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
 ): Effect.fn.Return<
   YeetStatusSnapshot,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const verdictPath = yield* runArtifactPathForContext(context, "verdict.json");
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
@@ -2029,7 +2066,7 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
  */
 export const writeYeetStatusSnapshot = Effect.fn("YeetStatus.writeYeetStatusSnapshot")(function* (
   snapshot: YeetStatusSnapshot
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const json = yield* YeetStatusSnapshotJson.encode(snapshot).pipe(

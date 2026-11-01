@@ -35,17 +35,18 @@ const makeSqlBackedDrizzleClient = (sqlClient: SqlClient.SqlClient): DrizzleClie
   client = {
     execute: (statement, parameters) =>
       sql.unsafe<Record<string, unknown>>(statement, parameters).pipe(
-        Effect.map((rows): DrizzleRows => rows),
-        Effect.mapError((cause) =>
-          DrizzleError.fromUnknown(
-            "execute",
-            cause,
-            DrizzleErrorContext.make({
-              params: O.some(parameters),
-              query: O.some(statement),
-            })
-          )
-        )
+        Effect.mapBoth({
+          onFailure: (cause) =>
+            DrizzleError.fromUnknown(
+              "execute",
+              cause,
+              DrizzleErrorContext.make({
+                params: O.some(parameters),
+                query: O.some(statement),
+              })
+            ),
+          onSuccess: (rows): DrizzleRows => rows,
+        })
       ),
     withTransaction: Effect.fn("withTransaction")(
       (use) => sqlClient.withTransaction(Effect.suspend(() => use(client))),
@@ -63,8 +64,10 @@ const DrizzlePgliteLayer = Layer.unwrap(
 const readBodies = (rows: DrizzleRows) =>
   pipe(
     decodeNoteRows(rows),
-    Effect.map(A.map((row) => row.body)),
-    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+    Effect.mapBoth({
+      onFailure: (cause) => DrizzleError.fromUnknown("decodeRows", cause),
+      onSuccess: A.map((row) => row.body),
+    })
   );
 
 if (!shouldRunPgliteIntegration) {

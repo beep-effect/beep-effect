@@ -80,7 +80,7 @@ import {
   VendoredSkillLockEntry,
 } from "./SkillsLock.schemas.ts";
 import type { Sha256Hex } from "@beep/schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type { ComputedSkillTree, HashedSkillFile } from "./internal/SkillTree.ts";
 import type { SkillPatchLabel } from "./Skills.schemas.ts";
 import type { SkillDriftRow, SkillPinProposal, SkillsLockDocument } from "./SkillsLock.schemas.ts";
@@ -296,7 +296,7 @@ export const renderSkillTreeDiff = Effect.fn("SkillsProvenance.renderSkillTreeDi
   skill: string,
   before: ReadonlyArray<SkillUpstreamContentFile>,
   after: ReadonlyArray<SkillUpstreamContentFile>
-): Effect.fn.Return<string, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<string, SkillsCommandError, Digest.Digest> {
   const left = yield* computeSkillTree(before, `${skill}:diff-before`);
   const right = yield* computeSkillTree(after, `${skill}:diff-after`);
   const paths = A.dedupe(
@@ -383,7 +383,7 @@ const buildPatch = Effect.fn("SkillsProvenance.buildPatch")(function* (
   local: ComputedSkillTree,
   filePath: string,
   index: number
-): Effect.fn.Return<BuiltPatch, SkillsCommandError, SkillPatchOwnerSource | Crypto.Crypto> {
+): Effect.fn.Return<BuiltPatch, SkillsCommandError, SkillPatchOwnerSource | Digest.Digest> {
   yield* requireSafeSkillKey(skill);
   const owners = yield* SkillPatchOwnerSource;
   const text = yield* renderFilePatch(
@@ -412,7 +412,7 @@ const buildPatchSeries = Effect.fn("SkillsProvenance.buildPatchSeries")(function
   upstream: ComputedSkillTree,
   local: ComputedSkillTree,
   driftPaths: ReadonlyArray<string>
-): Effect.fn.Return<PatchSeries, SkillsCommandError, SkillPatchOwnerSource | Crypto.Crypto> {
+): Effect.fn.Return<PatchSeries, SkillsCommandError, SkillPatchOwnerSource | Digest.Digest> {
   const built = yield* Effect.forEach(driftPaths, (filePath, index) =>
     buildPatch(skill, repoRoot, upstream, local, filePath, index)
   );
@@ -830,7 +830,7 @@ const readingOfV2 = (sha256: Sha256Hex, document: SkillsLockDocument): SkillsLoc
 
 const readSkillsLock = Effect.fn("SkillsLock.readSkillsLock")(function* (
   repoRoot: string
-): Effect.fn.Return<SkillsLockReading, SkillsCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<SkillsLockReading, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const { lockPath, text } = yield* readSkillsLockText(repoRoot);
   const sha256 = yield* hashBytes(textEncoder.encode(text), SKILLS_LOCK_PATH);
   const v2 = yield* Effect.option(decodeSkillsLockDocumentJson(text));
@@ -867,7 +867,7 @@ const lockedResolutions = Effect.fn("SkillsProvenance.lockedResolutions")(functi
 ): Effect.fn.Return<
   HashMap.HashMap<string, SkillProvenanceResolution>,
   SkillsCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -884,7 +884,7 @@ const lockedResolutions = Effect.fn("SkillsProvenance.lockedResolutions")(functi
 const resolveResolution = Effect.fn("SkillsProvenance.resolveResolution")(function* (
   skill: string,
   repoRoot: string
-): Effect.fn.Return<SkillProvenanceResolution, SkillsCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<SkillProvenanceResolution, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const resolutions = yield* lockedResolutions(repoRoot);
   return yield* resolutions.pipe(
     HashMap.get(skill),
@@ -913,7 +913,7 @@ const readInstalledTargets = Effect.fn("SkillsProvenance.readInstalledTargets")(
     readonly installedTreeHash: Sha256Hex;
   },
   SkillsCommandError | SkillInstallStateError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto
+  FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -965,7 +965,7 @@ type ProvenanceRequirements =
   | SkillPatchOwnerSource
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto;
+  | Digest.Digest;
 
 type ComputedProvenance = {
   readonly report: SkillProvenanceReport;
@@ -975,7 +975,7 @@ type ComputedProvenance = {
 const verifiedLicenseHash = Effect.fn("SkillsProvenance.verifiedLicenseHash")(function* (
   resolution: SkillProvenanceResolution,
   licenseBytes: Uint8Array
-): Effect.fn.Return<Sha256Hex, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<Sha256Hex, SkillsCommandError, Digest.Digest> {
   const skill = resolution.name;
   const actual = yield* hashBytes(licenseBytes, `${skill}:${resolution.license.path}`);
   if (!Str.Equivalence(actual, resolution.license.sha256)) {
@@ -1047,7 +1047,7 @@ export const buildSkillPatchAdditions = Effect.fn("SkillsProvenance.buildSkillPa
 ): Effect.fn.Return<
   ReadonlyArray<readonly [SkillPatch, SkillPatchFile]>,
   SkillsCommandError,
-  SkillPatchOwnerSource | Crypto.Crypto
+  SkillPatchOwnerSource | Digest.Digest
 > {
   return yield* Effect.forEach(driftPathsOf(before, after), (filePath, index) =>
     Effect.map(
@@ -1138,14 +1138,14 @@ const computeProvenance = Effect.fn("SkillsProvenance.computeProvenance")(functi
  * import type { SkillPatchOwnerSource } from "@beep/repo-cli/commands/Skills/Skills.patches"
  * import type { SkillProvenanceReport } from "@beep/repo-cli/commands/Skills/Skills.schemas"
  * import { resolveSkillProvenance, SkillUpstreamContentSource } from "@beep/repo-cli/commands/Skills/Skills.service"
- * import * as Crypto from "effect/Crypto";
+ * import type * as Digest from "effect/crypto/Digest";
  * import * as Effect from "effect/Effect";
  * import * as FileSystem from "effect/FileSystem";
  * import * as Path from "effect/Path";
  * const resolved: Effect.Effect<
  *   SkillProvenanceReport,
  *   SkillsCommandError | SkillUpstreamContentError,
- *   SkillUpstreamContentSource | SkillPatchOwnerSource | FileSystem.FileSystem | Path.Path | Crypto.Crypto
+ *   SkillUpstreamContentSource | SkillPatchOwnerSource | FileSystem.FileSystem | Path.Path | Digest.Digest
  * > = resolveSkillProvenance("shadcn", "/workspace/beep-effect")
  *
  * console.log(Effect.isEffect(resolved)) // true
@@ -1191,7 +1191,7 @@ export const resolveSkillProvenance = Effect.fn("SkillsProvenance.resolveSkillPr
 export const computeLocalSkillLockEntry = Effect.fn("SkillsLock.computeLocalSkillLockEntry")(function* (
   repoRoot: string,
   skill: string
-): Effect.fn.Return<LocalSkillLockEntry, SkillsCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
+): Effect.fn.Return<LocalSkillLockEntry, SkillsCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const installed = yield* requireInstalledTargets(repoRoot, skill);
   return LocalSkillLockEntry.make({
     installedTargets: installed.installedTargets,
@@ -1415,7 +1415,7 @@ const loadTreeAtRevision = Effect.fn("SkillsLock.loadTreeAtRevision")(function* 
 ): Effect.fn.Return<
   ComputedSkillTree,
   SkillsCommandError | SkillUpstreamContentError,
-  SkillUpstreamContentSource | Crypto.Crypto
+  SkillUpstreamContentSource | Digest.Digest
 > {
   const source = yield* SkillUpstreamContentSource;
   const files = yield* source.load(atRevision(resolution, revision)).pipe(
@@ -1464,7 +1464,7 @@ const classifyAgainstPathHistory = Effect.fn("SkillsLock.classifyAgainstPathHist
 ): Effect.fn.Return<
   { readonly pin: SkillPinProposal; readonly drift: ReadonlyArray<SkillDriftRow> },
   SkillsCommandError | SkillUpstreamContentError,
-  SkillUpstreamContentSource | Crypto.Crypto
+  SkillUpstreamContentSource | Digest.Digest
 > {
   if (A.isReadonlyArrayEmpty(driftPaths)) {
     return { pin: PristineAtRevisionPin.make({ revision: seed.upstream.sourceRevision }), drift: A.empty() };
@@ -1690,7 +1690,7 @@ const encodeMigrationRows = S.encodeEffect(S.Array(SkillMigrationRow));
 const sealSkillsLockMigrationPlan = Effect.fn("SkillsLock.sealSkillsLockMigrationPlan")(function* (
   lockSha256: Sha256Hex,
   rows: ReadonlyArray<SkillMigrationRow>
-): Effect.fn.Return<SkillsLockMigrationPlan, SkillsCommandError, Crypto.Crypto> {
+): Effect.fn.Return<SkillsLockMigrationPlan, SkillsCommandError, Digest.Digest> {
   const encodedRows = yield* encodeMigrationRows(rows).pipe(
     SkillsCommandError.mapError("Failed to encode the skills lock migration plan rows.")
   );

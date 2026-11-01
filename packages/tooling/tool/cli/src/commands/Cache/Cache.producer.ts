@@ -8,7 +8,7 @@ import { CacheClientPin, CacheQualificationKey, CacheTaskContract } from "@beep/
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -344,7 +344,7 @@ const makeIssuer = Effect.fn("Producer.makeIssuer")(function* (
 export const makeCacheProducerIssuer = Effect.fn("Producer.makeCacheProducerIssuer")(function* (
   expected: CacheProducerBinding
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   return yield* makeIssuer(expected, Redacted.make(yield* crypto.randomBytes(64)));
 });
 
@@ -747,7 +747,7 @@ export const initializeCacheProducerIssuer = Effect.fn("Producer.initializeCache
   yield* validateCacheProducerApproval(approval);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   if (!path.isAbsolute(directory)) return yield* CacheCommandError.new("Producer store path must be absolute.");
   const trusted = approval.binding;
   const approvedHex = yield* bindingDigest(trusted);

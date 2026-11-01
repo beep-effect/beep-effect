@@ -6,7 +6,7 @@
     "title": "beep-effect.com web app on Alchemy",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-10-28",
+    "updated": "2026-11-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-effect-web-alchemy",
@@ -18,8 +18,34 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PR #2444 merged over pending required checks (relaxed gate), so final PR #2447 re-finals the completion through the strict gate.",
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2435,
+        "role": "supporting"
+      },
+      {
+        "number": 2444,
+        "role": "supporting"
+      },
+      {
+        "number": 2447,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-5de23d4c0df7/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,17 +91,17 @@
     {
       "id": "P3",
       "name": "CI deploy",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -89,5 +115,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2447
+  }
 }

@@ -38,6 +38,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -1007,6 +1008,7 @@ describe("Yeet provenance footer splice", () => {
           const routeContext = context(root);
           const provider = ConfigProvider.fromEnv({ env: { HOME: root, PWD: root } });
           const policy = YeetUntilReadyPolicy.make({ settleTimeoutMs: 42 });
+          const pollInterval = Duration.seconds(60);
           const terminal = yield* runYeetMergeLoop(
             { base: "origin/main", head: "HEAD", packetDir: ".beep/yeet" },
             {
@@ -1014,9 +1016,11 @@ describe("Yeet provenance footer splice", () => {
               hydrate: () => Effect.succeed(routeContext),
               mergeLoop: (_context, options) => {
                 expect(options.policy).toEqual(policy);
+                expect(options.pollInterval).toEqual(pollInterval);
                 return Effect.succeed(exit.terminal);
               },
               policy,
+              pollInterval,
               registry,
               view: () =>
                 Effect.succeed(GhPrView.make({ headRefName: routeContext.branch, number: 42, state: "OPEN" })),

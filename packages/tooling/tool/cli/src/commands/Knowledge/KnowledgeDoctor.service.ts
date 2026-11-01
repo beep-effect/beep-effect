@@ -125,7 +125,8 @@ import {
   ResolutionWitness,
   TreeEntryWitness,
 } from "./KnowledgeDoctor.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
@@ -1502,10 +1503,11 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
     trackedEntries: entries,
     readBytes: (repoPath) =>
       Effect.fromOption(HashMap.get(files, repoPath)).pipe(
-        Effect.mapError(() =>
-          KnowledgeOperationalError.make({ message: `Fixture is missing tracked bytes for ${repoPath}.` })
-        ),
-        Effect.map((text) => textEncoder.encode(text))
+        Effect.mapBoth({
+          onFailure: () =>
+            KnowledgeOperationalError.make({ message: `Fixture is missing tracked bytes for ${repoPath}.` }),
+          onSuccess: (text) => textEncoder.encode(text),
+        })
       ),
   };
   return {
@@ -1581,7 +1583,7 @@ const pathRemovalsLive = Effect.fn("KnowledgeDoctor.pathRemovals")(function* (re
 });
 
 type LiveTreeRequirements =
-  | Crypto.Crypto
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
@@ -2194,7 +2196,8 @@ export interface KnowledgeDoctorShape {
 export class KnowledgeDoctor extends Context.Service<KnowledgeDoctor, KnowledgeDoctorShape>()($I`KnowledgeDoctor`) {}
 
 type KnowledgeDoctorRequirements =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner;

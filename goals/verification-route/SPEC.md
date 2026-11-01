@@ -103,20 +103,21 @@ Untouched: `goals/time-to-certainty/**`, `ProofFact.ts`, `ProofDigest.ts`,
 
 Slice 1 (cut line):
 
-- [ ] Schemas and the total footprint record exist in `commands/Ci/`; a test
+- [x] Schemas and the total footprint record exist in `commands/Ci/`; a test
       proves removing a lane's row is a type error and that every row contains
       `unknown`.
-- [ ] A fixture proves `classify` is total and emits semantic atoms for a root
+- [x] A fixture proves `classify` is total and emits semantic atoms for a root
       `package.json` catalog edit (`pkg:catalog`), a script edit (`pkg:script`),
       and a docs edit (`docs:markdown`).
-- [ ] `beep ci route plan` prints the selected set with the atoms that selected
+- [x] `beep ci route plan` prints the selected set with the atoms that selected
       each lane; at all-`unknown` it equals every lane.
-- [ ] `beep ci route census` prints, over the pinned corpus, machine-time turbo
+- [x] `beep ci route census` prints, over the pinned corpus, machine-time turbo
       or CI ran that the route would not select, by atom kind, with the
       `unknown` share and the A1 cost source per lane.
-- [ ] `beep ci route replay` prints recall and the base-unknown share; recall is
+- [x] `beep ci route replay` prints recall and the base-unknown share; recall is
       100% at all-`unknown`.
-- [ ] The corpus receipts are digest-pinned and the fetch resumes by head.
+- [x] The corpus receipts are digest-pinned and the fetch resumes (by run id, checkpointed per
+      completed UTC day; see the 2026-10-31 Decision Log row).
 
 Slice 2:
 
@@ -132,6 +133,9 @@ Slice 2:
       and revocable from the sentinel.
 - [ ] The proof-ledger shadow's resulting misses are attributed in the receipt
       as key change, not disagreement.
+- [ ] Package-grain propagation reads the workspace graph at the requested head,
+      not the checkout, before any lane is selected from affected packages (see
+      the 2026-10-31 Decision Log row).
 
 Slice 3:
 
@@ -191,6 +195,15 @@ new rulings append here.
 | 2026-10-28 | Two layers: compile to turbo + route the rest | Free hosted-side win; negations alone unsound | Route only |
 | 2026-10-28 | Appetite: three PR slices, cut line at the census | Replay, not a window | Stop after slice 1 |
 | 2026-10-28 | DEFERRED: ProofFact re-key | time-to-certainty's surface; needs an enforced refinement first | Fire `proof-key-footprint` |
+| 2026-10-31 | Affected packages from `@beep/repo-workspaces` `ChangeDetector`, not a re-derived turbo graph | The library already computes changed and affected packages over the workspace graph | Swap the injected `affected` for a turbo dry-run reader |
+| 2026-10-31 | Classifier owner lookup reads the root `workspaces` globs at the commit, not `WorkspaceDiscovery` | Discovery reads the working tree and cannot answer for a historical commit | Use discovery when classifying the working tree only |
+| 2026-10-31 | Corpus resumes by run id and checkpoints per completed UTC day; a day with a running run keeps its finished runs without advancing `until` | A 60-day end-only capture was lost to the shared 5,000/h GitHub limit; advancing past a running day would drop its runs forever | Revert to an end-only write |
+| 2026-10-31 | `commits` atom kind: one atom per head for the commit range | Replay: two PR #1399 heads had trees identical to their base yet added commits; commitlint reads the range | Drop the kind and treat empty-tree heads as `unknown` |
+| 2026-10-31 | `external` footprint flag; `security` external (always selected) | Replay: Security red on an empty-tree head while green on the base; osv-scanner reads the live advisory DB | Clear the flag; Security then follows its atom kinds |
+| 2026-10-31 | Missing PR heads are fetched by SHA; an unfetchable head is a counted `unknown` change | 4 of 5,083 heads were force-pushed over and absent from `refs/pull/*/head`; one missing head failed the whole census | Fail the census on a missing head |
+| 2026-10-31 | Census purity is judged over tree kinds (ignores `commits`) | Nearly every head carries `commits`; including it empties the pure columns that rank refinements | Count `commits` in purity |
+| 2026-10-31 | Slice 1 reports affected packages from the live workspace graph, not the graph at each head | The field only labels the plan; every lane selects from atoms, which already resolve owners at the commit. A graph per head means reading every workspace manifest at each of 5,083 census heads | Read the graph at the head (batched `git cat-file`) once propagation selects lanes in slice 2 |
+| 2026-10-31 | Corpus capture assumes one writer per corpus directory | Capture is a hand-run operator refresh of committed evidence; a safe lock needs stale-lock recovery after a crash | Add an exclusive directory lock when slice 2 adds an unattended corpus refresh |
 
 ## Exception Ledger
 

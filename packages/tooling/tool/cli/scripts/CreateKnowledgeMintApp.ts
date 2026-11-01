@@ -6,7 +6,7 @@
 
 import { NodeCrypto } from "@effect/platform-node";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -194,8 +194,8 @@ const startRegistration = Effect.fn("KnowledgeMint.startRegistration")(function*
     Effect.flatMap(decodeManifest)
   );
   const manifestJson = yield* encodeJson(manifest);
-  const crypto = yield* Crypto.Crypto;
-  const handle = makeKnowledgeMintHandler(yield* crypto.randomUUIDv4(), manifestJson);
+  const crypto = yield* SecureRandom.SecureRandom;
+  const handle = makeKnowledgeMintHandler(yield* crypto.uuidV4(), manifestJson);
   const server = Bun.serve({
     hostname: "127.0.0.1",
     port: PORT,

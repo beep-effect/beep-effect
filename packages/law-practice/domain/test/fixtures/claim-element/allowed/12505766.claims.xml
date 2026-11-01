@@ -1,0 +1,109 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>an eye tracker;</claim-text>
+<claim-text>a multiscopic display comprising:
+<claim-text>an array of light-emitting cells; and</claim-text>
+<claim-text>a multiscopic optical element comprising a plurality of multiscopic cells; and</claim-text>
+</claim-text>
+<claim-text>at least one processor configured to:
+<claim-text>determine respective relative positions of eyes of at least one user with respect to an image plane of the multiscopic display, using the eye tracker;</claim-text>
+<claim-text>for a given multiscopic cell, identify a plurality of distinct sets of light-emitting cells whose emitted light is directed toward respective ones of the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane, and a position of the given multiscopic cell in the multiscopic optical element;</claim-text>
+<claim-text>for the given multiscopic cell, determine at least one additional set of light-emitting cells that:
+<claim-text>(i) does not emit light that is directed toward any of the eyes of the at least one user,</claim-text>
+<claim-text>(ii) is separated by a distance smaller than a first predefined threshold from a single distinct set of light-emitting cells, and</claim-text>
+<claim-text>(iii) is separated by a distance greater than a second predefined threshold from any other distinct set of light-emitting cells;</claim-text>
+</claim-text>
+<claim-text>generate or retrieve respective images to be presented to the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane;</claim-text>
+<claim-text>retrieve pixel values, from each of the respective images, corresponding to a respective one of the plurality of distinct sets;</claim-text>
+<claim-text>identify a given eye corresponding to the single distinct set;</claim-text>
+<claim-text>retrieve pixel values, from an image to be presented to the given eye, corresponding to the at least one additional set;</claim-text>
+<claim-text>generate an output image using pixel values retrieved for the plurality of distinct sets and the pixel values retrieved for the at least one additional set; and</claim-text>
+<claim-text>display the output image via the multiscopic display.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine a level of uncertainty in determining the respective relative positions of the eyes; and</claim-text>
+<claim-text>adjust at least one of: the first predefined threshold, the second predefined threshold, based on the level of uncertainty.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when retrieving the pixel values corresponding to the at least one additional set, the at least one processor is configured to replicate pixel values from a subset of the single distinct set as the pixel values corresponding to the at least one additional set, wherein the subset of the single distinct set corresponds to light-emitting cells of the single distinct set that are nearest to the light-emitting cells of the at least one additional set.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to:
+<claim-text>determine, for the given multiscopic cell, an anticipated relative position of the given eye with respect to the image plane, at which light emitted from the at least one additional set of light-emitting cells is likely to be received by the given eye, based on a relative position of the given eye with respect to the image plane as determined using the eye tracker, the position of the given multiscopic cell in the multiscopic optical element, a relative position of the at least one additional set of light-emitting cells with respect to the given multiscopic cell; and</claim-text>
+<claim-text>reproject the image to be presented to the given eye from the determined relative position of the given eye to the anticipated relative position of the given eye, prior to retrieving the pixel values corresponding to the at least one additional set.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the at least one processor is configured to adjust a luminance of the pixel values retrieved for the at least one additional set based on a distance between the at least one additional set and the single distinct set.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when identifying the plurality of distinct sets, the at least one processor is configured to:
+<claim-text>for the given multiscopic cell, identify respective focus spots on the array of light-emitting cells for the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane and the position of the given multiscopic cell in the multiscopic optical element; and</claim-text>
+<claim-text>identify respective ones of the plurality of distinct sets for the respective focus spots based on optical projection parameters of the given multiscopic cell.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein when determining a given additional set of light-emitting cells for a given multiscopic cell, the at least one processor is configured to:
+<claim-text>determine when the given additional set is separated by a first distance and a second distance, each smaller than the first predefined threshold, from a first distinct set of light-emitting cells and a second distinct set of light-emitting cells, respectively, wherein the first distinct set and the second distinct set correspond to a first eye and a second eye of an individual one of the at least one user; and</claim-text>
+<claim-text>when it is determined that the given additional set is separated by the first distance and the second distance, each smaller than the first predefined threshold, from the first distinct set and the second distinct set, respectively,
+<claim-text>determine which one of the first eye and the second eye is a dominant eye of the individual one of the at least one user; and</claim-text>
+<claim-text>select the given additional set for retrieving pixel values to be presented to the dominant eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method comprising:
+<claim-text>determining respective relative positions of eyes of at least one user with respect to an image plane of a multiscopic display, using an eye tracker, wherein the multiscopic display comprises an array of light-emitting cells and a multiscopic optical element comprising a plurality of multiscopic cells;</claim-text>
+<claim-text>for a given multiscopic cell, identifying a plurality of distinct sets of light-emitting cells whose emitted light is directed toward respective ones of the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane, and a position of the given multiscopic cell in the multiscopic optical element;</claim-text>
+<claim-text>for the given multiscopic cell, determining at least one additional set of light-emitting cells that:
+<claim-text>(i) does not emit light that is directed toward any of the eyes of the at least one user,</claim-text>
+<claim-text>(ii) is separated by a distance smaller than a first predefined threshold from a single distinct set of light-emitting cells, and</claim-text>
+<claim-text>(iii) is separated by a distance greater than a second predefined threshold from any other distinct set of light-emitting cells;</claim-text>
+</claim-text>
+<claim-text>generating or retrieving respective images to be presented to the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane;</claim-text>
+<claim-text>retrieving pixel values, from each of the respective images, corresponding to a respective one of the plurality of distinct sets;</claim-text>
+<claim-text>identifying a given eye corresponding to the single distinct set;</claim-text>
+<claim-text>retrieving pixel values, from an image to be presented to the given eye, corresponding to the at least one additional set;</claim-text>
+<claim-text>generating an output image using pixel values retrieved for the plurality of distinct sets and the pixel values retrieved for the at least one additional set; and</claim-text>
+<claim-text>displaying the output image via the multiscopic display.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>determining a level of uncertainty in determining the respective relative positions of the eyes; and</claim-text>
+<claim-text>adjusting at least one of: the first predefined threshold, the second predefined threshold, based on the level of uncertainty.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein retrieving the pixel values corresponding to the at least one additional set comprises replicating pixel values from a subset of the single distinct set as the pixel values corresponding to the at least one additional set, wherein the subset of the single distinct set corresponds to light-emitting cells of the single distinct set that are nearest to the light-emitting cells of the at least one additional set.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>determining, for the given multiscopic cell, an anticipated relative position of the given eye with respect to the image plane, at which light emitted from the at least one additional set of light-emitting cells is likely to be received by the given eye, based on a relative position of the given eye with respect to the image plane as determined using the eye tracker, the position of the given multiscopic cell in the multiscopic optical element, a relative position of the at least one additional set of light-emitting cells with respect to the given multiscopic cell; and</claim-text>
+<claim-text>reprojecting the image to be presented to the given eye from the determined relative position of the given eye to the anticipated relative position of the given eye, prior to retrieving the pixel values corresponding to the at least one additional set.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising adjusting a luminance of the pixel values retrieved for the at least one additional set based on a distance between the at least one additional set and the single distinct set.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein identifying the plurality of distinct sets comprises:
+<claim-text>for the given multiscopic cell, identifying respective focus spots on the array of light-emitting cells for the eyes of the at least one user, based on the respective relative positions of the eyes with respect to the image plane and the position of the given multiscopic cell in the multiscopic optical element; and</claim-text>
+<claim-text>identifying respective ones of the plurality of distinct sets for the respective focus spots based on optical projection parameters of the given multiscopic cell.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein determining a given additional set of light-emitting cells for a given multiscopic cell comprises:
+<claim-text>determining when the given additional set is separated by a first distance and a second distance, each smaller than the first predefined threshold, from a first distinct set of light-emitting cells and a second distinct set of light-emitting cells, respectively, wherein the first distinct set and the second distinct set correspond to a first eye and a second eye of an individual one of the at least one user; and</claim-text>
+<claim-text>when it is determined that the given additional set is separated by the first distance and the second distance, each smaller than the first predefined threshold, from the first distinct set and the second distinct set, respectively,
+<claim-text>determining which one of the first eye and the second eye is a dominant eye of the individual one of the at least one user; and</claim-text>
+<claim-text>selecting the given additional set for retrieving pixel values to be presented to the dominant eye.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

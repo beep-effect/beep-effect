@@ -12,7 +12,7 @@
 // retired readers rejected is pinned here as the kit reads it.
 
 import { WorkspacePatternReadError, WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { assertInstanceOf, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { platform, platformWith } from "./support/fixtures.ts";
@@ -158,5 +158,28 @@ describe("WorkspacePatterns — a malformed `workspaces` field reads as no patte
         deepStrictEqual(yield* WorkspacePatterns.read("/repo"), ["packages/*"]);
       })
     );
+  });
+});
+
+describe("WorkspacePatterns.forMatching — the declared text as the enumerators match it", () => {
+  it("strips trailing slashes and leading ./ segments, after the ! of an exclusion", () => {
+    deepStrictEqual(
+      WorkspacePatterns.forMatching(["packages/*/", "./tools/cli", "././apps/web/", "!./packages/core"]),
+      ["packages/*", "tools/cli", "apps/web", "!packages/core"]
+    );
+  });
+
+  it("follows a trailing /** with its base, for an include and an exclusion", () => {
+    deepStrictEqual(WorkspacePatterns.forMatching(["packages/core/**", "!./packages/legacy/**/", "**"]), [
+      "packages/core/**",
+      "packages/core",
+      "!packages/legacy/**",
+      "!packages/legacy",
+      "**",
+    ]);
+  });
+
+  it("keeps a pattern that normalizes to nothing as declared", () => {
+    deepStrictEqual(WorkspacePatterns.forMatching(["/", "!/", "./", "!"]), ["/", "!/", "./", "!"]);
   });
 });

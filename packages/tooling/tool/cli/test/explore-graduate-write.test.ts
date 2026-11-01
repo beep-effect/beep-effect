@@ -20,7 +20,7 @@ import {
   PacketStreamLocator,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -68,7 +68,7 @@ const decodeManifestJson = S.decodeUnknownEffect(
   )
 );
 const runExploreCommand = Command.runWith(exploreCommand, { version: "0.0.0" });
-const layer = Layer.provideMerge(PacketEventStoreLive, NodeServices.layer);
+const layer = Layer.provideMerge(PacketEventStoreLive, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const manifestText = `${JSON.stringify(
   {

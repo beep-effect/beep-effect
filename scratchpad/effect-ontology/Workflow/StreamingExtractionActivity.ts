@@ -21,7 +21,7 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -170,8 +170,8 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
  * Computes the canonical SHA-256 identity for document content.
  */
 const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContentHash")(function* (content: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", textEncoder.encode(content));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, textEncoder.encode(content));
   return yield* S.decodeEffect(ContentHash)(Hex.encode(digest));
 });
 

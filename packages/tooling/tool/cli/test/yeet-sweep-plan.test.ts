@@ -39,6 +39,7 @@ import * as Ref from "effect/Ref";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 import type { SweepPlanStep } from "@beep/repo-cli/test/Yeet";
 
 const mergedTip = "aaaa1111bbbb2222";
@@ -524,10 +525,10 @@ const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) 
         Effect.gen(function* () {
           if (!ChildProcess.isStandardCommand(command))
             return yield* Effect.die("the sweep never spawns a piped command");
-          const line = A.join([command.command, ...command.args], " ");
+          const line = A.join([command.command, ...commandArgs(command)], " ");
           const mutation =
             (command.command === "git" &&
-              A.contains(["fetch", "merge", "branch", "push", "switch"], command.args[0])) ||
+              A.contains(["fetch", "merge", "branch", "push", "switch"], commandArgs(command)[0])) ||
             command.command === "bun";
           if (mutation && !A.contains(allowedMutationCommands, line))
             return yield* Effect.die(`Unexpected sweep mutation: ${line}`);
@@ -611,7 +612,7 @@ const recordedSweep = Effect.fnUntraced(function* (root: string) {
   const recording = ChildProcessSpawner.make((command) =>
     Effect.gen(function* () {
       if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
-      yield* Ref.update(spawned, A.append(A.join([command.command, ...command.args], " ")));
+      yield* Ref.update(spawned, A.append(A.join([command.command, ...commandArgs(command)], " ")));
       return yield* spawner.spawn(command);
     })
   );
@@ -646,7 +647,7 @@ describe("executeSweep", () => {
           const recordingSpawner = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               if (!ChildProcess.isStandardCommand(command)) return yield* Effect.die("Unexpected piped command");
-              yield* Ref.update(spawned, A.append(A.join([command.command, ...command.args], " ")));
+              yield* Ref.update(spawned, A.append(A.join([command.command, ...commandArgs(command)], " ")));
               return yield* spawner.spawn(command);
             })
           );

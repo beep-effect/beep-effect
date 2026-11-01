@@ -1,0 +1,95 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for verifying an integrity of event sequences of workflow events in a workflow system, the method comprising:
+<claim-text>logging each event of a set of event sequences associated with workflow events comprising one or more of:</claim-text>
+</claim-text>
+<claim-text>(i) a workflow instance identifier for a workflow instance,</claim-text>
+<claim-text>(ii) an event type,</claim-text>
+<claim-text>(iii) a serialized event payload, and</claim-text>
+<claim-text>(iv) an event timestamp;
+<claim-text>computing, based on a prior digest value, the serialized event payload, and a salt derived from the event timestamp, a respective rolling cryptographic digest for each event over the set of event sequences;</claim-text>
+<claim-text>embedding a terminal digest value for the set of event sequences associated with the workflow instance into an electronic message to obtain an embedded terminal digest; and</claim-text>
+<claim-text>transmitting the electronic message to a recipient system, wherein the recipient system verifies the integrity of the set of event sequences by independently recomputing the respective rolling cryptographic digest from locally accessible data to obtain a result and comparing the result to the embedded terminal digest.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the event timestamp has microsecond-level precision.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein computing the respective rolling cryptographic digest is performed using a hardware security module (HSM).</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the HSM is Federal Information Processing Standard (FIPS) 140-2 compliant and completes each digest operation in less than 2 milliseconds.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the respective rolling cryptographic digest comprises a SHA-256 hash or equivalent cryptographic hash.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein verification by the recipient system occurs in under 10 milliseconds at a 95th percentile.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electronic message comprises a JavaScript Object Notation (JSON) or Financial Information Exchange (FIX) protocol message, and the embedded terminal digest is stored in a designated integrity field.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising: retrying one or more steps of the method up to three times with exponential backoff in case of failure.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow system operates in a cloud-computing environment.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow events pertain to a financial transaction, and the embedded terminal digest is included in a regulatory reporting message.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow events comprise trade lifecycle events comprising one or more of: “TradeConfirmed,” “PaymentSettled,” and “DocumentAcknowledged,” each associated with a unique trade identifier.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow events comprise healthcare messages formatted in Health Level Seven (HL7) or Fast Healthcare Interoperability Resources (FHIR) standards, and the terminal digest value is embedded in a metadata field or extension.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the set of event sequences pertains to a financial transaction, and the embedded terminal digest is included in a regulatory reporting message.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the set of event sequences pertains to trade lifecycle events comprising one or more of: “TradeConfirmed,” “PaymentSettled,” and “DocumentAcknowledged,” each associated with a unique trade identifier.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the set of event sequences pertains to healthcare messages formatted in Health Level Seven (HL7) or Fast Healthcare Interoperability Resources (FHIR) standards, and the terminal digest value is embedded in a metadata field or extension.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow instance identifier comprises a Medical Record Number (MRN) and an Encounter ID.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the workflow events represent shipment events including “GoodsDispatched,” “CustomsCleared,” “InTransitScan,” and “ProofOfDelivery,” are associated with a Shipment ID.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the terminal digest value is embedded in a metadata field of a shipping manifest or customs declaration in an electronic data interchange (EDI), eXtensible Markup Language (XML) or equivalent format.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. A system for verifying an integrity of event sequences of workflow events in a workflow system, the system comprising:
+<claim-text>at least one processor; and</claim-text>
+<claim-text>a computer-readable storage medium storing instructions, which, when executed by the at least one processor, cause the at least one processor to be configured to:</claim-text>
+<claim-text>log each event of a set of event sequences associated with workflow events comprising one or more of:</claim-text>
+</claim-text>
+<claim-text>(i) a workflow instance identifier for a workflow instance,</claim-text>
+<claim-text>(ii) an event type,</claim-text>
+<claim-text>(iii) a serialized event payload, and</claim-text>
+<claim-text>(iv) an event timestamp;
+<claim-text>compute, based on a prior digest value, the serialized event payload, and a salt derived from the event timestamp, a respective rolling cryptographic digest for each event over the set of event sequences associated with the workflow events;</claim-text>
+<claim-text>embed a terminal digest value for the set of event sequences into an electronic message to obtain an embedded terminal digest; and</claim-text>
+<claim-text>transmit the electronic message to a recipient system, wherein the recipient system verifies the integrity of the set of event sequences by independently recomputing the respective rolling cryptographic digest from locally accessible data to obtain a result and comparing the result to the embedded terminal digest.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method comprising:
+<claim-text>receiving, from a computing device, an electronic message comprising an embedded terminal digest; and</claim-text>
+<claim-text>recomputing, for each event over a set of event sequences associated with workflow events, a respective rolling cryptographic digest from locally accessible data to obtain a result and comparing the result to the embedded terminal digest, wherein the embedded terminal digest is obtained on the computing device via steps comprising:</claim-text>
+<claim-text>logging each event of the set of event sequences associated with workflow events comprising one or more of:</claim-text>
+</claim-text>
+<claim-text>(i) a workflow instance identifier for a workflow instance,</claim-text>
+<claim-text>(ii) an event type,</claim-text>
+<claim-text>(iii) a serialized event payload, and</claim-text>
+<claim-text>(iv) an event timestamp;
+<claim-text>computing, based on a prior digest value, the serialized event payload, and a salt derived from the event timestamp, a respective rolling cryptographic digest for each event over the set of event sequences; and</claim-text>
+<claim-text>embedding a terminal digest value for the set of event sequences associated with the workflow events into the electronic message to obtain an embedded terminal digest.</claim-text>
+</claim-text>
+</claim>
+</claims>

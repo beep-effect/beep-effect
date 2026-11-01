@@ -14,7 +14,7 @@ import { scriptFences, typescriptFences } from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -32,7 +32,7 @@ import * as Str from "effect/String";
 const fence = Str.repeat(3)("`");
 const markdownOf = (...lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 const vendored = HashSet.make("shadcn");
-const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
+const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const TypecheckerLayer = MarkdownFenceTypechecker.layer.pipe(Layer.provideMerge(PlatformLayer));
 
 const encoder = new TextEncoder();

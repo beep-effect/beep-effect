@@ -8,6 +8,14 @@
 import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
+  ClaimSelfCheck,
+  ClaimSelfCheckLive,
+  UsptoClaims,
+  UsptoClaimsError,
+} from "@beep/law-practice-use-cases/ClaimSelfCheck";
+import {
+  ClaimSelfCheckReviewRequest,
+  claimSelfCheckReview,
   PracticeKgCandidateClaimsNotLoadedResult,
   PracticeKgCorrespondentAddressError,
   PracticeKgCorrespondentLookupRequest,
@@ -31,6 +39,7 @@ import { thunkEffectVoid } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -57,7 +66,6 @@ import type {
 } from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
 import type * as Tool from "effect/ai/Tool";
-import type * as Layer from "effect/Layer";
 import type * as SqlClient from "effect/sql/SqlClient";
 
 const spineStatus = PracticeKgEpistemicStatus.Enum["derived-from-official-records"];
@@ -318,6 +326,7 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
   DuckDb | Path.Path | PracticeKgBundle | SqlClientService
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {
+    const selfCheck = yield* ClaimSelfCheck;
     const bundle = yield* PracticeKgBundle;
     const duckdb = yield* DuckDb;
     const sql = (yield* SqlClientService).withoutTransforms();
@@ -364,8 +373,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
-            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
-            Effect.mapError(toolFailure("corpus_search_text"))
+            Effect.mapBoth({
+              onFailure: toolFailure("corpus_search_text"),
+              onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
+            })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
@@ -380,8 +391,10 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           .pipe(
             Effect.mapError(failureOf("store-query-failed")),
             Effect.flatMap(decodeRows(decodePracticeKgDocumentRows)),
-            Effect.map(addPracticeKgCorpusPointers(bundle.corpusRoot, path)),
-            Effect.mapError(toolFailure("corpus_get_document"))
+            Effect.mapBoth({
+              onFailure: toolFailure("corpus_get_document"),
+              onSuccess: addPracticeKgCorpusPointers(bundle.corpusRoot, path),
+            })
           );
         return projectRows(A.map(rows, toToolRecord), practiceKgDocumentFieldTiers, request.budgetBytes, version);
       }, stampFailureReason),
@@ -407,6 +420,13 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
           emailLinkageNote
         );
       }, stampFailureReason),
+      // Local normalized input is the complete read boundary. This handler does
+      // not fetch public sources, require API credentials, or persist candidates.
+      claim_self_check: Effect.fn("PracticeKgTools.claim_self_check")((request) =>
+        claimSelfCheckReview(ClaimSelfCheckReviewRequest.make(request)).pipe(
+          Effect.provideService(ClaimSelfCheck, selfCheck)
+        )
+      ),
       kg_candidate_claims: Effect.fn("PracticeKgTools.kg_candidate_claims")(
         function* (request) {
           const tables = yield* sql.unsafe(PracticeKgQueries.claimsTableProbe);
@@ -569,4 +589,21 @@ export const PracticeKgToolkitHandlersLive: Layer.Layer<
       ),
     });
   })
+).pipe(
+  Layer.provide(
+    ClaimSelfCheckLive.pipe(
+      Layer.provide(
+        Layer.succeed(UsptoClaims, {
+          claims: Effect.fn("ClaimSelfCheckLocal.publicClaimsUnavailable")(() =>
+            Effect.fail(
+              UsptoClaimsError.make({
+                reason: "unavailable",
+                message: "This local review tool accepts supplied claims and does not fetch USPTO documents.",
+              })
+            )
+          ),
+        })
+      )
+    )
+  )
 );

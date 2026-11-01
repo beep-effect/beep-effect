@@ -1,0 +1,123 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16068637-root-11",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [11, 12, 13, 14, 15, 16],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20190039119", "A1", "20190207"],
+    "applicationReference": ["US", "16068637", "20170623"],
+    "officeActionDocumentIdentifiers": ["K2XMF4F4RXEAPX2"],
+    "officeActionMailDate": "2019-11-14"
+  },
+  "digestEvidence": [
+    {
+      "file": "16068637.publication.xml",
+      "sha256": "94fd320fbde49aa0b41957e7a0f94898a9c82c44c6c1336f3b6f04d1b2912428",
+      "matchesProvenance": true
+    },
+    {
+      "file": "16068637.claims.xml",
+      "sha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JJAKGNS1RXEAPX3",
+      "available": true,
+      "sha256": "27a64630b3702646da288fbf54febd5572c137383ebeed424a957955ac577151",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 51,
+    "actualRows": 51,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2018-07-06T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "JJAKGNS1RXEAPX3"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the rivet",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the rivet"
+    },
+    {
+      "claimNumber": 11,
+      "examinerPhrase": "the bottom end",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the bottom end"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the rotary driving system",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": false,
+      "nativeQuote": "the rotatory driving system"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the flow",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the flow"
+    },
+    {
+      "claimNumber": 16,
+      "examinerPhrase": "the axial translational motion",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the axial translational motion"
+    }
+  ],
+  "assessment": "Visual PDF page2 verifies exact numbered11 preamble A friction self-piercing riveting (F-SPR) system comprising: and a rivet comprising: absent from original XML because of external SVG images. Full11 body matches native. Pages3-4 corroborate selected12-16 and actual references12-14->11,15->14,16->11. Original12 visibly prints wedge-sahped where native has wedge-shaped; circled1/2 are serialized textually in native. These limited typo/symbol differences do not show a competing operative version. PDF resolves the merged-number/header concern without reconstructing reference text from OCR.",
+  "findings": [],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Original has15 numbered nodes; Claim10 embeds body attributed to11 after missing external SVG assets CLM.1.svg and CLM.2.svg. Native11 header/number and rivet introduction are not corroborated by cached original text. Protocol bars accepting unresolved merged-number source; matching body/OA is insufficient.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Original has15 numbered nodes; Claim10 embeds body attributed to11 after missing external SVG assets CLM.1.svg and CLM.2.svg. Native11 header/number and rivet introduction are not corroborated by cached original text. Protocol bars accepting unresolved merged-number source; matching body/OA is insufficient.",
+          "requiredAction": "Obtain authoritative original SVG/image/PDF rendering of11 header and rivet introduction, and reconcile symbolic original12 portions."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "JJAKGNS1RXEAPX3",
+    "sha256": "ba1bf94df37c4613c3e7346296ca95032c642087818a10db7b5c541338b50cae",
+    "pdfPagesInspected": [2, 3, 4],
+    "printedPages": [2, 3, 4],
+    "purpose": "Independent visual corroboration only; native source remains authoritative annotation text."
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-16 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ]
+}

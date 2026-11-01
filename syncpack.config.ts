@@ -1,3 +1,4 @@
+import heldDependencies from "./hold-ledger/syncpack-held.generated.json" with { type: "json" };
 import type { RcFile } from "syncpack";
 
 const config = {
@@ -133,79 +134,21 @@ const config = {
       strategy: "versionsByName",
     },
   },
-  updateGroups: [
-    {
-      // Held back from `deps:update`: tstyche stays at 8.0.0-beta.0 until
-      // stable 8.0 passes effect-drizzle's existing explicit-target matrix.
-      // Targets use its own compiler store, independent of root TypeScript.
-      // Full layout: docs/runbooks/typescript-toolchain.md.
-      // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
-      // @nodable/flexible-xml-parser, which references Buffer at module
-      // scope and breaks every browser bundle.
-      // @effect/tsgo pins its seven platform binaries exactly, so only its own
-      // catalog entry moves. A reviewed bump updates the root diagnosticSeverity
-      // map and the copied profiles and runs the full check graph as the census
-      // before this pin moves.
-      // tsrs (oxc-project/tsrs) is held with it: `effect-tsgo patch --tsrs` only
-      // has an Effect build for the tsrs versions the installed @effect/tsgo
-      // packages ship (0.59.0 ships 0.20.0-ts7.1.0-beta), so the two pins move
-      // together in one reviewed bump (goals/tsrs-gates).
-      // Every Effect rule gates inside the Effect-patched tsrs: the three
-      // ignoreEffect*InTscExitCode flags are false and the standalone
-      // diagnostics lane is retired (goals/tsrs-gates PR 2, 2026-10-27).
-      // 0.53.0 was measured across all workspace check/test projects on
-      // 2026-10-14 (goals/effect-rules-diagnostics-lane); the patch-only 0.53.4
-      // bump added no rules (hold register, 2026-10-17). All six 0.52 rules are
-      // errors; schema-opaque-default armed schemaClassMissingBrand on
-      // 2026-10-15 in its closing PR. The 0.54.1 bump armed schemaClassObjectLiteral.
-      // The 0.55.0 bump armed preferEffectString after the effect/String migration
-      // (goals/effect-string-migration) cleared its 2,992 sites.
-      // The import-style rules remain declared off; named helper imports are
-      // deliberate and Effect barrel imports contradict the module-path law.
-      // tsc-rs (pingdotgg/ts-rust) ran the gates from 2026-10-14 until
-      // goals/tsrs-gates replaced it; it is no longer installed. See the runbook.
-      // @biomejs/biome stays at 2.5.6: 2.5.15 reformats four @beep/html and
-      // @beep/provenance sources and adds a noDeprecatedImports error in
-      // @beep/repo-cli (hold register, 2026-10-17). Bump it with that
-      // format/lint wave. `renderBiomeJson` no longer pipes stdin, so the
-      // original 2.5.7 stdin regression no longer applies.
-      // lexical 0.51 deprecates `LexicalComposer` (Biome `noDeprecatedImports`
-      // fails every composer in @beep/editor and @beep/ui) in favour of
-      // `LexicalExtensionComposer`, whose extension-based config is a
-      // gesture-bearing editor migration with its own browser-QA campaign;
-      // the whole lockstep `@lexical/*` family stays at 0.50 until it lands.
-      // Fallow 3.34 corrects entry-glob semantics and exposes 61 existing findings.
-      // Promote it after the public API and generated-entry triage, without a new baseline.
-      // Ink 8 strips U+200B workflow-command neutralization markers from output.
-      // Keep Ink 7 until terminal command safety and width contracts migrate together.
-      // jsdom 30.1.0 breaks every vitest 5 jsdom-environment file at worker
-      // start ("'addEventListener' called on an object that is not a valid
-      // instance of EventTarget" from vitest's catchWindowErrors), so no
-      // React test file runs. Still reproduced on 30.1.3 under the `--bun`
-      // vitest runtime on 2026-10-17 (Node passes). Pinned exactly at 30.0.1 (a
-      // range resolves straight back to the broken release) until vitest or
-      // jsdom ships the fix.
-      // statelyai 0.15.0 depends on @statelyai/model-testing@0.2.0, which was
-      // never published (npm 404), so `bun install` cannot resolve the lockfile.
-      // Stay on 0.14.3 until a release ships whose dependency tree resolves.
-      label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
-      dependencies: [
-        "fallow",
-        "ink",
-        "tstyche",
-        "lexical",
-        "@lexical/**",
-        "jsdom",
-        "fast-xml-validator",
-        "detailed-xml-validator",
-        "@biomejs/biome",
-        "@effect/tsgo",
-        "tsrs",
-        "statelyai",
-      ],
-      isIgnored: true,
-    },
-  ],
+  // The held list is a projection of hold-ledger/claims.jsonl: each hold's
+  // reason, probe and exit condition live in its record (`bun run beep holds
+  // list`), and `bun run beep holds lint --write` regenerates the list. An
+  // empty `dependencies` array would match every dependency, so the group is
+  // omitted when nothing is held.
+  updateGroups:
+    heldDependencies.length > 0
+      ? [
+          {
+            label: "Held back — do not auto-update (see hold-ledger/claims.jsonl)",
+            dependencies: heldDependencies,
+            isIgnored: true,
+          },
+        ]
+      : [],
   versionGroups: [
     {
       // Pulumi's nodejs runtime needs the classic TypeScript API, so infra

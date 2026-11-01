@@ -1,0 +1,9 @@
+{
+  "source": "Caddy default autosave from this exact installed-unit proof",
+  "retainedPrivateCopy": "/tmp/obs-deploy-l4twuxou/owned-shared-autosave.json",
+  "sha256": "57d1b44dbed8e94e1a3120f91970c5515a54694ebbf1d8ed5e120b2ba0f2eb1b",
+  "ownedGeneratedFileRemoved": true,
+  "priorPreimageAvailable": false,
+  "restoredUnrelatedConfiguration": false,
+  "repair": "Disable persistence and isolate XDG config/data for the new intake service"
+}

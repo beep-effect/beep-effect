@@ -45,7 +45,8 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertDefined, assertFailure, assertFalse, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -195,19 +196,9 @@ const lineText = S.Literals(["a", " ", "\n", "\r", "\r\n", "{", "\u00e9"]).pipe(
   Arbitrary.map(A.join(""))
 );
 
-// A real SHA-256 backend over WebCrypto behind core's Crypto contract, and the
+// A real SHA-256 backend over WebCrypto behind core's Digest contract, and the
 // synchronous digest the Result twins take.
-const CryptoTest = Layer.succeed(
-  Crypto.Crypto,
-  Crypto.make({
-    randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-    digest: (algorithm, data) =>
-      Effect.map(
-        Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))),
-        (buffer) => new Uint8Array(buffer)
-      ),
-  })
-);
+const CryptoTest = Layer.mergeAll(Digest.layerWebCrypto, SecureRandom.layerWebCrypto);
 const syncDigest: JsoncDigest = sha256;
 
 // encode then decode is the identity under the schema's own equivalence;

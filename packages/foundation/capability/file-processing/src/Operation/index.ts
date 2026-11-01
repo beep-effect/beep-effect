@@ -6,6 +6,13 @@
  */
 
 /**
+ * Operation constructors.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./Operation.constructors.ts";
+/**
  * Operation failures.
  *
  * @category errors

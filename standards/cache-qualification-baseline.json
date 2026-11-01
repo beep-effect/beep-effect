@@ -1130,19 +1130,19 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "GPT-6-Astra independent foundation panel",
+      "reason": "Carry only previously reviewed AI-metrics dependency deltas onto accepted main e733; root seals already match incoming main; no qualification or exception growth.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
+        "sha256": "844d0b3a32550fa207520930ab9010696cf79e31723e4fce411a95fc2818547b"
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (W0 lane, refactor/beep-cli-w0-retirements)",
-      "reason": "Re-record the cache posture of the root, repo-cli and repo-docgen subjects after the W0 retirements: the quality policy seal loses the JSDocMigrate inputs, repo-cli drops the runpod and codex-sdk dependencies, and the repo-docgen docs:aggregate script points at docgen aggregate; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (hold-ledger, feat/hold-ledger)",
+      "reason": "Re-record the existing cache posture of @beep/repo-cli after its manifest gained the @beep/epistemics dependency and the ./commands/Holds export (goals/hold-ledger). Script words, tasks, inputs, outputs and cache flags are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/w0-cache-baseline-review.md",
-        "sha256": "a68dffb3991b610426c7ec34d0586a3bdd812abc98a1fbf2baa35f15375da706"
+        "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31.md",
+        "sha256": "fa762fda73a2245c60f19d7289ae7b704f4bc148c6748a2a866a061a1f774025"
       }
     },
     "@beep/repo-configs": {
@@ -1426,11 +1426,11 @@
       }
     },
     "@beep/uspto": {
-      "reviewer": "Claude Opus 5.5 (G4 lane, claude/policy-fingerprint-per-task-225ace)",
-      "reason": "Re-record the legacy cache posture of the subjects whose policy tasks now depend on generated per-task fingerprint seals instead of //#lint:policy-fingerprint, and of the 34 new cached seal tasks under //; task inputs, outputs and cache flags are otherwise unchanged; no qualification is granted.",
+      "reviewer": "Codex claim-element-antecedent-check owner (self-review)",
+      "reason": "Record only the USPTO manifest input drift caused by two canonical generated doctest scripts. Existing task scripts and qualification scope/profile/epoch are unchanged; the new doctest remains unassessed. No cache qualification is granted.",
       "basis": {
-        "path": "goals/beep-cli-composition/research/g4-cache-baseline-review.md",
-        "sha256": "7c93a4c500140eaa9a590e2b5332e2e2f6b206cd06da7bf21070a5ae86c65daf"
+        "path": "goals/claim-element-antecedent-check/research/cache-baseline-review-v23.md",
+        "sha256": "d75bad6f997274d19e3a2350cdf59ad9cab769412fe963ab4c4b7bc8e4523a23"
       }
     },
     "@beep/uspto-mcp": {
@@ -1594,7 +1594,7 @@
       {
         "computation": "//#changeset:status",
         "command": "bun run beep quality changeset-status",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-changeset-status"
         ],
@@ -1626,7 +1626,7 @@
       {
         "computation": "//#config-sync:check",
         "command": "bun run beep tsconfig-sync --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:tsconfig-sync"
         ],
@@ -1677,7 +1677,7 @@
       {
         "computation": "//#fallow:audit:check",
         "command": "bun run beep quality fallow audit --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/audit.check.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1722,7 +1722,7 @@
       {
         "computation": "//#fallow:boundaries:advisory",
         "command": "bun run beep quality fallow boundaries --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/boundaries.advisory.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1767,7 +1767,7 @@
       {
         "computation": "//#fallow:boundaries:config-check",
         "command": "bun run beep quality fallow boundaries config-check --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1803,7 +1803,7 @@
       {
         "computation": "//#fallow:dead-code:check",
         "command": "bun run beep quality fallow dead-code --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/dead-code.check.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1848,7 +1848,7 @@
       {
         "computation": "//#fallow:fix-preview:advisory",
         "command": "bun run beep quality fallow fix-preview --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/fix-preview.advisory.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1893,7 +1893,7 @@
       {
         "computation": "//#fallow:flags:advisory",
         "command": "bun run beep quality fallow flags --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/flags.advisory.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1938,7 +1938,7 @@
       {
         "computation": "//#fallow:health:advisory",
         "command": "bun run beep quality fallow health --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.advisory.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -1983,7 +1983,7 @@
       {
         "computation": "//#fallow:health:check",
         "command": "bun run beep quality fallow health --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.check.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -2028,7 +2028,7 @@
       {
         "computation": "//#fallow:security:advisory",
         "command": "bun run beep quality fallow security --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/security.advisory.json --quiet",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-fallow"
         ],
@@ -2073,7 +2073,7 @@
       {
         "computation": "//#goals:doctor",
         "command": "bun run beep goals doctor",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:goals-doctor"
         ],
@@ -2105,7 +2105,7 @@
       {
         "computation": "//#goals:index-check",
         "command": "bun run beep goals index --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:goals-index"
         ],
@@ -2138,7 +2138,7 @@
       {
         "computation": "//#jsdoc:inventory:check",
         "command": "bun run beep quality jsdoc-inventory --output-json .beep/ci/jsdoc-documentation.inventory.jsonc --output-markdown .beep/ci/jsdoc-documentation.inventory.md",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-jsdoc-inventory"
         ],
@@ -2187,7 +2187,7 @@
       {
         "computation": "//#jsdoc:ratchet:check",
         "command": "bun run beep quality jsdoc-ratchet --inventory .beep/ci/jsdoc-documentation.inventory.jsonc",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#jsdoc:inventory:check",
           "//#lint:policy-fingerprint:quality-jsdoc-ratchet"
@@ -2228,7 +2228,7 @@
       {
         "computation": "//#knowledge:refs-check",
         "command": "bun run beep knowledge refs --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:knowledge"
         ],
@@ -2271,7 +2271,7 @@
       {
         "computation": "//#knowledge:semantic-delta",
         "command": "bun run beep knowledge semantic-delta",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:knowledge"
         ],
@@ -2316,7 +2316,7 @@
       {
         "computation": "//#lint:allowlist",
         "command": "bun run beep laws allowlist-check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -2349,7 +2349,7 @@
       {
         "computation": "//#lint:circular",
         "command": "bun run beep lint circular",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-circular"
         ],
@@ -2383,7 +2383,7 @@
       {
         "computation": "//#lint:ecosystem-polarity",
         "command": "bun run beep lint ecosystem-polarity",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-ecosystem-polarity"
         ],
@@ -2414,7 +2414,7 @@
       {
         "computation": "//#lint:effect-imports",
         "command": "bun run beep laws effect-imports --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -2449,7 +2449,7 @@
       {
         "computation": "//#lint:effect-imports-markdown",
         "command": "bun run beep laws effect-imports --mode markdown --check --enforce-documentation",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -2491,7 +2491,7 @@
       {
         "computation": "//#lint:effect-vitest",
         "command": "bun run beep lint effect-vitest",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-effect-vitest"
         ],
@@ -2523,9 +2523,49 @@
         }
       },
       {
+        "computation": "//#lint:holds",
+        "command": "bun run beep holds lint",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
+        "dependencies": [
+          "//#lint:policy-fingerprint:holds"
+        ],
+        "configuration": {
+          "cache": false,
+          "inputs": [
+            "!**/.beep/**",
+            "!**/.turbo/**",
+            "!**/dist/**",
+            "!**/node_modules/**",
+            "!.git/**",
+            "!.repos/**",
+            "**/package.json",
+            "./.bun-version",
+            "./.nvmrc",
+            "./package.json",
+            "./tsconfig.base.json",
+            "./tsconfig.json",
+            "./tsconfig.packages.json",
+            "hold-ledger/**",
+            "osv-scanner.toml",
+            "package.json",
+            "syncpack.config.ts"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint:holds"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "//#lint:identity-registry",
         "command": "bun run beep lint identity-registry",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-identity-registry"
         ],
@@ -2567,7 +2607,7 @@
       {
         "computation": "//#lint:jsdoc-module-tags",
         "command": "bun run beep quality jsdoc-module-tags",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-jsdoc-module-tags"
         ],
@@ -2598,7 +2638,7 @@
       {
         "computation": "//#lint:jsdoc:root",
         "command": "beep-cli lint jsdoc --root-only",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -2650,7 +2690,7 @@
       {
         "computation": "//#lint:judge-rubric",
         "command": "bun run beep lint judge-rubric",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-judge-rubric"
         ],
@@ -2680,7 +2720,7 @@
       {
         "computation": "//#lint:markdown-fences",
         "command": "bun run beep laws markdown-fences --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -2722,7 +2762,7 @@
       {
         "computation": "//#lint:native-runtime:roots",
         "command": "beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -2765,7 +2805,7 @@
       {
         "computation": "//#lint:opaque-roundtrips",
         "command": "bun run beep lint opaque-roundtrips",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-opaque-roundtrips"
         ],
@@ -2804,7 +2844,7 @@
       {
         "computation": "//#lint:oxlint",
         "command": "oxlint --quiet --disable-nested-config",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -2841,7 +2881,7 @@
       {
         "computation": "//#lint:package-scripts",
         "command": "bun run beep lint package-scripts --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-package-scripts"
         ],
@@ -2885,7 +2925,7 @@
       {
         "computation": "//#lint:package-test-typecheck",
         "command": "bun run beep lint package-test-typecheck",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-package-test-typecheck"
         ],
@@ -2927,7 +2967,7 @@
       {
         "computation": "//#lint:policy-fingerprint",
         "command": "beep-cli lint policy-fingerprint --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -3075,6 +3115,7 @@
             "packages/foundation/capability/xdg/package.json",
             "packages/foundation/capability/xdg/src/**",
             "packages/foundation/modeling/epistemics/package.json",
+            "packages/foundation/modeling/epistemics/src/**",
             "packages/foundation/modeling/github-commands/package.json",
             "packages/foundation/modeling/github-commands/src/**",
             "packages/foundation/modeling/github-references/package.json",
@@ -3196,7 +3237,7 @@
       {
         "computation": "//#lint:policy-fingerprint:goals",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -3228,7 +3269,7 @@
       {
         "computation": "//#lint:policy-fingerprint:goals-doctor",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:goals"
         ],
@@ -3455,6 +3496,7 @@
             "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
             "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -3554,6 +3596,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -3612,7 +3655,7 @@
       {
         "computation": "//#lint:policy-fingerprint:goals-index",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:goals"
         ],
@@ -3836,6 +3879,7 @@
             "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
             "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -3934,6 +3978,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -3989,9 +4034,90 @@
         }
       },
       {
+        "computation": "//#lint:policy-fingerprint:holds",
+        "command": "true",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
+        "dependencies": [
+          "//#lint:policy-fingerprint:shared"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "./.bun-version",
+            "./.nvmrc",
+            "./package.json",
+            "./tsconfig.base.json",
+            "./tsconfig.json",
+            "./tsconfig.packages.json",
+            "packages/drivers/git/package.json",
+            "packages/drivers/git/src/Git.errors.ts",
+            "packages/drivers/git/src/Git.models.ts",
+            "packages/drivers/git/src/Git.ts",
+            "packages/drivers/git/src/GitCommand.ts",
+            "packages/drivers/git/src/internal/classification.ts",
+            "packages/drivers/git/src/internal/execution.ts",
+            "packages/drivers/git/src/internal/parsers.ts",
+            "packages/drivers/git/src/internal/run.ts",
+            "packages/drivers/git/src/internal/sshEnvironment.ts",
+            "packages/foundation/capability/xdg/package.json",
+            "packages/foundation/capability/xdg/src/Absolute.ts",
+            "packages/foundation/capability/xdg/src/XdgBase.ts",
+            "packages/foundation/modeling/epistemics/package.json",
+            "packages/foundation/modeling/epistemics/src/Claim/Claim.behavior.ts",
+            "packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts",
+            "packages/foundation/modeling/epistemics/src/Claim/index.ts",
+            "packages/foundation/modeling/epistemics/src/KnowledgeInterval/KnowledgeInterval.behavior.ts",
+            "packages/foundation/modeling/epistemics/src/KnowledgeInterval/KnowledgeInterval.model.ts",
+            "packages/foundation/modeling/epistemics/src/KnowledgeInterval/index.ts",
+            "packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.behavior.ts",
+            "packages/foundation/modeling/epistemics/src/ValidInterval/ValidInterval.model.ts",
+            "packages/foundation/modeling/epistemics/src/ValidInterval/index.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts",
+            "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
+            "packages/tooling/tool/cli/src/commands/Worktree/Worktree.constants.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/BeepCacheRoot.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/FallowAuditCache.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/GitWorktree.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ResidueTerminalLane.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+            "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
+            "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+            "packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts"
+          ],
+          "env": [],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "//#lint:policy-fingerprint:shared"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "//#lint:policy-fingerprint:knowledge",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -4253,6 +4379,7 @@
             "packages/tooling/library/ai-sync/src/transforms.ts",
             "packages/tooling/library/ai-sync/src/validation.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -4417,6 +4544,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/Codeowners.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -4480,7 +4608,7 @@
       {
         "computation": "//#lint:policy-fingerprint:laws",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -4508,6 +4636,9 @@
             "packages/foundation/capability/config-file/src/ConfigFile.ts",
             "packages/foundation/capability/config-file/src/ConfigResolver.ts",
             "packages/foundation/capability/config-file/src/JsoncCodec.ts",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
             "packages/foundation/modeling/html/package.json",
             "packages/foundation/modeling/html/src/Html.attributes.ts",
             "packages/foundation/modeling/html/src/Html.conformance.ts",
@@ -4538,6 +4669,28 @@
             "packages/foundation/modeling/html/src/internal/conformance/Html.heading-conformance.ts",
             "packages/foundation/modeling/html/src/internal/conformance/Html.policy-conformance-registry.ts",
             "packages/foundation/modeling/html/src/internal/conformance/Html.script-conformance.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
             "packages/foundation/modeling/markdown/package.json",
             "packages/foundation/modeling/markdown/src/Markdown.ts",
             "packages/foundation/modeling/markdown/src/MarkdownDiagnostic.ts",
@@ -4611,17 +4764,81 @@
             "packages/foundation/modeling/md/src/internal/conformance/Md.profile-registry.ts",
             "packages/foundation/modeling/md/src/internal/conformance/Md.semantic-inspector.ts",
             "packages/foundation/modeling/md/src/internal/conformance/Md.specification-source-registry.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
             "packages/foundation/modeling/package-json/src/PackageJsonFile.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
             "packages/foundation/modeling/tsconfig/package.json",
             "packages/foundation/modeling/tsconfig/src/CompilerOptions.ts",
             "packages/foundation/modeling/tsconfig/src/ResolvedTsconfig.ts",
             "packages/foundation/modeling/tsconfig/src/TsconfigJson.ts",
             "packages/foundation/modeling/tsconfig/src/internal/caseInsensitiveLiterals.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-tsconfig/package.json",
             "packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
             "packages/tooling/library/repo-tsconfig/src/TsconfigValidator.ts",
             "packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
             "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/policy-pack/repo-configs/package.json",
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSchemas.ts",
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSnapshotCodegen.ts",
@@ -4656,6 +4873,7 @@
             "packages/tooling/tool/cli/src/commands/Skills/SkillsLock.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Skills/SkillsPublication.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Skills/internal/LockFile.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/Json.ts",
@@ -4691,7 +4909,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -4723,7 +4941,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-circular",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -4757,7 +4975,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-deprecated-apis",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -4912,6 +5130,7 @@
             "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
             "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -4963,6 +5182,7 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -4998,7 +5218,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-ecosystem-polarity",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5035,7 +5255,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-effect-vitest",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5048,7 +5268,96 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
             "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
@@ -5059,6 +5368,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestStore.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -5083,7 +5393,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-identity-registry",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5096,11 +5406,101 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityBulkRegistration.ts",
             "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityExportBlock.ts",
             "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
             "packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
             "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/WholeToken.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
@@ -5124,7 +5524,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-jsdoc",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5137,8 +5537,98 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/Lint/LintJsdoc.command.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts"
           ],
           "env": [],
@@ -5156,7 +5646,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-judge-rubric",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5171,6 +5661,7 @@
             "./tsconfig.packages.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+            "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
@@ -5219,7 +5710,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-laws",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5232,7 +5723,96 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/policy-pack/repo-configs/package.json",
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSchemas.ts",
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts",
@@ -5250,6 +5830,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/LintLaws.command.ts",
             "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/tsmorph/JsDoc.ts",
             "packages/tooling/tool/cli/src/internal/tsmorph/OwnerResolver.ts",
@@ -5271,7 +5852,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-opaque-roundtrips",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5303,7 +5884,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-package-scripts",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5316,7 +5897,97 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/Lint/PackageScripts.command.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/jsdoc/DoctestSource.ts",
             "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
@@ -5337,7 +6008,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-package-test-typecheck",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5387,7 +6058,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-reflection-artifacts",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5453,7 +6124,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-roadmap-refs",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5686,6 +6357,7 @@
             "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
             "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -5793,6 +6465,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -5851,7 +6524,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-schema-first",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5864,7 +6537,96 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
             "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
             "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
@@ -5879,6 +6641,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstSchemaClass.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstStore.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -5909,7 +6672,7 @@
       {
         "computation": "//#lint:policy-fingerprint:lint-tsconfig-overlay",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint"
         ],
@@ -5954,7 +6717,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -6220,6 +6983,7 @@
             "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
             "packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
@@ -6383,6 +7147,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
             "packages/tooling/tool/cli/src/internal/PathContainment.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/ArtifactIo.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/GeneratedFileDrift.ts",
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
@@ -6464,7 +7229,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-bun-audit",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6501,7 +7266,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-changeset-graph",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6538,7 +7303,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-changeset-status",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6568,7 +7333,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-fallow",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6601,7 +7366,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-jsdoc-inventory",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6638,7 +7403,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-jsdoc-module-tags",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6675,7 +7440,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-jsdoc-ratchet",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6712,7 +7477,7 @@
       {
         "computation": "//#lint:policy-fingerprint:quality-tsgo-rules",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality"
         ],
@@ -6749,7 +7514,7 @@
       {
         "computation": "//#lint:policy-fingerprint:shared",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -7092,8 +7857,6 @@
             "packages/foundation/primitive/data/src/internal/data/mime-types/video.ts",
             "packages/foundation/primitive/data/src/internal/data/utils.ts",
             "packages/tooling/library/repo-utils/package.json",
-            "packages/tooling/library/repo-utils/src/Dependencies.ts",
-            "packages/tooling/library/repo-utils/src/DependencyIndex.ts",
             "packages/tooling/library/repo-utils/src/FsUtils.ts",
             "packages/tooling/library/repo-utils/src/Graph.ts",
             "packages/tooling/library/repo-utils/src/JsonUtils.ts",
@@ -7110,7 +7873,6 @@
             "packages/tooling/library/repo-utils/src/TypeScript/index.ts",
             "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
             "packages/tooling/library/repo-utils/src/TypeScript/models/index.ts",
-            "packages/tooling/library/repo-utils/src/Workspaces.ts",
             "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts",
             "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
             "packages/tooling/library/repo-utils/src/errors/NoSuchFileError.ts",
@@ -7119,7 +7881,6 @@
             "packages/tooling/library/repo-utils/src/index.ts",
             "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
             "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
-            "packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts",
             "packages/tooling/tool/cli/package.json",
             "packages/tooling/tool/cli/src/**/*.hbs",
             "packages/tooling/tool/cli/src/**/*.json",
@@ -7172,7 +7933,7 @@
       {
         "computation": "//#lint:policy-fingerprint:topo-sort",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -7185,8 +7946,97 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
+            "packages/foundation/modeling/yaml/package.json",
+            "packages/foundation/modeling/yaml/src/Yaml.ts",
+            "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
+            "packages/foundation/modeling/yaml/src/YamlDocument.ts",
+            "packages/foundation/modeling/yaml/src/YamlEdit.ts",
+            "packages/foundation/modeling/yaml/src/YamlFormat.ts",
+            "packages/foundation/modeling/yaml/src/YamlLint.ts",
+            "packages/foundation/modeling/yaml/src/YamlLintRule.ts",
+            "packages/foundation/modeling/yaml/src/YamlNode.ts",
+            "packages/foundation/modeling/yaml/src/YamlToken.ts",
+            "packages/foundation/modeling/yaml/src/YamlVisitor.ts",
+            "packages/foundation/modeling/yaml/src/index.ts",
+            "packages/foundation/modeling/yaml/src/internal/block-scalar.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/anchors.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/block.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/comments.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/document.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/flow.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/scalars.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/state.ts",
+            "packages/foundation/modeling/yaml/src/internal/composer/tags.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst-parser.ts",
+            "packages/foundation/modeling/yaml/src/internal/cst.ts",
+            "packages/foundation/modeling/yaml/src/internal/diagnostics.ts",
+            "packages/foundation/modeling/yaml/src/internal/diff.ts",
+            "packages/foundation/modeling/yaml/src/internal/equal.ts",
+            "packages/foundation/modeling/yaml/src/internal/fold.ts",
+            "packages/foundation/modeling/yaml/src/internal/lexer.ts",
+            "packages/foundation/modeling/yaml/src/internal/options.ts",
+            "packages/foundation/modeling/yaml/src/internal/raw-document.ts",
+            "packages/foundation/modeling/yaml/src/internal/requote.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/catalog.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/colon-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/comments-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-end.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/document-start.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/empty-lines.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/eof-newline.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/hyphen-spacing.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/indentation.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/key-duplicates.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/line-length.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/parse-validity.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/quoted-strings.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/trailing-spaces.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/truthy.ts",
+            "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
+            "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
+            "packages/foundation/modeling/yaml/src/internal/token.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/TopoSort/TopoSort.command.ts",
-            "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts"
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -7203,7 +8053,7 @@
       {
         "computation": "//#lint:policy-fingerprint:tsconfig-sync",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -7216,6 +8066,35 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
+            "packages/foundation/modeling/lockfiles/package.json",
+            "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
+            "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
+            "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
+            "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
             "packages/foundation/modeling/tsconfig/package.json",
             "packages/foundation/modeling/tsconfig/src/CompilerOptions.ts",
             "packages/foundation/modeling/tsconfig/src/TsconfigJson.ts",
@@ -7273,7 +8152,16 @@
             "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
             "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
             "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/Fallow/Fallow.command.ts",
             "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
             "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.errors.ts",
@@ -7281,6 +8169,7 @@
             "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.render.ts",
             "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
             "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.service.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
             "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
@@ -7303,7 +8192,7 @@
       {
         "computation": "//#lint:policy-fingerprint:version-sync",
         "command": "true",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:shared"
         ],
@@ -7316,22 +8205,35 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/foundation/modeling/glob/src/GlobSet.ts",
+            "packages/foundation/modeling/glob/src/GlobString.ts",
+            "packages/foundation/modeling/glob/src/index.ts",
             "packages/foundation/modeling/lockfiles/package.json",
             "packages/foundation/modeling/lockfiles/src/BunExtension.ts",
+            "packages/foundation/modeling/lockfiles/src/ConfigDependencyLock.ts",
             "packages/foundation/modeling/lockfiles/src/ImporterDependency.ts",
             "packages/foundation/modeling/lockfiles/src/Lockfile.ts",
             "packages/foundation/modeling/lockfiles/src/LockfileFormat.ts",
             "packages/foundation/modeling/lockfiles/src/LockfileImporter.ts",
+            "packages/foundation/modeling/lockfiles/src/LockfileIntegrity.ts",
+            "packages/foundation/modeling/lockfiles/src/PackageManagerLock.ts",
+            "packages/foundation/modeling/lockfiles/src/PnpmEnvLockfile.ts",
             "packages/foundation/modeling/lockfiles/src/PnpmExtension.ts",
             "packages/foundation/modeling/lockfiles/src/ResolvedPackage.ts",
+            "packages/foundation/modeling/lockfiles/src/UnsupportedLockfileVersion.ts",
             "packages/foundation/modeling/lockfiles/src/WorkspaceDependency.ts",
+            "packages/foundation/modeling/lockfiles/src/index.ts",
             "packages/foundation/modeling/lockfiles/src/internal/bun.ts",
             "packages/foundation/modeling/lockfiles/src/internal/documents.ts",
             "packages/foundation/modeling/lockfiles/src/internal/npm.ts",
             "packages/foundation/modeling/lockfiles/src/internal/pnpm.ts",
+            "packages/foundation/modeling/lockfiles/src/internal/pnpmEnv.ts",
             "packages/foundation/modeling/lockfiles/src/internal/shared.ts",
             "packages/foundation/modeling/lockfiles/src/internal/yarn.ts",
+            "packages/foundation/modeling/package-json/src/EntryPoint.ts",
             "packages/foundation/modeling/package-json/src/LenientManifest.ts",
+            "packages/foundation/modeling/package-json/src/PackageValidator.ts",
+            "packages/foundation/modeling/package-json/src/index.ts",
             "packages/foundation/modeling/yaml/package.json",
             "packages/foundation/modeling/yaml/src/Yaml.ts",
             "packages/foundation/modeling/yaml/src/YamlDiagnostic.ts",
@@ -7381,6 +8283,17 @@
             "packages/foundation/modeling/yaml/src/internal/rules/util.ts",
             "packages/foundation/modeling/yaml/src/internal/stringifier.ts",
             "packages/foundation/modeling/yaml/src/internal/token.ts",
+            "packages/tooling/library/repo-workspaces/package.json",
+            "packages/tooling/library/repo-workspaces/src/DependencyGraph.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceDiscovery.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePackage.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
+            "packages/tooling/library/repo-workspaces/src/WorkspaceRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/enumerate.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/layerRoot.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
+            "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
             "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.command.ts",
             "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.errors.ts",
             "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.render.ts",
@@ -7403,6 +8316,7 @@
             "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/VercelJsonUpdater.ts",
             "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/YamlFileUpdater.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
+            "packages/tooling/tool/cli/src/internal/RepoWorkspaces.ts",
             "packages/tooling/tool/cli/src/internal/cli/CommandErrorFields.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
@@ -7424,7 +8338,7 @@
       {
         "computation": "//#lint:reflection-artifacts",
         "command": "bun run beep lint reflection-artifacts",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-reflection-artifacts"
         ],
@@ -7455,7 +8369,7 @@
       {
         "computation": "//#lint:retired-effect-paths",
         "command": "bun run beep laws retired-effect-paths --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -7496,7 +8410,7 @@
       {
         "computation": "//#lint:retired-iri-authorities",
         "command": "bun run beep laws retired-iri-authorities --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -7536,7 +8450,7 @@
       {
         "computation": "//#lint:roadmap-refs",
         "command": "bun run beep lint roadmap-refs",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-roadmap-refs"
         ],
@@ -7568,7 +8482,7 @@
       {
         "computation": "//#lint:schema-first",
         "command": "bun run beep lint schema-first",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-schema-first"
         ],
@@ -7607,7 +8521,7 @@
       {
         "computation": "//#lint:schema-tag-idioms",
         "command": "bun run beep laws schema-tag-idioms --check",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:laws"
         ],
@@ -7647,7 +8561,7 @@
       {
         "computation": "//#lint:shadcn",
         "command": "oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -7684,7 +8598,7 @@
       {
         "computation": "//#lint:tsconfig-overlay",
         "command": "bun run beep lint tsconfig-overlay",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-tsconfig-overlay"
         ],
@@ -7723,7 +8637,7 @@
       {
         "computation": "//#lint:tsgo-rules",
         "command": "bun run beep quality tsgo-rules",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-tsgo-rules"
         ],
@@ -7762,7 +8676,7 @@
       {
         "computation": "//#lint:typos",
         "command": "typos",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -7827,7 +8741,7 @@
       {
         "computation": "//#repo-sanity:bun-audit",
         "command": "bun run beep quality bun-audit",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-bun-audit"
         ],
@@ -7858,7 +8772,7 @@
       {
         "computation": "//#repo-sanity:changeset-graph",
         "command": "bun run beep quality changeset-graph",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:quality-changeset-graph"
         ],
@@ -7906,7 +8820,7 @@
       {
         "computation": "//#repo-sanity:sherif",
         "command": "bunx sherif@1.10.0 -r non-existent-packages",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -7948,7 +8862,7 @@
       {
         "computation": "//#repo-sanity:syncpack",
         "command": "bunx syncpack lint",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -7991,7 +8905,7 @@
       {
         "computation": "//#repo-sanity:versions",
         "command": "bun run version-sync --skip-network",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:version-sync"
         ],
@@ -8039,7 +8953,7 @@
       {
         "computation": "//#topo-sort",
         "command": "bun run beep topo-sort",
-        "commandDigest": "c4ab0cb969b74deb5f4ae5031da216a1658bea8e3df3f5beda97f76b803c440f",
+        "commandDigest": "eb14da9962db8bea671de39cb0465b045604f41f46797eac28f28c7759e83668",
         "dependencies": [
           "//#lint:policy-fingerprint:topo-sort"
         ],
@@ -102094,11 +103008,13 @@
         "command": "bun run --if-present beep:audit",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#audit",
           "@beep/cli-kit#audit",
           "@beep/duckdb#audit",
           "@beep/fc-runs#audit",
           "@beep/file-processing#audit",
           "@beep/identity#audit",
+          "@beep/jsonl#audit",
           "@beep/memfs#audit",
           "@beep/observability#audit",
           "@beep/phoenix#audit",
@@ -102168,11 +103084,13 @@
         "command": "bun run beep:build",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102231,11 +103149,13 @@
         "command": "bun run beep:check",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102281,11 +103201,13 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#build",
           "@beep/cli-kit#build",
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonl#build",
           "@beep/memfs#build",
           "@beep/observability#build",
           "@beep/phoenix#build",
@@ -102416,11 +103338,13 @@
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102629,11 +103553,13 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102682,11 +103608,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102741,11 +103669,13 @@
         "command": "bun run beep:test",
         "commandDigest": "76f57aca0937ac80ee29b8eb6348b90079c7b393d9053a25ea742392ae891cab",
         "dependencies": [
+          "@beep/ai-provider-cli#transit",
           "@beep/cli-kit#transit",
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonl#transit",
           "@beep/memfs#transit",
           "@beep/observability#transit",
           "@beep/phoenix#transit",
@@ -102802,6 +103732,7 @@
           "@beep/colors#audit",
           "@beep/config-file#audit",
           "@beep/duckdb#audit",
+          "@beep/epistemics#audit",
           "@beep/exiftool#audit",
           "@beep/fc-runs#audit",
           "@beep/ffmpeg#audit",
@@ -102922,6 +103853,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103031,6 +103963,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103127,6 +104060,7 @@
           "@beep/colors#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
+          "@beep/epistemics#build",
           "@beep/exiftool#build",
           "@beep/fc-runs#build",
           "@beep/ffmpeg#build",
@@ -103272,6 +104206,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103413,6 +104348,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103672,6 +104608,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103771,6 +104708,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -103894,6 +104832,7 @@
           "@beep/colors#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
+          "@beep/epistemics#transit",
           "@beep/exiftool#transit",
           "@beep/fc-runs#transit",
           "@beep/ffmpeg#transit",
@@ -126105,7 +127044,7 @@
       {
         "computation": "@beep/uspto#audit",
         "command": "bun run --if-present beep:audit",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#audit",
           "@beep/schema#audit",
@@ -126171,7 +127110,7 @@
       {
         "computation": "@beep/uspto#build",
         "command": "bun run beep:build",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126226,7 +127165,7 @@
       {
         "computation": "@beep/uspto#check",
         "command": "bun run beep:check",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126268,7 +127207,7 @@
       {
         "computation": "@beep/uspto#coverage",
         "command": "bunx vitest run --coverage --exclude=test/integration/**",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126320,7 +127259,7 @@
       {
         "computation": "@beep/uspto#docgen",
         "command": "bun run beep:docgen",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/repo-docgen#transit",
           "@beep/uspto#transit"
@@ -126357,9 +127296,60 @@
         }
       },
       {
+        "computation": "@beep/uspto#doctest",
+        "command": "bun run beep:doctest",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
+        "dependencies": [
+          "@beep/identity#transit",
+          "@beep/schema#transit",
+          "@beep/test-runner#transit",
+          "@beep/test-utils#transit",
+          "@beep/utils#transit",
+          "@beep/utils#transit"
+        ],
+        "configuration": {
+          "cache": true,
+          "inputs": [
+            "!node_modules/**",
+            "../../../.bun-version",
+            "../../../.nvmrc",
+            "../../../package.json",
+            "../../../packages/foundation/modeling/utils/src/**",
+            "../../../packages/tooling/tool/cli/test/global-cleanup.ts",
+            "../../../tsconfig.base.json",
+            "../../../tsconfig.json",
+            "../../../tsconfig.packages.json",
+            "../../../vite.shared.ts",
+            "../../../vitest.aliases.generated.json",
+            "../../../vitest.setup.ts",
+            "../../../vitest.shared.ts",
+            ".env",
+            ".env.*",
+            "package.json",
+            "src/**",
+            "test/**",
+            "tsconfig*.json",
+            "vitest*.config.ts"
+          ],
+          "env": [
+            "BEEP_VITEST_DOCTEST"
+          ],
+          "passThroughEnv": [],
+          "outputs": [],
+          "dependsOn": [
+            "@beep/utils#transit",
+            "^transit"
+          ],
+          "persistent": false,
+          "interactive": false,
+          "interruptible": false,
+          "outputLogs": "full"
+        }
+      },
+      {
         "computation": "@beep/uspto#lint",
         "command": "bun run beep:lint",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": true,
@@ -126394,7 +127384,7 @@
       {
         "computation": "@beep/uspto#lint:deprecated-apis",
         "command": "beep-cli lint deprecated-apis --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/identity#transit",
@@ -126462,7 +127452,7 @@
       {
         "computation": "@beep/uspto#lint:fix",
         "command": "bun run beep:lint:fix",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [],
         "configuration": {
           "cache": false,
@@ -126491,7 +127481,7 @@
       {
         "computation": "@beep/uspto#lint:jsdoc",
         "command": "beep-cli lint jsdoc --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-jsdoc"
         ],
@@ -126546,7 +127536,7 @@
       {
         "computation": "@beep/uspto#lint:laws",
         "command": "beep-cli lint laws --package .",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "//#lint:policy-fingerprint:lint-laws"
         ],
@@ -126600,7 +127590,7 @@
       {
         "computation": "@beep/uspto#package-test-typecheck",
         "command": "beep-cli quality test-tsgo-package",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126645,7 +127635,7 @@
       {
         "computation": "@beep/uspto#test",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -126696,7 +127686,7 @@
       {
         "computation": "@beep/uspto#test:integration",
         "command": "bun run beep:test:integration",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#build",
           "@beep/schema#build",
@@ -126739,7 +127729,7 @@
       {
         "computation": "@beep/uspto#test:property",
         "command": "bun run beep:test",
-        "commandDigest": "a1872974e8c7d76c94365a0d4903e978c523a689bb672f8a2869a22afa28aa5e",
+        "commandDigest": "7fe39b4e2bb2b2b6c2066738d8dfc81679e382f0ed305c39f7d7bed93f11ffa7",
         "dependencies": [
           "@beep/identity#transit",
           "@beep/schema#transit",
@@ -134928,7 +135918,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "7ab6bbae472a796c6ed73d19e89e36026945e65374e13a79f5a3b001c599acc1"
+        "sha256": "d69c396677f3302d5e4ab25bcefdd1194751d5c3a4510b6d1701f17c59f6eb06"
       }
     ]
   }

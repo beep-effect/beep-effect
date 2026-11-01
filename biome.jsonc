@@ -60,6 +60,7 @@
       "!**/bun.lock",
       "!**/dist",
       "!standards/fallow.boundaries.generated.jsonc",
+      "!hold-ledger/syncpack-held.generated.json",
       "!standards/instrumentation-catalog",
       "!standards/schema-catalog",
       "!standards/fallow.dead-code.regression-baseline.jsonc",
@@ -265,12 +266,12 @@
           "level": "error",
           "options": {
             "paths": {
-              "uuid": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+              "uuid": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
             },
             "patterns": [
               {
                 "group": ["uuid/**"],
-                "message": "Use the effect/Crypto service: randomUUIDv4, randomUUIDv7, or digest for name-based ids. uuid is not a repository dependency."
+                "message": "Use the effect/crypto services: SecureRandom.uuidV4, SecureRandom.uuidV7, or Digest for name-based ids. uuid is not a repository dependency."
               }
             ]
           }
@@ -286,6 +287,13 @@
       // sha256 and compared byte-for-byte by its check-by-default scripts and tests.
       "includes": [
         "goals/turborepo-task-qualification/research/**/*.json",
+        // Claim references and prior rounds are byte-bound to critic/attorney receipts.
+        "packages/law-practice/domain/test/fixtures/claim-element/positive/**/*.json",
+        "goals/claim-element-antecedent-check/history/label-conformance-drafts/**/*.json",
+        "goals/claim-element-antecedent-check/history/label-source-exclusions/**/*.json",
+        // Immutable automated reviewer receipts bind exact input/output bytes.
+        "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-*-round*.json",
+        "goals/claim-element-antecedent-check/history/autonomous-review-v1/allowed-*-round*.json",
         "goals/epistemic-retention-policy-calibration/ops/protocol-v1.json",
         "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json",
         "goals/epistemic-retention-policy-calibration/history/results/*.json",

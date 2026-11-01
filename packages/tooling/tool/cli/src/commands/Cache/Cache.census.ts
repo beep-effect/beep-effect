@@ -8,7 +8,7 @@
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CacheTaskConfiguration } from "@beep/repo-configs/cache";
-import { FsUtils, GlobOptions, readPackageJsonFile, resolveWorkspacePackages, toSortedRecord } from "@beep/repo-utils";
+import { FsUtils, GlobOptions, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { HostProcessArchitecture, HostProcessPlatform } from "@beep/utils";
 import * as A from "effect/Array";
@@ -28,6 +28,7 @@ import * as Str from "effect/String";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { isTurboCacheControlArg } from "../../internal/cli/TurboCache.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
+import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import {
   CacheCensusNode,
   CacheCensusReport,
@@ -471,7 +472,7 @@ export const collectCacheTaskSelection = Effect.fn("Cache.collectTaskSelection")
     Effect.flatMap(decodeTurboRuntimePlanJson),
     CacheCommandError.mapError("Native task selection did not produce a valid dry plan.")
   );
-  const workspaces = yield* resolveWorkspacePackages(root);
+  const workspaces = yield* workspaceManifests(root);
   const rootManifest = yield* readPackageJsonFile(paths.join(root, "package.json"));
   const rows = [
     CacheCensusWorkspace.make({
@@ -552,7 +553,7 @@ export const collectCacheCensus = Effect.fn("Cache.collectCacheCensus")(function
   const fsUtils = yield* FsUtils;
   const root = paths.resolve(repoRoot);
   const turbo = yield* resolveCacheTurboBinary(root, executable);
-  const workspaces = yield* resolveWorkspacePackages(root).pipe(
+  const workspaces = yield* workspaceManifests(root).pipe(
     CacheCommandError.mapError("Cannot discover workspace manifests.")
   );
   const query = yield* capture(root, turbo, ["--skip-infer", "query", "ls", "--output", "json"]).pipe(

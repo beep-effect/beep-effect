@@ -35,6 +35,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
@@ -204,7 +205,7 @@ describe("skills command", () => {
     const native =
       '[skills]\ninclude_instructions = true\n[[skills.config]]\nname = "closeout"\nenabled = true\n[mcp_servers.native]\nurl = "native"\n[[skills.config]]\nname = "operator-skill"\nenabled = false\n[[skills.config]]\nname = "native-metadata"\nenabled = false\nowner = "operator"\n';
     const rendered = renderCodexConfigWithSkills(native, ["closeout"]);
-    expect(Toml.parse(rendered)).toMatchObject({
+    expect(Result.getOrThrow(Toml.parse(rendered))).toMatchObject({
       skills: {
         config: [
           { name: "closeout", enabled: true },
@@ -221,7 +222,7 @@ describe("skills command", () => {
     const native =
       '[skills]\ninclude_instructions = true\n[mcp_servers.native]\nurl = "native"\n[[skills.config]]\nname = "closeout"\nenabled = false\nowner = "operator"\n';
     const rendered = renderCodexConfigWithSkills(native, ["closeout"]);
-    expect(Toml.parse(rendered)).toMatchObject({
+    expect(Result.getOrThrow(Toml.parse(rendered))).toMatchObject({
       skills: { config: [{ name: "closeout", enabled: true, owner: "operator" }] },
     });
     expect(O.getOrNull(Str.match(/name = "closeout"/g)(rendered))).toHaveLength(1);

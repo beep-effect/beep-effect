@@ -2,12 +2,13 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { it } from "@beep/test-runner";
 import { currentHostPlatform } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -70,7 +71,7 @@ const hostNodeExecutable = Effect.gen(function* () {
 
 const decodeReport = S.decodeUnknownEffect(S.fromJsonString(ConformanceReport));
 
-it.layer(NodeServices.layer, {
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), {
   excludeTestServices: true,
   timeout: "30 seconds",
 })((it) => {

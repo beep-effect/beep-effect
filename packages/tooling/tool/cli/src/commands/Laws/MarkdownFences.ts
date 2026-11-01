@@ -79,7 +79,8 @@ import {
   MarkdownFenceVerdict,
   TypecheckFence,
 } from "./MarkdownFences.model.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { MarkdownFencesCompilerFailureReason } from "./Laws.errors.ts";
 import type { MarkdownFenceDisposition, MarkdownFencesOptions } from "./MarkdownFences.model.ts";
@@ -475,10 +476,10 @@ export class MarkdownFenceTypechecker extends Context.Service<
   static readonly make: Effect.Effect<
     MarkdownFenceTypechecker["Service"],
     never,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > = Effect.gen(function* () {
     const context = yield* Effect.context<
-      FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+      SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
     >();
     return MarkdownFenceTypechecker.of({
       typecheck: Effect.fn("MarkdownFenceTypechecker.typecheck")(function* (repoRoot, fences) {
@@ -505,7 +506,7 @@ export class MarkdownFenceTypechecker extends Context.Service<
   static readonly layer: Layer.Layer<
     MarkdownFenceTypechecker,
     never,
-    FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > = Layer.effect(MarkdownFenceTypechecker, MarkdownFenceTypechecker.make);
 }
 
@@ -515,7 +516,7 @@ const typecheckStaged = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<MarkdownFenceDiagnostic>,
   MarkdownFencesExecutionError | MarkdownFencesCompilerError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(fences)) {
     return A.empty();
@@ -719,7 +720,12 @@ export const runMarkdownFences = Effect.fn("MarkdownFences.runMarkdownFences")(f
 ): Effect.fn.Return<
   MarkdownFencesSummary,
   MarkdownFencesExecutionError | MarkdownFencesCompilerError,
-  MarkdownFenceTypechecker | FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | Digest.Digest
+  | MarkdownFenceTypechecker
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     MarkdownFencesExecutionError.mapError("Failed to locate the repository root")

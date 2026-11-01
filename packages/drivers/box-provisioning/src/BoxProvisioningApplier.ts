@@ -21,7 +21,8 @@ import { Sha256Hex } from "@beep/schema";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
@@ -80,7 +81,6 @@ import {
   toObservedFolderFromFull,
   toObservedWebhook,
 } from "./internal/live.ts";
-import type * as PlatformError from "effect/PlatformError";
 import type { BoxProvisioningApplyJournalError } from "./BoxProvisioningErrors.ts";
 import type { BoxDesiredState, BoxLogicalKey } from "./BoxProvisioningIntent.ts";
 import type {
@@ -111,12 +111,11 @@ type DesiredResource =
 
 const invariant = (code: BoxProvisioningInvariantError["code"]) => BoxProvisioningInvariantError.make({ code });
 
-type ApplyDigestError = PlatformError.PlatformError | BoxProvisioningSchemaError;
+type ApplyDigestError = BoxProvisioningSchemaError;
 
-const digestFailure = (error: BoxCanonicalDigestError): ApplyDigestError =>
-  P.isTagged("PlatformError")(error) ? error : BoxProvisioningSchemaError.make({ stage: "plan" });
+const digestFailure = (): ApplyDigestError => BoxProvisioningSchemaError.make({ stage: "plan" });
 
-const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError, Crypto.Crypto>) =>
+const hashed = <A>(effect: Effect.Effect<A, BoxCanonicalDigestError, Digest.Digest>) =>
   effect.pipe(Effect.mapError(digestFailure));
 
 const journalErrorTag = (
@@ -165,7 +164,7 @@ const collaborationMatches = (
 const desiredAfterDigest = (
   desiredState: BoxDesiredState,
   action: BoxPlanAction
-): Effect.Effect<Sha256Hex, BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
+): Effect.Effect<Sha256Hex, BoxProvisioningInvariantError | ApplyDigestError, Digest.Digest> =>
   Match.value(action.resourceKind).pipe(
     Match.when("folder", () =>
       findDesired(desiredState.folders, action.logicalKeyDigest).pipe(
@@ -266,8 +265,10 @@ const collaborationAccessibleBy = (
 
 const decodeCreatedIdentity = (value: unknown): Effect.Effect<BoxProviderId, BoxProvisioningInvariantError> =>
   decodeUnknownRawResourceIdentity(value).pipe(
-    Effect.map((identity) => BoxProviderId.make(identity.id)),
-    Effect.mapError(() => invariant("unreadable-sdk-response"))
+    Effect.mapBoth({
+      onFailure: () => invariant("unreadable-sdk-response"),
+      onSuccess: (identity) => BoxProviderId.make(identity.id),
+    })
   );
 
 const validateFolderAbsent = Effect.fn("BoxProvisioningApplier.validateFolderAbsent")(function* (
@@ -503,7 +504,7 @@ const applyCreate = (
   action: BoxCreateAction,
   folderProviderIds: MutableHashMap.MutableHashMap<Sha256Hex, BoxProviderId>,
   folderIdentities: MutableHashMap.MutableHashMap<Sha256Hex, BoxObservedFolder>
-): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
+): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Digest.Digest> =>
   Match.value(action.resourceKind).pipe(
     Match.when("folder", () => createFolder(box, desiredState, action, folderProviderIds, folderIdentities)),
     Match.when("collaboration", () =>
@@ -553,7 +554,7 @@ const applyUpdate = (
   box: B.Box["Service"],
   desiredState: BoxDesiredState,
   action: BoxUpdateAction
-): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Crypto.Crypto> =>
+): Effect.Effect<BoxApplyOutcome, B.BoxError | BoxProvisioningInvariantError | ApplyDigestError, Digest.Digest> =>
   Match.value(action.resourceKind).pipe(
     Match.when("collaboration", () => updateCollaboration(box, desiredState, action)),
     Match.when("webhook", () => updateWebhook(box, desiredState, action)),
@@ -786,7 +787,8 @@ export class BoxProvisioningApplyJournal extends Context.Service<
 const makeService = (
   box: B.Box["Service"],
   journal: BoxProvisioningApplyJournal["Service"],
-  crypto: Crypto.Crypto
+  digest: Digest.Digest["Service"],
+  secureRandom: SecureRandom.SecureRandom["Service"]
 ): BoxProvisioningApplierShape => {
   const apply = Effect.fn("BoxProvisioningApplier.apply")(
     function* (desiredState: BoxDesiredState, plan: BoxProvisioningPlan, injectedAttemptId?: BoxApplyAttemptId) {
@@ -802,10 +804,7 @@ const makeService = (
       yield* validateBoxProvisioningBlockerContract(desiredState, plan, "pre-apply");
 
       const attemptId = yield* O.match(O.fromUndefinedOr(injectedAttemptId), {
-        onNone: Effect.fnUntraced(function* () {
-          const crypto = yield* Crypto.Crypto;
-          return BoxApplyAttemptId.make(yield* crypto.randomUUIDv4().pipe(Effect.mapError(digestFailure)));
-        }),
+        onNone: () => Effect.map(secureRandom.uuidV4(), BoxApplyAttemptId.make),
         onSome: Effect.succeed,
       });
       const completed = MutableHashSet.empty<Sha256Hex>();
@@ -822,7 +821,7 @@ const makeService = (
         mutation: Effect.Effect<
           BoxApplyOutcome,
           B.BoxError | BoxProvisioningInvariantError | ApplyDigestError,
-          Crypto.Crypto
+          Digest.Digest
         >
       ) {
         yield* journal.append(
@@ -922,7 +921,7 @@ const makeService = (
         planDigest: plan.planDigest,
       });
     },
-    (effect) => effect.pipe(Effect.provideService(Crypto.Crypto, crypto))
+    (effect) => effect.pipe(Effect.provideService(Digest.Digest, digest))
   );
   return { apply };
 };
@@ -973,9 +972,12 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
   $I`BoxProvisioningApplier`
 ) {
   static readonly layerWithJournal = Layer.unwrap(
-    Effect.all([B.Box, BoxProvisioningApplyJournal, Crypto.Crypto]).pipe(
-      Effect.map(([box, journal, crypto]) =>
-        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, journal, crypto)))
+    Effect.all([B.Box, BoxProvisioningApplyJournal, Digest.Digest, SecureRandom.SecureRandom]).pipe(
+      Effect.map(([box, journal, digest, secureRandom]) =>
+        Layer.succeed(
+          BoxProvisioningApplier,
+          BoxProvisioningApplier.of(makeService(box, journal, digest, secureRandom))
+        )
       )
     )
   ).pipe(Layer.provide(NodeCrypto.layer));
@@ -999,11 +1001,7 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
    * @since 0.0.0
    */
   static readonly makeLayerFromBox = (box: B.Box["Service"]): Layer.Layer<BoxProvisioningApplier> =>
-    Layer.unwrap(
-      Effect.map(Crypto.Crypto, (crypto) =>
-        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, noopApplyJournal, crypto)))
-      )
-    ).pipe(Layer.provide(NodeCrypto.layer));
+    BoxProvisioningApplier.makeLayerFromBoxAndJournal(box, noopApplyJournal);
 
   /** Construct an applier layer with an explicit durable journal sink. */
   static readonly makeLayerFromBoxAndJournal = (
@@ -1011,8 +1009,11 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
     journal: BoxProvisioningApplyJournal["Service"]
   ): Layer.Layer<BoxProvisioningApplier> =>
     Layer.unwrap(
-      Effect.map(Crypto.Crypto, (crypto) =>
-        Layer.succeed(BoxProvisioningApplier, BoxProvisioningApplier.of(makeService(box, journal, crypto)))
+      Effect.map(Effect.all([Digest.Digest, SecureRandom.SecureRandom]), ([digest, secureRandom]) =>
+        Layer.succeed(
+          BoxProvisioningApplier,
+          BoxProvisioningApplier.of(makeService(box, journal, digest, secureRandom))
+        )
       )
     ).pipe(Layer.provide(NodeCrypto.layer));
 }

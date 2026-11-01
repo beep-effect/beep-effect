@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`, one slice per PR: probe (#2404), inventory and lint, `deps:update` and guidance. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |

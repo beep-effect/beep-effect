@@ -12,7 +12,7 @@ import { FsUtils, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
@@ -310,7 +310,11 @@ const matchesAnyRule =
 const formatTouchedFiles = Effect.fn("SchemaParityCodemod.formatTouchedFiles")(function* (
   repoRoot: string,
   files: ReadonlyArray<string>
-): Effect.fn.Return<void, SchemaParityCodemodError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  void,
+  SchemaParityCodemodError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   for (const chunk of A.chunksOf(files, 50)) {
     const step = yield* runCaptured({
       command: "bun",
@@ -357,19 +361,17 @@ const applyPlannedWrites = Effect.fn("SchemaParityCodemod.applyPlannedWrites")(f
 ): Effect.fn.Return<
   void,
   SchemaParityCodemodError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   const staged = yield* Effect.forEach(
     writes,
     Effect.fnUntraced(function* (write) {
       const extension = path.extname(write.filePath);
       const stem = Str.slice(0, write.filePath.length - extension.length)(write.filePath);
-      const nonce = yield* crypto
-        .randomUUIDv4()
-        .pipe(SchemaParityCodemodError.mapError("Failed to identify codemod stage."));
+      const nonce = yield* crypto.uuidV4();
       return { ...write, stagedPath: `${stem}${STAGED_SUFFIX}-${nonce}${extension}` };
     })
   );
@@ -442,10 +444,10 @@ const renderReportLines = (report: SchemaParityCodemodReport): ReadonlyArray<str
 ];
 
 type RunServices =
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | FsUtils
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 /**

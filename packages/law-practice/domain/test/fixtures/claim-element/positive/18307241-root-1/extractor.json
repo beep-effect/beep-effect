@@ -1,0 +1,149 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18307241-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "unresolved": [],
+  "referenceConcerns": [
+    {
+      "claimNumber": 1,
+      "quotes": [
+        "the first and second end faces",
+        "the first and second electrically conductive end face coatings",
+        "the lateral surfaces",
+        "the shear force"
+      ],
+      "reason": "Coordinated sets have separately introduced members and no single combined introduction; their first group mentions have no arbitrary member antecedent. Later identical group references link the first explicit group mention. Repeated indefinite shear-force mentions do not uniquely identify one physical force; omitted force antecedent choices."
+    },
+    {
+      "claimNumber": 2,
+      "quotes": [
+        "the first and second end faces",
+        "the first and second electrically conductive end face coatings",
+        "the lateral surfaces",
+        "the shear force"
+      ],
+      "reason": "Coordinated sets have separately introduced members and no single combined introduction; their first group mentions have no arbitrary member antecedent. Later identical group references link the first explicit group mention. Repeated indefinite shear-force mentions do not uniquely identify one physical force; omitted force antecedent choices."
+    },
+    {
+      "claimNumber": 3,
+      "quotes": [
+        "the first and second end faces",
+        "the first and second electrically conductive end face coatings",
+        "the lateral surfaces",
+        "the shear force"
+      ],
+      "reason": "Coordinated sets have separately introduced members and no single combined introduction; their first group mentions have no arbitrary member antecedent. Later identical group references link the first explicit group mention. Repeated indefinite shear-force mentions do not uniquely identify one physical force; omitted force antecedent choices."
+    },
+    {
+      "claimNumbers": [
+        1,
+        2,
+        3
+      ],
+      "quotes": [
+        "the action",
+        "a shear force",
+        "piezoelectric interference charges"
+      ],
+      "reason": "Force instances and charge populations can differ by generation mechanism even when noun heads match. Clear body/element/surface/coating identities link by local ownership, but repeated bare charge populations and the action references do not acquire arbitrary same-head antecedents. Where a bare charge phrase repeats without a unique mechanism distinction, it is retained as an entity mention."
+    },
+    {
+      "claimNumbers": [
+        7,
+        8,
+        9,
+        12,
+        15,
+        16,
+        17,
+        18
+      ],
+      "quotes": [
+        "the secondary tangential axis",
+        "the normal axis",
+        "the principal tangential axis"
+      ],
+      "reason": "These role axes are absent from their actual dependency ancestry1 or1/7 or1/12. Sibling4/5/6 role introductions do not donate antecedents; no role-axis edge inferred from geometry or normal-force direction."
+    },
+    {
+      "claimNumber": 7,
+      "quote": "that",
+      "reason": "Standalone polarity proform supplies the second polarity entity in comparison; retained exact bare term without fabricating a prior normal-force-polarity NP."
+    },
+    {
+      "claimNumbers": [
+        8,
+        9
+      ],
+      "quotes": [
+        "the same number",
+        "a way"
+      ],
+      "reason": "Comparison number first recited definitely, with no explicit count introduction. a way remains a determiner-bearing adverbial NP; neither receives an invented antecedent."
+    },
+    {
+      "claimNumber": 9,
+      "quote": "the tangential axis",
+      "reason": "Root has longitudinal/transverse/vertical axes and no uniquely named tangential axis. Do not select an axis through construction."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the second continuous electrically conductive coating",
+      "reason": "Actual ancestors1/7/9 lack a second continuous coating introduction; claim12 is a sibling and not a donor."
+    },
+    {
+      "claimNumber": 10,
+      "quote": "the further first further electrically conductive lateral surface coating",
+      "reason": "Retained exact repeated further wording. Sole further coating in actual ancestor9 supplies its unique entity despite lexical repetition."
+    },
+    {
+      "claimNumber": 11,
+      "quotes": [
+        "the sealing",
+        "the microscopic pores",
+        "the need"
+      ],
+      "reason": "Sealing is earlier expressed by verbs; two microscopic-pore populations belong to different faces. No fabricated nominal sealing introduction, arbitrary pore-population selection, or need introduction."
+    },
+    {
+      "claimNumbers": [
+        15,
+        16,
+        17
+      ],
+      "quotes": [
+        "the second and third lateral surfaces",
+        "the second and third electrically conductive lateral surface coatings",
+        "the second and fourth electrically conductive lateral surface coatings"
+      ],
+      "reason": "Coordinated subsets have separately introduced members. No single set introduction or arbitrary member stands in for the complete group; omitted antecedent edge preserves explicit group wording."
+    }
+  ],
+  "sourceFamilyConcerns": [],
+  "annotationRationale": "Fresh semantic source annotations for all18claims. Root coordinate-system/axis context, main-body face enumeration, and piezoelectric/mass/end-coating/lateral-coating relationships preserved. Repeated source structures in1/2/3 retain component-local face, plane and coating identities; no ordinal names borrowed across different piezoelectric owners. Alternative sensitivity branches5/13/14 remain separate with literal or wherein text and equative role-axis identities grounded in their own branch. All remaining coating/conductor/sealing/normality relationships have ordered full-source functional parts. Actual natural dependency chains govern all cross-claim identities; unintroduced role axes and second coating in10 remain concerns. No physical force/population identity inferred merely from shared lexical heads.",
+  "independence": "Fresh source-semantic annotations from canonical claims, protocol and schemas only; no production/decomposer, implementation design, predictions, synthetic or conformance labels inspected. Mechanical helper locates manually chosen quotes and validates spans; semantic grouping, terms and antecedents are manually declared. Independent critic pending."
+}

@@ -1,0 +1,29 @@
+{
+  "applicationNumber": "11479265",
+  "publicationNumber": "US20070009023A1",
+  "publicationDate": "2007-01-11",
+  "nativeXmlSha256": "deaa3090ac9777d86c676d065038992b0eac89a4fa3bdc2a0d749603096271b5",
+  "claimsXmlSha256": "a95f5a9d57a63e6616eebcce267f6125aad804eb4b1ff44821b44f9dd17ccab2",
+  "officeActionDocumentIdentifiers": ["FTDA915CPPOPPY5"],
+  "officeActionMailDate": "2009-04-13",
+  "officeActionSection112Text": [
+    "claims 1-14 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nregarding claim 1, line 9, the term “the timing resolution” lacks antecedent basis; line 10, the term “the path timings” lacks antecedent basis; line 11, the term “the subcarriers” lacks antecedent basis; line 13, the term “the weights” lacks antecedent basis; line 14, the term “the output” lacks antecedent basis.\r\nregarding claim 2, line 6, the term “the output lacks antecedent basis; line 8, the term “the output lacks antecedent basis; line 11, the term “the output lacks antecedent basis.\r\nregarding claim 3, line 9, the term “the output lacks antecedent basis; line 10, the term “the impulse responses lacks antecedent basis.\r\nregarding claim 4, line 9, the term “the impulse responses lacks antecedent basis.\r\nregarding claim 5, line 2, the term the minimum mean square error method” lacks antecedent basis; line 3, the term “the zero forcing method lacks antecedent basis.\r\nregarding claim 6, lines 2-3, the term “the results of detection of sliding correlation” lacks antecedent basis.\r\nregarding claim 7, lines 2-3, the term “the results of detection of sliding correlation” lacks antecedent basis.\r\nregarding claim 8, lines 2-3, the term “the results of detection of sliding correlation” lacks antecedent basis; lines 7-8, the term “the peripheral portions” lacks antecedent basis; line 11, the term “the output” lacks antecedent basis\r\nregarding claim 14, line 8, the term “the path timings” lacks antecedent basis; line 10, the term “the subcarriers” lacks antecedent basis; line 12, the term “the weights” lacks antecedent basis and the term the equalizing filter” lacks antecedent basis.\r\nclaims 9-13 are rejected by virtue of their dependency."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EPD542NLPP1GUI3",
+      "officialDate": "2006-06-30T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 37,
+  "documentInventoryRows": 37,
+  "primaryCpc": "H04L  25/03159",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11479265",
+    "https://api.uspto.gov/api/v1/patent/applications/11479265/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

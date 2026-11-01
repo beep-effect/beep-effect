@@ -1,0 +1,1583 @@
+{
+  "schemaVersion": "claim-autonomous-reference-independent-review/v1",
+  "reviewAuthority": "automated",
+  "reviewerRole": "extractor",
+  "reviewerId": "A",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "status": "review-complete-with-explicit-uncertainty",
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "confidenceInterpretation": "Self-assessed and uncalibrated; not a probability of legal correctness. agree/revise conclusions below 0.95 are not accepted. Uncertainty is retained.",
+  "independence": {
+    "runtimeDecompositionCodeReadForThisAudit": false,
+    "predictionsReadForThisAudit": false,
+    "otherReviewerOutputsRead": false,
+    "scope": "Existing frozen annotation audit only; no reference relabelling or runtime LLM decomposition."
+  },
+  "inputBundleDigest": "1b2f9c790af6bb6ba88eda3c753afc343d323e0c329cfd8ce80f80e01541c096",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "addendumBundleDigest": "bc6a2e4d058bb168f29a44e9bc0241450a4f3890a6d5e1d233b9939c00332297",
+  "inputFiles": [
+    {
+      "path": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+      "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550"
+    },
+    {
+      "path": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d"
+    }
+  ],
+  "familyVersions": [
+    {
+      "familyId": "14432872-root-5",
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "publicationNumber": "US20160346041A1",
+      "officeActionIdentifiers": [
+        "J2SZPL3ZRXEAPX2"
+      ],
+      "officeActionMailDate": "2017-05-19"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "publicationNumber": "US20120294970A1",
+      "officeActionIdentifiers": [
+        "I8A52WO0PXXIFW4"
+      ],
+      "officeActionMailDate": "2015-04-13"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "publicationNumber": "US20160174707A1",
+      "officeActionIdentifiers": [
+        "IRRSD7PYRXEAPX2"
+      ],
+      "officeActionMailDate": "2016-08-16"
+    },
+    {
+      "familyId": "14659462-root-1",
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "publicationNumber": "US20150192169A1",
+      "officeActionIdentifiers": [
+        "IOAAT5U4RXEAPX4"
+      ],
+      "officeActionMailDate": "2016-05-17"
+    },
+    {
+      "familyId": "11299450-root-1",
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "publicationNumber": "US20070136415A1",
+      "officeActionIdentifiers": [
+        "FMJAPNLLPPOPPY5"
+      ],
+      "officeActionMailDate": "2008-10-21"
+    },
+    {
+      "familyId": "13484431-root-19",
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "publicationNumber": "US20130025114A1",
+      "officeActionIdentifiers": [
+        "HS1U3WJ9PXXIFW4"
+      ],
+      "officeActionMailDate": "2014-02-24"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "14432872-root-5:5",
+      "familyId": "14432872-root-5",
+      "claimNumber": 5,
+      "outcome": "uncertain",
+      "confidence": 0.88,
+      "rationale": "The four expressly lettered procedural steps and material terms are represented. However, standalone proforms in repeated actions need a convention check: introducing them has components as its participant, and seal it refers to the vein; retaining all as connecting text may omit the sole mention participating in those sub-actions. No claim that this is a clear required correction.",
+      "evidence": [
+        {
+          "quote": "introducing them",
+          "sourceClaimNumbers": [
+            5
+          ]
+        },
+        {
+          "quote": "subsequently seal it",
+          "sourceClaimNumbers": [
+            5
+          ]
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "id": "14432872-root-5:6",
+      "familyId": "14432872-root-5",
+      "claimNumber": 6,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The mixture preparation and production purpose remain one anchored relation; medication is linked to the explicit medication introduction in step b of claim 5, and the natural dependency on step b is retained. Source quantities and the original wording remain in connecting text.",
+      "evidence": [
+        {
+          "quote": "a mixture of 3 cc to 5 cc of sclerosant substance",
+          "sourceClaimNumbers": [
+            6
+          ]
+        },
+        {
+          "quote": "wherein step b)",
+          "sourceClaimNumbers": [
+            6
+          ]
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "id": "14432872-root-5:7",
+      "familyId": "14432872-root-5",
+      "claimNumber": 7,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The step-c injection and continuous laser operation are retained together with medication, laser and time period terms. Claim 5 is the dependency ancestor, and medication points to its explicit introduction. No introduction for the already-definite laser is fabricated.",
+      "evidence": [
+        {
+          "quote": "the laser (31) is fired continuously",
+          "sourceClaimNumbers": [
+            7
+          ]
+        },
+        {
+          "quote": "wherein step c)",
+          "sourceClaimNumbers": [
+            7,
+            8
+          ]
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "id": "14432872-root-5:8",
+      "familyId": "14432872-root-5",
+      "claimNumber": 8,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The pulse/time limitation and pulse-administration relation are retained. The pulses reference resolves to the explicit pulses mention in the same clause; source wording of the time bounds is preserved.",
+      "evidence": [
+        {
+          "quote": "fired in pulses at 60 ms to 100 ms",
+          "sourceClaimNumbers": [
+            8
+          ]
+        },
+        {
+          "quote": "the administration of the pulses",
+          "sourceClaimNumbers": [
+            8
+          ]
+        }
+      ],
+      "annotationSha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "canonicalClaimsSha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84"
+    },
+    {
+      "id": "13575735-root-1:1",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "outcome": "revise",
+      "confidence": 0.98,
+      "rationale": "The nested part/list structure and most explicit antecedents are coherent, but the bare one end and one side heads discard partitive selectors. lexical-head/v1 requires preserving selectors not encoded by the determiner tag. Record an overlay proposing one end and one side; keep the original labels untouched.",
+      "evidence": [
+        {
+          "quote": "one end of the top surface",
+          "sourceClaimNumbers": [
+            1,
+            7,
+            8
+          ]
+        },
+        {
+          "quote": "one side of the conveying part",
+          "sourceClaimNumbers": [
+            1
+          ]
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "id": "13575735-root-1:2",
+      "familyId": "13575735-root-1",
+      "claimNumber": 2,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The linear-groove relation retains the otherwise easily lost a manner term. Both groove types, the cooling part and the discharging portion resolve through claim 1 without inventing an antecedent for manner.",
+      "evidence": [
+        {
+          "quote": "extended linearly from the curl-shaping groove",
+          "sourceClaimNumbers": [
+            2
+          ]
+        },
+        {
+          "quote": "in such a manner",
+          "sourceClaimNumbers": [
+            1,
+            2,
+            3,
+            6,
+            7,
+            8
+          ]
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "id": "13575735-root-1:3",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "outcome": "revise",
+      "confidence": 0.98,
+      "rationale": "The side-guide list and within-claim introductions are represented. Both bare one side terms lose a meaningful selected side under lexical-head/v1, so the two heads need an automated correction proposal, not an edit to the benchmark.",
+      "evidence": [
+        {
+          "quote": "the opposite side to one side of the paperboard",
+          "sourceClaimNumbers": [
+            3
+          ]
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "id": "13575735-root-1:4",
+      "familyId": "13575735-root-1",
+      "claimNumber": 4,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The added bent protrusion, dependency through claim 3 and references to the frame/plate are coherent. The head side edges for bare both side edges removes a distributive quantity; whether both is treated as an outer grammatical determiner or a preserved selector is underspecified by the listed examples.",
+      "evidence": [
+        {
+          "quote": "both side edges of the rear end",
+          "sourceClaimNumbers": [
+            4
+          ]
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "id": "13575735-root-1:5",
+      "familyId": "13575735-root-1",
+      "claimNumber": 5,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "rationale": "The heat-wire relation is anchored and thereon unambiguously refers to the lower mold. The mold and groove introductions are available through claim 1, not a sibling claim.",
+      "evidence": [
+        {
+          "quote": "the lower mold has a heat wire disposed thereon",
+          "sourceClaimNumbers": [
+            5
+          ]
+        }
+      ],
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "canonicalClaimsSha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d"
+    },
+    {
+      "id": "14970678-root-17:17",
+      "familyId": "14970678-root-17",
+      "claimNumber": 17,
+      "outcome": "uncertain",
+      "confidence": 0.89,
+      "rationale": "The cabinet, body, latch list and engagement relations are represented, including the one selector. Housing is introduced as both a cabinet housing and a housing for the body; later the housing links are absent. It is plausible these are one entity, but source repetition alone does not establish a unique introduction. The ambiguity should be retained, not guessed.",
+      "evidence": [
+        {
+          "quote": "a cabinet housing",
+          "sourceClaimNumbers": [
+            17
+          ]
+        },
+        {
+          "quote": "a housing for the body",
+          "sourceClaimNumbers": [
+            1,
+            17
+          ]
+        },
+        {
+          "quote": "the other latch element",
+          "sourceClaimNumbers": [
+            1,
+            8,
+            17
+          ]
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "id": "14970678-root-17:18",
+      "familyId": "14970678-root-17",
+      "claimNumber": 18,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The selected latch resolves to the one selector in claim 17 and the hand-operation limitation is retained. said bias plausibly refers to the bias phrase in 17.c.iv, but that phrase itself is definite after a biased predicate rather than an explicit new bias introduction. A new edge versus unresolved annotation requires a clarified introduction convention.",
+      "evidence": [
+        {
+          "quote": "said bias by hand",
+          "sourceClaimNumbers": [
+            2,
+            15,
+            16,
+            18
+          ]
+        },
+        {
+          "quote": "the bias",
+          "sourceClaimNumbers": [
+            1,
+            9,
+            11,
+            17
+          ]
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "id": "14970678-root-17:19",
+      "familyId": "14970678-root-17",
+      "claimNumber": 19,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The pivoting limitation and engagement/latch references are retained, with both referring terms linked to their explicit selected-latch and engagement mentions in claim 17.",
+      "evidence": [
+        {
+          "quote": "said one latch element is pivotable",
+          "sourceClaimNumbers": [
+            3,
+            13,
+            19
+          ]
+        },
+        {
+          "quote": "said engagement",
+          "sourceClaimNumbers": [
+            1,
+            3,
+            4,
+            13,
+            14,
+            17,
+            19,
+            20
+          ]
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "id": "14970678-root-17:20",
+      "familyId": "14970678-root-17",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The elongate/rotatable relation retains the possessive axis phrase with head longitudinal axis and links engagement and the selected latch to claim 17. No independent axis entity is invented in the ancestor.",
+      "evidence": [
+        {
+          "quote": "its longitudinal axis",
+          "sourceClaimNumbers": [
+            4,
+            14,
+            20
+          ]
+        },
+        {
+          "quote": "said engagement",
+          "sourceClaimNumbers": [
+            1,
+            3,
+            4,
+            13,
+            14,
+            17,
+            19,
+            20
+          ]
+        }
+      ],
+      "annotationSha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "canonicalClaimsSha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd"
+    },
+    {
+      "id": "14659462-root-1:1",
+      "familyId": "14659462-root-1",
+      "claimNumber": 1,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The three method steps and explicit (a)/(b) orientation list are represented. Shaft, nut, flange, and hole references resolve to source introductions; first and second items are not fabricated as separately introduced nouns from the two-item group.",
+      "evidence": [
+        {
+          "quote": "A method of fastening two items",
+          "sourceClaimNumbers": [
+            1
+          ]
+        },
+        {
+          "quote": "at least one chamfered flange",
+          "sourceClaimNumbers": [
+            1
+          ]
+        },
+        {
+          "quote": "via pins positioned thereover",
+          "sourceClaimNumbers": [
+            1
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:2",
+      "familyId": "14659462-root-1",
+      "claimNumber": 2,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The nut/slug/flange/pin enumeration and within-claim antecedents are coherent. the barrel nut unit may rename the barrel nut in claim 1, but unit is newly appended and the source does not explicitly equate the assembly and nut. Leaving this unlinked is defensible but not a high-confidence fully complete semantic annotation.",
+      "evidence": [
+        {
+          "quote": "the barrel nut unit",
+          "sourceClaimNumbers": [
+            2
+          ]
+        },
+        {
+          "quote": "a nut with a cylindrical bore floatably seated in a slug",
+          "sourceClaimNumbers": [
+            2
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:3",
+      "familyId": "14659462-root-1",
+      "claimNumber": 3,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "rationale": "The bowed pins refer through claim 2 to its plurality introduction and the body limits that exact pin element. The repeated method resolves through the dependency chain.",
+      "evidence": [
+        {
+          "quote": "said plurality of pins are bowed",
+          "sourceClaimNumbers": [
+            3,
+            11
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:4",
+      "familyId": "14659462-root-1",
+      "claimNumber": 4,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The source adds a new indentation to the claim-2 nut, with a precise nut antecedent and claim-2 dependency.",
+      "evidence": [
+        {
+          "quote": "said nut features an indentation",
+          "sourceClaimNumbers": [
+            4,
+            5
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:5",
+      "familyId": "14659462-root-1",
+      "claimNumber": 5,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The identical indentation limitation is scoped to claim 3; its nut introduction remains in ancestor claim 2, which is correctly retained.",
+      "evidence": [
+        {
+          "quote": "The method of claim 3",
+          "sourceClaimNumbers": [
+            5
+          ]
+        },
+        {
+          "quote": "said nut features an indentation",
+          "sourceClaimNumbers": [
+            4,
+            5
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:6",
+      "familyId": "14659462-root-1",
+      "claimNumber": 6,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The indentation comes from claim 4, and nut/flange from claim 2. The relative clause does not create an extra pronoun entity; all explicit noun phrases are retained.",
+      "evidence": [
+        {
+          "quote": "said indentation is at the base portion",
+          "sourceClaimNumbers": [
+            6
+          ]
+        },
+        {
+          "quote": "said nut that meets said flange",
+          "sourceClaimNumbers": [
+            6
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:7",
+      "familyId": "14659462-root-1",
+      "claimNumber": 7,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "rationale": "The flange resolves through claim 2; the newly stated cardinal two chamfers is preserved in the bare head.",
+      "evidence": [
+        {
+          "quote": "said flange features two chamfers",
+          "sourceClaimNumbers": [
+            7
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:8",
+      "familyId": "14659462-root-1",
+      "claimNumber": 8,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "Pins and ends have explicit ancestor links and the text is preserved. said slugs is plural although ancestor claim 2 introduced a slug, so unique identity cannot simply be asserted; the current omission is conservative. The annotation needs an explicit uncertainty note for that source discrepancy.",
+      "evidence": [
+        {
+          "quote": "said slugs",
+          "sourceClaimNumbers": [
+            8
+          ]
+        },
+        {
+          "quote": "a slug",
+          "sourceClaimNumbers": [
+            2,
+            10,
+            14
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:9",
+      "familyId": "14659462-root-1",
+      "claimNumber": 9,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The measurement nouns and bounds are retained without inventing pin holes. The body depends-on-element edge targets claim 2 pins, although pin holes were not expressly introduced in that ancestor; this is a plausible relevance edge but its precise semantic target is not established by source wording.",
+      "evidence": [
+        {
+          "quote": "said pin holes",
+          "sourceClaimNumbers": [
+            9
+          ]
+        },
+        {
+          "quote": "the distance from the periphery and the axis",
+          "sourceClaimNumbers": [
+            9
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:10",
+      "familyId": "14659462-root-1",
+      "claimNumber": 10,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The explicit nut/indentation/pin enumeration and nested (a)/(b) conditions are retained, with all clearly introduced nut/slug/pin/indentation references linked. said floatably seated position lacks an explicit noun introduction in this branch and is not fabricated.",
+      "evidence": [
+        {
+          "quote": "said nut being floatably seated in a slug",
+          "sourceClaimNumbers": [
+            10
+          ]
+        },
+        {
+          "quote": "a portion of said pins",
+          "sourceClaimNumbers": [
+            10
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:11",
+      "familyId": "14659462-root-1",
+      "claimNumber": 11,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The bowed plural pins resolve to claim 10 own pin introduction, not the similarly worded claim 2 sibling branch.",
+      "evidence": [
+        {
+          "quote": "The method of claim 10",
+          "sourceClaimNumbers": [
+            11,
+            12
+          ]
+        },
+        {
+          "quote": "said plurality of pins are bowed",
+          "sourceClaimNumbers": [
+            3,
+            11
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:12",
+      "familyId": "14659462-root-1",
+      "claimNumber": 12,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "rationale": "The nut and shaft resolve within the claim-10 branch and the new chamfered flange/base terms remain introduced by their actual a surfaces.",
+      "evidence": [
+        {
+          "quote": "a chamfered flange at a base of the shaft",
+          "sourceClaimNumbers": [
+            12
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:13",
+      "familyId": "14659462-root-1",
+      "claimNumber": 13,
+      "outcome": "uncertain",
+      "confidence": 0.89,
+      "rationale": "The annotation preserves the original there wording and cardinal chamfers. the chamfered flange plausibly resolves to the flange narrowed by claim 7, but claim 1 also introduces a chamfered flange and the relationship of claim 2 unit to that nut was not explicit. The current lack of a link remains a bounded ambiguity.",
+      "evidence": [
+        {
+          "quote": "there the chamfered flange is defined by two chamfers",
+          "sourceClaimNumbers": [
+            13
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:14",
+      "familyId": "14659462-root-1",
+      "claimNumber": 14,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The nut/slug/flange/pin enumeration and explicit lower bound at least two pins are retained. In each of the opposite ends, the annotated term is only the opposite ends and the distributive each remains connecting text. A uniform selector convention versus entity-proform convention is needed before calling that fully complete.",
+      "evidence": [
+        {
+          "quote": "at least two pins",
+          "sourceClaimNumbers": [
+            14
+          ]
+        },
+        {
+          "quote": "each of the opposite ends of said slug",
+          "sourceClaimNumbers": [
+            14
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:15",
+      "familyId": "14659462-root-1",
+      "claimNumber": 15,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "Apertures resolve to claim 14. the barrel nut assembly repeats a definite name first used in claim 14; whether it can serve as an introducing mention despite no indefinite introduction is unresolved. The exact measurement text is preserved.",
+      "evidence": [
+        {
+          "quote": "the center point of the apertures",
+          "sourceClaimNumbers": [
+            15
+          ]
+        },
+        {
+          "quote": "the barrel nut assembly",
+          "sourceClaimNumbers": [
+            10,
+            14,
+            15,
+            16
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:16",
+      "familyId": "14659462-root-1",
+      "claimNumber": 16,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The flange resolves to the claim-14 flange. The assembly phrase has the same definite-introduction uncertainty as claim 15, so I cannot certify full semantic agreement for that term.",
+      "evidence": [
+        {
+          "quote": "the flange of the barrel nut assembly features a chamfer",
+          "sourceClaimNumbers": [
+            16
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:17",
+      "familyId": "14659462-root-1",
+      "claimNumber": 17,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The two indentations and opposite sides remain explicit terms and the nut correctly resolves within the claim-14 branch. Cardinal two is retained.",
+      "evidence": [
+        {
+          "quote": "two indentations in opposite sides of the nut",
+          "sourceClaimNumbers": [
+            17
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:18",
+      "familyId": "14659462-root-1",
+      "claimNumber": 18,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The nut and pins resolve through ancestors 17/14. an indentation remains a new indefinite mention as written instead of being forced to the preceding two-indentations group.",
+      "evidence": [
+        {
+          "quote": "between said pins located in an indentation",
+          "sourceClaimNumbers": [
+            18
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:19",
+      "familyId": "14659462-root-1",
+      "claimNumber": 19,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The bowed-pins predicate resolves to the at least two pins introduction in claim 14.",
+      "evidence": [
+        {
+          "quote": "The method of claim 14",
+          "sourceClaimNumbers": [
+            15,
+            16,
+            17,
+            19
+          ]
+        },
+        {
+          "quote": "said pins are bowed",
+          "sourceClaimNumbers": [
+            19,
+            20
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "14659462-root-1:20",
+      "familyId": "14659462-root-1",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The dependency is claim 18 and its pins resolve through that chain to claim 14. No sibling pin introduction is used.",
+      "evidence": [
+        {
+          "quote": "The method of claim 18",
+          "sourceClaimNumbers": [
+            20
+          ]
+        },
+        {
+          "quote": "said pins are bowed",
+          "sourceClaimNumbers": [
+            19,
+            20
+          ]
+        }
+      ],
+      "annotationSha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "canonicalClaimsSha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f"
+    },
+    {
+      "id": "11299450-root-1:1",
+      "familyId": "11299450-root-1",
+      "claimNumber": 1,
+      "outcome": "uncertain",
+      "confidence": 0.89,
+      "rationale": "The preconditions and five operational steps are retained, with explicit portal/base/delta references. Several Portal page references and latest navigational state mentions remain unlinked amid requested/new-page and general/new-state mentions. The source supports some aliases, but choosing a unique introduction uniformly needs source-specific criticism. each user interaction also drops each under the disputed distributive convention.",
+      "evidence": [
+        {
+          "quote": "the requested Portal page",
+          "sourceClaimNumbers": [
+            1,
+            11
+          ]
+        },
+        {
+          "quote": "a new navigational state",
+          "sourceClaimNumbers": [
+            1,
+            11
+          ]
+        },
+        {
+          "quote": "the latest navigational state",
+          "sourceClaimNumbers": [
+            1,
+            11
+          ]
+        },
+        {
+          "quote": "each user interaction",
+          "sourceClaimNumbers": [
+            1,
+            11
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:2",
+      "familyId": "11299450-root-1",
+      "claimNumber": 2,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "Base and delta states correctly refer to their claim-1 introductions. said Portal page can refer to the new page being encoded, but the parent contains several page descriptions, so the absent page link is not safely accepted or corrected without an explicit identity rationale.",
+      "evidence": [
+        {
+          "quote": "encoded in said Portal page in a serialized form",
+          "sourceClaimNumbers": [
+            2
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:3",
+      "familyId": "11299450-root-1",
+      "claimNumber": 3,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The six expressly comma-separated processing steps are retained with source navigation/navigational spelling intact. New latest base state and new page references link to the source introductions in this claim, while original base/delta inputs resolve through claim 2/1.",
+      "evidence": [
+        {
+          "quote": "said delta navigation state",
+          "sourceClaimNumbers": [
+            3
+          ]
+        },
+        {
+          "quote": "a new latest base navigational state",
+          "sourceClaimNumbers": [
+            3
+          ]
+        },
+        {
+          "quote": "said pre-serialized new latest base navigational state",
+          "sourceClaimNumbers": [
+            3
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:4",
+      "familyId": "11299450-root-1",
+      "claimNumber": 4,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The serialization method and delta proxy object are retained; the new latest base state is not linked to sibling claim 3, which is outside the dependency chain. No sibling-only antecedent is fabricated.",
+      "evidence": [
+        {
+          "quote": "The method according to claim 2",
+          "sourceClaimNumbers": [
+            3,
+            4,
+            7,
+            8
+          ]
+        },
+        {
+          "quote": "said new latest base navigational state",
+          "sourceClaimNumbers": [
+            3,
+            4
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:5",
+      "familyId": "11299450-root-1",
+      "claimNumber": 5,
+      "outcome": "uncertain",
+      "confidence": 0.92,
+      "rationale": "said hierarchical tree-like object representation plainly refers back to the underlying representation mentioned in parent claim 4, but that earlier mention is definite. Whether it counts as an introducing term needs the same explicit convention as other definite-first references. Current absence of an edge should be audited, not treated as unquestioned agreement.",
+      "evidence": [
+        {
+          "quote": "said hierarchical tree-like object representation",
+          "sourceClaimNumbers": [
+            5,
+            6
+          ]
+        },
+        {
+          "quote": "the underlying hierarchical tree-like object representation",
+          "sourceClaimNumbers": [
+            4
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:6",
+      "familyId": "11299450-root-1",
+      "claimNumber": 6,
+      "outcome": "revise",
+      "confidence": 0.99,
+      "rationale": "The source explicitly mentions the structure and then said structure in the same clause. These are one unambiguous referent regardless of the previous representation question, but the frozen tree has no corresponding antecedent edge. Propose that edge in an overlay.",
+      "evidence": [
+        {
+          "quote": "the structure and/or nodes within said structure",
+          "sourceClaimNumbers": [
+            6
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:7",
+      "familyId": "11299450-root-1",
+      "claimNumber": 7,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The URL delta and browser references are grounded in claim 1; said serialization method is correctly not linked to sibling claim 4. The page references remain underspecified among multiple ancestor page mentions, so full annotation completeness cannot be certified.",
+      "evidence": [
+        {
+          "quote": "said serialization method",
+          "sourceClaimNumbers": [
+            7
+          ]
+        },
+        {
+          "quote": "said Portal page to be submitted",
+          "sourceClaimNumbers": [
+            7
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:8",
+      "familyId": "11299450-root-1",
+      "claimNumber": 8,
+      "outcome": "agree",
+      "confidence": 0.96,
+      "rationale": "The compression relation retains serialization result and the explicit one-or-more algorithm group. No separate serialization-result introduction is invented from a serialization action.",
+      "evidence": [
+        {
+          "quote": "said serialization result",
+          "sourceClaimNumbers": [
+            8
+          ]
+        },
+        {
+          "quote": "one or more standard compression algorithms",
+          "sourceClaimNumbers": [
+            8
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:9",
+      "familyId": "11299450-root-1",
+      "claimNumber": 9,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The compression algorithms resolve to the group in claim 8 and all three named algorithms are retained exactly with lowercase normalized heads.",
+      "evidence": [
+        {
+          "quote": "said compression algorithms are GZip, Zip, RLE",
+          "sourceClaimNumbers": [
+            9
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "11299450-root-1:10",
+      "familyId": "11299450-root-1",
+      "claimNumber": 10,
+      "outcome": "uncertain",
+      "confidence": 0.9,
+      "rationale": "The delta state reference resolves through ancestors and the compressed serialization result is retained. said URL is used generically across repeated URL references in claim 1; assigning a single introduction or certifying its absence requires further source interpretation.",
+      "evidence": [
+        {
+          "quote": "the path information of said URL",
+          "sourceClaimNumbers": [
+            10
+          ]
+        },
+        {
+          "quote": "said compressed serialization result",
+          "sourceClaimNumbers": [
+            10
+          ]
+        }
+      ],
+      "annotationSha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "canonicalClaimsSha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d"
+    },
+    {
+      "id": "13484431-root-19:19",
+      "familyId": "13484431-root-19",
+      "claimNumber": 19,
+      "outcome": "revise",
+      "confidence": 0.99,
+      "rationale": "The holding/pressure/list relations are represented, but the enumerator letters a, b and c are annotated as bare entity terms. In a) placing / b) forming / c) forming they are list labels, not claimed noun phrases. The later step references can target the explicit step element; adding letter entities is not source-grounded entity annotation. Preserve original labels and record this correction proposal separately.",
+      "evidence": [
+        {
+          "quote": "a) placing a substrate",
+          "sourceClaimNumbers": [
+            19
+          ]
+        },
+        {
+          "quote": "b) forming a suction pressure",
+          "sourceClaimNumbers": [
+            19
+          ]
+        },
+        {
+          "quote": "c) forming a suction pressure",
+          "sourceClaimNumbers": [
+            19
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:20",
+      "familyId": "13484431-root-19",
+      "claimNumber": 20,
+      "outcome": "agree",
+      "confidence": 0.97,
+      "rationale": "The embankment/protrusion/flush-top limitations retain exact terms; holding surface resolves to claim 19 and both embankment references resolve to the new embankment here. The respective protrusions correctly point to the plural group.",
+      "evidence": [
+        {
+          "quote": "the tops of the respective protrusions",
+          "sourceClaimNumbers": [
+            2,
+            4,
+            11,
+            13,
+            20,
+            22
+          ]
+        },
+        {
+          "quote": "flush with the top of said embankment",
+          "sourceClaimNumbers": [
+            2,
+            4,
+            11,
+            13,
+            20,
+            22
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:21",
+      "familyId": "13484431-root-19",
+      "claimNumber": 21,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The cardinal lower bound is preserved and the second-clause selected ports link to the first-clause selector. However at least two of said Bernoulli suction ports is represented as one bare term rather than a selector plus nested said noun phrase; that conflicts plausibly with the nested-phrase convention and requires bounded criticism.",
+      "evidence": [
+        {
+          "quote": "at least two of said Bernoulli suction ports",
+          "sourceClaimNumbers": [
+            3,
+            12,
+            21
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:22",
+      "familyId": "13484431-root-19",
+      "claimNumber": 22,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The six limitations and their new groups are retained, and explicit ports/regions resolve through the dependency chain. each of the regions and each of said arcuate regions lose the standalone distributive entity mention whereas one selectors elsewhere are terms. The convention needs a uniform source-grounded ruling.",
+      "evidence": [
+        {
+          "quote": "each of the regions",
+          "sourceClaimNumbers": [
+            4,
+            13,
+            22
+          ]
+        },
+        {
+          "quote": "each of said arcuate regions",
+          "sourceClaimNumbers": [
+            4,
+            13,
+            22
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:23",
+      "familyId": "13484431-root-19",
+      "claimNumber": 23,
+      "outcome": "agree",
+      "confidence": 0.98,
+      "rationale": "The relative-area relation retains the arcuate-region group from claim 22. each other remains reciprocal relationship text between the already explicit participants under entity-mentions/v1.",
+      "evidence": [
+        {
+          "quote": "said arcuate regions are equal in area to each other",
+          "sourceClaimNumbers": [
+            5,
+            14,
+            23
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:24",
+      "familyId": "13484431-root-19",
+      "claimNumber": 24,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The temporal b/c step relations and dependencies are correct, but antecedent edges target bare b/c enumerator terms in claim 19. Those letter terms are independently criticized as non-entity list labels. Representing step references without them requires a new overlay, not a silent accepted baseline.",
+      "evidence": [
+        {
+          "quote": "said step b)",
+          "sourceClaimNumbers": [
+            24
+          ]
+        },
+        {
+          "quote": "said step c)",
+          "sourceClaimNumbers": [
+            24,
+            25
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    },
+    {
+      "id": "13484431-root-19:25",
+      "familyId": "13484431-root-19",
+      "claimNumber": 25,
+      "outcome": "uncertain",
+      "confidence": 0.91,
+      "rationale": "The suction, pressure, threshold and holding-surface references are grounded in ancestors, but said step c is again linked to the questioned c enumerator entity in claim 19. The source statement itself is preserved.",
+      "evidence": [
+        {
+          "quote": "after the start of said step c)",
+          "sourceClaimNumbers": [
+            25
+          ]
+        },
+        {
+          "quote": "the predetermined value",
+          "sourceClaimNumbers": [
+            7,
+            16,
+            25
+          ]
+        }
+      ],
+      "annotationSha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "canonicalClaimsSha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68"
+    }
+  ],
+  "additionalHeadDecisions": [
+    {
+      "id": "13575735-root-1:head:0",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.b.iv",
+      "anchor": {
+        "startChar": 622,
+        "endChar": 629,
+        "quote": "one end"
+      },
+      "currentHead": "end",
+      "proposedHead": "one end",
+      "sourceText": "A curl-shaping device for paperboard, comprising: a conveying part adapted to convey the paperboard; a compressing part having a plurality of compression rollers arranged in a row above the conveying part to pressurize the top surface of the paperboard, supporting frames adapted to support the ends of the shafts of the compression rollers to allow the compression rollers to be rotated, a connecting frame adapted to connect the supporting frames one another to allow the compression rollers to apply the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction; a curl-shaping part disposed at one side of the conveying part to form a curled portion along the lateral side of the paperboard, the curl-shaping part being composed of a lower mold and an upper mold, the lower mold having a paperboard underside support plate adapted to support the underside surface of the lateral end of the paperboard moving from an introducing portion into which the paperboard is introduced to a discharging portion from which the paperboard is discharged, a first stepped protrusion formed vertically on the paperboard underside support plate in such a manner as to become inclined inwardly in the moving direction of the paperboard, and a curl-shaping groove formed along the first stepped protrusion surface in such a manner as to become gradually curved from the introducing portion toward the discharging portion, and the upper mold having a paperboard top support plate disposed on top of the lower mold and having a second stepped protrusion formed to be brought into close contact with the first stepped protrusion of the paperboard underside support plate; and a natural cooling and shaping part adapted to naturally cool the curled portion of the paperboard, while maintaining the curled portion passed through the curl-shaping groove in the shape, the natural cooling and shaping part having a curl-cooling groove extended from the curl-shaping groove formed at the discharging portion and having a shape corresponding to the curled portion to allow the curled portion to be passed therethrough.",
+      "context": " the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction; a curl-shaping part disposed at one side of the c",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 622,
+          "endChar": 629,
+          "quote": "one end"
+        }
+      ]
+    },
+    {
+      "id": "13575735-root-1:head:1",
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c",
+      "anchor": {
+        "startChar": 762,
+        "endChar": 770,
+        "quote": "one side"
+      },
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "sourceText": "A curl-shaping device for paperboard, comprising: a conveying part adapted to convey the paperboard; a compressing part having a plurality of compression rollers arranged in a row above the conveying part to pressurize the top surface of the paperboard, supporting frames adapted to support the ends of the shafts of the compression rollers to allow the compression rollers to be rotated, a connecting frame adapted to connect the supporting frames one another to allow the compression rollers to apply the top surface of the paperboard with the forces applied equally therefrom, and an upper frame extended upwardly from one end of the top surface of the connection frame in such a manner as to be bent in the lateral direction; a curl-shaping part disposed at one side of the conveying part to form a curled portion along the lateral side of the paperboard, the curl-shaping part being composed of a lower mold and an upper mold, the lower mold having a paperboard underside support plate adapted to support the underside surface of the lateral end of the paperboard moving from an introducing portion into which the paperboard is introduced to a discharging portion from which the paperboard is discharged, a first stepped protrusion formed vertically on the paperboard underside support plate in such a manner as to become inclined inwardly in the moving direction of the paperboard, and a curl-shaping groove formed along the first stepped protrusion surface in such a manner as to become gradually curved from the introducing portion toward the discharging portion, and the upper mold having a paperboard top support plate disposed on top of the lower mold and having a second stepped protrusion formed to be brought into close contact with the first stepped protrusion of the paperboard underside support plate; and a natural cooling and shaping part adapted to naturally cool the curled portion of the paperboard, while maintaining the curled portion passed through the curl-shaping groove in the shape, the natural cooling and shaping part having a curl-cooling groove extended from the curl-shaping groove formed at the discharging portion and having a shape corresponding to the curled portion to allow the curled portion to be passed therethrough.",
+      "context": "urface of the connection frame in such a manner as to be bent in the lateral direction; a curl-shaping part disposed at one side of the conveying part to form a curled portion along the lateral side of the paperboard, the curl-shaping part being composed of a lower mold and an ",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 762,
+          "endChar": 770,
+          "quote": "one side"
+        }
+      ]
+    },
+    {
+      "id": "13575735-root-1:head:2",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a",
+      "anchor": {
+        "startChar": 145,
+        "endChar": 153,
+        "quote": "one side"
+      },
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "sourceText": "The curl-shaping device for paperboard according to claim 1, further comprising a paperboard lateral side guide disposed on the opposite side to one side of the paperboard where the curled portion is formed, the paperboard lateral side guide comprising: a plurality of rollers arranged in a row in such a manner as to be brought into close contact with the opposite side to one side of the paperboard where the curled portion is formed; a roller connection frame connected to the ends of the shafts of the rollers in such a manner as to connect the rollers one another and having an operating space formed at the inside thereof; a pressurizing plate disposed at the rear side of the inside of the operating space of the roller connection frame; pressurizing springs disposed spaced equally apart from each other between the roller connection frame and the pressurizing plate; and an operating cylinder having a front end rod connected to the rear side of the pressurizing plate.",
+      "context": "or paperboard according to claim 1, further comprising a paperboard lateral side guide disposed on the opposite side to one side of the paperboard where the curled portion is formed, the paperboard lateral side guide comprising: a plurality of rollers arranged in a row in such ",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 145,
+          "endChar": 153,
+          "quote": "one side"
+        }
+      ]
+    },
+    {
+      "id": "13575735-root-1:head:3",
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.i",
+      "anchor": {
+        "startChar": 374,
+        "endChar": 382,
+        "quote": "one side"
+      },
+      "currentHead": "side",
+      "proposedHead": "one side",
+      "sourceText": "The curl-shaping device for paperboard according to claim 1, further comprising a paperboard lateral side guide disposed on the opposite side to one side of the paperboard where the curled portion is formed, the paperboard lateral side guide comprising: a plurality of rollers arranged in a row in such a manner as to be brought into close contact with the opposite side to one side of the paperboard where the curled portion is formed; a roller connection frame connected to the ends of the shafts of the rollers in such a manner as to connect the rollers one another and having an operating space formed at the inside thereof; a pressurizing plate disposed at the rear side of the inside of the operating space of the roller connection frame; pressurizing springs disposed spaced equally apart from each other between the roller connection frame and the pressurizing plate; and an operating cylinder having a front end rod connected to the rear side of the pressurizing plate.",
+      "context": "a plurality of rollers arranged in a row in such a manner as to be brought into close contact with the opposite side to one side of the paperboard where the curled portion is formed; a roller connection frame connected to the ends of the shafts of the rollers in such a manner a",
+      "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 374,
+          "endChar": 382,
+          "quote": "one side"
+        }
+      ]
+    },
+    {
+      "id": "17617663-root-1:head:0",
+      "familyId": "17617663-root-1",
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "anchor": {
+        "startChar": 505,
+        "endChar": 512,
+        "quote": "one end"
+      },
+      "currentHead": "end",
+      "proposedHead": "one end",
+      "sourceText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the phase sequence control assembly comprises a water-cooled cable (6), an alternating phase conversion circuit, a fuse FU and a disconnecting switch QS; the water-cooled cable (6) comprises a first stirring current inlet line L1, a second stirring current inlet line L2 and a third stirring current inlet line L3 which are connected to an external three-phase power supply at one end and are connected to the electromagnetic coil (5) via the disconnecting switch QS, the fuse FU and through the alternating phase conversion circuit at the other end.",
+      "context": "inlet line L2 and a third stirring current inlet line L3 which are connected to an external three-phase power supply at one end and are connected to the electromagnetic coil (5) via the disconnecting switch QS, the fuse FU and through the alternating phase conversion circuit a",
+      "annotationSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 505,
+          "endChar": 512,
+          "quote": "one end"
+        }
+      ]
+    },
+    {
+      "id": "17617663-root-1:head:1",
+      "familyId": "17617663-root-1",
+      "claimNumber": 7,
+      "path": "7.b",
+      "anchor": {
+        "startChar": 357,
+        "endChar": 378,
+        "quote": "two segmented rollers"
+      },
+      "currentHead": "segmented rollers",
+      "proposedHead": "two segmented rollers",
+      "sourceText": "The electromagnetic stirring device for the secondary cooling zone of slab continuous casting of claim 1, characterized in that the protective shell (3) comprises a tooth head end concaved inwardly at both sides to form a cambered structure, wherein the tooth head end of the protective shell (3) extends toward the casting slab (1) and is arranged between two segmented rollers (2), and the cambered structure of the protective shell (3) conforms to the profiles of the segmented rollers (2).",
+      "context": "ure, wherein the tooth head end of the protective shell (3) extends toward the casting slab (1) and is arranged between two segmented rollers (2), and the cambered structure of the protective shell (3) conforms to the profiles of the segmented rollers (2).",
+      "annotationSha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+      "outcome": "apply-proposed-head",
+      "confidence": 0.98,
+      "rationale": "The source contains the exact quoted count/partitive selector. Its bare determiner does not encode one/two. lexical-head/v1 explicitly preserves counts and selectors, so the proposed head retains source meaning without shortening the anchor. This is an automated overlay only.",
+      "evidence": [
+        {
+          "startChar": 357,
+          "endChar": 378,
+          "quote": "two segmented rollers"
+        }
+      ]
+    }
+  ],
+  "additionalGranularityDecision": {
+    "familyId": "16068637-root-11",
+    "claimNumber": 16,
+    "text": "A rivet rotational feeding method of the F-SPR system of claim 11 for joining workpieces, includes: Step 1, placing the rivet vertically under the driving spindle and applying appropriate resistance to restrain the axial translational motion and rotational motion of the rivet; Step 2, feeding the driving spindle straightly downwards to the upper surface of the rivet at a high rate; Step 3, feeding the driving spindle axially downward slowly and, at the same time, rotating the driving spindle to match the central positioning structures of the driving spindle automatically with the positioning structures in the center of the rivet head; Making the rotary driving structures on the bottom of the driving spindle contacting with the driving structures on the top of the rivet head; The mating surfaces of the rivet head and on the driving spindle contacting with each other, wherein the bottom surface of the driving spindle contacting with the top surface of the rivet head; during the matting of the driving spindle and the rivet, when the axial pressing force of the circumferential torque exerted on the rivet by the driving spindle exceeds the external resistance applied to the rivet, the rivet starts to move axially or circumferentially with the driving spindle; Step 4, when the driving spindle and the rivet move together approaching the surface of the workpieces, the speed and rate of the axial and circumferential motion of the driving spindle switch to the required process parameters of F-SPR process and drive the rivet to finish the F-SPR process under the setting process parameters.",
+    "anchor": {
+      "startChar": 867,
+      "endChar": 877,
+      "quote": "each other"
+    },
+    "clause": {
+      "startChar": 786,
+      "endChar": 978,
+      "quote": "The mating surfaces of the rivet head and on the driving spindle contacting with each other, wherein the bottom surface of the driving spindle contacting with the top surface of the rivet head"
+    },
+    "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+    "question": "In this matching-surface relationship, should “each other” remain relationship text between the explicitly named mating surfaces, or should it also be a separate entity-reference term?",
+    "reason": "The independent agent loop reached its three-round limit before the representation convention was clarified. This decision requires actual attorney review.",
+    "id": "16068637-root-11:16:granularity",
+    "outcome": "connecting-text",
+    "confidence": 0.98,
+    "rationale": "The mating surfaces of the rivet head and driving spindle are explicit participants in the contacting relation. each other expresses their reciprocity and adds no separate entity. entity-mentions/v1 supports keeping it as anchored connecting text.",
+    "evidence": [
+      {
+        "startChar": 786,
+        "endChar": 978,
+        "quote": "The mating surfaces of the rivet head and on the driving spindle contacting with each other, wherein the bottom surface of the driving spindle contacting with the top surface of the rivet head"
+      },
+      {
+        "startChar": 867,
+        "endChar": 877,
+        "quote": "each other"
+      }
+    ]
+  },
+  "addendumDecision": {
+    "familyId": "16068637-root-11",
+    "claimNumber": 13,
+    "path": "13.a",
+    "anchor": {
+      "startChar": 108,
+      "endChar": 117,
+      "quote": "each edge"
+    },
+    "head": "each edge",
+    "proposedHead": "edge",
+    "id": "16068637-root-11:13:head:108:117",
+    "outcome": "uncertain",
+    "confidence": 0.91,
+    "rationale": "each edge is a distributively selected member of the notch/protrusion edge sets. The protocol removes outer pronominal determiners but preserves partitive selectors not encoded in the determiner tag. It does not explicitly classify distributive each consistently with the held selector cases. edge is grammatically defensible; each edge preserves distributivity. Do not resolve this solely by analogy to one/two or silently change the reference.",
+    "evidence": [
+      {
+        "quote": "The F-SPR system of claim 11, wherein the wedge-shaped notch and wedge-shaped protrusion have chamfering on each edge for avoiding over positioning."
+      }
+    ],
+    "annotationSha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+    "canonicalClaimsSha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d",
+    "bundleDigest": "bc6a2e4d058bb168f29a44e9bc0241450a4f3890a6d5e1d233b9939c00332297"
+  },
+  "coverage": {
+    "mainClaims": 50,
+    "headQuestions": 6,
+    "reciprocalQuestions": 1,
+    "addendumQuestions": 1,
+    "mainOutcomeCounts": {
+      "uncertain": 20,
+      "agree": 26,
+      "revise": 4
+    }
+  },
+  "mechanicalSourceChecks": {
+    "utf16AnchorsChecked": 1767,
+    "mismatches": [],
+    "interpretation": "Coherence only; not semantic correctness or full Effect schema validation."
+  },
+  "preservation": "Only this new receipt is written. All frozen sources, labels, results and original attorney packets are unchanged."
+}

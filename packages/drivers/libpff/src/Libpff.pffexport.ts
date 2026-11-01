@@ -46,7 +46,7 @@ import { PFFEXPORT_MESSAGES_SUFFIX, PffexportMessageRecord } from "./Libpff.mess
 import { LibpffFileProcessingEngine, LibpffFileProcessingEngineDescriptor } from "./Libpff.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as Scope from "effect/Scope";
 import type { LibpffError } from "./Libpff.errors.ts";
 
@@ -561,7 +561,7 @@ const claimReleaseFailedWarning =
  * construction and probes `pffexport -V` once to populate
  * `descriptor.version`; a failed probe leaves the version unset rather than
  * failing construction. The returned engine's `exportArchive` method still
- * requires `effect/Crypto` so child artifact ids can be derived through the
+ * requires the `effect/crypto/Digest` service so child artifact ids can be derived through the
  * shared SHA-backed artifact id schema. File-backed source artifacts are
  * passed to `pffexport` by path; in-memory artifacts use a private temporary
  * snapshot. Exported file and directory names escape backslashes to `%5C`
@@ -583,7 +583,7 @@ const claimReleaseFailedWarning =
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @effects Requires {@link FileSystem.FileSystem}, {@link Path.Path}, and {@link ChildProcessSpawner.ChildProcessSpawner}; returned archive export effects additionally require `effect/Crypto` for child artifact id derivation.
+ * @effects Requires {@link FileSystem.FileSystem}, {@link Path.Path}, and {@link ChildProcessSpawner.ChildProcessSpawner}; returned archive export effects additionally require the `effect/crypto/Digest` service for child artifact id derivation.
  * @category constructors
  * @since 0.0.0
  */
@@ -857,13 +857,14 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         Effect.map((bytes) => O.getOrElse(bytes, () => new Uint8Array()))
       )
     ).pipe(
-      Effect.mapError(() =>
-        makeLibpffError(
-          "engine-unavailable",
-          LibpffErrorOptions.make({ cause: "pffexport interpreter inspection failed" })
-        )
-      ),
-      Effect.map((bytes) => textDecoder.decode(bytes)),
+      Effect.mapBoth({
+        onFailure: () =>
+          makeLibpffError(
+            "engine-unavailable",
+            LibpffErrorOptions.make({ cause: "pffexport interpreter inspection failed" })
+          ),
+        onSuccess: (bytes) => textDecoder.decode(bytes),
+      }),
       Effect.map((contents) => Str.split("\n")(contents)[0] ?? ""),
       Effect.map((firstLine) => (Str.startsWith("#!")(firstLine) ? Str.trim(Str.slice(2)(firstLine)) : ""))
     );
@@ -1269,10 +1270,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
           [drainStream(handle.stdout), captureBoundedProcessText(handle.stderr), handle.exitCode],
           { concurrency: "unbounded" }
         ).pipe(
-          Effect.map(([, capturedStderr, code]) => ({ exitCode: code, stderr: capturedStderr })),
-          Effect.mapError(() =>
-            makeLibpffError("process", LibpffErrorOptions.make({ cause: "pffexport terminated abnormally" }))
-          )
+          Effect.mapBoth({
+            onFailure: () =>
+              makeLibpffError("process", LibpffErrorOptions.make({ cause: "pffexport terminated abnormally" })),
+            onSuccess: ([, capturedStderr, code]) => ({ exitCode: code, stderr: capturedStderr }),
+          })
         );
         const quotaProcessResult: Effect.Effect<PffexportProcessResult, LibpffError, Scope.Scope> = Effect.gen(
           function* () {
@@ -1561,7 +1563,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     files: ReadonlyArray<WalkedFile>,
     originalNames: HashMap.HashMap<string, string>,
     warnings: Array<string>
-  ): Effect.fn.Return<Array<ExportedEntry>, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<Array<ExportedEntry>, LibpffError, Digest.Digest> {
     const entries: Array<ExportedEntry> = [];
     for (const file of A.sort(files, byRelativePath)) {
       const decoded = yield* decodeChildPath(file.relativePath);
@@ -1589,7 +1591,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     operation: ExportArchiveOperation,
     item: ExportedItemDirectory,
     outlookHeaders: Readonly<Record<string, string>>
-  ): Effect.fn.Return<Uint8Array, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<Uint8Array, LibpffError, Digest.Digest> {
     const headerBlock = yield* O.match(item.internetHeaders, {
       onNone: () => Effect.succeed(synthesizeEmlHeaderBlock(outlookHeaders)),
       onSome: (entry) => readItemText(entry.absolutePath).pipe(Effect.map(stripMimeStructuralHeaders)),
@@ -1627,7 +1629,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     item: ExportedItemDirectory,
     emlBytes: Uint8Array,
     warnings: Array<string>
-  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Digest.Digest> {
     const emlRelativePath = yield* decodeChildPath(`${item.directoryPath}/${PFFEXPORT_EML_FILE_NAME}`);
     if (O.isNone(emlRelativePath)) {
       warnings.push(nonPortablePathWarning(emlBytes.length));
@@ -1659,7 +1661,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     budget: O.Option<number>,
     state: EmlBudgetState,
     warnings: Array<string>
-  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Digest.Digest> {
     const qualifiesForEml =
       O.isSome(item.internetHeaders) ||
       O.exists(item.body, (entry) => A.contains(emlBodyFileNames, posixBasename(entry.ref.relativePath)));
@@ -1703,7 +1705,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     budget: O.Option<number>,
     state: EmlBudgetState,
     warnings: Array<string>
-  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<O.Option<ArtifactReference>, LibpffError, Digest.Digest> {
     if (!A.isReadonlyArrayNonEmpty(records)) {
       return O.none<ArtifactReference>();
     }
@@ -1775,7 +1777,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     readonly operation: ExportArchiveOperation;
     readonly state: EmlBudgetState;
     readonly warnings: Array<string>;
-  }): Effect.fn.Return<O.Option<ResolvedExportedMessage>, LibpffError, Crypto.Crypto> {
+  }): Effect.fn.Return<O.Option<ResolvedExportedMessage>, LibpffError, Digest.Digest> {
     const outlookHeaders = parseOutlookHeaders(yield* readItemText(input.item.outlookHeaders.absolutePath));
     const folderPath = yield* decodeChildPath(input.item.folderPath);
     const messagePath = yield* decodeChildPath(input.item.directoryPath);
@@ -1831,7 +1833,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     claimPath: string,
     messagesJsonlName: string,
     messagesJsonlPath: string
-  ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<ArchiveExportResult, LibpffError, Digest.Digest> {
     const treeSuffixes = targetTreeSuffixesFor(exportMode);
     const treeRootNames = A.map(treeSuffixes, (suffix) => `${operation.source.id}${suffix}`);
 
@@ -1906,7 +1908,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const exportArchiveImpl = Effect.fn("LibpffPffexportEngine.exportArchiveImpl")(function* (
     operation: ExportArchiveOperation,
     sourcePath: string
-  ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
+  ): Effect.fn.Return<ArchiveExportResult, LibpffError, Digest.Digest> {
     const targetBase = path.join(config.exportRoot, operation.source.id);
     const claimPath = `${targetBase}${PFFEXPORT_CLAIM_SUFFIX}`;
     const messagesJsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;

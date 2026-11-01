@@ -9,9 +9,11 @@ import {
 } from "@beep/law-practice-use-cases/MailTagging";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
+import { assertInstanceOf, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import {
@@ -250,19 +252,17 @@ describe("MailTagging attachment filer", () => {
     scenario({
       envelopes: [usptoMail],
       attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "notice.pdf", bytes: pdf })]]],
-      failingDigests: ["SHA-256"],
+      failingDigests: [Digest.sha256],
     }),
     { timeout: "30 seconds" }
   )("hash failure", (it) => {
     it.effect(
-      "fails with a typed content-hasher error and files nothing",
+      "dies on a digest defect and files nothing",
       Effect.fnUntraced(function* () {
         const state = yield* World;
-        const error = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const exit = yield* Effect.exit(file({ mode: "apply", message: usptoMail }));
 
-        assertInstanceOf(error, MailTaggingPortError);
-        expect([error.port, error.operation]).toStrictEqual(["ContentHasher", "sha256"]);
-        assertNone(error.cause);
+        assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
         expect(yield* Ref.get(state.writes)).toStrictEqual([]);
       })
     );
@@ -785,20 +785,19 @@ describe("MailTagging two-phase filing", () => {
     scenario({
       envelopes: [usptoMail],
       attachments: [[usptoMail.messageId, [attachment({ id: "att-1", name: "office-action.pdf", bytes: pdf })]]],
-      failingDigests: ["SHA-1"],
+      failingDigests: [Digest.sha1],
     }),
     { timeout: "30 seconds" }
   )("SHA-1 unavailable while comparing a holder", (it) => {
     it.effect(
-      "fails with a typed content-hasher error and records no outcome",
+      "dies on a digest defect and records no outcome",
       Effect.fnUntraced(function* () {
         const state = yield* World;
         yield* Ref.set(state.lyingUpload, O.some(1));
         yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
-        const failure = yield* Effect.flip(file({ mode: "apply", message: usptoMail }));
+        const exit = yield* Effect.exit(file({ mode: "apply", message: usptoMail }));
 
-        assertInstanceOf(failure, MailTaggingPortError);
-        expect([failure.port, failure.operation]).toStrictEqual(["ContentHasher", "sha1"]);
+        assertTrue(Exit.isFailure(exit) && Exit.hasDies(exit));
         expect((yield* ledgerShape()).lines).toStrictEqual(["FilingIntended"]);
       })
     );

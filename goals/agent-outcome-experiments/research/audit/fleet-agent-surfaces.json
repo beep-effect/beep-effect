@@ -1,0 +1,132 @@
+{
+  "~/.claude/settings.json": {
+    "exists": true,
+    "telemetryEnvKeys": [
+      "CLAUDE_CODE_ENABLE_TELEMETRY",
+      "OTEL_EXPORTER_OTLP_ENDPOINT",
+      "OTEL_EXPORTER_OTLP_PROTOCOL",
+      "OTEL_LOGS_EXPORTER",
+      "OTEL_LOG_RAW_API_BODIES",
+      "OTEL_LOG_TOOL_CONTENT",
+      "OTEL_LOG_TOOL_DETAILS",
+      "OTEL_LOG_USER_PROMPTS",
+      "OTEL_METRICS_EXPORTER",
+      "OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES",
+      "OTEL_TRACES_EXPORTER"
+    ],
+    "telemetrySections": {},
+    "hooksPresent": false,
+    "safeSwitches": {
+      "CLAUDE_CODE_ENABLE_TELEMETRY": "1",
+      "OTEL_LOG_USER_PROMPTS": "0",
+      "OTEL_LOG_RAW_API_BODIES": "0",
+      "OTEL_LOG_TOOL_CONTENT": "0",
+      "OTEL_LOG_TOOL_DETAILS": "0",
+      "OTEL_TRACES_EXPORTER": "otlp",
+      "OTEL_METRICS_EXPORTER": "otlp",
+      "OTEL_LOGS_EXPORTER": "none"
+    }
+  },
+  "~/.codex/config.toml": {
+    "exists": true,
+    "telemetryEnvKeys": [],
+    "telemetrySections": {
+      "otel": {
+        "keys": [
+          "environment",
+          "log_user_prompt",
+          "exporter",
+          "metrics_exporter",
+          "span_attributes"
+        ],
+        "valueType": "dict",
+        "log_user_prompt": false
+      }
+    },
+    "hooksPresent": true,
+    "safeExporterModes": {
+      "exporter": "none",
+      "metricsExporterKinds": ["otlp-http"],
+      "traceExporterExplicit": false,
+      "traceExporterEffectiveDefault": "None; version-matched rust-v0.165.0 core/src/config/otel.rs line 20",
+      "runtimeOverridesVerified": false
+    }
+  },
+  "~/.grok/config.toml": {
+    "exists": true,
+    "telemetryEnvKeys": [],
+    "telemetrySections": {},
+    "hooksPresent": false
+  },
+  "~/.cursor/cli-config.json": {
+    "exists": true,
+    "telemetryEnvKeys": [],
+    "telemetrySections": {},
+    "hooksPresent": false
+  },
+  "grok": {
+    "available": true,
+    "path": "~/.local/bin/grok",
+    "realPath": "~/.grok/bin/grok-1.0.72"
+  },
+  "claude": {
+    "available": true,
+    "path": "~/.local/bin/claude",
+    "realPath": "~/.local/share/claude/versions/2.1.312"
+  },
+  "codex": {
+    "available": true,
+    "path": "~/.local/bin/codex",
+    "realPath": "~/.codex/packages/standalone/releases/0.165.0-x86_64-unknown-linux-musl/bin/codex"
+  },
+  "cursor-agent": {
+    "available": true,
+    "path": "~/.local/bin/cursor-agent",
+    "realPath": "~/.local/share/cursor-agent/versions/2026.10.22-27dcf5f/cursor-agent",
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false,
+    "mentionsClaudeProxy": false
+  },
+  "chatgpt": {
+    "available": true,
+    "path": "/usr/bin/chatgpt",
+    "realPath": "/usr/lib/chatgpt/codex-launcher",
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false,
+    "mentionsClaudeProxy": false
+  },
+  "~/.config/Claude/config.json": {
+    "exists": true,
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false
+  },
+  "~/.config/Claude/claude_desktop_config.json": {
+    "exists": true,
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false
+  },
+  "~/.local/share/applications/claude-code-url-handler.desktop": {
+    "exists": true,
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false
+  },
+  "~/.local/share/applications/com.anthropic.Claude.desktop": {
+    "exists": true,
+    "telemetryVariableNames": [],
+    "mentionsOtlp": false,
+    "mentionsSessionBridge": false
+  },
+  "museShellRoute": {
+    "claudemFunctionMentionPresent": true,
+    "museModelPinPresent": true,
+    "proxyHelperCallPresent": true,
+    "proxyHelperMentionsClaude": true,
+    "proxyHelperSetsResourceAttributes": true,
+    "runtimeSuccessVerified": false
+  }
+}

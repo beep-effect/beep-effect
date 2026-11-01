@@ -1,0 +1,15 @@
+Observation snapshot: 2026-10-28T23:25:26.790Z
+Population window: [2026-10-26T07:33:20.000Z, 2026-10-26T07:33:21.000Z)
+claude-code / worker / native-otlp (route 1111111111111111111111111111111111111111111111111111111111111111)
+  launches: denominator and observations unknown
+  acceptedEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+  visibleEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+claude-code / worker / native-otlp (route 2222222222222222222222222222222222222222222222222222222222222222)
+  launches: denominator and observations unknown
+  acceptedEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+  visibleEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+claude-code / worker / native-otlp (route 3333333333333333333333333333333333333333333333333333333333333333)
+  launches: denominator and observations unknown
+  acceptedEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+  visibleEvents: 1/1 expected IDs observed, 0 not observed, 0 outside expected set; query partial
+Not observed does not prove loss. Local acceptance does not prove backend visibility. This declared boundary does not cover all activity.

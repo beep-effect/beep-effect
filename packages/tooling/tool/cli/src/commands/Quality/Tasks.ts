@@ -16,7 +16,7 @@ import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -137,6 +137,7 @@ import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
@@ -215,10 +216,10 @@ const capturedTimeoutResult = (error: CaptureCommandTimedOutError): CapturedStep
   });
 
 type QualityTaskEnvironment =
-  | Crypto.Crypto
+  | Digest.Digest
+  | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | Crypto.Crypto
   | ChildProcessSpawner.ChildProcessSpawner;
 
 type OptionalQualityTaskStep = {
@@ -1686,7 +1687,7 @@ interface StreamingStepOutcome {
 type StreamingOutcomeObserver = (
   outcome: StreamingStepOutcome,
   index: number
-) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Digest.Digest | FileSystem.FileSystem | Path.Path>;
 
 const ignoreStreamingOutcome: StreamingOutcomeObserver = () => Effect.void;
 
@@ -1957,7 +1958,7 @@ export const redSchedulingDecision = (
 
 type QualityTaskLaneRunObserver = (
   laneRun: QualityTaskLaneRun
-) => Effect.Effect<void, QualityTaskConfigurationError, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<void, QualityTaskConfigurationError, Digest.Digest | FileSystem.FileSystem | Path.Path>;
 
 const ignoreQualityTaskLaneRun: QualityTaskLaneRunObserver = () => Effect.void;
 
@@ -2512,7 +2513,7 @@ const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOut
 ): Effect.fn.Return<
   QualityTaskStepOutput,
   QualityTaskConfigurationError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
     QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
@@ -2985,6 +2986,7 @@ const policyMediumTasks = [
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
   "lint:schema-tag-idioms",
+  "lint:holds",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
@@ -3067,7 +3069,7 @@ const listRootDocsCacheKeyFiles = Effect.fnUntraced(function* (repoRoot: string,
 export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
   function* (repoRoot: string) {
     const fs = yield* FileSystem.FileSystem;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const files = pipe(
       yield* Effect.forEach(rootDocsCacheKeySources, (source) => listRootDocsCacheKeyFiles(repoRoot, source)),
       A.flatten,
@@ -3076,7 +3078,7 @@ export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
     const parts = yield* Effect.forEach(files, (file) =>
       fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
     );
-    const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(A.join(parts, "")));
+    const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(parts, "")));
     return Str.slice(0, 16)(Hex.encode(digest));
   },
   Effect.orElseSucceed(() => UNKEYED_ROOT_DOCS_CACHE)

@@ -13,7 +13,7 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -148,6 +148,7 @@ import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeY
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
+import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
@@ -179,11 +180,11 @@ const admissionAttemptFields = (attempt: O.Option<YeetAttemptStarted>) => ({
 const generateAttemptId = Effect.fn("Yeet.generateAttemptId")(function* (): Effect.fn.Return<
   YeetAttemptId,
   YeetCommandError,
-  Crypto.Crypto
+  SecureRandom.SecureRandom
 > {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* SecureRandom.SecureRandom;
   return yield* crypto
-    .randomUUIDv4()
+    .uuidV4()
     .pipe(Effect.flatMap(decodeUUID), Effect.mapError(YeetCommandError.new("Failed to generate Yeet attempt id.")));
 });
 
@@ -197,7 +198,11 @@ const recordLocalShardOutcome = Effect.fn("Yeet.recordLocalShardOutcome")(functi
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (!isNamedLocalProofShard(step)) {
     return;
@@ -273,7 +278,7 @@ export const hydrateYeetReadOnlyContext = Effect.fn("Yeet.hydrateYeetReadOnlyCon
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   return readOnlyRunContext(repoRoot, branch, options);
@@ -301,7 +306,7 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
 ): Effect.fn.Return<
   RepoRunContext,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const { repoRoot, branch } = yield* currentRepoRootAndBranch();
   if (options.mode === "status") {
@@ -339,8 +344,8 @@ const executeMeasuredStep = Effect.fn("Yeet.executeMeasuredStep")(function* (
   }
   const artifactDir = yield* artifactDirForContext(context);
   const rssDir = path.join(artifactDir, "rss");
-  const crypto = yield* Crypto.Crypto;
-  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${yield* crypto.randomUUIDv4()}.txt`);
+  const crypto = yield* SecureRandom.SecureRandom;
+  const rssPath = path.join(rssDir, `${safeArtifactName(step.id)}-${yield* crypto.uuidV4()}.txt`);
   yield* fs.makeDirectory(rssDir, { recursive: true });
   const measuredStep = RepoPlanStep.make({
     ...step,
@@ -414,7 +419,11 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<RepoStepRunResult>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   let results = A.empty<RepoStepRunResult>();
   for (const step of steps) {
@@ -457,7 +466,7 @@ const fullProofAdmissionOriginGate = (
 ): AdmissionOriginGate<
   FullProofAdmissionOriginLease,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path
+  Digest.Digest | SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path
 > => ({
   tryAcquire: retireFullProofLockOrObserveAtPath(lockPath).pipe(Effect.map(O.as(retiredProofLockLease))),
   tryAcquireFallback: retireFullProofLockOrObserveAtPath(lockPath).pipe(
@@ -593,7 +602,11 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<RepoStepRunResult>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   return yield* Effect.forEach(steps, (step) => runPhaseStep(context, step, recorder), { concurrency: 1 });
 });
@@ -606,7 +619,11 @@ const runVerifyMode = Effect.fn("Yeet.runVerifyMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const verifyResults = yield* runProofPhase(context, fullSteps, recorder);
   if (A.some(verifyResults, (result) => result.exitCode !== 0)) {
@@ -626,7 +643,11 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const results = yield* runPhase(context, steps, recorder);
   if (A.some(results, (result) => result.exitCode !== 0)) {
@@ -662,7 +683,7 @@ const reusablePublishStagingIsClean = Effect.fn("Yeet.reusablePublishStagingIsCl
 ): Effect.fn.Return<
   boolean,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(stagedPaths)) return true;
   if (!options.pushOnly) return false;
@@ -683,7 +704,7 @@ const requireCleanReusablePublishWorktree = Effect.fn("Yeet.requireCleanReusable
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (A.isReadonlyArrayEmpty(changedPaths)) return;
   return yield* failPublishScopeWithPacket(context, {
@@ -705,7 +726,7 @@ const shouldSkipCommitForReusablePublish = Effect.fn("Yeet.shouldSkipCommitForRe
 ): Effect.fn.Return<
   boolean,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (!reusablePublishMaySkipCommit(options)) return false;
 
@@ -738,7 +759,7 @@ const validatePublishCommitMessage = Effect.fn("Yeet.validatePublishCommitMessag
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   if (O.isSome(message)) {
     return yield* validateCommitMessage(context, message.value);
@@ -773,7 +794,11 @@ const stageAndCommitPublishIntent = Effect.fn("Yeet.stageAndCommitPublishIntent"
 ): Effect.fn.Return<
   PreparedPublishCommit,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (publishIntent.kind === "existing-commit") {
     yield* Console.log(
@@ -806,7 +831,11 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
 ): Effect.fn.Return<
   PreparedPublishCommit,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (skipCommit) {
     yield* Console.log(
@@ -905,7 +934,11 @@ export interface PublishTailDependencies {
   ) => Effect.Effect<
     ReadonlyArray<ProofJobRecord>,
     YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >;
   readonly runnerStatus?: (
     record: ProofJobRecord
@@ -967,7 +1000,11 @@ const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(functi
 ): Effect.fn.Return<
   O.Option<ProofJobRecord>,
   never,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   return yield* listJobs(context).pipe(
     Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
@@ -998,7 +1035,11 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (!options.pr) {
     return yield* runPublishMonitorAndResult(plan.context, monitorSteps, recorder, extras, skipCommit);
@@ -1116,7 +1157,11 @@ const submitDetachedReadyMonitor = Effect.fn("Yeet.submitDetachedReadyMonitor")(
 ): Effect.fn.Return<
   O.Option<ProofJobRecord>,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const results = yield* runPhase(context, submitSteps, recorder);
   if (A.some(results, (result) => result.exitCode !== 0)) {
@@ -1148,7 +1193,12 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
 > {
   const preparedHead = yield* readPublishedHead(plan.context);
   const gateResults = yield* runWithFullProofCoordinator(
@@ -1214,7 +1264,7 @@ export const runPushFirstPublishPhasesForTesting = runPushFirstPublishPhases;
  */
 export const assertMergeOnlyPublish = Effect.fn("Yeet.assertMergeOnlyPublish")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const refuse = () =>
     Effect.fail(
       YeetCommandError.make({
@@ -1256,7 +1306,12 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
 > {
   const reusableSkipCommit = yield* shouldSkipCommitForReusablePublish(plan.context, options);
   if (options.reuseVerified) yield* assertReusableVerifiedState(plan.context);
@@ -1321,7 +1376,11 @@ const runMonitorMode = Effect.fn("Yeet.runMonitorMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet monitor failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1338,7 +1397,11 @@ const printOperatorStatusSummary = Effect.fn("Yeet.printOperatorStatusSummary")(
 ): Effect.fn.Return<
   YeetStatusSnapshot,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const snapshot = yield* collectYeetStatus(context, remote);
   yield* writeYeetStatusSnapshot(snapshot);
@@ -1357,7 +1420,11 @@ const failWithRerunGuidance = Effect.fn("Yeet.failWithRerunGuidance")(function* 
 ): Effect.fn.Return<
   never,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const snapshot = yield* printOperatorStatusSummary(context, true);
   return yield* YeetCommandError.make({
@@ -1426,12 +1493,20 @@ const retryPendingMonitorChecks = Effect.fn("Yeet.retryPendingMonitorChecks")(fu
   attempt: Effect.Effect<
     ReadonlyArray<RepoStepRunResult>,
     YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const remaining = deadline - (yield* Clock.currentTimeMillis);
   if (remaining <= 0) return MonitorCheckReconciliation.cases.timeout.make({ names });
@@ -1456,12 +1531,20 @@ const reconcileMonitorCheckCensus = Effect.fn("Yeet.reconcileMonitorCheckCensus"
   attempt: Effect.Effect<
     ReadonlyArray<RepoStepRunResult>,
     YeetCommandError,
-    Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    | Digest.Digest
+    | SecureRandom.SecureRandom
+    | FileSystem.FileSystem
+    | Path.Path
+    | ChildProcessSpawner.ChildProcessSpawner
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   if (isAwaitingYeetCheckRegistration(results)) return MonitorCheckReconciliation.cases.unreadable.make({});
   const required = yield* collectRemoteChecks(context, true);
@@ -1522,7 +1605,11 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   // `runPhase` appends to the recorder, and the recorder is what the verdict,
   // the PR body, and `yeet status` all read. A retried attempt must therefore
@@ -1592,7 +1679,11 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   // The planner emits monitor steps only under `--monitor`, so every other
   // publish arrives here with an empty list. Falling through decoded the absent
@@ -1615,8 +1706,10 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     O.getOrElse(() => Str.empty)
   );
   const pullRequestNumber = yield* decodeGhPrViewJson(contextOutput).pipe(
-    Effect.map((pullRequest) => pullRequest.number),
-    Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
+    Effect.mapBoth({
+      onFailure: YeetCommandError.new("Failed to decode pull request number for yeet monitor."),
+      onSuccess: (pullRequest) => pullRequest.number,
+    })
   );
   yield* recordMonitoredPrSession(context, pullRequestNumber);
   yield* Effect.raceFirst(
@@ -1634,7 +1727,11 @@ const runPublishMonitorAndResult = Effect.fn("Yeet.runPublishMonitorAndResult")(
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   yield* runMonitorPhase(context, monitorSteps, recorder, "yeet publish monitor phase failed.").pipe(
     Effect.catch((error) => failWithRerunGuidance(context, error))
@@ -1669,7 +1766,11 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const snapshot = yield* collectYeetStatus(context, options.remote);
   yield* writeYeetStatusSnapshot(snapshot);
@@ -1733,7 +1834,11 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const report = yield* runPrCloseout(
     context,
@@ -1903,7 +2008,11 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2078,7 +2187,7 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
   attempt: YeetAttemptStarted,
   terminalWritten: Ref.Ref<boolean>,
   exit: Exit.Exit<unknown, unknown>
-): Effect.fn.Return<void, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest> {
   if (yield* Ref.get(terminalWritten)) {
     return;
   }
@@ -2180,7 +2289,11 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
 ): Effect.fn.Return<
   YeetAttemptStarted,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Digest.Digest
 > {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const resolvedHeadSha = yield* currentCommitSha(context);
@@ -2229,7 +2342,12 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
 > {
   if (options.mode === "status") {
     return yield* runStatusMode(plan.context, options);
@@ -2416,7 +2534,7 @@ export const runPlanExecutionForTesting = runPlanExecution;
  */
 const warnMergedVerifyIgnoresUncommittedWork = Effect.fn("Yeet.warnMergedVerifyIgnoresUncommittedWork")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const staged = yield* collectStagedPublishPaths(context.repoRoot);
   const unstaged = yield* collectUnstagedTrackedPaths(context.repoRoot);
   const untracked = yield* collectUntrackedPaths(context.repoRoot);
@@ -2441,7 +2559,12 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
 > {
   const artifactDir = yield* artifactDirForContext(context);
   yield* warnMergedVerifyIgnoresUncommittedWork(context);
@@ -2509,7 +2632,12 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
-  Crypto.Crypto | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | MemoryStats
+  | SecureRandom.SecureRandom
+  | FileSystem.FileSystem
+  | Path.Path
+  | ChildProcessSpawner.ChildProcessSpawner
+  | MemoryStats
+  | Digest.Digest
 > {
   const message = yield* validateRequiredMessage(options);
   const context = yield* hydrateYeetRunContext(options);

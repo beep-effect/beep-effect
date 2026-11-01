@@ -19,7 +19,6 @@ import {
   encodeDetectBordersReport,
   encodeNormalizeManifest,
 } from "./Files.schemas.ts";
-import type * as Crypto from "effect/Crypto";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -288,7 +287,7 @@ export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest"
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeNormalizeManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode normalize manifest for "${manifestPath}"`)
@@ -397,7 +396,7 @@ export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchiv
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeArchivePoorCandidatesManifest(manifest).pipe(
     FilesCommandError.mapError(`Failed to encode archive manifest for "${manifestPath}"`)
@@ -429,7 +428,7 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
 ): Effect.fn.Return<
   string,
   FilesCommandError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const encoded = yield* encodeDetectBordersReport(report).pipe(
     FilesCommandError.mapError("Failed to encode detect-borders report")

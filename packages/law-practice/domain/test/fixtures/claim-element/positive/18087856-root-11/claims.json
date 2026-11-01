@@ -1,0 +1,107 @@
+{
+  "familyId": "18087856-root-11",
+  "rootClaimNumber": 11,
+  "labelClaimNumbers": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "In a method performed by a base station in the wireless communication system, a method comprising: A step to transmit codebooks allocated for data transmission to each of multiple user terminals; A step to receive the pilot and the data from one or more user terminals among the multiple user terminals; A step to generate the active user information based on the above-mentioned data; A step to detect active user terminals among the above-mentioned multiple user terminals based on the above-mentioned pilot and active user information; A step to generate the channel estimation information related to the above-mentioned active user terminals; and A step to detect the data of the active user terminal based on the above-mentioned channel estimation information.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, Wherein the above-mentioned data is received through codewords transmitted based on codebooks assigned to each of one or more user terminals, and The pilot received from above-mentioned one or more user terminals is characterized by either That the one randomly selected for the above-mentioned user terminal among the multiple terminals which the above-mentioned base station has generated in advance and allocated for the transmission in association with codebooks to multiple user terminals, or That the one generated in real time to be associated with codebooks allocated to each of above-mentioned one or more user terminals through a pilot generation unit of the above-mentioned one or more user terminals.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 2, Wherein the method comprises an additional step to transmit signals for updating the above-mentioned pilot generation unit to the above-mentioned one or more user terminals, and Wherein in the event that the signals for updating the above-mentioned pilot generation unit have been transmitted, the pilot is characterized by the one generated in real time through the updated pilot generation unit to be associated with a codebook assigned to each of the above-mentioned one or more user terminals.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, Wherein the step to generate the above-mentioned active user information and the step to detect the above-mentioned active user terminal are performed based on a learned neural network, and Wherein the above-mentioned neural network is learned based on the step 1 and step 2 learnings, and Wherein the above-mentioned step 1 learning is performed with a first loss function defined based on the information on the activation states of above-mentioned multiple user terminals and the above-mentioned active user information, and Wherein the above-mentioned step 2 learning is performed with a second loss function defined based on the information on the activation states of the above-mentioned multiple user terminals and the information on the estimated activation states for the above-mentioned multiple user terminals.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 1, Wherein the method comprises an additional step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals, and Wherein the step to transmit the information indicating the length of the above-mentioned data is characterized by either That the step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals based on a data length change request received from the above-mentioned one or more user terminals; or That the step to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals when a pre-set condition is satisfied.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "In a method performed by user terminals in the wireless communication system, a method comprising: A step to receive a codebook allocated for the data transmission of the above-mentioned user terminal from a base station; A step to generate the data based on the above-mentioned codebook; A step to select or create a pilot; and A step to transmit the above-mentioned pilot and data to the above-mentioned base station, Wherein the above-mentioned user terminal is detected as an active user terminal among multiple user terminals based on the above-mentioned pilot and the active user information generated based on the above-mentioned data.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 6, Wherein the above-mentioned data is transmitted through a codeword sent based on a codebook assigned to the above-mentioned user terminal, and Wherein the above-mentioned pilot is characterized by either That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated in advance in association with codebooks for transmission of pilots and allocated to the above-mentioned user terminal, or That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 7, Wherein the method comprises an additional step to receive a signal for updating the above-mentioned pilot generation unit from the above-mentioned base station; and Wherein in the event that the signal for updating the above-mentioned pilot generation unit is received, the above-mentioned pilot characterized by being generated in real time to be associated with codebooks allocated to the above-mentioned user terminal through the updated pilot generation unit.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 6, Wherein the above-mentioned user terminal is detected as the active user terminal among the above-mentioned multiple user terminals based on a learned neural network; Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning; Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information; and Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 6, Wherein the method comprises an additional step to receive the information indicating the length of the above-mentioned data from the above-mentioned base station; Wherein the step to receive the information indicating the length of the above-mentioned data is characterized by comprising; either The step to receive the information indicating the data length from the above-mentioned base station based on a data length change request sent from the above-mentioned user terminal; or The step to receive the information indicating the data length when a pre-set condition is satisfied.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "In the wireless communication system, a base station comprising a user terminal; and one or more processors connected to the above-mentioned transceiver, Wherein the above-mentioned one or more processors is characterized by: Transmitting a codebook allocated for the data transmission to each of multiple user terminals, Receiving the pilot and the data from one or more user terminals among the above-mentioned multiple user terminals, Generating the active user information based on the above-mentioned data, Detecting the active user terminal among the above-mentioned multiple user terminals based on the above-mentioned pilot and active user information, Generating the channel estimation information related to the above-mentioned active user terminal, and Detecting the data of the above-mentioned active user terminal based on the above-mentioned channel estimation information.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The base station of claim 11, Wherein the above-mentioned data is received through a codeword transmitted based on a codebook assigned to each of the above-mentioned one or more user terminals, and The pilot received from the above-mentioned one or more user terminals is characterized by either, That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated and allocated in advance in association with a codebook for transmission of pilots, or That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The base station of claim 12, Wherein one or more processors control the base station to transmit a signal to above-mentioned one or more user terminals for updating the above-mentioned pilot generation unit, and Wherein in the event that the signal for updating above-mentioned pilot generator is transmitted, the above-mentioned pilot is the one generated in real time through the updated pilot generation unit to be associated with the codebook allocated to above-mentioned one or more user terminals.",
+      "sourceXmlParentClaimNumbers": [12]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The base station of claim 11, Wherein the above-mentioned one or more processors generate the above-mentioned active user information based on a learned neural network and control it to detect the above-mentioned active user terminal, Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning, Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information, and Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The base station of claim 11, Wherein the above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to above-mentioned one or more user terminals, Wherein above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals based on a data length change request received from the above-mentioned one or more user terminals, or The above-mentioned one or more processors control the above-mentioned base station to transmit the information indicating the length of the above-mentioned data to the above-mentioned one or more user terminals when a pre-set condition is satisfied.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The user terminal of claim 11, comprising, a transceiver unit to transmit/receive signals to/from a base station; and One or more processors connected to the above-mentioned transceiver, Wherein the above-mentioned one or more processors is characterized by: Receiving a codebook allocated for the data transmission of the above-mentioned user terminal from a base station, Generating the data based on the above-mentioned codebook, Selecting or creating a pilot, Controlling the above-mentioned user terminal to transmit the above-mentioned pilot and data to the above-mentioned base station, and Being detected as the active user terminal among the multiple user terminals based on the above-mentioned pilot and the active user information generated based on the above-mentioned data.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The user terminal of claim 16, Wherein the above-mentioned data is transmitted through the codeword sent based on a codebook assigned to the above-mentioned user terminal; and Wherein the above-mentioned pilot is characterized by either That the pilot that is randomly chosen by the above-mentioned user terminal among the multiple pilots which the above-mentioned base station has generated in advance and allocated to the above-mentioned user terminal in association with a codebook for transmission of pilots, or That the pilot that is generated in real time through the pilot generation unit of the above-mentioned user terminal to be associated with a codebook allocated to the above-mentioned user terminal.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The user terminal of claim 17, Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive a signal from the above-mentioned base station for updating the above-mentioned pilot generation unit, and Wherein in the event that the signal for updating above-mentioned pilot generation unit is received, the above-mentioned pilot is the one generated in real time through the updated pilot generation unit to be associated with a codebook allocated to the above-mentioned user terminal.",
+      "sourceXmlParentClaimNumbers": [17]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The user terminal of claim 16, Wherein the above-mentioned user terminal is detected as the active user terminal among the above-mentioned multiple user terminals based on a learned neural network, Wherein the above-mentioned neural network is learned based on the step 1 learning and the step 2 learning, Wherein the above-mentioned step 1 learning is performed using a first loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the above-mentioned active user information, and Wherein the above-mentioned step 2 learning is performed using a second loss function defined based on the information indicating the activation states of the above-mentioned multiple user terminals and the information indicating the estimated activation states for the above-mentioned multiple user terminals.",
+      "sourceXmlParentClaimNumbers": [16]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The user terminal of claim 16, Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data from the above-mentioned base station, Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data from the above-mentioned base station based on a data length change request sent from the above-mentioned user terminal, or Wherein the above-mentioned one or more processors control the above-mentioned user terminal to receive the information indicating the length of the above-mentioned data when a pre-set condition is satisfied.",
+      "sourceXmlParentClaimNumbers": [16]
+    }
+  ]
+}

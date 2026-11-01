@@ -1,0 +1,1017 @@
+{
+  "observedAt": "2026-10-28T02:15:27.837873+00:00",
+  "windowStart": "2026-10-21T02:15:27.837873+00:00",
+  "query": "{ projects { edges { node { name recordCount traceCount sessionCount sevenDayRecords:recordCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"}) sevenDayTraces:traceCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"}) sevenDaySessions:sessionCount(timeRange:{start:\"2026-10-21T02:15:27.837873+00:00\",end:\"2026-10-28T02:15:27.837873+00:00\"}) tokenCountTotal tokenCountPrompt tokenCountCompletion costSummary { total { tokens cost } } traceRetentionPolicy { name cronExpression rule { __typename ... on TraceRetentionRuleMaxDays { maxDays } } } spans(first:100,sort:{col:startTime,dir:desc}) { edges { node { name spanKind statusCode startTime tokenCountTotal } } } } } } }",
+  "response": {
+    "data": {
+      "projects": {
+        "edges": [
+          {
+            "node": {
+              "name": "default",
+              "recordCount": 1,
+              "traceCount": 1,
+              "sessionCount": 0,
+              "sevenDayRecords": 0,
+              "sevenDayTraces": 0,
+              "sevenDaySessions": 0,
+              "tokenCountTotal": 0.0,
+              "tokenCountPrompt": 0.0,
+              "tokenCountCompletion": 0.0,
+              "costSummary": {
+                "total": {
+                  "tokens": null,
+                  "cost": null
+                }
+              },
+              "traceRetentionPolicy": {
+                "name": "Default",
+                "cronExpression": "0 0 * * 0",
+                "rule": {
+                  "__typename": "TraceRetentionRuleMaxDays",
+                  "maxDays": 14.0
+                }
+              },
+              "spans": {
+                "edges": [
+                  {
+                    "node": {
+                      "name": "ansible-phoenix-health",
+                      "spanKind": "unknown",
+                      "statusCode": "OK",
+                      "startTime": "2026-10-21T00:08:38.937008+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "node": {
+              "name": "harness-otel",
+              "recordCount": 564966,
+              "traceCount": 11043,
+              "sessionCount": 393,
+              "sevenDayRecords": 359130,
+              "sevenDayTraces": 6687,
+              "sevenDaySessions": 285,
+              "tokenCountTotal": 0.0,
+              "tokenCountPrompt": 0.0,
+              "tokenCountCompletion": 0.0,
+              "costSummary": {
+                "total": {
+                  "tokens": null,
+                  "cost": null
+                }
+              },
+              "traceRetentionPolicy": {
+                "name": "Default",
+                "cronExpression": "0 0 * * 0",
+                "rule": {
+                  "__typename": "TraceRetentionRuleMaxDays",
+                  "maxDays": 14.0
+                }
+              },
+              "spans": {
+                "edges": [
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:13.943000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:11.647000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:09.403000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:07.661000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:06.505000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:06.452000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:06.444000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:06.444000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:02.002000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:01.955000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:01.954000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:01.954000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:15:00.689000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:59.872000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:59.866000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:59.866000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:59.573000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:57.715000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.868000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.679000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.668000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.668000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.586000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.575000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:55.575000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:52.670000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:50.458000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:49.644000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:49.563000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:49.553000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:49.553000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:46.147000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:44.297000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:44.181000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:44.174000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:44.174000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:43.725000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:39.900000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.652000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.646000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.646000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.564000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.513000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.512000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:38.512000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:37.077000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:37.018000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:37.003000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:37.002000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:36.253000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:36.199000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:36.188000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:36.188000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:31.909000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:29.009000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:27.873000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:27.761000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:27.755000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:27.755000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.interaction",
+                      "spanKind": "agent",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:27.630000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:20.323000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:17.147000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:16.429000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:16.421000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:16.421000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:15.070000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:15.014000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:15.001000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:15.001000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.904000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.901000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.901000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.116000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.039000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.024000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:11.024000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:07.934000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:07.869000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:07.854000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:07.854000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:06.887000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:06.785000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:06.778000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:06.778000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:04.399000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:02.419000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:02.363000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:02.348000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:14:02.348000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:58.533000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:58.475000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:58.462000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:58.461000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:50.013000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:50.002000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:50.002000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.llm_request",
+                      "spanKind": "llm",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:45.547000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.execution",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:45.485000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool",
+                      "spanKind": "tool",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:45.477000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  },
+                  {
+                    "node": {
+                      "name": "claude_code.tool.blocked_on_user",
+                      "spanKind": "unknown",
+                      "statusCode": "UNSET",
+                      "startTime": "2026-10-28T02:13:45.477000+00:00",
+                      "tokenCountTotal": 0
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "node": {
+              "name": "beep-agent-effectiveness",
+              "recordCount": 0,
+              "traceCount": 0,
+              "sessionCount": 0,
+              "sevenDayRecords": 0,
+              "sevenDayTraces": 0,
+              "sevenDaySessions": 0,
+              "tokenCountTotal": 0.0,
+              "tokenCountPrompt": 0.0,
+              "tokenCountCompletion": 0.0,
+              "costSummary": {
+                "total": {
+                  "tokens": null,
+                  "cost": null
+                }
+              },
+              "traceRetentionPolicy": {
+                "name": "Default",
+                "cronExpression": "0 0 * * 0",
+                "rule": {
+                  "__typename": "TraceRetentionRuleMaxDays",
+                  "maxDays": 14.0
+                }
+              },
+              "spans": {
+                "edges": []
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

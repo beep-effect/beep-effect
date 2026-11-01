@@ -1,0 +1,167 @@
+{
+  "familyId": "15572618-root-22",
+  "rootClaimNumber": 22,
+  "labelClaimNumbers": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An optical sensor device, comprising: a reference body; an optical fiber including an intrinsic fiber optic sensor; and a hydraulic transmission system including an input portion in hydraulic communication with an output portion, wherein the hydraulic transmission system is connected to the reference body such that the input portion and output portion are movable with respect to the reference body, wherein the optical fiber is connected with a first connecting portion thereof to the output portion of the hydraulic transmission system and with a second connecting portion thereof to an element exterior to the hydraulic transmission system, wherein the intrinsic fiber optic sensor is positioned between the first connecting portion and the second connecting portion, wherein the input portion of the hydraulic transmission system is arranged for receiving an input action and the hydraulic transmission system is arranged for converting the input action received by the input portion of the hydraulic transmission system to a sensing action applied to the optical fiber by the output portion such as to modify strain in the optical fiber dependent on the input action.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The optical sensor device according to claim 1, wherein the optical fiber is connected with the second connecting portion thereof to at least one of the reference body or a further element that is fixed relative to the reference body.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The optical sensor device according to claim 1, wherein the input portion is a flexible membrane, and the hydraulic transmission system includes an input hydraulic chamber having a first open end in fluid communication with the output portion and a second end closed off by the flexible membrane.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The optical sensor device according to claim 1, wherein the input portion is a movable input piston, and the hydraulic transmission system includes an input hydraulic chamber having a first open end in fluid communication with the output portion and wherein the movable input piston is received in the input hydraulic chamber.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The optical sensor device according to claim 1, wherein the hydraulic transmission system includes an input bellows having a first open end and a second closed end, wherein the first open end is in fluid communication with the output portion, and wherein the input portion of the hydraulic transmission system is the second closed end of the bellows.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The optical sensor device according to claim 1, wherein the output portion is a flexible membrane, and the hydraulic transmission system includes an output hydraulic chamber having a first open end in fluid communication with the input portion and a second end closed off by the flexible membrane.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The optical sensor device according to claim 1, wherein the output portion is a movable output piston, and the hydraulic transmission system includes an output hydraulic chamber having a first open end in fluid communication with the input portion and wherein the movable output piston is received in the output hydraulic chamber.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The optical sensor device according to any one of claim 1, wherein the hydraulic transmission system includes an output bellows having a first open end and a second closed end, wherein the first open end is in fluid communication with the input portion, and wherein the output portion of the hydraulic transmission system includes the second closed end of the bellows.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The optical sensor device according to claim 1, wherein the hydraulic transmission system has a transmission ratio greater than 1.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The optical sensor device according to claim 9, wherein an effective surface area of the input portion in hydraulic communication with the output portion is greater than an effective surface area of the output portion in hydraulic communication with the input portion.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The optical sensor device according to any one of claim 1, wherein the hydraulic transmission system has a transmission ratio less than 1.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The optical sensor device according to claim 11, wherein an effective surface area of the input portion in hydraulic communication with the output portion is less than an effective surface area of the output portion in hydraulic communication with the input portion.",
+      "sourceXmlParentClaimNumbers": [11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The optical sensor device according to claim 1, wherein the hydraulic transmission system comprises a compensation system including a reservoir in fluid communication with the hydraulic transmission system such that hydraulic fluid flows between the hydraulic transmission system and the reservoir, wherein a flow resistance within the hydraulic transmission system between the input portion and the output portion is less than a flow resistance between the hydraulic transmission system and the reservoir.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The optical sensor device according to claim 13, wherein the reservoir includes a movable surface arranged to change a volume of the reservoir in fluid communication with the hydraulic transmission system, wherein the movable surface has a predetermined spring constant.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The optical sensor device according to claim 13, wherein the reservoir is arranged to be filled with a volume of pressurized gas that is substantially insoluble in the hydraulic fluid of the reservoir, such that the pressurized gas exerts a force on the hydraulic fluid of the reservoir.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The optical sensor device according to claim 13, wherein the flow resistance within the hydraulic transmission system between the input portion and the output portion and the flow resistance between the hydraulic transmission system and the reservoir results in a flow timescale that is at least X times slower than Y, wherein X is in the range of 3-100, preferably in the range of 10-1000, and more preferably X is greater than 100, and wherein Y is in the range of 0.1 Hz to 10 Hz.",
+      "sourceXmlParentClaimNumbers": [13]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The optical sensor device according to claim 1, further comprising a bi-stable spring having a first and a second stable deflection position and an unstable equilibrium negative stiffness range around an unstable equilibrium position between the first and second stable deflection position, wherein the optical fiber is pre-stressed to be tensed, the optical fiber thereby acting as a spring having a first spring constant of positive value, wherein the bi-stable spring is connected with a first connecting portion thereof to one of the input portion of the hydraulic transmission system and the output portion of the hydraulic transmission system, wherein the bi-stable spring is connected with a second connecting portion thereof to an element exterior to the hydraulic transmission system, and wherein the optical fiber thereby counteracts a spring action of the bi-stable spring such as to operate the bi-stable spring in a deflection position range within the negative stiffness range, the deflection position range not including the unstable equilibrium position of the bi-stable spring.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The optical sensor device according to claim 1, wherein the intrinsic fiber optic sensor comprises at least one of a Fiber Bragg Grating, a photonic crystal fiber, a birefringent fiber, a fiber laser, or a multicore fiber.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The optical sensor device according to claim 1, wherein the device further comprises a sensing transducer connected to the input portion of the hydraulic transmission system, wherein the sensing transducer is arranged for receiving the input action and applying the input action to the input portion of the hydraulic transmission system.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The optical sensor device according to claim 19, wherein the sensing transducer is an inertial mass.",
+      "sourceXmlParentClaimNumbers": [19]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "(canceled)",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "An optical accelerometer comprising: a first optical sensor device arranged for receiving a first input action applied in a first direction and for converting the first input action into a first sensing action in a first sensing direction; a second optical sensor device arranged for receiving a second input action applied in a second direction and for converting the second input action into a second sensing action in a second sensing direction; a third optical sensor device arranged for receiving a third input action applied in a third direction and for converting the third input action into a third sensing action in a third sensing direction; a sensing transducer being an inertial mass; wherein the sensing transducer is connected to the input portion of the first optical sensor device, the input portion of the second optical device, and the input portion of the third optical device; wherein a reference body of the first optical sensor, the second optical sensor and the third optical sensor are the same reference body; and wherein the first input direction, the second input direction and the third input direction are orthogonal.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The optical accelerometer according to claim 22, wherein the first sensing direction is parallel to the first input direction, wherein the second sensing direction is parallel to the second input direction, and wherein the third sensing direction is parallel to the third input direction",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The optical accelerometer according to claim 22, wherein the first input direction is parallel to the first sensing direction, wherein the second input direction is perpendicular to the second sensing direction, wherein the third input direction is perpendicular to the third sensing direction, and wherein the first second and third sensing directions are parallel to a longitudinal extent of the optical accelerometer.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "[[0]]The optical accelerometer according to claim 24, wherein the transmission ratio of the hydraulic transmission system of the first optical sensor is greater than 1, and wherein the transmission ratio of the second and third optical sensors is less than 1.",
+      "sourceXmlParentClaimNumbers": [24]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The optical accelerometer according to claim 24, wherein the transmission ratio of the hydraulic transmission system of the first optical sensor is less than 1, and wherein the transmission ratio of the second and third optical sensors is greater than 1.",
+      "sourceXmlParentClaimNumbers": [24]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The optical accelerometer according to claim 22, wherein the optical accelerometer is arranged for incorporation in a seismic cable, and wherein the optical accelerometer has a longitudinal extent parallel to the longitudinal extent of the cable.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The optical accelerometer according to claim 27, wherein the reference body is shaped as a portion of an outer cylinder and is arranged to be coupled to a cylindrically shaped reinforced core of the seismic cable.",
+      "sourceXmlParentClaimNumbers": [27]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The optical accelerometer according to claim 22, wherein the first sensor device comprises a compensation system including a reservoir in fluid communication with the hydraulic transmission system of the first sensor device such that hydraulic fluid flows between the hydraulic transmission system and the reservoir, wherein a flow resistance within the hydraulic transmission system between the input portion and the output portion is less than a flow resistance between the respective hydraulic transmission system and the reservoir, and wherein the reservoir is arranged for exerting a balancing force on a fluid or liquid in the reservoir, wherein the balancing force is tuned at least partly on the basis of Earth's gravity.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The optical accelerometer according to claim 22, wherein the second sensor device comprises a compensation system including a reservoir in fluid communication with the hydraulic transmission system of the second sensor device such that hydraulic fluid flows between the hydraulic transmission system and the reservoir, wherein a flow resistance within the hydraulic transmission system between the input portion and the output portion is less than a flow resistance between the respective hydraulic transmission system and the reservoir, and wherein the reservoir is arranged for exerting a balancing force on a fluid or liquid in the reservoir, wherein the balancing force is tuned at least partly on the basis of Earth's gravity.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The optical accelerometer according to claim 22, wherein the third sensor device comprises a compensation system including a reservoir in fluid communication with the hydraulic transmission system of the third sensor device such that hydraulic fluid flows between the hydraulic transmission system and the reservoir, wherein a flow resistance within the hydraulic transmission system between the input portion and the output portion is less than a flow resistance between the respective hydraulic transmission system and the reservoir, and wherein the reservoir is arranged for exerting a balancing force on a fluid or liquid in the reservoir, wherein the balancing force is tuned at least partly on the basis of Earth's gravity.",
+      "sourceXmlParentClaimNumbers": [22]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "A seismic cable comprising: a sensor device comprising: a reference body; an optical fiber including an intrinsic fiber optic sensor; and a hydraulic transmission system including an input portion in hydraulic communication with an output portion, wherein the hydraulic transmission system is connected to the reference body such that the input portion and output portion are movable with respect to the reference body, wherein the optical fiber is connected with a first connecting portion thereof to the output portion of the hydraulic transmission system and with a second connecting portion thereof to an element exterior to the hydraulic transmission system, wherein the intrinsic fiber optic sensor is positioned between the first connecting portion and the second connecting portion, wherein the input portion of the hydraulic transmission system is arranged for receiving an input action and the hydraulic transmission system is arranged for converting the input action received by the input portion of the hydraulic transmission system to a sensing action applied to the optical fiber by the output portion such as to modify strain in the optical fiber dependent on the input action.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

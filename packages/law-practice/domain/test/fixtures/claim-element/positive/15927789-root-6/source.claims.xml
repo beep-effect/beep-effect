@@ -1,0 +1,52 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. Positioning module characterized by comprising:
+<claim-text>a wire which is unwound by an external force;</claim-text>
+<claim-text>a length calculation unit calculating the unwinding length when the wire is unwound;</claim-text>
+<claim-text>an angle calculation unit calculating the unwinding angle when the wire is unwound; and</claim-text>
+<claim-text>a location information calculation unit calculating the location information of at least some points on the wire by using the unwinding length and the unwinding angle calculated.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. Positioning module of <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized by further including a speed calculation unit calculating a speed value (V) using the moving distance (ΔL) of at least a point on the wire during a unit interval of time (ΔT).</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. Positioning module of <claim-ref idref="CLM-00002">claim 2</claim-ref>, characterized by further including a control signal generator generating a control signal by comparing the speed value, which is calculated in the speed calculated unit, with the threshold value set in advance.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. Positioning module of <claim-ref idref="CLM-00003">claim 3</claim-ref>, characterized by comprising the control signal generator which generates the control signal corresponding to the number of curves where the speed value exceeds the threshold value within a unit interval of time.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. Positioning module of <claim-ref idref="CLM-00004">claim 4</claim-ref>, characterized in that the control signal is one of the control signals that either accelerate, decelerate or stop the traveling device.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. Driving control device of carrier unit, characterized by comprising an operator, which is designed to be detachable from the distal end of the wire and the transport unit equipped with a location measurement module comprising:
+<claim-text>a wire which is unwound by external force;</claim-text>
+<claim-text>a length calculation unit calculating an unwinding length of the wire; and</claim-text>
+<claim-text>an angle calculation unit calculating an unwinding angle of the wire, and controls the travelling motion of the transport unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. Driving control device of carrier unit of <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that:
+<claim-text>the positioning module acquire the location information of distal end point of the wire based on the unwinding length and unwinding angle of the wire, indicate and save the location information in a time-ordered sequence in the coordinate system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. Driving control device of carrier unit of <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that:
+<claim-text>the wire is electrically conductive;</claim-text>
+<claim-text>the positioning module supplies power to the operator through the electrically conductive wire, and then the operator can control the travel of transport unit.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. Driving control device of carrier unit of <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that
+<claim-text>the transport unit is induced to move to the distal end point of one side of the wire which is calculated by the positioning module, under the first travelling mode set by the operator.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. Driving control device of carrier unit of <claim-ref idref="CLM-00006">claim 6</claim-ref>, characterized in that
+<claim-text>the transport unit receives the user's operation signal which is input to a controller module through the wire;</claim-text>
+<claim-text>travelling direction is controlled by the operation signal;</claim-text>
+<claim-text>under the second travelling mode set by the operator.</claim-text>
+</claim-text>
+</claim>
+</claims>

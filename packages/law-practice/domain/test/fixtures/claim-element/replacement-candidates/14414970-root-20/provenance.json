@@ -1,0 +1,50 @@
+{
+  "applicationNumber": "14414970",
+  "publicationNumber": "US20150183022A1",
+  "publicationDate": "2015-07-02",
+  "nativeXmlSha256": "245f4d92180d7291df3834ddd6f54e8a4f43a22e2a50b5109b32ac858e41e4a8",
+  "claimsXmlSha256": "ce5205838a42a5b21490f9b43266f1e754fc79cfd5cf59fc2bca2164265c627f",
+  "officeActionDocumentIdentifiers": ["J1DIJ7SRRXEAPX5"],
+  "officeActionMailDate": "2017-04-11",
+  "officeActionSection112Text": [
+    "claims 11-22 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 6, “the upper surface” lacks antecedent basis.\r\nclaim 1, line 7, “the die side” lacks antecedent basis.\r\nclaim 1, line 9, “the effective solid volume” lacks antecedent basis.\r\nclaim 7, line 2, “the full length” lacks antecedent basis.\r\nclaim 8, line 2, “the exterior surface” lacks antecedent basis.\r\nclaim 12, line 1, “the diameter” lacks antecedent basis.\r\nclaim 13, line 1, “the outside diameter’ lacks antecedent basis.\r\nclaim 14, line 1, “the inside diameter” lacks antecedent basis.\r\nclaim 17, line 1, “the formation” lacks antecedent basis.\r\nclaim 20, line 6, “the upper surface” lacks antecedent basis.\r\nclaim 20, line 7, “the die side” lacks antecedent basis.\r\nclaim 20, line 8, “the effective solid volume” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "I4YHRUZLPXXIFW3",
+      "officialDate": "2015-01-15T00:00:00.000-0500"
+    },
+    {
+      "documentIdentifier": "I4ZKXSVRPXXIFW4",
+      "officialDate": "2015-01-15T00:00:00.000-0500"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "I4YHRUZLPXXIFW3",
+      "officialDate": "2015-01-15T00:00:00.000-0500",
+      "sha256": "a5e8f54d6ed86f4c8f0900cc2b2f3e57e18204476fa6c246fa3cf4b4f869d87a",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [1, 2, 3, 18],
+      "sourceClaimCount": 21
+    },
+    {
+      "documentIdentifier": "I4ZKXSVRPXXIFW4",
+      "officialDate": "2015-01-15T00:00:00.000-0500",
+      "sha256": "364cb57718159e62d8b0ec2408b44c7bd0a59560873f2eb71ac38db586b8e2f9",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 21
+    }
+  ],
+  "documentInventoryCount": 99,
+  "documentInventoryRows": 99,
+  "primaryCpc": "B21J  15/025",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/14414970",
+    "https://api.uspto.gov/api/v1/patent/applications/14414970/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "not in active sample; source extractor/critic and semantic review pending"
+}

@@ -1,0 +1,235 @@
+{
+  "date": "2026-10-28",
+  "convention": "entity-mentions/v1",
+  "purpose": "literal surface inventory for independent consistency review; not a parser or semantic acceptance",
+  "draftFamiliesScanned": 24,
+  "connectiveTermsForReview": [
+    {
+      "familyId": "12447956-root-7",
+      "claimNumber": 7,
+      "path": "7.a",
+      "anchor": {
+        "startChar": 113,
+        "endChar": 118,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "16068637-root-11",
+      "claimNumber": 16,
+      "path": "16.c.iii",
+      "anchor": {
+        "startChar": 867,
+        "endChar": 877,
+        "quote": "each other"
+      },
+      "head": "each other"
+    },
+    {
+      "familyId": "15752303-root-1",
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 178,
+        "endChar": 183,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "15752303-root-1",
+      "claimNumber": 15,
+      "path": "15.a",
+      "anchor": {
+        "startChar": 253,
+        "endChar": 258,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "16819424-root-10",
+      "claimNumber": 10,
+      "path": "10.a.iii",
+      "anchor": {
+        "startChar": 389,
+        "endChar": 400,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "16819424-root-10",
+      "claimNumber": 11,
+      "path": "11.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "16819424-root-10",
+      "claimNumber": 12,
+      "path": "12.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "claimNumber": 5,
+      "path": "5.b",
+      "anchor": {
+        "startChar": 424,
+        "endChar": 428,
+        "quote": "that"
+      },
+      "head": "that"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.b.iii",
+      "anchor": {
+        "startChar": 449,
+        "endChar": 460,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c.ii.i",
+      "anchor": {
+        "startChar": 1109,
+        "endChar": 1114,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c.ii.i",
+      "anchor": {
+        "startChar": 1174,
+        "endChar": 1179,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.ii",
+      "anchor": {
+        "startChar": 557,
+        "endChar": 568,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.iv",
+      "anchor": {
+        "startChar": 801,
+        "endChar": 811,
+        "quote": "each other"
+      },
+      "head": "each other"
+    },
+    {
+      "familyId": "11246782-root-28",
+      "claimNumber": 28,
+      "path": "28.d",
+      "anchor": {
+        "startChar": 878,
+        "endChar": 889,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "11246782-root-28",
+      "claimNumber": 29,
+      "path": "29.b.ii",
+      "anchor": {
+        "startChar": 636,
+        "endChar": 647,
+        "quote": "one another"
+      },
+      "head": "one another"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 1,
+      "path": "1.f",
+      "anchor": {
+        "startChar": 1337,
+        "endChar": 1342,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 1,
+      "path": "1.g.ii",
+      "anchor": {
+        "startChar": 1804,
+        "endChar": 1814,
+        "quote": "each other"
+      },
+      "head": "each other"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 3,
+      "path": "3.b.iv",
+      "anchor": {
+        "startChar": 442,
+        "endChar": 447,
+        "quote": "which"
+      },
+      "head": "which"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "claimNumber": 6,
+      "path": "6.a",
+      "anchor": {
+        "startChar": 209,
+        "endChar": 214,
+        "quote": "which"
+      },
+      "head": "which"
+    }
+  ],
+  "uncoveredAMannerForReview": [
+    {
+      "familyId": "12447956-root-7",
+      "claimNumber": 15,
+      "startChar": 118,
+      "endChar": 126,
+      "quote": "a manner",
+      "context": "at the pivoting angle of the lid (14) is restricted in such a manner that, in the open position of the lid (14), the tip of the "
+    },
+    {
+      "familyId": "12447956-root-7",
+      "claimNumber": 18,
+      "startChar": 119,
+      "endChar": 127,
+      "quote": "a manner",
+      "context": "at the pivoting angle of the lid (14) is restricted in such a manner that, in the open position of the lid (14), the tip of the "
+    }
+  ]
+}

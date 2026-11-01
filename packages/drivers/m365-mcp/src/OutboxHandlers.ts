@@ -35,7 +35,7 @@ import {
   M365UpdateEventRequest,
 } from "@beep/m365";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -219,12 +219,12 @@ export const makeOutboxToolkitHandlers = (
 ): Layer.Layer<
   Tool.HandlersFor<typeof OutboxToolkit.tools>,
   never,
-  M365 | OutboxAttachmentSource | OutboxAuditLog | Crypto.Crypto
+  M365 | OutboxAttachmentSource | OutboxAuditLog | Digest.Digest
 > =>
   OutboxToolkit.toLayer(
     Effect.gen(function* () {
       const m365 = yield* M365;
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const source = yield* OutboxAttachmentSource;
       const audit = yield* OutboxAuditLog;
       const userId = O.some(settings.mailbox);
@@ -241,7 +241,7 @@ export const makeOutboxToolkitHandlers = (
             maxAttachments: settings.maxAttachments,
             maxReportedBytes: settings.maxMessageAttachmentBytes * STORED_BYTES_ALLOWANCE,
           })
-        ).pipe(Effect.provideService(M365, m365), Effect.provideService(Crypto.Crypto, crypto));
+        ).pipe(Effect.provideService(M365, m365), Effect.provideService(Digest.Digest, crypto));
 
       const deleteDraft = (draftId: string) =>
         m365.deleteDraftMessage(M365DeleteDraftMessageRequest.make({ messageId: draftId, userId }));

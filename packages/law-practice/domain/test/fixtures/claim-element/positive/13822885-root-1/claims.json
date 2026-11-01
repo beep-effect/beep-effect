@@ -1,0 +1,77 @@
+{
+  "familyId": "13822885-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A battery pack comprising: a battery assembly including a plurality of rectangular battery cells that are arranged side by side; a pair of end plates that are arranged on the side-by-side arrangement directional end surfaces of the battery assembly; and a plurality of metal bind bars that couple said end plates, which are arranged on the end surfaces of said battery assembly, to each other, wherein each of the bind bars includes bent parts that are formed by bending the both end parts of the bind bar toward a common direction, and the bind bar is formed in a substantially rectangular U shape as viewed from the bar edge side by forming the bent parts by bending the both end parts of the bind bar, wherein the bent parts on the both ends of the bind bar are coupled to said end plates so that said battery assembly is interposed and secured between the end plates, wherein said bent part includes a bent-part-side engagement structure in a coupling area of the bent part to be coupled to said end plate, wherein said end plate includes an end-plate-side engagement structure that is positioned so as to face said bent part, and wherein said end plates are securely held by the bind bars when said bent-part-side engagement structures of the bind bars engage with the end-plate-side engagement structures of the end plates.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The battery pack according to claim 1, wherein said bind bar is constructed so that the bent parts on both ends of said bind bar can be in press contact with the outside surfaces of said end plates.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The battery pack according to claim 1, wherein said bent-part-side engagement structure is a slit that is formed in a rectangular shape, and said end-plate-side engagement structure is an engagement protrusion that can be inserted into said slit.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The battery pack according to claim 3, wherein said end plate includes a metal plate, wherein the metal plate is partially bent so that said engagement protrusion is formed.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The battery pack according to claim 3, wherein an inclined surface is formed on one side of said engagement protrusion.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The battery pack according to claim 1, wherein said end plate includes an inclined surface on a side part of the outside surface that is located on the engagement side where the substantially rectangular U-shaped opening of said bind bar is coupled, wherein the inclined surface descends toward the substantially rectangular U-shaped opening.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The battery pack according to claim 1, wherein said end plate includes a main plate that is formed of plastic, and a metal plate that is arranged on the outside surface of the main plate, wherein said metal plate is coupled to said main plate and arranged in a predetermined position on the main plate by a positioning mechanism, and the bent part of said bind bar is arranged in a predetermined position on said end plate by said positioning mechanism.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The battery pack according to claim 7, wherein said positioning mechanism includes a positioning protruding part that is arranged on said main plate, a positioning hole that is arranged in said metal plate, and can receive said positioning protruding part, and a coupling hole that is arranged in the bent part of said bind bar and can receive said positioning protruding part, wherein the positioning protruding part of said main plate is inserted into the positioning hole of said metal plate so that said metal plate is coupled to said main plate and arranged in the predetermined position on the main plate, and wherein the positioning protruding part that is inserted into said metal plate is inserted into the coupling hole of said bent part so that said bind bar is arranged in the predetermined position on said end plate.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The battery pack according to claim 1, wherein said bind bars are arranged on the side surfaces of said battery assembly.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The battery pack according to claim 9, wherein a plurality of strip-shaped bars are arranged as said bind bars and spaced away from each other in the vertical direction on the side surface of said battery assembly.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The battery pack according to claim 10, wherein the height of said bent parts, which are located on the both ends of the bind bar, is larger than the strip-shaped main part of the bind bar.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The battery pack according to claim 9, wherein upper and lower bar portions as said strip-shaped bars cover the upper and lower parts of the side surface of said battery assembly, wherein the both ends of said upper bar portion are coupled to the both ends of said lower bar portion so that said bind bar has an opening that exposes the central part of the side surface of said battery assembly.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The battery pack according to claim 9, wherein said bind bar is dimensioned to cover the side surface of said battery assembly, wherein said battery assembly is placed on the upper surface of a cooling plate, wherein said cooling plate includes a coolant pipe and is thermally connected to the bottom surfaces of said rectangular battery cells.",
+      "sourceXmlParentClaimNumbers": [9]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "A vehicle comprising the battery pack according to claim 1.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

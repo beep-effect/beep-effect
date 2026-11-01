@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * Every digest uses Effect's platform `Crypto` service. Components are UTF-8
+ * Every digest uses Effect's platform `Digest` service. Components are UTF-8
  * encoded, separated by a NUL byte, and hashed in contract field order so
  * adjacent variable-length values cannot collide by concatenation.
  *
@@ -13,7 +13,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -42,22 +42,18 @@ class PolicyPackManifest extends S.Opaque<PolicyPackManifest, { readonly brand: 
 const decodePolicyPackManifest = S.decodeUnknownEffect(S.fromJsonString(PolicyPackManifest));
 
 const digestBytes = Effect.fn("Yeet.ProofDigest.digestBytes")(function* (
-  bytes: Uint8Array,
-  label: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto
-    .digest("SHA-256", bytes)
-    .pipe(YeetCommandError.mapError(`Failed to hash ${label} for the proof epoch.`));
+  bytes: Uint8Array
+): Effect.fn.Return<string, never, Digest.Digest> {
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, bytes);
   return Hex.encode(digest);
 });
 
 const digestComponents = Effect.fn("Yeet.ProofDigest.digestComponents")(function* (
-  components: ReadonlyArray<string>,
-  label: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
+  components: ReadonlyArray<string>
+): Effect.fn.Return<string, never, Digest.Digest> {
   const framed = pipeComponents(components);
-  return yield* digestBytes(framed, label);
+  return yield* digestBytes(framed);
 });
 
 const pipeComponents = (components: ReadonlyArray<string>): Uint8Array =>
@@ -83,12 +79,12 @@ const readPin = Effect.fn("Yeet.ProofDigest.readPin")(function* (
   label: string
 ): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
-  const value = yield* fs
-    .readFileString(filePath)
-    .pipe(
-      Effect.map(Str.trim),
-      Effect.mapError(YeetCommandError.new(`Failed to read ${label} for the proof epoch.`, { file: filePath }))
-    );
+  const value = yield* fs.readFileString(filePath).pipe(
+    Effect.mapBoth({
+      onFailure: YeetCommandError.new(`Failed to read ${label} for the proof epoch.`, { file: filePath }),
+      onSuccess: Str.trim,
+    })
+  );
   return yield* decodeNonEmptyString(value).pipe(
     Effect.mapError(YeetCommandError.new(`The ${label} proof-epoch pin is empty.`, { file: filePath }))
   );
@@ -141,11 +137,14 @@ export type ProofEpochComponents = Pick<
  */
 export const proofInputKey = Effect.fn("Yeet.proofInputKey")(function* (
   digest: ProofInputKeyComponents
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  return yield* digestComponents(
-    [digest.laneId, digest.commandDigest, digest.envProfile, digest.inputDigest, digest.epochDigest],
-    "proof input key"
-  );
+): Effect.fn.Return<string, YeetCommandError, Digest.Digest> {
+  return yield* digestComponents([
+    digest.laneId,
+    digest.commandDigest,
+    digest.envProfile,
+    digest.inputDigest,
+    digest.epochDigest,
+  ]);
 });
 
 /**
@@ -172,8 +171,8 @@ export const proofInputKey = Effect.fn("Yeet.proofInputKey")(function* (
  */
 export const proofCommandDigest = Effect.fn("Yeet.proofCommandDigest")(function* (
   commandText: string
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  return yield* digestComponents([commandText], "proof command");
+): Effect.fn.Return<string, YeetCommandError, Digest.Digest> {
+  return yield* digestComponents([commandText]);
 });
 
 /**
@@ -202,18 +201,15 @@ export const proofCommandDigest = Effect.fn("Yeet.proofCommandDigest")(function*
  */
 export const proofEpochDigest = Effect.fn("Yeet.proofEpochDigest")(function* (
   components: ProofEpochComponents
-): Effect.fn.Return<string, YeetCommandError, Crypto.Crypto> {
-  return yield* digestComponents(
-    [
-      components.lockfileDigest,
-      components.bunVersion,
-      components.nodeVersion,
-      components.rootTurboConfigDigest,
-      components.rootTsconfigDigest,
-      components.policyPackVersion,
-    ],
-    "proof epoch"
-  );
+): Effect.fn.Return<string, YeetCommandError, Digest.Digest> {
+  return yield* digestComponents([
+    components.lockfileDigest,
+    components.bunVersion,
+    components.nodeVersion,
+    components.rootTurboConfigDigest,
+    components.rootTsconfigDigest,
+    components.policyPackVersion,
+  ]);
 });
 
 /**
@@ -241,7 +237,7 @@ export const proofEpochDigest = Effect.fn("Yeet.proofEpochDigest")(function* (
  */
 export const collectProofEpoch = Effect.fn("Yeet.collectProofEpoch")(function* (
   repoRoot: string
-): Effect.fn.Return<ProofEpoch, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ProofEpoch, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const path = yield* Path.Path;
   const lockfilePath = path.join(repoRoot, "bun.lock");
   const bunVersionPath = path.join(repoRoot, ".bun-version");
@@ -277,11 +273,7 @@ export const collectProofEpoch = Effect.fn("Yeet.collectProofEpoch")(function* (
     )
   );
   const [lockfileDigest, rootTurboConfigDigest, rootTsconfigDigest] = yield* Effect.all(
-    [
-      digestBytes(lockfileBytes, "bun.lock"),
-      digestBytes(turboConfigBytes, "turbo.json"),
-      digestBytes(tsconfigBytes, "tsconfig.base.json"),
-    ],
+    [digestBytes(lockfileBytes), digestBytes(turboConfigBytes), digestBytes(tsconfigBytes)],
     { concurrency: 3 }
   );
   const components: ProofEpochComponents = {

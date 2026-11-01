@@ -1,0 +1,3455 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 74,
+          "quote": "A method for the attachment of a fastener element to a composite workpiece"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 13,
+              "endChar": 27,
+              "quote": "the attachment"
+            },
+            "determiner": "the",
+            "head": "attachment"
+          },
+          {
+            "anchor": {
+              "startChar": 31,
+              "endChar": 49,
+              "quote": "a fastener element"
+            },
+            "determiner": "a",
+            "head": "fastener element"
+          },
+          {
+            "anchor": {
+              "startChar": 53,
+              "endChar": 74,
+              "quote": "a composite workpiece"
+            },
+            "determiner": "a",
+            "head": "composite workpiece"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 84,
+          "endChar": 419,
+          "quote": "a hole punch is driven with the piercing body to the fore against a first side of the workpiece while the workpiece is supported at its oppositely disposed side by a piercing die, the hole of which is selected to suit the cross-sectional shape of the piercing body and hereby a piercing slug of the material of the workpiece is cut out"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 96,
+              "quote": "a hole punch"
+            },
+            "determiner": "a",
+            "head": "hole punch"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 129,
+              "quote": "the piercing body"
+            },
+            "determiner": "the",
+            "head": "piercing body"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 141,
+              "quote": "the fore"
+            },
+            "determiner": "the",
+            "head": "fore"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 162,
+              "quote": "a first side"
+            },
+            "determiner": "a",
+            "head": "first side"
+          },
+          {
+            "anchor": {
+              "startChar": 166,
+              "endChar": 179,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 186,
+              "endChar": 199,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 216,
+              "endChar": 244,
+              "quote": "its oppositely disposed side"
+            },
+            "determiner": "bare",
+            "head": "oppositely disposed side"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 262,
+              "quote": "a piercing die"
+            },
+            "determiner": "a",
+            "head": "piercing die"
+          },
+          {
+            "anchor": {
+              "startChar": 264,
+              "endChar": 272,
+              "quote": "the hole"
+            },
+            "determiner": "the",
+            "head": "hole"
+          },
+          {
+            "anchor": {
+              "startChar": 302,
+              "endChar": 327,
+              "quote": "the cross-sectional shape"
+            },
+            "determiner": "the",
+            "head": "cross-sectional shape"
+          },
+          {
+            "anchor": {
+              "startChar": 331,
+              "endChar": 348,
+              "quote": "the piercing body"
+            },
+            "determiner": "the",
+            "head": "piercing body"
+          },
+          {
+            "anchor": {
+              "startChar": 360,
+              "endChar": 375,
+              "quote": "a piercing slug"
+            },
+            "determiner": "a",
+            "head": "piercing slug"
+          },
+          {
+            "anchor": {
+              "startChar": 379,
+              "endChar": 391,
+              "quote": "the material"
+            },
+            "determiner": "the",
+            "head": "material"
+          },
+          {
+            "anchor": {
+              "startChar": 395,
+              "endChar": 408,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 425,
+          "endChar": 709,
+          "quote": "the sheet metal part is brought into contact against the said first side, and is optionally pressed into the latter in order to bring features providing security against rotation provided at least one of the sheet metal part and at the piercing body into engagement with the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 425,
+              "endChar": 445,
+              "quote": "the sheet metal part"
+            },
+            "determiner": "the",
+            "head": "sheet metal part"
+          },
+          {
+            "anchor": {
+              "startChar": 478,
+              "endChar": 497,
+              "quote": "the said first side"
+            },
+            "determiner": "the",
+            "head": "said first side"
+          },
+          {
+            "anchor": {
+              "startChar": 530,
+              "endChar": 540,
+              "quote": "the latter"
+            },
+            "determiner": "the",
+            "head": "latter"
+          },
+          {
+            "anchor": {
+              "startChar": 559,
+              "endChar": 567,
+              "quote": "features"
+            },
+            "determiner": "bare",
+            "head": "features"
+          },
+          {
+            "anchor": {
+              "startChar": 629,
+              "endChar": 649,
+              "quote": "the sheet metal part"
+            },
+            "determiner": "the",
+            "head": "sheet metal part"
+          },
+          {
+            "anchor": {
+              "startChar": 657,
+              "endChar": 674,
+              "quote": "the piercing body"
+            },
+            "determiner": "the",
+            "head": "piercing body"
+          },
+          {
+            "anchor": {
+              "startChar": 696,
+              "endChar": 709,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 96,
+                "quote": "a hole punch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 112,
+              "quote": " is driven with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 129,
+                "quote": "the piercing body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 133,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 141,
+                "quote": "the fore"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 150,
+              "quote": " against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 162,
+                "quote": "a first side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 162,
+              "endChar": 166,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 166,
+                "endChar": 179,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 179,
+              "endChar": 186,
+              "quote": " while "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 186,
+                "endChar": 199,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 199,
+              "endChar": 216,
+              "quote": " is supported at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 216,
+                "endChar": 244,
+                "quote": "its oppositely disposed side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 248,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 262,
+                "quote": "a piercing die"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 264,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 264,
+                "endChar": 272,
+                "quote": "the hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 272,
+              "endChar": 302,
+              "quote": " of which is selected to suit "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 302,
+                "endChar": 327,
+                "quote": "the cross-sectional shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 327,
+              "endChar": 331,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 331,
+                "endChar": 348,
+                "quote": "the piercing body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 348,
+              "endChar": 360,
+              "quote": " and hereby "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 360,
+                "endChar": 375,
+                "quote": "a piercing slug"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 375,
+              "endChar": 379,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 379,
+                "endChar": 391,
+                "quote": "the material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 391,
+              "endChar": 395,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 395,
+                "endChar": 408,
+                "quote": "the workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 408,
+              "endChar": 419,
+              "quote": " is cut out"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 425,
+                "endChar": 445,
+                "quote": "the sheet metal part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 445,
+              "endChar": 478,
+              "quote": " is brought into contact against "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 478,
+                "endChar": 497,
+                "quote": "the said first side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 497,
+              "endChar": 530,
+              "quote": ", and is optionally pressed into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 530,
+                "endChar": 540,
+                "quote": "the latter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 540,
+              "endChar": 559,
+              "quote": " in order to bring "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 559,
+                "endChar": 567,
+                "quote": "features"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 567,
+              "endChar": 629,
+              "quote": " providing security against rotation provided at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 629,
+                "endChar": 649,
+                "quote": "the sheet metal part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 649,
+              "endChar": 657,
+              "quote": " and at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 657,
+                "endChar": 674,
+                "quote": "the piercing body"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 674,
+              "endChar": 696,
+              "quote": " into engagement with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 696,
+                "endChar": 709,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 166,
+            "endChar": 179,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 186,
+            "endChar": 199,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 395,
+            "endChar": 408,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 478,
+            "endChar": 497,
+            "quote": "the said first side"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 162,
+            "quote": "a first side"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 530,
+            "endChar": 540,
+            "quote": "the latter"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 162,
+            "quote": "a first side"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 696,
+            "endChar": 709,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 116,
+          "quote": "said composite workpiece is at least partly formed from a foam material"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 69,
+              "quote": "said composite workpiece"
+            },
+            "determiner": "said",
+            "head": "composite workpiece"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 116,
+              "quote": "a foam material"
+            },
+            "determiner": "a",
+            "head": "foam material"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 69,
+                "quote": "said composite workpiece"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 101,
+              "quote": " is at least partly formed from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 116,
+                "quote": "a foam material"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 69,
+            "quote": "said composite workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 128,
+          "quote": "said foam material comprises at least one of plastic, aluminum, magnesium and steel"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 63,
+              "quote": "said foam material"
+            },
+            "determiner": "said",
+            "head": "foam material"
+          },
+          {
+            "anchor": {
+              "startChar": 90,
+              "endChar": 97,
+              "quote": "plastic"
+            },
+            "determiner": "bare",
+            "head": "plastic"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 107,
+              "quote": "aluminum"
+            },
+            "determiner": "bare",
+            "head": "aluminum"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 118,
+              "quote": "magnesium"
+            },
+            "determiner": "bare",
+            "head": "magnesium"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 128,
+              "quote": "steel"
+            },
+            "determiner": "bare",
+            "head": "steel"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 63,
+                "quote": "said foam material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 90,
+              "quote": " comprises at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 90,
+                "endChar": 97,
+                "quote": "plastic"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 97,
+              "endChar": 99,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 107,
+                "quote": "aluminum"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 109,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 118,
+                "quote": "magnesium"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 123,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 128,
+                "quote": "steel"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 63,
+            "quote": "said foam material"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 116,
+            "quote": "a foam material"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 128,
+          "quote": "said foam material is optionally in association with at least one further component"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 63,
+              "quote": "said foam material"
+            },
+            "determiner": "said",
+            "head": "foam material"
+          },
+          {
+            "anchor": {
+              "startChar": 98,
+              "endChar": 128,
+              "quote": "at least one further component"
+            },
+            "determiner": "at-least-one",
+            "head": "further component"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 63,
+                "quote": "said foam material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 98,
+              "quote": " is optionally in association with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 98,
+                "endChar": 128,
+                "quote": "at least one further component"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 63,
+            "quote": "said foam material"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 116,
+            "quote": "a foam material"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 2"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 132,
+          "quote": "said foam material comprises a sandwich material having cover layers of other materials"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 63,
+              "quote": "said foam material"
+            },
+            "determiner": "said",
+            "head": "foam material"
+          },
+          {
+            "anchor": {
+              "startChar": 74,
+              "endChar": 93,
+              "quote": "a sandwich material"
+            },
+            "determiner": "a",
+            "head": "sandwich material"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 113,
+              "quote": "cover layers"
+            },
+            "determiner": "bare",
+            "head": "cover layers"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 132,
+              "quote": "other materials"
+            },
+            "determiner": "bare",
+            "head": "other materials"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "2"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "2.a"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 63,
+                "quote": "said foam material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 63,
+              "endChar": 74,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 74,
+                "endChar": 93,
+                "quote": "a sandwich material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 93,
+              "endChar": 101,
+              "quote": " having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 113,
+                "quote": "cover layers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 117,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 132,
+                "quote": "other materials"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 63,
+            "quote": "said foam material"
+          }
+        },
+        "introducing": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 116,
+            "quote": "a foam material"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 5"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 166,
+          "quote": "said sandwich material comprises first and second cover layers and a core of one of foam material cardboard, card or wood"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 67,
+              "quote": "said sandwich material"
+            },
+            "determiner": "said",
+            "head": "sandwich material"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 107,
+              "quote": "first and second cover layers"
+            },
+            "determiner": "bare",
+            "head": "first and second cover layers"
+          },
+          {
+            "anchor": {
+              "startChar": 112,
+              "endChar": 118,
+              "quote": "a core"
+            },
+            "determiner": "a",
+            "head": "core"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 166,
+              "quote": "foam material cardboard, card or wood"
+            },
+            "determiner": "bare",
+            "head": "foam material cardboard, card or wood"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "5"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "5.a"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 67,
+                "quote": "said sandwich material"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 67,
+              "endChar": 78,
+              "quote": " comprises "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 107,
+                "quote": "first and second cover layers"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 107,
+              "endChar": 112,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 112,
+                "endChar": 118,
+                "quote": "a core"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 129,
+              "quote": " of one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 166,
+                "quote": "foam material cardboard, card or wood"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 67,
+            "quote": "said sandwich material"
+          }
+        },
+        "introducing": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 74,
+            "endChar": 93,
+            "quote": "a sandwich material"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 246,
+          "quote": "a plurality of hole punches is supplied in a strip assembly to a piercing head operating in strokes which, for each stroke, presses a hole punch out of the strip assembly and thus pierces the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 72,
+              "quote": "a plurality of hole punches"
+            },
+            "determiner": "plurality-of",
+            "head": "hole punches"
+          },
+          {
+            "anchor": {
+              "startChar": 88,
+              "endChar": 104,
+              "quote": "a strip assembly"
+            },
+            "determiner": "a",
+            "head": "strip assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 123,
+              "quote": "a piercing head"
+            },
+            "determiner": "a",
+            "head": "piercing head"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 144,
+              "quote": "strokes"
+            },
+            "determiner": "bare",
+            "head": "strokes"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 167,
+              "quote": "each stroke"
+            },
+            "determiner": "bare",
+            "head": "each stroke"
+          },
+          {
+            "anchor": {
+              "startChar": 177,
+              "endChar": 189,
+              "quote": "a hole punch"
+            },
+            "determiner": "a",
+            "head": "hole punch"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 215,
+              "quote": "the strip assembly"
+            },
+            "determiner": "the",
+            "head": "strip assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 233,
+              "endChar": 246,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 72,
+                "quote": "a plurality of hole punches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 72,
+              "endChar": 88,
+              "quote": " is supplied in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 88,
+                "endChar": 104,
+                "quote": "a strip assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 104,
+              "endChar": 108,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 123,
+                "quote": "a piercing head"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 123,
+              "endChar": 137,
+              "quote": " operating in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 144,
+                "quote": "strokes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 144,
+              "endChar": 156,
+              "quote": " which, for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 167,
+                "quote": "each stroke"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 177,
+              "quote": ", presses "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 177,
+                "endChar": 189,
+                "quote": "a hole punch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 189,
+              "endChar": 197,
+              "quote": " out of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 197,
+                "endChar": 215,
+                "quote": "the strip assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 215,
+              "endChar": 233,
+              "quote": " and thus pierces "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 233,
+                "endChar": 246,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 197,
+            "endChar": 215,
+            "quote": "the strip assembly"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "a strip assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 233,
+            "endChar": 246,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 298,
+          "quote": "the piercing head simultaneously serves, during the separating out of the hole punch from the strip assembly, for a reshaping of the sheet metal part, to produce features of shape, the features of shape fulfilling at least one of the following functions"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 62,
+              "quote": "the piercing head"
+            },
+            "determiner": "the",
+            "head": "piercing head"
+          },
+          {
+            "anchor": {
+              "startChar": 93,
+              "endChar": 111,
+              "quote": "the separating out"
+            },
+            "determiner": "the",
+            "head": "separating out"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 129,
+              "quote": "the hole punch"
+            },
+            "determiner": "the",
+            "head": "hole punch"
+          },
+          {
+            "anchor": {
+              "startChar": 135,
+              "endChar": 153,
+              "quote": "the strip assembly"
+            },
+            "determiner": "the",
+            "head": "strip assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 159,
+              "endChar": 170,
+              "quote": "a reshaping"
+            },
+            "determiner": "a",
+            "head": "reshaping"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 194,
+              "quote": "the sheet metal part"
+            },
+            "determiner": "the",
+            "head": "sheet metal part"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 224,
+              "quote": "features of shape"
+            },
+            "determiner": "bare",
+            "head": "features of shape"
+          },
+          {
+            "anchor": {
+              "startChar": 226,
+              "endChar": 247,
+              "quote": "the features of shape"
+            },
+            "determiner": "the",
+            "head": "features of shape"
+          },
+          {
+            "anchor": {
+              "startChar": 275,
+              "endChar": 298,
+              "quote": "the following functions"
+            },
+            "determiner": "the",
+            "head": "following functions"
+          }
+        ]
+      },
+      {
+        "path": "8.a.i",
+        "anchor": {
+          "startChar": 300,
+          "endChar": 361,
+          "quote": "bringing about a security against rotation with the workpiece"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 315,
+              "endChar": 342,
+              "quote": "a security against rotation"
+            },
+            "determiner": "a",
+            "head": "security against rotation"
+          },
+          {
+            "anchor": {
+              "startChar": 348,
+              "endChar": 361,
+              "quote": "the workpiece"
+            },
+            "determiner": "the",
+            "head": "workpiece"
+          }
+        ]
+      },
+      {
+        "path": "8.a.ii",
+        "anchor": {
+          "startChar": 363,
+          "endChar": 430,
+          "quote": "facilitating separation of the hole punches from the strip assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 376,
+              "endChar": 386,
+              "quote": "separation"
+            },
+            "determiner": "bare",
+            "head": "separation"
+          },
+          {
+            "anchor": {
+              "startChar": 390,
+              "endChar": 406,
+              "quote": "the hole punches"
+            },
+            "determiner": "the",
+            "head": "hole punches"
+          },
+          {
+            "anchor": {
+              "startChar": 412,
+              "endChar": 430,
+              "quote": "the strip assembly"
+            },
+            "determiner": "the",
+            "head": "strip assembly"
+          }
+        ]
+      },
+      {
+        "path": "8.a.iii",
+        "anchor": {
+          "startChar": 435,
+          "endChar": 484,
+          "quote": "facilitating the coiling up of the strip assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 448,
+              "endChar": 462,
+              "quote": "the coiling up"
+            },
+            "determiner": "the",
+            "head": "coiling up"
+          },
+          {
+            "anchor": {
+              "startChar": 466,
+              "endChar": 484,
+              "quote": "the strip assembly"
+            },
+            "determiner": "the",
+            "head": "strip assembly"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "7.a"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 62,
+                "quote": "the piercing head"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 93,
+              "quote": " simultaneously serves, during "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 93,
+                "endChar": 111,
+                "quote": "the separating out"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 115,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 129,
+                "quote": "the hole punch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 135,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 135,
+                "endChar": 153,
+                "quote": "the strip assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 153,
+              "endChar": 159,
+              "quote": ", for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 159,
+                "endChar": 170,
+                "quote": "a reshaping"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 170,
+              "endChar": 174,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 194,
+                "quote": "the sheet metal part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 194,
+              "endChar": 207,
+              "quote": ", to produce "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 224,
+                "quote": "features of shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 226,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 226,
+                "endChar": 247,
+                "quote": "the features of shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 247,
+              "endChar": 275,
+              "quote": " fulfilling at least one of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 275,
+                "endChar": 298,
+                "quote": "the following functions"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a.i",
+        "parent": "8.a"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 300,
+              "endChar": 315,
+              "quote": "bringing about "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.i",
+              "anchor": {
+                "startChar": 315,
+                "endChar": 342,
+                "quote": "a security against rotation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 342,
+              "endChar": 348,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.i",
+              "anchor": {
+                "startChar": 348,
+                "endChar": 361,
+                "quote": "the workpiece"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a.ii",
+        "parent": "8.a"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a.ii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 363,
+              "endChar": 376,
+              "quote": "facilitating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.ii",
+              "anchor": {
+                "startChar": 376,
+                "endChar": 386,
+                "quote": "separation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 386,
+              "endChar": 390,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.ii",
+              "anchor": {
+                "startChar": 390,
+                "endChar": 406,
+                "quote": "the hole punches"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 406,
+              "endChar": 412,
+              "quote": " from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.ii",
+              "anchor": {
+                "startChar": 412,
+                "endChar": 430,
+                "quote": "the strip assembly"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a.iii",
+        "parent": "8.a"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a.iii",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 435,
+              "endChar": 448,
+              "quote": "facilitating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.iii",
+              "anchor": {
+                "startChar": 448,
+                "endChar": 462,
+                "quote": "the coiling up"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 466,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a.iii",
+              "anchor": {
+                "startChar": 466,
+                "endChar": 484,
+                "quote": "the strip assembly"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 62,
+            "quote": "the piercing head"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 108,
+            "endChar": 123,
+            "quote": "a piercing head"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 129,
+            "quote": "the hole punch"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 177,
+            "endChar": 189,
+            "quote": "a hole punch"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 135,
+            "endChar": 153,
+            "quote": "the strip assembly"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "a strip assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a.i",
+          "anchor": {
+            "startChar": 348,
+            "endChar": 361,
+            "quote": "the workpiece"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 53,
+            "endChar": 74,
+            "quote": "a composite workpiece"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a.ii",
+          "anchor": {
+            "startChar": 390,
+            "endChar": 406,
+            "quote": "the hole punches"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 72,
+            "quote": "a plurality of hole punches"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a.ii",
+          "anchor": {
+            "startChar": 412,
+            "endChar": 430,
+            "quote": "the strip assembly"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "a strip assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a.iii",
+          "anchor": {
+            "startChar": 466,
+            "endChar": 484,
+            "quote": "the strip assembly"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 88,
+            "endChar": 104,
+            "quote": "a strip assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 226,
+            "endChar": 247,
+            "quote": "the features of shape"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 207,
+            "endChar": 224,
+            "quote": "features of shape"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 39,
+          "quote": "A method in accordance with any claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 49,
+          "endChar": 246,
+          "quote": "the method is carried out in a press which is equipped with a progressive tool which carries out a plurality of operations in different stations of the progressive tool for each stroke of the press"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 49,
+              "endChar": 59,
+              "quote": "the method"
+            },
+            "determiner": "the",
+            "head": "method"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 85,
+              "quote": "a press"
+            },
+            "determiner": "a",
+            "head": "press"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 127,
+              "quote": "a progressive tool"
+            },
+            "determiner": "a",
+            "head": "progressive tool"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 171,
+              "quote": "a plurality of operations"
+            },
+            "determiner": "plurality-of",
+            "head": "operations"
+          },
+          {
+            "anchor": {
+              "startChar": 175,
+              "endChar": 193,
+              "quote": "different stations"
+            },
+            "determiner": "bare",
+            "head": "different stations"
+          },
+          {
+            "anchor": {
+              "startChar": 197,
+              "endChar": 217,
+              "quote": "the progressive tool"
+            },
+            "determiner": "the",
+            "head": "progressive tool"
+          },
+          {
+            "anchor": {
+              "startChar": 222,
+              "endChar": 233,
+              "quote": "each stroke"
+            },
+            "determiner": "bare",
+            "head": "each stroke"
+          },
+          {
+            "anchor": {
+              "startChar": 237,
+              "endChar": 246,
+              "quote": "the press"
+            },
+            "determiner": "the",
+            "head": "press"
+          }
+        ]
+      },
+      {
+        "path": "9.b",
+        "anchor": {
+          "startChar": 253,
+          "endChar": 320,
+          "quote": "the piercing head being used in one station of the progressive tool"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 253,
+              "endChar": 270,
+              "quote": "the piercing head"
+            },
+            "determiner": "the",
+            "head": "piercing head"
+          },
+          {
+            "anchor": {
+              "startChar": 285,
+              "endChar": 296,
+              "quote": "one station"
+            },
+            "determiner": "bare",
+            "head": "one station"
+          },
+          {
+            "anchor": {
+              "startChar": 300,
+              "endChar": 320,
+              "quote": "the progressive tool"
+            },
+            "determiner": "the",
+            "head": "progressive tool"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 49,
+                "endChar": 59,
+                "quote": "the method"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 59,
+              "endChar": 78,
+              "quote": " is carried out in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 85,
+                "quote": "a press"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 85,
+              "endChar": 109,
+              "quote": " which is equipped with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 127,
+                "quote": "a progressive tool"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 127,
+              "endChar": 146,
+              "quote": " which carries out "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 171,
+                "quote": "a plurality of operations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 171,
+              "endChar": 175,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 175,
+                "endChar": 193,
+                "quote": "different stations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 193,
+              "endChar": 197,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 197,
+                "endChar": 217,
+                "quote": "the progressive tool"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 217,
+              "endChar": 222,
+              "quote": " for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 222,
+                "endChar": 233,
+                "quote": "each stroke"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 233,
+              "endChar": 237,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 237,
+                "endChar": 246,
+                "quote": "the press"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "9.b",
+        "parent": "9"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9.b",
+        "ancestor": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "9.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 253,
+                "endChar": 270,
+                "quote": "the piercing head"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 270,
+              "endChar": 285,
+              "quote": " being used in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 285,
+                "endChar": 296,
+                "quote": "one station"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 300,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.b",
+              "anchor": {
+                "startChar": 300,
+                "endChar": 320,
+                "quote": "the progressive tool"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 49,
+            "endChar": 59,
+            "quote": "the method"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A method"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 197,
+            "endChar": 217,
+            "quote": "the progressive tool"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 127,
+            "quote": "a progressive tool"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 246,
+            "quote": "the press"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 85,
+            "quote": "a press"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.b",
+          "anchor": {
+            "startChar": 300,
+            "endChar": 320,
+            "quote": "the progressive tool"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 109,
+            "endChar": 127,
+            "quote": "a progressive tool"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 35,
+          "quote": "A method in accordance with claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A method"
+            },
+            "determiner": "a",
+            "head": "method"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 45,
+          "endChar": 260,
+          "quote": "the piercing slug is removed in the same stroke of the piercing head or in a second stroke by means of a plunger which is moved through a bore of the hole punch, i.e. of the sheet metal part and of the piercing body"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 45,
+              "endChar": 62,
+              "quote": "the piercing slug"
+            },
+            "determiner": "the",
+            "head": "piercing slug"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 92,
+              "quote": "the same stroke"
+            },
+            "determiner": "the",
+            "head": "same stroke"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 113,
+              "quote": "the piercing head"
+            },
+            "determiner": "the",
+            "head": "piercing head"
+          },
+          {
+            "anchor": {
+              "startChar": 120,
+              "endChar": 135,
+              "quote": "a second stroke"
+            },
+            "determiner": "a",
+            "head": "second stroke"
+          },
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 157,
+              "quote": "a plunger"
+            },
+            "determiner": "a",
+            "head": "plunger"
+          },
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 187,
+              "quote": "a bore"
+            },
+            "determiner": "a",
+            "head": "bore"
+          },
+          {
+            "anchor": {
+              "startChar": 191,
+              "endChar": 205,
+              "quote": "the hole punch"
+            },
+            "determiner": "the",
+            "head": "hole punch"
+          },
+          {
+            "anchor": {
+              "startChar": 215,
+              "endChar": 235,
+              "quote": "the sheet metal part"
+            },
+            "determiner": "the",
+            "head": "sheet metal part"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 260,
+              "quote": "the piercing body"
+            },
+            "determiner": "the",
+            "head": "piercing body"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 45,
+                "endChar": 62,
+                "quote": "the piercing slug"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": " is removed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 77,
+                "endChar": 92,
+                "quote": "the same stroke"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 96,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 113,
+                "quote": "the piercing head"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 120,
+              "quote": " or in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 120,
+                "endChar": 135,
+                "quote": "a second stroke"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 135,
+              "endChar": 148,
+              "quote": " by means of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 157,
+                "quote": "a plunger"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 181,
+              "quote": " which is moved through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 181,
+                "endChar": 187,
+                "quote": "a bore"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 191,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 191,
+                "endChar": 205,
+                "quote": "the hole punch"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 215,
+              "quote": ", i.e. of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 215,
+                "endChar": 235,
+                "quote": "the sheet metal part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 235,
+              "endChar": 243,
+              "quote": " and of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 260,
+                "quote": "the piercing body"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 45,
+            "endChar": 62,
+            "quote": "the piercing slug"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 360,
+            "endChar": 375,
+            "quote": "a piercing slug"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 191,
+            "endChar": 205,
+            "quote": "the hole punch"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 84,
+            "endChar": 96,
+            "quote": "a hole punch"
+          }
+        }
+      }
+    ]
+  }
+]

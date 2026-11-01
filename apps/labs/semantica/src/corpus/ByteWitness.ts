@@ -3,7 +3,7 @@ import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
@@ -126,9 +126,9 @@ export const verifyByteExpectations = Effect.fn("ByteWitness.verifyByteExpectati
   const nestedDrifts = yield* Effect.scoped(
     Effect.gen(function* () {
       const cryptoContext = yield* Layer.build(BunCrypto.layer);
-      const crypto = Context.get(cryptoContext, Crypto.Crypto);
+      const crypto = Context.get(cryptoContext, Digest.Digest);
       const hashBytes = Effect.fn("ByteWitness.hashBytes")((bytes: Uint8Array) =>
-        S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.orDie)
+        S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(Effect.provideService(Digest.Digest, crypto), Effect.orDie)
       );
       return yield* Effect.forEach(
         expectations,

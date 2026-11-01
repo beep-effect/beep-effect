@@ -5,15 +5,17 @@
  * @since 0.0.0
  */
 
-import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } from "@beep/repo-utils";
+import { DomainError, TSMorphService } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { Project, SyntaxKind } from "ts-morph";
+import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { mentionsToken } from "../../../internal/WholeToken.ts";
 import { toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
 import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
@@ -58,7 +60,7 @@ export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
  */
 const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
   const path = yield* Path.Path;
-  const identityWorkspaceDir = yield* getWorkspaceDir(repoRoot, IDENTITY_PACKAGE_NAME);
+  const identityWorkspaceDir = HashMap.get(yield* workspaceDirectories(repoRoot), IDENTITY_PACKAGE_NAME);
 
   if (O.isNone(identityWorkspaceDir)) {
     return yield* DomainError.make({
@@ -361,7 +363,7 @@ const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<s
 const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectWorkspaceIdentityEntries")(function* (
   repoRoot: string
 ) {
-  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  const workspaces = yield* workspaceDirectories(repoRoot);
   let entries = A.empty<readonly [slug: string, dir: string]>();
 
   for (const [name, dir] of workspaces) {

@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str } from "@beep/utils";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -817,7 +817,7 @@ export const modelsAtomicExchangeOrLive = Effect.serviceOption(ModelsAtomicExcha
 const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const validate = validateSyntax;
   const eligibility = (
     file: string,
@@ -839,7 +839,7 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
   const hashBytes = Effect.fnUntraced(function* (bytes: Uint8Array) {
     return Hex.encode(
       yield* crypto
-        .digest("SHA-256", asArrayBufferView(bytes))
+        .digest(Digest.sha256, asArrayBufferView(bytes))
         .pipe(ModelsLocatorError.mapError("Cannot fingerprint configuration."))
     );
   });

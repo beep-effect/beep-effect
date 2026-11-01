@@ -1,0 +1,14 @@
+{
+  "initialHostAvailableBytes": 53087375360,
+  "stopReason": null,
+  "peakObservedBytes": 2764926976,
+  "minimumHostAvailableBytes": 50554507264,
+  "exitCode": 0,
+  "finalState": {
+    "ActiveState": "inactive",
+    "MainPID": "0",
+    "Result": "success",
+    "MemoryCurrent": "[not set]",
+    "MemoryPeak": "[not set]"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "18734099-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "previousRound": 1,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1.h",
+      "anchor": {
+        "startChar": 431,
+        "endChar": 439,
+        "quote": "two ends"
+      },
+      "determiner": "bare",
+      "beforeHead": "ends",
+      "afterHead": "two ends",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "evice are also provided between the upper backrest and the base, with two ends of the transfer rod rotatably connected to the upper backrest and the",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 6,
+      "path": "6.c",
+      "anchor": {
+        "startChar": 345,
+        "endChar": 352,
+        "quote": "one end"
+      },
+      "determiner": "bare",
+      "beforeHead": "end",
+      "afterHead": "one end",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "rotates synchronously with the backrest bracket relative to the base; one end of the first connecting rod is rotatably connected to the base; the u",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round1.json",
+      "sha256": "43c73771696527e49eb4daf665fc46f94a5fe8c62af3e1da11911dc89fc94b61"
+    },
+    {
+      "file": "extractor.round1.json",
+      "sha256": "6e04a730618f544c392e921c9f0174a715ea732904717972ec7bd56abb79f68b"
+    },
+    {
+      "file": "critic.round1.json",
+      "sha256": "3a7223fd1c22989785cdfd5e5fa322f47b066dd8d06a4dce812d003a0b1c8374"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

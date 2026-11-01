@@ -1,0 +1,258 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "17045367-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20210364542", "A1", "20211125"],
+    "applicationReference": ["US", "17045367", "20190328"],
+    "officeActionDocumentIdentifiers": ["LL5B9BDNGREENX0"],
+    "officeActionMailDate": "2023-08-14"
+  },
+  "digestEvidence": [
+    {
+      "file": "17045367.publication.xml",
+      "sha256": "354192e5f5cfd48630fcdd4f0d1099731c67ee6f62b00fba3f70cad32a459e15",
+      "matchesProvenance": true
+    },
+    {
+      "file": "17045367.claims.xml",
+      "sha256": "5fb8980debef0bd2cac995aacae683e415cab8ce4c5f0949f5e0f081c8e01853",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "5fb8980debef0bd2cac995aacae683e415cab8ce4c5f0949f5e0f081c8e01853",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "KFX8SLX1LDFLYX9",
+      "xmlAvailable": true,
+      "sha256": "0b9e18132c0493189ce46e322ff7723e986c45d480b709d98d3c925edb9a8505",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "LL586R3KGREENM5",
+      "xmlAvailable": true,
+      "sha256": "4e546fde0cac2d03cd6d4f49fb5e78256d59b46e606fcfb35228dc97d485d101",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 41,
+    "actualRows": 41,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2020-10-05T20:46:11.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "KFX8SLX1LDFLYX9"
+      },
+      {
+        "officialDate": "2020-10-05T20:06:32.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "LL586R3KGREENM5"
+      },
+      {
+        "officialDate": "2020-10-05T16:28:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "KFWZKK1RLDFLYX7"
+      },
+      {
+        "officialDate": "2020-10-05T16:28:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "KFWZKK1TLDFLYX7"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the electronics",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the electronics"
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the battery",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the battery"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the wind direction arrow",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the wind direction arrow"
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the circuit board",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the circuit board"
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the end",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the end"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the base",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the base"
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the hollow pointer arm",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hollow pointer arm"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the wire",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the wire"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the cap",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the cap"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plug",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the plug"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the end",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the end"
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the battery wire",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the battery wire"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the cap",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the cap"
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the base",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the base"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the hollow pointer arm",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hollow pointer arm"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the circuit board",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the circuit board"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the battery wire",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the battery wire"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the tube",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the tube"
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the case",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the case"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the solar panels",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the solar panels"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the solar cells",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the solar cells"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the radio antenna",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the radio antenna"
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the air molecules",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the air molecules"
+    }
+  ],
+  "assessment": "Full retained OA confirms actual112(b)/second-paragraph rejection scope1-10 in Allowable Subject Matter. However original KFX8SLX1LDFLYX9 matches native, whereas LL586R3KGREENM5 differs pointer versus pointer arm and dependency phrasing; both same-date originals have no explicit replacement-list/status statement. Operative choice remains unresolved.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "evidence": "Full retained OA confirms actual112(b)/second-paragraph rejection scope1-10 in Allowable Subject Matter. However original KFX8SLX1LDFLYX9 matches native, whereas LL586R3KGREENM5 differs pointer versus pointer arm and dependency phrasing; both same-date originals have no explicit replacement-list/status statement. Operative choice remains unresolved.",
+      "requiredAction": "Supply authoritative source evidence resolving this identified ground or operative-version gap; do not alter native source to force correspondence."
+    }
+  ],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "additionalOfficeActionEvidence": {
+    "documentIdentifier": "LL5B9BDNGREENX0",
+    "submissionDate": "2023-08-14",
+    "groundHeading": "Claim Rejections - 35 USC \u00a7 112",
+    "scopeQuote": "Claims 1-10 would be allowable if rewritten or amended to overcome the rejection(s) under 35 U.S.C. 112(b) or 35 U.S.C. 112 (pre-AIA ), 2nd paragraph, set forth in this Office action."
+  }
+}

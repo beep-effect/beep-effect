@@ -1,0 +1,67 @@
+{
+  "familyId": "12656234-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Method of visual representation of stock exchange transactions for at least one registered stock in terms of price levels in a price limit order book, where each transaction is defined by a transaction information associated with said transaction, which comprises at least: a date and time; a negotiation market; a negotiated stock; an execution volume; a sell limit price registered in the first sell level of the order book; a buy limit price registered in the first buy level of the order book; an execution price; wherein the method comprises for each stock exchange transaction: receiving in real time at least one transaction and its associated transaction information; labeling the at least one transaction with a label selected from between initiated buy transaction, when the execution price is equal to or greater than the sell limit price registered in the first sell level of the order book, and initiated sell transaction, when the execution price is equal to or lower than the buy limit price registered in the first buy level of the order book; determining the value in real time of a binary variable known as “side” which takes the value “1” when the transaction information is an initiated buy transaction and takes the value “2” when the transaction information is an initiated sell transaction; depicting in real time, on a user graphic interface, the transaction information selected between the initiated sell transaction information, the initiated buy transaction information and a combination of both by means of at least two colors determined by the “side” binary variable.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, wherein it further comprises: adding a color for depicting in real time, on the user graphic interface, the evolution in time of the buy limit price in the first buy level and of the sell limit price in the first sell level; calculating for each minimum representation time period “t”, a buy volume executed against the sell orders of the book (ASK), VAt, whose value corresponds to the sum of the executed volumes of initiated buy transactions whose date and time lie within the minimum representation time period “t”, and an executed sell volume against buy orders of the book (BID), VBt, whose value corresponds to the sum of the executed volumes of initiated sell transactions whose date and time lie within the minimum representation time period.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 2, wherein the method further comprises: calculating a real Bid/Ask pressure for the minimum representation time “t”: PRt=VAt−VBt; depicting in real time, on said use graphic interface, the evolution in time of the real Bid/Ask pressure, said pressure being represented between the representation made for the time evolution of the buy limit price in the first buy level and the sell limit price in the first sell level, with the color determined by the value “1” of the side variable if PRt is greater than zero and its intensity being proportional to the absolute value of PRt, and by the value “2” of the side variable if PRt is less than zero and its intensity being proportional to the absolute value of PRt; adding a color when the value of PRt is equal to zero.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 2, wherein the method further comprises: depicting in real time, on that user graphic interface, the evolution in time of the volume of each buy and sell level of the price limit order book, the buy volumes below the first buy level in the price axis being represented in the color determined for buys, and the sell volumes above the first sell level in the price axis being represented in the color determined for sells.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of claim 3, wherein the method further comprises: depicting in real time, on that user graphic interface, the evolution in time of the volume of each buy and sell level of the price limit order book, the buy volumes below the first buy level in the price axis being represented in the color determined for buys, and the sell volumes above the first sell level in the price axis being represented in the color determined for sells.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of claim 2, wherein the method further comprises: calculating, in real time, the accumulated by price real Bid/Ask pressure PRAt: PRAt(p)=α·PRAt-1(p)+VAt(p)−VBt(p); where PRAt-1 represents the accumulated real Bid/Ask pressure in the minimum representation period t−1 and α is a coefficient between 0 and 1 weighting the importance of period t−1 for the calculus of period t; depicting in real time, on said use graphic interface, the evolution in time of the accumulated by price real Bid/Ask pressure, said pressure being represented at each price level the stock price passes through, with the color determined for buys if PRAt is greater than zero, its intensity being proportional to the absolute value of PRAt, and with the color determined for sells if PRAt is less than zero, its intensity being proportional to the absolute value of PRAt; adding a color when the value of PRAt is equal to zero.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 6, wherein the method further comprises: depicting in real time, on said user graphic interface, the evolution in time of some moving averages of the values VAt y VBt on the basis of some weightable values, length in number of time periods of the moving window, selected by the user; calculating the volume imbalance between the first sell level of the order book (ASK) and the first buy level of the order book in order to determine the immediate evolution in the stock price by means of a ratio: Ratio = log   V t ASK V t BID where VtASK is the volume of the first sell level for the period t, and VtBID is the volume of the first buy level for the period t.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The method of claim 2, wherein the method further comprises: normalizing the volume of each registered level in the order book by means of: Vn t i = N · V t i ∑ j = 0 N - 1  ∑ k = 1 K  V t - j i ; where Vti is the volume of level i in the time period t, “K” is the total number of levels, “N” is the number of time periods passed taken into account for the normalization, Vnti is the normalized volume of level i in the time period t; depicting in real time, on said user graphic interface, the evolution in time of the normalized volumes of the order book, with the normalized buy volumes below the first buy level on the price axis being represented in the color determined for buys and its intensities being proportional to the value of the normalized buy volumes, and the normalized sell volumes above the first sell level on the price axis being represented in the color determined for sells and its intensities being proportional to the value of the normalized sell volumes; permitting the “ceilings” and “supports” of the stock to be identified at any instant of representation up to the time period t.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The method of claim 8, wherein the method further comprises: calculating a gradient for each normalized volume of the price limit order book by means of: VVti=Vnti−Vnt-1i; where VVti is the gradient of level i for the period t, and Vnti and Vnt-1i represent the normalized volume of level i for the time period t and t−1 respectively; depicting in real time, on said user graphic interface, the evolution in time of the gradients of each level of the order book, with the positive gradients of buy levels of the order book and the negative gradients of sell levels of the order book being represented in a color representing a price rise signal and its intensity being proportional to the absolute value of the gradient, and the negative gradients of buy levels of the book and the positive gradients of sell levels of the book being represented in a color representing a price drop signal and its intensity being proportional to the absolute value of the gradient.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The method of claim 1, wherein the transaction information additionally comprises the two codes of the two members carrying out the transaction; wherein the method further comprises: calculating: a buy limit volume Vlb, which is equal to the sum of transaction volumes conducted by the member by means of buy limit price orders during a determined period; a sell limit volume Vls, which is equal to the sum of transaction volumes conducted by the member by means of sell limit price orders during a determined period; a buy market volume Vmb, which is equal to the sum of transaction volumes initiated by the member by means of buy market orders during a determined period; and a sell market volume Vms, which is equal to the sum of transaction volumes initiated by the member by means of sell market orders during a determined period; for each member and for a representation option selected from among all the transactions conducted on the same stock by a member and all the transactions conducted by a member on various stocks; calculating a value known as odds-rate, OR: OR = Vls * Vmb Vlb * Vms calculating a representation area for each volume where the radius is calculated by means of: R i = V i ∑ k = 1 4  V k where Vi is an option selected from among Vls, Vmb, Vlb and Vms; depicting in real time, on a user graphic interface which forms a square divided into four quadrants, the volumes Vlb, Vls, Vmb and Vms, in the upper left, lower left, upper right and lower right squares, respectively, representing a pie, the two buy volumes being represented in the color determinated for buys and the two sell volumes in the color determinated for sells; the larger “primary” diagonal of the pie being represented in dark color and the smaller “secondary” diagonal of the pie being represented in light color; the sum of upper areas of the pie being equal to the lower one if the member buys as much as it sells and the sum of left areas of the pie being equal to the right one if the member contracts with limit orders as much as with market orders; when buy-sell equality holds, the four volumes representing a circle, OR=1, and disclosing an operation by the member that is neutral with respect to the variation in the stock price, an imperfect circle with larger diagonal being the upper right and lower left quadrants which determine an ascending primary diagonal, OR>1, and disclosing an operation by the member who favors a positive variation in the stock price, and an imperfect circle with larger diagonal beingthe upper left and lower right quadrants which determine a descending primary diagonal, OR<1, and disclosing an operation by the member who favors a negative variation in the stock price.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "System of visual representation of stock exchange transactions for at least one registered stock in terms of price levels in a price limit order book, wherein each transaction is defined by a transaction information associated with that transaction, said transaction information associated with said transaction being stored in a market database which sends said information to some user equipment comprising at least: a memory element for storing in real time the transaction information associated with each transaction of each stock; a processor which analyzes in real time the transaction information stored in the memory element, it calculates some representation parameters on the basis of the transaction information associated with each transaction and sends those parameters to a graphic processor; a graphic processor which analyzes in real time the representation parameters and sends them to a user graphic interface; a user graphic interface which produces a graphic representation in real time of the representation parameters.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The system of visual representation of stock exchange transactions of claim 11, wherein the user equipment additionally comprises a database connected to the processor which stores the analysis made by the processor in order to produce an accumulated representation of the data.",
+      "sourceXmlParentClaimNumbers": [11]
+    }
+  ]
+}

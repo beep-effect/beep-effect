@@ -1,0 +1,168 @@
+{
+  "recordedAt": "2026-10-29T04:45:33.741765+00:00",
+  "result": "passed",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "goalComplete": false,
+  "artifactRoot": "/tmp/obs-deploy-kgrini2y",
+  "deliberateMemoryExhaustion": false,
+  "liveCanary": {
+    "result": "passed",
+    "syntheticRecordsOnly": true,
+    "actualHarnessCoverage": false,
+    "productionCollectorChanged": false,
+    "backend": "https://dankserver.tailc7c348.ts.net:8447",
+    "project": "foundation-canary-662884114b02",
+    "collectorImage": "otel/opentelemetry-collector-contrib@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806",
+    "recordBudget": 2,
+    "producerAutomaticRetries": 0,
+    "initialHostAvailableBytes": 53009346560,
+    "containerDns": "explicit host-resolved tailnet address; TLS hostname verification retained",
+    "templateSha256": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+    "renderedSha256": "963f597d2a8e3e07abe18d0b9bfa7456b74b68d14fad47bd0bebede83563106c",
+    "onlyTemplateOverrides": ["project", "export endpoint", "30s retry window"],
+    "independentCollectorStopDeadlineSeconds": 150,
+    "collectorLimitsVerified": true,
+    "intakeAcknowledgmentBody": {},
+    "eventIds": [
+      "18be05e04090655273af873efcbedf7084e2ec1326df8ac1bdb5cce5712407cf",
+      "6384ea02a95627e37d87fa8d6c3931935702504534e92311e9f89a067eb8ec78"
+    ],
+    "storedRecords": [
+      {
+        "id": "U3BhbjoyMDQxMTM3",
+        "name": "agent.agent",
+        "context": {
+          "trace_id": "5426ad9a7f324ff6b4d92e51d8d8c358",
+          "span_id": "a14602e436144971"
+        },
+        "span_kind": "AGENT",
+        "parent_id": null,
+        "start_time": "2026-10-29T04:45:45.149764+00:00",
+        "end_time": "2026-10-29T04:45:45.249764+00:00",
+        "status_code": "UNSET",
+        "status_message": "",
+        "attributes": {
+          "session.id": "128c46e0ca8c0f71b4d8297f984bb3e9ef72db34e52cc639d880156d08a13fe7",
+          "ai_metrics.usage.convention": "unknown",
+          "ai_metrics.usage.normalized": false,
+          "ai_metrics.time_basis": "source_event",
+          "ai_metrics.source_end_time_unix_nano": "1793249145249764151",
+          "ai_metrics.stream": "native",
+          "ai_metrics.route_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "ai_metrics.source_name_hash": "af5951ec5beccc31525f4ca51927848b6a10f5c0f9abeba38268fcbeca985af9",
+          "ai_metrics.source_start_time_unix_nano": "1793249145149764151",
+          "ai_metrics.event_id": "6384ea02a95627e37d87fa8d6c3931935702504534e92311e9f89a067eb8ec78",
+          "ai_metrics.duration_known": true
+        },
+        "events": []
+      },
+      {
+        "id": "U3BhbjoyMDQxMTM2",
+        "name": "agent.agent",
+        "context": {
+          "trace_id": "f4728402793a412f9dbf3f3ade67f6d9",
+          "span_id": "8d6819b19d824898"
+        },
+        "span_kind": "AGENT",
+        "parent_id": null,
+        "start_time": "2026-10-29T04:45:44.149764+00:00",
+        "end_time": "2026-10-29T04:45:44.249764+00:00",
+        "status_code": "UNSET",
+        "status_message": "",
+        "attributes": {
+          "session.id": "3b3e461de0b5b92f83253e1b86f0c80fd920f4ff32edb87e5d9cc5a9caf1d754",
+          "ai_metrics.usage.convention": "unknown",
+          "ai_metrics.usage.normalized": false,
+          "ai_metrics.time_basis": "source_event",
+          "ai_metrics.source_end_time_unix_nano": "1793249144249764151",
+          "ai_metrics.stream": "native",
+          "ai_metrics.route_id": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "ai_metrics.source_name_hash": "af5951ec5beccc31525f4ca51927848b6a10f5c0f9abeba38268fcbeca985af9",
+          "ai_metrics.source_start_time_unix_nano": "1793249144149764151",
+          "ai_metrics.event_id": "18be05e04090655273af873efcbedf7084e2ec1326df8ac1bdb5cce5712407cf",
+          "ai_metrics.duration_known": true
+        },
+        "events": []
+      }
+    ],
+    "exactLocalAndBackendEventSets": true,
+    "workerVisibilityReceipts": 2,
+    "privateContentAbsentFromBackend": true,
+    "pausedBeforeStop": true,
+    "recordedAt": "2026-10-29T04:45:46.229787+00:00",
+    "queueFilesRetained": [
+      {
+        "bytes": 32768,
+        "sha256": "e5750bc6a3dd279a35797d26b1d69f6a2a954662ff50ded8dcbff83a3fa0f3da"
+      }
+    ],
+    "independentStopGuardReleased": true,
+    "cleanup": "owned collector stopped and removed; private queue retained",
+    "backendEvidencePreservedAfterRollback": true
+  },
+  "registeredPlanCommand": true,
+  "bundledEntrypoint": true,
+  "actualInstalledUserUnits": true,
+  "sharedCaddyAutosaveUnchanged": true,
+  "frontendAutosaveDisabled": true,
+  "caddyConfigurationValidated": true,
+  "systemdUnitsVerified": true,
+  "startsPaused": true,
+  "privateRoutesDenied": {
+    "GET /health": 404,
+    "GET /metrics": 404,
+    "POST /control/resume": 404,
+    "POST /control/pause": 404,
+    "GET /v1/traces": 404,
+    "POST /v1/traces/": 404,
+    "POST /v1/launches": 404
+  },
+  "pausedIntakeStatus": 503,
+  "oversizedStatus": 413,
+  "incompleteHeaderSeconds": 2.001,
+  "unrelatedSecretsAbsent": true,
+  "limits": {
+    "worker": {
+      "memory.max": "536870912",
+      "memory.swap.max": "0",
+      "cpu.max": "50000 100000",
+      "pids.max": "64"
+    },
+    "intake": {
+      "memory.max": "134217728",
+      "memory.swap.max": "0",
+      "cpu.max": "25000 100000",
+      "pids.max": "64"
+    }
+  },
+  "dependentIntakeStopped": true,
+  "changedBundleRefused": true,
+  "journalPreservedOnRefusal": true,
+  "verifiedBundleSha256": "d80c878eee0486e6f7c27ca816bd7d7417d68432d975cf445274b8b3c6f996c3",
+  "artifactSha256": {
+    "worker.sha256": "19e4a62ac3de8fc2cefa7b3773fdf7ce0e134f0274acc0ad77c1f17c57afff9f",
+    "caddy": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9",
+    "intake.json": "514451ec0df564b17123442bf1af91d7f97165a6e1fc0c4d597a9c70ce258fa8",
+    "intake.sha256": "05789a8e545560edb84dc17938d67649dd389004aecd458b3a403dd74cf58587"
+  },
+  "cleanup": [
+    {
+      "unit": "beep-observation-deploy-d20a0a3757ee.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    },
+    {
+      "unit": "beep-observation-deploy-d20a0a3757ee-intake.service",
+      "mainPid": 0,
+      "ownedUnitFileRemoved": true
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": "c91549ab1020bea7eab50f2751a9470bef43b43a32bd4b205fbfbd8b2263ee5e",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts": "b4220e80d0dbe2b41982228d2a6379dc0343acf0bc52e351130fb41bbea72762",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts": "bddd3e906afe6cf7a49a2526af5990c76e40b22ec8c05bd4a935803bd7cfce1c",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "78c60c3a916ea432ef3598f0dac0f88e52caf8f1c04707c992090cc3dd9e08dd",
+    "goals/agent-observability-foundation/ops/live_canary_support.py": "4f20aa46f241316911e9e7e5546eb9ad39b267587532df7053c9704fafc1376c"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "familyId": "18734099-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    1
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 2,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 3,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 4,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 5,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 6,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 7,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 8,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 9,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 10,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 11,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 12,
+      "reason": "Intended source transition characterized in that is outside PatentClaimTransition; selecting an incidental later supported word would invent a different preamble/body boundary.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Natural language membership: 2→1, 3→2, 4→3, 5→1, 6→5, 7/8/9/10→6, 11→1, 12→11; all twelve descend from selected independent root1.",
+    "Rejection expressly includes claims1–12 and quotes the characterized transitions plus matching antecedent passages; publication predates rejection. Complete-inventory/no-intervening-CLM assertion is retained provenance, with no exact original comparison for this family.",
+    "Claim1 uses comprising at the intended characterized by comprising boundary. Preamble retains characterized by exactly. Claims2–12 use unsupported characterized in that; no trees fabricated.",
+    "Canonical input now removes colon-style printed numbers. Offsets anchored against corrected claims.json."
+  ],
+  "rationale": "Manually selected claim1 elements, heads, and exact-head intra-claim edges per P2. Remaining claims explicitly unresolved for source transition coverage. Quote helper only; no implementation/prediction access."
+}

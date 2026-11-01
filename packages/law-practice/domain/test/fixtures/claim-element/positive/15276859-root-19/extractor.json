@@ -1,0 +1,33 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15276859-root-19",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "convention": "entity-mentions/v1",
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    19,
+    20
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "said engine",
+      "reason": "The resumptive said engine unambiguously refers to the sole turbine engine despite examiner antecedent objection. Same source-grounded semantic analysis links the surface to annular separation surface and each strip to the sole at-least-one electric heating strip."
+    },
+    {
+      "quote": "claims 1-20 are rejected",
+      "reason": "Selected root19/dependent20 only. Full native 1-18 are context, not additional scored claims or ancestors. Source critic accepted operative source; original20 trailing page16 is formatting, not source wording here."
+    },
+    {
+      "quote": "that is disposed upstream",
+      "reason": "Relative that links already explicit strip and wall participants; retained in functional connecting text under entity-mentions/v1, not an additional term."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required.",
+  "validation": "Every selected claim exactly once; exact canonical source spans; ordered nonoverlapping owned terms; local/foreign term-reference endpoints; complete contiguous ordered functional reconstruction and actual ClaimElementTree runtime decoding passed. This does not replace independent semantic critic or attorney review.",
+  "criticReview": "round1 pending independent semantic critic",
+  "attorneyAdjudication": "pending; confidence is not attorney agreement"
+}

@@ -8,7 +8,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertInstanceOf, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -1021,8 +1021,8 @@ describe("@beep/ciops live replay", () => {
             evidence: "unused-in-check-mode.md",
           })
         );
-        const crypto = yield* Crypto.Crypto;
-        const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(run.rendered));
+        const crypto = yield* Digest.Digest;
+        const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(run.rendered));
         const policy = yield* readPolicy();
         const events = yield* decodeAdmissionJournal(yield* readText(`${repoRoot}/${goldenJournalPath}`));
         const report = yield* replayAdmissionJournal(policy, events, "frozen-policy", "frozen-journal");

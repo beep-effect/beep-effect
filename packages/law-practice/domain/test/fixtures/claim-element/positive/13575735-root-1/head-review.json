@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-28",
+  "convention": "lexical-head/v1",
+  "familyId": "13575735-root-1",
+  "status": "requires-attorney-after-agent-round-limit",
+  "reason": "Three extractor/critic rounds completed before lexical-head/v1 clarification. Preserve the current reference and ask the attorney to decide each head; no fourth agent round.",
+  "annotationSha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+  "items": [
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.b.iv",
+      "anchor": {
+        "startChar": 622,
+        "endChar": 629,
+        "quote": "one end"
+      },
+      "head": "end",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "one end"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 1,
+      "path": "1.c",
+      "anchor": {
+        "startChar": 762,
+        "endChar": 770,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "one side"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a",
+      "anchor": {
+        "startChar": 145,
+        "endChar": 153,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "one side"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "claimNumber": 3,
+      "path": "3.a.i",
+      "anchor": {
+        "startChar": 374,
+        "endChar": 382,
+        "quote": "one side"
+      },
+      "head": "side",
+      "reason": "unsupported-count-prefix-not-retained; independent lexical review required",
+      "proposedHead": "one side"
+    }
+  ]
+}

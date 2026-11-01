@@ -1,0 +1,111 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A wireless communication system, comprising:
+<claim-text>a central cloud server configured to:
+<claim-text>cause a plurality of hybrid analog-digital repeater devices to extract a reference signal independently from a first type of polarization and a second type of polarization at each of the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>monitor, over time, a signal metric of the extracted reference signal at a plurality of different locations for the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>detect an interferer in a specific area across a wireless backhaul mesh network in a case where the signal metric of the extracted reference signal is dropped beyond a defined threshold at a given location of the plurality of different locations;</claim-text>
+<claim-text>estimate a location of the interferer based on the detected interferer in the specific area; and</claim-text>
+<claim-text>analyze the estimated location of the interferer and previous movement patterns of the interferer to predict a future trajectory of the interferer.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to:
+<claim-text>obtain a first type of telemetry information from the plurality of hybrid analog-digital repeater devices in the wireless backhaul mesh network, wherein
+<claim-text>each of the plurality of hybrid analog-digital repeater devices is configured to form dual analog data links on a first type of polarization and a second type of polarization with one or more neighboring network nodes in the wireless backhaul mesh network, and</claim-text>
+</claim-text>
+<claim-text>the first type of polarization is different from the second type of polarization;
+<claim-text>obtain a second type of telemetry information from a master wireless access point (WAP) device and one or more service wireless access point devices in the wireless backhaul mesh network; and</claim-text>
+<claim-text>based on the first type of telemetry information and the second type of telemetry information, determine a radio frequency (RF) signal interference or blockage on the first type of polarization corresponding to a first analog data link of the dual analog data links at one or more hybrid analog-digital repeater devices of the plurality of hybrid analog-digital repeater devices.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The wireless communication system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein
+<claim-text>the plurality of hybrid analog-digital repeater devices is disposed as a bi-directional RF bridge of data traffic between the master WAP device and the one or more service WAP devices, the central cloud server is further configured to:
+<claim-text>cause the plurality of hybrid analog-digital repeater devices in the wireless backhaul mesh network to relay the data traffic on the first type of polarization corresponding to the first analog data link of the dual analog data links while the second type of polarization is configured to concurrently spatially scan a corresponding surrounding area to determine a location and a movement pattern of one or more candidate objects as signal blockers without affecting the first analog data link; and</claim-text>
+<claim-text>switch the data traffic at the one or more hybrid analog-digital repeater devices on the second type of polarization corresponding to a second analog data link of the dual analog data links in a case where the RF signal interference or blockage is determined on the first type of polarization corresponding to the first analog data link at the one or more hybrid analog-digital repeater devices.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The wireless communication system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the central cloud server is further configured to identify a direction and a location of the RF signal interference or blockage based on the first type of telemetry information and the second type of telemetry information.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The wireless communication system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the central cloud server is further configured to apply a neural network model to mitigate an impact of the RF signal interference or blockage on the wireless backhaul mesh network by communicating a set of control instructions to the one or more hybrid analog-digital repeater devices affected by the RF signal interference or blockage in the wireless backhaul mesh network, and
+<claim-text>wherein the set of control instructions causes the one or more hybrid analog-digital repeater devices to further adjust one or more of: an antenna radiation pattern, a channel frequency, a beam routing path, or control a transmit power level based on the first type of telemetry information and the second type of telemetry information.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to:
+<claim-text>predict future blocker positions in the wireless backhaul mesh network based on a first type of telemetry information including at least a surrounding-environment sensed information and historical blocker movement patterns; and</claim-text>
+<claim-text>proactively adjust beamforming patterns and beam routings in the wireless backhaul mesh network based on the predicted future blocker positions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The wireless communication system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the central cloud server is further configured to cause the one or more hybrid analog-digital repeater devices to:
+<claim-text>execute alternate beamforming weights for each antenna element of a donor antenna and one or more service phased antenna arrays of the one or more hybrid analog-digital repeater devices in a case where the RF signal interference or blockage is determined on the first type of polarization corresponding to the first analog data link at the one or more hybrid analog-digital repeater devices; and</claim-text>
+<claim-text>generate a spatial null or a region of reduced signal strength in a direction of the RF signal interference or blockage based on the executed alternate beamforming weights.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to identify and quantify polarization-dependent impairments affecting one type of polarization higher than other type of polarization based on comparative analysis of the extracted reference signal across two types of polarizations.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to:
+<claim-text>cause the plurality of hybrid analog-digital repeater devices to execute a first beam sweep in an azimuth plane in a defined step angle size covering 0° to 360° azimuth angular span with a defined stop dwell time at each of the defined step angle size.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to:
+<claim-text>cause the plurality of hybrid analog-digital repeater devices to execute a second beam sweep in an elevation plane in a defined step angle size spanning angles from −90° to +90° relative to an azimuth plane with a defined stop dwell time at each of the defined step angle size to pause at each angular position.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the central cloud server is further configured to set an initial beam direction and a power level of each transmit (Tx) or receive (Rx) beam at each of the plurality of hybrid analog-digital repeater devices.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The wireless communication system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the central cloud server is further configured to detect one or more specific suspect directions of interferers by tuning the defined step angle size or the defined stop dwell time.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The wireless communication system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the central cloud server is further configured to detect one or more specific suspect directions of interferers by tuning the defined step angle size or the defined stop dwell time.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The wireless communication system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a first type of telemetry information obtained from the plurality of hybrid analog-digital repeater devices comprises two or more of: a unique identifier (ID) of each of the plurality of hybrid analog-digital repeater devices, a geo-location of each of the plurality of hybrid analog-digital repeater devices, an operational state of the plurality of hybrid analog-digital repeater devices, signal metadata of an incoming beam of RF signals at each of the plurality of hybrid analog-digital repeater devices, vibration information indicative of a change in vibration detected at each of the plurality of hybrid analog-digital repeater devices, antenna array orientation change information indicative of the change in an orientation of a donor antenna and one or more service phase antenna arrays of each of the plurality of hybrid analog-digital repeater devices, and surrounding-environment sensed information sensed by a set of onboard sensors at each of the plurality of hybrid analog-digital repeater devices.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The wireless communication system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the second type of telemetry information obtained from the master WAP device and the one or more service WAP devices comprises user equipment (UE) related information of one or more UEs wirelessly connected to a corresponding wireless access point pertaining to the master WAP device and the one or more service wireless access point devices, and wherein the UE related information comprises a Received Signal Strength Indicator (RSSI), a throughput, a latency, a packet loss measurement, a channel utilization, an interference level, a retransmission or error rate, device information, and location data associated with each UE of the one or more UEs connected to the corresponding wireless access point.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The wireless communication system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the central cloud server is further configured to drop participation of the one or more hybrid analog-digital repeater devices in the wireless backhaul mesh network in a case where the RF signal interference or blockage is determined on both the first type of polarization and the second type of polarization at the one or more hybrid analog-digital repeater devices.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The wireless communication system of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein the central cloud server is further configured to dynamically reassign two or more network nodes previously connected to the one or more hybrid analog-digital repeater devices to neighboring network nodes of each of the two or more network nodes except the one or more hybrid analog-digital repeater devices.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. A method for telemetry information-based signal interference mitigation in a wireless backhaul mesh network, the method comprising:
+<claim-text>in a central cloud server:
+<claim-text>causing each of a plurality of hybrid analog-digital repeater devices to extract a reference signal independently from a first type of polarization and a second type of polarization at each of the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>monitoring, over time, a signal metric of the extracted reference signal at a plurality of different locations for the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>detecting an interferer in a specific area across the wireless backhaul mesh network in a case where the signal metric of the extracted reference signal is dropped beyond a defined threshold at a given location of the plurality of different locations;</claim-text>
+<claim-text>estimating a location of the interferer based on the detected interferer in the specific area; and</claim-text>
+<claim-text>analyzing the estimated location of the interferer and previous movement patterns of the interferer to predict a future trajectory of the interferer.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00018">claim 18</claim-ref>, further comprising:
+<claim-text>identifying and quantifying polarization-dependent impairments affecting one type of polarization higher than other type of polarization based on comparative analysis of the extracted reference signal across two types of polarizations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A computer program product for telemetry information-based signal interference mitigation in a wireless backhaul mesh network, the computer program product comprising a computer-readable storage medium having program instructions embodied therewith, the program instructions are executable by a system to cause the system to execute operations, the operations comprising:
+<claim-text>causing each of a plurality of hybrid analog-digital repeater devices to extract a reference signal independently from a first type of polarization and a second type of polarization at each of the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>monitoring, over time, a signal metric of the extracted reference signal at a plurality of different locations for the plurality of hybrid analog-digital repeater devices;</claim-text>
+<claim-text>detecting an interferer in a specific area across the wireless backhaul mesh network in a case where the signal metric of the extracted reference signal is dropped beyond a defined threshold at a given location of the plurality of different locations;</claim-text>
+<claim-text>estimating a location of the interferer based on the detected interferer in the specific area; and</claim-text>
+<claim-text>analyzing the estimated location of the interferer and previous movement patterns of the interferer to predict a future trajectory of the interferer.</claim-text>
+</claim-text>
+</claim>
+</claims>

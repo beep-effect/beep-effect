@@ -17,7 +17,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -47,8 +47,9 @@ import type { ProcessTableShape } from "@beep/repo-cli/test/RepoRun";
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  NodeCrypto.layer,
   TestConsole.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(NodeServices.layer))
+  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
 
 const runGit = Effect.fn("WorktreeRemoveFenceTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {

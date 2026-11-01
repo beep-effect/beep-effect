@@ -50,7 +50,7 @@ import {
   planWorkspaceCoverageAffectedScope,
   workspaceCoverageScopeOwners,
 } from "@beep/repo-cli/test/Quality";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -59,6 +59,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -543,4 +544,4 @@ const program = Effect.gen(function* () {
   }
 });
 
-program.pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);
+program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), NodeRuntime.runMain);

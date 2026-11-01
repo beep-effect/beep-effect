@@ -9,6 +9,7 @@ import {
   M365Error,
 } from "@beep/m365";
 import { it } from "@beep/test-runner";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
@@ -114,8 +115,10 @@ const overJob = Effect.fn("overJob")(function* <A, E>(
         parentFolderId: folderId,
       };
       const contact = yield* S.decodeEffect(GraphContact)(wire).pipe(
-        Effect.map((value) => GraphContact.make({ ...value, rawJson: O.some(wire) })),
-        Effect.mapError(() => M365Error.fromReason("response decoding"))
+        Effect.mapBoth({
+          onFailure: () => M365Error.fromReason("response decoding"),
+          onSuccess: (value) => GraphContact.make({ ...value, rawJson: O.some(wire) }),
+        })
       );
       yield* Ref.update(inventory, (snapshot) =>
         MailboxInventory.make({
@@ -228,7 +231,7 @@ describe("contact seeding", () => {
     const plan = planContacts([source], 0, inventoryOf([stored("other", "Other fixture", "info@example.test")]), []);
     expect(reportPlan("fixture-run", plan.rows, 0).Create).toBe(1);
   });
-  it.layer(BunServices.layer, { timeout: "5 seconds" })((it) => {
+  it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { timeout: "5 seconds" })((it) => {
     it.effect("deduplicates source bytes and rejects VCF outside census", () =>
       withFiles(
         Effect.fnUntraced(function* (root) {

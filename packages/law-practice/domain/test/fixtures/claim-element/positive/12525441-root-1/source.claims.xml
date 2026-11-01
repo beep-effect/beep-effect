@@ -1,0 +1,37 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for joining components by means of tensioning bolts, comprising the following steps:
+<claim-text>placing a tensioning bolt at the components to be joined,</claim-text>
+<claim-text>threading a nut onto the tensioning bolt,</claim-text>
+<claim-text>stretching the tensioning bolt by means of a hydraulic tensioning device, supported at the components, said tensioning device being in engagement with the protruding end of the tensioning bolt which extends beyond the nut, and</claim-text>
+<claim-text>turning the nut further until it contacts one of the components,</claim-text>
+<claim-text>wherein</claim-text>
+<claim-text>the hydraulic pressure of the tensioning device is monitored, the tensioning device is blocked hydraulically when a hydraulic pressure target value is reached during stretching, and, in the event of a pressure drop during the blocking, pressure is built up again by additional pumping.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that at the beginning of the blocking a time measurement is started, and that a signal for turning the nut is generated if no pressure drop to below a lower threshold value occurs within a predetermined holding time after the start of the time measurement.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that an electronic recording of the following parameters is performed:
+<claim-text>a) the duration of the pressure build-up until the target value is reached,</claim-text>
+<claim-text>b) the magnitude of the pressure and/or the chronological development of the pressure,</claim-text>
+<claim-text>c) whether additional pumping has occurred.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the lengthening of the threaded bolt is determined by determining the volume of the hydraulic oil pumped into the tensioning device.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, characterized in that the hydraulic tensioning device includes at least one piston movable in a tensioning cylinder, and that the course of the piston is calculated from the volume of delivered oil by means of a microprocessor and sensors.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. A device for joining components by means of tensioning bolts, comprising a hydraulic tensioning device having a tensioning cylinder, a hydraulic aggregate for generating the pressure for the tensioning device and a control device at which a target value of the pressure can be set,
+<claim-text>wherein</claim-text>
+<claim-text>the control device controls the hydraulic aggregate such that, after the target value has been reached, the control device causes a hydraulic blocking of the tensioning device for a predetermined holding time and that the control device reactivates the hydraulic aggregate if the pressure drops below a lower threshold value within the holding time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The device of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein if no pressure drop to below the lower threshold value occurs during the holding time, the control device generates a signal for turning the nut.</claim-text>
+</claim>
+</claims>

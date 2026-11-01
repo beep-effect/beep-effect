@@ -19,10 +19,9 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
-import * as PlatformError from "effect/PlatformError";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -84,31 +83,18 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
     "snapshots source authority before the asynchronous digest boundary",
     Effect.fnUntraced(function* () {
       const source = identity({ textDigest: factDigest });
-      const mutatingCrypto = Crypto.make({
-        digest: (algorithm, data) =>
+      const digest = yield* Digest.Digest;
+      const mutatingDigest = Digest.Digest.of({
+        ...digest,
+        digest: Effect.fn("VerifiedTextAnchorTest.mutatingDigest")((algorithm, data) =>
           Effect.sync(() => Reflect.set(source, "scopeRef", "matter:mutated")).pipe(
-            Effect.andThen(
-              Effect.tryPromise({
-                catch: (cause) =>
-                  PlatformError.systemError({
-                    _tag: "Unknown",
-                    cause,
-                    description: "Could not compute mutating fixture digest",
-                    method: "digest",
-                    module: "VerifiedTextAnchorTest",
-                  }),
-                try: () =>
-                  globalThis.crypto.subtle
-                    .digest(algorithm, new Uint8Array(data))
-                    .then((buffer) => new Uint8Array(buffer)),
-              })
-            )
-          ),
-        randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
+            Effect.andThen(digest.digest(algorithm, data))
+          )
+        ),
       });
       const verified = yield* verifySourceTextIdentity(
         VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText: "fact" })
-      ).pipe(Effect.provideService(Crypto.Crypto, mutatingCrypto));
+      ).pipe(Effect.provideService(Digest.Digest, mutatingDigest));
 
       expect(source.scopeRef).toBe("matter:mutated");
       expect(verified.source.scopeRef).toBe("matter:example");
@@ -308,7 +294,7 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
   );
 
   it.effect(
-    "sanitizes source-text digest failures",
+    "sanitizes a malformed source-text digest",
     Effect.fnUntraced(
       function* () {
         const source = identity({ textDigest: factDigest });
@@ -324,18 +310,12 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
         expect(failure.reason).toBe("stale-source");
         expect(failure.message).toBe("Verified text anchor rejected: stale-source.");
       },
+      // The digest itself cannot fail; a truncated one fails `Sha256Hex` decoding instead.
       Effect.provideService(
-        Crypto.Crypto,
-        Crypto.make({
-          digest: () =>
-            Effect.fail(
-              PlatformError.systemError({
-                _tag: "Unknown",
-                method: "digest",
-                module: "VerifiedTextAnchorTest",
-              })
-            ),
-          randomBytes: (size) => new Uint8Array(size),
+        Digest.Digest,
+        Digest.Digest.of({
+          digest: Effect.fn("VerifiedTextAnchorTest.truncatedDigest")(() => Effect.succeed(new Uint8Array(4))),
+          digestHex: Effect.fn("VerifiedTextAnchorTest.truncatedDigestHex")(() => Effect.succeed("00000000")),
         })
       )
     )

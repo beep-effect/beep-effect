@@ -143,6 +143,10 @@
       "purpose": "Wave 3-A3 parity: the repo-utils package.json model and workspace dependency helpers recorded before the @beep/package-json re-base and compared at the head, with a mutation corpus."
     },
     {
+      "path": "ops/repo-workspaces-adoption-parity.ts",
+      "purpose": "4-A3 parity: the retired repo-utils workspace set, dependency edges and topological order (frozen) against WorkspaceDiscovery and DependencyGraph over the live repo, strict manifests per member, plus byte-identical tsconfig-sync --check, package-scripts, fallow boundaries, labs list and docgen status outputs and the topo-sort shift."
+    },
+    {
       "path": "ops/repo-workspaces-differential.ts",
       "purpose": "Wave 4-W-a differential: @beep/repo-workspaces member set, edge set and topological order against bun.lock and raw package.json oracles."
     },

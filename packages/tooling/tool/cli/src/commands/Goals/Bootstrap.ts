@@ -38,7 +38,7 @@ import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
 import { materializeExpectFlag, materializeWriteFlag, requireOneMode, writeReviewedPlan } from "./Materialize.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 import type * as PlatformError from "effect/PlatformError";
 import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
@@ -495,7 +495,7 @@ const createRow = (
   ownership: PlanOwnership,
   reason: string,
   payload: string
-): Effect.Effect<PlanRow, PlatformError.PlatformError, Crypto.Crypto> =>
+): Effect.Effect<PlanRow, PlatformError.PlatformError, Digest.Digest> =>
   Effect.map(sha256Hex(payload), (payloadDigest) => ({
     path,
     action: "create",
@@ -654,10 +654,10 @@ export const compileMaterializationPlan: {
   (
     input: BootstrapInput,
     existingSlugs: ReadonlyArray<string>
-  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Digest.Digest>;
   (
     existingSlugs: ReadonlyArray<string>
-  ): (input: BootstrapInput) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Crypto.Crypto>;
+  ): (input: BootstrapInput) => Effect.Effect<MaterializationPlan, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
   Effect.fnUntraced(function* (input: BootstrapInput, existingSlugs: ReadonlyArray<string>) {

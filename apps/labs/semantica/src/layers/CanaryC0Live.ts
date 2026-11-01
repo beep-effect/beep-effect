@@ -4,7 +4,7 @@ import { WinkBackendLive, WinkEngineLive } from "@beep/wink";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -189,13 +189,13 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
   hostedProvider: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError>,
   goldSourceLayer: (
     directory: string
-  ) => Layer.Layer<GoldSource, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path>
+  ) => Layer.Layer<GoldSource, never, Digest.Digest | FileSystem.FileSystem | Path.Path>
 ) {
   const canonicalizer = yield* Canonicalizer;
   const chunker = yield* Chunker;
   const config = yield* LabConfig;
   const corpusManifestBuilder = yield* CorpusManifestBuilder;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const documentSource = yield* DocumentSource;
   const f1Catalog = yield* F1Catalog;
   const fs = yield* FileSystem.FileSystem;
@@ -242,14 +242,14 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
       onNonEmpty: Effect.succeed,
     });
     const hostedModel = yield* AnthropicExtractionModelIdentity({
-      artifactHash: yield* HOSTED_EXTRACTION_ARTIFACT_HASH.pipe(Effect.provideService(Crypto.Crypto, crypto)),
+      artifactHash: yield* HOSTED_EXTRACTION_ARTIFACT_HASH.pipe(Effect.provideService(Digest.Digest, crypto)),
       model: config.extractorModel,
     });
     const runBody = {
       corpusHash: selection.manifest.corpusHash,
       extractor: hostedModel,
       fixtureIndexDigest: yield* contentDigest(F1Index)(selection.fixtures).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.orDie
       ),
       gold,
@@ -271,7 +271,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
 
     const support = Layer.mergeAll(
       Layer.succeed(Canonicalizer, canonicalizer),
-      Layer.succeed(Crypto.Crypto, crypto),
+      Layer.succeed(Digest.Digest, crypto),
       Layer.succeed(FileSystem.FileSystem, fs),
       Layer.succeed(LabConfig, selectedConfig),
       Layer.succeed(Path.Path, path),
@@ -329,7 +329,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
                 };
               }
               const canonical = yield* canonicalizer.identify(document, outcome);
-              const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Crypto.Crypto, crypto));
+              const chunks = yield* chunker.chunk(canonical).pipe(Effect.provideService(Digest.Digest, crypto));
               const chunked = yield* makeEvent(
                 EventBody.cases.Chunked.make({
                   chunks: A.map(chunks, (chunk) => chunk.id),
@@ -342,7 +342,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
               const extractionOutcomes = yield* Effect.all(
                 [hostedExtractor.extract(canonical, chunks), patternExtractor.extract(canonical, chunks)],
                 { concurrency: 2 }
-              ).pipe(Effect.provideService(Crypto.Crypto, crypto));
+              ).pipe(Effect.provideService(Digest.Digest, crypto));
               yield* Effect.forEach(
                 extractionOutcomes,
                 Effect.fnUntraced(function* (extraction) {
@@ -358,7 +358,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
           const snapshot = yield* ledger.read(run.id);
           const report = yield* evaluatorService
             .score(run, snapshot, outcomes)
-            .pipe(Effect.provideService(Crypto.Crypto, crypto));
+            .pipe(Effect.provideService(Digest.Digest, crypto));
           return {
             coldStartMs: N.max(0, layersReadyMillis - startedMillis),
             report,
@@ -440,7 +440,7 @@ const makeCanaryC0 = Effect.fn("CanaryC0.make")(function* (
 export const CanaryC0WithGoldSourceLive = (options: {
   readonly goldSourceLayer: (
     directory: string
-  ) => Layer.Layer<GoldSource, never, Crypto.Crypto | FileSystem.FileSystem | Path.Path>;
+  ) => Layer.Layer<GoldSource, never, Digest.Digest | FileSystem.FileSystem | Path.Path>;
   readonly hostedProvider: Layer.Layer<LanguageModel.LanguageModel, Config.ConfigError>;
 }) => Layer.effect(CanaryC0, makeCanaryC0(options.hostedProvider, options.goldSourceLayer));
 

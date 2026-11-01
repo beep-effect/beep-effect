@@ -1,0 +1,85 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An adjustable tethering system comprising:
+<claim-text>a primary line having a longitudinal length;</claim-text>
+<claim-text>a capsule comprising a bail release feature; and</claim-text>
+<claim-text>a secondary line wound about the primary line to form a plurality of windings, a bail section, and an attachment section, the secondary line being releasably slidable along the longitudinal length of the primary line;</claim-text>
+<claim-text>wherein the plurality of windings of the secondary line are positioned within an internal cavity of the capsule;</claim-text>
+<claim-text>wherein the attachment section is defined by a portion of the secondary line that extends outwardly from the primary line, and wherein the bail section is defined by a portion of the secondary line that extends transversely across the plurality of windings; and</claim-text>
+<claim-text>wherein the bail release feature of the capsule is configured to physically engage the bail section and cause a release of tension in the plurality of windings.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the primary line is a dock line having a first end and a second end, and wherein the first end is a looped end.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the secondary line is a continuous loop, and wherein the secondary line is wrapped around the primary line such that the secondary line has been passed through itself a plurality of times to create the plurality of windings.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The adjustable tethering system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the secondary line is wrapped around the primary line to form a Prusik knot.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the secondary line is wrapped around the primary line to form a Klemheist knot.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, the capsule further comprising an exterior wall and an interior wall, the interior wall defining the internal cavity, the bail release feature being a protrusion that extends from the interior wall inwardly into the internal cavity such that an end of the protrusion is a first distance inwardly of the interior wall, and wherein the plurality of windings and the bail section of the secondary line are situated within the internal cavity of the capsule such that the bail section is a shorter distance from the interior wall than the first distance, and wherein the capsule is free to rotate relative to the standing section of the secondary line such that the protrusion physically contacts the bail section and thereby releases tension in the plurality of windings.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the attachment section is configured such that an application of tension to the attachment section operates to tighten the plurality of windings about the primary line to arrest longitudinal movement of the secondary line along the longitudinal length of the primary line.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the bail section extends substantially orthogonal to a radial direction extending from a central axis of the primary line.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the capsule comprises a polymeric material.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The adjustable tethering system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the capsule is formed by injection molding.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The adjustable tethering system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the capsule comprises a unitary molded body, and wherein the bail release feature is an integral protrusion of the unitary molded body.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The adjustable tethering system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the polymeric material has a Shore A hardness between 30A and 60A.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The adjustable tethering system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein the polymeric material comprises silicone.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The adjustable tethering system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the protrusion is integrally molded with the interior wall of the capsule.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The adjustable tethering system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the capsule comprises two halves that are fastened together.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The adjustable tethering system of <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the two halves of the capsule are irreversibly fastened together by welding.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the adjustable tethering system is configured for marine applications.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The adjustable tethering system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the adjustable tethering system is configured to secure a watercraft during docking.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. An adjustable tethering system comprising:
+<claim-text>a primary line having a longitudinal length, a first end, and a second end;</claim-text>
+<claim-text>a secondary line wound about the primary line to form a plurality of windings, a bail section, and an attachment section, the secondary line being releasably slidable along the longitudinal length of the primary line; and</claim-text>
+<claim-text>a capsule comprising:
+<claim-text>an internal cavity; and</claim-text>
+<claim-text>a bail release feature in the form of a protrusion extending inwardly from an interior wall of the capsule;</claim-text>
+</claim-text>
+<claim-text>wherein the plurality of windings and the bail section of the secondary line are positioned entirely within the internal cavity of the capsule;</claim-text>
+<claim-text>wherein the first and second ends of the primary line extend from opposite ends of the capsule, and wherein the attachment section of the secondary line extends outwardly from the capsule between the opposite ends of the capsule;</claim-text>
+<claim-text>wherein the attachment section is configured such that application of tension to the attachment section causes the plurality of windings to tighten about the primary line to releasably prevent translation of the plurality of windings along the longitudinal length of the primary line; and</claim-text>
+<claim-text>wherein the capsule is configured to rotate relative to the bail section of the secondary line such that the protrusion engages the bail section to cause a release of tension in the plurality of windings, thereby permitting translation of the plurality of windings along the longitudinal length of the primary line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A method of manufacturing a tethering system, the method comprising:
+<claim-text>injection molding a capsule from a silicone-based polymeric material such that the capsule includes a bail release feature and an internal cavity;</claim-text>
+<claim-text>winding a secondary line about a longitudinal axis of a primary line to form a plurality of windings and a bail section;</claim-text>
+<claim-text>routing the primary and secondary lines through the internal cavity of the capsule such that the plurality of windings are positioned within the internal cavity of the capsule and such that an attachment section of the secondary line extends external to the internal cavity of the capsule; and</claim-text>
+<claim-text>configuring the capsule to rotate relative to the bail section of the secondary line such that the bail release feature is able to contact the bail section to release tension in the plurality of windings.</claim-text>
+</claim-text>
+</claim>
+</claims>

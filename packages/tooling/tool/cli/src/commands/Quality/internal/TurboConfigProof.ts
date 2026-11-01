@@ -17,7 +17,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { commandErrorFields } from "../../../internal/cli/CommandErrorFields.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 
 export { QualityArtifactGeneratorError } from "./QualityArtifactSupport.ts";
 
@@ -75,6 +75,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:retired-effect-paths",
   "//#lint:retired-iri-authorities",
   "//#lint:schema-tag-idioms",
+  "//#lint:holds",
   "//#lint:ecosystem-polarity",
   "//#goals:index-check",
   "//#lint:reflection-artifacts",
@@ -487,7 +488,11 @@ const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function
   repoRoot: string,
   command: string,
   args: ReadonlyArray<string>
-): Effect.fn.Return<CommandOutput, TurboConfigProofError, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  CommandOutput,
+  TurboConfigProofError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
   const renderedCommand = commandText(command, args);
   const result = yield* runCaptured({
     command,
@@ -534,7 +539,7 @@ export const runTurboConfigProof = Effect.fn("TurboConfigProof.runTurboConfigPro
 ): Effect.fn.Return<
   TurboConfigProofReport,
   TurboConfigProofError,
-  Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const tasks = normalizeProofTasks(options.tasks);
   const queryArgs = ["turbo", "query", "affected", "--tasks", ...tasks, "--base", options.base, "--head", options.head];

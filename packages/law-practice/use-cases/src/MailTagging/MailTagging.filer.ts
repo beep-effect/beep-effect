@@ -20,10 +20,9 @@ import {
 } from "@beep/law-practice-domain/values/MailTagging";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Hex from "effect/encoding/Hex";
 import { flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -286,29 +285,28 @@ const hashFailed = (operation: "sha256" | "sha1") => () =>
 export const makeAttachmentFiler: Effect.Effect<
   AttachmentFilerShape,
   never,
-  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Crypto.Crypto
+  Mailbox | MatterFolderDirectory | DocumentStore | KnownDocuments | FilingLedger | Digest.Digest
 > = Effect.gen(function* () {
   const mailbox = yield* Mailbox;
   const folders = yield* MatterFolderDirectory;
   const documents = yield* DocumentStore;
   const knownDocuments = yield* KnownDocuments;
   const ledger = yield* FilingLedger;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const planned = yield* Ref.make(HashMap.empty<TaggingRunId, ReadonlyArray<FiledContent>>());
 
   const contentHash = Effect.fn("AttachmentFiler.contentHash")(function* (
     bytes: Uint8Array
   ): Effect.fn.Return<ContentSha256, MailTaggingPortError> {
     const digest = yield* decodeContentHash(bytes).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError(hashFailed("sha256"))
     );
     return ContentSha256.make(digest);
   });
 
   // Computed only to compare with the hash a store reports for a held name.
-  const contentSha1 = (bytes: Uint8Array): Effect.Effect<string, MailTaggingPortError> =>
-    crypto.digest("SHA-1", bytes).pipe(Effect.map(Hex.encode), Effect.mapError(hashFailed("sha1")));
+  const contentSha1 = (bytes: Uint8Array): Effect.Effect<string> => crypto.digestHex(Digest.sha1, bytes);
 
   const upload = (placement: Placement, payload: Payload) =>
     documents.upload(

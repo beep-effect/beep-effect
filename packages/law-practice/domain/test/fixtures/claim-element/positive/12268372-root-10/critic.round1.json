@@ -1,0 +1,33 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12268372-root-10",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    10,
+    11,
+    12,
+    13
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "reviewScope": {
+    "claimCount": 4,
+    "elementCount": 20,
+    "termCount": 51,
+    "functionalRelationCount": 5
+  },
+  "reviewNotes": [
+    "Read canonical claims including context, native claims XML, provenance, source audit and independent source critic, extractor rationale, and all expected elements/terms/edges. Source eligibility remains the separate accepted source-critic conclusion; this semantic review does not repeat or supersede its original-document/PDF authentication.",
+    "Audited subject/transition grammar, explicit and nested lists, complete lexical heads, true natural dependency ancestry, missing and ambiguous introductions, local/cross-claim antecedents, term ownership, and ordered typed functional parts. No sibling claim was treated as an ancestor.",
+    "Manual schema/geometry helper checked exact UTF-16 spans for elements, terms, functional parts and antecedent references; terms are ordered/nonoverlapping inside owners, functional term parts name their owner terms, and part spans are ordered inside owners. Geometry alone is not semantic approval.",
+    "Accepted exact native fined spelling, bare traction-appliance preamble, actual 11/12 -> 10 and 13 -> 11 ancestry, component-specific friction-surface references, and unlinked ambiguous aggregate wheel/other-wheel/rope references. No actionable semantic finding remains in this bounded round."
+  ],
+  "independence": "Independent bounded semantic critic session. Read only task-authorized source/reference/schema material. No P2-DESIGN, production decomposer/policy, predictions, synthetic fixtures, conformance archives, network, secrets, git or delegation. Only critic.json written; helpers locate manually selected quotations, serialize these findings and check schema/span geometry.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental proposed references only; no goal completion or active sample acceptance claimed."
+}

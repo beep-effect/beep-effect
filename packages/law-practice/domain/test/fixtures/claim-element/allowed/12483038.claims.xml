@@ -1,0 +1,105 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A photovoltaic power system, comprising:
+<claim-text>two or more photovoltaic (PV) panels;</claim-text>
+<claim-text>a maximum power point tracking (MPPT) circuit configured to adjust power extraction from each PV panel;</claim-text>
+<claim-text>a microcontroller configured to execute a real-time control algorithm to manage dynamic operation of the photovoltaic power system; and</claim-text>
+<claim-text>a dual-input DC-DC converter configured to:
+<claim-text>receive and process an independent power input from each PV panel;</claim-text>
+<claim-text>maintain energy transfer to balance one or more variations in power due to mismatched irradiance conditions among the PV panels;</claim-text>
+<claim-text>regulate a duty cycle based on a control signal from the microcontroller; and</claim-text>
+<claim-text>produce an output voltage for one or more DC loads.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the microcontroller is configured to:
+<claim-text>measure and analyze a voltage, a current, and a power output from each PV panel;</claim-text>
+<claim-text>detect one or more variations in irradiance and one or more mismatch effects between the PV panels;</claim-text>
+<claim-text>execute a Particle Swarm Optimization (PSO) algorithm to determine one or more control parameters for the MPPT circuit and the dual-input DC-DC converter;</claim-text>
+<claim-text>adjust the MPPT circuit and the dual-input DC-DC converter operation in response to a real-time condition; and</claim-text>
+<claim-text>maintain power output during one or more shading conditions, one or more panel mismatch conditions, and one or more environmental variations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the MPPT circuit is configured to:
+<claim-text>track the maximum power of each PV panel;</claim-text>
+<claim-text>receive a control parameter from the microcontroller to adjust an operating condition of each PV panel; and</claim-text>
+<claim-text>modify the voltage and current for each panel to increase energy extraction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the microcontroller is further configured to:
+<claim-text>measure and analyze an irradiance level and an electrical characteristic of each PV panel;</claim-text>
+<claim-text>detect and compensate for one or more differences in irradiance and power mismatch between the PV panels;</claim-text>
+<claim-text>execute a Particle Swarm Optimization (PSO) algorithm to determine an operating parameter for each PV panel;</claim-text>
+<claim-text>adjust an MPPT setting and a parameter of the dual-input DC-DC converter to increase power transfer; and</claim-text>
+<claim-text>maintain a power output during one or more shading conditions and one or more environmental variations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a switching matrix comprising three electronic switches for each PV panel, wherein the switching matrix is configured to:
+<claim-text>reconfigure connections between the PV panels between series and parallel configurations; and</claim-text>
+<claim-text>adjust the connections based on real-time irradiance data to meet a voltage requirement and a power requirement of an electrical load connected to an output of the dual-input DC-DC converter.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the switching matrix is configured to bypass a PV panel to prevent a power loss in the system.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a photodetector array configured to measure real-time irradiance for each PV panel and provide the irradiance measurement to the microcontroller.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a battery storage system, wherein:
+<claim-text>the dual-input DC-DC converter is configured to deliver the output voltage to charge the battery storage system; and</claim-text>
+<claim-text>the microcontroller reconfigures connections of the PV panels to maintain power delivery to the battery storage system during one or more variations in irradiance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the dual-input DC-DC converter is configured to:
+<claim-text>deliver the output voltage to a DC home appliance; and</claim-text>
+<claim-text>the microcontroller is configured to control switching of connections of the PV panels to maintain the output voltage against one or more variations in irradiance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the dual-input DC-DC converter comprises a fixed-duty-cycle configuration that adapts the reconfigured connections of the PV panels to power a DC appliance using the output voltage and current.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the dual-input DC-DC converter further comprises a transformer coupled to the PV panels through a plurality of switches, wherein:
+<claim-text>each PV panel is connected to the transformer through a switch; and</claim-text>
+<claim-text>the microcontroller adjusts a duty cycle for the switch to compensate for power variation at a corresponding PV panel due to an irradiance condition.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the dual-input DC-DC converter is configured to operate with a fixed configuration; and
+<claim-text>the microcontroller is configured to dynamically reconfigure the connections of the PV panels to adapt to one or more changes in irradiance conditions.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the microcontroller is further configured to:
+<claim-text>adjust a phase shift between a switching cycle of a switch connected to a PV panel and a switching cycle of another switch connected to another PV panel to improve power extraction from the PV panels.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the Particle Swarm Optimization (PSO) algorithm is configured to:
+<claim-text>explore a plurality of duty cycle combinations for each PV panel;</claim-text>
+<claim-text>evaluate a fitness function based on power extraction; and</claim-text>
+<claim-text>determine a duty cycle value that balances one or more power variations between the PV panels.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the microcontroller executes an algorithm that:
+<claim-text>analyzes a power requirement of a plurality of DC appliances connected to the system;</claim-text>
+<claim-text>determines a switch configuration based on the analyzed power; and</claim-text>
+<claim-text>distributes power to the plurality of DC appliances.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A method for reconfiguring connections between photovoltaic panels, comprising:
+<claim-text>measuring a real-time irradiance level at each PV panel using a photodetector array;</claim-text>
+<claim-text>analyzing the irradiance level to determine a panel connection configuration;</claim-text>
+<claim-text>activating or deactivating a plurality of switches to connect the PV panels in a series arrangement or a parallel arrangement; and</claim-text>
+<claim-text>adapting connections of the PV panels to maintain a voltage to an electrical load when an environmental condition changes.</claim-text>
+</claim-text>
+</claim>
+</claims>

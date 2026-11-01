@@ -1,0 +1,109 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer-implemented method comprising:
+<claim-text>electronically collecting, via an artificial intelligence module, capitalization table data into a database, the capitalization table data purportedly, by a user, corresponding to an asset;</claim-text>
+<claim-text>accessing unique identifiers corresponding to each of a one or more items within the capitalization table data;</claim-text>
+<claim-text>automatically and subsequent to accessing the unique identifiers, utilizing the artificial intelligence module validating relevancy of the one or more items to the asset, including:
+<claim-text>electronically collecting additional capitalization table data into the database using the unique identifiers, the additional capitalization table data considered as corresponding to the asset based on the unique identifiers;</claim-text>
+<claim-text>cross-referencing the capitalization table data with the additional capitalization table data; and</claim-text>
+<claim-text>confirming relevancy of the one or more items to the asset based on results of the cross-referencing;</claim-text>
+</claim-text>
+<claim-text>automatically, as part of a constant training cycle, training the artificial intelligence module based on confirming the relevancy of the one or more items improving data validating performance of the artificial intelligence module; and</claim-text>
+<claim-text>deriving a live syncing capitalization table corresponding to the asset based on the one or more items.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein electronically collecting, via an artificial intelligence module, capitalization table data into a database comprises electronically collecting, via an artificial intelligence module, pushed capitalization table data into a database; and
+<claim-text>wherein electronically collecting additional capitalization table data into the database comprises electronically collecting pulled additional capitalization table data into the database.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein confirming relevancy of the one or more items to the asset based on results of the cross-referencing comprises:
+<claim-text>generating capitalization table data validation findings based on results of the cross-referencing;</claim-text>
+<claim-text>electronically notifying an administrative entity of the capitalization table data validation findings; and</claim-text>
+<claim-text>accessing a capitalization table data rejection/approval decision of the administrative entity.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, further comprising:
+<claim-text>assigning a weight to the additional capitalization table data; and</claim-text>
+<claim-text>determining a confidence score for the capitalization table data validation findings based on the assigned weight.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising verifying quality of the additional capitalization table data prior to cross-referencing the capitalization table data with the additional capitalization table data.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein collecting the capitalization table data comprises collecting the capitalization table data from the user and wherein collecting the additional capitalization table data comprises collecting the additional capitalization table data from at least one of: a public internet or a non-public internet.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising electronically informing the user of the accuracy of the capitalization table data at a user interface.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising deriving an additional characteristic corresponding to the asset based on the one or more items.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein deriving an additional characteristic corresponding to the asset comprises deriving a valuation of the asset.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein electronically collecting additional capitalization table data into the database using the unique identifiers comprises:
+<claim-text>formulating a JSON object containing the one or more items; and</claim-text>
+<claim-text>sending out an asynchronous search for matches on the one or more items contained in the JSON object.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A system comprising:
+<claim-text>a processor;</claim-text>
+<claim-text>system memory coupled to the processor and storing instructions configured to cause the processor to:
+<claim-text>electronically collect, via an artificial intelligence module, capitalization table data into a database, the capitalization table data purportedly, by a user, corresponding to an asset;</claim-text>
+<claim-text>access unique identifiers corresponding to each of a one or more items within the capitalization table data;</claim-text>
+<claim-text>automatically and subsequent to accessing the unique identifiers, utilize the artificial intelligence module validating relevancy of the one or more items to the asset, including:
+<claim-text>electronically collect additional capitalization table data into the database using the unique identifiers, the additional capitalization table data considered as corresponding to the asset based on the unique identifiers;</claim-text>
+<claim-text>cross-reference the capitalization table data with the additional capitalization table data; and</claim-text>
+<claim-text>confirm relevancy of the one or more items to the asset based on results of the cross-referencing;</claim-text>
+</claim-text>
+<claim-text>automatically, as part of a constant training cycle, train the artificial intelligence module based on confirming the relevancy of the one or more items improving data validating performance of the artificial intelligence module; and</claim-text>
+<claim-text>derive a live syncing capitalization table corresponding to the asset based on the one or more items.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein instructions configured to cause the processor to electronically collect, via an artificial intelligence module, capitalization table data into a database comprise instructions configured to cause the processor to electronically collect, via an artificial intelligence module, pushed capitalization table data into a database; and
+<claim-text>wherein instructions configured to cause the processor to electronically collect additional capitalization table data into the database comprise instructions configured to cause the processor to electronically collect pulled additional capitalization table data into the database.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein instructions configured to cause the processor to confirm relevancy of the one or more items to the asset based on results of the cross-referencing comprises instructions configured to cause the processor to:
+<claim-text>generate capitalization table data validation findings based on results of the cross-referencing;</claim-text>
+<claim-text>electronically notify an administrative entity of the capitalization table data validation findings; and</claim-text>
+<claim-text>access a capitalization table data rejection/approval decision of the administrative entity.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00013">claim 13</claim-ref>, further comprising instructions configured to cause the processor to:
+<claim-text>assign a weight to the additional capitalization table data; and</claim-text>
+<claim-text>determine a confidence score for the capitalization table data validation findings based on the assigned weight.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising instructions configured to cause the processor to verify quality of the additional capitalization table data prior to cross-referencing the capitalization table data with the additional capitalization table data.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein instructions configured to cause the processor to collect the capitalization table data comprise instructions configured to cause the processor to collect the capitalization table data from the user and wherein instructions configured to cause the processor to collect the additional capitalization table data comprise instructions configured to cause the processor to collect the additional capitalization table data from at least one of: a public internet or a non-public internet.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising instructions configured to cause the processor to electronically inform the user of the accuracy of the capitalization table data at a user interface.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising instructions configured to cause the processor to derive an additional characteristic corresponding to the asset based on the one or more items.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein instructions configured to cause the processor to derive an additional characteristic corresponding to the asset comprise instructions configured to cause the processor to derive a valuation of the asset.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The system of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein instructions configured to cause the processor to electronically collect additional capitalization table data into the database using the unique identifiers comprise instructions configured to cause the processor to:
+<claim-text>formulate a JSON object containing the one or more items; and</claim-text>
+<claim-text>send out an asynchronous search for matches on the one or more items contained in the JSON object.</claim-text>
+</claim-text>
+</claim>
+</claims>

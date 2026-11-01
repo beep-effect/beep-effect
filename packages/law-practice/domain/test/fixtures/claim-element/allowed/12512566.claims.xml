@@ -1,0 +1,35 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal, comprising a casing equipped with a wound core therein, with the top of the wound core serving as a negative terminal and the bottom of the wound core serving as a positive terminal, wherein the negative terminal comprises a negative current collector plate laser-welded to a negative tab of the wound core, a central portion of the negative current collector plate is laser-welded to a stud flange located at the bottom of a stud, a lower insulating sheet is disposed between the negative current collector plate and the casing, a sealing gasket is disposed between the stud, the stud flange and the casing, the stud extends upward through a central hole of the casing and is threadedly connected to a nut provided on an outer side of the casing, an upper insulating sheet is disposed between the nut and the casing, and the threaded engagement portion between the nut and the stud is laser-welded;
+<claim-text>the positive terminal comprises a cover, the edge of the cover is laser-welded to the bottom of the casing, the bottom of the cover is laser-welded to a positive tab of the wound core, and an explosion-proof valve is disposed at the middle portion of the cover;</claim-text>
+<claim-text>an electrolyte injection hole is disposed in the middle of the negative current collector plate and the stud for electrolyte injection, after electrolyte injection and formation, a sealing plug is inserted into the electrolyte injection hole of the stud, and the top end of the sealing plug is laser-welded to the stud.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an upper portion of the electrolyte injection hole of the stud is a polygonal hole for locking and fixation, and a lower portion thereof is a circular hole.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein an upper portion of the sealing plug is a polygonal boss matched with the polygonal hole, and a lower portion thereof is a cylinder matched with the circular hole.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the nut is matched with the stud flange to clamp and fix the upper insulating sheet, the casing, and the sealing gasket.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the nut is flush with the top end of the stud, and the stud is flush with the top end of the sealing plug.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the lower insulating sheet is configured to isolate the short-circuit mode between the negative current collector plate and the casing.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sealing gasket is configured to isolate the short-circuit mode between the stud, the stud flange and the casing.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the upper insulating sheet is configured to isolate the short-circuit mode between the nut and the casing.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the nut is made of aluminum, copper, nickel or nickel-plated copper, and the sealing plug is made of nickel-plated copper.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The aluminum-cased cylindrical battery structure with electrolyte injected at the pole terminal according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the upper insulating sheet and lower insulating sheet are made of PP or PET.</claim-text>
+</claim>
+</claims>

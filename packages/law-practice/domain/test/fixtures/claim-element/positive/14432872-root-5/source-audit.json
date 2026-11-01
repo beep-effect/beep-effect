@@ -1,0 +1,91 @@
+{
+  "familyId": "14432872-root-5",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the device",
+      "nativeQuote": "the device",
+      "literalMatch": true,
+      "explanation": "Same numbered claim; examiner expressly discusses whether it should depend on1. Source keeps5 independent."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the optical fiber",
+      "nativeQuote": "the optical fiber",
+      "literalMatch": true,
+      "explanation": "Exact phrase in claim5."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the laser",
+      "nativeQuote": "the laser",
+      "literalMatch": true,
+      "explanation": "Exact phrase in selected child7."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the type of laser",
+      "nativeQuote": "the type of laser",
+      "literalMatch": true,
+      "explanation": "Exact phrase in8."
+    }
+  ],
+  "concerns": [
+    "Original I7Z34TWPPXXIFW3 selected6/7 match; selected5 has isolated OCR numeral5 between do/so and8 appended page6. Second original has isolated line/page numbers5/10/15/20/25/30 inside otherwise same wording. Numbered original set remains1-8; extra unnumbered introductory Claim node is not a ninth claim.",
+    "Publication/app/date/digest verified. Complete inventory row counts55/55 and original2015-04-01 CLM date precede OA. No intervening CLM asserted; no substantive selected-claim version difference found."
+  ],
+  "rationale": "Actual112(b)/second-paragraph rejection cites selected5-8; natural dependencies6-8->5 agree; source phrases and original corroboration support operative version.",
+  "sourceIdentity": {
+    "applicationNumber": "14432872",
+    "publicationNumber": "US20160346041A1",
+    "publicationDate": "2016-12-01",
+    "officeActionMailDate": "2017-05-19",
+    "officeActionDocumentIdentifiers": ["J2SZPL3ZRXEAPX2"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20160346041 A1 20161201",
+      "application-reference": "US 14432872 20131021",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "I7Z34TWPPXXIFW3",
+        "officialDate": "2015-04-01T00:00:00.000-0400"
+      },
+      {
+        "documentIdentifier": "I7Z34U1FPXXIFW3",
+        "officialDate": "2015-04-01T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "I7Z34TWPPXXIFW3",
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "sha256": "b03c191c4bbc2683738d0df6068674bdea19d3170ff9559969d27718bae65e8f",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [2, 6, 7],
+        "sourceClaimCount": 8
+      },
+      {
+        "documentIdentifier": "I7Z34U1FPXXIFW3",
+        "officialDate": "2015-04-01T00:00:00.000-0400",
+        "sha256": "0db5c63bd79d84b78f995a302a82a876c40fa4f9ea34c627fe0bae5e1a9332a9",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [],
+        "sourceClaimCount": 8
+      }
+    ],
+    "documentInventoryCount": 55,
+    "documentInventoryRows": 55,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

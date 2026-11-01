@@ -1,0 +1,2542 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 150,
+          "quote": "A low pressure shaft for interconnecting a fan or low pressure compressor of a gas turbine engine with a low pressure turbine of the engine, the shaft"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 41,
+              "endChar": 73,
+              "quote": "a fan or low pressure compressor"
+            },
+            "determiner": "a",
+            "head": "fan or low pressure compressor"
+          },
+          {
+            "anchor": {
+              "startChar": 77,
+              "endChar": 97,
+              "quote": "a gas turbine engine"
+            },
+            "determiner": "a",
+            "head": "gas turbine engine"
+          },
+          {
+            "anchor": {
+              "startChar": 103,
+              "endChar": 125,
+              "quote": "a low pressure turbine"
+            },
+            "determiner": "a",
+            "head": "low pressure turbine"
+          },
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 139,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          },
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 150,
+              "quote": "the shaft"
+            },
+            "determiner": "the",
+            "head": "shaft"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 158,
+          "endChar": 266,
+          "quote": "an aft section whose diameter expands progressively with distance along the rearward direction of the engine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 172,
+              "quote": "an aft section"
+            },
+            "determiner": "an",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 179,
+              "endChar": 187,
+              "quote": "diameter"
+            },
+            "determiner": "bare",
+            "head": "diameter"
+          },
+          {
+            "anchor": {
+              "startChar": 230,
+              "endChar": 252,
+              "quote": "the rearward direction"
+            },
+            "determiner": "the",
+            "head": "rearward direction"
+          },
+          {
+            "anchor": {
+              "startChar": 256,
+              "endChar": 266,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 272,
+          "endChar": 396,
+          "quote": "an annular joint portion at the rear end of the aft section for joining the shaft to a drive arm of the low pressure turbine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 272,
+              "endChar": 296,
+              "quote": "an annular joint portion"
+            },
+            "determiner": "an",
+            "head": "annular joint portion"
+          },
+          {
+            "anchor": {
+              "startChar": 300,
+              "endChar": 312,
+              "quote": "the rear end"
+            },
+            "determiner": "the",
+            "head": "rear end"
+          },
+          {
+            "anchor": {
+              "startChar": 316,
+              "endChar": 331,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 344,
+              "endChar": 353,
+              "quote": "the shaft"
+            },
+            "determiner": "the",
+            "head": "shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 357,
+              "endChar": 368,
+              "quote": "a drive arm"
+            },
+            "determiner": "a",
+            "head": "drive arm"
+          },
+          {
+            "anchor": {
+              "startChar": 372,
+              "endChar": 396,
+              "quote": "the low pressure turbine"
+            },
+            "determiner": "the",
+            "head": "low pressure turbine"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 406,
+          "endChar": 529,
+          "quote": "the rate of expansion of the diameter of the aft section decreases with distance along the rearward direction of the engine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 406,
+              "endChar": 427,
+              "quote": "the rate of expansion"
+            },
+            "determiner": "the",
+            "head": "rate of expansion"
+          },
+          {
+            "anchor": {
+              "startChar": 431,
+              "endChar": 443,
+              "quote": "the diameter"
+            },
+            "determiner": "the",
+            "head": "diameter"
+          },
+          {
+            "anchor": {
+              "startChar": 447,
+              "endChar": 462,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 493,
+              "endChar": 515,
+              "quote": "the rearward direction"
+            },
+            "determiner": "the",
+            "head": "rearward direction"
+          },
+          {
+            "anchor": {
+              "startChar": 519,
+              "endChar": 529,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 158,
+                "endChar": 172,
+                "quote": "an aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 179,
+              "quote": " whose "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 179,
+                "endChar": 187,
+                "quote": "diameter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 187,
+              "endChar": 230,
+              "quote": " expands progressively with distance along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 230,
+                "endChar": 252,
+                "quote": "the rearward direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 252,
+              "endChar": 256,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 256,
+                "endChar": 266,
+                "quote": "the engine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 272,
+                "endChar": 296,
+                "quote": "an annular joint portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 300,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 300,
+                "endChar": 312,
+                "quote": "the rear end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 312,
+              "endChar": 316,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 316,
+                "endChar": 331,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 331,
+              "endChar": 344,
+              "quote": " for joining "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 344,
+                "endChar": 353,
+                "quote": "the shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 353,
+              "endChar": 357,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 357,
+                "endChar": 368,
+                "quote": "a drive arm"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 368,
+              "endChar": 372,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 372,
+                "endChar": 396,
+                "quote": "the low pressure turbine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 406,
+                "endChar": 427,
+                "quote": "the rate of expansion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 427,
+              "endChar": 431,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 431,
+                "endChar": 443,
+                "quote": "the diameter"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 443,
+              "endChar": 447,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 447,
+                "endChar": 462,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 462,
+              "endChar": 493,
+              "quote": " decreases with distance along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 493,
+                "endChar": 515,
+                "quote": "the rearward direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 515,
+              "endChar": 519,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 519,
+                "endChar": 529,
+                "quote": "the engine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 139,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 77,
+            "endChar": 97,
+            "quote": "a gas turbine engine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 150,
+            "quote": "the shaft"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A low pressure shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 256,
+            "endChar": 266,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 77,
+            "endChar": 97,
+            "quote": "a gas turbine engine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 316,
+            "endChar": 331,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 353,
+            "quote": "the shaft"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A low pressure shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 372,
+            "endChar": 396,
+            "quote": "the low pressure turbine"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 103,
+            "endChar": 125,
+            "quote": "a low pressure turbine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 431,
+            "endChar": 443,
+            "quote": "the diameter"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 179,
+            "endChar": 187,
+            "quote": "diameter"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 447,
+            "endChar": 462,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 519,
+            "endChar": 529,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 77,
+            "endChar": 97,
+            "quote": "a gas turbine engine"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 150,
+          "quote": "on a longitudinal cross-section through the shaft the aft section has an elliptical section profile"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 54,
+              "endChar": 82,
+              "quote": "a longitudinal cross-section"
+            },
+            "determiner": "a",
+            "head": "longitudinal cross-section"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 100,
+              "quote": "the shaft"
+            },
+            "determiner": "the",
+            "head": "shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 101,
+              "endChar": 116,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 150,
+              "quote": "an elliptical section profile"
+            },
+            "determiner": "an",
+            "head": "elliptical section profile"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 51,
+              "endChar": 54,
+              "quote": "on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 54,
+                "endChar": 82,
+                "quote": "a longitudinal cross-section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 82,
+              "endChar": 91,
+              "quote": " through "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 100,
+                "quote": "the shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 100,
+              "endChar": 101,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 101,
+                "endChar": 116,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 121,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 121,
+                "endChar": 150,
+                "quote": "an elliptical section profile"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 100,
+            "quote": "the shaft"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A low pressure shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 101,
+            "endChar": 116,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 289,
+          "quote": "the aft section is formed as an axial row of two or more frustoconical sub-sections, for each pair of adjacent frustoconical sub-sections the cone angle of the rearward sub-section being less than the cone angle of the forward sub-section"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 66,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 92,
+              "quote": "an axial row"
+            },
+            "determiner": "an",
+            "head": "axial row"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 134,
+              "quote": "two or more frustoconical sub-sections"
+            },
+            "determiner": "bare",
+            "head": "two or more frustoconical sub-sections"
+          },
+          {
+            "anchor": {
+              "startChar": 140,
+              "endChar": 188,
+              "quote": "each pair of adjacent frustoconical sub-sections"
+            },
+            "determiner": "bare",
+            "head": "pair of adjacent frustoconical sub-sections"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 203,
+              "quote": "the cone angle"
+            },
+            "determiner": "the",
+            "head": "cone angle"
+          },
+          {
+            "anchor": {
+              "startChar": 207,
+              "endChar": 231,
+              "quote": "the rearward sub-section"
+            },
+            "determiner": "the",
+            "head": "rearward sub-section"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 262,
+              "quote": "the cone angle"
+            },
+            "determiner": "the",
+            "head": "cone angle"
+          },
+          {
+            "anchor": {
+              "startChar": 266,
+              "endChar": 289,
+              "quote": "the forward sub-section"
+            },
+            "determiner": "the",
+            "head": "forward sub-section"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 66,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 80,
+              "quote": " is formed as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 92,
+                "quote": "an axial row"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 96,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 134,
+                "quote": "two or more frustoconical sub-sections"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 134,
+              "endChar": 140,
+              "quote": ", for "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 140,
+                "endChar": 188,
+                "quote": "each pair of adjacent frustoconical sub-sections"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 189,
+              "quote": " "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 203,
+                "quote": "the cone angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 203,
+              "endChar": 207,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 207,
+                "endChar": 231,
+                "quote": "the rearward sub-section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 231,
+              "endChar": 248,
+              "quote": " being less than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 262,
+                "quote": "the cone angle"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 262,
+              "endChar": 266,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 266,
+                "endChar": 289,
+                "quote": "the forward sub-section"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 66,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 135,
+          "quote": "the annular joint portion is configured to form a curvic coupling with the drive arm"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 76,
+              "quote": "the annular joint portion"
+            },
+            "determiner": "the",
+            "head": "annular joint portion"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 116,
+              "quote": "a curvic coupling"
+            },
+            "determiner": "a",
+            "head": "curvic coupling"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 135,
+              "quote": "the drive arm"
+            },
+            "determiner": "the",
+            "head": "drive arm"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4.a",
+        "ancestor": "1.b"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 76,
+                "quote": "the annular joint portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 99,
+              "quote": " is configured to form "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 116,
+                "quote": "a curvic coupling"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 122,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 122,
+                "endChar": 135,
+                "quote": "the drive arm"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 51,
+            "endChar": 76,
+            "quote": "the annular joint portion"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 296,
+            "quote": "an annular joint portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 122,
+            "endChar": 135,
+            "quote": "the drive arm"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 357,
+            "endChar": 368,
+            "quote": "a drive arm"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 51,
+          "endChar": 155,
+          "quote": "the wall thickness of the aft section decreases with distance along the rearward direction of the engine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 51,
+              "endChar": 69,
+              "quote": "the wall thickness"
+            },
+            "determiner": "the",
+            "head": "wall thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 73,
+              "endChar": 88,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 119,
+              "endChar": 141,
+              "quote": "the rearward direction"
+            },
+            "determiner": "the",
+            "head": "rearward direction"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 155,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5.a",
+        "ancestor": "1.a"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 51,
+                "endChar": 69,
+                "quote": "the wall thickness"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 69,
+              "endChar": 73,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 73,
+                "endChar": 88,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 119,
+              "quote": " decreases with distance along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 119,
+                "endChar": 141,
+                "quote": "the rearward direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 141,
+              "endChar": 145,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 155,
+                "quote": "the engine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 73,
+            "endChar": 88,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 145,
+            "endChar": 155,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 77,
+            "endChar": 97,
+            "quote": "a gas turbine engine"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 61,
+          "endChar": 281,
+          "quote": "an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the wall thickness of the stiffening formation being greater than the wall thickness of the aft section at its rear end"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 92,
+              "quote": "an annular stiffening formation"
+            },
+            "determiner": "an",
+            "head": "annular stiffening formation"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 119,
+              "quote": "the rear end"
+            },
+            "determiner": "the",
+            "head": "rear end"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 138,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 160,
+              "quote": "the joint portion"
+            },
+            "determiner": "the",
+            "head": "joint portion"
+          },
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 180,
+              "quote": "the wall thickness"
+            },
+            "determiner": "the",
+            "head": "wall thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 184,
+              "endChar": 208,
+              "quote": "the stiffening formation"
+            },
+            "determiner": "the",
+            "head": "stiffening formation"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 246,
+              "quote": "the wall thickness"
+            },
+            "determiner": "the",
+            "head": "wall thickness"
+          },
+          {
+            "anchor": {
+              "startChar": 250,
+              "endChar": 265,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 269,
+              "endChar": 281,
+              "quote": "its rear end"
+            },
+            "determiner": "bare",
+            "head": "rear end"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6.a",
+        "ancestor": "1.b"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 92,
+                "quote": "an annular stiffening formation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 107,
+              "quote": " which bridges "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 119,
+                "quote": "the rear end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 119,
+              "endChar": 123,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 138,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 138,
+              "endChar": 143,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 160,
+                "quote": "the joint portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 162,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 180,
+                "quote": "the wall thickness"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 180,
+              "endChar": 184,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 184,
+                "endChar": 208,
+                "quote": "the stiffening formation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 208,
+              "endChar": 228,
+              "quote": " being greater than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 246,
+                "quote": "the wall thickness"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 246,
+              "endChar": 250,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 250,
+                "endChar": 265,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 265,
+              "endChar": 269,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 269,
+                "endChar": 281,
+                "quote": "its rear end"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 138,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 160,
+            "quote": "the joint portion"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 296,
+            "quote": "an annular joint portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 184,
+            "endChar": 208,
+            "quote": "the stiffening formation"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 92,
+            "quote": "an annular stiffening formation"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 250,
+            "endChar": 265,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 41,
+          "quote": "A low pressure shaft according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A low pressure shaft"
+            },
+            "determiner": "a",
+            "head": "low pressure shaft"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 61,
+          "endChar": 250,
+          "quote": "an annular stiffening formation which bridges the rear end of the aft section and the joint portion, the stiffening formation curving radially outwardly from the rear end of the aft section"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 61,
+              "endChar": 92,
+              "quote": "an annular stiffening formation"
+            },
+            "determiner": "an",
+            "head": "annular stiffening formation"
+          },
+          {
+            "anchor": {
+              "startChar": 107,
+              "endChar": 119,
+              "quote": "the rear end"
+            },
+            "determiner": "the",
+            "head": "rear end"
+          },
+          {
+            "anchor": {
+              "startChar": 123,
+              "endChar": 138,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          },
+          {
+            "anchor": {
+              "startChar": 143,
+              "endChar": 160,
+              "quote": "the joint portion"
+            },
+            "determiner": "the",
+            "head": "joint portion"
+          },
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 186,
+              "quote": "the stiffening formation"
+            },
+            "determiner": "the",
+            "head": "stiffening formation"
+          },
+          {
+            "anchor": {
+              "startChar": 219,
+              "endChar": 231,
+              "quote": "the rear end"
+            },
+            "determiner": "the",
+            "head": "rear end"
+          },
+          {
+            "anchor": {
+              "startChar": 235,
+              "endChar": 250,
+              "quote": "the aft section"
+            },
+            "determiner": "the",
+            "head": "aft section"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7.a",
+        "ancestor": "1.b"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 61,
+                "endChar": 92,
+                "quote": "an annular stiffening formation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 92,
+              "endChar": 107,
+              "quote": " which bridges "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 107,
+                "endChar": 119,
+                "quote": "the rear end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 119,
+              "endChar": 123,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 123,
+                "endChar": 138,
+                "quote": "the aft section"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 138,
+              "endChar": 143,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 143,
+                "endChar": 160,
+                "quote": "the joint portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 160,
+              "endChar": 162,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 186,
+                "quote": "the stiffening formation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 186,
+              "endChar": 219,
+              "quote": " curving radially outwardly from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 219,
+                "endChar": 231,
+                "quote": "the rear end"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 231,
+              "endChar": 235,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 235,
+                "endChar": 250,
+                "quote": "the aft section"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 123,
+            "endChar": 138,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 143,
+            "endChar": 160,
+            "quote": "the joint portion"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 272,
+            "endChar": 296,
+            "quote": "an annular joint portion"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 162,
+            "endChar": 186,
+            "quote": "the stiffening formation"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 61,
+            "endChar": 92,
+            "quote": "an annular stiffening formation"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 235,
+            "endChar": 250,
+            "quote": "the aft section"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 158,
+            "endChar": 172,
+            "quote": "an aft section"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 20,
+          "quote": "A gas turbine engine"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 20,
+              "quote": "A gas turbine engine"
+            },
+            "determiner": "a",
+            "head": "gas turbine engine"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 28,
+          "endChar": 166,
+          "quote": "the low pressure shaft of claim 1 interconnecting a fan or low pressure compressor of the engine with a low pressure turbine of the engine"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 28,
+              "endChar": 50,
+              "quote": "the low pressure shaft"
+            },
+            "determiner": "the",
+            "head": "low pressure shaft"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 110,
+              "quote": "a fan or low pressure compressor"
+            },
+            "determiner": "a",
+            "head": "fan or low pressure compressor"
+          },
+          {
+            "anchor": {
+              "startChar": 114,
+              "endChar": 124,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          },
+          {
+            "anchor": {
+              "startChar": 130,
+              "endChar": 152,
+              "quote": "a low pressure turbine"
+            },
+            "determiner": "a",
+            "head": "low pressure turbine"
+          },
+          {
+            "anchor": {
+              "startChar": 156,
+              "endChar": 166,
+              "quote": "the engine"
+            },
+            "determiner": "the",
+            "head": "engine"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8.a",
+        "ancestor": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 28,
+                "endChar": 50,
+                "quote": "the low pressure shaft"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 50,
+              "endChar": 78,
+              "quote": " of claim 1 interconnecting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 110,
+                "quote": "a fan or low pressure compressor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 114,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 114,
+                "endChar": 124,
+                "quote": "the engine"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 124,
+              "endChar": 130,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 130,
+                "endChar": 152,
+                "quote": "a low pressure turbine"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 156,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 156,
+                "endChar": 166,
+                "quote": "the engine"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 28,
+            "endChar": 50,
+            "quote": "the low pressure shaft"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A low pressure shaft"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 114,
+            "endChar": 124,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A gas turbine engine"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 156,
+            "endChar": 166,
+            "quote": "the engine"
+          }
+        },
+        "introducing": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 20,
+            "quote": "A gas turbine engine"
+          }
+        }
+      }
+    ]
+  }
+]

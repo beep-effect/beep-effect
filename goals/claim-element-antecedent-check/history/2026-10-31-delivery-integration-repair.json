@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "claim-delivery-integration-repair/v1",
+  "date": "2026-10-31",
+  "pullRequest": "https://github.com/beep-effect/beep-effect/pull/2411",
+  "measuredHead": "0e1c7ff72da662d9b62d5e035b27aa01966c070b",
+  "findings": [
+    {
+      "check": "Heavy / Build",
+      "defect": "Missing claim_self_check entry in the app manifest tool-description map.",
+      "repair": "Add the description for the existing read-only tool."
+    },
+    {
+      "check": "Heavy / Check",
+      "defect": "MCP regression assertion violates missedPipeableOpportunity.",
+      "repair": "Use invalid.pipe(Exit.isFailure, assertTrue), preserving the assertion."
+    },
+    {
+      "check": "Lint (lint-a)",
+      "defect": "Generated identity lint profile is stale.",
+      "repair": "Run the canonical cache profile writer; root rules/exclusions are unchanged."
+    },
+    {
+      "check": "Test Unit (unit-b)",
+      "defect": "App telemetry static tool list omits claim_self_check.",
+      "repair": "Add its static name and extend the existing all-tools canary requests with valid/invalid self-check inputs. Require a returned claim-finding containing the synthetic token before asserting no telemetry leakage."
+    }
+  ],
+  "packageVerification": {
+    "@beep/mcp-kit": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 10.8,
+      "docgenSeconds": 3.8
+    },
+    "@beep/practice-kg-mcp": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 48.6,
+      "docgenSeconds": 27.0
+    }
+  },
+  "logs": [
+    {
+      "name": "claim-mcp-kit-verified-fix-full.log",
+      "sha256": "24b84cedcbd9f6e21d83c493053e4e5639c0282162f26067f15f4b49e8c1ffd6"
+    },
+    {
+      "name": "claim-practice-app-final-canary-proof.log",
+      "sha256": "c7534361a957431d939df5df20b4c0649d84f81d42f3d89be7807338ececd518"
+    },
+    {
+      "name": "claim-ci-wave-final-profile-check.log",
+      "sha256": "142685164d853d7b09ac8d7ebd1e785609299d771d51aeb7be59e16ccff1eea3"
+    },
+    {
+      "name": "claim-ci-wave-cache-audit.log",
+      "sha256": "3793a6c97bc20c5a80614c7ac32dd39b26c96a5200d260e0e92289ca3ff5cae2"
+    }
+  ],
+  "identityProfileCurrent": true,
+  "cacheAuditBlockingFindings": 0,
+  "runtimeAlgorithmChanged": false,
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "protectedPassesRetained": 34,
+  "lostProtectedPasses": 0,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "preservationChecks": [
+    {
+      "manifest": "research/implementation-repair-v19-freeze.json",
+      "checked": 20,
+      "mismatches": []
+    },
+    {
+      "manifest": "history/autonomous-review-v1/preservation.json",
+      "checked": 631,
+      "mismatches": []
+    },
+    {
+      "manifest": "pre-landed-sync-evidence-f2cd",
+      "checked": 1136,
+      "mismatches": []
+    }
+  ],
+  "currentPhase": "P4 in progress; hosted checks, final readiness and closeout remain pending",
+  "friction": "Narrow service checks did not exercise app metadata and all-tools telemetry integration. Full app package verification catches both omissions. Failed attempts are retained; successful checks do not retroactively turn them green.",
+  "prevention": "Include the runnable app package audit when adding a tool to its toolkit, alongside service and MCP framework checks."
+}

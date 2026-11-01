@@ -21,7 +21,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -44,7 +44,7 @@ const formatSchemaIssues = SchemaIssue.makeFormatterStandardSchemaV1();
 const decodeUnknownLabManifestFromJsonStringEffect = S.decodeUnknownEffect(LabManifestFromJsonString);
 const encodeLabManifestFromJsonStringEffect = S.encodeEffect(LabManifestFromJsonString);
 
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer);
+const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),

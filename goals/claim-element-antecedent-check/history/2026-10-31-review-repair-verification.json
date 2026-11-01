@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "claim-review-repair-verification/v1",
+  "date": "2026-10-31",
+  "runtimeVersion": "v22",
+  "implementationDigest": "892aaadc3f2a854ac472d4e236059bf1814098c7cfa757834abc4a301481ab65",
+  "packageVerification": {
+    "domain": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 9.4,
+      "docgenSeconds": 11.7,
+      "logSha256": "cc82bbc27827f9a348e6dbaa117789fbe279f0f7e901d2d18fb7170d56b08b86"
+    },
+    "use-cases": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 16.8,
+      "docgenSeconds": 11.0,
+      "logSha256": "bfd49c69ac7131f600d2a6393e69320af0f777114433932dac88260d0884505e"
+    },
+    "server": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 45.9,
+      "docgenSeconds": 24.6,
+      "logSha256": "b5d5dee6bdef64efd63d7130558318d648aebfbbd74ffbea8b4fb5d2d47f36f7"
+    },
+    "practice-kg-mcp": {
+      "audit": "pass",
+      "docgen": "pass",
+      "auditSeconds": 17.8,
+      "docgenSeconds": 15.6,
+      "logSha256": "e1d019388e33306e59fa1abab98f2aab80924619f2b4adac9fd5ec577871c606"
+    }
+  },
+  "fallowHealthIntroduced": 0,
+  "fallowAuditIntroduced": 0,
+  "fallowAuditInheritedNonblocking": 4,
+  "generatedInventoryChanges": "JSDoc timestamp and source-line anchors only, unchanged open totals; schema-first inventory only line 307 to 336, unchanged existing exception and reason.",
+  "priorFinalCheck": "e999af7b2a controlled-stopped with exit 130 after real review findings; not a passing proof.",
+  "hostedReadiness": "pending new fix-wave publication and exact-head final check",
+  "schemaFirstCheck": "pass",
+  "schemaFirstExceptionCountChanged": false,
+  "schemaFirstCheckLogSha256": "3a5695b8e252d2e8bac07e734b4064f5733d9e7a046efdb43f942aab93765f5f",
+  "jsdocOpenPackages": 17,
+  "jsdocOpenExports": 99,
+  "jsdocOpenModules": 166,
+  "jsdocRootPolicyOpen": 0,
+  "jsdocInventoryLogSha256": "97ad749b1c02b6d5fabbbb81987c1a8d69b72e08154616601fe08bc4e81e8abb"
+}

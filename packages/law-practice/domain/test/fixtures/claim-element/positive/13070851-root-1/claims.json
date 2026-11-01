@@ -1,0 +1,77 @@
+{
+  "familyId": "13070851-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for component carrier (CC) deactivation in a user equipment (UE) of a wireless communication system, comprising: receiving a Radio Resource Control (RRC) message for configuring carrier aggregation (CA) to the UE; and flushing all uplink hybrid automatic repeat-request (HARQ) buffers of the HARQ entity corresponding to an uplink (UL) CC when a linked downlink (DL) CC which provides a physical downlink control channel (PDCCH) scheduling for the UL CC is deactivated.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method of claim 1, further comprising indicating in the RRC message a linkage between the DL CC and the said UL CC.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method of claim 1, further comprising receiving on the DL CC a physical HARQ Indicator Channel (PHICH) used for HARQ feedback in response to transmission on the UL CC.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method of claim 1, further comprising deactivating the DL CC due to reception of a Medium Access Control (MAC) control element or a timer-based implicit CC deactivation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method of any of claims 1 to 4, wherein the UL CC is an UL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [1, 4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method of any of claims 1 to 4, wherein the DL CC is a DL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [1, 4]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method of claim 5, wherein the DL CC is a DL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A user equipment (UE) for a wireless communication system, the UE comprising: a control circuit for realizing functions of the UE; a processor installed in the control circuit, for executing a program code to command the control circuit; and a memory installed in the control circuit and coupled to the processor; wherein the processor is configured to execute a program code stored in memory to receive a Radio Resource Control (RRC) message for configuring carrier aggregation (CA) to the UE, and flush all uplink hybrid automatic repeat-request (HARQ) buffers of the HARQ entity corresponding to an uplink (UL) CC when a linked downlink (DL) CC which provides a physical downlink control channel (PDCCH) scheduling for the UL CC is deactivated.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The user equipment of claim 8, wherein the processor is configured to execute the program code to further indicate in the RRC message a linkage between the DL CC and the said UL CC.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The user equipment of claim 8, wherein the processor is configured to execute the program code to further receive on the DL CC a physical HARQ Indicator Channel (PHICH) used for HARQ feedback in response to transmission on the UL CC.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The user equipment of claim 8, wherein the processor is configured to execute the program code to further deactivate the DL CC due to reception of a Medium Access Control (MAC) control element or a timer-based implicit CC deactivation.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The user equipment of any of claims 8 to 11, wherein the UL CC is an UL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [8, 11]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The user equipment of any of claims 8 to 11, wherein the DL CC is a DL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [8, 11]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The user equipment of claim 12, wherein the DL CC is a DL Secondary CC.",
+      "sourceXmlParentClaimNumbers": [12]
+    }
+  ]
+}

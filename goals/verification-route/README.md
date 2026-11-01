@@ -37,15 +37,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Slice 1 (schemas, route, census) — not started. Next concrete action: the
-`ChangeAtom` / `CheckFootprint` / `Propagation` schemas and the total record
-at `unknown`, then `classify`, then the corpus fetch.
+P0 Slice 1 complete (2026-10-31, lane `verification-route-s1`). Next: P1 Slice 2,
+starting from the ranked refinements in
+[`research/census-2026-10-31.md`](./research/census-2026-10-31.md): the taxonomy refinement
+for packet data files first, then footprint refinements with mutation fixtures.
 
 ## Latest Evidence
 
-Not started. Pre-packet evidence: the 2026-10-27/28 turbo dry-runs in the
-exploration's `CAPTURE.md` (biome catalog bump: 188/189 build and check,
-187/189 lint and test invalidated; 1/189 lint with a per-task negation).
+- [`research/census-2026-10-31.md`](./research/census-2026-10-31.md): census and replay over
+  6,328 hosted runs (5,083 PR heads, 11,710 h); replay recall 100% at the all-`unknown`
+  record; the corpus is pinned by sha256 in `research/corpus/RECEIPTS.json`.
+- Pre-packet evidence: the 2026-10-27/28 turbo dry-runs in the exploration's `CAPTURE.md`
+  (biome catalog bump: 188/189 build and check, 187/189 lint and test invalidated; 1/189 lint
+  with a per-task negation).
 
 ## Notes
 

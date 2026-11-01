@@ -64,7 +64,7 @@ import { runGitRawOutput } from "../../internal/repo-run/GitExec.ts";
 import { typescriptFences as sharedTypeScriptFences } from "./internal/TypeScriptFences.ts";
 import { SchemaTagIdiomsExecutionError } from "./Laws.errors.ts";
 import { SchemaTagIdiomFinding, SchemaTagIdiomsSummary } from "./SchemaTagIdioms.model.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { SchemaTagIdiomRule, SchemaTagIdiomsOptions } from "./SchemaTagIdioms.model.ts";
@@ -1096,7 +1096,7 @@ export const runSchemaTagIdioms = Effect.fn("SchemaTagIdioms.runSchemaTagIdioms"
 ): Effect.fn.Return<
   SchemaTagIdiomsSummary,
   SchemaTagIdiomsExecutionError,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     SchemaTagIdiomsExecutionError.mapError("Failed to locate the repository root")

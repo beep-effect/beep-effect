@@ -40,10 +40,3 @@ export * from "./PackageJsonTools.ts";
  * @since 0.0.0
  */
 export * from "./TypeScriptSourceExclusions.ts";
-/**
- * The WorkspaceDeps module.
- *
- * @category utilities
- * @since 0.0.0
- */
-export * from "./WorkspaceDeps.ts";

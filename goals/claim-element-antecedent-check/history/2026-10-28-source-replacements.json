@@ -1,0 +1,195 @@
+{
+  "date": "2026-10-28",
+  "status": "source-only replacement receipt; no predictions or semantic scores used",
+  "replacements": [
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "15773469-root-5",
+      "oldClaimCount": 7,
+      "newFamilyId": "18409554-root-16",
+      "newClaimCount": 7,
+      "cpcSection": "A",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "15773469",
+        "rootClaimNumber": 5,
+        "claimNumbers": [5, 6, 7, 8, 9, 10, 11],
+        "claimCount": 7,
+        "cpcSection": "A",
+        "familyId": "15773469-root-5",
+        "fixtureDirectory": "15773469-root-5",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "18107161-root-18",
+      "oldClaimCount": 6,
+      "newFamilyId": "13575735-root-1",
+      "newClaimCount": 5,
+      "cpcSection": "B",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "18107161",
+        "rootClaimNumber": 18,
+        "claimNumbers": [18, 19, 20, 21, 25, 26],
+        "claimCount": 6,
+        "cpcSection": "B",
+        "familyId": "18107161-root-18",
+        "fixtureDirectory": "18107161-root-18",
+        "status": "source-ineligible",
+        "sourceAuditVerdict": "ineligible",
+        "sourceCriticStatus": "ineligible"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "14438042-root-4",
+      "oldClaimCount": 10,
+      "newFamilyId": "11246782-root-28",
+      "newClaimCount": 3,
+      "cpcSection": "B",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "14438042",
+        "rootClaimNumber": 4,
+        "claimNumbers": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+        "claimCount": 10,
+        "cpcSection": "B",
+        "familyId": "14438042-root-4",
+        "fixtureDirectory": "14438042-root-4",
+        "status": "source-ineligible",
+        "sourceAuditVerdict": "ineligible",
+        "sourceCriticStatus": "ineligible"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "12267381-root-1",
+      "oldClaimCount": 11,
+      "newFamilyId": "17617663-root-1",
+      "newClaimCount": 10,
+      "cpcSection": "B",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "12267381",
+        "rootClaimNumber": 1,
+        "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+        "claimCount": 11,
+        "cpcSection": "B",
+        "familyId": "12267381-root-1",
+        "fixtureDirectory": "12267381-root-1",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "15572618-root-22",
+      "oldClaimCount": 10,
+      "newFamilyId": "15803808-root-15",
+      "newClaimCount": 5,
+      "cpcSection": "G",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "15572618",
+        "rootClaimNumber": 22,
+        "claimNumbers": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+        "claimCount": 10,
+        "cpcSection": "G",
+        "familyId": "15572618-root-22",
+        "fixtureDirectory": "15572618-root-22",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "11479265-root-1",
+      "oldClaimCount": 11,
+      "newFamilyId": "12748625-root-1",
+      "newClaimCount": 9,
+      "cpcSection": "H",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "11479265",
+        "rootClaimNumber": 1,
+        "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13],
+        "claimCount": 11,
+        "cpcSection": "H",
+        "familyId": "11479265-root-1",
+        "fixtureDirectory": "11479265-root-1",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "eligible",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "14172895-root-10",
+      "oldClaimCount": 7,
+      "newFamilyId": "14970678-root-17",
+      "newClaimCount": 4,
+      "cpcSection": "E",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "14172895",
+        "rootClaimNumber": 10,
+        "claimNumbers": [10, 11, 12, 13, 14, 15, 16],
+        "claimCount": 7,
+        "cpcSection": "E",
+        "familyId": "14172895-root-10",
+        "fixtureDirectory": "14172895-root-10",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "17755831-root-1",
+      "oldClaimCount": 15,
+      "newFamilyId": "13468456-root-1",
+      "newClaimCount": 12,
+      "cpcSection": "A",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "17755831",
+        "rootClaimNumber": 1,
+        "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        "claimCount": 15,
+        "cpcSection": "A",
+        "familyId": "17755831-root-1",
+        "fixtureDirectory": "17755831-root-1",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "oldFamilyId": "17045367-root-1",
+      "oldClaimCount": 10,
+      "newFamilyId": "13062032-root-1",
+      "newClaimCount": 13,
+      "cpcSection": "G",
+      "reason": "source eligibility/fidelity only; no predictions inspected",
+      "previousSlot": {
+        "applicationNumber": "17045367",
+        "rootClaimNumber": 1,
+        "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "claimCount": 10,
+        "cpcSection": "G",
+        "familyId": "17045367-root-1",
+        "fixtureDirectory": "17045367-root-1",
+        "status": "source-unresolved",
+        "sourceAuditVerdict": "unresolved",
+        "sourceCriticStatus": "unresolved"
+      }
+    }
+  ]
+}

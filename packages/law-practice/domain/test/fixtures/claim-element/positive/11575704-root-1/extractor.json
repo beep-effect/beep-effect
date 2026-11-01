@@ -1,0 +1,116 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "11575704-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "farther comprise",
+      "reason": "Exact canonical claim-6 farther retained; accepted source critic corroborates original further spelling and finds no substantive version conflict."
+    },
+    {
+      "quote": "wherein one wherein",
+      "reason": "Malformed native claim-8 wording retained in functional connecting text. Its clear selectable light-source/beam-pattern limitation is labeled directly, without parser-coverage abstention."
+    },
+    {
+      "quote": "claims 1-12",
+      "reason": "Actual rejection covers claims 1-12; selected root family is 1-11 only. Independent root 12 was read as context and is not silently added to scope."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        1,
+        3
+      ],
+      "quotes": [
+        "the pattern of illumination",
+        "the spread pattern",
+        "the received light"
+      ],
+      "reason": "Definite names of output/received effects lack an unambiguous explicit introducing term at the required granularity. Do not equate array geometry, spread, spread portion and output pattern merely through similar vocabulary."
+    },
+    {
+      "claimNumbers": [
+        2,
+        4,
+        7
+      ],
+      "quotes": [
+        "each respective fiber optic cable",
+        "a respective one",
+        "the respective array",
+        "the LED",
+        "the fiber optic cable"
+      ],
+      "reason": "Member-level or respective references inside arrays/sets are preserved without forcing a specific member onto a collective introducing term. Claim 4 has first/second source collections and repeated within-array fiber/LED references; branch-local collection identity is not collapsed to the other array or inherited first-array plurality."
+    },
+    {
+      "claimNumbers": [
+        3,
+        4,
+        6
+      ],
+      "quotes": [
+        "the first and second arrays of illumination light sources",
+        "the first and second lenses"
+      ],
+      "reason": "Collective references retained with no fabricated collective introduction and no arbitrary first/second member target."
+    },
+    {
+      "claimNumber": 7,
+      "quote": "the each respective one end",
+      "reason": "Exact malformed surface retained as determiner the with complete head each respective one end; the directly inherited one end mention is the anchor, without inventing another end introduction."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-semantic labels. Claim-1 apparatus list has two explicitly coordinated components. Dependent functional language is retained in full anchored relations. Complete named optical components and beam-pattern heads remain literal, including shortened references where text identifies a unique first/second component. Relative which/whereby clauses connect explicit participants without duplicate relative nodes. Abstract determiner phrases such as the vertical, the optical coupling, the superimposition and the received light remain terms; missing introductions are not invented.",
+  "counts": {
+    "trees": 11,
+    "elements": 23,
+    "terms": 114,
+    "edges": 90
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+    "sourceEligibility": "Accepted retained source critic reviewed; source-audit historical gaps reconciled by its later source/PDF evidence where applicable. No new PDF or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "verification": {
+    "schema": "All resolved trees decoded successfully through the declared ClaimElementTree schema; schema contracts only, no decomposer.",
+    "spans": "All element/term/functional-part anchors are exact canonical UTF-16 spans; ordered nonoverlapping terms and complete functional partitions checked.",
+    "references": "All antecedent endpoints name actual labeled terms and targets stay on independently read natural dependency ancestry.",
+    "scope": "Every selected claim occurs exactly once as resolved; unselected context is not included."
+  },
+  "headConvention": "lexical-head/v1",
+  "headConventionReview": {
+    "schemaVersion": "head-review/v2",
+    "previousRound": 1,
+    "round": 2,
+    "review": "head-review.json",
+    "reviewedFlagCount": 5,
+    "changedHeadCount": 5,
+    "scope": "Only individually source-adjudicated outer each head words normalized. Exact anchors, determiners, elements, functional parts, typed edges, source/claim scope, semantic confidence and existing concerns unchanged. Prior raw expected/extractor/critic/head-review receipts preserved. Current correction awaits a separate independent critic."
+  },
+  "criticReview": "round2 head-only independent critic pending",
+  "headConsistencyIndependence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed."
+}

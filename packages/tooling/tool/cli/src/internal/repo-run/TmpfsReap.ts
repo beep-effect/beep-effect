@@ -34,7 +34,7 @@ import { configuredPath, resolveBeepCacheRoot } from "./BeepCacheRoot.ts";
 import { FALLOW_AUDIT_CACHE_SEGMENTS } from "./FallowAuditCache.ts";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import { TmpfsReapCandidate, TmpfsReapClass, TmpfsReapReport } from "./TmpfsReap.schemas.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TmpfsReapSkipReason } from "./TmpfsReap.schemas.ts";
 
@@ -787,7 +787,7 @@ const worktreeIsDirty = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   boolean,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   if (!Str.Equivalence(candidate.reapClass, "git-worktree") || O.isNone(candidate.parentRepo)) {
     return false;
@@ -890,7 +890,7 @@ const skipReasonFor = (
 
 const measureBytes = Effect.fnUntraced(function* (
   candidatePath: string
-): Effect.fn.Return<O.Option<number>, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<O.Option<number>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   const result = yield* runRepoCommandCapture("du", ["-sb", "--", candidatePath], candidatePath).pipe(Effect.option);
   return pipe(
     result,
@@ -919,7 +919,7 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   if (!Str.Equivalence(candidate.reapClass, "head-install")) {
     return A.empty();
@@ -949,7 +949,7 @@ const removeDanglingWorktreeStub = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
@@ -1007,7 +1007,7 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   if (Str.Equivalence(candidate.reapClass, "dangling-worktree-stub")) {
@@ -1035,7 +1035,7 @@ const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
@@ -1109,7 +1109,7 @@ const applyCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   if (O.isSome(candidate.skipReason)) {
     return { reaped: false, warnings: [] };

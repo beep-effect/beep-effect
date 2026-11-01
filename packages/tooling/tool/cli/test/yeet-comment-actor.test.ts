@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commandArgs } from "./support/commandArgs.ts";
 
 // A GitHub App can post under a login without the `[bot]` suffix: Copilot's
 // pull request reviewer posts as `Copilot`, and only the REST `user.type`
@@ -138,7 +139,7 @@ const gh = Layer.succeed(
   ChildProcessSpawner.ChildProcessSpawner,
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the comment poll never pipes a command");
-    return Effect.succeed(handle(JSON.stringify([pagesFor(A.join([command.command, ...command.args], " "))])));
+    return Effect.succeed(handle(JSON.stringify([pagesFor(A.join([command.command, ...commandArgs(command)], " "))])));
   })
 );
 

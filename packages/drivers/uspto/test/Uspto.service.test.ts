@@ -56,18 +56,24 @@ const continuityEnvelope = JSON.stringify({
   ],
 });
 
-const documentsEnvelope = JSON.stringify({
-  documentBag: [
+const documentsEnvelope = `{
+  "documentBag": [
     {
-      documentCode: "SPEC",
-      documentCodeDescriptionText: "Specification",
-      documentIdentifier: "DOC123",
-      downloadOptionBag: [{ downloadUrl: "https://api.uspto.gov/docs/DOC123.pdf", mimeTypeIdentifier: "PDF" }],
-      officialDate: "2018-09-21",
+      "documentCode": "SPEC",
+      "documentCodeDescriptionText": "Specification",
+      "documentIdentifier": "DOC123",
+      "downloadOptionBag": [
+        { "downloadUrl": "https://api.uspto.gov/docs/DOC123.pdf", "mimeTypeIdentifier": "PDF" },
+        { "downloadUrl": "https://api.uspto.gov/docs/DOC123.xml", "mimeTypeIdentifier": "XML" },
+        { "downloadUrl": "https://api.uspto.gov/docs/DOC123.txt" },
+        { "mimeTypeIdentifier": "XML" },
+        { "downloadUrl": 123 }
+      ],
+      "officialDate": "2018-09-21"
     },
-    { documentCode: "IDS" },
-  ],
-});
+    { "documentCode": "IDS" }
+  ]
+}`;
 
 const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Layer.Layer<HttpClient.HttpClient> =>
   Layer.succeed(
@@ -110,6 +116,53 @@ const expectEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema:
 };
 
 describe("Uspto service", () => {
+  const downloadRequests: Array<readonly [string, string | undefined]> = [];
+  const redirectClient = Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.sync(() => {
+        downloadRequests.push([request.url, request.headers["x-api-key"]]);
+        return HttpClientResponse.fromWeb(
+          request,
+          request.url === "https://api.uspto.gov/native.xml"
+            ? new Response(null, {
+                status: 302,
+                headers: { location: "https://data-documents.uspto.gov/native.xml" },
+              })
+            : request.url === "https://api.uspto.gov/publication.xml"
+              ? new Response(null, {
+                  status: 302,
+                  headers: { location: "https://data.uspto.gov/publication.xml" },
+                })
+              : request.url === "https://api.uspto.gov/untrusted.xml"
+                ? new Response(null, {
+                    status: 302,
+                    headers: { location: "https://data.uspto.gov.attacker.example/publication.xml" },
+                  })
+                : new Response("<claims/>")
+        );
+      })
+    )
+  );
+  it.layer(usptoLayer(redirectClient), { timeout: "5 seconds" })((it) => {
+    it.effect("follows an official download redirect without forwarding the API key", () =>
+      Effect.gen(function* () {
+        const uspto = yield* Uspto;
+        yield* uspto.downloadDocument("https://api.uspto.gov/native.xml");
+        yield* uspto.downloadDocument("https://api.uspto.gov/publication.xml");
+        expect(downloadRequests).toStrictEqual([
+          ["https://api.uspto.gov/native.xml", "test-key"],
+          ["https://data-documents.uspto.gov/native.xml", undefined],
+          ["https://api.uspto.gov/publication.xml", "test-key"],
+          ["https://data.uspto.gov/publication.xml", undefined],
+        ]);
+        const error = yield* Effect.flip(uspto.downloadDocument("https://api.uspto.gov/untrusted.xml"));
+        expect(error.reason).toBe("transport");
+        expect(downloadRequests).toHaveLength(5);
+      })
+    );
+  });
+
   {
     const requestedUrls: Array<string> = [];
     it.layer(usptoLayer(respondWith(applicationEnvelope, 200, requestedUrls)), { timeout: "5 seconds" })((it) => {
@@ -185,6 +238,11 @@ describe("Uspto service", () => {
         expect(documents).toHaveLength(1);
         expect(documents[0]?.documentIdentifier).toBe("DOC123");
         expect(documents[0]?.downloadUrl).toBe("https://api.uspto.gov/docs/DOC123.pdf");
+        expect(documents[0]?.downloadOptions).toStrictEqual([
+          { downloadUrl: "https://api.uspto.gov/docs/DOC123.pdf", mimeTypeIdentifier: "PDF" },
+          { downloadUrl: "https://api.uspto.gov/docs/DOC123.xml", mimeTypeIdentifier: "XML" },
+          { downloadUrl: "https://api.uspto.gov/docs/DOC123.txt" },
+        ]);
       })
     );
   });

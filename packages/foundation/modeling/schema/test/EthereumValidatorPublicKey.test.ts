@@ -30,21 +30,21 @@ describe("EthereumValidatorPublicKey", () => {
         decodeUnknownEthereumValidatorPublicKeyEffect(Str.toUpperCase(validPublicKey))
       );
       pipe(failure1, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure1)) {
+      if (Exit.isFailure(failure1) && Exit.hasFails(failure1)) {
         expect(pipe(failure1.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );
       }
       const failure2 = yield* Effect.exit(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ab", 47)}`));
       pipe(failure2, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure2)) {
+      if (Exit.isFailure(failure2) && Exit.hasFails(failure2)) {
         expect(pipe(failure2.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );
       }
       const failure3 = yield* Effect.exit(decodeUnknownEthereumValidatorPublicKeyEffect(`0x${Str.repeat("ag", 48)}`));
       pipe(failure3, Exit.hasFails, assertTrue);
-      if (Exit.hasFails(failure3)) {
+      if (Exit.isFailure(failure3) && Exit.hasFails(failure3)) {
         expect(pipe(failure3.cause, Cause.findErrorOption, Option.getOrThrow).message).toContain(
           "EthereumValidatorPublicKey must be a lowercase 0x-prefixed 48-byte public key"
         );

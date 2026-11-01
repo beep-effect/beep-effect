@@ -1,0 +1,71 @@
+{
+  "familyId": "17139442-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.99,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the medical treatment device component",
+      "nativeQuote": "the medical treatment device component",
+      "literalMatch": true,
+      "explanation": "Case-insensitive exact numbered native substring."
+    }
+  ],
+  "concerns": [
+    "Examiner explicitly rejects2–7 by dependency on1; selected root1 phrase exact. Full original20-claim set exact per comparison including all selected1–7. Membership2–7→1 agrees natural wording."
+  ],
+  "rationale": "Actual112(b)/second-paragraph rejection ground and selected natural dependency membership reviewed. Examiner-to-numbered-native correspondence verified rather than chronology alone; underlying inventory assertion remains independently unverified. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "17139442",
+    "nativePublicationNumber": "US20210125715A1",
+    "nativePublicationDate": "20210429",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "aeaacf16fa39b0335b2f72d911fc8eb0edb411c6f6453d82b287c5c469673e08",
+    "sourceClaimsXmlSha256": "16d32ec18f041fce2434c32b17cbe2f25c89bba04362db47bcd3d0960f7c2efb"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 102,
+    "retainedInventoryCount": 102,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "KJD99Y99DFLYX11",
+        "officialDate": "2020-12-31T14:43:05.000-0500"
+      }
+    ],
+    "officeActionMailDate": "2021-11-24",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "KJD99Y99DFLYX11",
+      "officialDate": "2020-12-31T14:43:05.000-0500",
+      "sha256": "dbd905fcda15eccd7b1923110c992fb62478c890c2d0aee8c16db37e05b5d15e",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+      ],
+      "sourceClaimCount": 20
+    }
+  ],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "KJD99Y99DFLYX11",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 20
+    }
+  ]
+}

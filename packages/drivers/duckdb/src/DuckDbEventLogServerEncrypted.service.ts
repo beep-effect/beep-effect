@@ -15,6 +15,7 @@
 // beep: public leaf imports and Effect.fn wrappers follow repo laws; server-only dialect branches are omitted.
 import { $DuckdbId } from "@beep/identity/packages";
 import * as Arr from "effect/Array";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import { makeRemoteIdUnsafe } from "effect/eventlog/EventJournal";
@@ -69,10 +70,10 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
   }): Effect.Effect<
     EventLogServerEncrypted.Storage["Service"],
     SqlError.SqlError,
-    SqlClient.SqlClient | EventLogEncryption.EventLogEncryption | Scope.Scope
+    SqlClient.SqlClient | Digest.Digest | Scope.Scope
   > =>
     Effect.gen(function* () {
-      const encryptions = yield* EventLogEncryption.EventLogEncryption;
+      const digest = yield* Digest.Digest;
       const sql = (yield* SqlClient.SqlClient).withoutTransforms();
 
       const tablePrefix = options?.entryTablePrefix ?? "effect_events";
@@ -101,7 +102,10 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
 
       const resources = yield* RcMap.make({
         lookup: Effect.fnUntraced(function* (scopeKey: string) {
-          const scopeHash = Str.slice(0, 16)(yield* encryptions.sha256String(new TextEncoder().encode(scopeKey)));
+          const scopeHash = Str.slice(
+            0,
+            16
+          )(yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(scopeKey)));
           const table = `${tablePrefix}_${scopeHash}`;
           const tableSql = sql(table);
           const idsTableSql = sql(`${table}_ids`);
@@ -129,7 +133,10 @@ export const makeStorage = Effect.fn("DuckDbEventLogServerEncrypted.makeStorage"
       // Returns how many of the ids were not stored yet. Stored ids keep their
       // first sequence.
       // beep: DuckDB supports the SQLite ON CONFLICT / RETURNING branch directly.
-      const insertNewIds = Effect.fnUntraced(function* (idsTableSql: Statement.Identifier, rows: ReadonlyArray<IdRow>) {
+      const insertNewIds = Effect.fnUntraced(function* (
+        idsTableSql: Statement.Identifier,
+        rows: Arr.NonEmptyReadonlyArray<IdRow>
+      ) {
         return yield* sql`INSERT INTO ${idsTableSql} ${sql.insert(rows)} ON CONFLICT DO NOTHING RETURNING entry_id`.pipe(
           Effect.map(Arr.length)
         );
@@ -361,15 +368,12 @@ const decodeSessionAuthBindings = decodeSessionAuthBindingRows;
 export const layerStorage = (options?: {
   readonly entryTablePrefix?: string;
   readonly remoteIdTable?: string;
-}): Layer.Layer<
-  EventLogServerEncrypted.Storage,
-  SqlError.SqlError,
-  SqlClient.SqlClient | EventLogEncryption.EventLogEncryption
-> => Layer.effect(EventLogServerEncrypted.Storage)(makeStorage(options));
+}): Layer.Layer<EventLogServerEncrypted.Storage, SqlError.SqlError, SqlClient.SqlClient | Digest.Digest> =>
+  Layer.effect(EventLogServerEncrypted.Storage)(makeStorage(options));
 
 /**
  * Provides SQL-backed encrypted server `Storage` and supplies the default Web
- * Crypto `EventLogEncryption` layer.
+ * Crypto `Digest` layer.
  *
  * **Example** (Create DuckDB storage)
  * ```ts
@@ -384,7 +388,7 @@ export const layerStorageSubtle = (options?: {
   readonly entryTablePrefix?: string;
   readonly remoteIdTable?: string;
 }): Layer.Layer<EventLogServerEncrypted.Storage, SqlError.SqlError, SqlClient.SqlClient> =>
-  layerStorage(options).pipe(Layer.provide(EventLogEncryption.layerSubtle));
+  layerStorage(options).pipe(Layer.provide(Digest.layerWebCrypto));
 
 const makeEncryptedScopeKey = (publicKey: string, storeId: string): string => `${publicKey}/${storeId}`;
 

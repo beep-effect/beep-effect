@@ -85,8 +85,9 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
-import * as Crypto from "effect/Crypto";
 import * as Command from "effect/cli/Command";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -139,8 +140,8 @@ const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = UUID.make("550e8400-e29b-41d4-a716-446655440020");
 const reapClaimPath = Effect.fnUntraced(function* (lockPath: string, observedToken: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(observedToken));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(observedToken));
   return `${lockPath}.reap-${Hex.encode(digest)}`;
 });
 const reapAdopterPath = (
@@ -3281,25 +3282,25 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             );
             const ownIdentity = O.getOrElse(yield* processStartIdentityForPid(process.pid), () => "");
             expect(ownIdentity).not.toBe("");
-            const crypto = yield* Crypto.Crypto;
+            const crypto = yield* SecureRandom.SecureRandom;
             // Legacy names carry only the writer pid; identity-bearing names
             // add the hex-encoded process start so a reused pid cannot shield
             // an orphan the way it cannot shield a dead lease.
             const staleLegacy = path.join(
               tempRoot.leases,
-              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${yield* crypto.randomUUIDv4()}`
+              `nonce-${DEAD_PID}.lease.json.tmp-${DEAD_PID}-${yield* crypto.uuidV4()}`
             );
             const liveLegacy = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${yield* crypto.randomUUIDv4()}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${yield* crypto.uuidV4()}`
             );
             const reusedPid = path.join(
               tempRoot.leases,
-              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Hex.encode("proc:1")}-${yield* crypto.randomUUIDv4()}`
+              `nonce-${process.pid}.lease.json.tmp-${process.pid}-${Hex.encode("proc:1")}-${yield* crypto.uuidV4()}`
             );
             const current = path.join(
               tempRoot.queue,
-              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.randomUUIDv4()}`
+              `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.uuidV4()}`
             );
             yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
               fs.writeFileString(file, "")

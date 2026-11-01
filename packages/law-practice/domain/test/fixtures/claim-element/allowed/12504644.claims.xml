@@ -1,0 +1,522 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A 3D integrated imaging device, comprising:
+<claim-text>a spacer layer having a preset thickness;</claim-text>
+<claim-text>a three-dimensional structure layer disposed on a surface of a side of the spacer layer, the three-dimensional structure layer including a plurality of micro-nano structure units; and</claim-text>
+<claim-text>a microlens array arranged on a surface of a side of the spacer layer away from the three-dimensional structure layer, the microlens array including a plurality of microlenses,
+<claim-text>wherein</claim-text>
+<claim-text>the plurality of micro-nano structure units correspond to the plurality of microlenses one by one,</claim-text>
+<claim-text>a front view pattern of the plurality of micro-nano structure units is a superposition of images formed by each layered image of a target stereoscopic image under the plurality of microlenses according to different depths of field after the target stereoscopic image is layered, and</claim-text>
+<claim-text>a relationship between pixel coordinates of each layered image of the target stereoscopic image under a single microlens in a three-dimensional coordinate system and pixel coordinates in the three-dimensional structure layer is:</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00012" num="00012">
+<math overflow="scroll">
+<mrow>
+<mi>X</mi>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mi>X</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+</mrow>
+<mo>+</mo>
+<mrow>
+<mrow>
+<mi>tan</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<msup>
+<mi>sin</mi>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo>(</mo>
+<mrow>
+<mrow>
+<mi>sin</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<msup>
+<mi>tan</mi>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo>(</mo>
+<mfrac>
+<mrow>
+<mi>x</mi>
+<mo>-</mo>
+<mrow>
+<mi>x</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+</mrow>
+</mrow>
+<mi>g</mi>
+</mfrac>
+<mo>)</mo>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>*</mo>
+<mi>n</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>*</mo>
+<mi>d</mi>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<maths id="MATH-US-00012-2" num="00012.2">
+<math overflow="scroll">
+<mrow>
+<mi>Y</mi>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mi>Y</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+</mrow>
+<mo>+</mo>
+<mrow>
+<mrow>
+<mi>tan</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<msup>
+<mi>sin</mi>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo>(</mo>
+<mrow>
+<mrow>
+<mi>sin</mi>
+<mo>⁡</mo>
+<mo>(</mo>
+<mrow>
+<msup>
+<mi>tan</mi>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo>(</mo>
+<mfrac>
+<mrow>
+<mi>y</mi>
+<mo>-</mo>
+<mrow>
+<mi>y</mi>
+<mo>⁢</mo>
+<mn>0</mn>
+</mrow>
+</mrow>
+<mi>g</mi>
+</mfrac>
+<mo>)</mo>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>*</mo>
+<mi>n</mi>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>)</mo>
+</mrow>
+<mo>*</mo>
+<mi>d</mi>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>where (X, Y) refers to the pixel coordinates of the layered image of the target stereoscopic image in the three-dimensional coordinate system, (X0, Y0) refers to a central coordinate of the microlens, (x, y) refers to coordinates of pixel points on a micro-nano structure unit corresponding to the microlens, (x0, y0) refers to a central coordinate of the micro-nano structure unit, n is a refractive index of the microlens, g is a sum of a thickness of the spacer layer and a height of the microlens, and d is a depth of field, that is, a distance from a plane where the layered image is located to a vertex of the microlens.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The 3D integrated imaging device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the spacer layer is made of a light-transmitting material, and the material of the spacer layer is the same as a material of the microlens array.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The 3D integrated imaging device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a reflective material layer is provided on a side of the microlens array away from the spacer layer.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The 3D integrated imaging device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a sum of the thickness of the spacer layer and a thickness of the microlens array is greater than a focal length of each microlens.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The 3D integrated imaging device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the preset thickness is 1 micron to 200 microns.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The 3D integrated imaging device of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the microlens array comprises plano-convex lenses arranged in an array, and the arrangement of the array comprises an orthogonal arrangement or a honeycomb arrangement.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. A preparation method for a 3D integrated imaging device, wherein:
+<claim-text>the 3D integrated imaging device comprises:
+<claim-text>a spacer layer having a preset thickness;</claim-text>
+<claim-text>a three-dimensional structure layer is disposed on a surface of a side of the spacer layer, the three-dimensional structure layer including a plurality of micro-nano structure units; and</claim-text>
+<claim-text>a microlens array arranged on a surface of a side of the spacer layer away from the three-dimensional structure layer, the microlens array including a plurality of microlenses,
+<claim-text>wherein</claim-text>
+<claim-text>the plurality of micro-nano structure units correspond to the plurality of micro-lenses one by one, and</claim-text>
+<claim-text>a front view pattern of the plurality of micro-nano structure units is a superposition of images formed by each layered image of a target stereoscopic image under the plurality of micro-lenses according to different depths of field after the target stereoscopic image is layered,</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>the preparation method comprises:
+<claim-text>simulating to form a three-dimensional coordinate system;</claim-text>
+<claim-text>converting pixel coordinates of a three-dimensional target object in the three-dimensional coordinate system into pixel coordinates on a recording plane;</claim-text>
+<claim-text>forming the three-dimensional structure layer on a surface of a side of a substrate based on the pixel coordinates on the recording plane;</claim-text>
+<claim-text>disposing the spacer layer on a surface of the three-dimensional structure layer away from the substrate; and</claim-text>
+<claim-text>disposing the microlens array on a surface of a side of the spacer layer away from the three-dimensional structure layer.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The preparation method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the converting pixel coordinates of a three-dimensional target object in the three-dimensional coordinate system into pixel coordinates on a recording plane comprises:
+<claim-text>layering the three-dimensional target object to form a plurality of planar object images;</claim-text>
+<claim-text>setting different depths of field for different planar object images among the plurality of planar object images; and</claim-text>
+<claim-text>converting pixel coordinates of the plurality of planar object images in the three-dimensional coordinate system into the pixel coordinates on the recording plane based on the depths of field of the plurality of planar object images and parameters of the microlens array.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The preparation method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the setting different depths of field for different plane images among the plurality of plane images comprises:
+<claim-text>calculating reference values of the depths of field, the reference values being expressed by:</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00013" num="00013">
+<math overflow="scroll">
+<mrow>
+<msub>
+<mi>d</mi>
+<mn>0</mn>
+</msub>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mfrac>
+<msub>
+<mi>P</mi>
+<mn>1</mn>
+</msub>
+<msub>
+<mi>P</mi>
+<mi>p</mi>
+</msub>
+</mfrac>
+<mo>⁢</mo>
+<mi>k</mi>
+<mo>⁢</mo>
+<mi>f</mi>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mi>k</mi>
+<mo>⁢</mo>
+<mi>n</mi>
+<mo>⁢</mo>
+<mi>f</mi>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>where d<sub>0 </sub>refers to the reference values, P<sub>1 </sub>refers to a period between the plurality of microlenses, f refers to a focal length of the plurality of microlenses, P<sub>p </sub>refers to a resolution of pixel points on the recording plane, and n refers to a number of pixels in the plurality of microlenses;</claim-text>
+<claim-text>after the converting pixel coordinates of a three-dimensional target object in the three-dimensional coordinate system into pixel coordinates on a recording plane, the preparation method further includes:
+<claim-text>adjusting the pixel coordinates on the recording plane by a following mapping relationship:</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00014" num="00014">
+<math overflow="scroll">
+<mrow>
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<msup>
+<mi>i</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>j</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>s</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>t</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+<mo>=</mo>
+<mrow>
+<mrow>
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<mn>1</mn>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mrow>
+<mo>-</mo>
+<mi>k</mi>
+</mrow>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mn>1</mn>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mrow>
+<mo>-</mo>
+<mi>k</mi>
+</mrow>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mn>0</mn>
+</mtd>
+<mtd>
+<mrow>
+<mo>-</mo>
+<mn>1</mn>
+</mrow>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+<mo>⁢</mo>
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<mi>i</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>j</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>s</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>t</mi>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+</mrow>
+<mo>+</mo>
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<mi>kn</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>kn</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mrow>
+<mi>n</mi>
+<mo>+</mo>
+<mn>1</mn>
+</mrow>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mrow>
+<mi>n</mi>
+<mo>+</mo>
+<mn>1</mn>
+</mrow>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+</mrow>
+</mrow>
+</math>
+</maths>
+<claim-text>where</claim-text>
+</claim-text>
+<claim-text>
+<maths id="MATH-US-00015" num="00015">
+<math overflow="scroll">
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<msup>
+<mi>i</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>j</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>s</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<msup>
+<mi>t</mi>
+<mo>′</mo>
+</msup>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+</math>
+</maths>
+</claim-text>
+<claim-text>refers to coordinates, after adjustment, of (s′, t′)th pixel point in the recording plane corresponding to (s′, j′)th microlens,</claim-text>
+<claim-text>
+<maths id="MATH-US-00016" num="00016">
+<math overflow="scroll">
+<mrow>
+<mo>(</mo>
+<mtable>
+<mtr>
+<mtd>
+<mi>i</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>j</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>s</mi>
+</mtd>
+</mtr>
+<mtr>
+<mtd>
+<mi>t</mi>
+</mtd>
+</mtr>
+</mtable>
+<mo>)</mo>
+</mrow>
+</math>
+</maths>
+</claim-text>
+<claim-text>refers to coordinates, before adjustment, of (s, t)th pixel point in the recording plane corresponding to (i, j)th microlens, k refers to a constant, and n refers to a number of pixels corresponding to a single microlens.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The preparation method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the forming the three-dimensional structure layer on a surface of a side of a substrate based on the pixel coordinates on the recording plane comprises:
+<claim-text>forming the plurality of micro-nano structure units on the surface of the side of the substrate based on the pixel coordinates on the recording plane; and</claim-text>
+<claim-text>filling the surface of the side of the substrate with a coloring material.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The preparation method of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein after the forming the three-dimensional structure layer on a surface of a side of a substrate based on the pixel coordinates on the recording plane, the preparation method further comprises peeling off the substrate.</claim-text>
+</claim>
+</claims>

@@ -20,7 +20,8 @@ import { UUID } from "../../../internal/schema/Uuid.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetVerdict } from "./Verdict.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -219,7 +220,7 @@ export const decodeYeetAttemptJournalEvent: {
  */
 export const attemptJournalPath = (
   context: RepoRunContext
-): Effect.Effect<string, YeetCommandError, Crypto.Crypto | Path.Path> =>
+): Effect.Effect<string, YeetCommandError, Path.Path | Digest.Digest> =>
   runArtifactPathForContext(context, JOURNAL_FILE_NAME);
 
 /**
@@ -242,7 +243,11 @@ export const attemptJournalPath = (
 export const appendYeetAttemptJournalEvent = Effect.fn("YeetAttemptJournal.append")(function* (
   context: RepoRunContext,
   event: YeetAttemptJournalEvent
-): Effect.fn.Return<void, YeetCommandError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
+> {
   const line = yield* encodeEvent(event).pipe(
     Effect.mapError(YeetCommandError.new("Failed to encode Yeet attempt journal event."))
   );

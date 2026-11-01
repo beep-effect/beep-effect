@@ -47,7 +47,7 @@ import {
   turboCacheEnvironmentNeedsSecretSession,
   turboCacheValueSourceFor,
 } from "./TurboCache.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { TurboCacheValueSource } from "./TurboCache.ts";
 
@@ -527,7 +527,7 @@ const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(functio
   repoRoot: string,
   environment: Record<string, string>,
   args: ReadonlyArray<string> = ["run", "--", "true"]
-): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const exitCode = yield* runToExit({
     command: "op",
     args,
@@ -580,7 +580,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
 ): Effect.fn.Return<
   ReadonlyArray<TurboEnvironmentHealthWarning>,
   never,
-  FileSystem.FileSystem | Path.Path | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   const cached = MutableHashMap.get(turboEnvironmentHealthVerdicts, repoRoot);
   if (O.isSome(cached)) return cached.value;
@@ -979,7 +979,7 @@ export const clearTurboCacheSecretSessionVerdictsForTesting = (): void => {
 export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCacheSecretSession")(function* (
   repoRoot: string,
   environment: Readonly<Record<string, string | undefined>> = Bun.env
-): Effect.fn.Return<boolean, never, Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   if (yield* isCi) return false;
 
   const cached = MutableHashMap.get(turboSecretSessionVerdicts, repoRoot);

@@ -1,0 +1,47 @@
+{
+  "familyId": "16778182-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A method for predicting the dosage based on human physiological parameters, comprising: obtaining dosage data and multiple human physiological parameter data of multiple testers as raw data; preprocessing the raw data to obtain input data as a training set; based on the input data, establishing a decision tree by classification and regression tree algorithm, which includes: generating the decision tree based on the feature extraction of the input data, and pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set; inputting a user's human physiological parameter data, and predicting the required dosage according to the established decision tree.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The method according to claim 1, further comprising: using generalized regression neural network to post-optimize the output of the decision tree.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The method according to claim 1, further comprising: using BADT to process null data specifically to post-optimize the output of the decision tree.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The method according to claim 1, wherein the generation of the decision tree uses the Gini index to select the optimal feature, and to determine the optimal splitting point of the feature at the same time.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The method according to claim 1, the pruning comprising: cutting off the sub-trees continuously from the bottom of the complete tree form of the decision tree; testing the sequence of the sub-trees on the independent verification data set by the cross-validation method, from which the optimal sub-tree is selected.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The method according to claim 1, the preprocessing comprising: correlating the dosage data with the human physiological parameters on the time axis.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The method according to claim 1, the preprocessing further comprising: processing the input data by ETL, and processing the output data of the decision tree by ETL again as input data, thereby continuously iterating.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "A storage medium, which stores instructions that can be executed by a computer device and can be read by the computer device; the instructions cause the computer device to perform the following steps: obtaining dosage data and multiple human physiological parameter data of multiple testers as raw data; preprocessing the raw data to obtain input data as a training set; based on the input data, establishing a decision tree by classification and regression tree algorithm, which includes: generating the decision tree based on the feature extraction of the input data, and pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set; receiving a user's human physiological parameter data, and predicting the required dosage according to the established decision tree.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

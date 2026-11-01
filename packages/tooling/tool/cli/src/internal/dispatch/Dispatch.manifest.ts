@@ -28,8 +28,9 @@
 import { CommandGroupHelp } from "./Dispatch.schemas.ts";
 import type { FsUtils, TSMorphService } from "@beep/repo-utils";
 import type { BunServices } from "@effect/platform-bun/BunServices";
-import type * as Crypto from "effect/Crypto";
 import type * as Command from "effect/cli/Command";
+import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Scope from "effect/Scope";
 import type { MemoryStats } from "../repo-run/QualityScheduler.ts";
@@ -42,7 +43,12 @@ import type { RuntimeService } from "./Dispatch.schemas.ts";
  * @category models
  * @since 0.0.0
  */
-export type BaseServices = BunServices | HttpClient.HttpClient | Crypto.Crypto | Scope.Scope;
+export type BaseServices =
+  | BunServices
+  | HttpClient.HttpClient
+  | Digest.Digest
+  | SecureRandom.SecureRandom
+  | Scope.Scope;
 
 // The service each `RuntimeService` key provides; a type-level map, never a value.
 interface RuntimeServiceTypes {
@@ -150,6 +156,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     },
     []
   )(() => import("../../commands/HarnessLedger/index.ts").then((module) => module.harnessLedgerCommand)),
+  groupRoute(
+    { name: "holds", description: "Temporary repo decisions as probe-backed holds" },
+    []
+  )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
   groupRoute(
     { name: "refs", description: "Manage the manifest-defined reference workspace" },
     []

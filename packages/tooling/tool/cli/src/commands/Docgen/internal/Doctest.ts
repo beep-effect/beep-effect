@@ -1,5 +1,5 @@
 import { extractFencedCodeBlockDetails } from "@beep/repo-docgen/Core";
-import { FsUtils, findRepoRoot, GlobOptions, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
 import { transform as transformDoctest } from "@effect/doctest/Transform";
 import * as Effect from "effect/Effect";
@@ -22,6 +22,7 @@ import {
   parseJSDocSections,
   rawJSDocSpans,
 } from "../../../internal/jsdoc/JSDocSections.ts";
+import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
 import { DoctestAnalysisError, DoctestRewriteError } from "../Doctest.errors.ts";
@@ -39,7 +40,7 @@ import {
   TypeOnlyFence,
 } from "../Doctest.schemas.ts";
 import { DoctestFenceAnalyzer, DoctestFenceRewriter } from "../Doctest.service.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { DoctestCliConfig, ImpurityReason, PurityVerdict } from "../Doctest.schemas.ts";
@@ -821,7 +822,7 @@ const discoverFiles = Effect.fn("Doctest.discoverFiles")(function* (config: Doct
   const packagePrefix = yield* O.match(O.fromUndefinedOr(config.filter), {
     onNone: () => Effect.succeed(O.none<string>()),
     onSome: Effect.fnUntraced(function* (filter) {
-      const workspaces = yield* resolveWorkspaceDirs(repoRoot).pipe(
+      const workspaces = yield* workspaceDirectories(repoRoot).pipe(
         Effect.mapError(() => DoctestAnalysisError.make({ message: "Failed to resolve workspaces." }))
       );
       const workspace = HashMap.get(workspaces, filter);
@@ -1048,7 +1049,7 @@ const rewriteSource = (
   file: string,
   source: string,
   plans: ReadonlyArray<MarkPlan>
-): Effect.Effect<string, DoctestRewriteError> => {
+): Effect.Effect<string, DoctestRewriteError, SecureRandom.SecureRandom> => {
   if (A.some(plans, (plan) => plan.sourceDigest !== sourceDigest(source))) {
     return DoctestRewriteError.make({ message: "Source changed after analysis; refusing stale plan.", file });
   }
@@ -1132,7 +1133,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
   DoctestFenceAnalyzer,
   Effect.gen(function* () {
     const context = yield* Effect.context<
-      FileSystem.FileSystem | Path.Path | FsUtils | Crypto.Crypto | ChildProcessSpawner.ChildProcessSpawner
+      SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner.ChildProcessSpawner
     >();
     return {
       analyze: Effect.fn("DoctestFenceAnalyzer.analyze")((config) =>
@@ -1160,7 +1161,7 @@ export const DoctestFenceAnalyzerLive = Layer.effect(
 export const DoctestFenceRewriterLive = Layer.effect(
   DoctestFenceRewriter,
   Effect.gen(function* () {
-    const context = yield* Effect.context<FileSystem.FileSystem | Path.Path | FsUtils>();
+    const context = yield* Effect.context<SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils>();
     return {
       preview: Effect.fn("DoctestFenceRewriter.preview")((plans) =>
         rewriteWithServices(plans, false).pipe(Effect.provide(context))

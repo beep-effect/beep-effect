@@ -1,0 +1,85 @@
+{
+  "scope": "Independent claim-creation cohort publication through registered human and JSON commands",
+  "recordedAt": "2026-10-29T03:53:57.996720+00:00",
+  "result": "package, scoped CLI and actual-command synthetic proof passed; full acceptance incomplete",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-claim-population.ts": "6081e0aed40deafd2d9e1e7691504e04565f9444f010607c4fdad285f8ddb7d9",
+    "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": "18b400045e148b0b795ad6809a9718d89a438e0d8978d9eddfcecba8ca659b2b",
+    "packages/tooling/library/ai-metrics/src/index.ts": "117ddfee840b30cc49558031f8471166da9a3fc5eda98e1af3087ab132882d85",
+    "packages/tooling/library/ai-metrics/test/observation-claim-population.test.ts": "a6c281ad43d2391e4632557db0a6b7c5889d3b666200e29e3841979c659f816d",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "95a203f78de3ec30f41bd4d9e1f2000a63823ff48b55486f728b245101028983",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": "f58208c3f73f5cb90f472dfd9b0fdf4286c4ec32adb9b311b423d058078c0951",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": "737c6c4068056b32b1f144f49950886185fa03bf444f3125dd1d328b43bea3d9",
+    "packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts": "0f933fe1c23f7aaa52de982ae235508b3870f5e615e8d2b26259bba31d242b4e",
+    "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts": "eeae04ae783cb104989100029213135a2a78afc11f0e131242c746b26e2bc54e",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "1ea3a787a825f6c04db1570a735bfbf59e35b7898696d28b31f1e4044ddf044d",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "e7a32a2da32962205ee131d6b3b4dae48a32065b8b0f01b323a00eb8c0b7d3af"
+  },
+  "packageVerification": {
+    "command": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "result": "passed",
+    "log": "/tmp/foundation-population-quality-v2.log",
+    "resourceGuard": "goals/agent-observability-foundation/ops/claim-population-package-resource-guard.json",
+    "libraryChangedSinceGate": false,
+    "auditSeconds": 113.6,
+    "docgenSeconds": 11.8,
+    "newPopulationTests": 5
+  },
+  "scopedCliVerification": {
+    "result": "passed",
+    "tools": ["tsgo --noEmit", "tsrs --noEmit"],
+    "config": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+    "testFiles": 3,
+    "tests": 25,
+    "log": "/tmp/foundation-population-cli-qualified.log",
+    "resourceGuard": "goals/agent-observability-foundation/ops/claim-population-cli-resource-guard.json",
+    "lint": "9 changed source/test files passed Biome; /tmp/foundation-population-qualified-lint.log",
+    "broadCliGatePassed": false
+  },
+  "workerProof": {
+    "result": "passed",
+    "receipt": "goals/agent-observability-foundation/ops/claim-population-worker-verification.json",
+    "rawEvidence": "/tmp/obs-entry-s8mkvhcr/evidence.json",
+    "ownedProcessesStopped": 10,
+    "committedLaunchFacts": 16,
+    "managedCommand": {
+      "actualServeCommand": true,
+      "actualRecoveryCommand": true,
+      "actualInitializeClaimsCommand": true,
+      "actualEnrollmentCommand": true,
+      "actualPopulationCommand": true,
+      "populationHumanAndJson": true,
+      "independentStartsBeforeReceipts": true,
+      "populationBackendVisibilityUnknown": true,
+      "actualChildLaunches": 1,
+      "actualProviderSessions": 0,
+      "localCaptureWhileCollectorPaused": true,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "recoveredAfterOwnerExitAndCollectorRestart": true,
+      "independentClaimRefusedRelaunch": true,
+      "recoveryChildLaunches": 0,
+      "backendVisibilityRemainsUnknown": true,
+      "processLivenessRemainsUnknown": true,
+      "privateMetadataAbsent": true
+    }
+  },
+  "semantics": [
+    "claims-created-in-window; not lifecycle event-time or all-host activity",
+    "missing Started keeps denominator unknown",
+    "positive starts remain separate from historical acknowledgments",
+    "telemetry totals, current liveness and Phoenix visibility unknown",
+    "two agreeing scans with ten-second bound; not administrator rollback detection",
+    "duplicate claim IDs refused; linear slot-read regression"
+  ],
+  "remaining": [
+    "Operational independent claim-store backup/recovery proof",
+    "Broad CLI verification and final review panel",
+    "Real CLI/desktop bounded canaries, deployment, repository delivery and full SPEC acceptance"
+  ]
+}

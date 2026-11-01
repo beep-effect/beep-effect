@@ -1,0 +1,90 @@
+{
+  "observedAt": "2026-10-29T16:28:08.117602+00:00",
+  "since": "2026-10-27",
+  "distinctOomDecisions": 9,
+  "kernelDecisions": [
+    {
+      "timestamp": "2026-10-27T07:16:09-05:00",
+      "constraint": "CONSTRAINT_NONE",
+      "scope": "global",
+      "task": "python"
+    },
+    {
+      "timestamp": "2026-10-28T05:57:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T05:59:29-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:04:08-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T06:06:47-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T14:26:17-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "bun.native"
+    },
+    {
+      "timestamp": "2026-10-28T21:13:20-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "tsc"
+    },
+    {
+      "timestamp": "2026-10-29T07:54:53-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    },
+    {
+      "timestamp": "2026-10-29T10:56:06-05:00",
+      "constraint": "CONSTRAINT_MEMCG",
+      "scope": "cgroup",
+      "task": "python3"
+    }
+  ],
+  "newerService": {
+    "timestamp": "2026-10-29T10:56:06-05:00",
+    "classification": "service-limit-CONSTRAINT_MEMCG",
+    "memoryPeakBytes": 805306368,
+    "sourceSha256": "3ad0ead0b7e85291f1fc365de88013507072696bff9ac01a7cc8000ed3c295b2",
+    "exactCaseReceiptRecovered": false,
+    "interpretation": "Source declares an explicit memory-pressure stress case, but exact per-run intent is not established.",
+    "journalSummary": {
+      "result": "oom-kill",
+      "mainProcessResult": "code=killed, status=9/KILL",
+      "memoryPeakBytes": 805306368,
+      "cpuTimeMilliseconds": 209,
+      "wallTimeMilliseconds": 232
+    },
+    "serviceCategory": "restricted-runtime qualification (identity omitted; ownership and per-run intent not inferred)"
+  },
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 40758083584,
+    "SwapTotal": 51539603456,
+    "SwapFree": 5975863296
+  },
+  "pressure": "some avg10=1.86 avg60=0.37 avg300=0.31 total=520584157\nfull avg10=1.86 avg60=0.37 avg300=0.28 total=468927626\n",
+  "mutations": "No unrelated services, applications, notifications, or swap configuration changed.",
+  "publicRepresentation": {
+    "kind": "sanitized-derivative",
+    "originalSha256": "b5153e9c0d0085b03adce160d70730f1cd5a5c31ec0db30a37d2e225557ffce7",
+    "policy": "Home paths normalized; machine/session/process identities and unrelated workload locations omitted. Measurements, timestamps, source hashes and uncertainty retained. Exact original is retained privately; see public-receipt-sanitization-20261031.json."
+  }
+}

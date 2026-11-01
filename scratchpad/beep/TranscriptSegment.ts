@@ -13,7 +13,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as Equal from "effect/Equal";
@@ -48,7 +49,7 @@ const textEncoder = new TextEncoder();
 const uuidV5 = Effect.fnUntraced(function* (
   name: string,
   namespace: Uint8Array,
-): Effect.fn.Return<string, PlatformError.PlatformError, Crypto.Crypto> {
+): Effect.fn.Return<string, PlatformError.PlatformError, Digest.Digest> {
   if (!name.isWellFormed()) {
     return yield* PlatformError.badArgument({
       module: "TranscriptSegment",
@@ -56,12 +57,12 @@ const uuidV5 = Effect.fnUntraced(function* (
       description: "name must be well-formed UTF-16",
     });
   }
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const nameBytes = textEncoder.encode(name);
   const input = new Uint8Array(namespace.length + nameBytes.length);
   input.set(namespace);
   input.set(nameBytes, namespace.length);
-  const bytes = (yield* crypto.digest("SHA-1", input)).slice(0, 16);
+  const bytes = (yield* crypto.digest(Digest.sha1, input)).slice(0, 16);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   view.setUint8(6, (view.getUint8(6) & 0x0f) | 0x50);
   view.setUint8(8, (view.getUint8(8) & 0x3f) | 0x80);
@@ -153,11 +154,11 @@ export const SENTENCE_FINDALL_RE = new RegExp(`[^${SENTENCE_ENDERS}]+(?:${senten
  * @since 0.0.0
  */
 export const legacyConversationSegmentId: {
-  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Crypto.Crypto>;
-  (index: number): (conversationId: string) => Effect.Effect<string, PlatformError.PlatformError, Crypto.Crypto>;
+  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest>;
+  (index: number): (conversationId: string) => Effect.Effect<string, PlatformError.PlatformError, Digest.Digest>;
 } = dual(
   2,
-  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Crypto.Crypto> =>
+  (conversationId: string, index: number): Effect.Effect<string, PlatformError.PlatformError, Digest.Digest> =>
     uuidV5(`omi/conversations/${conversationId}/transcript-segments/${index}`, NAMESPACE_URL),
 );
 
@@ -410,7 +411,7 @@ export const prepareTranscriptSegment = Effect.fn("TranscriptSegment.prepare")(f
   const id =
     input.id !== undefined && input.id !== null && !Str.isEmpty(input.id)
       ? input.id
-      : yield* Crypto.Crypto.use((crypto) => crypto.randomUUIDv4());
+      : yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
   const speaker = input.speaker === undefined ? O.some("SPEAKER_00") : optionText(input.speaker);
   const speakerId =
     input.speakerId !== undefined && input.speakerId !== null

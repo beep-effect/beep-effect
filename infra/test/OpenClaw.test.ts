@@ -37,10 +37,11 @@ import * as Str from "@beep/utils/Str";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -117,8 +118,8 @@ const deploymentConfig = OpenClawDeploymentConfig.make({
 });
 
 const sha256Hex = Effect.fnUntraced(function* (text: string) {
-  const crypto = yield* Crypto.Crypto;
-  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(text));
+  const crypto = yield* Digest.Digest;
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(text));
   return Hex.encode(digest);
 });
 
@@ -134,9 +135,12 @@ const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) 
   );
 });
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
-const defaultGenerationEffect = makeOpenClawGeneration(defaultArgs).pipe(
-  Effect.provideService(Crypto.Crypto, NodeCrypto.make)
+const defaultGenerationEffect = NodeCrypto.layerDigest.pipe(
+  Layer.build,
+  Effect.flatMap((context) => makeOpenClawGeneration(defaultArgs).pipe(Effect.provideContext(context))),
+  Effect.scoped
 );
+const TestPlatform = Layer.merge(NodeServices.layer, NodeCrypto.layerDigest);
 const parseDocument = (json: string): { readonly [key: string]: unknown } => {
   const parsed = decodeJsonResult(json);
   const decoded = parsed.pipe(Result.getOrThrow);
@@ -241,7 +245,7 @@ describe("@beep/infra OpenClaw", () => {
     assertNone(args.backup);
   });
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(TestPlatform)((it) => {
     it.effect(
       "renders exactly two providers, hosted primary, DM-only Telegram, and loopback Control UI",
       Effect.fnUntraced(function* () {
@@ -482,7 +486,7 @@ describe("@beep/infra OpenClaw", () => {
     })
   );
 
-  it.layer(NodeServices.layer)(
+  it.layer(TestPlatform)(
     "addresses a generation by the length-delimited config/persona/skill/compatibility bundle",
     (it) =>
       it.effect(
@@ -497,7 +501,7 @@ describe("@beep/infra OpenClaw", () => {
       )
   );
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(TestPlatform)((it) => {
     it.effect(
       "re-addresses the generation when the deployment intent changes",
       Effect.fnUntraced(function* () {
@@ -511,7 +515,7 @@ describe("@beep/infra OpenClaw", () => {
     );
   });
 
-  it.layer(NodeServices.layer)("re-addresses the generation when only SOUL bytes change", (it) =>
+  it.layer(TestPlatform)("re-addresses the generation when only SOUL bytes change", (it) =>
     it.effect(
       "hashes the changed SOUL through the platform crypto service",
       Effect.fnUntraced(function* () {
@@ -949,7 +953,7 @@ describe("@beep/infra OpenClaw", () => {
     })
   );
 
-  it.layer(NodeServices.layer)("renders a separate fail-closed live acceptance command", (it) =>
+  it.layer(TestPlatform)("renders a separate fail-closed live acceptance command", (it) =>
     it.effect(
       "executes the rendered Bash script for real",
       Effect.fnUntraced(function* () {

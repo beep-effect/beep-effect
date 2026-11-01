@@ -518,6 +518,10 @@ export const yeetMonitorDurationMillis = Effect.fn("Yeet.monitorDurationMillis")
 const monitorFlags = {
   ...detachedFlags,
   ...sharedFlags,
+  pollInterval: Flag.String("poll-interval").pipe(
+    Flag.withDefault(""),
+    Flag.withDescription("Positive polling duration for --until-ready or --until-merged (default 30 seconds)")
+  ),
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,
   settleTimeout: settleTimeoutFlag,
@@ -834,8 +838,10 @@ const jobStatusCommand = Command.make(
           root,
           O.getSomesStruct({ PATH: yield* configStringOption("PATH") })
         ).pipe(
-          Effect.mapError(YeetCommandError.new("Failed to read job telemetry.")),
-          Effect.map((result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()))
+          Effect.mapBoth({
+            onFailure: YeetCommandError.new("Failed to read job telemetry."),
+            onSuccess: (result) => (result.exitCode === 0 ? O.some(result.output) : O.none<string>()),
+          })
         );
     if (options.json) {
       yield* Console.log(
@@ -1062,6 +1068,7 @@ const yeetMonitorCommand = Command.make(
   monitorFlags,
   Effect.fn("Yeet.monitorCommand")(function* ({
     stateRoot,
+    pollInterval,
     settleTimeout,
     untilEvent,
     untilMerged,
@@ -1069,6 +1076,15 @@ const yeetMonitorCommand = Command.make(
     watch,
     ...options
   }) {
+    if (Str.isNonEmpty(pollInterval) && !untilMerged && !untilReady)
+      return yield* YeetCommandError.make({ message: "--poll-interval requires --until-ready or --until-merged." });
+    const interval = Str.isEmpty(pollInterval)
+      ? undefined
+      : Duration.millis(
+          yield* durationMillis(pollInterval).pipe(
+            Effect.mapError(YeetCommandError.new("--poll-interval requires a positive finite duration."))
+          )
+        );
     if (options.detach) return yield* provideYeetStateRoot(runYeetMode("monitor", options), stateRoot);
     const route = yeetMonitorCommandRoute({
       plan: options.plan,
@@ -1091,9 +1107,14 @@ const yeetMonitorCommand = Command.make(
         "invalid-until-event": rejectYeetUntilEventPairing,
         "invalid-until-ready": rejectYeetUntilReadyPairing,
         "ready-loop": reportDetachedMonitor(
-          runYeetMergeLoop(options, { policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }) }).pipe(Effect.asVoid)
+          runYeetMergeLoop(options, {
+            pollInterval: interval,
+            policy: YeetUntilReadyPolicy.make({ settleTimeoutMs }),
+          }).pipe(Effect.asVoid)
         ),
-        "merge-loop": reportDetachedMonitor(runYeetMergeLoop(options, { settleTimeoutMs }).pipe(Effect.asVoid)),
+        "merge-loop": reportDetachedMonitor(
+          runYeetMergeLoop(options, { pollInterval: interval, settleTimeoutMs }).pipe(Effect.asVoid)
+        ),
         watch: reportDetachedMonitor(runYeetWatchLoop(options, untilEvent, { settleTimeoutMs })),
       }[route],
       stateRoot

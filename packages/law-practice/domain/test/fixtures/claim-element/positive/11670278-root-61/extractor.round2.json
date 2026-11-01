@@ -1,0 +1,44 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11670278-root-61",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "resolvedClaimNumbers": [61, 62, 63, 64, 65, 67],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Earlier source-audit unresolved verdict concerned missing original XML. Independent source critic accepted at 0.98 after original PDF pages 9–11 (printed 59–61) corroborated selected claims 61–65/67, their full wording and dependencies. Native text remains canonical.",
+    "Claim 66 visibly refers to itself and is outside selected scope. It is neither repaired nor added. Claim 67 exact “the least one pair” is retained without silently inserting at.",
+    "First definite location/current location/contour/intensity/polarity phrases have no invented noun introductions.",
+    "Measured actual-field properties and calculated-field properties are distinct source-qualified sets. Unqualified combined measured-and-calculated phrases are retained without arbitrarily pointing one phrase to only one of those sets.",
+    "Claim 61 repeats a rover unit in the preamble and component enumeration; subsequent operational references target the explicit component introduction. No identity edge between the two indefinite introductions is forced.",
+    "Claim 67 virtual rotation calculations are an explicit possessive noun phrase with no earlier standalone calculations noun introduction; no identity is invented from the earlier calculating verb."
+  ],
+  "annotationRationale": [
+    "Actual system preamble retains resumptive said boundary proximity determining system before comprising with its local antecedent. Component introduction and source-clear successive operations follow grammar, with explicit functional-relation elements and ordered anchored parts.",
+    "Complete lexical heads preserve boundary proximity determining system, auxiliary communications module, common two-dimensional plane, orthogonal magnetic fields, calculated magnetic fields, magnetic field properties and rover unit’s virtual rotation calculations; exact source apostrophe retained.",
+    "Pairs and fields are distinct nested of-phrase terms. Actual and calculated pairs get separate introductions and independently assigned later references; no bare exact-head shortcut conflates them.",
+    "Claim 63 current-location variables and sample-location variables are separate qualified introductions. Claim 64 comparison refers to the corresponding qualified sets rather than assigning both the variables occurrences to the same head.",
+    "Natural dependency ancestry 62→61,63→62,64→63,65→64,67→61 controls inherited entity references. Context claims are not silently scored.",
+    "First/second operational modes, sampled locations, base station, rover and auxiliary module remain explicit lexical/reference structure; missing introductions and malformed source wording do not cause parser-based structural abstention.",
+    "Round 2 independently accepts the missing pair antecedent. Claim 67 “the least one pair” [514,532), immediately qualified by “of orthogonal magnetic fields”, refers to claim 61.a “at least one pair” [290,307), the actual generated orthogonal-field pair. The same sentence explicitly distinguishes calculated magnetic fields and their separate pair. Claim 67 directly references 61 and cannot inherit descendant claim 65’s two-pair limitation. Added only this antecedent edge. Malformed literal quote, determiner the and head least one pair remain unchanged; semantic identity does not require source wording repair."
+  ],
+  "independence": "Fresh source-grounded manual quote, lexical head, grammar boundary and semantic identity selections. Only claims/native XML/context, provenance/source audit/source critic, protocol and schema contracts used. No production/rules/predictions/synthetic fixtures/conformance archives/network/secrets/git/delegation. Helper only locates manually selected quotes, formats schema data and checks spans/reference geometry.",
+  "sourceStatus": "Independent source critic accepted; semantic critic and attorney review pending.",
+  "validation": "Round-1 expected/extractor/critic preserved byte-for-byte. Exact new edge endpoints verified against canonical source and owned terms; selected scope unchanged. Verified expected-tree difference is exactly one antecedent edge.",
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "accepted-and-corrected",
+    "changes": [
+      "Added antecedent 67.b [514,532) →61.a [290,307). No source spans, terms, heads, determiners, functional parts or other edges changed."
+    ],
+    "previousReceipts": [
+      "expected.round1.json",
+      "extractor.round1.json",
+      "critic.round1.json"
+    ],
+    "criticRound2Status": "pending"
+  }
+}

@@ -251,8 +251,10 @@ export const makeGatewayProbes = Effect.gen(function* () {
   );
 
   const m365Consented = host.exists(tokenCachePath).pipe(
-    Effect.map((present) => (present ? satisfied : missing("Microsoft 365 has not been connected yet."))),
-    Effect.mapError(unavailable("m365-consented"))
+    Effect.mapBoth({
+      onFailure: unavailable("m365-consented"),
+      onSuccess: (present) => (present ? satisfied : missing("Microsoft 365 has not been connected yet.")),
+    })
   );
 
   const m365TokenCached = windowsOnly(
@@ -286,10 +288,11 @@ export const makeGatewayProbes = Effect.gen(function* () {
     onNone: () => Effect.succeed(noBundle),
     onSome: (bundleDir) =>
       host.exists(path.join(bundleDir, "bundle.manifest.json")).pipe(
-        Effect.map((present) =>
-          present ? satisfied : missing(`The folder "${bundleDir}" is not a knowledge-graph bundle.`)
-        ),
-        Effect.mapError(unavailable("practice-kg-bundle-present"))
+        Effect.mapBoth({
+          onFailure: unavailable("practice-kg-bundle-present"),
+          onSuccess: (present) =>
+            present ? satisfied : missing(`The folder "${bundleDir}" is not a knowledge-graph bundle.`),
+        })
       ),
   });
 

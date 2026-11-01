@@ -891,6 +891,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     rootTaskLane(repoRoot, "lint:schema-tag-idioms", "lint:schema-tag-idioms")
   ),
   githubCheckLane(
+    "lint:holds",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:holds", "lint:holds")
+  ),
+  githubCheckLane(
     "lint:schema-first",
     "cheap-gates",
     "repo-quality",
