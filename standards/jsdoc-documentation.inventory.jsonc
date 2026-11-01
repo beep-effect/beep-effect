@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T01:01:51.378Z",
+  "generatedAt": "2026-11-01T01:35:54.109Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
     "publicModules": 3638,
-    "publicExports": 25750,
+    "publicExports": 25752,
     "openModules": 165,
     "openExports": 97,
     "missingExportExamples": 3,
@@ -460567,7 +460567,7 @@
         "srcDir": "src",
         "sourceFileCount": 498,
         "publicModuleCount": 495,
-        "publicExportCount": 4608
+        "publicExportCount": 4610
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -462943,7 +462943,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -490961,9 +490961,56 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Route.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
-          "line": 332,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-332-ciroutecommand",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-335-ciroutecommand",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiRouteServices",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 353,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-353-cirouteservices",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeCiRouteCommandForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/Route.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Route.command.ts",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-372-makeciroutecommandfortesting",
+          "currentTags": [
+            "@internal",
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],

@@ -215,10 +215,7 @@ const planCommand = Command.make(
     });
     yield* routeFailure(program);
   })
-).pipe(
-  Command.withDescription("Classify a change and print the lanes the route selects, in wave order"),
-  Command.provide(routeLayers)
-);
+).pipe(Command.withDescription("Classify a change and print the lanes the route selects, in wave order"));
 
 const captureCommand = Command.make(
   "capture",
@@ -257,10 +254,7 @@ const captureCommand = Command.make(
     });
     yield* routeFailure(program);
   })
-).pipe(
-  Command.withDescription("Capture (or extend) the digest-pinned corpus of hosted runs"),
-  Command.provide(routeLayers)
-);
+).pipe(Command.withDescription("Capture (or extend) the digest-pinned corpus of hosted runs"));
 
 // census and replay differ only in which reader method runs and how the report prints. The
 // `Command.make` calls stay literal because the knowledge doctor derives the documented command
@@ -296,10 +290,7 @@ const censusCommand = Command.make(
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the census as JSON")),
   },
   runCorpusReport((reader, loaded) => reader.census(loaded), RouteCensusSchema, renderCensus)
-).pipe(
-  Command.withDescription("Print the loss census: hosted machine time by atom kind and lane"),
-  Command.provide(routeLayers)
-);
+).pipe(Command.withDescription("Print the loss census: hosted machine time by atom kind and lane"));
 
 const replayCommand = Command.make(
   "replay",
@@ -308,9 +299,21 @@ const replayCommand = Command.make(
     json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the replay as JSON")),
   },
   runCorpusReport((reader, loaded) => reader.replay(loaded), RouteReplaySchema, renderReplay)
+).pipe(Command.withDescription("Replay the route over the corpus and print its recall with base-green attribution"));
+
+// The route command tree without its services; `ciRouteCommand` provides the live
+// layers once at the parent, which dispatches every subcommand inside them.
+const ciRouteCommandDefinition = Command.make("route", {}, () =>
+  printLines([
+    "Verification route commands:",
+    "- bun run beep ci route plan [--base <sha>] [--head <ref>] [--json]",
+    `- bun run beep ci route capture [--since ${ROUTE_CORPUS_DEFAULT_SINCE}] [--until YYYY-MM-DD] [--workflows Check,Heavy] [--out ${ROUTE_CORPUS_DEFAULT_DIR}]`,
+    "- bun run beep ci route census [--corpus <receipt>] [--json]",
+    "- bun run beep ci route replay [--corpus <receipt>] [--json]",
+  ])
 ).pipe(
-  Command.withDescription("Replay the route over the corpus and print its recall with base-green attribution"),
-  Command.provide(routeLayers)
+  Command.withDescription("Select the checks a change kind can affect, and prove it by replay"),
+  Command.withSubcommands([planCommand, captureCommand, censusCommand, replayCommand])
 );
 
 /**
@@ -329,15 +332,42 @@ const replayCommand = Command.make(
  * @category cli-commands
  * @since 0.0.0
  */
-export const ciRouteCommand = Command.make("route", {}, () =>
-  printLines([
-    "Verification route commands:",
-    "- bun run beep ci route plan [--base <sha>] [--head <ref>] [--json]",
-    `- bun run beep ci route capture [--since ${ROUTE_CORPUS_DEFAULT_SINCE}] [--until YYYY-MM-DD] [--workflows Check,Heavy] [--out ${ROUTE_CORPUS_DEFAULT_DIR}]`,
-    "- bun run beep ci route census [--corpus <receipt>] [--json]",
-    "- bun run beep ci route replay [--corpus <receipt>] [--json]",
-  ])
-).pipe(
-  Command.withDescription("Select the checks a change kind can affect, and prove it by replay"),
-  Command.withSubcommands([planCommand, captureCommand, censusCommand, replayCommand])
-);
+export const ciRouteCommand = ciRouteCommandDefinition.pipe(Command.provide(routeLayers));
+
+/**
+ * The services every `beep ci route` subcommand reads.
+ *
+ * **Example** (Check that a service belongs to the route set)
+ *
+ * ```ts import.meta.vitest name="Check that a service belongs to the route set"
+ * import type { CiRouteServices } from "@beep/repo-cli/commands/Ci"
+ * import type { RouteGit } from "@beep/repo-cli/commands/Ci/RouteCensus"
+ *
+ * const readsGit: RouteGit extends CiRouteServices ? true : false = true
+ * readsGit // => true
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export type CiRouteServices = VerificationRoute | RouteCensusReader | ChangeClassifier | RouteGit | RouteCorpus;
+
+/**
+ * Build the real `beep ci route` command tree over supplied route services.
+ *
+ * **Example** (Reference the test command factory)
+ *
+ * ```ts import.meta.vitest name="Reference the test command factory"
+ * import { makeCiRouteCommandForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * typeof makeCiRouteCommandForTesting // => "function"
+ * ```
+ *
+ * @internal
+ * @param layer - Route services the dispatched handlers read.
+ * @returns The route command tree with those services.
+ * @category testing
+ * @since 0.0.0
+ */
+export const makeCiRouteCommandForTesting = <E, R>(layer: Layer.Layer<CiRouteServices, E, R>) =>
+  ciRouteCommandDefinition.pipe(Command.provide(layer));
