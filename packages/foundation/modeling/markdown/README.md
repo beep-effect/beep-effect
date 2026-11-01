@@ -386,6 +386,7 @@ The vendored conformance data ships with the package under `data/conformance/` a
 - `MarkdownMdx` (subpath only): the MDX node vocabulary and `MdxJsxAttributeContent`, for constructing and serializing MDX trees.
 - `MarkdownEdit` and `MarkdownRange` (with `applyAll`): the non-mutating text-edit vocabulary shared with `@beep/jsonc`, `@beep/yaml` and `@beep/toml`.
 - `MarkdownFormat`: `format` and `formatToString` compute conservative marker-normalization edits from `MarkdownFormattingOptions`; `modify` and `modifyToString` replace a node by identity through the canonical stringifier and fail with `MarkdownModificationError`.
+- `MarkdownFence`: `fences` lists a document's fenced code blocks as `CodeFence` values (raw info string, raw body, opening line, an `unterminated` verdict and half-open offsets for the fence, info string and body), including fences in blockquotes and list items.
 - `MarkdownVisitor`: a lazy `Stream` of `MarkdownVisitorEvent` values (`Enter`, `Exit`, `Error`) with child-index paths and depth.
 - `Mdast`: `toMdast` projects to plain mdast JSON; `fromMdast` and `fromMdastResult` admit a foreign mdast tree with validation, failing with `MdastDecodeError`.
 - `FrontmatterSource`: string-level `split` and `join` over the closed fence grammar, with byte-exact boundaries and no parsing of value or body.
@@ -436,6 +437,7 @@ Ported from upstream `@effected/markdown` (MIT, C. Spencer Beggs) through the ef
 - `FrontmatterCodec.make`, `decodeResult` and `encodeResult`: upstream's `FrontmatterCodec` is an interface with `decode` and `encode` only.
 - `@beep/markdown/MarkdownMdx`: the MDX leaf (the names were exported from `MarkdownNode` upstream).
 - `@beep/markdown/conformance/*`: the vendored conformance corpora as JSON subpaths.
+- `@beep/markdown/MarkdownFence` and `Code.unterminated`: fenced-code source spans and the unterminated-fence verdict (repo PR R6), the one fence extractor behind docgen and the repo-cli Markdown laws.
 
 ### Deviations
 

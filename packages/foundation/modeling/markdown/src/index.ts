@@ -16,7 +16,8 @@
  * edits over it. {@link Mdast} is the remark-ecosystem interop boundary:
  * projection to plain mdast JSON and checked decoding back;
  * {@link MarkdownVisitor} streams a tree walk; and the document's navigation
- * accessors (headings, sections, links) serve outline and link extraction.
+ * accessors (headings, sections, links) serve outline and link extraction;
+ * {@link MarkdownFence} lists fenced code blocks with their source spans.
  *
  * **Gotchas**
  *
@@ -52,6 +53,7 @@ export {
   SectionQueryOptions,
 } from "./MarkdownDocument.ts";
 export { MarkdownEdit, MarkdownPath, MarkdownRange, MarkdownSegment } from "./MarkdownEdit.ts";
+export { CodeFence, MarkdownFence } from "./MarkdownFence.ts";
 export {
   CodeBlockStyle,
   MarkdownFormat,

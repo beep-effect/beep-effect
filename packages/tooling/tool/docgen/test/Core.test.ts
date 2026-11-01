@@ -68,6 +68,18 @@ describe("Core", () =>
       expect(detail.extension).toBe(".ts");
     });
 
+    it("should mark only verbatim fence bodies as spliceable in place", () => {
+      const source =
+        "```ts\r\nconst a = 1\r\n```\n\n> ```ts\n> const b = 2\n> ```\n\n- item\n\n  ```ts\n  const c = 3\n  ```\n\n```ts\nconst d = 4";
+      const [details] = Core.extractFencedCodeBlockDetails(source);
+
+      expect(A.map(details, (detail) => detail.inPlace)).toEqual([true, false, false, false]);
+    });
+
+    it("should not parse a text without a fence marker run", () => {
+      expect(Core.extractFencedCodeBlockDetails("a `` b ~~ c")).toEqual([[], []]);
+    });
+
     it("should preserve compatibility output beside detailed extraction", () => {
       const source = "~~~tsx custom=value\nconst view = <div />\n~~~";
       const [blocks] = Core.extractFencedCodeBlocks(source);
@@ -94,6 +106,35 @@ describe("Core", () =>
         ["const a = 1"],
         ["Code block does not have a matching closing fence:\na\n\n~~~ts\nconst a = 1"]
       ));
+
+    // R6: fences are the CommonMark fences `@beep/markdown` reads, not every marker run.
+    it("should not open a fence on a marker run inside prose", () =>
+      expectFencedCode("Write ```ts to open one.\n\n```ts\nconst a = 1\n```", ["const a = 1"], []));
+
+    it("should not close a backtick fence with a tilde run", () =>
+      expectFencedCode(
+        "```ts\nconst a = 1\n~~~\nconst b = 2",
+        ["const a = 1\n~~~\nconst b = 2"],
+        ["Code block does not have a matching closing fence:\n```ts\nconst a = 1\n~~~\nconst b = 2"]
+      ));
+
+    it("should keep a marker run inside a body line in the body", () =>
+      expectFencedCode(
+        '```ts\nconst f = extract("~~~ts\\n1\\n~~~")\n```',
+        ['const f = extract("~~~ts\\n1\\n~~~")'],
+        []
+      ));
+
+    it("should read a four-backtick TypeScript fence and end the span at the closing line", () => {
+      const source = "````ts\nconst a = 1\n  ````\n";
+      const [details, warnings] = Core.extractFencedCodeBlockDetails(source);
+      expect(warnings).toEqual([]);
+      expect(A.map(details, (detail) => [detail.infoString, detail.code])).toEqual([["ts", "const a = 1"]]);
+      const detail = details[0];
+      if (detail === undefined) return;
+      expect(pipe(source, Str.slice(detail.codeStart, detail.codeEnd))).toBe("const a = 1\n");
+      expect(pipe(source, Str.slice(detail.fenceStart, detail.fenceEnd))).toBe("````ts\nconst a = 1\n  ````");
+    });
 
     describe("renderModuleToc", () => {
       it.effect("renders the module table of contents with dash bullets", () =>

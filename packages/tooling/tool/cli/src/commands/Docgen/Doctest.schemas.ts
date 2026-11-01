@@ -47,6 +47,46 @@ export class FenceLocation extends S.Opaque<FenceLocation, { readonly brand: uni
 ) {}
 
 /**
+ * One TypeScript fence of a JSDoc block as the doctest scan reads it.
+ *
+ * **Details**
+ *
+ * `code` is the fence body with the JSDoc `*` frame removed and the ends
+ * trimmed; `codeStartLine` is the 1-based source line of its first code line
+ * and `infoString` the raw text after the opening marker run.
+ *
+ * **Example** (Describe a scanned fence)
+ *
+ * ```ts import.meta.vitest name="Describe a scanned fence"
+ * import { FenceLocation, ScannedDoctestFence } from "@beep/repo-cli/commands/Docgen"
+ *
+ * const fence = ScannedDoctestFence.make({
+ *   code: "1 + 1",
+ *   codeStartLine: 5,
+ *   infoString: "ts",
+ *   location: FenceLocation.make({ file: "packages/example/src/index.ts", startLine: 4, endLine: 6 }),
+ * })
+ * fence.codeStartLine // => 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ScannedDoctestFence extends S.Opaque<ScannedDoctestFence, { readonly brand: unique symbol }>()(
+  S.Struct({
+    code: S.String,
+    codeStartLine: S.Natural,
+    infoString: S.String,
+    location: FenceLocation,
+  }).pipe(
+    $I.annoteSchema("ScannedDoctestFence", {
+      description:
+        "One JSDoc TypeScript fence as the doctest scan reads it: trimmed code, first code line, info string and location.",
+    })
+  )
+) {}
+
+/**
  * Accepts the TypeScript fence language identifiers supported by docgen.
  *
  * **Example** (Decode a fence language)

@@ -15,11 +15,13 @@ export {
   DoctestFenceAnalyzerLive,
   DoctestFenceRewriterLive,
   discoverChangedDoctestFilesForTesting,
+  doctestFenceFindingsForTesting,
   makeDoctestAnalyzerLayer,
   makeDoctestRewriterLayer,
   planConsoleRewrites,
   quotedDoctestName,
   rewriteDoctestSourceForTesting,
+  scanDoctestFencesForTesting,
   validateDoctestAssertions,
 } from "../commands/Docgen/internal/Doctest.ts";
 export { getDeclaredJsDocs } from "../commands/Docgen/internal/JsDocNodes.ts";

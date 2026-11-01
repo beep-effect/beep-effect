@@ -537,6 +537,25 @@ describe("schema tag idiom law", () => {
       })
     );
 
+    it.effect("fails closed on a Markdown text or JSDoc block the parser refuses", () =>
+      Effect.sync(() => {
+        const deep = `${Str.repeat(300)(">")} ${fence}ts`;
+        const markdown = A.join([deep, 'import * as S from "effect/Schema"', fence], "\n");
+        expect(
+          A.map(scanSchemaTagIdiomsMarkdown("README.md", markdown), (finding) => [finding.rule, finding.line])
+        ).toEqual([["unreadable-markdown", 1]]);
+        expect(scanSchemaTagIdiomsMarkdown("README.md", A.join([deep, "const a = 1", fence], "\n"))).toEqual([]);
+
+        const jsDoc = A.join(
+          ["/**", ` * ${deep}`, ' * import * as S from "effect/Schema"', ` * ${fence}`, " */"],
+          "\n"
+        );
+        expect(A.map(scan([jsDoc, "export const value = 1"]), (finding) => [finding.rule, finding.line])).toEqual([
+          ["unreadable-markdown", 4],
+        ]);
+      })
+    );
+
     it.effect("formats a finding as file:line:col with rule, match and suggestion", () =>
       Effect.sync(() => {
         expect(A.map(scan(['const F = S.Struct({ kind: S.Literal("k") })']), formatSchemaTagIdiomFinding)).toEqual([
