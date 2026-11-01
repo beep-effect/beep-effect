@@ -46,14 +46,14 @@ const $I = $MarkdownId.create("MarkdownFence");
  *
  * **Example** (Describe a fence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a fence"
  * import { CodeFence } from "@beep/markdown/MarkdownFence";
  *
  * const fence = CodeFence.make({
  *   fenceChar: "`", fenceLength: 3, infoString: "ts", body: "1\n", value: "1\n", line: 0, unterminated: false,
  *   fenceStart: 0, fenceEnd: 11, infoStart: 3, infoEnd: 5, bodyStart: 6, bodyEnd: 8,
  * });
- * console.log(fence.body) // 1
+ * fence.body // => "1\n"
  * ```
  *
  * @category models
@@ -138,7 +138,7 @@ const toFence = (source: string, node: FencedCode): CodeFence => {
  *
  * **Example** (Slice a fence's body out of the source)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Slice a fence's body out of the source"
  * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
  * import { MarkdownFence } from "@beep/markdown/MarkdownFence";
  * import * as Effect from "effect/Effect";
@@ -165,7 +165,7 @@ export abstract class MarkdownFence {
    *
    * **Example** (Read a body and an unterminated verdict)
    *
-   * ```ts
+   * ```ts import.meta.vitest name="Read a body and an unterminated verdict"
    * import { MarkdownDocument } from "@beep/markdown/MarkdownDocument";
    * import { MarkdownFence } from "@beep/markdown/MarkdownFence";
    * import * as Effect from "effect/Effect";

@@ -249,13 +249,13 @@ export const collectMarkdownFences: {
  *
  * **Example** (Report a text nested past the parser's depth guard)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Report a text nested past the parser's depth guard"
  * import { scanMarkdownFenceFile } from "@beep/repo-cli/commands/Laws/MarkdownFences"
  * import * as A from "effect/Array"
  *
  * const fence = "`".repeat(3)
  * const [diagnostic] = A.getFailures(scanMarkdownFenceFile("docs/deep.md", `${">".repeat(300)} ${fence}ts\n`))
- * console.log(diagnostic?.code) // "markdown-parse"
+ * diagnostic?.code // => "markdown-parse"
  * ```
  *
  * @param file - Repository-relative Markdown path recorded on each fence and diagnostic.
@@ -376,7 +376,7 @@ export const stagedFenceFileName: {
  *
  * **Example** (Map a missing-name diagnostic)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Map a missing-name diagnostic"
  * import { TypecheckFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import { mapFenceDiagnostics } from "@beep/repo-cli/commands/Laws/MarkdownFences"
  *
@@ -390,7 +390,8 @@ export const stagedFenceFileName: {
  * })
  * const [diagnostic] = mapFenceDiagnostics([fence], "fence-0.ts(1,1): error TS2304: Cannot find name 'missing'.")
  *
- * console.log(`${diagnostic?.path}:${diagnostic?.line}`) // "docs/demo.md:4"
+ * diagnostic?.path // => "docs/demo.md"
+ * diagnostic?.line // => 4
  * ```
  *
  * @param fences - The checked fences in staged order.
@@ -644,7 +645,7 @@ const verdictsFor = (
  *
  * **Example** (Format a failed verdict)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format a failed verdict"
  * import { TypecheckFence, MarkdownFenceDiagnostic, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import { formatMarkdownFenceFailure } from "@beep/repo-cli/commands/Laws/MarkdownFences"
  *
@@ -664,8 +665,8 @@ const verdictsFor = (
  *   message: "Cannot find name 'missing'.",
  * })
  *
- * console.log(formatMarkdownFenceFailure(MarkdownFenceVerdict.cases.failed.make({ fence, diagnostics: [diagnostic] })))
- * // ["docs/demo.md:4:1  TS2304 Cannot find name 'missing'."]
+ * const failure = MarkdownFenceVerdict.cases.failed.make({ fence, diagnostics: [diagnostic] })
+ * formatMarkdownFenceFailure(failure) // => ["docs/demo.md:4:1  TS2304 Cannot find name 'missing'."]
  * ```
  *
  * @param failure - A failed verdict.

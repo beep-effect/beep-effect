@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T02:29:00.697Z",
+  "generatedAt": "2026-11-01T03:00:08.040Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -516315,8 +516315,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/MarkdownFences.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
-          "line": 402,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-402-mapfencediagnostics",
+          "line": 403,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-403-mapfencediagnostics",
           "currentTags": [
             "@param",
             "@returns",
@@ -516339,8 +516339,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/MarkdownFences.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-443-markdownfencetypechecker",
+          "line": 444,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-444-markdownfencetypechecker",
           "currentTags": [
             "@category",
             "@since"
@@ -516361,8 +516361,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/MarkdownFences.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
-          "line": 676,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-676-formatmarkdownfencefailure",
+          "line": 677,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-677-formatmarkdownfencefailure",
           "currentTags": [
             "@param",
             "@returns",
@@ -516385,8 +516385,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/MarkdownFences.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
-          "line": 718,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-718-runmarkdownfences",
+          "line": 719,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-markdownfences-ts-719-runmarkdownfences",
           "currentTags": [
             "@param",
             "@returns",

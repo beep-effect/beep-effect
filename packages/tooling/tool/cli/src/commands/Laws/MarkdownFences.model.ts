@@ -95,7 +95,7 @@ export type MarkdownFenceDisposition = typeof MarkdownFenceDisposition.Type;
  *
  * **Example** (Describe a checked fence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a checked fence"
  * import { TypecheckFence } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  *
  * const fence = TypecheckFence.make({
@@ -107,7 +107,7 @@ export type MarkdownFenceDisposition = typeof MarkdownFenceDisposition.Type;
  *   disposition: "checked",
  * })
  *
- * console.log(fence.disposition) // "checked"
+ * fence.disposition // => "checked"
  * ```
  *
  * @category models
@@ -174,7 +174,7 @@ export class MarkdownFenceDiagnostic extends S.Opaque<MarkdownFenceDiagnostic, {
  *
  * **Example** (Build a skipped verdict)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a skipped verdict"
  * import { TypecheckFence, MarkdownFenceVerdict } from "@beep/repo-cli/commands/Laws/MarkdownFences.model"
  * import * as S from "effect/Schema"
  *
@@ -187,7 +187,7 @@ export class MarkdownFenceDiagnostic extends S.Opaque<MarkdownFenceDiagnostic, {
  *   disposition: "opt-out",
  * })
  *
- * console.log(S.is(MarkdownFenceVerdict)({ _tag: "skipped", fence })) // true
+ * S.is(MarkdownFenceVerdict)({ _tag: "skipped", fence }) // => true
  * ```
  *
  * @category models

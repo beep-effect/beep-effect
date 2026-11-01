@@ -57,7 +57,7 @@ export class FenceLocation extends S.Opaque<FenceLocation, { readonly brand: uni
  *
  * **Example** (Describe a scanned fence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a scanned fence"
  * import { FenceLocation, ScannedDoctestFence } from "@beep/repo-cli/commands/Docgen"
  *
  * const fence = ScannedDoctestFence.make({
@@ -66,7 +66,7 @@ export class FenceLocation extends S.Opaque<FenceLocation, { readonly brand: uni
  *   infoString: "ts",
  *   location: FenceLocation.make({ file: "packages/example/src/index.ts", startLine: 4, endLine: 6 }),
  * })
- * console.log(fence.codeStartLine) // 5
+ * fence.codeStartLine // => 5
  * ```
  *
  * @category models

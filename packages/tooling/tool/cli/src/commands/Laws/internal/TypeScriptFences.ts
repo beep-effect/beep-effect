@@ -96,11 +96,11 @@ export class TypeScriptFence extends S.Opaque<TypeScriptFence, { readonly brand:
  *
  * **Example** (Describe a script fence)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a script fence"
  * import { ScriptFence } from "@beep/repo-cli/test/Laws"
  *
  * const fence = ScriptFence.make({ code: "const a = 1\n", codeStart: 6, codeEnd: 18, extension: ".ts", inPlace: true })
- * console.log(fence.codeEnd - fence.codeStart) // 12
+ * fence.codeEnd - fence.codeStart // => 12
  * ```
  *
  * @category models
@@ -154,7 +154,7 @@ const fencesWithLanguage = (
  *
  * **Example** (Read a fence's info string and body line)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read a fence's info string and body line"
  * import { typescriptFences } from "@beep/repo-cli/test/Laws"
  *
  * const fence = "`".repeat(3)
