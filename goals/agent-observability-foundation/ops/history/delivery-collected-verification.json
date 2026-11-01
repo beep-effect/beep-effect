@@ -1,0 +1,112 @@
+{
+  "recordedAt": "2026-10-29T15:03:05.021054+00:00",
+  "result": "failed",
+  "collectedRun": "foundation-cheap-gates-v3.service",
+  "guard": {
+    "ownedScopes": {
+      "[redacted-agent-session-5]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-5]",
+        "preGuardPeakBytes": 6008832,
+        "ownership": "live descendant of proof service MainPID"
+      }
+    },
+    "unit": "foundation-cheap-gates-v3.service",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 8589934592,
+    "initialAvailableBytes": 50827706368,
+    "peakObservedBytes": 8001781760,
+    "minimumAvailableBytes": 30466813952,
+    "stoppedFor": null,
+    "exitCode": 1
+  },
+  "terminal": "15-minute outer-unit deadline during schema catalog; prior JSDoc and Fallow failures already recorded",
+  "ownedAdmissionScopeAfterDeadline": "Still active; explicitly stopped and verified inactive by parent. The run used the earlier guard revision.",
+  "guardFollowup": "New helper retains invocation ownership and cleans surviving scopes on outer exit/error; controlled exit-7 proof stopped only its owned child without OOM.",
+  "knownFailures": {
+    "jsdoc": {
+      "malformedExamples": 61,
+      "missingRuntimeTypeAliases": 1
+    },
+    "fallowAudit": {
+      "introducedDeadCode": 2,
+      "introducedComplexity": 60,
+      "introducedCloneGroups": 12,
+      "inheritedAdjacentCloneGroups": 4
+    }
+  },
+  "sourceChangedAfterFailureReports": "Example titles, PageDisposition type alias and manifest/catalog corrections applied after those failing scans; these edits are not covered by that run.",
+  "artifacts": [
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/0-foundation-cheap-gates-v3.log",
+      "sha256": "0288ccd1cd18ae4527e75165ae2b601ae8ed52fa6779d9011f8812dbeb232bcf"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/1-foundation-cheap-gates-v3-guard.json",
+      "sha256": "09095c76167158fdc777e5d1b9002134a101371ea1b496554d6f41d4559671dc"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/2-foundation-guard-exit-proof-v1.log",
+      "sha256": "3665906dce734b20063b6e2827b7a3f1828fce777153f8649e87109e762d2cf2"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/3-foundation-guard-exit-proof-v1-guard.json",
+      "sha256": "fc9046ba3fc3ce36f239ad3e94ad90528d4c0b01af404103d8539217c85b4e9d"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/4-foundation-bounded-job.py",
+      "sha256": "bf2905093ef5480ac704efdf6744910508524f53b7bd540a6b1fedfa80ddf0f7"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/5-audit.check.combined.txt",
+      "sha256": "56e704249139f6482d309f95a7dec954370c9d573f0d607cb9a1dd1c4301a598"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/6-dead-code.check.combined.txt",
+      "sha256": "2ca8448a3fc45f709bcd87ae9a715814ee4c09ca0764ef3c8210ad5c2d6247bb"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/7-audit.check.json",
+      "sha256": "4114ff57963488c2be3bf359a5f66108f98d2f8c083f890531b3cda4bf095014"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/8-dead-code.check.json",
+      "sha256": "8ea4d8c80b07a52f0909e5f7de66e0daa53d6efcf9b1fdf7472f2abb4305af9a"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/9-jsdoc-documentation.inventory.jsonc",
+      "sha256": "b81d1da6e31410a4056ab3e4642aba64eec17ef6368b092e30bfa3a7c2002534"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/claude-report.md",
+      "sha256": "785da44dd79fad6c75ea419a22dfc46592cc4afb35b371eeaa9c0603d47989b5"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/foundation-panel-claude-delivery-v1.log",
+      "sha256": "17dc0dad69f28382e9122fedfec5cf331ab5ba3a883752001792d3d7096bbb43"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/foundation-panel-claude-delivery-v1-guard.json",
+      "sha256": "34f2172162134e72ae9a61f776810d0c1622ff9012c42664731e16e6f6c13ac7"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/claude-launch.json",
+      "sha256": "dabf873fc6ea5667d0cc644aebff14084973a0e85aec008d0c81ff1966c94d82"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/grok-report.md",
+      "sha256": "7bb0fd661fe1987f577e4b0b58583cec6718436f5dbb411a64fb1f7fed201125"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/foundation-panel-grok-delivery-v2.log",
+      "sha256": "b05437a312f1dc0941feb0bb5a73eb5733c6de6f2b83ea026eaf8b5a02b27765"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/foundation-panel-grok-delivery-v2-guard.json",
+      "sha256": "c09c1c915723a83d0a4cf056d11df05ea886c4b7ef973530fe5442b183195650"
+    },
+    {
+      "path": "~/.local/state/beep/observation-proof-archive/delivery-collected-1iy25wq_/grok-launch-v2.json",
+      "sha256": "64a26536f045bf174037c7c9dfdf7da4d83359fe7ace74861d2f016bb0817d5f"
+    }
+  ]
+}

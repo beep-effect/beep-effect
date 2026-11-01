@@ -1,0 +1,76 @@
+{
+  "observedAt": "2026-10-29T22:16:46.997718+00:00",
+  "host": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 31427665920,
+    "SwapTotal": 51539603456,
+    "SwapFree": 81055744
+  },
+  "pressure": "some avg10=0.00 avg60=0.00 avg300=0.05 total=679489766\nfull avg10=0.00 avg60=0.00 avg300=0.04 total=608112864\n",
+  "distinctOomDecisions": 9,
+  "lastKernelDecision": "2026-10-29T10:56:06-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task=python3,pid=2787027,uid=1000",
+  "kernelDecisions": [
+    "2026-10-27T07:16:09-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/app-comfyui\\x2drdna4@4dfd146fea434a4896d0d9bc1189700d.service,task=python,pid=3841020,uid=1000",
+    "2026-10-28T05:57:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-f73fd58c50b7.service,task=bun.native,pid=1726603,uid=1000",
+    "2026-10-28T05:59:29-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-43e8e622bca9.service,task=bun.native,pid=1880114,uid=1000",
+    "2026-10-28T06:04:08-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-c2d016cab73a.service,task=bun.native,pid=2100022,uid=1000",
+    "2026-10-28T06:06:47-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-8698e49ccdfa.service,task=bun.native,pid=2199743,uid=1000",
+    "2026-10-28T14:26:17-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/beep-observation-proof-db4bf07912b3.service,task=bun.native,pid=719818,uid=1000",
+    "2026-10-28T21:13:20-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/agent.slice/agent-runs.slice/foundation-managed-enrollment-types.service,task=tsc,pid=2096272,uid=1000",
+    "2026-10-29T07:54:53-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-35bd64e246d2427c9ccfdf60344ace7c.service,task=python3,pid=3993553,uid=1000",
+    "2026-10-29T10:56:06-05:00 DankStation kernel: oom-kill:constraint=CONSTRAINT_MEMCG,nodemask=(null),cpuset=user@1000.service,mems_allowed=0,oom_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task_memcg=/user.slice/user-1000.slice/user@1000.service/app.slice/restricted-runtime-qual-41a0eb0cc1ac45b8b27e82a47e7e20dc.service,task=python3,pid=2787027,uid=1000"
+  ],
+  "largeProcesses": [
+    {
+      "pid": 537468,
+      "comm": "python",
+      "rssBytes": 34891792384,
+      "swapBytes": 22827638784
+    },
+    {
+      "pid": 3807058,
+      "comm": "bun.native",
+      "rssBytes": 2764238848,
+      "swapBytes": 0
+    },
+    {
+      "pid": 927184,
+      "comm": "ChatGPT",
+      "rssBytes": 1668796416,
+      "swapBytes": 360157184
+    },
+    {
+      "pid": 3900458,
+      "comm": "chrome",
+      "rssBytes": 1454010368,
+      "swapBytes": 258953216
+    },
+    {
+      "pid": 2037705,
+      "comm": "llama-server",
+      "rssBytes": 1274306560,
+      "swapBytes": 380276736
+    },
+    {
+      "pid": 3670139,
+      "comm": "MainThread",
+      "rssBytes": 1089298432,
+      "swapBytes": 0
+    },
+    {
+      "pid": 3651934,
+      "comm": "node",
+      "rssBytes": 816717824,
+      "swapBytes": 0
+    },
+    {
+      "pid": 3767999,
+      "comm": "MainThread",
+      "rssBytes": 757678080,
+      "swapBytes": 0
+    }
+  ],
+  "priorDolphinPid348619StillPresent": false,
+  "recoveryHold": "Id=beep-ai-metrics-forwarder.service\nActiveState=inactive\nUnitFileState=masked\nMainPID=0\n\nId=beep-ai-metrics-forwarder.timer\nActiveState=inactive\nUnitFileState=masked\n",
+  "mutations": "Read-only inspection; no unrelated process or swap changes"
+}

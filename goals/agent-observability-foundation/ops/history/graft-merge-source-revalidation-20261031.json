@@ -1,0 +1,21 @@
+{
+  "kind": "existing-canary-source-revalidation",
+  "workingTree": "After incoming main3fbb6e614b integration and public receipt sanitization; before merge commit",
+  "stages": [
+    {
+      "stage": "current-disposable",
+      "privateEvidenceSha256": "0e8d9975ef4ab51ea7131d0ad9b56531a019a1a958a1e112230b6e9b8ff52559",
+      "sourceCount": 88,
+      "sourceMismatches": []
+    },
+    {
+      "stage": "current-live",
+      "privateEvidenceSha256": "beee4aafebaaf28392b5aeb6d326238e4b59b1ffd456489f3a7e4d5e7f1e73b9",
+      "sourceCount": 87,
+      "sourceMismatches": []
+    }
+  ],
+  "newExecutionClaim": false,
+  "interpretation": "All source paths bound by accepted synthetic evidence still match exact private proof hashes; no rerun relabeling. Hosted final-head verification remains required.",
+  "recoveryHold": "Preserved"
+}

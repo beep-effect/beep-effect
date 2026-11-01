@@ -1,0 +1,13 @@
+Population window: [2026-10-28T04:03:11.160Z, 2026-10-29T04:03:11.160Z)
+Declared inventory: 1 hosts, 28 roots, 7 routes
+Capabilities: 0 supported, 0 unsupported, 7 unknown; 0 deliberately excluded
+Launch population: unknown; 0 distinct launch IDs enumerated; 7 routes have unknown launch populations
+Expected event population: unknown; 0 distinct event IDs enumerated; 7 routes have unknown expected-event populations
+These counts describe the declared evidence boundary. They do not establish capture of all activity.
+grok / unknown / unknown: unknown (route db765ff23c7042b847a908785899524c3fdef715bc629999ccb46c3715e7374c)
+claude-code / unknown / unknown: unknown (route 05aafd4d6df9c7b26811a701812b9b1613f20ca1a9f4322bdc16db0ed8fefbd4)
+claude-desktop / unknown / unknown: unknown (route e9824631391df74df28adc9bc461476df9abd4170ee4e1a36e1d5daf2454cb19)
+codex-cli / unknown / unknown: unknown (route 9a52fe07c6d9dcce0db911c46245a25d48368aae3b81b44d78375bf855255ebe)
+chatgpt-desktop / unknown / unknown: unknown (route 6965210bd7542587f1a290e95ffe38990ea842c3e2f4919bba9b8cf56ea326d9)
+muse / unknown / unknown: unknown (route aadaf14bfe619238ff80f325827b32480e1e6a634666a452b952a7ba910e58d2)
+cursor-agent / unknown / unknown: unknown (route d9893819615ea8540e810e0931175e66f6e867b0ee611d01dfab86c67cfc2e06)

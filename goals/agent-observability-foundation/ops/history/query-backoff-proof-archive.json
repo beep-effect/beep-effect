@@ -1,0 +1,128 @@
+{
+  "result": "passed",
+  "archive": "~/.local/state/beep/observation-proof-archive/obs-deploy-z3___axb",
+  "sameHostOnly": true,
+  "doNotRunRetainedBundles": true,
+  "files": [
+    {
+      "path": "artifacts space/caddy",
+      "bytes": 51953826,
+      "sha256": "678ade3bfc088749c81a681adc603333ee0bb023b6a6cfe3c0f58bef8ff854e9"
+    },
+    {
+      "path": "artifacts space/intake.json",
+      "bytes": 1068,
+      "sha256": "f44ffe85c2a7422f955a1ae05ca36f380b2f1334fa5f4656f3f3dc8ff1470602"
+    },
+    {
+      "path": "artifacts space/intake.sha256",
+      "bytes": 232,
+      "sha256": "9f4d142fe66e782e1387ef23d22e91713042bb9022040c78955b14c2062494c7"
+    },
+    {
+      "path": "artifacts space/worker.mjs",
+      "bytes": 1322715,
+      "sha256": "b9f8d032c4e2aee95258d02c9cd967b1b7af27f52793f5efcdc0d9dd0b38f364"
+    },
+    {
+      "path": "artifacts space/worker.sha256",
+      "bytes": 379,
+      "sha256": "e9573222726438c502ffdc96fb1da4762137e1ea1d2422992fcd8081f4c9a61b"
+    },
+    {
+      "path": "bundle-build.log",
+      "bytes": 68,
+      "sha256": "b83c6895ed18487b1a031a5c2eab4e90a104a8ef3fe226a09c646dc8b7f3fb22"
+    },
+    {
+      "path": "collector.yaml",
+      "bytes": 3825,
+      "sha256": "db5412c88ba8af169151bb0f50c99aa3c3f034b1f7b42a3d57634227e947adae"
+    },
+    {
+      "path": "deployment-request.json",
+      "bytes": 456,
+      "sha256": "0b8fb6cc6eca1d5cd7bbc4e494fa70cf0cd6c9880171751b9708cb149e71c662"
+    },
+    {
+      "path": "evidence.json",
+      "bytes": 20807,
+      "sha256": "cf424b144d99e429a7a4d3300ed34dfee4b5b2bead95425e826e29079880b2a2"
+    },
+    {
+      "path": "health-tsdb/queries.active",
+      "bytes": 20001,
+      "sha256": "4d53b2cb8f39eaa2434c0c213d53ac997b1075226374d30a40504f33caf8d8f7"
+    },
+    {
+      "path": "health-tsdb/wal/00000000",
+      "bytes": 32768,
+      "sha256": "35970b9c37aa63424cff05885cbd3a782cd5d6586c9bc8cacda598c66c816e88"
+    },
+    {
+      "path": "queue/exporter_otlphttp_phoenix_traces",
+      "bytes": 32768,
+      "sha256": "9f5c84e767772289903e88fda3041e74514dd43dedb7021d932807c6fef9211d"
+    },
+    {
+      "path": "state/backup-0/journal.sqlite",
+      "bytes": 167936,
+      "sha256": "e16ae05d21503697b575bc005a354d315332cdb7ae506a927e5ec95386dfb4af"
+    },
+    {
+      "path": "state/backup-0/manifest.json",
+      "bytes": 399,
+      "sha256": "73a23315247e0735fdc155cb249ed6e20bc368182027f212c3cd8090e27dda6e"
+    },
+    {
+      "path": "state/frontend-data/caddy/instance.uuid",
+      "bytes": 36,
+      "sha256": "8816e7ae31c6508c702242602bed6891936e40c76d06ba886d1d058268cc97bf"
+    },
+    {
+      "path": "state/frontend-data/caddy/last_clean.json",
+      "bytes": 112,
+      "sha256": "40a81b8f36e26952fc5a52c852bd0d4a438e754eabce906e4d2eaea92318e53b"
+    },
+    {
+      "path": "state/journal.sqlite",
+      "bytes": 167936,
+      "sha256": "2a3616f6efee65abb0c4b41567b3f53edb6971674eb89496b674496186862dc0"
+    },
+    {
+      "path": "state/worker.json",
+      "bytes": 1459,
+      "sha256": "9b827ffe7115aab2ab268a7207654cb90f4202a0cea26d01a497b0ff3df95b21"
+    },
+    {
+      "path": "state/worker.lock",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "synthetic-input.json",
+      "bytes": 1136,
+      "sha256": "7b5ae8e7d0ed1f3a80a134011a4fb9381813d8b35f626a2902a325dc883eb3ec"
+    },
+    {
+      "path": "synthetic-salt",
+      "bytes": 27,
+      "sha256": "befd250f1495be62bb8fec4e1f3e2801266253fb1849140ec0e9ebb9351c54d8"
+    },
+    {
+      "path": "worker-health-prometheus.yml",
+      "bytes": 291,
+      "sha256": "d5984387def00251ca58e66019ce43d41820f905e09b607445bd12e5a1b65b08"
+    },
+    {
+      "path": "worker-health-rules.yml",
+      "bytes": 4432,
+      "sha256": "faae46e301eb777d4c247f5293a22b6b36d66ccb3b35eef38351b305f0a89ffe"
+    },
+    {
+      "path": "worker-health.prom",
+      "bytes": 1426,
+      "sha256": "af0ac03d6f0a954453167651a36773da90ae273c2baae874cebfb72eebb3bd13"
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "observedAt": "2026-10-29T19:17:34.678879+00:00",
+  "head": "48f87682ccfb6037fe870baa747123c0789c5077",
+  "archive": "~/.local/state/beep/observation-proof-archive/delivery-client-readback-structure-e3uh_lwe",
+  "artifacts": [
+    {
+      "file": "foundation-structure-focused-v1.log",
+      "sha256": "a7cdacf9ee93b6f858a4eaed6e35a0b4c9bf125490faf3e0f743b8cd3dbdffff",
+      "bytes": 1364
+    },
+    {
+      "file": "foundation-structure-focused-v1-guard.json",
+      "sha256": "2159d0a45fccf5a7459472e2c95427f3233a7eb96a9b9698af8a674894f87859",
+      "bytes": 352
+    },
+    {
+      "file": "foundation-structure-quality-v1.log",
+      "sha256": "6679e16f00ae4f041d488e592ddc3b38ec8f6906d726745cc643141abd6bd97a",
+      "bytes": 18428
+    },
+    {
+      "file": "foundation-structure-quality-v1-guard.json",
+      "sha256": "3dfdd288b8b4df66c2bc8bdd575e64854fa5a73ab88649b7d768803214b0c694",
+      "bytes": 353
+    },
+    {
+      "file": "foundation-structure-quality-v2.log",
+      "sha256": "d105a9184f08a8e6d46c670fa27895edc76226682b9d2665c11d0aae379af1a8",
+      "bytes": 1154
+    },
+    {
+      "file": "foundation-structure-quality-v2-guard.json",
+      "sha256": "a19cb5c31d089495b3f98f8aec1c88bd36dcc7343970aca25d9151808eeabf69",
+      "bytes": 353
+    },
+    {
+      "file": "foundation-structure-fallow-v15.log",
+      "sha256": "a1a980844ff651b2b4f455645f392aa0e40536fe5f84b7f2f924f1c40649e596",
+      "bytes": 8057
+    },
+    {
+      "file": "foundation-structure-fallow-v15-guard.json",
+      "sha256": "5c638d970da78d3b9533696a1eaceb2d93dc4fd92aa6106fc162e83385d8cce8",
+      "bytes": 353
+    },
+    {
+      "file": "audit.repair-v15.json",
+      "sha256": "da9256f8d366ad00a545894adbd86c1c60d3c371703ea240a98c454907e60f09",
+      "bytes": 7513
+    },
+    {
+      "file": "audit.repair-v15.combined.txt",
+      "sha256": "e3d2cedc10bfc07846e12ae38f0d87bca9013264af18d6ada0d2d21f26a36bf2",
+      "bytes": 74766
+    },
+    {
+      "file": "foundation-conservative-job.py",
+      "sha256": "4a87673645fb9001e85f69643c91a30ae09c06e7d11ed981b1bab1a99e861423",
+      "bytes": 7422
+    },
+    {
+      "file": "foundation-launch-client-before-structure.ts",
+      "sha256": "4f7e2f59c1e16e33a346d0425f452fac0e3ff87b02d7d599e1695ae051e2dd7a",
+      "bytes": 9996
+    },
+    {
+      "file": "foundation-phoenix-readback-before-structure.ts",
+      "sha256": "d8de939418016a2b37598a82f68caf73297d3433f698c6e374743c1922a9d353",
+      "bytes": 8961
+    },
+    {
+      "file": "foundation-enrollment-before-structure.ts",
+      "sha256": "4d58a7f2e2434b4d4afefa47520a464e5d519b3babdadd2ca4a691a4728b79c9",
+      "bytes": 27946
+    }
+  ],
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "67d0ef1a4d78df615b17841a0dcaf541794156c639bfd4b6302447a4bdbbf786",
+    "packages/drivers/phoenix/src/Phoenix.span-readback.ts": "19521880baff145946b4844aa81e446071514a3ad8d038f0222d34ef6aa05d47",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "ffc832b5b1f35f02fef18075b31e42a3388003c80ee7568b110eae14714662f4"
+  },
+  "results": {
+    "focusedTests": {
+      "launchClientAndHttp": 11,
+      "phoenixReadback": 5,
+      "enrollment": 7
+    },
+    "aiMetrics": "full audit 123.4s and docgen13.1s passed",
+    "phoenix": "full audit13.9s and docgen6.3s passed",
+    "cli": "quick lint34.1s/check41.4s passed",
+    "fallow": {
+      "introducedComplexity": 26,
+      "before": 30,
+      "introducedDuplication": 0,
+      "inheritedAdjacentDuplication": 4,
+      "deadCode": 0,
+      "status": "still failing",
+      "coverage": "CRAP uses estimated static reachability, not measured branch coverage"
+    }
+  },
+  "review": "Independent Astra source acceptance; see CLIENT-READBACK-STRUCTURE-REVIEW.md",
+  "qualificationCorrections": [
+    "First focused shell command had wrong relative directory after 11 passing tests; remaining 12 ran in next job.",
+    "First package run found widened Match string return; installed withReturnType added and subsequent full package run passed."
+  ],
+  "limits": [
+    "Whole CLI runtime-abort localization remains pending.",
+    "Recovery hold and historical data unchanged.",
+    "No final installed refresh or full goal acceptance claimed."
+  ]
+}

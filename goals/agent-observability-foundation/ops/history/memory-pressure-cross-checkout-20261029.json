@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-29T20:26:23.952100+00:00",
+  "memoryBytes": {
+    "MemTotal": 134352207872,
+    "MemAvailable": 21944676352,
+    "SwapTotal": 51539603456,
+    "SwapFree": 216141824
+  },
+  "workloads": [
+    {
+      "Name": "python",
+      "VmRSS": "35589856 kB",
+      "VmSwap": "14658096 kB",
+      "cwd": "~/ai/ComfyUI",
+      "scopeType": "application scope"
+    }
+  ],
+  "observedEarlierAvailableGiB": 7.5,
+  "nextOwnedVerification": "refused before launch below24GiB admission floor",
+  "findings": [
+    "Two other Beep worktrees had Bun processes each above10GiB in a shared Chromium application scope",
+    "ComfyUI Python held approximately34GiB RSS and14GiB swapped memory",
+    "Process ownership differs from this packet; none were stopped or modified",
+    "Scope attribution does not establish exact command, a leak, or proof of kernel OOM"
+  ],
+  "protection": "Own proof stopped at16GiB reserve; never raised memory ceiling or disabled reserve",
+  "recommendation": "Route all heavy checkout proof commands through admission and per-job memory limits; do not assume an application scope enforces a job budget",
+  "earlierProcessSamples": [
+    {
+      "cwd": "~/YeeBois/projects/beep-effect9-worktrees/turborepo-producer-capture",
+      "process": "bun.native",
+      "rssKiB": 12947188,
+      "swapKiB": 0,
+      "scopeType": "Chromium application scope"
+    },
+    {
+      "cwd": "~/YeeBois/projects/beep-effect9-worktrees/docgen-node-launch",
+      "process": "bun.native",
+      "rssKiB": 12162756,
+      "swapKiB": 0,
+      "scopeType": "Chromium application scope"
+    },
+    {
+      "cwd": "~/YeeBois/projects/beep-effect9-worktrees/docgen-node-launch",
+      "process": "bun.native",
+      "rssKiB": 5616504,
+      "swapKiB": 0,
+      "scopeType": "Chromium application scope"
+    }
+  ]
+}

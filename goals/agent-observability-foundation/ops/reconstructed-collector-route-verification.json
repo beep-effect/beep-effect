@@ -1,0 +1,220 @@
+{
+  "syntheticOnly": true,
+  "productionDeployment": false,
+  "result": "passed",
+  "images": {
+    "phoenix": "arizephoenix/phoenix@sha256:c542e7de1dc1fdd0f938de337d44ebefa7266e91391eed6e7978523d7f6e1f2f",
+    "collector": "otel/opentelemetry-collector-contrib@sha256:1175b03003053962012f5a231f5567f66a3e8fdb960c7835c0e48f7aa1555806"
+  },
+  "fullGoalComplete": false,
+  "deliberateOomExercise": false,
+  "containerResourceLimitsVerified": true,
+  "unprojectedMetadataRouteSpanFilteredAndCounted": true,
+  "invalidProjectionCombinationsFiltered": 5,
+  "boundedProjectionProcessCompleted": true,
+  "automaticSchedulingVerified": true,
+  "readback": {
+    "project": "foundation-synthetic-proof",
+    "syntheticOnly": true,
+    "loopbackOnly": true,
+    "responseSha256": "1f7c47502540328fef2997a97870c55297409b14eb9664949859094e7566f66f",
+    "storedSpans": 9,
+    "nativeSpans": 3,
+    "reconstructedSpans": 6,
+    "reconstructionChecks": [
+      {
+        "scenario": "claude-repeat",
+        "eventId": "cef1400ee8a93eaf75de53a68a55f3185adf124273e6238f87036a18d81f3ec5",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "claude-repeat",
+        "eventId": "a6425585c3d1a3df53508b00e357f64fc274ddc217a12e86b10146ce58002248",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-last",
+        "eventId": "6447f2b7772762060009dcc1c0eb3a5fdca0ddc37f961e80f4291c6465621e27",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-last",
+        "eventId": "e1a8530eb4b9011cc5dbd382ce94b8bd6e1e3c3e0ae114c7a3e2ec8b0fb6359d",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-cumulative",
+        "eventId": "24d311328dc66343218bf4d6c6198699a34dbcdff9371b6185c295be637e9519",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      },
+      {
+        "scenario": "codex-cumulative",
+        "eventId": "6cc9495a0000aef122badf819141568793cbbdf2d393d5f925e7a1bcbd252427",
+        "identityAndSessionMatch": true,
+        "nonAdditiveUsage": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible"
+      }
+    ],
+    "nativeAttributeTotals": {
+      "knownTotal": 270,
+      "knownPrompt": 260,
+      "knownCompletion": 15,
+      "nativeSpansMissingTotal": 1
+    },
+    "checks": [
+      {
+        "scenario": "claude-complete",
+        "traceId": "11111111111111111111111111111111",
+        "spanId": "1111111111111111",
+        "eventId": "df0eedea2c0e84fcfd0ced95633801bfb83d819aa50735e2a99c35e1f6980340",
+        "prompt": 130,
+        "completion": 5,
+        "total": 135,
+        "usageComplete": true,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      },
+      {
+        "scenario": "openinference-complete",
+        "traceId": "22222222222222222222222222222222",
+        "spanId": "2222222222222222",
+        "eventId": "fcaaa84fb9061fd6397f0b71821b559a72132f4a79bf13f5c89745434605ada5",
+        "prompt": 130,
+        "completion": 5,
+        "total": 135,
+        "usageComplete": true,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      },
+      {
+        "scenario": "claude-incomplete",
+        "traceId": "33333333333333333333333333333333",
+        "spanId": "3333333333333333",
+        "eventId": "64e2557e0ae7be7c316e3f8beaa29eb6981dd878a33f29e8ee649918bda9be10",
+        "prompt": null,
+        "completion": 5,
+        "total": null,
+        "usageComplete": false,
+        "identityAndSessionMatch": true,
+        "privateCanariesAbsent": true,
+        "exactSourceNanosecondsRetained": true,
+        "localDeliveryState": "visible",
+        "priorAcceptanceState": "accepted-unverified"
+      }
+    ],
+    "phoenixGraphqlAggregates": {
+      "name": "foundation-synthetic-proof",
+      "recordCount": 9,
+      "traceCount": 9,
+      "sessionCount": 3,
+      "flatNativeRecords": 0,
+      "tokenCountTotal": 275.0,
+      "tokenCountPrompt": 260.0,
+      "tokenCountCompletion": 15.0,
+      "nativeRecords": 3,
+      "reconstructedRecords": 6,
+      "nativeTraces": 3,
+      "reconstructedTraces": 6,
+      "nativeTokens": 275.0,
+      "reconstructedTokens": 0.0,
+      "completeNativeTokens": 270.0,
+      "allLatencyP50": 0.0,
+      "nativeLatencyP50": 100.0
+    },
+    "aggregateFilters": {
+      "native": "attributes[\"ai_metrics\"][\"stream\"] == \"native\"",
+      "flatNative": "attributes[\"ai_metrics.stream\"] == \"native\"",
+      "reconstructed": "attributes[\"ai_metrics\"][\"stream\"] == \"reconstructed\"",
+      "complete": "attributes[\"ai_metrics\"][\"stream\"] == \"native\" and attributes[\"ai_metrics\"][\"usage\"][\"complete\"] == True"
+    },
+    "aggregateInterpretation": "275 is known native prompt plus completion, including a five-token incomplete subtotal; 270 belongs to complete native usage. Reconstructed zero contribution is not evidence of zero actual usage. Mixed zero-duration points reduce unfiltered P50 to zero; native-only P50 remains 100 ms.",
+    "backendReadbackPrecision": "standard timestamps: microseconds; explicit source metadata: exact nanoseconds",
+    "backendVisibilityAdapterImplemented": true,
+    "liveDeployment": false,
+    "goalComplete": false
+  },
+  "storedSpans": 9,
+  "nativeSpans": 3,
+  "reconstructedSpans": 6,
+  "rawTraceEndpointRefused": true,
+  "distinctExportAndReadbackOrigins": true,
+  "privateCanariesAbsentFromJournalQueueAndBackend": true,
+  "metadataReceiverHostPublishedInProduction": false,
+  "collectorGuardIsAuthentication": false,
+  "collectorGuardIsSanitizer": false,
+  "actualHarnessEnrollment": false,
+  "templateSha256": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+  "fixtureSha256": "6322a6a258ec04b1cc98b9d584618eb8441a1bad5f72bc40dce9bb31cc3898c7",
+  "ownedResourcesRemoved": true,
+  "recordedAt": "2026-10-28T23:25:26.790298+00:00",
+  "scope": "Synthetic native and reconstructed journal-to-collector-to-Phoenix route plus REST and GraphQL interpretation; no production enrollment",
+  "monitoringVerification": {
+    "defaultSuite": {
+      "tests": 6,
+      "skipped": 3,
+      "result": "passed",
+      "note": "Skipped Docker cases remain separately qualified; counts include skipped cases."
+    },
+    "renderedCollectorRuntime": {
+      "tests": 2,
+      "skipped": 0,
+      "result": "passed",
+      "seconds": 7.578,
+      "metricsCollisionAndScrubbing": true
+    }
+  },
+  "fixtureTypecheck": {
+    "command": "bunx --bun tsgo -p packages/tooling/library/ai-metrics/tsconfig.test.json --noEmit",
+    "result": "passed",
+    "exitCode": 0
+  },
+  "packageVerification": {
+    "result": "passed",
+    "unit": "foundation-mixed-route-quality-20261028.service",
+    "exitCode": 0,
+    "auditSeconds": 219.2,
+    "docgenSeconds": 21.1,
+    "runtimeSeconds": 243.246,
+    "memoryPeakGiB": 5.5,
+    "swapBytes": 0
+  },
+  "querySemanticRegression": {
+    "restKeysFlattened": true,
+    "literalDottedFilterCount": 0,
+    "nestedNativeFilterCount": 3,
+    "legacyPopulationCoverage": "unknown",
+    "existingLiveCountCauseEstablished": false
+  },
+  "sourceSha256": {
+    "packages/tooling/library/ai-metrics/test/fixtures/native-phoenix-proof.ts": "6322a6a258ec04b1cc98b9d584618eb8441a1bad5f72bc40dce9bb31cc3898c7",
+    "goals/agent-observability-foundation/ops/verify-native-collector-route.py": "8e6ef66c50486addd91fa9ff3b1353e2cbd36368bbf0cf761a501a1c9d52d861",
+    "goals/agent-observability-foundation/ops/verify-phoenix-native-proof.py": "73b583b4f1741df08bbef12ff42eb63dd9501dc93c8d32a618b87371e4bf73b9"
+  },
+  "dankserverSourceSha256": {
+    "ansible/roles/monitoring/templates/otel-config.yaml.j2": "7546a1b24bb01a8d0c061054264e71d462f6f7643add2ed1c70151c20c0e51d6",
+    "ansible/roles/monitoring/tests/test_otel_config.py": "eb4e9b0fecff389bf1e8a8f9acc1235231518a5463dd1748286d414f6547bb5d",
+    "ansible/roles/monitoring/tests/README.md": "663f19ca99f7ce5f044066c3076d818d17dbb1a3a148f2923a1dee4f72d2ff06"
+  }
+}
