@@ -1542,6 +1542,11 @@ const transformFence = (
   });
 };
 
+// A Markdown fence's `code` is the CommonMark value, which uses LF only; a replacement for a CRLF body keeps the
+// body's CRLF line endings.
+const withWrittenLineEndings = (writtenBody: string, replacement: string): string =>
+  Str.includes("\r\n")(writtenBody) ? Str.replace(/\r?\n/gu, "\r\n")(replacement) : replacement;
+
 const transformFencedContent = (
   mappings: RootImportMappings,
   file: string,
@@ -1570,11 +1575,10 @@ const transformFencedContent = (
       continue;
     }
     const { summary: sourceSummary } = transformed.success;
-    // A Markdown fence's `code` is the CommonMark value, which uses LF only; a CRLF body keeps its line endings.
-    const writtenBody = Str.slice(fence.codeStart, fence.codeEnd)(rewrittenContent);
-    const replacement = Str.includes("\r\n")(writtenBody)
-      ? Str.replace(/\r?\n/gu, "\r\n")(transformed.success.replacement)
-      : transformed.success.replacement;
+    const replacement = withWrittenLineEndings(
+      Str.slice(fence.codeStart, fence.codeEnd)(rewrittenContent),
+      transformed.success.replacement
+    );
     rootImportsRewritten += sourceSummary.rootImportsRewritten;
     rootExportsRewritten += sourceSummary.rootExportsRewritten;
     emittedImports += sourceSummary.emittedImports;
