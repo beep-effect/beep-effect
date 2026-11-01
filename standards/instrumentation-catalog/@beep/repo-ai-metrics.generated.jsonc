@@ -118,6 +118,7 @@
     {"name":"AiMetrics.intake.acceptPage","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.intake.readCursor","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.intake.readDisposition","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
+    {"name":"AiMetrics.intake.recordAttempt","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.intake.reserveSources","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":false},
     {"name":"AiMetrics.interpretDeliveryHttpReply","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
     {"name":"AiMetrics.isNestedGitRoot","owner":"@beep/repo-ai-metrics","family":"tooling","conforms":true},
