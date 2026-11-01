@@ -1702,6 +1702,23 @@ it.layer(commandCheckoutLayer, { timeout: "30 seconds" })("proof job command han
     })
   );
   it.effect(
+    "retains the monitor polling interval in the durable request and launched command",
+    Effect.fnUntraced(function* () {
+      const { root, launcher } = yield* CommandCheckout;
+      const fs = yield* FileSystem.FileSystem;
+      yield* writeExecutable(`${root}/git`, "#!/bin/sh\nprintf 'feature/job\\n'\n");
+      yield* writeExecutable(`${root}/systemd-run`, `#!/bin/sh\nprintf '%s\\n' "$@" > '${root}/launch.argv'\n`);
+      const argv = ["monitor", "--until-ready", "--poll-interval", "60s", "--detach"];
+      process.argv = [process.execPath, "/repo/cli.ts", "--", "yeet", ...argv];
+      yield* runJobCommand(argv);
+      const record = O.getOrThrow(
+        A.findFirst(yield* launcher.list, (record) => A.contains(record.request.argv, "--poll-interval"))
+      );
+      expect(record.request.argv).toEqual(["monitor", "--until-ready", "--poll-interval", "60s"]);
+      expect(yield* fs.readFileString(`${root}/launch.argv`)).toContain("monitor\n--until-ready\n--poll-interval\n60s");
+    })
+  );
+  it.effect(
     "wait exits 2 on a wave, names its rows and the re-run command, and keeps JSON mode's stdout the record",
     Effect.fnUntraced(function* () {
       const { root, launcher } = yield* CommandCheckout;

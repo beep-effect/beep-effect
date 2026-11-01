@@ -91,7 +91,7 @@ const respondWithNonce = (request: NextRequest, nonce: string): NextResponse => 
  *
  * **Details**
  *
- * The nonce comes from the Effect `Crypto` service (`randomUUIDv4`) provided by a
+ * The nonce comes from the Effect `SecureRandom` service (`uuidV4`) provided by a
  * module-level `ManagedRuntime` over `NodeCrypto.layer`, so the handler is async.
  *
  * **Example** (Assigning proxy handler)
