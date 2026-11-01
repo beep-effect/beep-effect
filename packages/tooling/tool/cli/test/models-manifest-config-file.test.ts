@@ -142,7 +142,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           ],
         };
         const legacy = { ...seed, targets: [...seed.targets, retiredTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
         expect(yield* encodeManifest(loaded)).toEqual(seed);
       })
     );
@@ -181,7 +181,7 @@ layer(Layer.mergeAll(storeLayer, NodeServices.layer), { timeout: "30 seconds" })
           locators: [block("retired-only", ["jsdoc.migrate-titles"])],
         };
         const legacy = { ...seed, targets: [...seed.targets, mixedTarget, retiredOnlyTarget] };
-        const loaded = yield* store.load(yield* writeTemp("models.yaml", stringify(legacy)));
+        const loaded = yield* store.load(yield* writeTemp("models.yaml", yield* Yaml.stringify(legacy)));
         const expected = {
           ...seed,
           targets: [...seed.targets, { ...mixedTarget, locators: [block("mixed-roles", ["qa.judge"])] }],
