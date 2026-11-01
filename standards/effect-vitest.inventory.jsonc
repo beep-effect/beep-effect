@@ -2293,7 +2293,7 @@
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/evaluation/allowed.main.ts",
       "line": 55,
-      "endLine": 177,
+      "endLine": 176,
       "symbol": "program",
       "occurrence": "v2:85435781911ec13485331280fb18bb6528c98e10d6178405bb7bfd1da5c8bc08",
       "class": "resource-wrapper",

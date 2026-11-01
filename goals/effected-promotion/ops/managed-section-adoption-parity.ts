@@ -34,7 +34,7 @@ import { buildExplorationProjection } from "@beep/repo-cli/commands/Explore";
 import { extractGeneratedBlock } from "@beep/repo-cli/commands/Models";
 import { STANDARD_SECTION, spliceStandardSection } from "@beep/repo-cli/commands/Observability";
 import { PacketEventStoreLive } from "@beep/repo-cli/test/Goals";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Data from "effect/Data";
@@ -349,6 +349,11 @@ const program = Effect.gen(function* () {
 
 NodeRuntime.runMain(
   program.pipe(
-    Effect.provide(Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provide(NodeServices.layer))))
+    Effect.provide(
+      Layer.mergeAll(
+        Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+        PacketEventStoreLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+      )
+    )
   )
 );

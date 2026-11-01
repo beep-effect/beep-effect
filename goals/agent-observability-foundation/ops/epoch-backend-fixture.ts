@@ -20,7 +20,7 @@ import { makePayloadReclaimer, PayloadRetentionPolicy } from "@beep/repo-ai-metr
 import { hashPrivateIdentifier } from "@beep/repo-ai-metrics/privacy";
 import { TranscriptIntakeConfig } from "@beep/repo-ai-metrics/transcript-intake";
 import { Sha256Hex } from "@beep/schema";
-import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
 import * as Clock from "effect/Clock";
@@ -236,7 +236,11 @@ const program = Effect.gen(function* () {
   yield* fs.writeFileString(output, yield* S.encodeEffect(S.fromJsonString(S.Unknown))(result), { mode: 0o600 });
 });
 NodeRuntime.runMain(
-  Layer.mergeAll(NodeServices.layer, Reactivity.layer, NodeHttpClient.layerNodeHttp).pipe(
+  Layer.mergeAll(
+    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+    Reactivity.layer,
+    NodeHttpClient.layerNodeHttp
+  ).pipe(
     Layer.build,
     Effect.flatMap((context) => Effect.provide(program, context)),
     Effect.scoped
