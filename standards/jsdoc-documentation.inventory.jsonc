@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T06:33:31.725Z",
+  "generatedAt": "2026-11-01T06:54:00.883Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -71197,8 +71197,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 1349,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1349-yamlformat",
+          "line": 1355,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1355-yamlformat",
           "currentTags": [
             "@public",
             "@category",

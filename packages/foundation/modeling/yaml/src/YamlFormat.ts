@@ -598,9 +598,9 @@ const formatStream: {
  * rejected.
  */
 const jsValueToNode: {
-  (value: unknown, ancestors: Array<object>, depth: number): YamlNode;
-  (ancestors: Array<object>, depth: number): (value: unknown) => YamlNode;
-} = dual(3, (value: unknown, ancestors: Array<object>, depth: number): YamlNode => {
+  (value: unknown, ancestors: Array<object>, depth: number): LoweredNode;
+  (ancestors: Array<object>, depth: number): (value: unknown) => LoweredNode;
+} = dual(3, (value: unknown, ancestors: Array<object>, depth: number): LoweredNode => {
   if (depth > MAX_NESTING_DEPTH) {
     throw ModifyFailure.make({
       code: "NestingDepthExceeded",
@@ -646,8 +646,11 @@ const jsValueToNode: {
   return YamlScalar.make({ value, style: "plain", offset: 0, length: 0 });
 });
 
+/** The nodes the lowering synthesizes: it never produces an alias. */
+type LoweredNode = YamlScalar | YamlSeq | YamlMap;
+
 /** Entry point for {@link jsValueToNode}: one ancestor stack per lowering. */
-function lowerValue(value: unknown): YamlNode {
+function lowerValue(value: unknown): LoweredNode {
   return jsValueToNode(value, [], 0);
 }
 
@@ -670,7 +673,6 @@ function lowerReplacement(previous: YamlNode | null, value: unknown): YamlNode {
           YamlSeq.make({ items: node.items, style: node.style, anchor, offset: node.offset, length: node.length }),
         YamlMap: (node) =>
           YamlMap.make({ items: node.items, style: node.style, anchor, offset: node.offset, length: node.length }),
-        YamlAlias: (node) => node,
       });
 }
 
@@ -1098,35 +1100,39 @@ const tryRegionalScalarEdit: {
 
 // ── modify: directive prologue ───────────────────────────────────────
 
+/** Directive, comment and blank lines up to and including the `---` marker that ends them. */
+const PROLOGUE_HEAD = "^(?:(?:%[^\\n]*|[ \\t]*(?:#[^\\n]*)?)\\r?\\n)*---";
+
+/** A prologue whose `---` line is bare: the marker, its trailing blanks and its line ending. */
+const BARE_DIRECTIVE_PROLOGUE = new RegExp(`${PROLOGUE_HEAD}[ \\t]*\\r?\\n`, "u");
+
 /**
- * Directive, comment and blank lines up to and including the `---` marker
- * that ends them (`head`), the rest of the marker line (`rest`: blanks and an
- * optional comment) and its line ending (`eol`). A marker line carrying
- * anything else — a node property, a flow collection, a block scalar header
- * — does not match.
+ * The prologue head of a `---` line that ends the text or carries only a
+ * comment. A marker line carrying anything else — a node property, a flow
+ * collection, a block scalar header — matches neither pattern.
  */
-const DIRECTIVE_PROLOGUE =
-  /^(?<head>(?:(?:%[^\n]*|[ \t]*(?:#[^\n]*)?)\r?\n)*---)(?<rest>(?:[ \t]+(?:#[^\n]*)?)?)(?<eol>\r?\n|$)/u;
+const SPLIT_DIRECTIVE_PROLOGUE = new RegExp(`${PROLOGUE_HEAD}(?=[ \\t]*$|[ \\t]+#[^\\n]*(?:\\r?\\n|$))`, "u");
 
 /**
  * The directive prologue of `text` (after any BOM), kept byte for byte by the
  * whole-document pipeline, or `undefined` when the `---` line that ends the
  * directives carries content that cannot be split from the body.
  *
- * A comment on the marker line belongs to the body: the composer stores it as
+ * A bare marker line keeps its own trailing blanks and line ending. A
+ * comment on the marker line belongs to the body: the composer stores it as
  * the root's leading comment, which the body renders on its own line below
- * the marker, as the pipeline does for a directive-less `--- # comment`. A
- * bare marker line keeps its own trailing blanks and line ending.
+ * the marker, as the pipeline does for a directive-less `--- # comment`; the
+ * prologue then ends at the marker and a newline.
  */
-const directivePrologue = (text: string): string | undefined =>
-  O.getOrUndefined(
-    O.map(O.fromNullishOr(DIRECTIVE_PROLOGUE.exec(Str.replace(/^\uFEFF/u, "")(text))?.groups), (groups) => {
-      const rest = groups.rest ?? "";
-      const eol = groups.eol ?? "";
-      const bare = Str.isEmpty(Str.trim(rest)) && Str.isNonEmpty(eol);
-      return bare ? `${groups.head}${rest}${eol}` : `${groups.head}\n`;
-    })
+const directivePrologue = (text: string): string | undefined => {
+  const source = Str.replace(/^\uFEFF/u, "")(text);
+  return pipe(
+    O.fromNullishOr(BARE_DIRECTIVE_PROLOGUE.exec(source)),
+    O.map((match) => match[0]),
+    O.orElse(() => O.map(O.fromNullishOr(SPLIT_DIRECTIVE_PROLOGUE.exec(source)), (match) => `${match[0]}\n`)),
+    O.getOrUndefined
   );
+};
 
 /**
  * `doc` with `contents`, framed to render after a verbatim directive

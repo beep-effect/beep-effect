@@ -192,6 +192,18 @@ describe("YamlFormat.modify under %YAML 1.1", () => {
     })
   );
 
+  it.effect("quotes coerced strings inside fresh sequences and mappings, beside valueless source keys", () =>
+    Effect.gen(function* () {
+      const written = yield* YamlFormat.modifyToString(
+        "%YAML 1.1\n---\nempty:\nlist: x\n",
+        ["list"],
+        ["off", { on: "1:30", plain: "redis" }, 1]
+      );
+      strictEqual(written, "%YAML 1.1\n---\nempty:\nlist:\n- 'off'\n- 'on': '1:30'\n  plain: redis\n- 1\n");
+      deepStrictEqual(read11(written), { empty: null, list: ["off", { on: "1:30", plain: "redis" }, 1] });
+    })
+  );
+
   it.effect("keeps today's output under %YAML 1.2 and without a directive", () =>
     Effect.gen(function* () {
       strictEqual(
