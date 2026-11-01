@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T23:48:06.061Z
+Generated: 2026-11-01T00:11:56.100Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 165 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3579 |
-| publicExports | 25322 |
+| publicModules | 3580 |
+| publicExports | 25324 |
 | openModules | 161 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -64,7 +64,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 6 | `@beep/github-commands` | `packages/foundation/modeling/github-commands` | clean | 3 | 6 | 0 | 0 |
 | 7 | `@beep/ontology-config` | `packages/ontology/config` | clean | 7 | 18 | 0 | 0 |
 | 8 | `@beep/spdx` | `packages/foundation/modeling/spdx` | clean | 4 | 16 | 0 | 0 |
-| 9 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
+| 9 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 229 | 0 | 0 |
 | 10 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
 | 11 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 168 | 969 | 0 | 0 |
 | 12 | `@beep/codegen-kit` | `packages/tooling/library/codegen-kit` | clean | 6 | 45 | 0 | 0 |
@@ -155,7 +155,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 97 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 31 | 0 | 0 |
 | 98 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
 | 99 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
-| 100 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 100 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
 | 101 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | clean | 8 | 40 | 0 | 0 |
 | 102 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | clean | 6 | 124 | 0 | 0 |
 | 103 | `@beep/libpff` | `packages/drivers/libpff` | clean | 7 | 42 | 0 | 0 |

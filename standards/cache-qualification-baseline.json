@@ -5726,6 +5726,7 @@
             "./tsconfig.packages.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/FFmpeg.capture.models.ts",
+            "packages/drivers/ffmpeg/src/FFmpeg.command.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
             "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
@@ -135941,7 +135942,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "3f744da98698f9e9f33d12f88a05ce071978e0fc7d79e53392c8692b06790dce"
+        "sha256": "9e0a7409871bac1f55c6fa442651ba6af52be48e73e8de384496c5eefcf7aca0"
       }
     ]
   }
