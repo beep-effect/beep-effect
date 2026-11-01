@@ -1,0 +1,11 @@
+{
+  "name": "@fixture/app",
+  "version": "0.0.1",
+  "dependencies": {
+    "effect": "4.0.6",
+    "right-pad": "2.0.0"
+  },
+  "devDependencies": {
+    "vitest": "4.1.0"
+  }
+}

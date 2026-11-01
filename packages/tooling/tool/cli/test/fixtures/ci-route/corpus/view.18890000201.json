@@ -1,0 +1,32 @@
+{
+  "attempt": 1,
+  "conclusion": "success",
+  "createdAt": "2026-10-27T14:02:11Z",
+  "databaseId": 18890000201,
+  "event": "pull_request",
+  "headBranch": "feat/route-corpus",
+  "headSha": "a1e7f3c5b9d2e4f6a8c0b1d3e5f7a9c2b4d6e8f0",
+  "jobs": [
+    {
+      "completedAt": "2026-10-27T14:47:58Z",
+      "conclusion": "success",
+      "databaseId": 53900000031,
+      "name": "Heavy / Check",
+      "startedAt": "2026-10-27T14:05:03Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/18890000201/job/53900000031"
+    },
+    {
+      "conclusion": "cancelled",
+      "databaseId": 53900000032,
+      "name": "Heavy / Docgen",
+      "startedAt": "2026-10-27T14:05:04Z",
+      "status": "completed",
+      "steps": [],
+      "url": "https://github.com/beep-effect/beep-effect/actions/runs/18890000201/job/53900000032"
+    }
+  ],
+  "status": "completed",
+  "workflowName": "Heavy"
+}
