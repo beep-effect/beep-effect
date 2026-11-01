@@ -897,6 +897,24 @@ const allocateBytes: {
     })
 );
 
+// The open descriptor `fd` and its inode: a file, or a directory opened read-only.
+const openDescriptorEntry = (
+  state: State,
+  fd: FileDescriptor,
+  method: string
+): Effect.Effect<readonly [OpenFileDescriptor, FileInode | DirectoryInode], PlatformError> =>
+  Effect.suspend(() => {
+    const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
+    if (descriptor === undefined) {
+      return Effect.fail(descriptorError(fd, method, "EBADF", "File descriptor is closed"));
+    }
+    const entry = HashMap.get(state.inodes, descriptor.inode).pipe(
+      O.filter(InodeEntry.isAnyOf(["File", "Directory"])),
+      O.getOrThrow
+    );
+    return Effect.succeed([descriptor, entry] as const);
+  });
+
 const getOpenFile: {
   (
     state: State,
@@ -917,19 +935,26 @@ const getOpenFile: {
     method: string,
     access?: DescriptorAccess
   ): Effect.Effect<readonly [OpenFileDescriptor, FileInode], PlatformError> =>
-    Effect.suspend(() => {
-      const descriptor = O.getOrUndefined(HashMap.get(state.descriptors, fd));
-      if (descriptor === undefined) {
-        return Effect.fail(descriptorError(fd, method, "EBADF", "File descriptor is closed"));
-      }
+    Effect.flatMap(openDescriptorEntry(state, fd, method), ([descriptor, entry]) => {
       if (access !== undefined && !descriptor[access]) {
         const code = method === "truncate" ? "EINVAL" : "EBADF";
         return Effect.fail(descriptorError(fd, method, code, `File descriptor is not ${access}`));
       }
-      const entry = O.getOrThrow(O.filter(HashMap.get(state.inodes, descriptor.inode), InodeEntry.isAnyOf(["File"])));
-      return Effect.succeed([descriptor, entry]);
+      // Linux opens a directory read-only (to fsync it); its data operations fail with EISDIR.
+      if (entry._tag === "Directory") {
+        return Effect.fail(descriptorError(fd, method, "EISDIR", "Is a directory"));
+      }
+      return Effect.succeed([descriptor, entry] as const);
     })
 );
+
+// `fstat` and `fsync` read only the inode, so they also accept a read-only directory descriptor.
+const getOpenInode = (
+  state: State,
+  fd: FileDescriptor,
+  method: string
+): Effect.Effect<FileInode | DirectoryInode, PlatformError> =>
+  Effect.map(openDescriptorEntry(state, fd, method), ([, entry]) => entry);
 
 const withSystemErrorPath: {
   (error: PlatformError, method: string, path: string): PlatformError;
@@ -2226,7 +2251,11 @@ const copy = (volume: Volume) =>
 // =============================================================================
 
 // Allocates the next descriptor for `entry` and counts the open.
-const registerDescriptor = (state: State, entry: FileInode, mode: OpenMode): readonly [State, OpenFileDescriptor] => {
+const registerDescriptor = (
+  state: State,
+  entry: FileInode | DirectoryInode,
+  mode: OpenMode
+): readonly [State, OpenFileDescriptor] => {
   const fd = FileDescriptor.make(state.nextDescriptor);
   const descriptor: OpenFileDescriptor = {
     fd,
@@ -2315,10 +2344,15 @@ const openExistingEntry = Effect.fnUntraced(function* (
   if (resolved._tag === "Failure") {
     return yield* openUnresolvedEntry(link, resolved.failure, path, mode);
   }
-  if (resolved.success.entry._tag !== "File") {
+  const entry = resolved.success.entry;
+  // Only a plain read-only open succeeds on a directory, as on Linux; any write or create flag is EISDIR.
+  if (entry._tag === "Directory" && !mode.writable && !mode.create) {
+    return [state, entry] as const;
+  }
+  if (entry._tag !== "File") {
     return yield* badResource("open", path, "EISDIR");
   }
-  return yield* truncateOnOpen(state, resolved.success.entry, mode.truncate);
+  return yield* truncateOnOpen(state, entry, mode.truncate);
 });
 
 // One hop of an open: the opened state and file, or the next candidate path.
@@ -2363,7 +2397,7 @@ const openDescriptorUnlocked: {
     }
     const mode = openMode(flag);
     yield* validateMode("open", options?.mode);
-    let opened: string | readonly [State, FileInode] = path;
+    let opened: string | readonly [State, FileInode | DirectoryInode] = path;
     while (P.isString(opened)) {
       opened = yield* openStep(state, opened, path, mode, options?.mode);
     }
@@ -2586,13 +2620,11 @@ class MemoryFile implements FileSystem.File {
   }
 
   get stat(): Effect.Effect<FileSystem.File.Info, PlatformError> {
-    return this.volume.withState((state) =>
-      Effect.map(getOpenFile(state, this.fd, "stat"), ([, entry]) => fileInfo(entry))
-    );
+    return this.volume.withState((state) => Effect.map(getOpenInode(state, this.fd, "stat"), fileInfo));
   }
 
   get sync(): Effect.Effect<void, PlatformError> {
-    return this.volume.withState((state) => Effect.asVoid(getOpenFile(state, this.fd, "sync")));
+    return this.volume.withState((state) => Effect.asVoid(getOpenInode(state, this.fd, "sync")));
   }
 
   seek(offset: bigint, from: FileSystem.SeekMode): Effect.Effect<bigint, PlatformError> {

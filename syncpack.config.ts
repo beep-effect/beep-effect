@@ -136,7 +136,8 @@ const config = {
   },
   // The held list is a projection of hold-ledger/claims.jsonl: each hold's
   // reason, probe and exit condition live in its record (`bun run beep holds
-  // list`), and `bun run beep holds lint --write` regenerates the list. An
+  // why <package>`), `bun run deps:update` retires flipped holds first, and
+  // docs/runbooks/hold-ledger.md covers the rest. An
   // empty `dependencies` array would match every dependency, so the group is
   // omitted when nothing is held.
   updateGroups:

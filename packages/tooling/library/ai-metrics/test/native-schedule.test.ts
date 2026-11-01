@@ -54,6 +54,16 @@ const schedulePolicy = NativeSchedulePolicy.make({
   reconcileDelayMillis: 100,
   tickTimeoutMillis: 1000,
 });
+// The query-delay case asserts a tick lands INSIDE the reconcile window, so its window is wide enough
+// that a loaded host cannot stall past it between two consecutive ticks.
+const widePolicy = NativeSchedulePolicy.make({
+  maxEvents: 1,
+  retryDelayMillis: 2000,
+  maxRetryDelayMillis: 8000,
+  reconcileDelayMillis: 2000,
+  tickTimeoutMillis: 1000,
+});
+const wideDelayWait = 2100;
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 
 const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
@@ -633,17 +643,19 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
   it.effect("reserves query delay before failed or interrupted read-back", () =>
     Effect.gen(function* () {
       const f = yield* fixture();
-      yield* (yield* f.reopen()).tick;
-      yield* Effect.sleep(120);
+      yield* (yield* f.reopen(widePolicy)).tick;
+      yield* Effect.sleep(wideDelayWait);
       yield* Ref.set(f.readStatus, 503);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(120);
-      const interrupted = yield* makeNativeDeliveryScheduler(f.intake, f.config, schedulePolicy, f.sender, {
+      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({
+        outcomes: [{ _tag: "Failed", reason: "readback" }],
+      });
+      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* Effect.sleep(wideDelayWait);
+      const interrupted = yield* makeNativeDeliveryScheduler(f.intake, f.config, widePolicy, f.sender, {
         reconcile: () => Effect.interrupt,
       });
       yield* interrupted.tick.pipe(Effect.exit);
-      expect(yield* (yield* f.reopen()).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      expect(yield* (yield* f.reopen(widePolicy)).tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
       expect(yield* Ref.get(f.reads)).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
     })
