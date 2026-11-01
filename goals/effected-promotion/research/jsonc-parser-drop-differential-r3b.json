@@ -1,0 +1,5659 @@
+{
+  "schemaVersion": 1,
+  "tool": "goals/effected-promotion/ops/jsonc-parser-drop-differential.ts",
+  "codeRev": "5bef6aca150e8b936939c83bec314a48b0271bcb",
+  "codeDirty": false,
+  "inputsRev": "bb2134fcb952e07580c4cebf2586c901f090ef5b",
+  "corpus": {
+    "files": 9365,
+    "pathsSha256": "204575c6983cfef6ee7145effc9544fa1a0acaef92f6c39d81b8cb8aee911591"
+  },
+  "format": {
+    "sites": [
+      {
+        "site": "renderPrettyCommandJson:text",
+        "cases": 9365,
+        "outcomes": {
+          "identical": 9365
+        }
+      },
+      {
+        "site": "renderPrettyCommandJson:compact",
+        "cases": 9342,
+        "outcomes": {
+          "identical": 9342
+        }
+      }
+    ],
+    "nonIdentical": [],
+    "unclassified": 0
+  },
+  "edit": {
+    "sites": [
+      {
+        "site": "applyJsoncModification",
+        "cases": 141730,
+        "outcomes": {
+          "identical": 141730
+        }
+      },
+      {
+        "site": "PolicyFingerprintJson.modifyJson",
+        "cases": 7,
+        "outcomes": {
+          "identical": 7
+        }
+      }
+    ],
+    "nonIdentical": [],
+    "unclassified": 0
+  },
+  "parse": {
+    "sites": [
+      {
+        "site": "profile:default",
+        "cases": 9385,
+        "outcomes": {
+          "identical": 9345,
+          "both-reject": 37,
+          "intended:bom-tolerance": 1,
+          "intended:proto-own-key": 1,
+          "intended:nesting-cap": 1
+        }
+      },
+      {
+        "site": "profile:trailing-comma",
+        "cases": 9385,
+        "outcomes": {
+          "identical": 9346,
+          "both-reject": 36,
+          "intended:bom-tolerance": 1,
+          "intended:proto-own-key": 1,
+          "intended:nesting-cap": 1
+        }
+      },
+      {
+        "site": "profile:strict-json",
+        "cases": 9385,
+        "outcomes": {
+          "identical": 8992,
+          "both-reject": 390,
+          "intended:bom-tolerance": 1,
+          "intended:proto-own-key": 1,
+          "intended:nesting-cap": 1
+        }
+      },
+      {
+        "site": "error-text:allowlist",
+        "cases": 13,
+        "outcomes": {
+          "identical": 10,
+          "intended:recovery-detail": 3
+        }
+      },
+      {
+        "site": "error-text:allowlist-check",
+        "cases": 13,
+        "outcomes": {
+          "identical": 10,
+          "intended:recovery-detail": 3
+        }
+      },
+      {
+        "site": "error-text:quality",
+        "cases": 13,
+        "outcomes": {
+          "intended:code-by-name": 10,
+          "intended:recovery-detail": 3
+        }
+      },
+      {
+        "site": "parseGoalManifestText",
+        "cases": 264,
+        "outcomes": {
+          "identical": 264
+        }
+      },
+      {
+        "site": "decodeAllowlistDocumentFromJsoncText",
+        "cases": 4,
+        "outcomes": {
+          "identical": 2,
+          "intended:recovery-detail": 2
+        }
+      },
+      {
+        "site": "selectOsvPackageOverrideIdsForAudit",
+        "cases": 2,
+        "outcomes": {
+          "identical": 1,
+          "both-reject": 1
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/35KP/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/5TYM/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6WLZ/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6XDY/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6ZKB/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/7Z25/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/8G76/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/98YD/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9DXL/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9KAX/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9WXW/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/AVM7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/HWV9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/JHB9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/KSS4/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/L383/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/M7A3/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/PUW8/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/QT73/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/RZT7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/U9NS/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/UT92/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/W4TN/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "empty",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "whitespace",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "trailing-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "leading-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "unterminated-string",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "unterminated-object",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "unterminated-comment",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "trailing-content",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "bad-escape",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "hex-number",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "nan",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "missing-colon",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "missing-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "bom",
+        "outcome": "intended:bom-tolerance"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "proto",
+        "outcome": "intended:proto-own-key"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "deep",
+        "outcome": "intended:nesting-cap"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:default",
+        "id": "control-character",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/35KP/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/5TYM/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6WLZ/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6XDY/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6ZKB/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/7Z25/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/8G76/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/98YD/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9DXL/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9KAX/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9WXW/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/AVM7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/HWV9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/JHB9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/KSS4/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/L383/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/M7A3/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/PUW8/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/QT73/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/RZT7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/U9NS/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/UT92/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/W4TN/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "empty",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "whitespace",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "leading-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "unterminated-string",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "unterminated-object",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "unterminated-comment",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "trailing-content",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "bad-escape",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "hex-number",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "nan",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "missing-colon",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "missing-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "bom",
+        "outcome": "intended:bom-tolerance"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "proto",
+        "outcome": "intended:proto-own-key"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "deep",
+        "outcome": "intended:nesting-cap"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:trailing-comma",
+        "id": "control-character",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": ".fallowrc.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": ".oxlintrc.effected.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": ".oxlintrc.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": ".oxlintrc.shadcn.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "apps/oip-web/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "apps/todox/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "biome.identity.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/fallow-quality-enforcement/research/feature-matrix.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/fallow-quality-enforcement/research/knip-parity.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/fallow-zero-dead-code/history/review-rounds.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/jsdoc-carrier-migration/data/apps/proof-manifest.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/jsdoc-carrier-migration/data/jsdoc-migrate.proof-manifest.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/jsdoc-carrier-migration/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/one-round-loop/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/per-module-imports/research/assets/biome-per-name-patterns.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/repo-crispening-orchestration/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/schema-opaque-default/ops/codemod/keep-class.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "goals/tsconfig.ops.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "infra/ci-runners/sdks/ghaRunners/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.test.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/capability/config-file/test/fixtures/codec-corpus/jsonc/yaml.biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/toml/biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/35KP/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/5TYM/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6WLZ/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6XDY/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6ZKB/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/7Z25/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/8G76/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/98YD/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9DXL/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9KAX/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9WXW/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/AVM7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/HWV9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/JHB9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/KSS4/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/L383/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/M7A3/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/PUW8/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/QT73/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/RZT7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/U9NS/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/UT92/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/W4TN/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/core.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/schema.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/services.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "scratchpad/effected/tsconfig.lab.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/check-census.regression-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/effect-vitest.primitives.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/acp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/agents-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/agents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/agents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ai-provider-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ai-sync.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/anthropic.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/api-docs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/box-provisioning.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/box.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ciops.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/cli-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/codegen-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/config-file.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/cosmos.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/discord.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/doc-text.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/dock.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/docket-intake.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/documents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/documents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/duckdb.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ecfr.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/editor.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/effect-drizzle.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/exiftool.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ffmpeg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/file-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/freshbooks.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/git.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/github-actions.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/github-reporting.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/github.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/glob.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/gov-legal-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/govinfo.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/graph-3d.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/html.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/hubspot.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/identity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/jsonc.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/jsonl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/langextract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/lejeune-bolt-workbench.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/lexical-schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/libpff.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/lint-rules.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/lockfiles.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/m365-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/m365.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/managed-section.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/markdown.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/mcp-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/mcpb-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/md.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/memfs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/n3.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/nlp-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/nlp-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/nlp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/npm-spec.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/obs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/observability.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/occt.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/oip-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/onepassword-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ontology-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ontology-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ontology-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ontology-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/ontology.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/openai-compat.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/openclaw.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/oxigraph.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/pacer.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/package-json.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/palantiri.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/pandoc-ast.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/pdf-tools.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/phoenix.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/poppler.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/postgres.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-claude-mod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-gateway.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-identify.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-kg-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-m365-contacts.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-mail-tagging.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-review-hub.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/practice-setup.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/pretext.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/professional-desktop.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/provenance.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/qa-capture.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/rdf-canonize.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/repo-ai-metrics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/repo-docgen.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/repo-tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/repo-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/repo-workspaces.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/runpod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/runtime-env.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/sanity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/sbom.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/schema-org.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/semantic-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/semantica.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/semver.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/shacl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/shared-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/skill-contract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/spdx.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/t3-code.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/tailscale.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/technical-drawing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/tesseract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/test-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/tika.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/toml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/uspto-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/uspto.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/walker.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/windows-secrets.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/wink.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/workspace-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/xdg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/xstate.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/instrumentation-catalog/@beep/yaml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/jsdoc-totals.regression-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/acp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/agents-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/agents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/agents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/agents-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/agents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ai-provider-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ai-sync.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/anthropic.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/api-docs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/api-transport.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-proof.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/architecture-lab-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/box-provisioning.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/box.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/brand.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/chalk.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ciops.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/cli-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/codegen-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/colors.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/config-file.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/cosmos.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/db-admin.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/discord.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/doc-text.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/dock-react.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/dock.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/docket-intake.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/documents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/documents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/documents-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/documents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/drizzle.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/duckdb.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ecfr.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/editor.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemic-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/epistemics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/exiftool.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ffmpeg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/file-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/freshbooks.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/git.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/github-actions.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/github-commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/github-references.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/github-reporting.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/github.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/glob.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/gov-legal-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/govinfo.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/graph-3d.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/html.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/hubspot.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/identity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/infra.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/jsonc.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/jsonl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/langextract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/law-practice-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/law-practice-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/law-practice-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/lejeune-bolt-workbench.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/lexical-schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/libpff.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/lint-rules.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/lockfiles.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/m365-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/m365.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/managed-section.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/markdown.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/mcp-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/mcpb-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/md.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/memfs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/n3.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/nlp-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/nlp-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/nlp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/npm-spec.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/obs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/observability.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/occt.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/oip-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/onepassword-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ontology-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ontology-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ontology-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ontology-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ontology.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/openai-compat.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/openai.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/openclaw.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/oxigraph.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/pacer.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/package-json.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/palantiri.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/pandoc-ast.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/pdf-tools.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/pglite.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/phoenix.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/poppler.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/postgres.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-claude-mod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-gateway.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-identify.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-kg-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-m365-contacts.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-mail-tagging.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-review-hub.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/practice-setup.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/pretext.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/professional-desktop.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/provenance.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/public-site.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/qa-capture.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/rdf.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-ai-metrics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-configs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-docgen.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/repo-workspaces.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/runpod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/runtime-env.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/sanity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/sbom.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/schema-org.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/semantic-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/semantica.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/semver.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/shacl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/shared-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/shared-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/skill-contract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/spdx.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/t3-code.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/tailscale.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/technical-drawing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/tesseract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/test-runner.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/test-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/tika.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/todox.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/toml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/uspto-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/uspto.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/walker.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/windows-secrets.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/wink.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/workspace-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/workspace-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/workspace-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/workspace-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/xdg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/xstate.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/schema-catalog/@beep/yaml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "standards/test-typecheck.blindspot-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "tsconfig.base.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "empty",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "whitespace",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "trailing-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "leading-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "comment",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "block-comment",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "unterminated-string",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "unterminated-object",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "unterminated-comment",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "trailing-content",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "bad-escape",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "hex-number",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "nan",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "missing-colon",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "missing-comma",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "bom",
+        "outcome": "intended:bom-tolerance"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "proto",
+        "outcome": "intended:proto-own-key"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "deep",
+        "outcome": "intended:nesting-cap"
+      },
+      {
+        "leg": "parse",
+        "site": "profile:strict-json",
+        "id": "control-character",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "empty",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "whitespace",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "leading-comma",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "unterminated-string",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "unterminated-object",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "unterminated-comment",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist",
+        "id": "trailing-content",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist-check",
+        "id": "trailing-content",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "trailing-content",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "bad-escape",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist",
+        "id": "hex-number",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist-check",
+        "id": "hex-number",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "hex-number",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist",
+        "id": "nan",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:allowlist-check",
+        "id": "nan",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "nan",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "missing-colon",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "missing-comma",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "error-text:quality",
+        "id": "control-character",
+        "outcome": "intended:code-by-name"
+      },
+      {
+        "leg": "parse",
+        "site": "decodeAllowlistDocumentFromJsoncText",
+        "id": "allowlist-truncated",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "decodeAllowlistDocumentFromJsoncText",
+        "id": "allowlist-missing-comma",
+        "outcome": "intended:recovery-detail"
+      },
+      {
+        "leg": "parse",
+        "site": "selectOsvPackageOverrideIdsForAudit",
+        "id": "bun.lock-broken:rejected:0",
+        "outcome": "both-reject"
+      }
+    ],
+    "unclassified": 0
+  },
+  "tree": {
+    "sites": [
+      {
+        "site": "modelsParseJson",
+        "cases": 9365,
+        "outcomes": {
+          "identical": 8991,
+          "both-reject": 374
+        }
+      },
+      {
+        "site": "Knowledge.refs:parseTree",
+        "cases": 9365,
+        "outcomes": {
+          "identical": 9342,
+          "both-reject": 23
+        }
+      }
+    ],
+    "nonIdentical": [
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": ".fallowrc.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": ".oxlintrc.effected.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": ".oxlintrc.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": ".oxlintrc.shadcn.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "apps/oip-web/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "apps/todox/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "biome.identity.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/adapters/golden/config/input.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/fallow-quality-enforcement/research/feature-matrix.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/fallow-quality-enforcement/research/knip-parity.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/fallow-zero-dead-code/history/review-rounds.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/jsdoc-carrier-migration/data/apps/proof-manifest.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/jsdoc-carrier-migration/data/jsdoc-migrate.proof-manifest.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/jsdoc-carrier-migration/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/one-round-loop/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/per-module-imports/research/assets/biome-per-name-patterns.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/repo-crispening-orchestration/tasks/tasks.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/schema-opaque-default/ops/codemod/keep-class.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "goals/tsconfig.ops.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "infra/ci-runners/sdks/ghaRunners/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.test.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/capability/config-file/test/fixtures/codec-corpus/jsonc/yaml.biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/toml/biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/biome.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/35KP/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/35KP/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/5TYM/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/5TYM/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6WLZ/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6WLZ/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6XDY/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6XDY/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6ZKB/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/6ZKB/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/7Z25/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/7Z25/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/8G76/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/8G76/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/98YD/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/98YD/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9DXL/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9DXL/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9KAX/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9KAX/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9WXW/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/9WXW/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/AVM7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/AVM7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/HWV9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/HWV9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/JHB9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/JHB9/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/KSS4/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/KSS4/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/L383/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/L383/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/M7A3/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/M7A3/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/PUW8/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/PUW8/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/QT73/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/QT73/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/RZT7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/RZT7/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/U9NS/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/U9NS/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/UT92/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/UT92/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/W4TN/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "Knowledge.refs:parseTree",
+        "id": "packages/foundation/modeling/yaml/test/fixtures/yaml-test-suite/W4TN/in.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/core.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/schema.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "packages/tooling/policy-pack/lint-rules/configs/services.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "scratchpad/effected/tsconfig.lab.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/check-census.regression-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/effect-vitest.primitives.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/acp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/agents-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/agents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/agents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ai-provider-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ai-sync.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/anthropic.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/api-docs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/architecture-lab-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/box-provisioning.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/box.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ciops.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/cli-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/codegen-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/config-file.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/cosmos.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/discord.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/doc-text.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/dock.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/docket-intake.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/documents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/documents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/duckdb.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ecfr.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/editor.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/effect-drizzle.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/epistemic-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/exiftool.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ffmpeg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/file-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/freshbooks.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/git.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/github-actions.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/github-reporting.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/github.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/glob.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/gov-legal-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/govinfo.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/graph-3d.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/html.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/hubspot.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/identity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/jsonc.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/jsonl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/langextract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/law-practice-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/lejeune-bolt-workbench.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/lexical-schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/libpff.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/lint-rules.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/lockfiles.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/m365-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/m365.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/managed-section.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/markdown.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/mcp-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/mcpb-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/md.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/memfs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/n3.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/nlp-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/nlp-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/nlp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/npm-spec.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/obs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/observability.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/occt.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/oip-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/onepassword-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ontology-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ontology-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ontology-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ontology-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/ontology.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/openai-compat.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/openclaw.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/oxigraph.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/pacer.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/package-json.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/palantiri.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/pandoc-ast.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/pdf-tools.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/phoenix.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/poppler.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/postgres.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-claude-mod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-gateway.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-identify.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-kg-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-m365-contacts.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-mail-tagging.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-review-hub.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/practice-setup.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/pretext.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/professional-desktop.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/provenance.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/qa-capture.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/rdf-canonize.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/repo-ai-metrics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/repo-docgen.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/repo-tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/repo-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/repo-workspaces.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/runpod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/runtime-env.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/sanity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/sbom.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/schema-org.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/semantic-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/semantica.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/semver.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/shacl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/shared-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/skill-contract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/spdx.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/t3-code.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/tailscale.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/technical-drawing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/tesseract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/test-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/tika.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/toml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/uspto-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/uspto.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/walker.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/windows-secrets.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/wink.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/workspace-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/xdg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/xstate.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/instrumentation-catalog/@beep/yaml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/jsdoc-totals.regression-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/acp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/agents-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/agents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/agents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/agents-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/agents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ai-provider-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ai-sync.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/anthropic.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/api-docs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/api-transport.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-proof.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/architecture-lab-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/box-provisioning.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/box.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/brand.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/chalk.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ciops.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/cli-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/codegen-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/colors.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/config-file.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/cosmos.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/db-admin.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/discord.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/doc-text.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/dock-react.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/dock.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/docket-intake.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/documents-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/documents-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/documents-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/documents-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/drizzle.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/duckdb.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ecfr.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/editor.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemic-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/epistemics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/exiftool.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ffmpeg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/file-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/freshbooks.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/git.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/github-actions.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/github-commands.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/github-references.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/github-reporting.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/github.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/glob.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/gov-legal-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/govinfo.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/graph-3d.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/html.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/hubspot.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/identity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/infra.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/jsonc.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/jsonl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/langextract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/law-practice-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/law-practice-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/law-practice-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/lejeune-bolt-workbench.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/lexical-schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/libpff.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/lint-rules.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/lockfiles.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/m365-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/m365.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/managed-section.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/markdown.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/mcp-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/mcpb-kit.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/md.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/memfs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/n3.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/nlp-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/nlp-processing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/nlp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/npm-spec.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/obs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/observability.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/occt.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/oip-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/onepassword-cli.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ontology-client.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ontology-config.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ontology-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ontology-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ontology.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/openai-compat.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/openai.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/openclaw.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/oxigraph.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/pacer.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/package-json.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/palantiri.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/pandoc-ast.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/pdf-tools.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/pglite.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/phoenix.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/poppler.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/postgres.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-claude-mod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-gateway.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-identify.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-kg-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-m365-contacts.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-mail-tagging.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-review-hub.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/practice-setup.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/pretext.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/professional-desktop.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/provenance.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/public-site.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/qa-capture.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/rdf.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-ai-metrics.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-configs.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-docgen.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/repo-workspaces.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/runpod.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/runtime-env.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/sanity.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/sbom.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/schema-org.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/schema.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/semantic-web.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/semantica.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/semver.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/shacl.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/shared-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/shared-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/skill-contract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/spdx.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/t3-code.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/tailscale.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/technical-drawing.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/tesseract.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/test-runner.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/test-utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/tika.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/todox.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/toml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/tsconfig.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/ui.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/uspto-mcp.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/uspto.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/utils.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/walker.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/windows-secrets.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/wink.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/workspace-domain.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/workspace-server.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/workspace-tables.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/workspace-use-cases.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/xdg.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/xstate.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/schema-catalog/@beep/yaml.generated.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "standards/test-typecheck.blindspot-baseline.jsonc",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "tsconfig.base.json",
+        "outcome": "both-reject"
+      },
+      {
+        "leg": "tree",
+        "site": "modelsParseJson",
+        "id": "tsconfig.json",
+        "outcome": "both-reject"
+      }
+    ],
+    "unclassified": 0
+  },
+  "generators": [
+    {
+      "id": "tsconfig-sync-check",
+      "argv": ["tsconfig-sync", "--check", "--verbose"],
+      "exitCode": 0,
+      "stdoutSha256": "f733383951eab9d2e3759662cfb22cc3176547608b60ec985e5a6193046ce16b",
+      "stdoutBytes": 33,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "tsconfig-sync-dry-run",
+      "argv": ["tsconfig-sync", "--dry-run", "--verbose"],
+      "exitCode": 0,
+      "stdoutSha256": "2f664ded609e6ab46a6a6e403f34b741597ea0a24a65de33e0d48c1865f3760c",
+      "stdoutBytes": 40,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "version-sync-dry-run",
+      "argv": ["version-sync", "--skip-network", "--dry-run"],
+      "exitCode": 0,
+      "stdoutSha256": "8b647c09d3b3d4db85a390b8e55e5b665da204d3cf37698b69573bea43a44f1e",
+      "stdoutBytes": 365,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "create-package-dry-run",
+      "argv": [
+        "create-package",
+        "--dry-run",
+        "--skip-lockfile",
+        "--type",
+        "library",
+        "--family",
+        "foundation",
+        "--kind",
+        "modeling",
+        "--description",
+        "R3b JSONC parity probe",
+        "r3b-jsonc-parity-probe"
+      ],
+      "exitCode": 0,
+      "stdoutSha256": "d48077a67858bc761d8565315a2721237af0582f5941230838a97d90224c45bd",
+      "stdoutBytes": 898,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "lint-policy-fingerprint",
+      "argv": ["lint", "policy-fingerprint"],
+      "exitCode": 0,
+      "stdoutSha256": "0b4f09902045bdef27af4b1fb37113bb61b307aeaef97a68c8341d39656611c2",
+      "stdoutBytes": 28,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "lint-reflection-artifacts",
+      "argv": ["lint", "reflection-artifacts"],
+      "exitCode": 0,
+      "stdoutSha256": "24f94435d2a3f0e76292aebb2d80dbb318ae1da6990f5f2f5ec33bcad06079d6",
+      "stdoutBytes": 66,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "laws-allowlist-check",
+      "argv": ["laws", "allowlist-check"],
+      "exitCode": 0,
+      "stdoutSha256": "9f596818909717a2f8da1da8e01ed30e8d9ec0b0cbb817f56cadc354748c996c",
+      "stdoutBytes": 20,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "quality-tsgo-rules",
+      "argv": ["quality", "tsgo-rules"],
+      "exitCode": 0,
+      "stdoutSha256": "9b178a47ddce9e633b2a2d6b65f7de64f73cc2bef3b2081f7ba7edd7edad2d97",
+      "stdoutBytes": 157,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "goals-doctor",
+      "argv": ["goals", "doctor"],
+      "exitCode": 0,
+      "stdoutSha256": "0832aba25698b686319e6a6520fd9f3538bf57785624d882d72bc2837051ab4e",
+      "stdoutBytes": 142,
+      "stderrSha256": "e303c54916a5120d27f78339dfcc5a046b5adca79475ea00398c2fca771c0e12",
+      "stderrBytes": 8986,
+      "treeClean": true
+    },
+    {
+      "id": "knowledge-refs",
+      "argv": ["knowledge", "refs"],
+      "exitCode": 0,
+      "stdoutSha256": "8f90242f07de1d439fe8827ad501d698656c77ca7b5f0f3f05af8c083797db59",
+      "stdoutBytes": 644178,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "models-check",
+      "argv": ["models", "check"],
+      "exitCode": 1,
+      "stdoutSha256": "dd98965f96dbd88e5ec566a0e996e397886d546a4cdc45f088c51400a74364bf",
+      "stdoutBytes": 11375,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true,
+      "attempts": 1
+    },
+    {
+      "id": "models-apply",
+      "argv": ["models", "apply"],
+      "exitCode": 0,
+      "stdoutSha256": "83ffd615e1c4b2ff18d0aee8462e105f854c4a7d0cb342ec1fff0d44a20bd2de",
+      "stdoutBytes": 23957,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true
+    },
+    {
+      "id": "skills-lock-plan-json",
+      "argv": ["skills", "lock-plan", "--json"],
+      "exitCode": 0,
+      "stdoutSha256": "0080005dfd99c7da860fd4e33984f6554cb863704de1c9dc4833f8a0e0c465a4",
+      "stdoutBytes": 32768,
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrBytes": 0,
+      "treeClean": true,
+      "attempts": 1
+    }
+  ],
+  "comparison": {
+    "baseline": "goals/effected-promotion/research/jsonc-parser-drop-differential-r3b-before.json",
+    "identical": true,
+    "differing": []
+  }
+}

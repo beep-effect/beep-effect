@@ -218,6 +218,16 @@ adopted site merges a decoded object through `Object.assign`). The rejection mes
 `Invalid JSONC input (...)` to `JSONC parse failed with N error(s): ...`. The `jsonc-parser` editing facade
 and its users leave in R3b.
 
+R3b moved every remaining `jsonc-parser` site onto the kit and dropped the dependency from `@beep/repo-cli`,
+`@beep/repo-configs` and the root devDependencies; it stays only as the oracle devDependency of
+`@beep/config-file` and `@beep/jsonc`, with its root catalog entry. To keep the repo-cli editing facade and
+pretty JSON renderer byte-identical, the kit's `JsoncFormatter.format` became a token-for-token port of
+`jsonc-parser` 3.3.1 `format` (README deviation 15) and `JsoncModifier` gained `modifyWithFormatting`, a port of
+its `modify`. Oracle: `ops/jsonc-parser-drop-differential.ts`
+(`research/jsonc-parser-drop-differential-r3b{-before,}.json`): every tracked `*.json` and `*.jsonc` file through
+`renderPrettyCommandJson` (as text and compact) and the facade's edit shapes, 0 differences; every parse profile
+and tree reading the retired sites used, 0 unclassified; 13 generator check or dry outputs byte-identical.
+
 | Site | Map id | Status | Notes |
 | --- | --- | --- | --- |
 | `@beep/schema/Jsonc` (`JsoncTextToUnknown`, `decodeJsoncTextAs`, `JsoncParseDiagnostic`) | #1 | retired (R3a) | Deleted with its test, both export entries, the root barrel line, the generated aliases and the catalog, inventory and span rows. `decodeJsoncTextAs(X)` is `Jsonc.bind(X).decode`; `JsoncTextToUnknown` is `Jsonc.JsoncFromString`; `JsoncParseDiagnostic` is `JsoncParseErrorDetail` (neither had an importer outside the facade). |
@@ -226,7 +236,13 @@ and its users leave in R3b.
 | `@beep/lint-rules` `test/registry.test.ts` Biome plugin config decode | - | adopted (R3a) | `Jsonc.bind(BiomePluginConfig).decode`; `@beep/jsonc` is a devDependency. |
 | packet ops scripts `tsconfig-sync-parity.ts`, `lockfiles-adoption-parity.ts`, `package-json-readers-parity.ts` | - | adopted (R3a) | Same owner switch; their recorded reports are unchanged. |
 | `@beep/utils/Schema` `TextDecodeTo` and `Jsonc.bind` `Codec`-view generics | - | kit extended (R3a) | Both are generic over the target schema (`Target extends S.Top`), so an `S.Opaque` class keeps its branded type; pinned in `jsonc/test/Jsonc.test.ts`. |
-| `@beep/repo-configs` `AllowlistJsoncTextToUnknown` | #10 | queued: R3b | A copy of the facade's decode with its own error prefix; goes with the repo-configs `jsonc-parser` drop. |
+| `@beep/repo-configs` `AllowlistJsoncTextToUnknown` | #10 | adopted (R3b) | Parses through `Jsonc.parseResult` (comments and trailing commas allowed, as before); the `Allowlist JSONC parse error (<code>@<offset>:<length>, ...)` text is kept, so not `Jsonc.JsoncFromString`, whose message differs. The error list matches `jsonc-parser` where both recover alike and keeps the first error's offset elsewhere (`intended:recovery-detail`). |
+| repo-cli `internal/cli/Jsonc.ts` editing facade (`JsoncModification`, `applyJsoncModification`) | #2 (editing half) | adopted (R3b) | A sync facade over `JsoncModifier.modifyWithFormattingResult`; `JsoncModification.path` is the kit's `JsoncPath`. The dead `jsonText` helper (only its own test called it) is removed. 141,689 edit shapes over the corpus byte-identical. |
+| repo-cli `internal/cli/Json.ts` `renderPrettyCommandJson` and the five Skills `format` + `applyEdits` copies (`Skills.render` x3, `SkillsRelock.render`, `SkillsReview.render`) | #3, #4, #284 | adopted (R3b) | One owner: the Skills renderers call `renderPrettyCommandJson`, which formats through `JsoncFormatter.formatToString`. |
+| repo-cli Models (`Models.spans`, `Models.apply.service`, `Models.locator.service`), `Knowledge/Knowledge.refs.ts`, `Lint/internal/PolicyFingerprintJson.ts` | #5, #6, #226 | adopted (R3b) | `JsoncNode` trees from `Jsonc.parseTreeResult` (`find`, `toValue`, node offsets); `modifyJson` resolves its insertion index from the parent's property names and passes it as `insertionIndex`. |
+| repo-cli parse sites (`Goals/Inventory`, `Lint/ReflectionArtifact`, `Laws/AllowlistCheck`, `Lint/PolicyFingerprint`, `Quality/Quality.command`, `Quality/FallowQuality.command`, `Quality/Quality.osv-ignore`) | #8, #9, #274, #306 | adopted (R3b) | `Jsonc.parseResult` with the profile each site used (`allowTrailingComma: false` where it relied on the `jsonc-parser` defaults; strict JSON without comments for the generated Vitest aliases). The Quality diagnostics print the code's name instead of `jsonc-parser`'s number. |
+| repo-cli tests and the `@beep/repo-configs` test | #12 | adopted (R3b) | `Jsonc.parse`/`parseResult` and `JsoncFormatter.formatToString`. |
+| root `package.json` | #13 | adopted (R3b) | The `jsonc-parser` devDependency is removed; the catalog entry stays for the `@beep/config-file` and `@beep/jsonc` oracle devDependencies. |
 
 ## `@beep/commands` drivers (roadmap R9, SPEC W4-l)
 
@@ -396,22 +412,22 @@ A row naming two PRs is split between them; #143 also appears above for its pack
 | repo-cli internal/GlobPattern.ts | #305 | partial | adopted in R2b | `internal/GlobPattern.ts` is deleted (see #57). |
 | repo-cli Knowledge/KnowledgeDoctor.leases.ts, Skills/Skills.patches.ts CODEOWNERS compilers | (none) | partial | excluded (R2b) | Not a map site; found by the R2b `git grep '[^/]*'` owner census. `globTokens`/`globSource`/`codeownersPattern` implement the gitignore/CODEOWNERS dialect: a slash anywhere anchors the pattern to the root, a trailing slash matches only below a directory, and a matched directory owns everything under it. `@beep/glob` has no spelling for directory ownership or slash-anchoring, the same reason #263 keeps the tsc `include` matcher. The two copies are identical; their deduplication into one repo-cli internal module is a defect outside R2b's files (KnowledgeDoctor is R5a's). |
 | schema Jsonc.ts | #1 | confirmed | migrated (R3a, W4-o) | `@beep/schema/Jsonc` deleted; every importer decodes through `Jsonc.bind`. See the `@beep/jsonc` section above. |
-| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | owner switch migrated (R3a, W4-o); `jsonc-parser` drop queued: R3b | The decode owner is `@beep/jsonc` (see the section above); the editing facade's `jsonc-parser` leaves in R3b. |
-| repo-cli internal/cli/Jsonc.ts | #2 | partial | re-export removed (R3a); editing facade queued: R3b | R3a removed the `decodeJsoncTextAs` re-export (W4-o); the sync editing facade moves onto `JsoncModifier`/`JsoncFormatter` in R3b. |
-| repo-cli internal/cli/Json.ts | #3 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
-| repo-cli Skills/Skills.render.ts | #4 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
-| repo-cli Models | #5 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli Knowledge/Knowledge.refs.ts | #6 | confirmed | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli Lint/Lint.command.ts | #7 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli Quality | #8 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli Laws/AllowlistCheck.ts | #9 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-configs internal/laws/EffectLawsAllowlist | #10 | confirmed | queued: R3b | repo-configs `EffectLawsAllowlist` onto `Jsonc.JsoncFromString`. |
-| repo-cli test | #12 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| root package.json | #13 | partial | queued: R3b | Root catalog entry and devDependency removed last. |
-| repo-cli | #226 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli | #274 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
-| repo-cli Skills/ | #284 | partial | queued: R3b | The five Skills `format`+`applyEdits` copies collapse onto `JsoncFormatter` behind `Json.ts`. |
-| repo-cli src | #306 | partial | queued: R3b | Part of the repo-cli-wide `jsonc-parser` removal. |
+| schema Jsonc.ts and the repo-cli jsonc facade | #255 | partial | migrated (R3a owner switch, R3b `jsonc-parser` drop; W4-o) | The decode owner is `@beep/jsonc` (see the section above); R3b moved the editing facade onto `JsoncModifier`. |
+| repo-cli internal/cli/Jsonc.ts | #2 | partial | migrated (R3a re-export removed; R3b facade onto `JsoncModifier.modifyWithFormattingResult`) | See the `@beep/jsonc` section above. |
+| repo-cli internal/cli/Json.ts | #3 | partial | adopted in R3b | `renderPrettyCommandJson` formats through `JsoncFormatter`; the five Skills copies call it. |
+| repo-cli Skills/Skills.render.ts | #4 | partial | adopted in R3b | The three copies call `renderPrettyCommandJson`. |
+| repo-cli Models | #5 | partial | adopted in R3b | `modelsParseJson` returns a `JsoncNode` (strict JSON, duplicate keys refused); apply and locator read `toValue()`. |
+| repo-cli Knowledge/Knowledge.refs.ts | #6 | confirmed | adopted in R3b | The evidence documents read through `Jsonc.parseTreeResult`, `find` and `toValue`; offsets unchanged (tree leg identical). |
+| repo-cli Lint/Lint.command.ts | #7 | partial | no site left (R3b) | `Lint.command.ts` imports no `jsonc-parser` at the R3b base (4-CI rewrote the file); the Lint group's remaining sites, `PolicyFingerprint` and `PolicyFingerprintJson`, moved in R3b. |
+| repo-cli Quality | #8 | partial | adopted in R3b | `Quality.command`, `FallowQuality.command` and `Quality.osv-ignore` parse through `Jsonc.parseResult`. |
+| repo-cli Laws/AllowlistCheck.ts | #9 | partial | adopted in R3b | `parseAllowlistText` maps `Jsonc.parseResult` errors to the same `parse error at offset <n>` lines. |
+| repo-configs internal/laws/EffectLawsAllowlist | #10 | confirmed | adopted in R3b | Onto `Jsonc.parseResult` rather than `Jsonc.JsoncFromString`, to keep the allowlist's own error text (see the `@beep/jsonc` section). |
+| repo-cli test | #12 | partial | adopted in R3b | Ten test files read through `Jsonc.parse`/`parseResult` or format through `JsoncFormatter`. |
+| root package.json | #13 | partial | adopted in R3b | The devDependency is removed; the catalog entry stays for the `@beep/config-file` and `@beep/jsonc` oracles (W4 closeout drop rule). |
+| repo-cli | #226 | partial | adopted in R3b | Part of the repo-cli-wide `jsonc-parser` removal; no importer is left. |
+| repo-cli | #274 | partial | adopted in R3b | Part of the repo-cli-wide `jsonc-parser` removal; no importer is left. |
+| repo-cli Skills/ | #284 | partial | adopted in R3b | The five copies call `renderPrettyCommandJson` (`Json.ts`). |
+| repo-cli src | #306 | partial | adopted in R3b | Part of the repo-cli-wide `jsonc-parser` removal; no importer is left. |
 | repo-cli VersionSync/internal/updaters/YamlFileUpdater.ts | #24 | partial | adopted in R4 | `updateYamlValue` reads the current value through `@beep/yaml` `YamlDocument.parse` and writes with `YamlFormat.modifyToString`, which splices only the target scalar (the old `parseDocument` + `setIn` + `toString` re-rendered the whole file: flow collections respaced, long scalars folded at 80 columns). When the kit cannot splice (an insertion of a missing key, or a block, multi-line, tagged or anchored target) the updater re-serializes with `indentSequences: true, quoteStyle: "auto"`, the `yaml` npm layout; `test/version-sync-yaml-updater.test.ts` pins an insertion beside an indented `ports` list. `replaceNodeVersionWithFile` removes and inserts a key, which re-serializes the document under both writers, with the same options. A parse failure is now a `VersionSyncError` instead of an edit on an error-bearing document. Parity: `research/yaml-drop-parity-r4.json` (20 `updateYamlValue` cases, 14 `byte-minimal` and 6 identical; 2 `replaceNodeVersionWithFile` cases, 1 `byte-minimal`, 1 `document-rerender` with every comment kept) and `test/version-sync-yaml-updater.test.ts`. |
 | repo-cli Quality/FallowQuality.command.ts | #26 | confirmed | adopted in R4 | `yamlDocumentValue` parses workflow YAML with `effect/encoding/Yaml` `parse`; a parse failure keeps the "Invalid workflow YAML <file>: <cause>" message (exit code 1). Parity: every tracked `.github/**` workflow and action file parses to the same value (`research/yaml-drop-parity-r4.json`, 18/18). |
 | repo-cli Models/Models.manifest.service.ts | #28 | partial | adopted in R4 | The writer renders through `@beep/yaml` `Yaml.stringify` with `indentSequences: true, quoteStyle: "auto"` (the `yaml` npm layout); `load` was 3-3's. Byte parity over the operator manifest and `seedModelsManifest`: both identical (`research/yaml-drop-parity-r4.json`). |
