@@ -322,6 +322,16 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
 );
 
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("rejects a blank hash salt as configuration", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const blank = TranscriptDiscoveryInput.make({ ...f.input([f.dir]), hashSalt: Redacted.make("  ") });
+      expect(yield* makeTranscriptDiscovery(blank).pipe(Effect.flip)).toMatchObject({ reason: "configuration" });
+    })
+  )
+);
+
+it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("refuses concurrent discovery and closes owned helpers when an active read is interrupted", () =>
     Effect.gen(function* () {
       const f = yield* fixture();

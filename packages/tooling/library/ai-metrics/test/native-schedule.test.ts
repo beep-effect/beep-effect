@@ -192,6 +192,45 @@ const replayPolicy = (targetId: Sha256Hex, minimumDelayMillis = 100) =>
     ),
   });
 
+// A clock pinned at `millis`, delegating sleeps and monotonic time to `clock`.
+const fixedClock = (clock: Clock.Clock, millis: number): Clock.Clock => ({
+  sleep: (duration) => clock.sleep(duration),
+  monotonicTimeNanos: clock.monotonicTimeNanos,
+  monotonicTimeNanosUnsafe: () => clock.monotonicTimeNanosUnsafe(),
+  currentTimeNanos: Effect.succeed(BigInt(millis) * 1000000n),
+  currentTimeNanosUnsafe: () => BigInt(millis) * 1000000n,
+  currentTimeMillis: Effect.succeed(millis),
+  currentTimeMillisUnsafe: () => millis,
+});
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("visits each event once per tick when the event budget exceeds the backlog", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const scheduler = yield* f.reopen(NativeSchedulePolicy.make({ ...schedulePolicy, maxEvents: 2 }));
+      const tick = yield* scheduler.tick;
+      assertTrue(tick._tag === "Complete");
+      expect(tick.outcomes).toHaveLength(1);
+      expect(yield* Ref.get(f.posts)).toBe(1);
+    })
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("holds a candidate whose prior attempt is later than the current clock", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const scheduler = yield* f.reopen();
+      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      const clock = yield* Clock.Clock;
+      const past = (yield* Clock.currentTimeMillis) - 60000;
+      const regressed = yield* scheduler.tick.pipe(Effect.provideService(Clock.Clock, fixedClock(clock, past)));
+      expect(regressed).toMatchObject({ outcomes: [{ reason: "clock-regression" }] });
+      expect(yield* Ref.get(f.posts)).toBe(1);
+    })
+  )
+);
+
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
   it.effect("rejects replay qualification for another target before persisting a schedule", () =>
     Effect.gen(function* () {
@@ -208,17 +247,25 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       const scheduler = yield* f.reopen(replayPolicy(f.config.targetId, 400));
-      yield* scheduler.tick;
-      yield* Effect.sleep(120);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] });
+      // The scheduler reads the time through a pinned clock that only the test advances,
+      // so a loaded host cannot stretch a delay window between two ticks.
+      const clock = yield* Clock.Clock;
+      const now = yield* Ref.make(yield* Clock.currentTimeMillis);
+      const tick = Effect.flatMap(Ref.get(now), (millis) =>
+        scheduler.tick.pipe(Effect.provideService(Clock.Clock, fixedClock(clock, millis)))
+      );
+      const advance = (millis: number) => Ref.update(now, (current) => current + millis);
+      yield* tick;
+      yield* advance(120);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Reconciled", result: { _tag: "Missing" } }] });
       yield* Ref.set(f.readStatus, 503);
-      yield* Effect.sleep(300);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
+      yield* advance(300);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Failed", reason: "readback" }] });
       expect(yield* Ref.get(f.posts)).toBe(1);
       yield* Ref.set(f.readStatus, 200);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
-      yield* Effect.sleep(120);
-      expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      expect(yield* tick).toMatchObject({ outcomes: [{ reason: "query-delay" }] });
+      yield* advance(120);
+      expect(yield* tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
     })
   )
