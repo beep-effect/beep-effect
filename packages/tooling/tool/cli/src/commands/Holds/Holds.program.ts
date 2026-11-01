@@ -11,10 +11,11 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { HoldsError } from "./Holds.errors.ts";
-import { anchorKey, heldListFor, holdLintFindingText, lintHolds } from "./Holds.inventory.ts";
+import { anchorKey, heldListFor, holdLintFindingText, lintHolds, liveAnchorValues } from "./Holds.inventory.ts";
 import { HoldId, HoldVersionId } from "./Holds.schemas.ts";
 import { HoldLedger, HoldProbe, HoldProbeRequest } from "./Holds.service.ts";
 import { HoldSites } from "./Holds.sites.ts";
@@ -137,13 +138,9 @@ export const runHoldsProbe = Effect.fn("Holds.probeProgram")(function* (input: H
   return A.append(report, `[holds] recorded ${run.id}; confirmed verdict: ${confirmed}`);
 });
 
-const manifestsNamedBy = (live: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<string> =>
-  pipe(
-    live,
-    A.flatMap((version) => version.proposition.subject.anchors),
-    A.map((anchor) => (anchor._tag === "ManifestDependency" ? O.some(anchor.manifest) : O.none())),
-    A.getSomes
-  );
+const manifestsNamedBy = liveAnchorValues((anchor) =>
+  anchor._tag === "ManifestDependency" ? O.some(anchor.manifest) : O.none()
+);
 
 const lintSnapshot = Effect.fn("Holds.lintSnapshot")(function* (live: ReadonlyArray<HoldClaimVersion>) {
   const sites = yield* HoldSites;
@@ -151,38 +148,53 @@ const lintSnapshot = Effect.fn("Holds.lintSnapshot")(function* (live: ReadonlyAr
   return lintHolds(snapshot, live);
 });
 
+// The anchor keys each hold lost, from the Orphaned findings.
+const goneAnchorsByHold = (findings: ReadonlyArray<HoldLintFinding>): HashMap.HashMap<string, ReadonlyArray<string>> =>
+  A.reduce(findings, HashMap.empty<string, ReadonlyArray<string>>(), (gone, finding) =>
+    finding._tag === "Orphaned"
+      ? HashMap.set(
+          gone,
+          finding.holdId,
+          A.append(O.getOrElse(HashMap.get(gone, finding.holdId), A.empty), anchorKey(finding.anchor))
+        )
+      : gone
+  );
+
+// Version ids are not guaranteed consecutive, so skip any id the ledger already uses.
+const unusedVersionId = (holdId: string, n: number, taken: HashSet.HashSet<string>): typeof HoldVersionId.Type =>
+  HashSet.has(taken, `${holdId}@${n}`) ? unusedVersionId(holdId, n + 1, taken) : HoldVersionId.make(`${holdId}@${n}`);
+
+// Every anchor the lint can check is gone, so nothing in config still enforces the hold.
+const isFullyOrphaned = (version: HoldClaimVersion, gone: ReadonlyArray<string>): boolean =>
+  A.length(gone) ===
+  A.length(A.filter(version.proposition.subject.anchors, (anchor) => anchor._tag !== "SyncpackHeld"));
+
 const tombstonesFor = Effect.fn("Holds.tombstones")(function* (
   all: ReadonlyArray<HoldClaimVersion>,
   live: ReadonlyArray<HoldClaimVersion>,
-  findings: ReadonlyArray<HoldLintFinding>
+  gone: HashMap.HashMap<string, ReadonlyArray<string>>
 ) {
   const at = yield* DateTime.now;
-  const counts = A.reduce(all, HashMap.empty<string, number>(), (tally, row) =>
-    HashMap.set(tally, row.logicalKey, O.getOrElse(HashMap.get(tally, row.logicalKey), () => 0) + 1)
-  );
-  const orphanReasons = A.reduce(findings, HashMap.empty<string, ReadonlyArray<string>>(), (reasons, finding) =>
-    finding._tag === "Orphaned"
-      ? HashMap.set(
-          reasons,
-          finding.holdId,
-          A.append(O.getOrElse(HashMap.get(reasons, finding.holdId), A.empty), anchorKey(finding.anchor))
-        )
-      : reasons
-  );
+  const taken = HashSet.fromIterable(A.map(all, (row) => row.id));
   return A.getSomes(
     A.map(live, (version) =>
-      O.map(
-        HashMap.get(orphanReasons, version.proposition.holdId),
-        (gone): HoldClaimVersion => ({
-          ...version,
-          // The tombstone keeps the proposition so a re-introduced hold can cite what was retired.
-          id: HoldVersionId.make(
-            `${version.proposition.holdId}@${O.getOrElse(HashMap.get(counts, version.logicalKey), () => 0) + 1}`
-          ),
-          supersedes: O.some(version.id),
-          knowledge: { ...version.knowledge, recordedAt: at },
-          review: { _tag: "Retracted", reason: `Anchor gone: ${A.join(gone, ", ")}.`, at },
-        })
+      pipe(
+        HashMap.get(gone, version.proposition.holdId),
+        O.filter((keys) => isFullyOrphaned(version, keys)),
+        O.map(
+          (keys): HoldClaimVersion => ({
+            ...version,
+            // The tombstone keeps the proposition so a re-introduced hold can cite what was retired.
+            id: unusedVersionId(
+              version.proposition.holdId,
+              A.length(A.filter(all, (row) => row.logicalKey === version.logicalKey)) + 1,
+              taken
+            ),
+            supersedes: O.some(version.id),
+            knowledge: { ...version.knowledge, recordedAt: at },
+            review: { _tag: "Retracted", reason: `Anchor gone: ${A.join(keys, ", ")}.`, at },
+          })
+        )
       )
     )
   );
@@ -193,10 +205,22 @@ const writeLintFixes = Effect.fn("Holds.writeLintFixes")(function* (
   findings: ReadonlyArray<HoldLintFinding>
 ) {
   const ledger = yield* HoldLedger;
-  const tombstones = yield* tombstonesFor(yield* ledger.allVersions, live, findings);
+  const gone = goneAnchorsByHold(findings);
+  const tombstones = yield* tombstonesFor(yield* ledger.allVersions, live, gone);
   yield* ledger.appendVersions(tombstones);
   yield* ledger.writeHeldList(heldListFor(yield* ledger.currentVersions));
-  return A.map(tombstones, (tombstone) => `[holds] tombstoned ${tombstone.id}: ${tombstone.proposition.holdId}`);
+  // A hold that lost only some anchors may still apply, so it stays live and the lint keeps failing on it.
+  const kept = A.filter(live, (version) =>
+    O.exists(HashMap.get(gone, version.proposition.holdId), (keys) => !isFullyOrphaned(version, keys))
+  );
+  return [
+    ...A.map(tombstones, (tombstone) => `[holds] tombstoned ${tombstone.id}: ${tombstone.proposition.holdId}`),
+    ...A.map(
+      kept,
+      (version) =>
+        `[holds] kept ${version.proposition.holdId}: some anchors remain; update or retire the record by hand`
+    ),
+  ];
 });
 
 /**

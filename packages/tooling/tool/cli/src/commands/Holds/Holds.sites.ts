@@ -16,8 +16,9 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { Node, SyntaxKind } from "ts-morph";
 import { decodeTomlTextWith } from "../../internal/schema/TextCodec.ts";
+import { createInMemoryTsMorphProject } from "../../internal/tsmorph/ProjectFactory.ts";
 import { HoldsError, holdsPlatformError } from "./Holds.errors.ts";
 import { HoldAnchor, HoldSiteSnapshot } from "./Holds.schemas.ts";
 import { holdLedgerDirectory, syncpackHeldListFile } from "./Holds.service.ts";
@@ -50,7 +51,27 @@ const decodeWorkspaceManifest = S.decodeUnknownEffect(S.fromJsonString(Workspace
 const decodeHeldList = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
 const decodeOsvConfig = decodeTomlTextWith(S.decodeUnknownEffect(OsvConfig));
 
-const syncpackLabelPattern = /\blabel:\s*"([^"]+)"/gu;
+// Read the labels from the syntax tree: comments and quote style must not change what counts as a group.
+const syncpackVersionGroupLabels = (text: string): ReadonlyArray<string> =>
+  pipe(
+    createInMemoryTsMorphProject()
+      .createSourceFile("syncpack.config.ts", text, { overwrite: true })
+      .getDescendantsOfKind(SyntaxKind.PropertyAssignment),
+    A.filter((property) => property.getName() === "versionGroups"),
+    A.flatMap((property) =>
+      O.toArray(O.fromUndefinedOr(property.getInitializerIfKind(SyntaxKind.ArrayLiteralExpression)))
+    ),
+    A.flatMap((groups) => groups.getElements()),
+    A.flatMap((group) =>
+      Node.isObjectLiteralExpression(group) ? O.toArray(O.fromUndefinedOr(group.getProperty("label"))) : []
+    ),
+    A.flatMap((label) =>
+      Node.isPropertyAssignment(label) ? O.toArray(O.fromUndefinedOr(label.getInitializer())) : []
+    ),
+    A.flatMap((value) =>
+      Node.isStringLiteral(value) || Node.isNoSubstitutionTemplateLiteral(value) ? [value.getLiteralValue()] : []
+    )
+  );
 
 const keysOf = (record: Readonly<Record<string, string>> | undefined): ReadonlyArray<string> =>
   O.match(O.fromUndefinedOr(record), { onNone: () => [], onSome: R.keys });
@@ -198,9 +219,7 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
     ];
     const versionGroups = pipe(
       O.toArray(syncpackText),
-      A.flatMap((text) => A.fromIterable(Str.matchAll(syncpackLabelPattern)(text))),
-      A.map((match) => O.fromNullishOr(match[1])),
-      A.getSomes,
+      A.flatMap(syncpackVersionGroupLabels),
       A.map((label) => HoldAnchor.cases.SyncpackVersionGroup.make({ label }))
     );
     const present = [

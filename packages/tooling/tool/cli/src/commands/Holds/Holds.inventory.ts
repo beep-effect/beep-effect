@@ -93,13 +93,40 @@ export const liveHoldVersions = (rows: ReadonlyArray<HoldClaimVersion>): Readonl
  */
 export const heldListFor = (live: ReadonlyArray<HoldClaimVersion>): ReadonlyArray<string> =>
   pipe(
-    live,
-    A.flatMap((version) => version.proposition.subject.anchors),
-    A.map((anchor) => (anchor._tag === "SyncpackHeld" ? O.some(anchor.dependency) : O.none())),
-    A.getSomes,
+    liveAnchorValues((anchor) => (anchor._tag === "SyncpackHeld" ? O.some(anchor.dependency) : O.none()))(live),
     A.dedupe,
     A.sort(Order.String)
   );
+
+/**
+ * Collect one value from every anchor of the given hold versions that `pick` selects.
+ *
+ * **Example** (Every manifest a hold names)
+ *
+ * ```ts
+ * import { liveAnchorValues } from "@beep/repo-cli/commands/Holds"
+ * import * as O from "effect/Option"
+ *
+ * const manifests = liveAnchorValues((anchor) =>
+ *   anchor._tag === "ManifestDependency" ? O.some(anchor.manifest) : O.none()
+ * )
+ * console.log(manifests([])) // []
+ * ```
+ *
+ * @param pick - Selects a value from an anchor, or `None` to skip it.
+ * @returns A function from hold versions to the selected values, in anchor order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const liveAnchorValues =
+  <B>(pick: (anchor: HoldAnchor) => O.Option<B>) =>
+  (live: ReadonlyArray<HoldClaimVersion>): Array<B> =>
+    pipe(
+      live,
+      A.flatMap((version) => version.proposition.subject.anchors),
+      A.map(pick),
+      A.getSomes
+    );
 
 /**
  * Compare live hold versions with the hold-shaped sites in a checkout.

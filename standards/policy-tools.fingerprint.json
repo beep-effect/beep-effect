@@ -1513,7 +1513,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
         "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
         "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
-        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts"
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+        "packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts"
       ]
     },
     {

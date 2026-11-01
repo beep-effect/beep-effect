@@ -26,7 +26,7 @@ root-input-bytes change on the same root computations.
 This reviews the declared configuration change only. It is not evidence that
 any computation is newly qualified or that a quality gate has passed.
 
-Current `turbo.json` SHA-256: `cb83aa39d2b8a9be408efc5387b6be4cd7720f2945c0bc10fae701289717909e`.
+Current `turbo.json` SHA-256: `20b56a6dab73e6c929d2b676e55cf8f73e8e8144d2dcdf064c130d923bc08293`.
 
 Drifted computations (subject `//`, root input bytes only):
 
@@ -95,6 +95,7 @@ Drifted computations (subject `//`, root input bytes only):
 
 New cached computation: `//#lint:policy-fingerprint:holds`, the generated seal
 whose inputs are the modules `beep holds lint` reaches (the `Holds` command
-group, `@beep/epistemics` and the shared CLI closure).
+group, `@beep/epistemics`, the in-memory ts-morph project factory that reads
+`syncpack.config.ts` version-group labels, and the shared CLI closure).
 
 New uncached computation: `//#lint:holds`.

@@ -14,7 +14,7 @@
       "reason": "Re-record the root subject after adding the //#lint:holds cheap-gates task and its generated policy seal (goals/hold-ledger slice 2); other root computations drift on root input bytes only; no qualification is granted.",
       "basis": {
         "path": "goals/hold-ledger/research/cache-baseline-review-2026-10-31-inventory.md",
-        "sha256": "de616263490bb838e38ba76c16edce4f72717847768e857d4e1c747f8f7f451d"
+        "sha256": "f8a9aad85df928c8bb43ea183b631a897dbc14e2a2987c3a3e826c24f1a04dd4"
       }
     },
     "@beep/acp": {
@@ -4171,7 +4171,8 @@
             "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
             "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
             "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
-            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts"
+            "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
+            "packages/tooling/tool/cli/src/internal/tsmorph/ProjectFactory.ts"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -136139,7 +136140,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "cb83aa39d2b8a9be408efc5387b6be4cd7720f2945c0bc10fae701289717909e"
+        "sha256": "20b56a6dab73e6c929d2b676e55cf8f73e8e8144d2dcdf064c130d923bc08293"
       }
     ]
   }

@@ -213,7 +213,20 @@ const rootManifest =
 
 const osvToml = '[[PackageOverrides]]\nname = "braces"\nignore = true\n\n[[PackageOverrides]]\nname = "braces"\n';
 
-const syncpackConfig = 'const config = { versionGroups: [{ label: "infra keeps TypeScript 6" }] };\n';
+// A commented-out group must not count, and a single-quoted label must.
+const syncpackConfig = A.join(
+  [
+    "const config = {",
+    "  versionGroups: [",
+    '    { label: "infra keeps TypeScript 6" },',
+    '    // { label: "retired group" },',
+    "    { label: 'single quoted group' },",
+    "  ],",
+    "};",
+    "",
+  ],
+  "\n"
+);
 
 const coveringHolds = [
   claim({ holdId: "glob-hold", anchors: [glob] }),
@@ -253,6 +266,7 @@ layer(layerFor(checkout), { timeout: "30 seconds" })("a checkout whose ledger co
         "osv:braces",
         "catalog:jsdom",
         "version-group:infra keeps TypeScript 6",
+        "version-group:single quoted group",
         "manifest:pkgs/drizzle/package.json#tstyche",
       ]);
       expect(snapshot.heldList).toEqual(["jsdom"]);
@@ -341,6 +355,58 @@ layer(
       );
       expect(yield* runHoldsLint(false)).toEqual(["[holds] lint ok: 5 live hold(s) cover every site."]);
     })
+  );
+});
+
+layer(
+  layerFor({
+    ...checkout,
+    "package.json": '{"name":"@beep/root","catalog":{"jsdom":"30.0.1"},"patchedDependencies":{"effect@4.1.0":"x"}}',
+    "hold-ledger/claims.jsonl": `${A.join(
+      [
+        ...A.filter(coveringHolds, (line) => !Str.includes('"holdId":"glob-hold"')(line)),
+        claim({ holdId: "glob-hold", anchors: [glob, jsdomCatalog] }),
+      ],
+      "\n"
+    )}\n`,
+  }),
+  { timeout: "30 seconds" }
+)("a hold that lost only some of its anchors", (it) => {
+  it.effect("is kept by --write and still fails the lint", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(runHoldsLint(true));
+      expect(Str.split(error.message, "\n")).toEqual([
+        "[holds] kept glob-hold: some anchors remain; update or retire the record by hand",
+        "orphaned: glob-hold anchors override:glob, which is gone",
+      ]);
+      const ledger = yield* HoldLedger;
+      expect(A.length(yield* ledger.allVersions)).toBe(6);
+    })
+  );
+});
+
+layer(
+  layerFor({
+    ...checkout,
+    "package.json": '{"name":"@beep/root","catalog":{"jsdom":"30.0.1"},"patchedDependencies":{"effect@4.1.0":"x"}}',
+    "hold-ledger/claims.jsonl": `${A.join(
+      [
+        ...A.filter(coveringHolds, (line) => !Str.includes('"holdId":"glob-hold"')(line)),
+        claim({ holdId: "glob-hold", anchors: [glob], version: 1 }),
+        claim({ holdId: "glob-hold", anchors: [glob], version: 3, supersedes: "glob-hold@1" }),
+      ],
+      "\n"
+    )}\n`,
+  }),
+  { timeout: "30 seconds" }
+)("a hold whose version numbers have a gap", (it) => {
+  it.effect("gives the tombstone an id no row uses", () =>
+    Effect.map(runHoldsLint(true), (lines) =>
+      expect(lines).toEqual([
+        "[holds] tombstoned glob-hold@4: glob-hold",
+        "[holds] lint ok: 5 live hold(s) cover every site.",
+      ])
+    )
   );
 });
 
