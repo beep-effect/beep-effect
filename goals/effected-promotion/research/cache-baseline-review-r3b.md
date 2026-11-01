@@ -3,9 +3,9 @@
 Reviewed 2026-11-01 for roadmap PR R3b of `goals/effected-promotion` (the npm `jsonc-parser` package leaves
 `@beep/repo-cli`, `@beep/repo-configs` and the root devDependencies, W4-o and W4-h).
 
-`bun run beep quality cache-policy` reported 4 blocking findings, all introduced by this branch and all of one kind:
-configuration drift for `@beep/repo-configs` on four task tuples (`#check`, `#lint:deprecated-apis`, `#test`,
-`#test:property`).
+`bun run beep quality cache-policy` reported 5 blocking findings, all introduced by this branch and all of one kind,
+configuration drift: four for `@beep/repo-configs` on its task tuples (`#check`, `#lint:deprecated-apis`, `#test`,
+`#test:property`) and one for the root's `//#lint:policy-fingerprint:shared` (see "Root (`//`)").
 
 The cause is one manifest edit. `@beep/repo-configs` drops the third-party `jsonc-parser` dependency and gains
 `@beep/jsonc` as a workspace dependency, because `AllowlistJsoncTextToUnknown` now parses through
@@ -17,8 +17,8 @@ removed `jsonc-parser` entries.
 The other manifest edits report no drift: `@beep/repo-cli` drops `jsonc-parser` (it already depended on
 `@beep/jsonc`), the root drops its `jsonc-parser` devDependency (the catalog entry stays for the oracles), and
 `@beep/jsonc` gains `jsonc-parser` as the devDependency of its `test/JsoncParserOracle.test.ts`.
-`bun run beep lint policy-fingerprint` reports the seal tasks current, so `standards/policy-tools.fingerprint.json`
-and `turbo.json` are byte-identical.
+These manifest edits leave the policy-tools seal alone; the one seal change in this branch is the root's, under
+"Root (`//`)".
 
 ## Turbo coupling
 

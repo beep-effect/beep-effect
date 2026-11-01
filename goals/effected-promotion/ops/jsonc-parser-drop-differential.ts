@@ -30,7 +30,8 @@
  *    or token length, a longer or shorter recovered tail), the case is `intended:recovery-detail` only when the
  *    first error sits at the same offset; any other difference is unclassified. The exported site functions run as well: `parseGoalManifestText` over every goal manifest,
  *    `decodeAllowlistDocumentFromJsoncText` over the allowlist and its broken variants, and
- *    `selectOsvPackageOverrideIdsForAudit` over `osv-scanner.toml` and `bun.lock`.
+ *    `selectOsvPackageOverrideIdsForAudit` over `osv-scanner.toml` and `bun.lock`, whose selected ids must equal
+ *    the same selection over `jsonc-parser`'s reading of the lockfile.
  * 4. **tree** (offset parity): `modelsParseJson` and the trailing-comma tree reading `Knowledge.refs` uses, against
  *    `jsonc-parser` `parseTree`: the node value (`getNodeValue` against `toValue`) and the type, offset and length of
  *    every top-level property value (`findNodeAtLocation` against `find`).
@@ -658,16 +659,18 @@ const runParse = Effect.fn("JsoncDrop.runParse")(function* (root: string, corpus
     const legacyLock = legacyParse(lock, { allowTrailingComma: true });
     const legacyIds = O.isSome(legacyLock) ? "parsed" : "rejected";
     const current = selectOsvPackageOverrideIdsForAudit(osvConfig, lock, now);
+    // The ids the retired site selected: its selection over `jsonc-parser`'s reading, handed back as strict JSON.
+    const legacySelected = O.map(legacyLock, (value) =>
+      selectOsvPackageOverrideIdsForAudit(osvConfig, JSON.stringify(value), now)
+    );
     cases.push({
       leg: "parse",
       site: "selectOsvPackageOverrideIdsForAudit",
       id: `${id}:${legacyIds}:${A.length(current)}`,
-      outcome:
-        legacyIds === "rejected"
-          ? A.isReadonlyArrayEmpty(current)
-            ? "both-reject"
-            : "unclassified"
-          : parseOutcome(id, legacyLock, Result.getSuccess(Jsonc.parseResult(lock))),
+      outcome: O.match(legacySelected, {
+        onNone: () => (A.isReadonlyArrayEmpty(current) ? "both-reject" : "unclassified"),
+        onSome: (expected) => (JSON.stringify(expected) === JSON.stringify(current) ? "identical" : "unclassified"),
+      }),
     });
   }
   return legOf(cases);
