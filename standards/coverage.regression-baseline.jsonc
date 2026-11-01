@@ -34769,6 +34769,90 @@
             "functions": 14
           }
         },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts": {
+          "lines": 90.9,
+          "statements": 91.3,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts": {
+          "lines": 96.05,
+          "statements": 93.58,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 0,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Image/Image.command.ts": {
           "lines": 100,
           "statements": 96.77,
