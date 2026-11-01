@@ -136,7 +136,6 @@ Manifest projection (tool-owned; `beep models check`):
 | cursor.review | cursor-seat | `claude-opus-5-5-high` | — |
 | cursor.mechanical | cursor-seat | `composer-2.5` | — |
 | qa.judge | claude-code | `claude-opus-5-5` | — |
-| jsdoc.migrate-titles | grok-cli | `grok-4.7` | — |
 | deprecated.routable | proxy-workflow | `gpt-daybreak-blue-latest` | — |
 
 superseded: gpt-5.6-sol, gpt-6-sol, grok-4.6, gpt-5.6-luna, claude-opus-5, claude-opus-5-thinking-high, muse-spark-1.3, grok-4.5, gpt-5.4, gpt-5.4-mini

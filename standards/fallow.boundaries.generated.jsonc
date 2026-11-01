@@ -120,6 +120,12 @@
         ]
       },
       {
+        "name": "@beep/beep-effect-web",
+        "patterns": [
+          "apps/beep-effect-web/src/**"
+        ]
+      },
+      {
         "name": "@beep/box",
         "patterns": [
           "packages/drivers/box/src/**"
@@ -1576,6 +1582,17 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/beep-effect-web",
+        "allow": [
+          "@beep/beep-effect-web",
+          "@beep/public-site"
+        ],
+        "allowTypeOnly": [
+          "@beep/beep-effect-web",
+          "@beep/public-site"
         ]
       },
       {
@@ -4430,7 +4447,6 @@
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/repo-workspaces",
-          "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
           "@beep/semver",
@@ -4493,7 +4509,6 @@
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/repo-workspaces",
-          "@beep/runpod",
           "@beep/runtime-env",
           "@beep/schema",
           "@beep/semver",

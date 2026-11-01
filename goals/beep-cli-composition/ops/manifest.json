@@ -37,7 +37,8 @@
     "research/SOURCES.md",
     "research/design-record.md",
     "research/g3-lazy-dispatch.md",
-    "research/g4-task-fingerprint.md"
+    "research/g4-task-fingerprint.md",
+    "research/w0-retirements.md"
   ],
   "agentLaunchers": [
     {

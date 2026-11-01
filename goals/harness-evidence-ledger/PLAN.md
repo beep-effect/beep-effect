@@ -130,8 +130,8 @@ reflection-artifacts` passes.
 Flip the manifest phases and `initiative.status`, update README status and
 latest evidence, in the same PR as the final work.
 
-Acceptance: `bun run beep goals doctor` and `bun run beep lint goal-packets`
-pass; the verdict is recorded in `README.md`.
+Acceptance: `bun run beep goals doctor` and the `lint goal-packets` command
+(retired in beep-cli-composition W0; [`LintGoalPackets.command.ts` at f16d82e9f1](https://github.com/beep-effect/beep-effect/blob/f16d82e9f16d72f64d42b40284bf2867566e796b/packages/tooling/tool/cli/src/commands/Lint/LintGoalPackets.command.ts)) pass; the verdict is recorded in `README.md`.
 
 ## Closeout Checklist
 
