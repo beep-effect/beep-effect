@@ -14,6 +14,7 @@ import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -22,7 +23,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { parseDocument } from "yaml";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { manifestParser } from "../../internal/ManifestRead.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { ChangesetGraphError } from "./Quality.errors.ts";
@@ -458,26 +459,10 @@ export const changesetPackageReferencesFromText = Effect.fn("ChangesetGraph.chan
       return A.empty<ChangesetGraphPackageReference>();
     }
 
-    const document = yield* Effect.try({
-      try: () => parseDocument(frontmatter.value),
-      catch: (cause) => ChangesetGraphError.new(cause, `Failed to parse changeset frontmatter in ${file}.`, file),
-    });
-
-    if (!A.isReadonlyArrayEmpty(document.errors)) {
-      const message = pipe(
-        A.head(document.errors),
-        O.map((error) => error.message),
-        O.getOrElse(() => "YAML parser reported an unknown error.")
-      );
-      return yield* ChangesetGraphError.make({
-        message: `Invalid changeset frontmatter in ${file}: ${message}`,
-        file,
-      });
-    }
-
     const value = yield* Effect.try({
-      try: () => document.toJSON(),
-      catch: (cause) => ChangesetGraphError.new(cause, `Failed to read changeset frontmatter in ${file}.`, file),
+      try: (): unknown => Yaml.parse(frontmatter.value),
+      catch: (cause) =>
+        ChangesetGraphError.new(cause, messageWithCause(`Invalid changeset frontmatter in ${file}`, cause), file),
     });
 
     if (P.isNullish(value)) {

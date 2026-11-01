@@ -210,14 +210,15 @@ export class StringifyOptionsInput extends S.Opaque<StringifyOptionsInput, { rea
     ),
     /**
      * Quote style for a `plain`-styled scalar that requires quoting. Default
-     * `"single"`. Values needing YAML escapes still render double-quoted.
+     * `"single"`; `"auto"` picks per value. Values needing YAML escapes still
+     * render double-quoted.
      *
      * @since 0.0.0
      */
     quoteStyle: S.optionalKey(QuoteStyle).pipe(
       $I.annoteKey("StringifyOptionsInput.quoteStyle", {
         description:
-          'Quote style for a `plain`-styled scalar that requires quoting. Default `"single"`. Values needing YAML escapes still render double-quoted.',
+          'Quote style for a `plain`-styled scalar that requires quoting. Default `"single"`; `"auto"` picks per value. Values needing YAML escapes still render double-quoted.',
       })
     ),
     /**

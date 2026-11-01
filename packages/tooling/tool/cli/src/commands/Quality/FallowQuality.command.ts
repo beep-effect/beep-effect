@@ -15,6 +15,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -25,7 +26,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parse as parseJsonc } from "jsonc-parser";
 import { ts } from "ts-morph";
-import { parseDocument } from "yaml";
+import { messageWithCause } from "../../internal/cli/CommandErrorFields.ts";
 import { runCapturedStreams } from "../../internal/process/index.ts";
 import {
   ensureFallowAuditCacheRoot,
@@ -484,36 +485,42 @@ const yamlDocumentValue = Effect.fn("FallowQuality.yamlDocumentValue")(function*
   filePath: string,
   text: string
 ): Effect.fn.Return<unknown, QualityScriptCommandError> {
-  const document = yield* Effect.try({
-    try: () => parseDocument(text),
-    catch: (cause) =>
-      QualityScriptCommandError.make({
-        message: `Failed to parse workflow YAML ${filePath}.`,
-        cause,
-      }),
-  });
-
-  if (!A.isReadonlyArrayEmpty(document.errors)) {
-    const message = pipe(
-      A.head(document.errors),
-      O.map((error) => error.message),
-      O.getOrElse(() => "YAML parser reported an unknown error.")
-    );
-    return yield* QualityScriptCommandError.make({
-      message: `Invalid workflow YAML ${filePath}: ${message}`,
-      exitCode: 1,
-    });
-  }
-
   return yield* Effect.try({
-    try: () => document.toJSON(),
+    try: (): unknown => Yaml.parse(text),
     catch: (cause) =>
       QualityScriptCommandError.make({
-        message: `Failed to read workflow YAML ${filePath}.`,
+        message: messageWithCause(`Invalid workflow YAML ${filePath}`, cause),
+        exitCode: 1,
         cause,
       }),
   });
 });
+
+/**
+ * Reads a workflow file's YAML text into a plain value, the step the Fallow CI
+ * contract check runs before it inspects the workflow.
+ *
+ * **Details**
+ *
+ * The test seam exposes the parse failure: malformed YAML fails with a
+ * `QualityScriptCommandError` whose message is
+ * `Invalid workflow YAML <file>: <cause>` and whose `exitCode` is 1.
+ *
+ * **Example** (Read a workflow value)
+ *
+ * ```ts
+ * import { workflowYamlValueForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ * import * as Effect from "effect/Effect"
+ *
+ * const value = Effect.runSync(workflowYamlValueForTesting(".github/workflows/check.yml", "name: Check\n"))
+ * console.log(value) // { name: "Check" }
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const workflowYamlValueForTesting = yamlDocumentValue;
 
 const countFor = (findings: ReadonlyArray<FallowFinding>, attribution: typeof FindingAttributionKind.Type): number =>
   pipe(

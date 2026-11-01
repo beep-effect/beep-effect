@@ -177,6 +177,10 @@
     {
       "path": "ops/markdown-toc-differential.ts",
       "purpose": "Roadmap R5b differential: @beep/markdown MarkdownToc against a disposable @effect/markdown-toc 0.1.0 install over every tracked Markdown file and every generated docgen page, with the page's embedded TOC compared to the oracle."
+    },
+    {
+      "path": "ops/yaml-drop-parity.ts",
+      "purpose": "R4 parity: frozen copies of every retired npm yaml call (compose and models-manifest writers, Research renderCard, the Runners/ChangesetGraph/FallowQuality/workflow-test reads, the VersionSync YamlFileUpdater edits, the Models yaml-path locator) against the sites' current code over the live inputs and fixtures, plus a changeset-graph fingerprint."
     }
   ],
   "provides": [],

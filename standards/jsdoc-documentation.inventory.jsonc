@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T04:32:58.688Z",
+  "generatedAt": "2026-11-01T06:54:00.883Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
     "publicModules": 3640,
-    "publicExports": 25771,
+    "publicExports": 25772,
     "openModules": 161,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -70553,8 +70553,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 174,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-174-yamlstringifyoptions",
+          "line": 180,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-180-yamlstringifyoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -70576,8 +70576,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 336,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-336-yamlparseerror",
+          "line": 343,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-343-yamlparseerror",
           "currentTags": [
             "@public",
             "@category",
@@ -70599,8 +70599,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 415,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-415-yamlstringifyerror",
+          "line": 422,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-422-yamlstringifyerror",
           "currentTags": [
             "@public",
             "@category",
@@ -70622,8 +70622,8 @@
           "exportKind": "interface",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 685,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-685-yamlboundcodec",
+          "line": 692,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-692-yamlboundcodec",
           "currentTags": [
             "@public",
             "@category",
@@ -70645,8 +70645,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 765,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-765-yaml",
+          "line": 772,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-772-yaml",
           "currentTags": [
             "@public",
             "@category",
@@ -71128,8 +71128,8 @@
           "exportKind": "type",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 93,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-93-yamlrangelike",
+          "line": 96,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-96-yamlrangelike",
           "currentTags": [
             "@public",
             "@category",
@@ -71151,8 +71151,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 139,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-139-yamlformattingoptions",
+          "line": 144,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-144-yamlformattingoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -71174,8 +71174,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 243,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-243-yamlmodificationerror",
+          "line": 249,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-249-yamlmodificationerror",
           "currentTags": [
             "@public",
             "@category",
@@ -71197,8 +71197,8 @@
           "exportKind": "class",
           "filePath": "src/YamlFormat.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlFormat.ts",
-          "line": 1108,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1108-yamlformat",
+          "line": 1355,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlformat-ts-1355-yamlformat",
           "currentTags": [
             "@public",
             "@category",
@@ -71657,8 +71657,8 @@
           "exportKind": "function",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1174,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1174-aliasexpansionlimit",
+          "line": 1184,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1184-aliasexpansionlimit",
           "currentTags": [
             "@category",
             "@since"
@@ -71771,8 +71771,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 113,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-113-quotestyle",
+          "line": 123,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-123-quotestyle",
           "currentTags": [
             "@public",
             "@category",
@@ -71794,8 +71794,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 127,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-127-quotestyle",
+          "line": 137,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-137-quotestyle",
           "currentTags": [
             "@public",
             "@category",
@@ -71817,8 +71817,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 154,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-154-quotecompat",
+          "line": 164,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-164-quotecompat",
           "currentTags": [
             "@public",
             "@category",
@@ -71840,8 +71840,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 168,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-168-quotecompat",
+          "line": 178,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-178-quotecompat",
           "currentTags": [
             "@public",
             "@category",
@@ -71863,8 +71863,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 187,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-187-scalarchomp",
+          "line": 197,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-197-scalarchomp",
           "currentTags": [
             "@public",
             "@category",
@@ -71886,8 +71886,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 201,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-201-scalarchomp",
+          "line": 211,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-211-scalarchomp",
           "currentTags": [
             "@public",
             "@category",
@@ -71909,8 +71909,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 222,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-222-yamlnodebase",
+          "line": 232,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-232-yamlnodebase",
           "currentTags": [
             "@public",
             "@category",
@@ -71932,8 +71932,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 366,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-366-yamlscalar",
+          "line": 376,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-376-yamlscalar",
           "currentTags": [
             "@public",
             "@category",
@@ -71955,8 +71955,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 571,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-571-yamlscalar",
+          "line": 581,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-581-yamlscalar",
           "currentTags": [
             "@public",
             "@category",
@@ -71978,8 +71978,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 470,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-470-yamlalias",
+          "line": 480,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-480-yamlalias",
           "currentTags": [
             "@public",
             "@category",
@@ -72001,8 +72001,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 662,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-662-yamlalias",
+          "line": 672,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-672-yamlalias",
           "currentTags": [
             "@public",
             "@category",
@@ -72024,8 +72024,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 602,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-602-yamlmap",
+          "line": 612,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-612-yamlmap",
           "currentTags": [
             "@public",
             "@category",
@@ -72047,8 +72047,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 788,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-788-yamlmap",
+          "line": 798,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-798-yamlmap",
           "currentTags": [
             "@public",
             "@category",
@@ -72070,8 +72070,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 632,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-632-yamlseq",
+          "line": 642,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-642-yamlseq",
           "currentTags": [
             "@public",
             "@category",
@@ -72093,8 +72093,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 871,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-871-yamlseq",
+          "line": 881,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-881-yamlseq",
           "currentTags": [
             "@public",
             "@category",
@@ -72116,8 +72116,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 700,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-700-yamlnode",
+          "line": 710,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-710-yamlnode",
           "currentTags": [
             "@public",
             "@category",
@@ -72139,8 +72139,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 716,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-716-yamlnode",
+          "line": 726,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-726-yamlnode",
           "currentTags": [
             "@public",
             "@category",
@@ -72162,8 +72162,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 744,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-744-yamlpair",
+          "line": 754,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-754-yamlpair",
           "currentTags": [
             "@public",
             "@category",
@@ -72185,8 +72185,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1117,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1117-aliasexpansionbudgetexceeded",
+          "line": 1127,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1127-aliasexpansionbudgetexceeded",
           "currentTags": [
             "@category",
             "@since"
@@ -72207,8 +72207,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1226,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1226-nodetojsvalue",
+          "line": 1236,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1236-nodetojsvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -359173,8 +359173,8 @@
           "exportKind": "const",
           "filePath": "src/compose.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/compose.ts",
-          "line": 44,
-          "anchor": "packages-tooling-library-ai-metrics-src-compose-ts-44-renderaimetricslocalphoenixcompose",
+          "line": 48,
+          "anchor": "packages-tooling-library-ai-metrics-src-compose-ts-48-renderaimetricslocalphoenixcompose",
           "currentTags": [
             "@category",
             "@since"
@@ -447649,7 +447649,7 @@
         "srcDir": "src",
         "sourceFileCount": 500,
         "publicModuleCount": 497,
-        "publicExportCount": 4635
+        "publicExportCount": 4636
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -455985,7 +455985,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -526290,8 +526290,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 56,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-56-modelslocatorreadershape",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-58-modelslocatorreadershape",
           "currentTags": [
             "@category",
             "@since"
@@ -526312,8 +526312,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 86,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-86-modelslocatorreader",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-88-modelslocatorreader",
           "currentTags": [
             "@category",
             "@since"
@@ -526334,8 +526334,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 111,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-111-modelsreadshellassign",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-113-modelsreadshellassign",
           "currentTags": [
             "@category",
             "@since"
@@ -526356,8 +526356,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 414,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-414-bound-model-segment",
+          "line": 467,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-467-bound-model-segment",
           "currentTags": [
             "@category",
             "@since"
@@ -526378,8 +526378,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 451,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-451-bindlocatormodel",
+          "line": 504,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-504-bindlocatormodel",
           "currentTags": [
             "@param",
             "@returns",
@@ -526402,8 +526402,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 486,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-486-modelsreadlocator",
+          "line": 539,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-539-modelsreadlocator",
           "currentTags": [
             "@category",
             "@since"
@@ -526424,8 +526424,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.locator.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.locator.service.ts",
-          "line": 532,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-532-modelslocatorreaderlive",
+          "line": 585,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-locator-service-ts-585-modelslocatorreaderlive",
           "currentTags": [
             "@category",
             "@since"
@@ -527247,8 +527247,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.service.ts",
-          "line": 55,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-55-manifestadoption",
+          "line": 60,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-60-manifestadoption",
           "currentTags": [
             "@category",
             "@since"
@@ -527269,8 +527269,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Models/Models.manifest.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.service.ts",
-          "line": 88,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-88-modelsmanifeststoreshape",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-93-modelsmanifeststoreshape",
           "currentTags": [
             "@category",
             "@since"
@@ -527291,8 +527291,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Models/Models.manifest.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.service.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-110-modelsmanifeststore",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-115-modelsmanifeststore",
           "currentTags": [
             "@category",
             "@since"
@@ -527313,8 +527313,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Models/Models.manifest.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Models/Models.manifest.service.ts",
-          "line": 238,
-          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-238-modelsmanifeststorelive",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-models-models-manifest-service-ts-246-modelsmanifeststorelive",
           "currentTags": [
             "@category",
             "@since"
@@ -535808,8 +535808,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 39,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-39-export-changesetgrapherror-from-quality-errors-ts",
+          "line": 40,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-40-export-changesetgrapherror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -535830,8 +535830,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-89-changesetgraphpackagereference",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-90-changesetgraphpackagereference",
           "currentTags": [
             "@category",
             "@since"
@@ -535852,8 +535852,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-123-changesetgraphsummary",
+          "line": 124,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-124-changesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -535874,8 +535874,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-204-changesetsparseclosingfenceline",
+          "line": 205,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-205-changesetsparseclosingfenceline",
           "currentTags": [
             "@param",
             "@returns",
@@ -535898,8 +535898,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 270,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-270-readchangesetgraphworkspacemanifest",
+          "line": 271,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-271-readchangesetgraphworkspacemanifest",
           "currentTags": [
             "@param",
             "@returns",
@@ -535922,8 +535922,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-340-collectworkspacepackagejsonfiles",
+          "line": 341,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-341-collectworkspacepackagejsonfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -535946,8 +535946,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 439,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-439-changesetpackagereferencesfromtext",
+          "line": 440,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-440-changesetpackagereferencesfromtext",
           "currentTags": [
             "@category",
             "@since"
@@ -535968,8 +535968,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 548,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-548-findmissingchangesetpackagereferences",
+          "line": 533,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-533-findmissingchangesetpackagereferences",
           "currentTags": [
             "@param",
             "@returns",
@@ -535992,8 +535992,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 619,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-619-makechangesetgraphsummary",
+          "line": 604,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-604-makechangesetgraphsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -536014,8 +536014,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetGraph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
-          "line": 646,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-646-runchangesetgraphcheck",
+          "line": 631,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetgraph-ts-631-runchangesetgraphcheck",
           "currentTags": [
             "@category",
             "@since"
@@ -537554,9 +537554,32 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 371,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-371-export-fallowciuploaddiagnosticsfortesting-from-internal-fallowcicontract-ts",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-372-export-fallowciuploaddiagnosticsfortesting-from-internal-fallowcicontract-ts",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "workflowYamlValueForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Quality/FallowQuality.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+          "line": 523,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-523-workflowyamlvaluefortesting",
+          "currentTags": [
+            "@internal",
             "@category",
             "@since"
           ],
@@ -537576,8 +537599,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 761,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-761-inheritedcodemodduplicationcountfortesting",
+          "line": 768,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-768-inheritedcodemodduplicationcountfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -537598,8 +537621,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1200,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1200-fallowauditdifffallbackargsfortesting",
+          "line": 1207,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1207-fallowauditdifffallbackargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -537622,8 +537645,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1274,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1274-fallowauditneedsdifffallbackfortesting",
+          "line": 1281,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1281-fallowauditneedsdifffallbackfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -537646,8 +537669,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 1477,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1477-collectauditdiffinputfortesting",
+          "line": 1484,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-1484-collectauditdiffinputfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -537670,8 +537693,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2032,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2032-reportinvariantdiagnosticsfortesting",
+          "line": 2039,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2039-reportinvariantdiagnosticsfortesting",
           "currentTags": [
             "@internal",
             "@category",
@@ -537693,8 +537716,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/FallowQuality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-          "line": 2821,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2821-qualityfallowcommand",
+          "line": 2828,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-fallowquality-command-ts-2828-qualityfallowcommand",
           "currentTags": [
             "@category",
             "@since"

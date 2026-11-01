@@ -74,6 +74,7 @@
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@beep/xdg": "workspace:^",
+    "@beep/yaml": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@opentelemetry/api": "catalog:",
     "@opentelemetry/core": "catalog:",
@@ -81,8 +82,7 @@
     "@opentelemetry/resources": "catalog:",
     "@opentelemetry/sdk-trace-base": "catalog:",
     "effect": "catalog:",
-    "protobufjs": "catalog:",
-    "yaml": "catalog:"
+    "protobufjs": "catalog:"
   },
   "devDependencies": {
     "@beep/ai-provider-cli": "workspace:^",

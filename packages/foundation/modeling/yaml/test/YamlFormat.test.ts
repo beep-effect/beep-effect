@@ -273,13 +273,70 @@ describe("YamlFormat", () => {
       assert.strictEqual(YamlFormat.formatToString(text), text);
     });
 
-    it.effect("modify fails typed with DirectiveCarryingDocument, never re-emits without the directive", () =>
+    it.effect("modify keeps a %TAG prologue byte for byte, never re-emits without the directive", () =>
       Effect.gen(function* () {
         const text = "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 1\n";
-        const error = yield* Effect.flip(YamlFormat.modify(text, ["b"], 2));
+        // The splice touches only the target span.
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(text, ["b"], 2),
+          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb: 2\n"
+        );
+        // The whole-document pipeline renders the body after the verbatim prologue.
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(text, ["b"], [2]),
+          "%TAG !e! tag:example.com,2000:\n---\na: !e!foo bar\nb:\n- 2\n"
+        );
+      })
+    );
+
+    it.effect("modify keeps a %YAML 1.2 compose prologue on the splice and the whole-document path", () =>
+      Effect.gen(function* () {
+        const text = "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.10.3 # pinned\n";
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(text, ["services", "redis", "image"], "redis:8.12.0"),
+          "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.12.0 # pinned\n"
+        );
+        const inserted = yield* YamlFormat.modifyToString(text, ["services", "redis", "restart"], "always");
+        assert.strictEqual(
+          inserted,
+          "# compose\n%YAML 1.2\n---\nservices:\n  redis:\n    image: redis:8.10.3 # pinned\n    restart: always\n"
+        );
+        assert.deepStrictEqual(yield* Yaml.parse(inserted), {
+          services: { redis: { image: "redis:8.10.3", restart: "always" } },
+        });
+        // A CRLF prologue keeps its bytes; the re-rendered body is LF, as on every whole-document edit.
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString("%YAML 1.2\r\n---\r\na: 1\r\n", ["b"], 2),
+          "%YAML 1.2\r\n---\r\na: 1\nb: 2\n"
+        );
+        // A marker-line comment belongs to the body and renders on its own line, as without directives.
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString("%YAML 1.2\n--- # body\na: 1\n", ["b"], 2),
+          "%YAML 1.2\n---\n# body\na: 1\nb: 2\n"
+        );
+      })
+    );
+
+    it.effect("modify fails typed with DirectiveCarryingDocument when the --- line carries content", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(YamlFormat.modify("%YAML 1.2\n--- !!map\na: 1\n", ["b"], 2));
         assert.instanceOf(error, YamlModificationError);
         assert.strictEqual(error.diagnostics[0]?.code, "DirectiveCarryingDocument");
         assert.notProperty(error, "reason");
+      })
+    );
+
+    it.effect("modify reads a long CRLF prologue in linear time, refused or kept", () =>
+      Effect.gen(function* () {
+        // Each CRLF directive, comment and blank line has exactly one way to
+        // match, so a refused marker line fails without backtracking 2^n paths.
+        const prologue = `%YAML 1.2\r\n${Str.repeat(40)("# note\r\n\r\n  \r\n")}`;
+        const error = yield* Effect.flip(YamlFormat.modify(`${prologue}--- !!map\r\na: 1\r\n`, ["b"], 2));
+        assert.strictEqual(error.diagnostics[0]?.code, "DirectiveCarryingDocument");
+        assert.strictEqual(
+          yield* YamlFormat.modifyToString(`${prologue}---\r\na: 1\r\n`, ["b"], [2]),
+          `${prologue}---\r\na: 1\nb:\n- 2\n`
+        );
       })
     );
 
@@ -393,6 +450,14 @@ describe("YamlFormat", () => {
     it("double→single: applies under the default quoteStyle (single) when quoteStyle is omitted", () => {
       const options = YamlFormattingOptions.make({ requoteScalars: true });
       assert.strictEqual(YamlFormat.formatToString('k: "a"\n', undefined, options), "k: 'a'\n");
+    });
+
+    it("auto: picks the target quote per scalar from its value", () => {
+      const requoteAuto = YamlFormattingOptions.make({ quoteStyle: "auto", requoteScalars: true });
+      assert.strictEqual(
+        YamlFormat.formatToString("a: 'x'\nb: \"say \\\"hi\\\"\"\nc: 'it''s'\n", undefined, requoteAuto),
+        'a: "x"\nb: \'say "hi"\'\nc: "it\'s"\n'
+      );
     });
 
     it("double→single: an inner single quote is doubled", () => {
@@ -850,7 +915,7 @@ describe("YamlFormat", () => {
         ["xs: [1]\n", "InvalidIndex"],
         ["xs: [1]\n---\nxs: [2]\n", "MultiDocumentStream"],
         ["xs: *undefined_alias\n", "UndefinedAlias"],
-        ["%YAML 1.2\n---\nxs: [1]\n", "DirectiveCarryingDocument"],
+        ["%YAML 1.2\n--- {xs: [1]}\n", "DirectiveCarryingDocument"],
       ] as const) {
         it.effect(`echoes ${spelling} as a tagged index and catches ${code}`, () =>
           Effect.gen(function* () {

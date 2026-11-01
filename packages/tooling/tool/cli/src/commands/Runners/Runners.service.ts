@@ -14,6 +14,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Yaml from "effect/encoding/Yaml";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -23,7 +24,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as YAML from "yaml";
 import { hashFileSha256 } from "../../internal/cli/FsGuards.ts";
 import { formatCommandLine, runCaptured } from "../../internal/process/StepExec.ts";
 import { RunnersCommandError } from "./Runners.errors.ts";
@@ -827,7 +827,7 @@ const checkBakeManifest = Effect.fn("Runners.checkManifest")(function* (manifest
     .readFileString(path.join(inputs.repoRoot, "infra/ci-runners/Pulumi.production.yaml"))
     .pipe(RunnersCommandError.mapError("Failed to read the production runner image pin."));
   const parsedConfig = yield* Effect.try({
-    try: (): unknown => YAML.parse(rawConfig),
+    try: (): unknown => Yaml.parse(rawConfig),
     catch: () => runnersError("Invalid production runner YAML configuration."),
   });
   const config = yield* decodeIntendedRunnerPin(parsedConfig).pipe(

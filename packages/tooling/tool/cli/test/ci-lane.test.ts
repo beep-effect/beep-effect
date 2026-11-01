@@ -55,8 +55,8 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { parseDocument } from "yaml";
 import { commandArgs, commandEnv } from "./support/commandArgs.ts";
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const REPO_ROOT = "/repo";
 const coverageDispatchIdentity = CoverageProducerIdentity.make({
@@ -901,18 +901,17 @@ describe("CI lane partitions", () => {
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
-      const workflow = parseDocument(workflowText);
-      expect(workflow.errors).toHaveLength(0);
+      const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
-      expect(workflow.getIn(["jobs", "lint", "name"])).toBe("Lint");
-      expect(workflow.getIn(["jobs", "lint", "if"])).toBe("${{ always() }}");
-      expect(workflow.getIn(["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(workflow.getIn(["jobs", "test-unit", "if"])).toBe("${{ always() }}");
-      expect(workflow.getIn(["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
-      expect(workflow.getIn(["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
-      const lintGate = String(workflow.getIn(["jobs", "lint", "steps", 0, "run"]));
-      const unitGate = String(workflow.getIn(["jobs", "test-unit", "steps", 0, "run"]));
+      const lintGate = String(yamlAt(workflow, ["jobs", "lint", "steps", 0, "run"]));
+      const unitGate = String(yamlAt(workflow, ["jobs", "test-unit", "steps", 0, "run"]));
       expect(lintGate).toContain('needs.lint-shard.result }}" != "success"');
       expect(unitGate).toContain('needs.test-unit-shard.result }}" != "success"');
       expect(lintGate).toContain("exit 1");

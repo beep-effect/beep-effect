@@ -307,16 +307,47 @@ const TIMESTAMP_11_RE =
 
 /**
  * Returns true if a string value would be resolved as a non-string type by a
- * YAML 1.1 parser. The delta over {@link wouldBeResolved}: null spellings are
- * identical in both editions (and already covered), so only the boolean,
- * integer, float and timestamp families are tested here.
+ * YAML 1.1 parser.
+ *
+ * **Details**
+ *
+ * The delta over the YAML 1.2 Core Schema patterns: null spellings are
+ * identical in both editions (and already covered there), so only the
+ * boolean, integer, float and timestamp families are tested here.
+ *
+ * **Example** (Spot YAML 1.1 coercions)
+ *
+ * ```ts
+ * import { wouldBeResolved11 } from "@beep/yaml/internal/stringifier"
+ *
+ * console.log(wouldBeResolved11("on"), wouldBeResolved11("1:30"), wouldBeResolved11("redis")) // true true false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
-function wouldBeResolved11(s: string): boolean {
+export function wouldBeResolved11(s: string): boolean {
   return matchesAny(YAML_11_RES, s);
 }
 
+// The reference `yaml` package's 1.1-schema float and sexagesimal patterns,
+// looser than the spec's in three places the patterns above do not cover: the
+// integer part is optional (a lone `.`, `+.`, `._` and a dotless exponent like
+// `e5` or `.e5` all resolve to floats), and a sexagesimal number may start
+// with `0` (`0:30`). Kept verbatim so the union stays a superset of the
+// reference reader.
+const FLOAT_11_REFERENCE_RE = /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$|^[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*$/;
+const SEXAGESIMAL_11_REFERENCE_RE = /^[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+(?:\.[0-9_]*)?$/;
+
 /** The YAML 1.1 implicit-resolver delta patterns, in test order. */
-const YAML_11_RES: ReadonlyArray<RegExp> = [BOOL_11_RE, INT_11_RE, FLOAT_11_RE, TIMESTAMP_11_RE];
+const YAML_11_RES: ReadonlyArray<RegExp> = [
+  BOOL_11_RE,
+  INT_11_RE,
+  FLOAT_11_RE,
+  FLOAT_11_REFERENCE_RE,
+  SEXAGESIMAL_11_REFERENCE_RE,
+  TIMESTAMP_11_RE,
+];
 
 /**
  * Returns true if a string requires quoting to be safely represented as a plain scalar.
@@ -339,11 +370,11 @@ const YAML_11_RES: ReadonlyArray<RegExp> = [BOOL_11_RE, INT_11_RE, FLOAT_11_RE, 
  * back as three items.
  */
 const requiresQuoting: {
-  (ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): (s: string) => boolean;
-  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): boolean;
+  (ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): (s: string) => boolean;
+  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): boolean;
 } = dual(
   (args) => P.isString(args[0]),
-  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): boolean =>
+  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): boolean =>
     // Empty string must be quoted
     s === "" ||
     // Flow context: any flow indicator anywhere terminates or corrupts the
@@ -352,7 +383,7 @@ const requiresQuoting: {
     wouldBeCoerced(s, ignoreType === true, quoteCompat) ||
     hasUnsafeLeadingIndicator(s) ||
     hasAmbiguousPlainSyntax(s) ||
-    hasUnplainableChar(s)
+    hasUnplainableChar(s, plainTab === true)
 );
 
 /**
@@ -398,17 +429,23 @@ function hasAmbiguousPlainSyntax(s: string): boolean {
  * C0 control characters require quoting. `isControlChar` deliberately
  * excludes TAB (0x09) and CR (0x0D) for its other callers — the block-scalar
  * and single-quoted-multiline paths, where both are representable — so both
- * are tested explicitly here. A plain scalar cannot carry either: CR is
- * normalised away by the parser (silent data corruption on round-trip) and
- * an interior tab produces text other YAML parsers reject. Only single-line
- * values reach this point, so quoting on any TAB is safe for block styles.
+ * are tested explicitly here. A plain scalar cannot carry CR: the parser
+ * normalises it away (silent data corruption on round-trip). An interior tab
+ * is valid YAML 1.2 plain content, but some other YAML parsers reject it, so
+ * it is quoted unless `plainTab` is set (the `"auto"` quote style, which
+ * follows the `yaml` npm package and leaves it plain). A leading or trailing
+ * tab, and a tab beside `#` or after `:`, are caught by the indicator and
+ * ambiguity checks under either setting. Only single-line values reach this
+ * point, so quoting on any TAB is safe for block styles.
  */
 const plainUnsafe = /[\x00-\x09\x0b-\x1f]/;
+const plainUnsafeExceptTab = /[\x00-\x08\x0b-\x1f]/;
 
-function hasUnplainableChar(s: string): boolean {
+function hasUnplainableChar(s: string, plainTab: boolean): boolean {
+  const unsafe = plainTab ? plainUnsafeExceptTab : plainUnsafe;
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
-    if (plainUnsafe.test(ch)) return true;
+    if (unsafe.test(ch)) return true;
   }
   return false;
 }
@@ -511,6 +548,37 @@ export function renderSingleQuoted(s: string): string {
   return `'${Str.replaceAll("'", "''")(s)}'`;
 }
 
+/**
+ * The quote character the plain-scalar fallback uses for `s` under
+ * `quoteStyle`: `"single"` and `"double"` name it outright, while `"auto"`
+ * picks it per value like the `yaml` npm package's default
+ * (`singleQuote: null`), single quotes for a value holding `"` and no `'` and double quotes
+ * otherwise, so neither quote has to be escaped where one choice avoids it.
+ *
+ * **Example** (Pick the quote for a value under `auto`)
+ *
+ * ```ts
+ * import { fallbackQuoteStyle } from "@beep/yaml/internal/stringifier"
+ *
+ * console.log(fallbackQuoteStyle('say "hi"', "auto")) // single
+ * console.log(fallbackQuoteStyle("it's", "auto")) // double
+ * console.log(fallbackQuoteStyle("it's", "single")) // single
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const fallbackQuoteStyle: {
+  (quoteStyle: QuoteStyle): (s: string) => "single" | "double";
+  (s: string, quoteStyle: QuoteStyle): "single" | "double";
+} = dual(2, (s: string, quoteStyle: QuoteStyle): "single" | "double" =>
+  QuoteStyle.match(quoteStyle, {
+    single: () => "single" as const,
+    double: () => "double" as const,
+    auto: () => (Str.includes('"')(s) && !Str.includes("'")(s) ? ("single" as const) : ("double" as const)),
+  })
+);
+
 const ParentPosition = LiteralKit(["block-map-value", "block-seq-item"]).pipe(
   $I.annoteSchema("ParentPosition", { description: "The block parent position that controls scalar header rendering." })
 );
@@ -569,18 +637,21 @@ type StringRenderContext = typeof StringRenderContext.Type;
 
 const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => string> = {
   plain: ({ s, ignoreType, quoteCompat, inFlow, canonical, quoteStyle }) => {
-    if (requiresQuoting(s, ignoreType, quoteCompat, inFlow)) {
-      // Chars needing YAML escapes (tab, CR, control chars) force
-      // double-quoted under either quoteStyle — single quotes cannot
-      // express them. Backslashes are literal in single-quoted YAML
-      // and do NOT need double-quoting.
-      if (Str.includes("\t")(s)) {
+    if (requiresQuoting(s, ignoreType, quoteCompat, inFlow, quoteStyle === "auto")) {
+      // A tab forces double-quoted under "single" and "double" — the
+      // released conservative form, which escapes it as `\t`. CR and the
+      // other controls never reach here: `mustDoubleQuoteString` already
+      // double-quoted them. "auto" follows the `yaml` npm package instead,
+      // which keeps a literal tab inside single quotes (valid YAML 1.2 on a
+      // single line, and it reads back exactly). Backslashes are literal in
+      // single-quoted YAML and do NOT need double-quoting.
+      if (quoteStyle !== "auto" && Str.includes("\t")(s)) {
         return renderDoubleQuoted(s, canonical);
       }
       // Otherwise the caller's fallback preference decides: single-quoted
       // by default (the released byte-compatible form), double-quoted
-      // when `quoteStyle` asks for it.
-      return quoteStyle === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
+      // when `quoteStyle` asks for it, and chosen per value under "auto".
+      return fallbackQuoteStyle(s, quoteStyle) === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
     }
     return s;
   },
@@ -605,7 +676,8 @@ const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => 
  * Multi-line strings are routed to block styles regardless of the requested
  * style (except double-quoted). For single-line strings, plain style delegates
  * to {@link requiresQuoting} and falls back to `quoteStyle` (single-quoted by
- * default, double-quoted when the caller asked for it) — or to double-quoted
+ * default, double-quoted when the caller asked for it, chosen per value by
+ * {@link fallbackQuoteStyle} under `"auto"`) — or to double-quoted
  * regardless when the value needs YAML escapes single quotes cannot express.
  * Block literal and block folded styles are always accepted for single-line
  * strings even though the output is unusual.
@@ -1426,7 +1498,7 @@ const stringifyScalarNodeLines: {
 } = dual(3, (node: YamlScalar, ctx: StringifyContext, depth: number): string[] => {
   // Empty scalar (zero-length in source) with tag or anchor: render just tag/anchor
   const isEmpty = isEmptySourceScalar(node);
-  if (isEmpty && (isNonEmptyText(node.tag) || isNonEmptyText(node.anchor))) {
+  if (isEmpty && rendersAsMetadataOnly(node)) {
     return [scalarMetadataOnly(node)];
   }
   const lines = renderScalarNodeValueLines(node, ctx, depth, isEmpty);
@@ -1440,6 +1512,16 @@ const isNonEmptyText = (text: string | undefined): text is string => text !== un
 /** A zero-length source scalar with no value (null, undefined or the empty string). */
 const isEmptySourceScalar = (node: YamlScalar): boolean =>
   node.length === 0 && (node.value === null || node.value === undefined || node.value === "");
+
+/**
+ * Whether a zero-length scalar reads back as its tag/anchor alone. A tag
+ * fixes the empty node's value (`!!str` reads `""`), and an anchor alone
+ * reads null; an anchored empty string with no tag is not an empty source
+ * node — `modify` carries a replaced node's anchor onto a fresh `""`, whose
+ * span is synthetic — so it renders its quotes (`&an ''`), not `&an` (null).
+ */
+const rendersAsMetadataOnly = (node: YamlScalar): boolean =>
+  isNonEmptyText(node.tag) || (isNonEmptyText(node.anchor) && P.isNullish(node.value));
 
 /** The `tag &anchor` rendering of an empty scalar that carries only metadata. */
 function scalarMetadataOnly(node: YamlScalar): string {
