@@ -38,7 +38,7 @@ type SourceAnchor = {
 
 const repositoryRoot = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
 const packageRoot = NodeURL.fileURLToPath(new URL("..", import.meta.url));
-const fixtureRoot = NodeURL.fileURLToPath(new URL("./fixtures/effect-vitest-410", import.meta.url));
+const fixtureRoot = NodeURL.fileURLToPath(new URL("./fixtures/effect-vitest-411", import.meta.url));
 const indexFile = "packages/vitest/src/index.ts";
 const utilsFile = "packages/vitest/src/utils.ts";
 const readmeFile = "packages/vitest/README.md";
@@ -303,7 +303,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     );
 
     it.effect(
-      "compiles every graph example against the installed 4.1.0 package surface",
+      "compiles every graph example against the installed 4.1.1 package surface",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
         const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
@@ -410,7 +410,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         );
         const graph = yield* readEffectVitestPrimitiveGraph(repositoryRoot);
         const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
-        assertTrue(Str.includes("does not match graph pin @effect/vitest@4.1.0 (")(failure.message));
+        assertTrue(Str.includes("does not match graph pin @effect/vitest@4.1.1 (")(failure.message));
         assertTrue(Str.includes("Regenerate source anchors")(failure.message));
         assertTrue(Str.includes("review the semantic diff")(failure.message));
         assertTrue(Str.includes("update the graph pin")(failure.message));
