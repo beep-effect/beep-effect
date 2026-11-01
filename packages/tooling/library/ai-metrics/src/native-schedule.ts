@@ -8,6 +8,7 @@ import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -311,8 +312,20 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
     })
   );
   yield* readCursor;
+  // One tick is a bounded pass: a page verified once is reused by its later selections and
+  // candidate reads, instead of re-reading and re-hashing every event for each claimed event.
+  let passPages = O.none<MutableHashMap.MutableHashMap<Sha256Hex, Effect.Success<ReturnType<typeof pages.read>>>>();
+  const readPage = Effect.fnUntraced(function* (receiptId: Sha256Hex) {
+    if (O.isNone(passPages)) return yield* pages.read(receiptId);
+    const cache = passPages.value;
+    const cached = MutableHashMap.get(cache, receiptId);
+    if (O.isSome(cached)) return cached.value;
+    const page = yield* pages.read(receiptId);
+    MutableHashMap.set(cache, receiptId, page);
+    return page;
+  });
   const readSelectedPage = Effect.fnUntraced(function* (ref: typeof PageRef.Type | undefined) {
-    const current = ref === undefined ? O.none() : yield* pages.read(ref.receiptId);
+    const current = ref === undefined ? O.none() : yield* readPage(ref.receiptId);
     const ids = O.isSome(current) ? pages.eventIds(current.value) : [];
     return { ref, current, ids };
   });
@@ -414,7 +427,7 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
   const held = (eventId: Sha256Hex, reason: typeof NativeScheduleOutcome.cases.Held.Type.reason) =>
     NativeScheduleOutcome.cases.Held.make({ eventId, reason });
   const readCandidate = Effect.fnUntraced(function* (candidate: typeof Candidate.Type) {
-    const page = yield* pages.read(candidate.receiptId);
+    const page = yield* readPage(candidate.receiptId);
     if (O.isNone(page)) return yield* failure("storage");
     const ids = pages.eventIds(page.value);
     const offset = A.findFirstIndex(ids, (id) => id === candidate.eventId);
@@ -533,6 +546,7 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
   const tick = Effect.gen(function* () {
     const admitted = yield* permit.withPermitsIfAvailable(1)(
       Effect.gen(function* () {
+        passPages = O.some(MutableHashMap.empty());
         let outcomes: ReadonlyArray<typeof NativeScheduleOutcome.Type> = [];
         let ages: ReadonlyArray<typeof AgeSample.Type> = [];
         let wrapped = false;
@@ -555,7 +569,14 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
           outcomes = A.append(outcomes, outcome);
         }
         return NativeScheduleTick.cases.Complete.make({ wrapped, outcomes, lag: O.some(summarizeAges(ages)) });
-      }).pipe(Effect.timeoutOption(policy.tickTimeoutMillis))
+      }).pipe(
+        Effect.ensuring(
+          Effect.sync(() => {
+            passPages = O.none();
+          })
+        ),
+        Effect.timeoutOption(policy.tickTimeoutMillis)
+      )
     );
     if (O.isNone(admitted)) return yield* failure("busy");
     return O.getOrElse(admitted.value, () => NativeScheduleTick.cases.Deadline.make({}));
