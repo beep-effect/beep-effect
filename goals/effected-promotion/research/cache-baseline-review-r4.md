@@ -22,8 +22,8 @@ The root (`//`) does not change. `bun run beep lint policy-fingerprint --write` 
 
 ## Turbo coupling
 
-Measured on this branch after merging `origin/main` e99f80e1b0, re-measured after each earlier merge (d5ac507ae3,
-bb6e32b003, 4bcd7ff7bf, 8143d4e70d). Between those merges main bumped effect to 4.1.0 (#2415), landed 4-A3 (#2445) and changed
+Measured on this branch after merging `origin/main` b4a6140271, re-measured after each earlier merge (d5ac507ae3,
+bb6e32b003, 4bcd7ff7bf, 8143d4e70d, e99f80e1b0). Between those merges main bumped effect to 4.1.0 (#2415), landed 4-A3 (#2445) and changed
 workspace manifests: repo-cli dropped `@beep/runpod` and
 `@openai/codex-sdk`, docgen's scripts changed, and `@beep/repo-ai-metrics` gained `@effect/platform-node`,
 `protobufjs` and the `@beep/ai-provider-cli` devDependency with its own reviewed row. The walk covers the workspace
