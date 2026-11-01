@@ -146,10 +146,20 @@ const stringsOf = (value: unknown): O.Option<ReadonlyArray<string>> =>
 // `stringsOf`, with a non-array read as no strings.
 const stringsOrEmpty = (value: unknown): ReadonlyArray<string> => O.getOrElse(stringsOf(value), () => []);
 
-/** A pattern body without its leading `./` segments and its trailing slashes. */
+/**
+ * A pattern body without its leading `./` segments and its trailing slashes.
+ *
+ * @param body - The pattern text after any `!`.
+ * @returns The body as the enumerators match it.
+ */
 const normalizedBody = (body: string): string => Str.replace(/\/+$/, "")(Str.replace(/^(?:\.\/+)+/, "")(body));
 
-/** The directory a trailing `/**` descends from, or `""` when the body has no such suffix or no base. */
+/**
+ * The directory a trailing `/**` descends from.
+ *
+ * @param body - A normalized pattern body.
+ * @returns The base directory, or `""` when the body has no such suffix or no base.
+ */
 const globstarBaseOf = (body: string): string => (Str.endsWith("/**")(body) ? Str.slice(0, -3)(body) : "");
 
 /**
@@ -160,6 +170,9 @@ const globstarBaseOf = (body: string): string => (Str.endsWith("/**")(body) ? St
  * The `!` of an exclusion is kept and the body after it is normalized. A
  * `X/**` body is followed by `X`, so the base directory is selected (or
  * excluded) too. A body that normalizes to nothing keeps the declared text.
+ *
+ * @param pattern - One declared workspace pattern, `!` included.
+ * @returns The one or two patterns the enumerators match in its place.
  */
 const forMatchingOne = (pattern: string): ReadonlyArray<string> => {
   const negation = Str.startsWith("!")(pattern) ? "!" : "";
