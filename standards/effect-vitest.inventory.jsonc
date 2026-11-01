@@ -6143,7 +6143,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Real git repositories (plain, separate-git-dir and worktree layouts) built by spawned git are the subject: the root identity evidence reads what git itself reports. NodeServices supplies the native spawner and filesystem; the oversized-output and timeout probes already run behind a scripted spawner. Owner: @beep/repo-ai-metrics. Exit: retire when a scripted git double covers the plain, separate-git-dir and worktree identity cases and the real-git cases move to an opt-in live suite."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:17:@effect/platform-node@0#1",
@@ -6186,7 +6187,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Two independent producer processes race for one claimed attempt over real files, so OS process concurrency and the file-lock outcome are the subject; the crash cases SIGKILL their producer. Owner: @beep/repo-ai-metrics. Exit: retire when EV010 recognises concurrently spawned independent processes as a native subject, or the race runs behind a scripted two-process double."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/observation-root-probe.test.ts:10:@effect/platform-node@0#1",
@@ -6207,7 +6209,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The declared-root inventory producer probes real git repositories created by spawned git, so the git working-tree layout is the subject. Owner: @beep/repo-ai-metrics. Exit: retire when the root probe runs behind a scripted git double and the real-git cases move to an opt-in live suite."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/observation-worker.test.ts:31:@effect/platform-node@0#1",
@@ -6228,7 +6231,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "One harness runs real transcript discovery through the worker: helper processes scan a real directory tree, so native directory traversal and helper-process admission are the subject; the other harnesses use the SQL test layer only. Owner: @beep/repo-ai-metrics. Exit: retire when transcript discovery takes an injected scanner the worker test can script."
     },
     {
       "id": "EV010:packages/tooling/library/ai-metrics/test/retention.test.ts:14:@effect/platform-node@0#1",
@@ -6315,7 +6319,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "Discovery spawns owned helper processes that walk real directory trees, including symlinks, permission failures, non-UTF-8 names and an unreadable child, so native traversal and helper lifetime are the subject. Owner: @beep/repo-ai-metrics. Exit: retire when the scanner runs behind a scripted helper double over a memory volume that models permissions and non-UTF-8 names."
     },
     {
       "id": "EV010:packages/tooling/library/ai-sync/test/ai-sync.test.ts:41:@effect/platform-node@0#1",
@@ -6710,7 +6715,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "A real child is spawned through the platform ChildProcessSpawner, held in a Deferred, recorded, closed and killed (SIGKILL), so the managed observation owner's real process lifecycle is the subject. Owner: @beep/repo-cli. Exit: retire when EV010 follows a spawner handle through a Deferred to its kill, or the lifecycle cases run behind a scripted spawner with the live child kept as an opt-in check."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts:20:@effect/platform-node@0#1",
@@ -8953,7 +8959,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The shim binds real Unix-domain sockets and TCP ports, so socket files, rebinding and owner refusal on the native filesystem are the subject. Owner: @beep/repo-cli. Exit: retire when the shim's socket binding runs behind an injected listener double, or EV010 recognises a Unix-socket server as a native subject."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/worktree-command.test.ts:50:@effect/platform-node@0#1",
