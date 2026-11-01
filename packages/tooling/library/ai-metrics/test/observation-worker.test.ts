@@ -50,6 +50,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -431,17 +432,20 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         ObservationRuntimePolicy.make({ intervalMillis: 100, cycleTimeoutMillis: 1000, staleAfterMillis: 1500 })
       );
       const running = yield* runtime.run.pipe(Effect.forkChild);
-      while (O.isNone((yield* runtime.health).lastCycle)) yield* Effect.sleep(5);
+      yield* runtime.health.pipe(
+        Effect.repeat({ until: (health) => O.isSome(health.lastCycle), schedule: Schedule.spaced(5) })
+      );
       expect(yield* runtime.health).toMatchObject({ phase: "paused", sourceCoverage: "unknown" });
       expect((yield* f.post()).status).toBe(503);
       yield* f.worker.resume;
       expect((yield* f.post()).status).toBe(200);
       const eventId = yield* f.event;
-      while (true) {
-        const state = yield* f.worker.eventState(eventId);
-        if (O.isSome(state) && state.value.state === "accepted-unverified") break;
-        yield* Effect.sleep(5);
-      }
+      yield* f.worker.eventState(eventId).pipe(
+        Effect.repeat({
+          until: (state) => O.isSome(state) && state.value.state === "accepted-unverified",
+          schedule: Schedule.spaced(5),
+        })
+      );
       expect(yield* Ref.get(f.backendCalls)).toBe(1);
       yield* Fiber.interrupt(running);
       expect(yield* runtime.health).toMatchObject({ phase: "stopped", running: false, sourceCoverage: "unknown" });

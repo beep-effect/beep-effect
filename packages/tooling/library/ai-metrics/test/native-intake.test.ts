@@ -10,7 +10,6 @@ import { makeTranscriptIntakeJournal, TranscriptIntakeConfig } from "@beep/repo-
 import { readTranscriptPage, TranscriptPageInput } from "@beep/repo-ai-metrics/transcript-page";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest";
 import * as SqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import { expect } from "@effect/vitest";
@@ -252,18 +251,18 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
       );
       // DROP COLUMN creates a temporary SQLite schema on the fixture connection.
       // A real service restart opens a fresh connection to the earlier file.
+      const reopenedSql = yield* SqliteClient.make({ filename: files[0].file }).pipe(
+        Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make)
+      );
       yield* Effect.gen(function* () {
         const reopened = yield* makeNativeIntakeJournal(config);
-        const reopenedSql = yield* SqlClient.SqlClient;
         expect(yield* reopened.acceptBatch(projected)).toEqual(original);
         assertSome(yield* reopened.readBatch(original.page.receiptId), projected);
         expect(yield* reopenedSql`SELECT evidence_epoch FROM observation_intake_pages`).toEqual([
           { evidence_epoch: 0 },
         ]);
         expect(yield* reopenedSql`PRAGMA integrity_check`).toEqual([{ integrity_check: "ok" }]);
-      }).pipe(
-        provideScopedLayer(SqliteClient.layer({ filename: files[0].file }).pipe(Layer.provide(Reactivity.layer)))
-      );
+      }).pipe(Effect.provideService(SqlClient.SqlClient, reopenedSql));
     })
   )
 );

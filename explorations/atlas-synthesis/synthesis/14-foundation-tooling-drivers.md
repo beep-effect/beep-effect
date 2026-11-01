@@ -136,7 +136,7 @@ Four sub-families. These are **operator-facing** (they keep the repo green) and 
 
 | Package | Path | Purpose |
 |---|---|---|
-| `@beep/repo-utils` | `packages/tooling/library/repo-utils` | Monorepo tooling utilities (~515 symbols): `Dependencies`/`DependencyIndex`/`UniqueDeps`, `Graph`, `FsUtils`, `JsonUtils`, `TsConfig`, `Workspaces`, `TSMorph`/`TypeScript` AST helpers, `JSDoc`, `Reuse`, plus `EffectCapabilityKG.ts`. |
+| `@beep/repo-utils` | `packages/tooling/library/repo-utils` | Monorepo tooling utilities (~515 symbols): `Graph`, `FsUtils`, `JsonUtils`, `TsConfig` (workspace discovery and the dependency index moved to `@beep/repo-workspaces` in effected-promotion 4-A3), `TSMorph`/`TypeScript` AST helpers, `JSDoc`, `Reuse`, plus `EffectCapabilityKG.ts`. |
 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | AI-usage metrics for repo lanes (~219 symbols). **Learning-vehicle residue** — quality tooling, not product. |
 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | AI artifact sync tooling. |
 | `@beep/repo-codegraph` | `packages/tooling/library/repo-codegraph` | Repo code-graph library. **Learning-vehicle residue** (the L3 code-intelligence learning bet) — now monorepo-quality substrate, not the product moat. |

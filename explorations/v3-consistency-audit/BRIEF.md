@@ -127,8 +127,8 @@ every operation (`Membership.Revoke.Contract` â‡’ `Membership.Revoke.Handler` â‡
 in the Architecture command group (DECISIONS *auditor shape*):
 
 - **Walks** existing slice packages via the package-discovery and TypeScript
-  walkers already in `Lint` (`collectTypeScriptFiles`) and `@beep/repo-utils` (`resolveWorkspaceDirs` /
-  `resolveWorkspacePackages`, the brick Fallow already walks with; Fallow's
+  walkers already in `Lint` (`collectTypeScriptFiles`) and repo-cli `internal/RepoWorkspaces.ts` (`workspaceDirectories` /
+  `workspaceManifests` over `@beep/repo-workspaces` `WorkspaceDiscovery`, the brick Fallow already walks with; Fallow's
   private `classifyWorkspaceRole` promoted to an exported `LiteralKit`-typed
   classifier), not the plan.
 - **Asserts** one rule per grammar line above, keyed `family/kind/tier` so

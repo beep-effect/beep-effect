@@ -17,6 +17,7 @@ export * from "../internal/PathContainment.ts";
 export * from "../internal/publication/PublicationLedger.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
 export * from "../internal/quality/TestTypecheckCoverage.ts";
+export * from "../internal/RepoWorkspaces.ts";
 export * from "../internal/repo-run/ChangedFiles.ts";
 export * from "../internal/schema/JsonCodec.ts";
 export * from "../internal/schema/TextCodec.ts";

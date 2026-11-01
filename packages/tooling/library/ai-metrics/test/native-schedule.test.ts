@@ -240,11 +240,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
     Effect.gen(function* () {
       const f = yield* fixture();
       const policy = replayPolicy(f.config.targetId);
-      for (let attempt = 0; attempt < 8; attempt++) {
-        const scheduler = yield* f.reopen(policy);
-        expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
+      yield* Effect.gen(function* () {
+        const reconstructed = yield* f.reopen(policy);
+        expect(yield* reconstructed.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
         yield* Effect.sleep(120);
-      }
+      }).pipe(Effect.replicateEffect(8, { discard: true }));
       const scheduler = yield* f.reopen(policy);
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Held", reason: "attempt-limit" }] });
       expect(yield* Ref.get(f.posts)).toBe(8);

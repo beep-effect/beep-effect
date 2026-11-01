@@ -1,5 +1,12 @@
 # #1861 hold register and compatibility exit proofs
 
+> **Superseded by the hold ledger (2026-10-31).** Every hold below that is
+> still in force is a live record in [`hold-ledger/claims.jsonl`](../../../../hold-ledger/claims.jsonl)
+> with its reason, probe and exit condition; `bun run beep holds list` shows
+> them and `bun run beep holds lint` keeps config and ledger in step
+> ([`goals/hold-ledger`](../../../hold-ledger/README.md)). This file stays as the
+> 2026-10-17 census record.
+
 Lane `residue-hold-exits`, branch `chore/residue-hold-exits` off `main`
 `e3ee18dfd7`, census taken on 2026-10-17. Source evidence: the H1 receipt
 `goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md`

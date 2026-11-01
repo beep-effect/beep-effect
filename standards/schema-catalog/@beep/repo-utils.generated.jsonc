@@ -219,7 +219,6 @@
     {"file":"packages/tooling/library/repo-utils/src/TsNativeApi.models.ts","symbol":"TsNativeFileNotInProgram","kind":"tagged-error","owner":"@beep/repo-utils","identity":"TsNativeFileNotInProgram"},
     {"file":"packages/tooling/library/repo-utils/src/TsNativeApi.models.ts","symbol":"TsNativeProtocolFailure","kind":"tagged-error","owner":"@beep/repo-utils","identity":"TsNativeProtocolFailure"},
     {"file":"packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts","symbol":"TSSyntaxKind","kind":"literal-kit","owner":"@beep/repo-utils"},
-    {"file":"packages/tooling/library/repo-utils/src/Workspaces.ts","symbol":"WorkspacePackage","kind":"struct-const","owner":"@beep/repo-utils","identity":"WorkspacePackage","description":"A resolved workspace package: its absolute directory and strictly decoded manifest."},
     {"file":"packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts","symbol":"CyclicDependencyError","kind":"tagged-error","owner":"@beep/repo-utils","identity":"CyclicDependencyError"},
     {"file":"packages/tooling/library/repo-utils/src/errors/DomainError.ts","symbol":"DomainError","kind":"tagged-error","owner":"@beep/repo-utils","identity":"DomainError"},
     {"file":"packages/tooling/library/repo-utils/src/errors/NoSuchFileError.ts","symbol":"NoSuchFileError","kind":"tagged-error","owner":"@beep/repo-utils","identity":"NoSuchFileError"},
@@ -238,7 +237,6 @@
     {"file":"packages/tooling/library/repo-utils/src/schemas/PackageJson.ts","symbol":"PackageExports","kind":"union","owner":"@beep/repo-utils","identity":"PackageExports","description":"The package exports field modeled as a path target, conditional exports object, subpath map, or fallback array."},
     {"file":"packages/tooling/library/repo-utils/src/schemas/PackageJson.ts","symbol":"PublishConfig","kind":"schema-const","owner":"@beep/repo-utils","identity":"PublishConfig","description":"npm publish configuration with explicit support for access, tag, registry, provenance, bin, exports, and additional JSON-valued config keys."},
     {"file":"packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts","symbol":"PackageJsonValidationIssue","kind":"struct-const","owner":"@beep/repo-utils","identity":"PackageJsonValidationIssue","description":"A formatted package.json validation issue with both path segments and a JSON Pointer."},
-    {"file":"packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts","symbol":"CanonicalAliasTargets","kind":"struct-const","owner":"@beep/repo-utils","identity":"CanonicalAliasTargets","description":"Canonical root and wildcard alias targets derived for a package root export."},
-    {"file":"packages/tooling/library/repo-utils/src/schemas/WorkspaceDeps.ts","symbol":"WorkspaceDeps","kind":"struct-const","owner":"@beep/repo-utils","identity":"WorkspaceDeps","description":"Classified dependencies for a workspace package, split into workspace-local and external npm buckets."}
+    {"file":"packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts","symbol":"CanonicalAliasTargets","kind":"struct-const","owner":"@beep/repo-utils","identity":"CanonicalAliasTargets","description":"Canonical root and wildcard alias targets derived for a package root export."}
   ]
 }

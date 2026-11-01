@@ -658,7 +658,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
         // carries the inline seed).
         const catalogs = CatalogSet.merge(recorded.catalogs, inline, injected);
 
-        const globs = yield* GlobSet.compile(patterns).pipe(
+        const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns)).pipe(
           Effect.mapError((error) =>
             CatalogAssemblyError.make({ source: "manifest", path: error.pattern, cause: error })
           )

@@ -34,6 +34,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoWorkspacesId.create("WorkspacePatterns");
 
@@ -145,6 +146,42 @@ const stringsOf = (value: unknown): O.Option<ReadonlyArray<string>> =>
 // `stringsOf`, with a non-array read as no strings.
 const stringsOrEmpty = (value: unknown): ReadonlyArray<string> => O.getOrElse(stringsOf(value), () => []);
 
+/**
+ * A pattern body without its leading `./` segments and its trailing slashes.
+ *
+ * @param body - The pattern text after any `!`.
+ * @returns The body as the enumerators match it.
+ */
+const normalizedBody = (body: string): string => Str.replace(/\/+$/, "")(Str.replace(/^(?:\.\/+)+/, "")(body));
+
+/**
+ * The directory a trailing `/**` descends from.
+ *
+ * @param body - A normalized pattern body.
+ * @returns The base directory, or `""` when the body has no such suffix or no base.
+ */
+const globstarBaseOf = (body: string): string => (Str.endsWith("/**")(body) ? Str.slice(0, -3)(body) : "");
+
+/**
+ * One declared pattern as the enumerators match it.
+ *
+ * **Details**
+ *
+ * The `!` of an exclusion is kept and the body after it is normalized. A
+ * `X/**` body is followed by `X`, so the base directory is selected (or
+ * excluded) too. A body that normalizes to nothing keeps the declared text.
+ *
+ * @param pattern - One declared workspace pattern, `!` included.
+ * @returns The one or two patterns the enumerators match in its place.
+ */
+const forMatchingOne = (pattern: string): ReadonlyArray<string> => {
+  const negation = Str.startsWith("!")(pattern) ? "!" : "";
+  const body = normalizedBody(Str.slice(negation.length)(pattern));
+  if (Str.isEmpty(body)) return [pattern];
+  const base = globstarBaseOf(body);
+  return Str.isEmpty(base) ? [`${negation}${body}`] : [`${negation}${body}`, `${negation}${base}`];
+};
+
 // Reads `path` and fails with a typed `read` failure instead of the platform error.
 const readConfigText = Effect.fnUntraced(function* (path: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -247,6 +284,45 @@ export class WorkspacePatterns {
         : []
     );
   };
+
+  /**
+   * The patterns as the enumerators match them: each without its leading
+   * `./` segments and trailing slashes, and each trailing `/**` followed by
+   * its base directory.
+   *
+   * **Details**
+   *
+   * A package manager appends `/package.json` to each pattern and globs that,
+   * so `packages/*` followed by a slash reads as `packages/*`, `./packages/core`
+   * as `packages/core`, and `packages/core/**` also selects
+   * `packages/core/package.json` (the `**` matches zero directories). A
+   * directory matcher does none of that, so the compiled declared text would
+   * miss members, report slashed paths, and let `!./packages/core` exclude
+   * nothing. An exclusion is normalized after its `!`, and `!X/**` is
+   * followed by `!X`. Every kit reader compiles this form;
+   * {@link WorkspacePatterns.read} and the projections still return the
+   * declared text verbatim. A pattern that normalizes to nothing (only
+   * slashes, or `./`) keeps its declared text, so it is still matched (or
+   * refused) as written.
+   *
+   * **Example** (Normalize declared patterns for matching)
+   *
+   * ```ts
+   * import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+   *
+   * console.log(WorkspacePatterns.forMatching(["packages/core/", "!./packages/legacy//", "tools/cli"]).join(","));
+   * // packages/core,!packages/legacy,tools/cli
+   * console.log(WorkspacePatterns.forMatching(["./apps/**"]).join(","));
+   * // apps/**,apps
+   * ```
+   *
+   * @param patterns - The declared patterns.
+   * @returns The normalized patterns in declaration order, a `/**` pattern followed by its base.
+   * @category parsing
+   * @since 0.0.0
+   */
+  static readonly forMatching = (patterns: ReadonlyArray<string>): ReadonlyArray<string> =>
+    A.flatMap(patterns, forMatchingOne);
 
   /**
    * Reads the workspace `packages:` patterns for `root`, preferring `pnpm-workspace.yaml` over the root `package.json` `workspaces` field.
