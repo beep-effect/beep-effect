@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T03:44:48.814Z",
+  "generatedAt": "2026-11-01T03:57:20.141Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -515649,8 +515649,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1724,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1724-discovereffectimportsourcefiles",
+          "line": 1729,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1729-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -515673,8 +515673,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1765,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1765-discovereffectimportmarkdownfiles",
+          "line": 1770,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1770-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -515697,8 +515697,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1805,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1805-runeffectimportrules",
+          "line": 1810,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1810-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
