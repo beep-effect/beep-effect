@@ -583,6 +583,73 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
         })
       )
     );
+  for (const reset of [false, true])
+    test.effect(`budgets embedded remote read failures, reset=${reset}`, () =>
+      fixture((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const limit = reset ? 9 : 5;
+          const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+            ...options,
+            onMerged: () => Effect.void,
+            collectStatus: () =>
+              Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+                Effect.map((n) => {
+                  if (n >= limit) return snapshot(root, [], false, head, "MERGED");
+                  if (reset && n === 3) return snapshot(root, [check("Lint", "pending")]);
+                  return YeetStatusSnapshot.make({
+                    ...snapshot(root, [], false),
+                    remote: YeetStatusRemote.make({
+                      available: false,
+                      checked: true,
+                      detail: failure.message,
+                      readFailure: O.some(failure),
+                    }),
+                    mergeReady: O.none(),
+                  });
+                })
+              ),
+          });
+          expect(terminal).toBe("poll-error-budget");
+          expect(yield* Ref.get(calls)).toBe(limit);
+          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain(
+            "poll failed (5/5): read unavailable"
+          );
+        })
+      )
+    );
+  test.effect("keeps a confirmed absent pull request outside the read-failure budget", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const previousErrors = A.length(yield* TestConsole.errorLines);
+        const calls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          onMerged: () => Effect.void,
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n >= 6
+                  ? snapshot(root, [], false, head, "MERGED")
+                  : YeetStatusSnapshot.make({
+                      ...snapshot(root, [], false),
+                      remote: YeetStatusRemote.make({
+                        available: false,
+                        checked: true,
+                        detail: "GitHub REST found no open pull request for the current branch",
+                      }),
+                      mergeReady: O.none(),
+                    })
+              )
+            ),
+        });
+        expect(terminal).toBe("merged");
+        expect(yield* Ref.get(calls)).toBe(7);
+        const errors = A.drop(yield* TestConsole.errorLines, previousErrors);
+        expect(A.join(A.map(errors, String), "\n")).not.toContain("poll failed");
+      })
+    )
+  );
   test.effect("retries closeout failures against the cached head and budgets consecutive errors", () =>
     fixture((root) =>
       Effect.gen(function* () {
@@ -1155,25 +1222,41 @@ it.layer(platform)("B7 remaining boundaries", (test) => {
 });
 
 it.layer(platform)("B7 remaining boundaries", (test) => {
-  test.effect("counts a post-closeout reread failure without repeating the successful closeout", () =>
-    fixture((root) =>
-      Effect.gen(function* () {
-        const calls = yield* Ref.make(0);
-        const closes = yield* Ref.make(0);
-        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
-          ...options,
-          collectStatus: () =>
-            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
-              Effect.flatMap((n) => (n === 1 ? Effect.fail(failure) : Effect.succeed(snapshot(root, [check()], n > 1))))
-            ),
-          closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.as(report())),
-        });
-        expect(terminal).toBe("ready");
-        expect(yield* Ref.get(closes)).toBe(1);
-        expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("poll failed (1/5)");
-      })
-    )
-  );
+  for (const embedded of [false, true])
+    test.effect(`counts a post-closeout reread failure without repeating closeout, embedded=${embedded}`, () =>
+      fixture((root) =>
+        Effect.gen(function* () {
+          const calls = yield* Ref.make(0);
+          const closes = yield* Ref.make(0);
+          const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+            ...options,
+            collectStatus: () =>
+              Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+                Effect.flatMap((n) => {
+                  if (n !== 1) return Effect.succeed(snapshot(root, [check()], n > 1));
+                  if (!embedded) return Effect.fail(failure);
+                  return Effect.succeed(
+                    YeetStatusSnapshot.make({
+                      ...snapshot(root, [], false),
+                      remote: YeetStatusRemote.make({
+                        available: false,
+                        checked: true,
+                        detail: failure.message,
+                        readFailure: O.some(failure),
+                      }),
+                      mergeReady: O.none(),
+                    })
+                  );
+                })
+              ),
+            closeout: () => Ref.update(closes, (n) => n + 1).pipe(Effect.as(report())),
+          });
+          expect(terminal).toBe("ready");
+          expect(yield* Ref.get(closes)).toBe(1);
+          expect(A.join(A.map(yield* TestConsole.errorLines, String), "\n")).toContain("poll failed (1/5)");
+        })
+      )
+    );
 
   test.effect("accepts an operator merge under until-ready and sweeps once", () =>
     fixture((root) =>

@@ -38,6 +38,7 @@ import { deriveYeetMergeReady, mergeStateIsAcceptable, outstandingThreadCount } 
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
+import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
 import { YEET_STATUS_CHECK_FIELDS } from "./Planner.ts";
@@ -284,7 +285,7 @@ export class YeetStatusRemote extends S.Opaque<YeetStatusRemote, { readonly bran
     available: S.Boolean,
     checked: S.Boolean,
     detail: S.String,
-    // None on a successful lookup (including a confirmed absent PR).
+    // None on a complete read (including a confirmed absent PR).
     readFailure: YeetCommandError.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     // Each check's whole record (signal, link, workflow, GitHub's instants), so
     // a row the merge loop writes carries the same capsule a --watch row does.
@@ -974,7 +975,7 @@ export const summarizeRemoteChecksForTesting: {
  *
  * @param context - Repository context whose current branch identifies the pull request.
  * @param required - Restrict the read to required checks when true; otherwise read all checks.
- * @returns Decoded rows, or None when the response is unreadable or truncated.
+ * @returns Decoded rows (empty when gh reports no checks), or None when the response is unreadable or truncated.
  * @category getters
  * @since 0.0.0
  */
@@ -1013,7 +1014,15 @@ export const collectRemoteChecks: {
     if (result.truncated) {
       return O.none();
     }
-    return yield* decodeGhStatusChecks(result.output).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+    // gh answers a head with no (required) checks yet in text with exit 1; that
+    // is a complete, empty census, not an unreadable one. JSON decodes first: a
+    // failing check also exits non-zero and its text may carry the same phrase.
+    return yield* decodeGhStatusChecks(result.output).pipe(
+      Effect.asSome,
+      Effect.orElseSucceed(() =>
+        result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output) ? O.some(A.empty<GhStatusCheck>()) : O.none()
+      )
+    );
   })
 );
 
@@ -1561,6 +1570,11 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     available: true,
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
+    readFailure: O.match(O.all([checks, requiredChecks]), {
+      onNone: () =>
+        O.some(YeetCommandError.make({ message: "Failed to read the complete pull request check census." })),
+      onSome: O.none,
+    }),
     checks: A.map(O.getOrElse(checks, A.empty), (row) =>
       statusWatchCheck(
         row,

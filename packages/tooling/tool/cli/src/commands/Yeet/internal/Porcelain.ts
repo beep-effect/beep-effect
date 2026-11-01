@@ -72,6 +72,7 @@ import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type * as Crypto from "effect/Crypto";
+import type * as Duration from "effect/Duration";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -121,6 +122,7 @@ interface YeetMonitorRouteDependencies {
     options: Parameters<typeof runYeetMonitorUntilMerged>[1]
   ) => ReturnType<typeof runYeetMonitorUntilMerged>;
   readonly policy?: YeetMonitorLoopPolicy;
+  readonly pollInterval?: Duration.Duration | undefined;
   readonly registry?: PrSessionRegistryShape;
   readonly rulesetRead?: typeof readYeetRulesetRequiredContexts;
   readonly settleTimeoutMs?: number;
@@ -596,6 +598,7 @@ export const runYeetMergeLoop: {
       closeout: dependencies.closeout,
       capture: dependencies.capture,
       policy,
+      pollInterval: dependencies.pollInterval,
       waveRerunCommand: O.getOrUndefined(yeetAttachedMonitorRerunCommand(process.argv)),
     });
     const exit = yeetMonitorExitFor(terminal);
