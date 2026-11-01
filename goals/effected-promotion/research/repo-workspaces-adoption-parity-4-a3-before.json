@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/repo-workspaces-adoption-parity.ts",
-  "commit": "900023804b88135345880f1dca3c9f92b8308043",
+  "commit": "2e63c774996874dad251f289aad3ba0e47081ccd",
   "members": {
-    "count": 189,
-    "legacySha256": "6943951e5d1582538f61880a478748421e8ea3c7f54cd0ef067b2fb1fe805b22",
-    "kitSha256": "6943951e5d1582538f61880a478748421e8ea3c7f54cd0ef067b2fb1fe805b22",
+    "count": 190,
+    "legacySha256": "2391d5d67470446e604ef2eb2b95bfc33eff9ab65b61f17b7ae242ed940195e2",
+    "kitSha256": "2391d5d67470446e604ef2eb2b95bfc33eff9ab65b61f17b7ae242ed940195e2",
     "identical": true,
     "absoluteIdentical": true
   },
-  "manifests": { "count": 189, "identical": true, "differing": [] },
+  "manifests": { "count": 190, "identical": true, "differing": [] },
   "edges": {
     "count": 1375,
-    "legacySha256": "af48ea06e79a01c3dec0eb7fc7864d9c2d4bad3b0d3fc6910af7e659559a656b",
-    "kitSha256": "af48ea06e79a01c3dec0eb7fc7864d9c2d4bad3b0d3fc6910af7e659559a656b",
+    "legacySha256": "183e6b2dc4be6436a2bb3643b754cec23c1716b15ac32045ef63f9f6a3dd8cf9",
+    "kitSha256": "183e6b2dc4be6436a2bb3643b754cec23c1716b15ac32045ef63f9f6a3dd8cf9",
     "identical": true
   },
   "order": {
     "legacy": {
-      "count": 189,
-      "sha256": "1e0d4f40b9425ca5a45386ff0a01c08a8b00ee8d73b5d019cf3da1beebbba6fa",
+      "count": 190,
+      "sha256": "da7fa74c7fef7e6237d5e0f10ff9a9cb7aee86ecbfad4b57ff846e252ce4990f",
       "topological": true,
       "sameSetAsMembers": true
     },
     "kit": {
-      "count": 189,
-      "sha256": "0bca85304c53532d6d027a2049169d39892147ccfa665ead005a42ae5aa813ec",
+      "count": 190,
+      "sha256": "12f414a29588bd8d7d1bb99c3b56f677bde6373520142c9b2d065675c4dc3e04",
       "topological": true,
       "sameSetAsMembers": true
     },
     "identical": false,
-    "positionsMoved": 187,
+    "positionsMoved": 188,
     "kitOrder": [
       "@beep/fc-runs",
       "@beep/tsgo-shim",
@@ -71,6 +71,7 @@
       "@beep/anthropic",
       "@beep/api-transport",
       "@beep/architecture-lab-config",
+      "@beep/beep-effect-web",
       "@beep/box",
       "@beep/brand",
       "@beep/chalk",
@@ -227,8 +228,8 @@
     {
       "command": "beep topo-sort",
       "exitCode": 0,
-      "stdoutSha256": "1e0d4f40b9425ca5a45386ff0a01c08a8b00ee8d73b5d019cf3da1beebbba6fa",
-      "stdoutLines": 189
+      "stdoutSha256": "da7fa74c7fef7e6237d5e0f10ff9a9cb7aee86ecbfad4b57ff846e252ce4990f",
+      "stdoutLines": 190
     },
     {
       "command": "beep tsconfig-sync --check",
@@ -239,13 +240,13 @@
     {
       "command": "beep lint package-scripts --check",
       "exitCode": 0,
-      "stdoutSha256": "6a3538aae5a1e67e76673c4a264251180b147e56860f20cb7b7b7f901cd658bb",
+      "stdoutSha256": "9283d6e1857f3a896e9b285ee4fec96fe37dd703c376cdeb46fbae1a0199c69e",
       "stdoutLines": 1
     },
     {
       "command": "beep fallow boundaries --check",
       "exitCode": 0,
-      "stdoutSha256": "60ea084f943a333e9a21ddcd1915c24eec6391c0d07616c8c39a62b49378d875",
+      "stdoutSha256": "022ad7b446de014b10bed2314a68cf65a471c94561158ac9496ade3c4da49d05",
       "stdoutLines": 2
     },
     {
@@ -257,7 +258,7 @@
     {
       "command": "beep docgen status",
       "exitCode": 0,
-      "stdoutSha256": "257577f67968786c03f246dfde724659a14f01a05a36d71d7abeebd01eccf632",
+      "stdoutSha256": "018d41f23c22bed121c30d2e7ab00af93f38845e362d62869114a49aee8edb9b",
       "stdoutLines": 4
     }
   ]
