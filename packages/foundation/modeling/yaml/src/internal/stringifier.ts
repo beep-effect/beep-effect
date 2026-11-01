@@ -520,8 +520,8 @@ export function renderSingleQuoted(s: string): string {
 /**
  * The quote character the plain-scalar fallback uses for `s` under
  * `quoteStyle`: `"single"` and `"double"` name it outright, while `"auto"`
- * picks it per value like the `yaml` npm package's default (`singleQuote:
- * null`), single quotes for a value holding `"` and no `'` and double quotes
+ * picks it per value like the `yaml` npm package's default
+ * (`singleQuote: null`), single quotes for a value holding `"` and no `'` and double quotes
  * otherwise, so neither quote has to be escaped where one choice avoids it.
  *
  * **Example** (Pick the quote for a value under `auto`)
