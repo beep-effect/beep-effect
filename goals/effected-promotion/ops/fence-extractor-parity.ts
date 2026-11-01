@@ -617,7 +617,7 @@ const runDoctestUnit = (file: string, source: string): void => {
   const counts = tally("source/doctest");
   counts.units += 1;
   const oldFences = oldDoctestFences(source);
-  const newFences = scanDoctestFencesForTesting(file, source);
+  const scanned = scanDoctestFencesForTesting(file, source);
   counts.fences += oldFences.length;
   const toRecord = (fence: ScannedDoctestFence): DoctestFenceRecord => ({
     code: fence.code,
@@ -642,6 +642,12 @@ const runDoctestUnit = (file: string, source: string): void => {
         next: preview(next),
       });
   };
+  // A refused scan fails closed in `doctest verify`; here it is one unclassified difference, so the gate fails.
+  if (Result.isFailure(scanned)) {
+    push("new-only", "unclassified", 0, undefined, scanned.failure.message);
+    return;
+  }
+  const newFences = scanned.success;
   for (const old of oldFences) {
     const nextFence = newFences.find((candidate) => candidate.location.startLine === old.startLine);
     if (nextFence === undefined) {
