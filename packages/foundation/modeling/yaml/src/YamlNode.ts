@@ -97,6 +97,13 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * unlike `ScalarStyle` it is a stringify-option vocabulary, never a property
  * of a composed node.
  *
+ * **Details**
+ *
+ * `"single"` and `"double"` name one quote character for every scalar.
+ * `"auto"` picks per value the way the `yaml` npm package does by default:
+ * single quotes for a value holding `"` and no `'`, double quotes otherwise,
+ * and it leaves an interior tab plain where a plain scalar keeps it.
+ *
  * **Example** (Decode QuoteStyle vocabulary)
  *
  * ```ts
@@ -104,16 +111,17 @@ export type CollectionStyle = typeof CollectionStyle.Type;
  * import * as S from "effect/Schema"
  *
  * console.log(S.decodeUnknownSync(QuoteStyle)("double")) // double
+ * console.log(S.decodeUnknownSync(QuoteStyle)("auto")) // auto
  * ```
  *
  * @public
  * @category schemas
  * @since 0.0.0
  */
-export const QuoteStyle = LiteralKit(["single", "double"]).pipe(
+export const QuoteStyle = LiteralKit(["single", "double", "auto"]).pipe(
   $I.annoteSchema("QuoteStyle", {
     description:
-      "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node.",
+      "Quote characters available to the stringifier's plain-scalar fallback: the style a `plain`-styled scalar is rendered in when it turns out to require quoting. `auto` picks per value like the `yaml` npm package's default (single quotes for a value holding a double quote and no single quote, double quotes otherwise) and leaves an interior tab plain. Referenced by the `quoteStyle` field of `YamlStringifyOptions`; unlike `ScalarStyle` it is a stringify-option vocabulary, never a property of a composed node.",
   })
 );
 

@@ -339,11 +339,11 @@ const YAML_11_RES: ReadonlyArray<RegExp> = [BOOL_11_RE, INT_11_RE, FLOAT_11_RE, 
  * back as three items.
  */
 const requiresQuoting: {
-  (ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): (s: string) => boolean;
-  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): boolean;
+  (ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): (s: string) => boolean;
+  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): boolean;
 } = dual(
   (args) => P.isString(args[0]),
-  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean): boolean =>
+  (s: string, ignoreType?: boolean, quoteCompat?: QuoteCompat, inFlow?: boolean, plainTab?: boolean): boolean =>
     // Empty string must be quoted
     s === "" ||
     // Flow context: any flow indicator anywhere terminates or corrupts the
@@ -352,7 +352,7 @@ const requiresQuoting: {
     wouldBeCoerced(s, ignoreType === true, quoteCompat) ||
     hasUnsafeLeadingIndicator(s) ||
     hasAmbiguousPlainSyntax(s) ||
-    hasUnplainableChar(s)
+    hasUnplainableChar(s, plainTab === true)
 );
 
 /**
@@ -398,17 +398,23 @@ function hasAmbiguousPlainSyntax(s: string): boolean {
  * C0 control characters require quoting. `isControlChar` deliberately
  * excludes TAB (0x09) and CR (0x0D) for its other callers — the block-scalar
  * and single-quoted-multiline paths, where both are representable — so both
- * are tested explicitly here. A plain scalar cannot carry either: CR is
- * normalised away by the parser (silent data corruption on round-trip) and
- * an interior tab produces text other YAML parsers reject. Only single-line
- * values reach this point, so quoting on any TAB is safe for block styles.
+ * are tested explicitly here. A plain scalar cannot carry CR: the parser
+ * normalises it away (silent data corruption on round-trip). An interior tab
+ * is valid YAML 1.2 plain content, but some other YAML parsers reject it, so
+ * it is quoted unless `plainTab` is set (the `"auto"` quote style, which
+ * follows the `yaml` npm package and leaves it plain). A leading or trailing
+ * tab, and a tab beside `#` or after `:`, are caught by the indicator and
+ * ambiguity checks under either setting. Only single-line values reach this
+ * point, so quoting on any TAB is safe for block styles.
  */
 const plainUnsafe = /[\x00-\x09\x0b-\x1f]/;
+const plainUnsafeExceptTab = /[\x00-\x08\x0b-\x1f]/;
 
-function hasUnplainableChar(s: string): boolean {
+function hasUnplainableChar(s: string, plainTab: boolean): boolean {
+  const unsafe = plainTab ? plainUnsafeExceptTab : plainUnsafe;
   for (let i = 0; i < s.length; i++) {
     const ch = Str.slice(i, i + 1)(s);
-    if (plainUnsafe.test(ch)) return true;
+    if (unsafe.test(ch)) return true;
   }
   return false;
 }
@@ -511,6 +517,33 @@ export function renderSingleQuoted(s: string): string {
   return `'${Str.replaceAll("'", "''")(s)}'`;
 }
 
+/**
+ * The quote character the plain-scalar fallback uses for `s` under
+ * `quoteStyle`: `"single"` and `"double"` name it outright, while `"auto"`
+ * picks it per value like the `yaml` npm package's default (`singleQuote:
+ * null`), single quotes for a value holding `"` and no `'` and double quotes
+ * otherwise, so neither quote has to be escaped where one choice avoids it.
+ *
+ * **Example** (Pick the quote for a value under `auto`)
+ *
+ * ```ts
+ * import { fallbackQuoteStyle } from "@beep/yaml/internal/stringifier"
+ *
+ * console.log(fallbackQuoteStyle("auto", 'say "hi"')) // single
+ * console.log(fallbackQuoteStyle("auto", "it's")) // double
+ * console.log(fallbackQuoteStyle("single", "it's")) // single
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const fallbackQuoteStyle = (quoteStyle: QuoteStyle, s: string): "single" | "double" =>
+  QuoteStyle.match(quoteStyle, {
+    single: () => "single" as const,
+    double: () => "double" as const,
+    auto: () => (Str.includes('"')(s) && !Str.includes("'")(s) ? ("single" as const) : ("double" as const)),
+  });
+
 const ParentPosition = LiteralKit(["block-map-value", "block-seq-item"]).pipe(
   $I.annoteSchema("ParentPosition", { description: "The block parent position that controls scalar header rendering." })
 );
@@ -569,18 +602,21 @@ type StringRenderContext = typeof StringRenderContext.Type;
 
 const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => string> = {
   plain: ({ s, ignoreType, quoteCompat, inFlow, canonical, quoteStyle }) => {
-    if (requiresQuoting(s, ignoreType, quoteCompat, inFlow)) {
-      // Chars needing YAML escapes (tab, CR, control chars) force
-      // double-quoted under either quoteStyle — single quotes cannot
-      // express them. Backslashes are literal in single-quoted YAML
-      // and do NOT need double-quoting.
-      if (Str.includes("\t")(s)) {
+    if (requiresQuoting(s, ignoreType, quoteCompat, inFlow, quoteStyle === "auto")) {
+      // A tab forces double-quoted under "single" and "double" — the
+      // released conservative form, which escapes it as `\t`. CR and the
+      // other controls never reach here: `mustDoubleQuoteString` already
+      // double-quoted them. "auto" follows the `yaml` npm package instead,
+      // which keeps a literal tab inside single quotes (valid YAML 1.2 on a
+      // single line, and it reads back exactly). Backslashes are literal in
+      // single-quoted YAML and do NOT need double-quoting.
+      if (quoteStyle !== "auto" && Str.includes("\t")(s)) {
         return renderDoubleQuoted(s, canonical);
       }
       // Otherwise the caller's fallback preference decides: single-quoted
       // by default (the released byte-compatible form), double-quoted
-      // when `quoteStyle` asks for it.
-      return quoteStyle === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
+      // when `quoteStyle` asks for it, and chosen per value under "auto".
+      return fallbackQuoteStyle(quoteStyle, s) === "double" ? renderDoubleQuoted(s, canonical) : renderSingleQuoted(s);
     }
     return s;
   },
@@ -605,7 +641,8 @@ const stringStyleRenderers: Record<ScalarStyle, (input: StringRenderContext) => 
  * Multi-line strings are routed to block styles regardless of the requested
  * style (except double-quoted). For single-line strings, plain style delegates
  * to {@link requiresQuoting} and falls back to `quoteStyle` (single-quoted by
- * default, double-quoted when the caller asked for it) — or to double-quoted
+ * default, double-quoted when the caller asked for it, chosen per value by
+ * {@link fallbackQuoteStyle} under `"auto"`) — or to double-quoted
  * regardless when the value needs YAML escapes single quotes cannot express.
  * Block literal and block folded styles are always accepted for single-line
  * strings even though the output is unusual.

@@ -801,6 +801,70 @@ describe("Yaml", () => {
         assert.strictEqual(options.quoteStyle, "double");
         assert.throws(() => YamlStringifyOptions.make({ quoteStyle: deliberatelyInvalid<"single">("backtick") }));
       });
+
+      describe('"auto"', () => {
+        // Expected strings authored offline against `yaml@2.9.1`
+        // (`stringify({ k: value }, { lineWidth: 0 })`, its default
+        // `singleQuote: null`), the same convention as the oracle-differential
+        // suite: the committed literals are the contract.
+        const auto = YamlStringifyOptions.make({ quoteStyle: "auto" });
+        const cases: ReadonlyArray<readonly [string, string]> = [
+          ['Effect: "v4" release', "k: 'Effect: \"v4\" release'\n"],
+          ['"', "k: '\"'\n"],
+          ["'", 'k: "\'"\n'],
+          ["'lead", 'k: "\'lead"\n'],
+          ["*", 'k: "*"\n'],
+          ["@scope/pkg", 'k: "@scope/pkg"\n'],
+          ["it's here", "k: it's here\n"],
+          ["both ' and \"", "k: both ' and \"\n"],
+          ["tab\there", "k: tab\there\n"],
+          ["a\tb\tc", "k: a\tb\tc\n"],
+          ['x\t"y": z', "k: 'x\t\"y\": z'\n"],
+          ["x\ty: z", 'k: "x\\ty: z"\n'],
+          ["tab\t", 'k: "tab\\t"\n'],
+          ["\tlead", 'k: "\\tlead"\n'],
+          ["a\t#b", 'k: "a\\t#b"\n'],
+          ["a:\tb", 'k: "a:\\tb"\n'],
+          ["", 'k: ""\n'],
+        ];
+
+        it.effect("matches the yaml npm package's default quote choice per value", () =>
+          Effect.forEach(
+            cases,
+            Effect.fnUntraced(function* ([value, expected]) {
+              const emitted = yield* Yaml.stringify({ k: value }, auto);
+              assert.strictEqual(emitted, expected, Str.isEmpty(value) ? "<empty>" : value);
+              assert.deepStrictEqual(yield* Yaml.parse(emitted), { k: value });
+            }),
+            { discard: true }
+          )
+        );
+
+        it.effect("applies to mapping keys and sequence items too", () =>
+          Effect.gen(function* () {
+            assert.strictEqual(
+              yield* Yaml.stringify({ '"quoted" key': ["it's: x", "plain"] }, auto),
+              '\'"quoted" key\':\n- "it\'s: x"\n- plain\n'
+            );
+          })
+        );
+
+        it.effect("still double-quotes carriage returns and control characters", () =>
+          Effect.gen(function* () {
+            const value = { k: 'a"\rb', c: 'x"\u0001' };
+            const emitted = yield* Yaml.stringify(value, auto);
+            assert.strictEqual(emitted, 'k: "a\\"\\rb"\nc: "x\\"\\x01"\n');
+            assert.deepStrictEqual(yield* Yaml.parse(emitted), value);
+          })
+        );
+
+        it.effect("leaves single and double unchanged for an interior tab", () =>
+          Effect.gen(function* () {
+            assert.strictEqual(yield* Yaml.stringify({ k: "tab\there" }), 'k: "tab\\there"\n');
+            assert.strictEqual(yield* Yaml.stringify({ k: "tab\there" }, double), 'k: "tab\\there"\n');
+          })
+        );
+      });
     });
 
     describe('quoteCompat: "yaml-1.1"', () => {

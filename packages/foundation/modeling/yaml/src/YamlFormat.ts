@@ -41,6 +41,7 @@ import { ParseOptionsInput, StringifyOptionsInput } from "./internal/options.ts"
 import { RawYamlDocument } from "./internal/raw-document.ts";
 import { requoteScalarText } from "./internal/requote.ts";
 import {
+  fallbackQuoteStyle,
   renderDoubleQuoted,
   renderSingleQuoted,
   StringifyDepthExceeded,
@@ -54,7 +55,7 @@ import { YamlEdit, YamlRange } from "./YamlEdit.ts";
 import { YamlMap, YamlPair, YamlScalar, YamlSeq } from "./YamlNode.ts";
 import type { RawDiagnostic } from "./internal/diagnostics.ts";
 import type { YamlPath } from "./YamlEdit.ts";
-import type { YamlNode } from "./YamlNode.ts";
+import type { QuoteStyle, YamlNode } from "./YamlNode.ts";
 
 const $I = $YamlId.create("YamlFormat");
 
@@ -110,7 +111,9 @@ export type YamlRangeLike = YamlRange | { readonly offset: number; readonly leng
  * double-quote escaping, double→single is skipped whenever the value carries
  * characters single quotes cannot express (newlines, tabs, control and other
  * non-printable characters — single-quoted style can escape nothing but
- * `'`). Plain scalars stay plain, block scalars stay block, and scalars
+ * `'`). Under `quoteStyle` `"auto"` the target quote is chosen per scalar
+ * from its value, the same way the stringifier chooses it. Plain scalars
+ * stay plain, block scalars stay block, and scalars
  * carrying a tag or anchor — or spanning multiple source lines — are left
  * untouched. The option exists only where a source quote exists to re-quote:
  * it is read by {@link YamlFormat.format} / {@link YamlFormat.formatToString}
@@ -383,10 +386,11 @@ function definedFields<T extends Record<string, unknown>>(fields: T): Partial<T>
  * the surrounding diff keeps the edit surgical per scalar span.
  */
 const requoteNode: {
-  (node: YamlNode, text: string, quote: '"' | "'"): YamlNode;
-  (text: string, quote: '"' | "'"): (node: YamlNode) => YamlNode;
-} = dual(3, (node: YamlNode, text: string, quote: '"' | "'"): YamlNode => {
+  (node: YamlNode, text: string, quoteStyle: QuoteStyle): YamlNode;
+  (text: string, quoteStyle: QuoteStyle): (node: YamlNode) => YamlNode;
+} = dual(3, (node: YamlNode, text: string, quoteStyle: QuoteStyle): YamlNode => {
   if (isYamlScalar(node)) {
+    const quote = fallbackQuoteStyle(quoteStyle, P.isString(node.value) ? node.value : "") === "double" ? '"' : "'";
     if (O.isNone(requoteScalarText(text, node, quote, "escaping"))) return node;
     return YamlScalar.make({
       value: node.value,
@@ -407,14 +411,14 @@ const requoteNode: {
       node,
       A.map(node.items, (pair) =>
         YamlPair.make({
-          key: requoteNode(pair.key, text, quote),
-          value: pair.value === null ? null : requoteNode(pair.value, text, quote),
+          key: requoteNode(pair.key, text, quoteStyle),
+          value: pair.value === null ? null : requoteNode(pair.value, text, quoteStyle),
         })
       )
     );
   }
   if (isYamlSeq(node)) {
-    return rebuildSeq(node, A.map(node.items, requoteNode(text, quote)));
+    return rebuildSeq(node, A.map(node.items, requoteNode(text, quoteStyle)));
   }
   return node;
 });
@@ -425,8 +429,7 @@ const requoteDocument: {
   (text: string, options: YamlFormattingOptions | undefined): (doc: RawYamlDocument) => RawYamlDocument;
 } = dual(3, (doc: RawYamlDocument, text: string, options: YamlFormattingOptions | undefined): RawYamlDocument => {
   if (options?.requoteScalars !== true || doc.contents === null) return doc;
-  const quote = (options.quoteStyle ?? "single") === "double" ? '"' : "'";
-  return { ...doc, contents: requoteNode(doc.contents, text, quote) };
+  return { ...doc, contents: requoteNode(doc.contents, text, options.quoteStyle ?? "single") };
 });
 
 // ── format ───────────────────────────────────────────────────────────────────
