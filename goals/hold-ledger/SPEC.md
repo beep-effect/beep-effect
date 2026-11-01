@@ -42,8 +42,9 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/commands/` — a new `Holds` command group with
-  `admit`, `probe`, `why` and `lint` (with `--write`), plus the
-  `HoldProposition` schema.
+  `list`, `why`, `probe`, `update` and `lint` (with `--write`), plus the
+  `HoldProposition` schema. Admission is the runbook procedure (see the
+  Decision Log).
 - The ledger files: an append-only claims file plus single-writer ledger,
   following `research/README.md`. Choose the location and record it in the
   Decision Log.
@@ -139,6 +140,7 @@ them and record each in the Decision Log.
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |
+| 2026-11-01 | Holds are admitted by the runbook procedure (write the line, decode it through `HoldClaimVersion`, `holds lint --write`), not a `beep holds admit` command. | Every gate an `admit` command would enforce already runs: the ledger refuses a row that does not decode, and the cheap-gate lint fails until every hold-shaped site has a live record whose anchors exist. An `admit` command would add a second writer for the same validated row. No acceptance criterion required it (#2453 review). | Add `beep holds admit` that builds and appends the row. |
 | 2026-11-01 | The final PR (#2453) records the goal's PRs in the completion gate and lands the closeout reflection, but not the `completed-retained` proposal. | `GoalProposedCloseoutCheck` requires a gating `yeet-verdict` evidence reference, and #2453 merges under the operator's merge-now ruling with package-scoped checks, so no genuine verdict file exists to cite. Citing one would fabricate evidence. | Add `proposedCloseout` with the verdict reference once the readiness evidence exists. |
 | 2026-11-01 | `bun run deps:update` runs `beep holds update` first. It probes every scripted hold whose lease is two-thirds spent and every flipped hold, then tombstones each hold confirmed `Flipped` with today's run among the two passes, whose exit is `Unpin`, whose candidate is npm `latest`, and whose anchors are only catalog entries or held-list patterns. A probe that cannot run keeps its hold; other flipped holds are reported for a reviewed change. A dry run plans with the fresh runs in memory. | Re-probing ties retirement to the release `syncpack update --target=latest` will install, so a `latest` that moved is re-tested first (#2453 review). A workspace-manifest pin is not moved by the catalog bump, and overrides, patches and OSV exceptions are file edits. Due probes have no jitter because `deps:update` is one deterministic run; fleet wakes belong to `goals/wake-service`. | Restore `deps:update` to the bare `syncpack update` and drop `holds update`. |
 | 2026-11-01 | The agent guidance is a runbook, `docs/runbooks/hold-ledger.md`, not a skill. | The steps are commands run at known moments (adding a hold-shaped entry, `deps:update`); a runbook linked from the ledger, the docs index and `syncpack.config.ts` reaches them without adding always-loaded skill frontmatter. | Promote the runbook into a skill. |

@@ -620,6 +620,35 @@ layer(
   );
 });
 
+layer(layerFor(sweepLedger), { timeout: "30 seconds" })("deps:update past the 180-day lifetime", (it) => {
+  it.effect("escalates a flipped hold instead of retiring it", () =>
+    Effect.gen(function* () {
+      yield* TestClock.adjust("181 days");
+      const lines = yield* runHoldsUpdate(updateInput(true));
+      expect(lines).not.toContain(
+        "[holds] would unpin statelyai-model-testing-404: flipped; dropped from the held list for this catalog bump"
+      );
+      expect(lines).toContain(
+        "[holds] escalate statelyai-model-testing-404: older than 180 days; exit Unpin, or renew with fresh evidence"
+      );
+      expect(lastLine(lines)).toBe("[holds] update planned (dry run): 2 probed, 0 unpinned.");
+    })
+  );
+});
+
+layer(layerFor({ "hold-ledger/claims.jsonl": `${expiredClaim}\n` }), { timeout: "30 seconds" })(
+  "explaining an expired hold",
+  (it) => {
+    it.effect("does not call it live", () =>
+      Effect.map(runHoldsWhy("statelyai"), (lines) =>
+        expect(lines[0]).toBe(
+          "[holds] statelyai-model-testing-404 (exact-pin, statelyai): expired 1970-01-01, not live"
+        )
+      )
+    );
+  }
+);
+
 describe("holdsPlatformError", () => {
   it("keeps the platform message after the context", () => {
     const error = holdsPlatformError("Could not read the ledger")(

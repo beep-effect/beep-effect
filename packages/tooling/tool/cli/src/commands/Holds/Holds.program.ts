@@ -409,8 +409,13 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     const failed = O.isSome(fresh) && O.isNone(freshRun);
     return { version, freshRun, flipped: !failed && confirmHoldRuns([...O.toArray(freshRun), ...runs]) === "Flipped" };
   });
+  // A hold past its lease or 180-day lifetime escalates whatever its probe says, so it is never auto-retired.
+  const escalate = escalationLine(yield* ledger.allVersions, now);
   const flipped = A.filter(verdicts, (entry) => entry.flipped);
-  const unpinned = A.filter(flipped, (entry) => O.isSome(entry.freshRun) && isUnpinnedByCatalogBump(entry.version));
+  const unpinned = A.filter(
+    flipped,
+    (entry) => O.isSome(entry.freshRun) && isUnpinnedByCatalogBump(entry.version) && O.isNone(escalate(entry.version))
+  );
   if (!input.dryRun) {
     yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, { discard: true });
     const tombstone = retract(yield* ledger.allVersions, now);
@@ -421,7 +426,6 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     );
     yield* ledger.writeHeldList(heldListFor(yield* ledger.currentVersions));
   }
-  const escalate = escalationLine(yield* ledger.allVersions, now);
   return [
     ...A.map(probed, (entry) => entry.line),
     ...A.map(flipped, ({ version }) =>
@@ -431,12 +435,7 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
         input.dryRun
       )
     ),
-    ...A.getSomes(
-      A.map(
-        A.filter(live, (version) => !A.some(unpinned, (entry) => entry.version.id === version.id)),
-        escalate
-      )
-    ),
+    ...A.getSomes(A.map(live, escalate)),
     `[holds] update ${input.dryRun ? "planned (dry run)" : "done"}: ${A.length(probed)} probed, ${A.length(unpinned)} unpinned.`,
   ];
 });
@@ -459,10 +458,15 @@ const falsifierText = (version: HoldClaimVersion): string =>
 const whyLines = Effect.fn("Holds.whyLines")(function* (head: HoldClaimVersion, versionCount: number) {
   const ledger = yield* HoldLedger;
   const proposition = head.proposition;
+  const runs = yield* ledger.runsFor(head);
+  // Same liveness as `liveHoldVersions`: an expired, unretracted head is not live either.
   const status =
     head.review._tag === "Retracted"
       ? `tombstoned ${head.review.at.pipe(DateTime.formatIso, Str.slice(0, 10))}: ${head.review.reason}`
-      : `live, ${leaseText(head)}, confirmed ${confirmHoldRuns(yield* ledger.runsFor(head))}`;
+      : O.match(head.knowledge.expiredAt, {
+          onSome: (at) => `expired ${at.pipe(DateTime.formatIso, Str.slice(0, 10))}, not live`,
+          onNone: () => `live, ${leaseText(head)}, confirmed ${confirmHoldRuns(runs)}`,
+        });
   return [
     `[holds] ${proposition.holdId} (${proposition.kind}, ${A.join(proposition.subject.packages, ", ")}): ${status}`,
     `  assertion: ${proposition.assertion}`,

@@ -101,5 +101,19 @@ A tombstone is a new version with `review: Retracted` that supersedes the live
 one; the ledger is append-only, so nothing is ever edited or deleted.
 `holds lint --write` writes a tombstone only when every checkable anchor of a
 hold is gone; a hold that lost only some anchors stays live and keeps the lint
-red until you decide. A hold that comes back later is a new record that cites
-the tombstone in its evidence.
+red until you decide.
+
+To retire a hold by hand (its exit is done but an anchor such as a catalog
+entry stays, as with `xml-validator-module-scope-buffer` once its override is
+removed and its catalog version updated), append a tombstone in the same PR as
+the config change:
+
+1. Copy the hold's live line from `hold-ledger/claims.jsonl`.
+2. Set `id` to the next unused `<holdId>@<n>`, `supersedes` to the live id,
+   `knowledge.recordedAt` to now, and `review` to
+   `{"_tag":"Retracted","reason":"<what ended it, with the PR>","at":<now ms>}`.
+3. Append it as the last line, run `bun run beep holds lint --write` to
+   regenerate the held list, then `bun run beep holds lint`.
+
+A hold that comes back later is a new record that cites the tombstone in its
+evidence.

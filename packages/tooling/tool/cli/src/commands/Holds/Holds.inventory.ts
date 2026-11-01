@@ -255,7 +255,7 @@ export const isProbeDue: {
  * **Details**
  *
  * Only an `Unpin` exit whose anchors are all catalog entries or held-list
- * patterns, probed against npm `latest`, qualifies: tombstoning the record
+ * patterns, with at least one catalog entry, probed against npm `latest`, qualifies: tombstoning the record
  * drops the pattern from the held list, and `syncpack update --target=latest`
  * installs the version the probe tested. A direct workspace-manifest pin is
  * not moved by the catalog bump, and an override, patch, OSV exception or
@@ -278,6 +278,8 @@ export const isUnpinnedByCatalogBump = (version: HoldClaimVersion): boolean =>
   version.proposition.exitAction._tag === "Unpin" &&
   version.proposition.falsifier._tag === "Scripted" &&
   version.proposition.falsifier.candidate === "latest" &&
+  // The catalog bump only moves packages that resolve through the catalog.
+  A.some(version.proposition.subject.anchors, (anchor) => anchor._tag === "CatalogEntry") &&
   A.every(
     version.proposition.subject.anchors,
     (anchor) => anchor._tag === "CatalogEntry" || anchor._tag === "SyncpackHeld"
