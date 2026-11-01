@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T00:56:27.770Z",
+  "generatedAt": "2026-11-01T01:04:29.315Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -51601,8 +51601,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 178,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-178-yamlstringifyoptions",
+          "line": 180,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-180-yamlstringifyoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -51624,8 +51624,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 341,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-341-yamlparseerror",
+          "line": 343,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-343-yamlparseerror",
           "currentTags": [
             "@public",
             "@category",
@@ -51647,8 +51647,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 420,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-420-yamlstringifyerror",
+          "line": 422,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-422-yamlstringifyerror",
           "currentTags": [
             "@public",
             "@category",
@@ -51670,8 +51670,8 @@
           "exportKind": "interface",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 690,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-690-yamlboundcodec",
+          "line": 692,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-692-yamlboundcodec",
           "currentTags": [
             "@public",
             "@category",
@@ -51693,8 +51693,8 @@
           "exportKind": "class",
           "filePath": "src/Yaml.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/Yaml.ts",
-          "line": 770,
-          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-770-yaml",
+          "line": 772,
+          "anchor": "packages-foundation-modeling-yaml-src-yaml-ts-772-yaml",
           "currentTags": [
             "@public",
             "@category",
@@ -52705,8 +52705,8 @@
           "exportKind": "function",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1174,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1174-aliasexpansionlimit",
+          "line": 1176,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1176-aliasexpansionlimit",
           "currentTags": [
             "@category",
             "@since"
@@ -52819,8 +52819,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 121,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-121-quotestyle",
+          "line": 123,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-123-quotestyle",
           "currentTags": [
             "@public",
             "@category",
@@ -52842,8 +52842,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 135,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-135-quotestyle",
+          "line": 137,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-137-quotestyle",
           "currentTags": [
             "@public",
             "@category",
@@ -52865,8 +52865,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 162,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-162-quotecompat",
+          "line": 164,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-164-quotecompat",
           "currentTags": [
             "@public",
             "@category",
@@ -52888,8 +52888,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 176,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-176-quotecompat",
+          "line": 178,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-178-quotecompat",
           "currentTags": [
             "@public",
             "@category",
@@ -52911,8 +52911,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 195,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-195-scalarchomp",
+          "line": 197,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-197-scalarchomp",
           "currentTags": [
             "@public",
             "@category",
@@ -52934,8 +52934,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 209,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-209-scalarchomp",
+          "line": 211,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-211-scalarchomp",
           "currentTags": [
             "@public",
             "@category",
@@ -52957,8 +52957,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 230,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-230-yamlnodebase",
+          "line": 232,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-232-yamlnodebase",
           "currentTags": [
             "@public",
             "@category",
@@ -52980,8 +52980,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 374,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-374-yamlscalar",
+          "line": 376,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-376-yamlscalar",
           "currentTags": [
             "@public",
             "@category",
@@ -53003,8 +53003,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 577,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-577-yamlscalar",
+          "line": 579,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-579-yamlscalar",
           "currentTags": [
             "@public",
             "@category",
@@ -53026,8 +53026,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 478,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-478-yamlalias",
+          "line": 480,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-480-yamlalias",
           "currentTags": [
             "@public",
             "@category",
@@ -53049,8 +53049,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 662,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-662-yamlalias",
+          "line": 664,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-664-yamlalias",
           "currentTags": [
             "@public",
             "@category",
@@ -53072,8 +53072,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 606,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-606-yamlmap",
+          "line": 608,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-608-yamlmap",
           "currentTags": [
             "@public",
             "@category",
@@ -53095,8 +53095,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 788,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-788-yamlmap",
+          "line": 790,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-790-yamlmap",
           "currentTags": [
             "@public",
             "@category",
@@ -53118,8 +53118,8 @@
           "exportKind": "namespace",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 634,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-634-yamlseq",
+          "line": 636,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-636-yamlseq",
           "currentTags": [
             "@public",
             "@category",
@@ -53141,8 +53141,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 871,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-871-yamlseq",
+          "line": 873,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-873-yamlseq",
           "currentTags": [
             "@public",
             "@category",
@@ -53164,8 +53164,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 700,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-700-yamlnode",
+          "line": 702,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-702-yamlnode",
           "currentTags": [
             "@public",
             "@category",
@@ -53187,8 +53187,8 @@
           "exportKind": "type",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 716,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-716-yamlnode",
+          "line": 718,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-718-yamlnode",
           "currentTags": [
             "@public",
             "@category",
@@ -53210,8 +53210,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 744,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-744-yamlpair",
+          "line": 746,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-746-yamlpair",
           "currentTags": [
             "@public",
             "@category",
@@ -53233,8 +53233,8 @@
           "exportKind": "class",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1117,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1117-aliasexpansionbudgetexceeded",
+          "line": 1119,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1119-aliasexpansionbudgetexceeded",
           "currentTags": [
             "@category",
             "@since"
@@ -53255,8 +53255,8 @@
           "exportKind": "const",
           "filePath": "src/YamlNode.ts",
           "repoPath": "packages/foundation/modeling/yaml/src/YamlNode.ts",
-          "line": 1226,
-          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1226-nodetojsvalue",
+          "line": 1228,
+          "anchor": "packages-foundation-modeling-yaml-src-yamlnode-ts-1228-nodetojsvalue",
           "currentTags": [
             "@category",
             "@since"
@@ -571403,8 +571403,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1033,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1033-yeetmonitorcommandroute",
+          "line": 1037,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1037-yeetmonitorcommandroute",
           "currentTags": [
             "@param",
             "@returns",
@@ -571427,8 +571427,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Yeet/Yeet.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-          "line": 1368,
-          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1368-yeetcommand",
+          "line": 1387,
+          "anchor": "packages-tooling-tool-cli-src-commands-yeet-yeet-command-ts-1387-yeetcommand",
           "currentTags": [
             "@category",
             "@since"

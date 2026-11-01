@@ -20,6 +20,11 @@ bun run beep yeet job cancel <jobId>
 `--job-max-runtime "2 hours"` to set a systemd runtime ceiling; give one to a
 detached `monitor --until-ready` that may be abandoned, because a red does not
 end it. `--plan` and recursive detachment inside a job are rejected.
+For `--until-ready` and `--until-merged`, `--poll-interval "60 seconds"`
+sets the time between status polls; the default remains 30 seconds. The value
+must be positive and finite, and is retained in the detached job's command.
+Unavailable remote reads count toward the five-consecutive-failure budget;
+a confirmed absence of a pull request does not count as a read failure.
 `job wait` returns:
 
 | Exit | Outcome | Meaning |
