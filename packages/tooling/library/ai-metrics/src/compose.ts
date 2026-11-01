@@ -83,9 +83,7 @@ export const renderAiMetricsLocalPhoenixCompose: (
       },
     },
     composeYamlOptions
-  ).pipe(
-    Effect.mapError((cause) =>
-      composeFailure("AI metrics local Phoenix compose rendering could not serialize the compose file.", cause)
-    )
-  );
+    // A fixed document of strings has no cycle and no deep nesting, so the
+    // kit's stringify error cannot occur here; it would be a defect.
+  ).pipe(Effect.orDie);
 });

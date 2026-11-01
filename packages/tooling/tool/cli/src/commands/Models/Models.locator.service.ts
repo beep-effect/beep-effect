@@ -17,7 +17,7 @@ import { A, O, P, pipe, R, Str } from "@beep/utils";
 import { YamlDocument } from "@beep/yaml/YamlDocument";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { constFalse, dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Regex from "effect/RegExp";
@@ -263,8 +263,8 @@ const isSimpleYamlNode = (node: YamlNode): boolean =>
       scalar.style !== "block-folded" &&
       P.isUndefined(scalar.anchor) &&
       P.isUndefined(scalar.tag),
-    YamlSeq: () => false,
-    YamlAlias: () => false,
+    YamlSeq: constFalse,
+    YamlAlias: constFalse,
   });
 
 // Whether a composed YAML subtree holds only the simple forms, mapping keys

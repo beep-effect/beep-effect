@@ -457,6 +457,7 @@ layer(Layer.mergeAll(NodeServices.layer, ModelsLocatorReaderLive), { timeout: "3
         "model: old\n---\nmodel: old\n",
         "model: !tag old\n",
         "model: |\n  old\n",
+        "model: old\nlist:\n  - x\n",
       ])
         expect(O.getOrThrow(yield* reader.read(file(text), yaml))).toMatch(/^Unsupported YAML form: line [0-9]+/);
       assertSome(yield* reader.read(file("model: old\nnative: keep\n"), yaml), "old");
