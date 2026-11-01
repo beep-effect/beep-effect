@@ -22,9 +22,12 @@ The root (`//`) does not change. `bun run beep lint policy-fingerprint --write` 
 
 ## Turbo coupling
 
-Measured on this branch after merging `origin/main` d5ac507ae3 by walking the workspace dependency closure
-(dependencies, devDependencies, peer and optional, `workspace:` specifiers only) of every manifest, with and without
-the new `@beep/repo-ai-metrics` -> `@beep/yaml` edge:
+Measured on this branch after merging `origin/main` 4bcd7ff7bf (re-measured after the earlier d5ac507ae3 and
+bb6e32b003 merges; in between, main changed workspace manifests: repo-cli dropped `@beep/runpod` and
+`@openai/codex-sdk`, docgen's scripts changed, and `@beep/repo-ai-metrics` gained `@effect/platform-node`,
+`protobufjs` and the `@beep/ai-provider-cli` devDependency with its own reviewed row). The walk covers the workspace
+dependency closure (dependencies, devDependencies, peer and optional, `workspace:` specifiers only) of every manifest,
+with and without the new `@beep/repo-ai-metrics` -> `@beep/yaml` edge:
 
 - `@beep/repo-ai-metrics` gains no upstream package: `@beep/yaml` was already in its closure transitively.
 - No other workspace's closure changes. The dependents of `@beep/repo-ai-metrics` (`@beep/infra`, `@beep/palantiri`,
@@ -32,5 +35,7 @@ the new `@beep/repo-ai-metrics` -> `@beep/yaml` edge:
 
 No closure grows; only the edited manifest's bytes move.
 
-Recording this subject accepts the existing posture for the edited manifest. No qualification is granted, and no other
+The stamp replaces the subject's review recorded on main
+(`goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md`); the merged manifest keeps every
+dependency delta that review covered. Recording this subject accepts the existing posture for the edited manifest. No qualification is granted, and no other
 subject changes.

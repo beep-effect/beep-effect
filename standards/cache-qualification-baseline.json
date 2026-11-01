@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "GPT-6-Astra independent foundation panel",
-      "reason": "Carry only previously reviewed AI-metrics dependency deltas onto accepted main e733; root seals already match incoming main; no qualification or exception growth.",
+      "reviewer": "Claude Opus 5.5 (effected-promotion roadmap R4, refactor/yaml-out-of-repo-cli)",
+      "reason": "Record the R4 manifest edit that drops the npm yaml dependency from @beep/repo-ai-metrics and adds the @beep/yaml workspace dependency (compose.ts renders through the kit); the turbo coupling is measured in the review; no qualification is granted.",
       "basis": {
-        "path": "goals/agent-observability-foundation/research/CACHE-E733-SYNC-20261031.md",
-        "sha256": "844d0b3a32550fa207520930ab9010696cf79e31723e4fce411a95fc2818547b"
+        "path": "goals/effected-promotion/research/cache-baseline-review-r4.md",
+        "sha256": "dc4c222a864bab7a37ce97d6f7ebe6d9b93e42ac8011ca53a021f0ad8ff60581"
       }
     },
     "@beep/repo-cli": {
@@ -102331,7 +102331,8 @@
           "@beep/test-runner#audit",
           "@beep/test-utils#audit",
           "@beep/utils#audit",
-          "@beep/xdg#audit"
+          "@beep/xdg#audit",
+          "@beep/yaml#audit"
         ],
         "configuration": {
           "cache": false,
@@ -102407,7 +102408,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -102472,7 +102474,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": true,
@@ -102524,7 +102527,8 @@
           "@beep/test-runner#build",
           "@beep/test-utils#build",
           "@beep/utils#build",
-          "@beep/xdg#build"
+          "@beep/xdg#build",
+          "@beep/yaml#build"
         ],
         "configuration": {
           "cache": false,
@@ -102661,7 +102665,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102876,7 +102881,8 @@
           "@beep/test-runner#transit",
           "@beep/test-utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": false,
@@ -102932,7 +102938,8 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
@@ -102993,7 +103000,8 @@
           "@beep/test-utils#transit",
           "@beep/utils#transit",
           "@beep/utils#transit",
-          "@beep/xdg#transit"
+          "@beep/xdg#transit",
+          "@beep/yaml#transit"
         ],
         "configuration": {
           "cache": true,
