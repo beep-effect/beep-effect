@@ -340,12 +340,12 @@ export const ciRouteCommand = ciRouteCommandDefinition.pipe(Command.provide(rout
  *
  * **Example** (Check that a service belongs to the route set)
  *
- * ```ts import.meta.vitest name="Check that a service belongs to the route set"
+ * ```ts
  * import type { CiRouteServices } from "@beep/repo-cli/commands/Ci"
  * import type { RouteGit } from "@beep/repo-cli/commands/Ci/RouteCensus"
  *
- * const readsGit: RouteGit extends CiRouteServices ? true : false = true
- * readsGit // => true
+ * // Compiles only while RouteGit is one of the route services.
+ * export type ReadsGit = RouteGit extends CiRouteServices ? RouteGit : never
  * ```
  *
  * @category cli-commands
@@ -364,9 +364,9 @@ export type CiRouteServices = VerificationRoute | RouteCensusReader | ChangeClas
  * typeof makeCiRouteCommandForTesting // => "function"
  * ```
  *
- * @internal
  * @param layer - Route services the dispatched handlers read.
  * @returns The route command tree with those services.
+ * @internal
  * @category testing
  * @since 0.0.0
  */

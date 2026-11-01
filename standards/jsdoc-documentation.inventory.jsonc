@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T01:44:59.651Z",
+  "generatedAt": "2026-11-01T02:25:51.851Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -491141,9 +491141,9 @@
           "line": 373,
           "anchor": "packages-tooling-tool-cli-src-commands-ci-route-command-ts-373-makeciroutecommandfortesting",
           "currentTags": [
-            "@internal",
             "@param",
             "@returns",
+            "@internal",
             "@category",
             "@since"
           ],
