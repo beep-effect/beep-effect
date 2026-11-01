@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/yaml-drop-parity.ts",
-  "commit": "a1e43ce9340c4e6b00bd54ce71b055ea26daec79",
+  "commit": "2f666e4bd8d90dfe9b906cd4197f63f4faf2d9ac",
   "stringify": {
     "sites": [
       {

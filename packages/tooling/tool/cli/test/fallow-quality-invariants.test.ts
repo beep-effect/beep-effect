@@ -146,7 +146,10 @@ it.effect("reads workflow YAML into a plain value", () =>
 
 it.effect("fails malformed workflow YAML with the file, the parser cause and exit code 1", () =>
   Effect.gen(function* () {
-    const error = yield* Effect.flip(workflowYamlValueForTesting(".github/workflows/bad.yml", "jobs: [unclosed\n"));
+    const error = yield* workflowYamlValueForTesting(".github/workflows/bad.yml", "jobs: [unclosed\n").pipe(
+      Effect.asVoid,
+      Effect.flip
+    );
     expect(error.message).toMatch(/^Invalid workflow YAML \.github\/workflows\/bad\.yml: \S/);
     expect(error.exitCode).toBe(1);
   })
