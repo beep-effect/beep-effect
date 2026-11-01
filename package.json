@@ -357,7 +357,7 @@
     "coverage": "beep-cli coverage",
     "coverage:baseline:write": "beep-cli coverage -- --write-baseline --concurrency=3",
     "create-package": "bun run beep create-package",
-    "deps:update": "bunx syncpack update --target=latest --dependency-types=catalog",
+    "deps:update": "bun run beep holds update && bunx syncpack update --target=latest --dependency-types=catalog",
     "dev": "bunx turbo run dev",
     "docgen": "bun run beep docgen local --full",
     "docgen:local": "bun run beep docgen local",
