@@ -1,0 +1,10 @@
+{
+  "unit": "foundation-managed-enrollment-wide-types.service",
+  "memoryStopBytes": 12884901888,
+  "hostAvailableFloorBytes": 10737418240,
+  "initialAvailableBytes": 27110486016,
+  "peakObservedBytes": 12887179264,
+  "minimumAvailableBytes": 14468423680,
+  "stoppedFor": "owned job growth",
+  "exitCode": 1
+}

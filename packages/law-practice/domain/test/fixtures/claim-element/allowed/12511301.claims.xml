@@ -1,0 +1,131 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for dynamically generating structured documents using artificial intelligence (AI) models, the system comprising:
+<claim-text>at least one hardware processor; and</claim-text>
+<claim-text>at least one non-transitory memory storing instructions, which, when executed by the at least one hardware processor, cause the system to:
+<claim-text>receive, from a graphical user interface (GUI), an output generation request comprising a prompt for generation of an output comprising a plurality of document sections;</claim-text>
+<claim-text>using a first AI model of an AI model set, retrieve (1) a chunk set, wherein each chunk of the chunk set is a portion of a source document set and (2) a template set,
+<claim-text>wherein each template of the template set is indicative of one or more document sections within the plurality of document sections to be generated using the source document set, and</claim-text>
+<claim-text>wherein each chunk of the chunk set is tagged with an operational boundary set defining a pre-loaded query context set associated with a corresponding source document of the chunk;</claim-text>
+</claim-text>
+<claim-text>using a second AI model of the AI model set, generate a ranking set of the chunk set by, for each particular chunk in the chunk set:
+<claim-text>determining a first metric value of a first metric using an angle between (i) a vector representation of the output generation request and (ii) a vector representation of the particular chunk,</claim-text>
+<claim-text>determining a second metric value of a second metric using a ratio between (i) a number of shared alphanumeric character sets between the output generation request and the particular chunk and (ii) a total number of alphanumeric character sets of the particular chunk, wherein each alphanumeric character set has a plurality of alphanumeric characters,</claim-text>
+<claim-text>determining a third metric value of a third metric using a temporal period associated with the particular chunk, and</claim-text>
+<claim-text>using the first, second, and third metric values, assigning the particular chunk a particular ranking within the ranking set;</claim-text>
+</claim-text>
+<claim-text>using a third AI model of the AI model set, generate a response responsive to the prompt of the received output generation request in accordance with (i) the ranking set of the chunk set, (ii) the template set, and (iii) respective operational boundary sets of the chunk set, wherein each alphanumeric character set within the response is tagged with one or more source identifiers that each uniquely identify a corresponding chunk of the chunk set; and</claim-text>
+<claim-text>cause display of, on the GUI, a graphical layout that includes (1) a first graphical representation indicative of the response, (2) a second graphical representation indicative of the retrieved chunk set, and (3) a third graphical representation indicative of respective source identifiers, of the one or more source identifiers, of one or more alphanumeric character sets of the alphanumeric character sets within the response.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein retrieving the template set further causes the system to:
+<claim-text>map the output generation request to one or more templates within an overall template set stored in a database, wherein each of the one or more templates is indicative of at least one document section within the plurality of document sections.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the system is further caused to:
+<claim-text>retrieve a set of predefined guidelines associated with the output generation request;</claim-text>
+<claim-text>using a fourth AI model of the AI model set, evaluate the generated response against the set of predefined guidelines to generate a compliance score for the generated response;</claim-text>
+<claim-text>compare the compliance score to a predetermined threshold; and</claim-text>
+<claim-text>responsive to the compliance score satisfying the predetermined threshold, cause display of the graphical layout on the GUI.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein one or more of: the first, second, or third AI models are the same.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the system is further caused to:
+<claim-text>obtain a user-edited response based on receiving a user input to the response via the GUI;</claim-text>
+<claim-text>using a fourth AI model of the AI model set, evaluate the user-edited response against predefined guidelines; and</claim-text>
+<claim-text>responsive to the user-edited response satisfying the predefined guidelines, cause display of, on the GUI, an indication of satisfaction of the user-edited response with the predefined guidelines.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein evaluating the user-edited response further causes the system to:
+<claim-text>compare the user-edited response to the predefined guidelines to identify a discrepancy set between the user-edited response and the predefined guidelines;</claim-text>
+<claim-text>generate an action set configured to remove the discrepancy set between the user-edited response and the predefined guidelines; and</claim-text>
+<claim-text>cause display of the action set in the GUI.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. One or more non-transitory computer-readable media, carrying instructions that, when executed by a computing system, cause the computing system to:
+<claim-text>receive, from a graphical user interface (GUI), an output generation request comprising a prompt for generation of an output comprising a plurality of document sections;</claim-text>
+<claim-text>using a first AI model of an AI model set, retrieve (1) a chunk set, wherein each chunk of the chunk set is a portion of a source document set and (2) a template set,
+<claim-text>wherein each template of the template set is indicative of one or more document sections within the plurality of document sections to be generated using the source document set, and</claim-text>
+<claim-text>wherein each chunk of the chunk set is tagged with an operational boundary set defining a pre-loaded query context set associated with a corresponding source document of the chunk;</claim-text>
+</claim-text>
+<claim-text>using a second AI model of the AI model set, generate a ranking set of the chunk set by, for each particular chunk in the chunk set:
+<claim-text>determining a first metric value of a first metric using an angle between (i) a vector representation of the output generation request and (ii) a vector representation of the particular chunk,</claim-text>
+<claim-text>determining a second metric value of a second metric using a ratio between (i) a number of shared alphanumeric character sets between the output generation request and the particular chunk and (ii) a total number of alphanumeric character sets of the particular chunk, wherein each alphanumeric character set has a plurality of alphanumeric characters,</claim-text>
+<claim-text>determining a third metric value of a third metric using a temporal period associated with the particular chunk, and</claim-text>
+<claim-text>using the first, second, and third metric values, assigning the particular chunk a particular ranking within the ranking set;</claim-text>
+</claim-text>
+<claim-text>using a third AI model of the AI model set, generate a response responsive to the prompt of the received output generation request in accordance with (i) the ranking set of the chunk set, (ii) the template set, and (iii) respective operational boundary sets of the chunk set,
+<claim-text>wherein each alphanumeric character set within the response is tagged with one or more source identifiers that each uniquely identify a corresponding chunk of the chunk set; and</claim-text>
+</claim-text>
+<claim-text>cause display of, on the GUI, a graphical layout that includes (1) a first graphical representation indicative of the response, (2) a second graphical representation indicative of the retrieved chunk set, and (3) a third graphical representation indicative of respective source identifiers, of the one or more source identifiers, of one or more alphanumeric character sets of the alphanumeric character sets within the response.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the first metric represents cosine similarity, and wherein the second metric indicates a keyword density.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein each chunk of the chunk set is tagged with an operational boundary set defining a pre-loaded query context set associated with a corresponding source artifact of the chunk.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The one or more non-transitory, computer-readable storage v of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein generating the response further comprises preventing usage of the corresponding chunks in accordance with respective pre-loaded query context sets of the corresponding chunks.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the prompt comprises a natural language prompt, and wherein retrieving the template set comprises mapping the natural language prompt to one or more templates within an overall template set stored in a database.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein one or more of: the first, second, or third AI models are the same.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The one or more non-transitory, computer-readable storage media of <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein one or more of: the first, second, or third AI models is a large language model.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A computer-implemented method, the computer-implemented method comprising:
+<claim-text>receiving, from a graphical user interface (GUI), an output generation request comprising a prompt for generation of an output comprising a plurality of document sections;</claim-text>
+<claim-text>using a first AI model of an AI model set, retrieving (1) a chunk set, wherein each chunk of the chunk set is a portion of a source document set and (2) a template set,</claim-text>
+<claim-text>wherein each template of the template set is indicative of one or more document sections within the plurality of document sections to be generated using the source document set, and</claim-text>
+<claim-text>wherein each chunk of the chunk set is tagged with an operational boundary set defining a pre-loaded query context set associated with a corresponding source document of the chunk;</claim-text>
+<claim-text>using a second AI model of the AI model set, generating a ranking set of the chunk set by, for each particular chunk in the chunk set:</claim-text>
+<claim-text>determining a first metric value of a first metric using an angle between (i) a vector representation of the output generation request and (ii) a vector representation of the particular chunk,</claim-text>
+<claim-text>determining a second metric value of a second metric using a ratio between (i) a number of shared alphanumeric character sets between the output generation request and the particular chunk and (ii) a total number of alphanumeric character sets of the particular chunk, wherein each alphanumeric character set has a plurality of alphanumeric characters,</claim-text>
+<claim-text>determining a third metric value of a third metric using a temporal period associated with the particular chunk, and</claim-text>
+<claim-text>using the first, second, and third metric values, assigning the particular chunk a particular ranking within the ranking set;</claim-text>
+<claim-text>using a third AI model of the AI model set, generating a response responsive to the prompt of the received output generation request in accordance with (i) the ranking set of the chunk set, (ii) the template set, and (iii) respective operational boundary sets of the chunk set,</claim-text>
+<claim-text>wherein each alphanumeric character set within the response is tagged with one or more source identifiers that each uniquely identify a corresponding chunk of the chunk set; and</claim-text>
+<claim-text>causing display of, on the GUI, a graphical layout that includes (1) a first graphical representation indicative of the response, (2) a second graphical representation indicative of the retrieved chunk set, and (3) a third graphical representation indicative of respective source identifiers, of the one or more source identifiers, of one or more alphanumeric character sets of the alphanumeric character sets within the response.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising:
+<claim-text>generating multiple response variants using different combinations of chunks within the chunk set; and</claim-text>
+<claim-text>determining a response variant from the multiple response variants based on a predefined guideline set.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising:
+<claim-text>constructing a response history set including one or more of: the generated response or a user edit set on the generated response.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising:
+<claim-text>generating an explanation set for the response describing a series of steps configured to derive the response; and</claim-text>
+<claim-text>causing a perceptible representation representing the explanation set via the GUI.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the response includes one or more of: a document, an audio file, an image, or a video.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein retrieving the template set comprises mapping the output generation request to one or more templates within an overall template set stored in a database.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computer-implemented method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein one or more of: the first, second, or third AI models are the same.</claim-text>
+</claim>
+</claims>

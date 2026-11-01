@@ -1,0 +1,323 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11246782-root-28",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "eligible",
+  "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+  "reviewedClaimNumbers": [
+    28,
+    29,
+    30
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "11246782",
+    "publicationNumber": "US20070080569A1",
+    "publicationReference": [
+      "US",
+      "20070080569",
+      "A1",
+      "20070412"
+    ],
+    "applicationReference": [
+      "US",
+      "11246782",
+      "20051007"
+    ],
+    "officeActionDocumentIdentifiers": [
+      "FCKH00ECPPOPPY5"
+    ],
+    "officeActionMailDate": "2008-02-12"
+  },
+  "digestEvidence": [
+    {
+      "file": "11246782.publication.xml",
+      "sha256": "7012dfce65ee20e9d6115148f4e42ab9a962a01056b76c39309c06bfdfaeb44c",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11246782.claims.xml",
+      "sha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "EEWNAG79PP2GUI1",
+      "officialDate": "2005-10-07T00:00:00.000-0400",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 51,
+    "actualRows": 51,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2006-02-27T00:00:00.000-0500",
+        "documentCode": "A.PE",
+        "documentIdentifier": "EK7CX1Q0PPOPPY2"
+      },
+      {
+        "officialDate": "2006-02-27T00:00:00.000-0500",
+        "documentCode": "REM",
+        "documentIdentifier": "EKA9SX2RPP2GUI2"
+      },
+      {
+        "officialDate": "2005-10-07T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "EEWNAG79PP2GUI1"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "FCKH00ECPPOPPY5",
+        "documentCode": "CTNF",
+        "officialDate": "2008-02-12T00:00:00.000-0500"
+      }
+    ]
+  },
+  "officeActionGroundQuote": "claims 15-19, and 22-30 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. in lines 3 and 5 of claim 15, it appears that applicant positively claims a juvenile. note the recitation a juvenile seated on the seating surface. it is suggested that when be inserted after juvenile. similarly note claim 22. claim 16 is indefinite since it depends from an indefinite claim. in line 7 of claim 17, \u201cthe crotch belt\u201d lacks proper antecedent basis. claims 18 and 19 are indefinite since each depends from an indefinite claim. in line 1 of claim 22, \u201cthe lower shell\u201d lacks proper antecedent basis. in the last line of claim 22, \u201cthe belt-receiver slot\u201d lacks proper antecedent basis. in line 1 of claim 23, \u201cthe harness mount\u201d lacks proper antecedent basis. in lines 3 to 4 of claim 23, \u201cthe top wall\u201d lacks proper antecedent basis. in line 4 of claim 23, \u201cthe upper shell\u201d lacks proper antecedent basis. in line 1 of claim 23, \u201cthe upper shell\u201d lacks proper antecedent basis. in line 2 of claim 24, \u201cthe hollow interior region\u201d lacks proper antecedent basis. in line 1 of claim 25, \u201cthe upper shell lacks proper antecedent basis. in line 2 of claim 25, the hollow interior region lacks proper antecedent basis. in line 6 of claim 25, \u201cthe top wall\u201d lacks proper antecedent basis. in line 7 of claim 25, \u201cthe underlying lower shell\u201d lacks proper antecedent basis. claim 26 is indefinite since it depends from an indefinite claim. in line 2 of claim 27, \u201cthe bottom wall of the lower shell\u201d lacks proper antecedent basis. in line 3 of claim 27, \u201cthe top wall of the upper shell\u201d lacks proper antecedent basis. in lines 4 to 5 of claim 28, \u201cthe upper shell\u201d lacks proper antecedent basis. in lines 5 to 6 of claim 28, the hollow interior region lacks proper antecedent basis. in line 6 of claim 28m the left swing arm lacks proper antecedent basis. in line 7 of claim 28, the hollow interior region lacks proper antecedent basis. in line 8 of claim 28, the right swing arm lacks proper antecedent basis. in line 10 of claim 28, the top wall lacks proper antecedent basis. in line 10 of claim 28, the underlying lower shell lacks proper antecedent basis. claim 29 is indefinite since it depends from an indefinite claim. in line 7 of claim 30, the belt-receiver slot lacks proper antecedent basis. in line 8 of claim 30, the bottom wall lacks proper antecedent basis. in line 10 of claim 30, the top wall lacks proper antecedent basis.",
+  "quotedEvidence": [
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the upper shell",
+      "nativeQuote": "the upper shell",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the hollow interior region",
+      "nativeQuote": "the hollow interior region",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 28,
+      "examinerPhrase": "the left swing arm",
+      "nativeQuote": "the left swing arm",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the belt-receiver slot",
+      "nativeQuote": "the belt-receiver slot",
+      "literalMatch": true
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the bottom wall",
+      "nativeQuote": "the bottom wall",
+      "literalMatch": true
+    }
+  ],
+  "rationale": "Original PDF7-8 corroborates complete selected28-30 with independent28 and29/30->28, including original dangling upper/lower shell references. Native30 coupled-to versus original coupled to is recorded as a punctuation difference, not a changed entity. The preliminary-amendment cover limits changes to the specification; related remarks explicitly state that the specification title is being made consistent with the original cover/transmittal title. No claim amendment appears in the same-date inventory. This resolves the possible intervening-claim-change concern by direct evidence, not chronology alone. Actual second-paragraph rejection15-19/22-30 and selected numbered phrases remain verified.",
+  "concerns": [],
+  "pdfNeeds": [],
+  "attorneyAdjudication": "pending",
+  "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "11246782-root-28",
+      "role": "extractor-source-audit",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.98,
+      "verdict": "unresolved",
+      "candidateStatus": "Source-only replacement candidate; no active slot changed; independent source critic and semantic references pending.",
+      "reviewedClaimNumbers": [
+        28,
+        29,
+        30
+      ],
+      "sourceIdentity": {
+        "applicationNumber": "11246782",
+        "publicationNumber": "US20070080569A1",
+        "publicationReference": [
+          "US",
+          "20070080569",
+          "A1",
+          "20070412"
+        ],
+        "applicationReference": [
+          "US",
+          "11246782",
+          "20051007"
+        ],
+        "officeActionDocumentIdentifiers": [
+          "FCKH00ECPPOPPY5"
+        ],
+        "officeActionMailDate": "2008-02-12"
+      },
+      "digestEvidence": [
+        {
+          "file": "11246782.publication.xml",
+          "sha256": "7012dfce65ee20e9d6115148f4e42ab9a962a01056b76c39309c06bfdfaeb44c",
+          "matchesProvenance": true
+        },
+        {
+          "file": "11246782.claims.xml",
+          "sha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+          "matchesProvenance": true
+        },
+        {
+          "file": "source.claims.xml",
+          "sha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+          "matchesProvenance": true
+        }
+      ],
+      "originalEvidence": [
+        {
+          "documentIdentifier": "EEWNAG79PP2GUI1",
+          "officialDate": "2005-10-07T00:00:00.000-0400",
+          "xmlAvailable": false
+        }
+      ],
+      "inventoryEvidence": {
+        "declaredCount": 51,
+        "actualRows": 51,
+        "preOrOnActionClaimOrAmendmentRows": [
+          {
+            "officialDate": "2006-02-27T00:00:00.000-0500",
+            "documentCode": "A.PE",
+            "documentIdentifier": "EK7CX1Q0PPOPPY2"
+          },
+          {
+            "officialDate": "2006-02-27T00:00:00.000-0500",
+            "documentCode": "REM",
+            "documentIdentifier": "EKA9SX2RPP2GUI2"
+          },
+          {
+            "officialDate": "2005-10-07T00:00:00.000-0400",
+            "documentCode": "CLM",
+            "documentIdentifier": "EEWNAG79PP2GUI1"
+          }
+        ],
+        "citedOfficeActionRows": [
+          {
+            "documentIdentifier": "FCKH00ECPPOPPY5",
+            "documentCode": "CTNF",
+            "officialDate": "2008-02-12T00:00:00.000-0500"
+          }
+        ]
+      },
+      "officeActionGroundQuote": "claims 15-19, and 22-30 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. in lines 3 and 5 of claim 15, it appears that applicant positively claims a juvenile. note the recitation a juvenile seated on the seating surface. it is suggested that when be inserted after juvenile. similarly note claim 22. claim 16 is indefinite since it depends from an indefinite claim. in line 7 of claim 17, \u201cthe crotch belt\u201d lacks proper antecedent basis. claims 18 and 19 are indefinite since each depends from an indefinite claim. in line 1 of claim 22, \u201cthe lower shell\u201d lacks proper antecedent basis. in the last line of claim 22, \u201cthe belt-receiver slot\u201d lacks proper antecedent basis. in line 1 of claim 23, \u201cthe harness mount\u201d lacks proper antecedent basis. in lines 3 to 4 of claim 23, \u201cthe top wall\u201d lacks proper antecedent basis. in line 4 of claim 23, \u201cthe upper shell\u201d lacks proper antecedent basis. in line 1 of claim 23, \u201cthe upper shell\u201d lacks proper antecedent basis. in line 2 of claim 24, \u201cthe hollow interior region\u201d lacks proper antecedent basis. in line 1 of claim 25, \u201cthe upper shell lacks proper antecedent basis. in line 2 of claim 25, the hollow interior region lacks proper antecedent basis. in line 6 of claim 25, \u201cthe top wall\u201d lacks proper antecedent basis. in line 7 of claim 25, \u201cthe underlying lower shell\u201d lacks proper antecedent basis. claim 26 is indefinite since it depends from an indefinite claim. in line 2 of claim 27, \u201cthe bottom wall of the lower shell\u201d lacks proper antecedent basis. in line 3 of claim 27, \u201cthe top wall of the upper shell\u201d lacks proper antecedent basis. in lines 4 to 5 of claim 28, \u201cthe upper shell\u201d lacks proper antecedent basis. in lines 5 to 6 of claim 28, the hollow interior region lacks proper antecedent basis. in line 6 of claim 28m the left swing arm lacks proper antecedent basis. in line 7 of claim 28, the hollow interior region lacks proper antecedent basis. in line 8 of claim 28, the right swing arm lacks proper antecedent basis. in line 10 of claim 28, the top wall lacks proper antecedent basis. in line 10 of claim 28, the underlying lower shell lacks proper antecedent basis. claim 29 is indefinite since it depends from an indefinite claim. in line 7 of claim 30, the belt-receiver slot lacks proper antecedent basis. in line 8 of claim 30, the bottom wall lacks proper antecedent basis. in line 10 of claim 30, the top wall lacks proper antecedent basis.",
+      "quotedEvidence": [
+        {
+          "claimNumber": 28,
+          "examinerPhrase": "the upper shell",
+          "nativeQuote": "the upper shell",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 28,
+          "examinerPhrase": "the hollow interior region",
+          "nativeQuote": "the hollow interior region",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 28,
+          "examinerPhrase": "the left swing arm",
+          "nativeQuote": "the left swing arm",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 30,
+          "examinerPhrase": "the belt-receiver slot",
+          "nativeQuote": "the belt-receiver slot",
+          "literalMatch": true
+        },
+        {
+          "claimNumber": 30,
+          "examinerPhrase": "the bottom wall",
+          "nativeQuote": "the bottom wall",
+          "literalMatch": true
+        }
+      ],
+      "rationale": "The actual second-paragraph rejection of claims 15-19 and 22-30 expressly includes selected claims 28-30. Detailed claim 28 phrases match native claim 28, claim 29 is explicitly rejected by dependency, and claim 30 phrases match. Natural dependencies 29/30 -> independent 28 form a meaningful family. Original EEWNAG79PP2GUI1 XML is absent. The complete 51-row inventory also lists a 2006 preliminary amendment before the 2008 action. Numbered phrase agreement alone cannot establish the complete operative original or adoption.",
+      "concerns": [
+        "Obtain original EEWNAG79PP2GUI1 PDF for selected claims 28-30 and investigate EK7CX1Q0PPOPPY2 preliminary amendment for operative claim changes before the OA."
+      ],
+      "pdfNeeds": [
+        "Obtain original EEWNAG79PP2GUI1 PDF for selected claims 28-30 and investigate EK7CX1Q0PPOPPY2 preliminary amendment for operative claim changes before the OA."
+      ],
+      "attorneyAdjudication": "pending",
+      "independence": "Source-extractor only for these candidates. No source/provenance/expected/active sample changes, predictions, production/rules, network, secrets, git or delegation."
+    }
+  ],
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "EEWNAG79PP2GUI1",
+      "sha256": "5692a6eb95b86a9db1ea804386b7cab6003e14a3663dcf35535c25518756155f",
+      "pdfPagesInspected": [
+        7,
+        8
+      ],
+      "printedPages": [
+        16,
+        17
+      ],
+      "purpose": "Visual original corroboration only; native source unchanged."
+    },
+    {
+      "documentIdentifier": "EK7CX1Q0PPOPPY2",
+      "sha256": "9919628f3530df0ad7c75fd07dc1e62afa421c0cab660a2d8adecfeef1863d1b",
+      "pdfPagesInspected": [
+        1
+      ],
+      "printedPages": [
+        1
+      ],
+      "purpose": "Visual original corroboration only; native source unchanged."
+    },
+    {
+      "documentIdentifier": "EKA9SX2RPP2GUI2",
+      "sha256": "b61c8ec5990a46ec8e93bdd34e1127f8c4d77aa115cea9cf61168e439bcabd26",
+      "pdfPagesInspected": [
+        1
+      ],
+      "printedPages": [
+        3
+      ],
+      "purpose": "Visual original corroboration only; native source unchanged."
+    }
+  ],
+  "pdfQuotedEvidence": [
+    {
+      "claimNumber": 28,
+      "nativeQuote": "wherein the upper shell further includes",
+      "originalQuote": "wherein the upper shell further includes",
+      "pdfPage": 7
+    },
+    {
+      "claimNumber": 29,
+      "nativeQuote": "The seat of claim 28",
+      "originalQuote": "The seat of claim 28",
+      "pdfPage": 7
+    },
+    {
+      "claimNumber": 30,
+      "nativeQuote": "The seat of claim 28",
+      "originalQuote": "The seat of claim 28",
+      "pdfPage": 8
+    },
+    {
+      "amendmentQuote": "Amendments to the Specification begin on page 2 of this paper.",
+      "documentIdentifier": "EK7CX1Q0PPOPPY2",
+      "pdfPage": 1
+    },
+    {
+      "amendmentQuote": "The specification is amended to change the title of the application",
+      "documentIdentifier": "EKA9SX2RPP2GUI2",
+      "pdfPage": 1
+    }
+  ]
+}

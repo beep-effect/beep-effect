@@ -27188,6 +27188,18 @@
         "functions": 88
       },
       "files": {
+        "packages/drivers/phoenix/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/drivers/phoenix/src/Phoenix.errors.ts": {
           "lines": 100,
           "statements": 100,
@@ -27224,16 +27236,16 @@
             "functions": 88
           }
         },
-        "packages/drivers/phoenix/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
+        "packages/drivers/phoenix/src/Phoenix.span-readback.ts": {
+          "lines": 88.46,
+          "statements": 86.88,
+          "branches": 87.8,
+          "functions": 66.66,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
+            "lines": 6,
+            "statements": 8,
+            "branches": 5,
+            "functions": 6
           }
         }
       }
@@ -30314,6 +30326,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/ai-metrics/src/delivery-ledger.ts": {
+          "lines": 97.96,
+          "statements": 94.82,
+          "branches": 87.75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 12,
+            "branches": 12,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-metrics/src/derived-storage.ts": {
           "lines": 94.15,
           "statements": 94.3,
@@ -30335,6 +30359,30 @@
             "lines": 0,
             "statements": 0,
             "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/evidence-retention.ts": {
+          "lines": 98.94,
+          "statements": 96.29,
+          "branches": 90.12,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 8,
+            "branches": 8,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/evidence-window.ts": {
+          "lines": 94.11,
+          "statements": 94.44,
+          "branches": 90,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
             "functions": 0
           }
         },
@@ -30372,6 +30420,18 @@
             "statements": 20,
             "branches": 11,
             "functions": 15
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/git-root-evidence.ts": {
+          "lines": 96.29,
+          "statements": 93.65,
+          "branches": 88.57,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 4,
+            "branches": 4,
+            "functions": 1
           }
         },
         "packages/tooling/library/ai-metrics/src/hook-pulse.ts": {
@@ -30446,6 +30506,18 @@
             "functions": 10
           }
         },
+        "packages/tooling/library/ai-metrics/src/internal/evidence-recovery.ts": {
+          "lines": 97.45,
+          "statements": 93.28,
+          "branches": 84.21,
+          "functions": 100,
+          "uncovered": {
+            "lines": 3,
+            "statements": 9,
+            "branches": 9,
+            "functions": 0
+          }
+        },
         "packages/tooling/library/ai-metrics/src/internal/file-info.ts": {
           "lines": 80,
           "statements": 83.33,
@@ -30470,6 +30542,30 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/ai-metrics/src/internal/observation-export-reader.ts": {
+          "lines": 98.14,
+          "statements": 90.32,
+          "branches": 78.78,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 6,
+            "branches": 7,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/internal/observation-http-body.ts": {
+          "lines": 94.11,
+          "statements": 94.44,
+          "branches": 100,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
         "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts": {
           "lines": 94.44,
           "statements": 94.44,
@@ -30480,6 +30576,18 @@
             "statements": 1,
             "branches": 0,
             "functions": 1
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/internal/unenrolled-evidence.ts": {
+          "lines": 95,
+          "statements": 95.45,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/library/ai-metrics/src/mirror.ts": {
@@ -30506,6 +30614,246 @@
             "functions": 0
           }
         },
+        "packages/tooling/library/ai-metrics/src/native-delivery.ts": {
+          "lines": 92.53,
+          "statements": 92.1,
+          "branches": 90.19,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 5,
+            "functions": 4
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-export.ts": {
+          "lines": 88,
+          "statements": 89.28,
+          "branches": 93.02,
+          "functions": 84.37,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 3,
+            "functions": 5
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-http.ts": {
+          "lines": 98.92,
+          "statements": 97.05,
+          "branches": 93.33,
+          "functions": 92.68,
+          "uncovered": {
+            "lines": 1,
+            "statements": 3,
+            "branches": 5,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-intake.ts": {
+          "lines": 97.7,
+          "statements": 92.05,
+          "branches": 83.95,
+          "functions": 100,
+          "uncovered": {
+            "lines": 3,
+            "statements": 12,
+            "branches": 13,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-readback.ts": {
+          "lines": 96.38,
+          "statements": 91.75,
+          "branches": 84.61,
+          "functions": 92.3,
+          "uncovered": {
+            "lines": 3,
+            "statements": 8,
+            "branches": 10,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-schedule.ts": {
+          "lines": 98.91,
+          "statements": 93.54,
+          "branches": 83.18,
+          "functions": 97.5,
+          "uncovered": {
+            "lines": 2,
+            "statements": 14,
+            "branches": 19,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/native-trace.ts": {
+          "lines": 98.47,
+          "statements": 95.89,
+          "branches": 91.01,
+          "functions": 96.42,
+          "uncovered": {
+            "lines": 2,
+            "statements": 6,
+            "branches": 8,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-backup.ts": {
+          "lines": 97.61,
+          "statements": 91.42,
+          "branches": 75.55,
+          "functions": 90.47,
+          "uncovered": {
+            "lines": 3,
+            "statements": 12,
+            "branches": 11,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-claim-population.ts": {
+          "lines": 96.07,
+          "statements": 94.91,
+          "branches": 90,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 3,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-coverage.ts": {
+          "lines": 87.5,
+          "statements": 86.48,
+          "branches": 100,
+          "functions": 86.95,
+          "uncovered": {
+            "lines": 4,
+            "statements": 5,
+            "branches": 0,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-inventory.ts": {
+          "lines": 93.65,
+          "statements": 94.59,
+          "branches": 96.42,
+          "functions": 91.66,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 1,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-launch-claims.ts": {
+          "lines": 96.86,
+          "statements": 94.63,
+          "branches": 88.88,
+          "functions": 93.42,
+          "uncovered": {
+            "lines": 8,
+            "statements": 16,
+            "branches": 15,
+            "functions": 5
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": {
+          "lines": 92.75,
+          "statements": 88,
+          "branches": 88.46,
+          "functions": 68.18,
+          "uncovered": {
+            "lines": 5,
+            "statements": 9,
+            "branches": 6,
+            "functions": 7
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-launch-facts.ts": {
+          "lines": 97.46,
+          "statements": 95.78,
+          "branches": 92.3,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 4,
+            "branches": 5,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-launch-http.ts": {
+          "lines": 98.27,
+          "statements": 94.11,
+          "branches": 88.46,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 4,
+            "branches": 6,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-maintenance-http.ts": {
+          "lines": 87.5,
+          "statements": 84.09,
+          "branches": 75,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 5,
+            "statements": 7,
+            "branches": 6,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-root-probe.ts": {
+          "lines": 98.03,
+          "statements": 98.21,
+          "branches": 100,
+          "functions": 95,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-runtime.ts": {
+          "lines": 96.77,
+          "statements": 94.15,
+          "branches": 81.6,
+          "functions": 93.44,
+          "uncovered": {
+            "lines": 4,
+            "statements": 9,
+            "branches": 16,
+            "functions": 4
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-source-health.ts": {
+          "lines": 85.29,
+          "statements": 86.11,
+          "branches": 52.94,
+          "functions": 68.75,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 8,
+            "functions": 5
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/observation-worker.ts": {
+          "lines": 92.68,
+          "statements": 93.02,
+          "branches": 73.33,
+          "functions": 89.47,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 4,
+            "functions": 2
+          }
+        },
         "packages/tooling/library/ai-metrics/src/otlp.ts": {
           "lines": 93.61,
           "statements": 94,
@@ -30516,6 +30864,18 @@
             "statements": 9,
             "branches": 5,
             "functions": 8
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/payload-reclamation.ts": {
+          "lines": 96.79,
+          "statements": 93.88,
+          "branches": 90.09,
+          "functions": 96.96,
+          "uncovered": {
+            "lines": 5,
+            "statements": 11,
+            "branches": 11,
+            "functions": 1
           }
         },
         "packages/tooling/library/ai-metrics/src/privacy.ts": {
@@ -30613,6 +30973,66 @@
             "branches": 0,
             "functions": 1
           }
+        },
+        "packages/tooling/library/ai-metrics/src/transcript-discovery.ts": {
+          "lines": 90.6,
+          "statements": 88.88,
+          "branches": 86.58,
+          "functions": 84.44,
+          "uncovered": {
+            "lines": 14,
+            "statements": 19,
+            "branches": 11,
+            "functions": 7
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/transcript-export.ts": {
+          "lines": 81.81,
+          "statements": 80.55,
+          "branches": 88.88,
+          "functions": 64.7,
+          "uncovered": {
+            "lines": 6,
+            "statements": 7,
+            "branches": 2,
+            "functions": 6
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/transcript-intake.ts": {
+          "lines": 98.63,
+          "statements": 96.2,
+          "branches": 90.14,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 6,
+            "branches": 7,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/transcript-page.ts": {
+          "lines": 96.17,
+          "statements": 94.9,
+          "branches": 94.3,
+          "functions": 90.32,
+          "uncovered": {
+            "lines": 7,
+            "statements": 11,
+            "branches": 7,
+            "functions": 6
+          }
+        },
+        "packages/tooling/library/ai-metrics/src/transcript-sweep.ts": {
+          "lines": 100,
+          "statements": 94.73,
+          "branches": 87.5,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
         }
       }
     },
@@ -30689,6 +31109,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/ObservationWorker.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 0,
+            "functions": 4
+          }
+        },
         "packages/tooling/tool/cli/src/commands/AIMetrics/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -30737,6 +31169,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": {
+          "lines": 80,
+          "statements": 78.94,
+          "branches": 50,
+          "functions": 56.25,
+          "uncovered": {
+            "lines": 11,
+            "statements": 12,
+            "branches": 7,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Mirror.ts": {
           "lines": 100,
           "statements": 100,
@@ -30747,6 +31191,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0,
+          "uncovered": {
+            "lines": 157,
+            "statements": 180,
+            "branches": 109,
+            "functions": 43
           }
         },
         "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts": {
@@ -31107,6 +31563,30 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": {
+          "lines": 32.35,
+          "statements": 30.55,
+          "branches": 0,
+          "functions": 12.5,
+          "uncovered": {
+            "lines": 23,
+            "statements": 25,
+            "branches": 4,
+            "functions": 7
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": {
+          "lines": 85.18,
+          "statements": 83,
+          "branches": 81.57,
+          "functions": 73.68,
+          "uncovered": {
+            "lines": 28,
+            "statements": 35,
+            "branches": 21,
+            "functions": 15
           }
         },
         "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.peer.command.ts": {
@@ -34347,6 +34827,90 @@
             "statements": 20,
             "branches": 21,
             "functions": 14
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts": {
+          "lines": 90.9,
+          "statements": 91.3,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts": {
+          "lines": 96.05,
+          "statements": 93.58,
+          "branches": 100,
+          "functions": 80,
+          "uncovered": {
+            "lines": 3,
+            "statements": 5,
+            "branches": 0,
+            "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Image/Image.command.ts": {

@@ -50,12 +50,12 @@ import * as R from "effect/Record";
 import * as References from "effect/References";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ToolHandlerPayload, translateApiKeyRequired } from "./ApiKeyRequired.ts";
 import { CurrentMcpCaller, CurrentMcpDispatchAnchor, McpCallerIdentity } from "./McpCaller.ts";
 import type * as JsonSchema from "effect/JsonSchema";
-import type * as SchemaAST from "effect/SchemaAST";
 import type * as Tracer from "effect/Tracer";
 
 /**
@@ -291,7 +291,14 @@ const inlineTopLevelReference = (
 
 const toolJsonSchema = (schema: S.Constraint, strict: boolean): JsonObject => {
   const document = inlineTopLevelReference(
-    S.toJsonSchemaDocument(schema, { onExcessProperty: strict ? "error" : "ignore" })
+    S.toJsonSchemaDocument(schema, {
+      onExcessProperty: strict ? "error" : "ignore",
+      // Upstream's template-pattern compiler cannot resolve Reference parts.
+      // Keep scalar/union/template fragments inline; structured and recursive
+      // schemas still use references. Runtime codecs are unchanged.
+      referencePolicy: ({ ast, identifier }) =>
+        SchemaAST.isObjects(ast) || SchemaAST.isArrays(ast) || SchemaAST.isDeclaration(ast) ? identifier : undefined,
+    })
   );
   return R.isEmptyRecord(document.definitions) ? document.schema : { ...document.schema, $defs: document.definitions };
 };

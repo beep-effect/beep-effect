@@ -1,0 +1,97 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A computer-implemented artificial intelligence (AI) system for autonomously managing a vehicle service center using a fleet of humanoid robots, comprising:
+<claim-text>a centralized AI control module (<b>102</b>), a fleet sensing module (<b>106</b>), and a robotic actuation module (<b>308</b>) configured to:</claim-text>
+<claim-text>a. receive and analyze multi-modal sensor data (<b>304</b>) and vehicle diagnostics (<b>204</b>), including specialized diagnostics for Electric Vehicles (EVs) and Software-Defined Vehicles (SDVs) from model year 2005 onwards;</claim-text>
+<claim-text>b. identify vehicle issues and generate explainable AI (XAI)-based repair strategies (<b>306</b><i>a</i>, <b>306</b><i>b</i>);</claim-text>
+<claim-text>c. generate and dispatch a service plan (<b>206</b>) to humanoid robots (<b>104</b>) with dynamically assigned roles (<b>306</b><i>c</i>);</claim-text>
+<claim-text>d. adapt control commands (<b>308</b>) based on real-time environmental feedback (<b>306</b><i>e</i>);</claim-text>
+<claim-text>e. update and manage a digital twin of a vehicle (<b>118</b>) and service center (<b>100</b>);</claim-text>
+<claim-text>f. constrain humanoid robot operation to user-defined geospatial boundaries (<b>3061</b>, <b>612</b>);</claim-text>
+<claim-text>g. provide customer updates (<b>218</b>) via humanoid robots (<b>104</b>) using emotion and sentiment recognition (<b>306</b><i>k</i>) algorithms;</claim-text>
+<claim-text>h. detect and respond to security threats (<b>306</b><i>j</i>), including autonomously detecting and responding to malfunctions or offline states of individual humanoid robots within said fleet by re-allocating tasks and dispatching assisting robots for recovery or removal operations;</claim-text>
+<claim-text>i. learn humanoid robotic behaviors using synthetic training data (<b>306</b><i>d</i>) and reinforcement learning (<b>306</b><i>c</i>); and</claim-text>
+<claim-text>j. optimize asset utilization by dynamically managing external vehicle staging areas (<b>606</b>) and internal service bays (<b>118</b>) to maximize throughput and revenue generation from the service center property, including systematically identifying, triaging, and completing previously unfinished vehicle service projects.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein humanoid robot roles include: customer check-in (<b>202</b>), payment (<b>218</b>), diagnostics (<b>204</b>), physical repair (<b>208</b>), logistics (<b>210</b>), outdoor maintenance (<b>212</b>, <b>600</b>), and security monitoring (<b>306</b><i>j</i>).</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the humanoid robots (<b>104</b>) are equipped with multi-degree-of-freedom hands (<b>502</b>) containing force sensors (<b>502</b><i>a</i>) and tactile sensors (<b>502</b><i>b</i>) for fine manipulation and human-safe interaction, including handling high-voltage EV components with specialized safety protocols.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein humanoid robot control includes autonomous selection and operation of interchangeable end-effectors (<b>510</b>) from a centralized automated tool magazine (<b>112</b>), with said end-effectors capable of self-diagnosis for wear and calibration drift.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a user interface (<b>108</b>, <b>310</b>) configured to: monitor humanoid robot operations, assign priority tasks, override behavior, review logs, and configure geospatial boundaries using augmented reality overlays.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the AI control module (<b>102</b>) includes a cyber-physical security framework with: AES-256 encryption, role-based access control (RBAC), immutable audit logs, and blockchain-based supply chain integration.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein emotion and sentiment recognition is performed via natural language processing, facial micro-expression analysis, and vocal tone analysis.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A computer-implemented method for autonomously operating a vehicle service center with humanoid robots, comprising:
+<claim-text>a. receiving a customer request (<b>202</b>) and scanning a vehicle with multi-modal sensors (<b>204</b>), including specialized scans for Electric Vehicle (EV) battery health and thermal management;</claim-text>
+<claim-text>b. generating a digital twin of a vehicle and service center facility;</claim-text>
+<claim-text>c. identifying service issues using explainable AI (XAI) reasoning (<b>204</b>);</claim-text>
+<claim-text>d. creating and dispatching a multi-task service plan (<b>206</b>) constrained by geospatial boundaries (<b>612</b>);</claim-text>
+<claim-text>e. coordinating a humanoid robot fleet (<b>104</b>) to perform repair (<b>208</b>, <b>408</b>), logistics (<b>210</b>, <b>410</b>), and customer interaction tasks (<b>202</b>, <b>402</b>), said coordination including autonomously detecting and responding to malfunctions or offline states of individual humanoid robots within the humanoid robot fleet by re-allocating tasks and dispatching assisting humanoid robots for recovery or removal operations;</claim-text>
+<claim-text>f. generating adaptive control commands in real time using sensor feedback;</claim-text>
+<claim-text>g. conducting quality control (<b>214</b>) and updating machine learning models;</claim-text>
+<claim-text>h. providing customer updates (<b>218</b>) using emotion-aware humanoid interactions;</claim-text>
+<claim-text>i. logging all operational data;</claim-text>
+<claim-text>j. detecting and responding to security events autonomously;</claim-text>
+<claim-text>k. autonomously managing and re-organizing external vehicle storage and staging areas (<b>606</b>) to enhance operational flow and maintain property aesthetics through upkeep of customer-facing areas; and</claim-text>
+<claim-text>l. systematically identifying, triaging, and completing previously unfinished vehicle service projects.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the humanoid robots (<b>104</b>) autonomously drive a vehicle into a service bay (<b>118</b>) or guide it onto an automated lift system, and can connect/disconnect EV charging cables and manage charge scheduling, including dynamic load balancing based on grid demand and electricity pricing.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the humanoid robots (<b>104</b>) use semantic understanding to interpret and manipulate objects in the environment.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the humanoid robots (<b>104</b>) perform real-time natural language conversations with customers (<b>120</b>), adapting tone and gestures based on detected sentiment.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein vehicle status updates (<b>218</b>) are visually displayed on humanoid robot interfaces (<b>504</b><i>d</i>), including annotated diagnostic visuals and live progress bars.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising automated key intake, storage, and retrieval via secure compartments (<b>110</b>).</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. A non-transitory computer-readable medium storing instructions that, when executed by one or more processors, cause a system to:
+<claim-text>a. receive service requests and sensor data, including data from connected vehicle streams via vehicle-to-x (V2X) communications for predictive maintenance;</claim-text>
+<claim-text>b. identify vehicle faults and generate explainable AI (XAI)-based repair strategies, including for EV powertrains and high-voltage systems;</claim-text>
+<claim-text>c. create and dispatch a task plan to humanoid robots with adaptive command generation;</claim-text>
+<claim-text>d. monitor humanoid robot performance and environment feedback in real time, including detecting malfunctions or offline states of individual humanoid robots and initiating autonomous response protocols for task re-allocation and peer-to-peer assistance;</claim-text>
+<claim-text>e. constrain all movement to user-defined geospatial boundaries;</claim-text>
+<claim-text>f. manage emotion-aware customer interactions via humanoid agents;</claim-text>
+<claim-text>g. update a digital twin of a vehicle and a service center for simulation, monitoring, and predictive maintenance;</claim-text>
+<claim-text>h. log all operations and performance data; and</claim-text>
+<claim-text>i. detect and respond to unauthorized access or anomalies, including cyber-physical attacks aimed at compromising humanoid robot actions or vehicle networks.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein reinforcement learning is applied to humanoid robot training for dynamic physical manipulation in vehicle repair scenarios.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising integration with a synthetic data engine (<b>306</b><i>d</i>) that simulates diverse vehicles, components, lighting, and damage types for training, including EV-specific components and charging scenarios, and continually incorporates human overrides and corrections to improve autonomous decision-making.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein user interaction history and customer preferences are used to adapt humanoid robot behavior in future sessions.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein humanoid robot navigation (<b>306</b><i>g</i>) includes obstacle detection and path planning using LiDAR, stereo vision, and semantic map overlays.</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein system logs are periodically hashed and stored on a blockchain to enable verifiable audit trails for compliance and trust.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computer-readable medium of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the instructions further cause the system to perform coordination of multi-humanoid robot collaboration (<b>306</b><i>c</i>, <b>400</b>), including joint manipulation tasks, human-robot cooperation, and augmented reality-assisted human oversight (<b>108</b>, <b>310</b>, <b>428</b>).</claim-text>
+</claim>
+</claims>

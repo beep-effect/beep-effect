@@ -1,0 +1,82 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An encoding apparatus comprising at least one processor comprising processor circuitry configured individually and/or collectively to:
+<claim-text>encode, in a bitstream, a presence flag indicating that an initialization flag is not included in the bitstream;</claim-text>
+<claim-text>for a slice of a picture, select initialization values for initializing an arithmetic coding;</claim-text>
+<claim-text>based on the presence flag indicating that the initialization flag is not included in the bitstream, select a first set of initialization values in response to a slice type of the slice being a B slice type, and select a second set of initialization values in response to the slice type of the slice being a P slice type;</claim-text>
+<claim-text>initialize the arithmetic coding using the selected initialization values; and</claim-text>
+<claim-text>encode one or more syntax elements of the slice using the arithmetic coding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The encoding apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the presence flag is in a picture parameter set.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The encoding apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the arithmetic coding is context-based adaptive binary arithmetic coding (CABAC).</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The encoding apparatus of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein to initialize the arithmetic coding, the at least one processor is further configured individually and/or collectively to:
+<claim-text>set context models using the selected initialization values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. A video encoding method comprising:
+<claim-text>encoding, in a bitstream, a presence flag indicating that an initialization flag is not included in the bitstream;</claim-text>
+<claim-text>for a slice of a picture, selecting initialization values for initializing an arithmetic coding;</claim-text>
+<claim-text>based on the presence flag indicating that the initialization flag is not included in the bitstream, selecting a first set of initialization values in response to a slice type of the slice being a B slice type, and selecting a second set of initialization values in response to the slice type of the slice being a P slice type;</claim-text>
+<claim-text>initializing the arithmetic coding using the selected initialization values; and</claim-text>
+<claim-text>encoding one or more syntax elements of the slice using the arithmetic coding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The video encoding method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the presence flag is in a picture parameter set.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The video encoding method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the arithmetic coding is context-based adaptive binary arithmetic coding (CABAC).</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The video encoding method of <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein initializing the arithmetic coding further comprises:
+<claim-text>setting context models using the selected initialization values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. A decoding apparatus comprising at least one processor comprising processor circuitry configured individually and/or collectively to:
+<claim-text>decode, from a bitstream, a presence flag indicating that an initialization flag is not included in the bitstream;</claim-text>
+<claim-text>for a slice of a picture, select initialization values for initializing an arithmetic coding;</claim-text>
+<claim-text>based on the presence flag indicating that the initialization flag is not included in the bitstream, select a first set of initialization values in response to a slice type of the slice being a B slice type, and select a second set of initialization values in response to the slice type of the slice being a P slice type;</claim-text>
+<claim-text>initialize the arithmetic coding using the selected initialization values; and</claim-text>
+<claim-text>decode one or more syntax elements of the slice using the arithmetic coding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The decoding apparatus of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the presence flag is in a picture parameter set.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The decoding apparatus of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein the arithmetic coding is context-based adaptive binary arithmetic coding (CABAC).</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The decoding apparatus of <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein to initialize the arithmetic coding, the at least one processor is further configured individually and/or collectively to:
+<claim-text>set context models using the selected initialization values.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. A video decoding method comprising:
+<claim-text>decoding, from a bitstream, a presence flag indicating that an initialization flag is not included in the bitstream;</claim-text>
+<claim-text>for a slice of a picture, selecting initialization values for initializing an arithmetic coding;</claim-text>
+<claim-text>based on the presence flag indicating that the initialization flag is not included in the bitstream, selecting a first set of initialization values in response to a slice type of the slice being a B slice type, and selecting a second set of initialization values in response to the slice type of the slice being a P slice type;</claim-text>
+<claim-text>initializing the arithmetic coding using the selected initialization values; and</claim-text>
+<claim-text>decoding one or more syntax elements of the slice using the arithmetic coding.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The video decoding method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the presence flag is in a picture parameter set.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The video decoding method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein the arithmetic coding is context-based adaptive binary arithmetic coding (CABAC).</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The video decoding method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein initializing the arithmetic coding further comprises:
+<claim-text>setting context models using the selected initialization values.</claim-text>
+</claim-text>
+</claim>
+</claims>

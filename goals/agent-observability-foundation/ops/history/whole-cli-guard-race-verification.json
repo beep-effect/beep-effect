@@ -1,0 +1,53 @@
+{
+  "result": "not-passing-guard-race",
+  "archive": "~/.local/state/beep/observation-proof-archive/whole-cli-guard-race-dt1ax7bn",
+  "sourceHead": "95711cb9df8f850c67aa16967567e5c7535e2801",
+  "sourceFilesChecked": 1421,
+  "sourceChangesDuringRun": [],
+  "guard": {
+    "ownedScopes": {
+      "[redacted-agent-session-6]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-6]",
+        "invocationId": "[redacted-invocation-for-redacted-agent-session-6]",
+        "preGuardPeakBytes": 57040896,
+        "ownership": "live descendant of proof service MainPID"
+      },
+      "[redacted-agent-session-7]": {
+        "group": "[redacted-user-cgroup]/agent-runs/[redacted-agent-session-7]",
+        "invocationId": "[redacted-invocation-for-redacted-agent-session-7]",
+        "preGuardPeakBytes": 3690496,
+        "ownership": "live descendant of proof service MainPID"
+      }
+    },
+    "unit": "foundation-whole-cli-final-v2.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 40848539648,
+    "peakObservedBytes": 5422419968,
+    "minimumAvailableBytes": 27052625920,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 289,
+    "pidsLimitEvents": 0,
+    "observedPhases": [
+      {
+        "phase": "beep:build",
+        "observedAtEpochSeconds": 1793311901.5373826
+      },
+      {
+        "phase": "beep:check",
+        "observedAtEpochSeconds": 1793311917.634793
+      },
+      {
+        "phase": "beep:test",
+        "observedAtEpochSeconds": 1793311927.662609
+      }
+    ],
+    "guardError": "CalledProcessError",
+    "exitCode": 1,
+    "orphanCleanup": []
+  },
+  "repair": "Only accept failed scope limit application if systemd reports not-found/inactive/no invocation AND cgroup no longer exists; live/unknown failures still refuse. Five isolated decisions passed; original memory/CPU/headroom/task limits unchanged.",
+  "replay": "pending; no passing whole-CLI claim"
+}

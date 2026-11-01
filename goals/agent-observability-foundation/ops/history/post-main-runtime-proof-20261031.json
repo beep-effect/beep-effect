@@ -1,0 +1,54 @@
+{
+  "kind": "accepted-main-runtime-integration-proof",
+  "incomingMain": "f93ac071a0",
+  "sourceMerge": "5bbe0bd4b4",
+  "resolution": "Combine incoming NodeModule/vi shim-test imports with existing platform/test-runner imports; retain all assertions and accepted stale-port arbitration source.",
+  "cliTypecheck": "all3configurations passed",
+  "reflectionLint": "0blocking/0advisory",
+  "nodeShimTestsPassed": 9,
+  "runtimeFocusedReplay": "See retained log: Bun shim plus23HTTP/worker tests separately under Node22.23.4 and Bun1.4.4.",
+  "diagnosticCollection": {
+    "guard": {
+      "ownedScopes": {},
+      "unit": "foundation-pr2364-post-main-proof-20261031.service",
+      "profile": "bounded",
+      "memoryStopBytes": 8589934592,
+      "hostAvailableFloorBytes": 17179869184,
+      "initialAvailableBytes": 52938948608,
+      "peakObservedBytes": 4485132288,
+      "minimumAvailableBytes": 38721298432,
+      "stoppedFor": null,
+      "tasksMax": 1024,
+      "peakObservedTasks": 75,
+      "pidsLimitEvents": 0,
+      "observedPhases": [
+        {
+          "phase": "beep:check",
+          "observedAtEpochSeconds": 1793453163.4468935
+        }
+      ],
+      "exitCode": 1,
+      "orphanCleanup": []
+    },
+    "census": "85declared vs83actual; extra deletedGraft and effectSchemaInventory declarations, identical sharedmain finding; assigned G1 by orchestrator13:26Z; no duplicate repair or whole-run-pass claim.",
+    "nodeShim9Passed": true
+  },
+  "runtimeGuard": {
+    "ownedScopes": {},
+    "unit": "foundation-pr2364-post-main-runtime-proof-20261031.service",
+    "profile": "bounded",
+    "memoryStopBytes": 8589934592,
+    "hostAvailableFloorBytes": 17179869184,
+    "initialAvailableBytes": 50852159488,
+    "peakObservedBytes": 547356672,
+    "minimumAvailableBytes": 47692603392,
+    "stoppedFor": null,
+    "tasksMax": 1024,
+    "peakObservedTasks": 76,
+    "pidsLimitEvents": 0,
+    "observedPhases": [],
+    "exitCode": 0,
+    "orphanCleanup": []
+  },
+  "pending": "Acceptedmain census/G4 repairs and final-head hosted verification; recovery hold preserved."
+}

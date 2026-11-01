@@ -1,0 +1,133 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for the resilient artificial intelligence (AI)-based data-driven dispatch of a battery energy storage system (BESS), the system comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a machine-readable medium in operable communication with the processor and having instructions stored thereon that, when executed by the processor, perform the following steps:</claim-text>
+<claim-text>a) collecting a weather forecast based on geographical coordinates of a microgrid via an Application Programming Interface (API);</claim-text>
+<claim-text>b) collecting a market forecast from available energy market data accessed via the API;</claim-text>
+<claim-text>c) retrieving internal system parameters comprising State of Charge (SOC) directly from the BESS;</claim-text>
+<claim-text>d) generating a photovoltaic (PV) generation prediction of an on-site solar canopy using collected data and a first machine learning (ML) model;</claim-text>
+<claim-text>e) generating a load consumption prediction of on-site loads using collected data and a second ML model;</claim-text>
+<claim-text>f) generating a regional outage prediction of a surrounding distribution system using collected data and a third ML model;</claim-text>
+<claim-text>g) calculating charge requirements to address detected outage event durations using a rule-based (RB) method;</claim-text>
+<claim-text>h) determining a dispatch profile for the BESS to achieve optimal economic return using a Mixed-Integer Linear Programming (MILP)-based method;</claim-text>
+<claim-text>i) transmitting recommended control setpoints based on the dispatch profile generated at a tertiary control level of a microgrid control system to a secondary control level; and</claim-text>
+<claim-text>j) upon detecting an energy deficit or an energy surplus within the microgrid, effectuating energy purchase from or sale to, respectively, a main grid through a Point of Common Coupling (PCC).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, steps a)-j) being implemented within the microgrid, which is grid-tied and comprises PV components and components of the BESS.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the microgrid operating in accordance with specifications defined in Institute of Electrical and Electronics Engineers (IEEE) Standard 2030.7-2017 to support interoperable integration, reliable performance, and efficient operation of the BESS within a utility grid infrastructure.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the first ML model comprising a Support Vector Regression (SVR) model configured to process input features comprising ambient temperature, module temperature, and Plane of Array (POA) irradiance.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the second ML model comprising a regression tree model configured to process input features comprising ambient temperature, a month indicator, an hour-of-day indicator, and a working day indicator specifying whether a given day is a working day.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the third ML model comprising a hybrid Long Short-Term Memory (LSTM) and Convolutional Neural Network (CNN) model, the third ML model being configured to receive forecasted local weather measurements as time series data and radar imagery representing spatial weather conditions as inputs.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the instructions, when executed, further performing the following step:
+<claim-text>upon prediction of an outage, initiating a proactive islanding trigger of local loads to alert grid operators and the microgrid control system of an impending intentional islanding operation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a controller device operatively coupled to the microgrid and configured to communicate with downstream client devices, the downstream client devices comprising Programmable Logic Controllers (PLCs), the secondary control level of the microgrid control system, and one or more devices having access to operational site data relevant to operation of the controller device.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, the controller device being connected to a cloud-based application for remote monitoring and review and being accessible on-site for visualizing operational data and adjusting device settings.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, the controller device comprising:
+<claim-text>(i) a backend server configured to execute embedded code and to communicate with user-interactive applications and backend code of the controller device;</claim-text>
+<claim-text>(ii) configuration files and the first ML model, the second ML model, and the third ML model stored in the backend server;</claim-text>
+<claim-text>(iii) a communication interface configured to manage data exchange with client devices via Modbus; and</claim-text>
+<claim-text>(iv) a database configured to store operational parameters for visualization.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method for the resilient artificial intelligence (AI)-based data-driven dispatch of a battery energy storage system (BESS), the method comprising:
+<claim-text>a) collecting a weather forecast based on geographical coordinates of a microgrid via an Application Programming Interface (API);</claim-text>
+<claim-text>b) collecting a market forecast from available energy market data accessed via the API;</claim-text>
+<claim-text>c) retrieving internal system parameters comprising State of Charge (SOC) directly from the BESS;</claim-text>
+<claim-text>d) generating a photovoltaic (PV) generation prediction of an on-site solar canopy using collected data and a first machine learning (ML) model;</claim-text>
+<claim-text>e) generating a load consumption prediction of on-site loads using collected data and a second ML model;</claim-text>
+<claim-text>f) generating a regional outage prediction of a surrounding distribution system using collected data and a third ML model;</claim-text>
+<claim-text>g) calculating charge requirements to address detected outage event durations using a rule-based (RB) method;</claim-text>
+<claim-text>h) determining a dispatch profile for the BESS to achieve optimal economic return using a Mixed-Integer Linear Programming (MILP)-based method;</claim-text>
+<claim-text>i) transmitting recommended control setpoints based on the dispatch profile generated at a tertiary control level of a microgrid control system to a secondary control level; and</claim-text>
+<claim-text>j) upon detecting an energy deficit or an energy surplus within the microgrid, effectuating energy purchase from or sale to, respectively, a main grid through a Point of Common Coupling (PCC).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, steps a)-j) being implemented within the microgrid, which is grid-tied and comprises PV components and components of the BESS.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, the microgrid operating in accordance with specifications defined in Institute of Electrical and Electronics Engineers (IEEE) Standard 2030.7-2017 to support interoperable integration, reliable performance, and efficient operation of the BESS within a utility grid infrastructure.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, the first ML model comprising a Support Vector Regression (SVR) model configured to process input features comprising ambient temperature, module temperature, and Plane of Array (POA) irradiance.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, the second ML model comprising a regression tree model configured to process input features comprising ambient temperature, a month indicator, an hour-of-day indicator, and a working day indicator specifying whether a given day is a working day.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, the third ML model comprising a hybrid Long Short-Term Memory (LSTM) and Convolutional Neural Network (CNN) model, the third ML model being configured to receive forecasted local weather measurements as time series data and radar imagery representing spatial weather conditions as inputs.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>upon prediction of an outage, initiating a proactive islanding trigger of local loads to alert grid operators and the microgrid control system of an impending intentional islanding operation.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising operatively coupling a controller device to the microgrid,
+<claim-text>the controller device being configured to communicate with downstream client devices,</claim-text>
+<claim-text>the downstream client devices comprising Programmable Logic Controllers (PLCs), the secondary control level of the microgrid control system, and one or more devices having access to operational site data relevant to operation of the controller device, and</claim-text>
+<claim-text>the controller device being connected to a cloud-based application for remote monitoring and review, and being accessible on-site for visualizing operational data and adjusting device settings.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, the controller device comprising:
+<claim-text>(i) a backend server configured to execute embedded code and to communicate with user-interactive applications and backend code of the controller device;</claim-text>
+<claim-text>(ii) configuration files and the first ML model, the second ML model, and the third ML model stored in the backend server;</claim-text>
+<claim-text>(iii) a communication interface configured to manage data exchange with client devices via Modbus; and</claim-text>
+<claim-text>(iv) a database configured to store operational parameters for visualization.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. A system for the resilient artificial intelligence (AI)-based data-driven dispatch of a battery energy storage system (BESS), the system comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a machine-readable medium in operable communication with the processor and having instructions stored thereon that, when executed by the processor, perform the following steps:</claim-text>
+<claim-text>a) collecting a weather forecast based on geographical coordinates of a microgrid via an Application Programming Interface (API);</claim-text>
+<claim-text>b) collecting a market forecast from available energy market data accessed via the API;</claim-text>
+<claim-text>c) retrieving internal system parameters comprising State of Charge (SOC) directly from the BESS;</claim-text>
+<claim-text>d) generating a photovoltaic (PV) generation prediction of an on-site solar canopy using collected data and a first machine learning (ML) model;</claim-text>
+<claim-text>e) generating a load consumption prediction of on-site loads using collected data and a second ML model;</claim-text>
+<claim-text>f) generating a regional outage prediction of a surrounding distribution system using collected data and a third ML model;</claim-text>
+<claim-text>g) calculating charge requirements to address detected outage event durations using a rule-based (RB) method;</claim-text>
+<claim-text>h) determining a dispatch profile for the BESS to achieve optimal economic return using a Mixed-Integer Linear Programming (MILP)-based method;</claim-text>
+<claim-text>i) transmitting recommended control setpoints based on the dispatch profile generated at a tertiary control level of a microgrid control system to a secondary control level; and</claim-text>
+<claim-text>j) upon detecting an energy deficit or an energy surplus within the microgrid, effectuating energy purchase from or sale to, respectively, a main grid through a Point of Common Coupling (PCC),</claim-text>
+<claim-text>steps a)-j) being implemented within the microgrid, which is grid-tied and comprises PV components and components of the BESS,</claim-text>
+<claim-text>the microgrid operating in accordance with specifications defined in Institute of Electrical and Electronics Engineers (IEEE) Standard 2030.7-2017 to support interoperable integration, reliable performance, and efficient operation of the BESS within a utility grid infrastructure,</claim-text>
+<claim-text>the first ML model comprising a Support Vector Regression (SVR) model configured to process input features comprising ambient temperature, module temperature, and Plane of Array (POA) irradiance,</claim-text>
+<claim-text>the second ML model comprising a regression tree model configured to process input features comprising ambient temperature, a month indicator, an hour-of-day indicator, and a working day indicator specifying whether a given day is a working day,</claim-text>
+<claim-text>the third ML model comprising a hybrid Long Short-Term Memory (LSTM) and Convolutional Neural Network (CNN) model, the third ML model being configured to receive forecasted local weather measurements as time series data and radar imagery representing spatial weather conditions as inputs,</claim-text>
+<claim-text>the instructions, when executed, further performing the following step:
+<claim-text>upon prediction of an outage, initiating a proactive islanding trigger of local loads to alert grid operators and the microgrid control system of an impending intentional islanding operation,</claim-text>
+</claim-text>
+<claim-text>the system further comprising a controller device operatively coupled to the microgrid and configured to communicate with downstream client devices,</claim-text>
+<claim-text>the downstream client devices comprising Programmable Logic Controllers (PLCs), the secondary control level of the microgrid control system, and one or more devices having access to operational site data relevant to operation of the controller device,</claim-text>
+<claim-text>the controller device being connected to a cloud-based application for remote monitoring and review, and being accessible on-site for visualizing operational data and adjusting device settings, and</claim-text>
+<claim-text>the controller device comprising:</claim-text>
+<claim-text>(i) a backend server configured to execute embedded code and to communicate with user-interactive applications and backend code of the controller device;</claim-text>
+<claim-text>(ii) configuration files and the first ML model, the second ML model, and the third ML model stored in the backend server;</claim-text>
+<claim-text>(iii) a communication interface configured to manage data exchange with client devices via Modbus; and</claim-text>
+<claim-text>(iv) a database configured to store operational parameters for visualization.</claim-text>
+</claim-text>
+</claim>
+</claims>

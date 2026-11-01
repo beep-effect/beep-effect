@@ -1,0 +1,43 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "14970678-root-17",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    17,
+    18,
+    19,
+    20
+  ],
+  "findings": [],
+  "sourceConcerns": [],
+  "referenceConcernsDisposition": "Extractor localized reference concerns reviewed and retained as explicit unlinked mentions; they do not require whole-claim abstention or invented introductions. No actionable correction remains in this bounded independent review.",
+  "reviewScope": {
+    "claimCount": 4,
+    "elementCount": 14,
+    "termCount": 42,
+    "edgeCount": 38,
+    "functionalRelationCount": 8
+  },
+  "reviewNotes": [
+    "The cabinet-drawer root precedes its actual comprising transition. Cabinet housing, drawer/body mounting relation and nested apparatus subgroup remain distinct, with four inner latch limitations in source order. The nominal apparatus and resumptive the apparatus have a clear local relation.",
+    "The first the housing [120,131) precedes the later a housing introduction [274,283), so its cabinet-housing antecedent is supported. Subsequent housing references remain unlinked rather than asserting identity or difference between the two introductions.",
+    "One [483,486) establishes the movable-latch role within the explicit first/second latch pair. Later said one latch element references resolve to that source role without choosing whether it is physically the first or second latch. The complementary other role and collective latch phrase do not receive an invented single-member introduction.",
+    "Bare engagement [549,559) supports later said engagement references. Bias remains unintroduced as a nominal; the biased predicate is not converted into an invented noun anchor. Its longitudinal axis [105,126) in claim 20 remains an exact possessive entity phrase without equating the axis to its latch owner.",
+    "Claims 18-20 depend directly on 17. Unselected apparatus claims 1-16 provide context only and cannot choose the cabinet-family latch roles or repair housing/bias/path introductions. Source claim 19 is rejected via dependency, not an invented individualized examiner quotation. The predetermined attorney spot-check designation did not change the semantic acceptance bar."
+  ],
+  "verification": [
+    "Read canonical full family context, native selected-claim XML, provenance, independent source critic and extractor rationale. Source eligibility remains separately accepted at source-critic confidence 0.98; no fresh original-PDF/full-inventory authentication is claimed.",
+    "Audited all expected elements/terms and typed edges for source grammar, complete heads, explicit nested lists, participating entity ownership and actual dependency-chain references. Applied entity-mentions/v1 without blanket relative/reciprocal entity nodes.",
+    "Independent helpers checked exact UTF-16 element/term/functional/antecedent source anchors, normalized heads, ordered nonoverlapping owned terms, contiguous full functional-source reconstruction, local functional ownership, actual ancestor membership of foreign references, endpoint coherence, unique paths and absence of duplicate typed edges. Native claims XML digest matches provenance. These bounded schema/geometry checks supplement semantic review; no production decomposer was called."
+  ],
+  "referenceSha256": "f3a72e276fd1b9e51999daa46e30d96827d72ba1878a0f6943b9defa940000f2",
+  "independence": "Independent semantic critic session, separate from extractor. Only this family critic.json written. No source/expected/code edits, implementation rules/P2-DESIGN, predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers only locate/check manually reviewed source spans and schema geometry and serialize this receipt.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic references only; no active sample admission, goal completion or human agreement claimed."
+}

@@ -1,0 +1,125 @@
+{
+  "familyId": "12749812-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.75,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the packet",
+      "nativeQuote": "the packet",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "said removed embedded ete flirts",
+      "nativeQuote": "A method for implementing variable length packets to embed extra control information in an interconnect system comprising: defining packets to include an End-to-End (ETE) Flow Unit within packet (Flit) count field in a packet header; receiving an incoming packet from an incoming link; checking said ETE flit count field, and responsive to an identified nonzero value in said ETE flit count field, removing a specified number of embedded ETE flits from the packet; and using control information from said removed embedded ETE flits.",
+      "literalMatch": false,
+      "explanation": "Examiner phrase not literal in numbered native claim; actual full source preserved for review."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "said embedded ete flits",
+      "nativeQuote": "said embedded ETE flits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "said embedded ete flits",
+      "nativeQuote": "said embedded ETE flits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said nonzero value",
+      "nativeQuote": "said nonzero value",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said ete messages",
+      "nativeQuote": "said ETE messages",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "said packet header",
+      "nativeQuote": "said packet header",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "said embedded ete flits",
+      "nativeQuote": "said embedded ETE flits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "said embedded ete flits",
+      "nativeQuote": "said embedded ETE flits",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring; parent rejection ground separately checked."
+    }
+  ],
+  "concerns": [
+    "MISSING ACTUAL STATUTORY GROUND: retained action snippet has antecedent comments but no112(b)/second-paragraph rejection statement or scope. Original extracted0 claims. Examiner flirts versus native flits is apparent transcription typo; cannot establish statutory positive from comments alone."
+  ],
+  "rationale": "Retained ground, numbered examiner phrases, selected natural dependencies and original versions examined. Chronology alone not used to qualify. No attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "12749812",
+    "nativePublicationNumber": "US20110243154A1",
+    "nativePublicationDate": "20111006",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "2b9cd8a72776f587574bfe5475f083a8dd3db6c681cff4bb6aa2a724f510189b",
+    "sourceClaimsXmlSha256": "6b10f44cbce96b1d760664dae240868b26765fec95dd7460566a836427bf63b7"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 34,
+    "retainedInventoryCount": 34,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "G7F0NLVBPPOPPY2",
+        "officialDate": "2010-03-30T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2012-12-21",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "G7F0NLVBPPOPPY2",
+      "officialDate": "2010-03-30T00:00:00.000-0400",
+      "sha256": "e4704319289adb7ed2b586714f9325239d5d0e3da745fbe90ad46763feb7e89a",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "nativeContextClaimCount": 24,
+  "selectedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "G7F0NLVBPPOPPY2",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": [],
+      "headerMailRoomDates": [],
+      "applicationMatches": true,
+      "claimNodeCount": 0
+    }
+  ]
+}

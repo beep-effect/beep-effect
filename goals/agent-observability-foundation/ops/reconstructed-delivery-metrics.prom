@@ -1,0 +1,105 @@
+# HELP beep_observation_runtime_running Whether this observation reports an owned runtime loop.
+# TYPE beep_observation_runtime_running gauge
+beep_observation_runtime_running 1
+# HELP beep_observation_health_observed_timestamp_seconds Wall clock when this health observation was read.
+# TYPE beep_observation_health_observed_timestamp_seconds gauge
+beep_observation_health_observed_timestamp_seconds 1793228343.484
+# HELP beep_observation_source_coverage_known Whether this runtime establishes fleet source coverage.
+# TYPE beep_observation_source_coverage_known gauge
+beep_observation_source_coverage_known 0
+# HELP beep_observation_runtime_phase Current delivery loop phase, not fleet delivery health.
+# TYPE beep_observation_runtime_phase gauge
+beep_observation_runtime_phase{phase="degraded"} 1
+# HELP beep_observation_cycle_completed_timestamp_seconds Completion time of the latest cycle, including failure.
+# TYPE beep_observation_cycle_completed_timestamp_seconds gauge
+beep_observation_cycle_completed_timestamp_seconds 1793228343.419
+# HELP beep_observation_retained_pages Pages retained at the start of this completed pass, not undelivered events.
+# TYPE beep_observation_retained_pages gauge
+beep_observation_retained_pages 2
+# HELP beep_observation_retained_payload_bytes Metadata payload bytes retained at the start of this completed pass.
+# TYPE beep_observation_retained_payload_bytes gauge
+beep_observation_retained_payload_bytes 1950
+# HELP beep_observation_retained_occurrences Retained occurrences including duplicates, not unique events.
+# TYPE beep_observation_retained_occurrences gauge
+beep_observation_retained_occurrences 2
+# HELP beep_observation_delivery_pass_examined Events examined in the latest completed pass.
+# TYPE beep_observation_delivery_pass_examined gauge
+beep_observation_delivery_pass_examined 2
+# HELP beep_observation_delivery_pass_send_calls Send calls observed in the latest pass, not confirmed deliveries.
+# TYPE beep_observation_delivery_pass_send_calls gauge
+beep_observation_delivery_pass_send_calls 1
+# HELP beep_observation_delivery_pass_visible Positive read-back results in the latest pass.
+# TYPE beep_observation_delivery_pass_visible gauge
+beep_observation_delivery_pass_visible 0
+# HELP beep_observation_delivery_pass_missing Missing read-back results in the latest pass.
+# TYPE beep_observation_delivery_pass_missing gauge
+beep_observation_delivery_pass_missing 1
+# HELP beep_observation_delivery_pass_mismatch Mismatched read-back results in the latest pass.
+# TYPE beep_observation_delivery_pass_mismatch gauge
+beep_observation_delivery_pass_mismatch 0
+# HELP beep_observation_delivery_pass_held Held events observed in the latest pass.
+# TYPE beep_observation_delivery_pass_held gauge
+beep_observation_delivery_pass_held 0
+# HELP beep_observation_delivery_pass_failed Failed operations observed in the latest pass.
+# TYPE beep_observation_delivery_pass_failed gauge
+beep_observation_delivery_pass_failed 0
+# HELP beep_observation_sources_configured Whether explicit source discovery is configured.
+# TYPE beep_observation_sources_configured gauge
+beep_observation_sources_configured 1
+# HELP beep_observation_sources_running Whether the shared runtime owner is running.
+# TYPE beep_observation_sources_running gauge
+beep_observation_sources_running 1
+# HELP beep_observation_sources_observed_timestamp_seconds Time this source health was observed.
+# TYPE beep_observation_sources_observed_timestamp_seconds gauge
+beep_observation_sources_observed_timestamp_seconds 1793228343.484
+# HELP beep_observation_sources_phase Current source cycle phase.
+# TYPE beep_observation_sources_phase gauge
+beep_observation_sources_phase{phase="waiting"} 1
+# HELP beep_observation_sources_cycle_completed_timestamp_seconds Time the latest source cycle completed, including failure.
+# TYPE beep_observation_sources_cycle_completed_timestamp_seconds gauge
+beep_observation_sources_cycle_completed_timestamp_seconds 1793228343.409
+# HELP beep_observation_sources_pass_accepted_pages Locally accepted page observations in the latest pass, not deliveries.
+# TYPE beep_observation_sources_pass_accepted_pages gauge
+beep_observation_sources_pass_accepted_pages 0
+# HELP beep_observation_sources_pass_accepted_frames Accepted frame occurrences in the latest pass, not unique events.
+# TYPE beep_observation_sources_pass_accepted_frames gauge
+beep_observation_sources_pass_accepted_frames 0
+# HELP beep_observation_sources_pass_idle_files Selected files with no accepted progress or partial tail.
+# TYPE beep_observation_sources_pass_idle_files gauge
+beep_observation_sources_pass_idle_files 0
+# HELP beep_observation_sources_pass_partial_files Selected files waiting for a complete line.
+# TYPE beep_observation_sources_pass_partial_files gauge
+beep_observation_sources_pass_partial_files 0
+# HELP beep_observation_sources_pass_failed_files Failed selected source operations in this pass.
+# TYPE beep_observation_sources_pass_failed_files gauge
+beep_observation_sources_pass_failed_files 0
+# HELP beep_observation_sources_active_helpers Helpers active at the latest completed source observation.
+# TYPE beep_observation_sources_active_helpers gauge
+beep_observation_sources_active_helpers 0
+# HELP beep_observation_sources_pass_operations Directory operations consumed during this pass.
+# TYPE beep_observation_sources_pass_operations gauge
+beep_observation_sources_pass_operations 2
+# HELP beep_observation_sources_cycle_pending_files Discovered file observations not yet assessed in current root cycles.
+# TYPE beep_observation_sources_cycle_pending_files gauge
+beep_observation_sources_cycle_pending_files 0
+# HELP beep_observation_sources_cycle_partial_files File observations with incomplete tails in current root cycles.
+# TYPE beep_observation_sources_cycle_partial_files gauge
+beep_observation_sources_cycle_partial_files 1
+# HELP beep_observation_sources_cycle_failed_files Failed file observations in current root cycles.
+# TYPE beep_observation_sources_cycle_failed_files gauge
+beep_observation_sources_cycle_failed_files 0
+# HELP beep_observation_sources_cycle_backlogged_files Assessed file observations with unread bytes beyond the bounded page.
+# TYPE beep_observation_sources_cycle_backlogged_files gauge
+beep_observation_sources_cycle_backlogged_files 0
+# HELP beep_observation_sources_cycle_assessed_files File observations assessed in current root cycles, not fleet sources.
+# TYPE beep_observation_sources_cycle_assessed_files gauge
+beep_observation_sources_cycle_assessed_files 2
+# HELP beep_observation_sources_roots Declared roots by observed traversal state.
+# TYPE beep_observation_sources_roots gauge
+beep_observation_sources_roots{state="retired"} 1
+beep_observation_sources_roots{state="pending"} 0
+beep_observation_sources_roots{state="scanning"} 0
+beep_observation_sources_roots{state="complete"} 1
+beep_observation_sources_roots{state="unavailable"} 0
+beep_observation_sources_roots{state="changed"} 0
+beep_observation_sources_roots{state="overflow"} 0

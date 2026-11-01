@@ -1,0 +1,25 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A trailer light detector applicable to multiple types, comprising:
+<claim-text>a housing component including a lower shell (<b>11</b>) and an upper shell (<b>12</b>) fixedly connected by assembly screws (<b>13</b>), wherein a handle holder (<b>14</b>) and a handle (<b>15</b>) detachably connected thereto are provided on a top of the housing;</claim-text>
+<claim-text>a circuit board component (<b>2</b>) disposed inside the housing, including a power module (<b>204</b>), a detection branch (<b>209</b>), a relay (<b>210</b>), a remote controller (<b>211</b>), an IP2326 chip (<b>206</b>), an STC chip (<b>207</b>), an antenna (<b>21</b>), a GND ground terminal (<b>205</b>) and a circuit module (<b>208</b>), wherein the power module (<b>204</b>) is electrically connected to a battery module (<b>203</b>), the detection branch (<b>209</b>) is connected to a trailer light interface through the relay (<b>210</b>), and the GND ground terminal (<b>205</b>) is fixedly connected to a ground circuit of the circuit board component (<b>2</b>) to provide stable ground protection;</claim-text>
+<claim-text>an operation component including a switch key (<b>22</b>), a plurality of keys (<b>23</b>) and a charging port (<b>24</b>) disposed on a surface of the housing, wherein the plurality of keys (<b>23</b>) are in signaling connection with the STC chip (<b>207</b>); and</claim-text>
+<claim-text>an interface component including a small socket (<b>3</b>) and a large interface (<b>4</b>); wherein a small socket protection cover (<b>31</b>) is disposed on an outer side of the small socket (<b>3</b>) and fixed by an anti-drop connection strip (<b>32</b>); and a large interface protection cover (<b>41</b>) and a protection cover base (<b>42</b>) are disposed on an outer side of the large interface (<b>4</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The trailer light detector applicable to multiple types according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the circuit board component (<b>2</b>) further includes an NTC thermistor pad assembly (<b>201</b>) and a diode (<b>202</b>), the NTC thermistor pad assembly (<b>201</b>) is configured to monitor a circuit board temperature, and the diode (<b>202</b>) is connected in series with the detection branch (<b>209</b>) to provide reverse current protection.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The trailer light detector applicable to multiple types according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the power module (<b>204</b>) includes a DC-DC buck voltage regulator circuit, an input end of the DC-DC buck voltage regulator circuit is connected to the battery module (<b>203</b>), and an output end of the DC-DC buck voltage regulator circuit is connected to the IP2326 chip (<b>206</b>) to provide a stable voltage.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The trailer light detector applicable to multiple types according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein: the detection branch (<b>209</b>) includes a plurality of independent detection channels, each of the plurality of independent detection channels is switched to be connected to a different functional interface of a trailer light through a relay (<b>210</b>), and the STC chip (<b>207</b>) controls an on-off state of the relay (<b>210</b>) based on an instruction input by the keys (<b>23</b>).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The trailer light detector applicable to multiple types according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the antenna (<b>21</b>) is connected to a wireless communication module of the STC chip (<b>207</b>) to transmit detection data to an external terminal device in real time.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The trailer light detector applicable to multiple types according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the small socket (<b>3</b>) and the large interface (<b>4</b>) are respectively adapted to different types of trailer light plugs, and the protection cover base (<b>42</b>) of the large interface (<b>4</b>) is fixed to the housing by a snap-fit structure.</claim-text>
+</claim>
+</claims>

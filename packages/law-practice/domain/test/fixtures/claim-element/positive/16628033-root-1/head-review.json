@@ -1,0 +1,66 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "16628033-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 1,
+      "path": "1.b",
+      "anchor": {
+        "startChar": 182,
+        "endChar": 190,
+        "quote": "one side"
+      },
+      "determiner": "bare",
+      "beforeHead": "side",
+      "afterHead": "one side",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "nd a tibial prosthesis (2), said tibial prosthesis (2) is disposed at one side of the tibial plateau intercondylar eminence (31) and is located belo",
+      "confidence": 0.99
+    },
+    {
+      "claimNumber": 8,
+      "path": "8.a",
+      "anchor": {
+        "startChar": 106,
+        "endChar": 113,
+        "quote": "one end"
+      },
+      "determiner": "bare",
+      "beforeHead": "end",
+      "afterHead": "one end",
+      "action": "changed",
+      "reason": "The bare tag encodes no cardinal, range, minimum bound or partitive selector. This source phrase expressly recites that quantity/selection, so preserve the full reviewed phrase in its head without selecting an entity or inventing an antecedent.",
+      "sourceContext": "int according to claim 7, characterized in that, the upper portion of one end of said locating pin (5) is installed in the tibial prosthesis (2), a",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "3aaed4037f47dc19703619194af1515ff8c48ed12f0b4a3282c02cf5490a0aa8"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "1408fa0d2bf6441261f91dfbd474566b4c6437000609b2224aacfe491588fa0f"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "45bdcc7c831445573c1f4ab46b57fc768410991fe516c11a4f437009268f53d8"
+    }
+  ],
+  "missingPriorCritic": null,
+  "structureInvariant": "Expected trees are byte-for-byte semantically equal after replacing only audited head fields with their prior values. No anchors, determiners, edges, element structure, source or claim scope changed.",
+  "independence": "Targeted extractor correction from manually reviewed exact canonical/native source context and lexical-head/v1 only. Literal audit flags were checked individually; no generic parser/decomposer, production rules, predictions, synthetic/conformance fixtures, network, secrets, git or delegation.",
+  "attorneyAdjudication": "unchanged; pending human review where already required"
+}

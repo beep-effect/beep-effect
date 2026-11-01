@@ -1,0 +1,26 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15927789-root-6",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [6, 7, 8, 9, 10],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Source critic accepted at 0.98; originals match after printed Claim labels/capitalization. Examiner adds an article to claim 8 travel of transport unit and varies traveling/travelling; native wording is retained.",
+    "Root 6 attachment is grammatically awkward: “an operator ... detachable from the distal end of the wire and the transport unit equipped with a location measurement module” and terminal “and controls the travelling motion”. The source does not unambiguously name the subject of terminal controls; its relational text is preserved without inventing an operator/unit subject term.",
+    "Location measurement module in 6 and positioning module in 7–9 are not silently equated; sibling independent positioning-module claim 1 supplies no introduction.",
+    "Root 6 recites definite the wire before its later explicit a wire. No forward antecedent edge is invented. Transport unit, distal end/point, coordinate system and first/second travelling modes lack explicit introductory entities on these ancestries."
+  ],
+  "annotationRationale": [
+    "Actual root subject is bare Driving control device of carrier unit. Component operator/module clause contains the explicit nested wire, length-calculation and angle-calculation list; nested functional elements own their terms without duplication.",
+    "Full lexical heads preserve location measurement module, positioning module, unwinding length, unwinding angle, time-ordered sequence and user’s operation signal. Native apostrophe and travel/travelling wording remain exact.",
+    "Children all expressly refer to 6. Clear inherited wire, unwinding length/angle, operator and device references receive cross-claim antecedents; transport/positioning entities are not imported from siblings.",
+    "Explicit detachment, unwinding, calculation, information storage, electrical power, motion and signal relations are represented. Subject/attachment ambiguities are recorded as source concerns rather than guessed identities."
+  ],
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney review pending.",
+  "independence": "Fresh manual source grammar, lexical heads, exact quote boundaries and referent assignments. Only source/context/provenance/audits/critic, protocol and schema contracts read. No production/rules/predictions/synthetic fixtures/conformance archives/network/secrets/git/delegation. Helpers only locate manually supplied quotes, format schema data and verify span/reference geometry.",
+  "validation": "All selected claims accounted exactly once; UTF16 equivalence, exact spans, unique paths, nonoverlapping owned terms and referenced endpoint memberships checked."
+}

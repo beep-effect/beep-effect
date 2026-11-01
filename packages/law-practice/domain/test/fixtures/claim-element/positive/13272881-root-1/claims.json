@@ -1,0 +1,94 @@
+{
+  "familyId": "13272881-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A jig for use in assisting the orientation and fixing of an insulator to a support comprising: a jig frame comprising a top surface, and two sides that define an open volume; the two sides have parallel contact edges at ends of the sides; at least one of the two sides having an opening therein of at least 1.5 cm in diameter; the top surface has two holes passing through the top surface; within each of the holes is a hollow guide pipe passing from an exterior surface of the top surface through an interior surface of the top surface; the hollow guide pipe passing past the interior surface of the top surface a distance that is less than a distance to plane formed by the two parallel contact edges.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The jig of claim 1 having a securing element for temporarily securing the jig to a surface to be machined and the opening having a level indicator therein that indicates when the top surface is horizontally level.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The jig of claim 2 wherein the securing element comprises an attachment element on the jig between the two guide pipes.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The jig of claim 2 wherein the hole has a notch on its circumference or an inwardly facing post and the level indicator respectively has an extension fitting into the notch or a gap in the circumference of the level indicator that receives the post to align the level indicator perpendicular to the top surface.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The jig of claim 1 wherein the two guide pipes are each perpendicular to the top surface.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The jig of claim 2 wherein the two guide pipes are each perpendicular to the top surface.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The jig of claim 4 wherein the two guide pipes are each perpendicular to the top surface and the level indicator comprises a bubble level indicator and the level indicator is removable from the hole and is positionable within the hole only when a post and gap or a notch and extension are aligned.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The jig of claim 1 having at least one bubble level in the opening oriented perpendicularly to the top surface on the jig.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The jig of claim 4 having at least one bubble in the opening oriented perpendicularly to the top surface on the jig.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The jig of claim 5 wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.",
+      "sourceXmlParentClaimNumbers": [5]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The jig of claim 6 wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The jig of claim 8 wherein the two sides of the jig comprise a flat extension portion and a contact portion angled outwardly and away from the flat extension portion.",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "A method of attaching an insulator to a support comprising: placing the jig of claim 1 against a surface to which the insulator is to be attached, orienting the two contact portions with a top surface of the support, aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position, temporarily securing the jig in the aligned position, passing a drill bit connected to a drill through the guide tubes to contact the support, drilling holes in the support at the specific positions, withdrawing the drill bits from the guide wires, removing the jig from the support, aligning holes in an insulator with the drilled holes in the support, and connecting the insulator to the support with connectors that attached through the drilled holes.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "A method of attaching an insulator to a support comprising: placing the jig of claim 2 against a surface to which the insulator is to be attached, orienting the two contact portions with a top surface of the support, aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position, adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator; temporarily securing the jig in the aligned position, passing a drill bit connected to a drill through the guide tubes to contact the support, drilling holes in the support at the specific positions, withdrawing the drill bits from the guide wires, removing the jig from the support, aligning holes in an insulator with the drilled holes in the support, and connecting the insulator to the support with connectors that attached through the drilled holes.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "A method of attaching an insulator to a support comprising: placing the jig of claim 4 against a surface to which the insulator is to be attached, orienting the two contact portions with a top surface of the support, aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position, adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator; temporarily securing the jig in the aligned position, passing a drill bit connected to a drill through the guide tubes to contact the support, drilling holes in the support at the specific positions, withdrawing the drill bits from the guide wires, removing the jig from the support, aligning holes in an insulator with the drilled holes in the support, and connecting the insulator to the support with connectors that attached through the drilled holes.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "A method of attaching an insulator to a support comprising: placing the jig of claim 7 against a surface to which the insulator is to be attached, orienting the two contact portions with a top surface of the support, aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position, adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator; temporarily securing the jig in the aligned position, passing a drill bit connected to a drill through the guide tubes to contact the support, drilling holes in the support at the specific positions, withdrawing the drill bits from the guide wires, removing the jig from the support, aligning holes in an insulator with the drilled holes in the support, and connecting the insulator to the support with connectors that attached through the drilled holes.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A method of attaching an insulator to a support comprising: placing the jig of claim 9 against a surface to which the insulator is to be attached, orienting the two contact portions with a top surface of the support, aligning the guide tubes with specific positions on the support where connectors for an insulator are to be used to form an aligned position, adjusting the insulator so that the top surface is parallel to the a nearest surface of the support according to the level indicator; temporarily securing the jig in the aligned position, passing a drill bit connected to a drill through the guide tubes to contact the support, drilling holes in the support at the specific positions, withdrawing the drill bits from the guide wires, removing the jig from the support, aligning holes in an insulator with the drilled holes in the support, and connecting the insulator to the support with connectors that attached through the drilled holes.",
+      "sourceXmlParentClaimNumbers": [9]
+    }
+  ]
+}

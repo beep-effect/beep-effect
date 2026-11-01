@@ -1,0 +1,703 @@
+{
+  "evaluations": {
+    "2026-10-28-positive-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.03357531760435572,
+        "edgePrecision": 0.08486238532110092,
+        "edgeRecall": 0.02092760180995475,
+        "goldEdges": 1768,
+        "matchedEdges": 37,
+        "predictedEdges": 436,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 24,
+          "structural-mismatch": 53,
+          "undecomposed": 2
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.0570409982174688,
+        "edgePrecision": 0.15946843853820597,
+        "edgeRecall": 0.03473227206946455,
+        "goldEdges": 6910,
+        "matchedEdges": 240,
+        "predictedEdges": 1505,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 186,
+          "structural-mismatch": 344,
+          "undecomposed": 8
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      }
+    },
+    "2026-10-28-repair-v10-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17342482844666252,
+        "edgePrecision": 0.1933240611961057,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1438,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.29257996427991556,
+        "edgePrecision": 0.33321005917159763,
+        "edgeRecall": 0.26078147612156294,
+        "goldEdges": 6910,
+        "matchedEdges": 1802,
+        "predictedEdges": 5408,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 29,
+          "structural-mismatch": 451
+        },
+        "strictMatches": 29,
+        "strictRate": 0.05390334572490706
+      }
+    },
+    "2026-10-28-repair-v2-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.18437719915552428,
+        "edgePrecision": 0.24394785847299813,
+        "edgeRecall": 0.14819004524886878,
+        "goldEdges": 1768,
+        "matchedEdges": 262,
+        "predictedEdges": 1074,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.21779597915115415,
+        "edgePrecision": 0.3051643192488263,
+        "edgeRecall": 0.16931982633863965,
+        "goldEdges": 6910,
+        "matchedEdges": 1170,
+        "predictedEdges": 3834,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "structural-mismatch": 480
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      }
+    },
+    "2026-10-28-repair-v3-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.18430273300630695,
+        "edgePrecision": 0.2421731123388582,
+        "edgeRecall": 0.14875565610859728,
+        "goldEdges": 1768,
+        "matchedEdges": 263,
+        "predictedEdges": 1086,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.21883325677537896,
+        "edgePrecision": 0.29962264150943396,
+        "edgeRecall": 0.1723589001447178,
+        "goldEdges": 6910,
+        "matchedEdges": 1191,
+        "predictedEdges": 3975,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "structural-mismatch": 480
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      }
+    },
+    "2026-10-28-repair-v4-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.18430273300630695,
+        "edgePrecision": 0.2421731123388582,
+        "edgeRecall": 0.14875565610859728,
+        "goldEdges": 1768,
+        "matchedEdges": 263,
+        "predictedEdges": 1086,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.21883325677537896,
+        "edgePrecision": 0.29962264150943396,
+        "edgeRecall": 0.1723589001447178,
+        "goldEdges": 6910,
+        "matchedEdges": 1191,
+        "predictedEdges": 3975,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "structural-mismatch": 480
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      }
+    },
+    "2026-10-28-repair-v5-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.16256476683937823,
+        "edgePrecision": 0.19015151515151515,
+        "edgeRecall": 0.1419683257918552,
+        "goldEdges": 1768,
+        "matchedEdges": 251,
+        "predictedEdges": 1320,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.25123855907297005,
+        "edgePrecision": 0.29925985197039406,
+        "edgeRecall": 0.21649782923299565,
+        "goldEdges": 6910,
+        "matchedEdges": 1496,
+        "predictedEdges": 4999,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 10,
+          "structural-mismatch": 470
+        },
+        "strictMatches": 10,
+        "strictRate": 0.01858736059479554
+      }
+    },
+    "2026-10-28-repair-v6-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.16704143912624478,
+        "edgePrecision": 0.19330855018587362,
+        "edgeRecall": 0.14705882352941177,
+        "goldEdges": 1768,
+        "matchedEdges": 260,
+        "predictedEdges": 1345,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2597941567065073,
+        "edgePrecision": 0.30459322693655116,
+        "edgeRecall": 0.22648335745296672,
+        "goldEdges": 6910,
+        "matchedEdges": 1565,
+        "predictedEdges": 5138,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 11,
+          "structural-mismatch": 469
+        },
+        "strictMatches": 11,
+        "strictRate": 0.020446096654275093
+      }
+    },
+    "2026-10-28-repair-v7-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17329910141206675,
+        "edgePrecision": 0.20029673590504452,
+        "edgeRecall": 0.15271493212669685,
+        "goldEdges": 1768,
+        "matchedEdges": 270,
+        "predictedEdges": 1348,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2927759807580659,
+        "edgePrecision": 0.3429182047794832,
+        "edgeRecall": 0.25542691751085383,
+        "goldEdges": 6910,
+        "matchedEdges": 1765,
+        "predictedEdges": 5147,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 19,
+          "structural-mismatch": 461
+        },
+        "strictMatches": 19,
+        "strictRate": 0.03531598513011153
+      }
+    },
+    "2026-10-28-repair-v8-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17329910141206675,
+        "edgePrecision": 0.20029673590504452,
+        "edgeRecall": 0.15271493212669685,
+        "goldEdges": 1768,
+        "matchedEdges": 270,
+        "predictedEdges": 1348,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.29310773824334413,
+        "edgePrecision": 0.3433067806489217,
+        "edgeRecall": 0.2557163531114327,
+        "goldEdges": 6910,
+        "matchedEdges": 1767,
+        "predictedEdges": 5147,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 21,
+          "structural-mismatch": 459
+        },
+        "strictMatches": 21,
+        "strictRate": 0.03903345724907063
+      }
+    },
+    "2026-10-28-repair-v9-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17394014962593515,
+        "edgePrecision": 0.19375,
+        "edgeRecall": 0.1578054298642534,
+        "goldEdges": 1768,
+        "matchedEdges": 279,
+        "predictedEdges": 1440,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2933354953786282,
+        "edgePrecision": 0.33351769911504425,
+        "edgeRecall": 0.261794500723589,
+        "goldEdges": 6910,
+        "matchedEdges": 1809,
+        "predictedEdges": 5424,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 25,
+          "structural-mismatch": 455
+        },
+        "strictMatches": 25,
+        "strictRate": 0.046468401486988845
+      }
+    },
+    "2026-10-31-repair-v11-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17342482844666252,
+        "edgePrecision": 0.1933240611961057,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1438,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.293067056340315,
+        "edgePrecision": 0.3337647928994083,
+        "edgeRecall": 0.26121562952243127,
+        "goldEdges": 6910,
+        "matchedEdges": 1805,
+        "predictedEdges": 5408,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 31,
+          "structural-mismatch": 449
+        },
+        "strictMatches": 31,
+        "strictRate": 0.05762081784386617
+      }
+    },
+    "2026-10-31-repair-v12-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17342482844666252,
+        "edgePrecision": 0.1933240611961057,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1438,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.293067056340315,
+        "edgePrecision": 0.3337647928994083,
+        "edgeRecall": 0.26121562952243127,
+        "goldEdges": 6910,
+        "matchedEdges": 1805,
+        "predictedEdges": 5408,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 31,
+          "structural-mismatch": 449
+        },
+        "strictMatches": 31,
+        "strictRate": 0.05762081784386617
+      }
+    },
+    "2026-10-31-repair-v13-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17342482844666252,
+        "edgePrecision": 0.1933240611961057,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1438,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.293067056340315,
+        "edgePrecision": 0.3337647928994083,
+        "edgeRecall": 0.26121562952243127,
+        "goldEdges": 6910,
+        "matchedEdges": 1805,
+        "predictedEdges": 5408,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 31,
+          "structural-mismatch": 449
+        },
+        "strictMatches": 31,
+        "strictRate": 0.05762081784386617
+      }
+    },
+    "2026-10-31-repair-v14-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17331670822942644,
+        "edgePrecision": 0.19305555555555556,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1440,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.29581576386636393,
+        "edgePrecision": 0.33640722980450016,
+        "edgeRecall": 0.26396526772793055,
+        "goldEdges": 6910,
+        "matchedEdges": 1824,
+        "predictedEdges": 5422,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 34,
+          "structural-mismatch": 446
+        },
+        "strictMatches": 34,
+        "strictRate": 0.06319702602230483
+      }
+    },
+    "2026-10-31-repair-v15-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1732626986600187,
+        "edgePrecision": 0.19292158223455932,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1441,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2977550855012562,
+        "edgePrecision": 0.338368023577086,
+        "edgeRecall": 0.2658465991316932,
+        "goldEdges": 6910,
+        "matchedEdges": 1837,
+        "predictedEdges": 5429,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 34,
+          "structural-mismatch": 446
+        },
+        "strictMatches": 34,
+        "strictRate": 0.06319702602230483
+      }
+    },
+    "2026-10-31-repair-v16-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1732626986600187,
+        "edgePrecision": 0.19292158223455932,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1441,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2981688543185869,
+        "edgePrecision": 0.3387334315169367,
+        "edgeRecall": 0.2662807525325615,
+        "goldEdges": 6910,
+        "matchedEdges": 1840,
+        "predictedEdges": 5432,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 37,
+          "structural-mismatch": 443
+        },
+        "strictMatches": 37,
+        "strictRate": 0.0687732342007435
+      }
+    },
+    "2026-10-31-repair-v17-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1732626986600187,
+        "edgePrecision": 0.19292158223455932,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1441,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2981688543185869,
+        "edgePrecision": 0.3387334315169367,
+        "edgeRecall": 0.2662807525325615,
+        "goldEdges": 6910,
+        "matchedEdges": 1840,
+        "predictedEdges": 5432,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 37,
+          "structural-mismatch": 443
+        },
+        "strictMatches": 37,
+        "strictRate": 0.0687732342007435
+      }
+    },
+    "2026-10-31-repair-v18-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1732626986600187,
+        "edgePrecision": 0.19292158223455932,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1441,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": null
+    },
+    "2026-10-31-repair-v19-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1732626986600187,
+        "edgePrecision": 0.19292158223455932,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1441,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.2981688543185869,
+        "edgePrecision": 0.3387334315169367,
+        "edgeRecall": 0.2662807525325615,
+        "goldEdges": 6910,
+        "matchedEdges": 1840,
+        "predictedEdges": 5432,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 37,
+          "structural-mismatch": 443
+        },
+        "strictMatches": 37,
+        "strictRate": 0.0687732342007435
+      }
+    },
+    "2026-10-31-repair-v20-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.1726171996274449,
+        "edgePrecision": 0.1913282863041982,
+        "edgeRecall": 0.15723981900452488,
+        "goldEdges": 1768,
+        "matchedEdges": 278,
+        "predictedEdges": 1453,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": null
+    },
+    "2026-10-31-repair-v21-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17729393468118196,
+        "edgePrecision": 0.19695922598479612,
+        "edgeRecall": 0.16119909502262444,
+        "goldEdges": 1768,
+        "matchedEdges": 285,
+        "predictedEdges": 1447,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": null
+    },
+    "2026-10-31-repair-v22-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17729393468118196,
+        "edgePrecision": 0.19695922598479612,
+        "edgeRecall": 0.16119909502262444,
+        "goldEdges": 1768,
+        "matchedEdges": 285,
+        "predictedEdges": 1447,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": {
+        "edgeF1": 0.30045351473922904,
+        "edgePrecision": 0.3411180581095991,
+        "edgeRecall": 0.26845151953690305,
+        "goldEdges": 6910,
+        "matchedEdges": 1855,
+        "predictedEdges": 5438,
+        "selectedClaims": 538,
+        "stages": {
+          "input-failed": 58,
+          "strict-match": 37,
+          "structural-mismatch": 443
+        },
+        "strictMatches": 37,
+        "strictRate": 0.0687732342007435
+      }
+    },
+    "2026-10-31-repair-v23-evaluation.json": {
+      "correctedNested": {
+        "edgeF1": 0.17729393468118196,
+        "edgePrecision": 0.19695922598479612,
+        "edgeRecall": 0.16119909502262444,
+        "goldEdges": 1768,
+        "matchedEdges": 285,
+        "predictedEdges": 1447,
+        "selectedClaims": 79,
+        "stages": {
+          "input-failed": 7,
+          "structural-mismatch": 72
+        },
+        "strictMatches": 0,
+        "strictRate": 0.0
+      },
+      "retainedSummaryNested": null
+    }
+  },
+  "reason": "Retained results counted any part-of edge (including a root limitation) as nested; goldFeature.nested is recomputed from frozen gold fixtures as containment below a top-level limitation. Frozen per-claim results are unchanged.",
+  "schemaVersion": "claim-antecedent-nested-correction/v1"
+}

@@ -1,0 +1,52 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "14657939-root-1",
+  "role": "extractor-granularity-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "reviewedAnchors": [
+    {
+      "claimNumber": 5,
+      "path": "5.b",
+      "anchor": {
+        "startChar": 424,
+        "endChar": 428,
+        "quote": "that"
+      },
+      "action": "retained-sole-entity-proform",
+      "reason": "Retain: this that is a standalone demonstrative proform in consistent with that of the supporting plane, not a relative-pronoun clause introducer. It supplies the only explicit comparison-height mention for the supporting plane; the earlier the height belongs to plane parts of support surfaces. Deleting the term would remove that distinct relational participant. Preserve exact bare term; no unique introducing term or antecedent is invented.",
+      "removedAntecedents": []
+    }
+  ],
+  "before": {
+    "claims": 9,
+    "elements": 31,
+    "terms": 125,
+    "edges": 96
+  },
+  "after": {
+    "claims": 9,
+    "elements": 31,
+    "terms": 125,
+    "edges": 96
+  },
+  "remainingUncertainty": [
+    {
+      "claimNumber": 5,
+      "path": "5.b",
+      "anchor": {
+        "startChar": 424,
+        "endChar": 428,
+        "quote": "that"
+      },
+      "reason": "Retain: this that is a standalone demonstrative proform in consistent with that of the supporting plane, not a relative-pronoun clause introducer. It supplies the only explicit comparison-height mention for the supporting plane; the earlier the height belongs to plane parts of support surfaces. Deleting the term would remove that distinct relational participant. Preserve exact bare term; no unique introducing term or antecedent is invented.",
+      "disposition": "Retained exact standalone height proform; source-specific justification for independent critic/attorney review."
+    }
+  ],
+  "existingConcerns": "All prior source/referent concerns retained in extractor receipt. This is a bounded consistency correction, not source eligibility or attorney acceptance.",
+  "independence": "Read clarified v2/entity-mentions convention and decision entry, exact canonical source and reviewed annotations. No implementation/rules/predictions/synthetic/conformance artifacts/network/secrets/git/delegation. Helpers transform only the manually reviewed listed anchors, merge contiguous source text, and verify geometry.",
+  "validation": "Exact source spans; unchanged element anchors/kinds/paths; unrelated terms retained; ordered nonoverlapping terms; local/foreign reference coherence; full contiguous functional reconstruction; runtime ClaimElementTree decode all passed."
+}

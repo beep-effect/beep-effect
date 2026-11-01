@@ -1,0 +1,129 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "17617663-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.97,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the secondary cooling zone",
+      "nativeQuote": "the secondary cooling zone",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the opening and closing",
+      "nativeQuote": "the opening and closing",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the secondary output terminal",
+      "nativeQuote": "the secondary output terminal",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the cathode",
+      "nativeQuote": "the cathode",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the opening degree",
+      "nativeQuote": "the opening degree",
+      "literalMatchIgnoringCase": true
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "the phase sequence",
+      "nativeQuote": "the phase sequence",
+      "literalMatchIgnoringCase": true
+    }
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "17617663",
+    "publicationNumber": "US20220305549A1",
+    "publicationDate": "20220929"
+  },
+  "digestEvidence": [
+    {
+      "file": "17617663.publication.xml",
+      "sha256": "7f59052842ad11070af0e1b00819e556c4bea247639b264230132e067b7060cc",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3",
+      "matchesProvenance": true
+    },
+    {
+      "file": "17617663.KWZ805L9LDFLYX9.original.xml",
+      "sha256": "55ca854127d087db1bf641b32b6f4aa11157ca707134652e78f1c4a1b43049de",
+      "matchesProvenance": true
+    },
+    {
+      "file": "17617663.KWZ8005CLDFLYX5.original.xml",
+      "sha256": "9b9cf34d724f8b926588a555cb40c72719c95e0610628a27df9ebf8261bf9388",
+      "matchesProvenance": true
+    }
+  ],
+  "independentPdfEvidence": [],
+  "inventoryEvidence": {
+    "sha256": "fa9d8635fa96ca17124c8264903b9974e5bcef45433ca84254904cd75af8b49e",
+    "declaredCount": 84,
+    "actualRows": 84,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "KWZ805L7LDFLYX9",
+        "documentCode": "A.PE",
+        "officialDate": "2021-12-09T12:14:31.000-0500"
+      },
+      {
+        "documentIdentifier": "KWZ805L9LDFLYX9",
+        "documentCode": "CLM",
+        "officialDate": "2021-12-09T12:14:31.000-0500"
+      },
+      {
+        "documentIdentifier": "KWZ805LALDFLYX9",
+        "documentCode": "REM",
+        "officialDate": "2021-12-09T12:14:31.000-0500"
+      },
+      {
+        "documentIdentifier": "KWZ8005CLDFLYX5",
+        "documentCode": "CLM",
+        "officialDate": "2021-12-09T12:14:28.000-0500"
+      }
+    ],
+    "citedOfficeActionRows": [
+      {
+        "documentIdentifier": "LG26KQHVGREENX3",
+        "documentCode": "CTNF",
+        "officialDate": "2023-04-06T03:31:58.000-0400"
+      }
+    ]
+  },
+  "evidence": [
+    "Marked original KWZ805L9 allselected1–10 independently compare exact ignoring whitespace/finalperiod; selected ORIGINAL labels corroborate unchanged text. Second original differs only l/1 glyphs and embedded line35, with no substantive alternatives.",
+    "Actual112(b)1–10 and numbered quoted phrases match. Natural2/3/7/8→1,4/6→3,5→4,method9 explicitly uses device1,10→9; crosssubject dependency preserved."
+  ],
+  "rationale": "Independent same-number ground/wording, fullinventory, familymembership and original/amendment evidence reviewed. Chronology alone not accepted. Sourceeligibility only; semantic references and attorneyadjudication separate.",
+  "independence": "Only candidate source-critic changed; read supplied sources/XML/PDF pages/inventories. No active/source/expected edits, rules/predictions/network/secrets/git/delegation."
+}

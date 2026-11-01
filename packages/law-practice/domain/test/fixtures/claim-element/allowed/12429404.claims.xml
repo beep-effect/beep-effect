@@ -1,0 +1,30 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A semiconductor low-temperature elemental mercury generator, comprising:
+<claim-text>a gas source, communicated with a carrier gas pipeline and a dilution gas pipeline, and</claim-text>
+<claim-text>a mercury pool generating chamber, wherein the mercury pool generating chamber comprises a semiconductor refrigeration device, a gas mixing device and a coil, wherein the coil is kept at a constant temperature through the semiconductor refrigeration device, the carrier gas pipeline is communicated with the coil, and the gas mixing device is communicated with a gas outlet of the coil and the dilution gas pipeline;</claim-text>
+<claim-text>wherein the mercury pool generating chamber is provided with an annular groove, the coil is located in the annular groove, and heat conducting liquid is filled between the coil and the groove;</claim-text>
+<claim-text>the mercury pool generating chamber is made of metal material with good thermal conductivity;</claim-text>
+<claim-text>the coil comprises an inlet section, a mercury source section and an outlet section, wherein quartz sand is filled in the inlet section and the outlet section, and quartz sand with mercury beads is filled in the mercury source section;</claim-text>
+<claim-text>a surface of the quartz sand in the mercury source section is coated with a gold film.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the carrier gas pipeline is provided with a small-flow mass flowmeter, and the dilution gas pipeline is provided with a large-flow mass flowmeter.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a pipeline diameter of the mercury source section is greater than or equal to pipeline diameters of the inlet section and the outlet section.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a length ratio of the inlet section, the mercury source section and the outlet section is (2-4): (1-3): (3-6).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein quartz wool is arranged at an inlet of the inlet section and an outlet of the outlet section.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the semiconductor refrigeration device comprises a semiconductor cooling plate and a cooling fan, and the cooling fan is located above the semiconductor cooling plate.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The semiconductor low-temperature elemental mercury generator according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the gas mixing device comprises a tee pipe, a gas outlet of the coil and the dilution gas pipeline are respectively connected with a first end and a second end of the tee pipe, and a third end of the tee pipe is a mercury-containing standard gas outlet.</claim-text>
+</claim>
+</claims>

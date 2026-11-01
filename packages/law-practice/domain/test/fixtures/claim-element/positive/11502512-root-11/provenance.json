@@ -1,0 +1,31 @@
+{
+  "applicationNumber": "11502512",
+  "publicationNumber": "US20080036867A1",
+  "publicationDate": "2008-02-14",
+  "nativeXmlSha256": "be667fd24977134b574ec2e669d44c7c61b92ffe9ac8354a940c9a227a188062",
+  "claimsXmlSha256": "9caf45b70f19cdf2d0809c67183878b1c008bc3ac668349d7cc001748cc84e91",
+  "officeActionDocumentIdentifiers": [
+    "GQUZQBJDPPOPPY5"
+  ],
+  "officeActionMailDate": "2011-08-04",
+  "officeActionSection112Text": [
+    "7. claims 1, 8 11, and 18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention.\r\nclaim 1 line 1 the term “the vector field divergence volume integral” lacks antecedent basis.\r\nclaim 1 line 3 the term “the total outgoing throughput” lacks antecedent basis.\r\nclaim 1 line 4 “the volume” lacks antecedent basis.\r\nclaim 1 lines 4-5 “through the vector” lacks antecedent basis.\r\nclaim 1 line 6 the integral equation variables are not defined.\r\nclaim 1 line 8 “those motion vectors” lacks antecedent basis.\r\nclaim 1 lines 8-9 “the domain” lacks antecedent basis.\r\nclaim 1 lines 15-21 all the equation variables are not defined.\r\nclaim 1 line 25 “the current video” lacks antecedent basis.\r\nclaim 2 lines 2-3 “the motion estimation” lacks antecedent basis.\r\nclaim 2 lines 3-4 “those motion vectors” lacks antecedent basis.\r\nclaim 4 lines 2-3 “the motion vector extraction method” lacks antecedent basis.\r\nclaim 4 lines 3-4 “those motion vectors” lacks antecedent basis.\r\nclaim 5 line 2 “the compression domain” lacks antecedent basis.\r\nclaim 6 line 3 “the primary” lacks antecedent basis.\r\nclaim 7 line 2 “ the accumulation circuit mux” lacks antecedent basis.\r\nclaim 7 line 3 “the primary” lacks antecedent basis.\r\nclaim 7 line 5 “the original memory unit” lacks antecedent basis.\r\nclaim 7 line 7 “the mux operation” lacks antecedent basis.\r\nclaim 7 line 10 “the cycle” lacks antecedent basis.\r\nclaim 7 line 10 “the final pan, tilt, and zoom values” lacks antecedent basis.\r\nclaim 8 line 2 “those motion vectors” lacks antecedent basis.\r\nclaim 8 line 3 “those motion vectors” lacks antecedent basis.\r\nclaim 8 line 14 “the present video” lacks antecedent basis.\r\nclaim 8 lines 9-11 the “pan, tilt, and zoom” variables are not defined.\r\nclaim 9 line 2 the term usually renders the claim indefinite.\r\nclaim 10 line 3 “the data received” lacks antecedent basis.\r\nclaim 11 line 4 “the camera motion detection method” lacks antecedent basis.\r\nclaim 11 line 5-6 “the camera motion detection method” lacks antecedent basis.\r\nclaim 11 line 9-15 all the equation variables are not defined.\r\nclaim 12 line 1 “the system” lacks antecedent basis.\r\nclaim 13 line 1 “the system” lacks antecedent basis.\r\nclaim 13 line 3 “the uncompression domain” lacks antecedent basis.\r\nclaim 15 line 1 “the system” lacks antecedent basis.\r\nclaim 15 line 2-3 “the compression domain” lacks antecedent basis.\r\nclaim 16 line 1 “the system” lacks antecedent basis.\r\nclaim 16 line 3 “the primary“lacks antecedent basis.\r\nclaim 17 line 1 “the system” lacks antecedent basis.\r\nclaim 17 line 2-3 “the accumulation circuit” lacks antecedent basis.\r\nclaim 17 line 7 “the mux operation” lacks antecedent basis.\r\nclaim 17 lines 10-11 “the final pan, tilt, and zoom values” lacks antecedent basis.\r\nclaim 18 line 4 “the camera motion detection method” lacks antecedent basis.\r\nclaim 18 lines 5-6 “the camera motion detection method” lacks antecedent basis.\r\nclaim 18 lines 9-12 the” pan, tilt, and zoom” variables are not defined.\r\nclaim 19 line 3 the term usually renders the claim indefinite.\r\nclaim 20 line 3 “the data retrieved” lacks antecedent basis.\r\n8. the prior art made of record and not relied upon is considered pertinent to applicant's disclosure.\r\nde haan et at. ( patent no. 6278736 b1) teaches [motion estimation].\r\noya (us patent no. 7433588 b2) teaches [camera control apparatus, camera control method, program and storage medium].\r\nota et al. (us patent no. 6236682 b1) teaches [video motion vector detection including rotating and/or zoom vector generation]."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "EQWI6XP2PP2GUI1",
+      "officialDate": "2006-08-11T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [],
+  "documentInventoryCount": 42,
+  "documentInventoryRows": 42,
+  "primaryCpc": "H04N  23/695",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/11502512",
+    "https://api.uspto.gov/api/v1/patent/applications/11502512/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-agent-accepted; attorney-pending"
+}

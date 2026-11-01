@@ -1,0 +1,130 @@
+{
+  "kind": "current-head-inherited-fallow-attribution",
+  "head": "d5e3ecf3efb5077cdd2e970a619c9e3fd7beb19d",
+  "runId": 41205786124,
+  "jobId": 124550480048,
+  "artifactId": 13044559239,
+  "artifactSha256": "b7297d612b21916d03bb13c94142faa7e57f489c6c2cd1081af118735ee7cf03",
+  "blockingHealthFindings": 11,
+  "findingsMatchPriorCddPathsNamesAndMetrics": true,
+  "sourceFilesUnchangedFromPriorCdd": [
+    "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts",
+    "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts"
+  ],
+  "findings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+      "name": "driftOf",
+      "cyclomatic": 29,
+      "cognitive": 28,
+      "line_count": 43,
+      "param_count": 3,
+      "exceeded": "all",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+      "name": "fingerprintFromSources",
+      "cyclomatic": 15,
+      "cognitive": 30,
+      "line_count": 160,
+      "param_count": 2,
+      "exceeded": "cognitive_crap",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+      "name": "renderJson",
+      "cyclomatic": 8,
+      "cognitive": 10,
+      "line_count": 24,
+      "param_count": 4,
+      "exceeded": "cognitive",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
+      "name": "scriptArgv",
+      "cyclomatic": 11,
+      "cognitive": 7,
+      "line_count": 14,
+      "param_count": 3,
+      "exceeded": "crap",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/ToolingSchemaFirst.command.ts",
+      "name": "walk",
+      "cyclomatic": 13,
+      "cognitive": 18,
+      "line_count": 60,
+      "param_count": 1,
+      "exceeded": "cognitive_crap",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "analyze",
+      "cyclomatic": 9,
+      "cognitive": 10,
+      "line_count": 26,
+      "param_count": 1,
+      "exceeded": "cognitive",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "closure",
+      "cyclomatic": 12,
+      "cognitive": 25,
+      "line_count": 50,
+      "param_count": 1,
+      "exceeded": "cognitive_crap",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "commandPath",
+      "cyclomatic": 9,
+      "cognitive": 16,
+      "line_count": 39,
+      "param_count": 2,
+      "exceeded": "cognitive",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "moduleSyntax",
+      "cyclomatic": 40,
+      "cognitive": 93,
+      "line_count": 152,
+      "param_count": 2,
+      "exceeded": "all",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "resolveExport",
+      "cyclomatic": 9,
+      "cognitive": 12,
+      "line_count": 18,
+      "param_count": 3,
+      "exceeded": "cognitive",
+      "effective_severity": "error"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Lint/internal/PolicyFingerprintGraph.ts",
+      "name": "shellClosure",
+      "cyclomatic": 12,
+      "cognitive": 22,
+      "line_count": 34,
+      "param_count": 1,
+      "exceeded": "cognitive_crap",
+      "effective_severity": "error"
+    }
+  ],
+  "auditIntroduced": 0,
+  "owner": "Consolidated main repair PR2399:10G4graph/writer findings plus existing moved ToolingSchemaFirst.walk allowance rekey documented by owner; no competing refactor, threshold relaxation or new exception.",
+  "goalComplete": false
+}

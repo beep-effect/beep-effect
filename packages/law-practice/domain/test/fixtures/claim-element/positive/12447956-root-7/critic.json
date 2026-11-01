@@ -1,0 +1,234 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "familyId": "12447956-root-7",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    7,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18
+  ],
+  "findings": [],
+  "priorFindingDispositions": [],
+  "reviewedGranularityCases": [
+    {
+      "claimNumber": 7,
+      "path": "7.a",
+      "anchor": {
+        "startChar": 113,
+        "endChar": 118,
+        "quote": "which"
+      },
+      "action": "term-to-functional-text",
+      "reason": "At an end of which is a relative modifying phrase governed by the explicit a support element in the immediately preceding root subject. The support element and end/end-cap participants remain in the tree and the full guidance clause remains functional text; which does not introduce another support entity.",
+      "removedAntecedents": [
+        {
+          "kind": "antecedent",
+          "referring": {
+            "path": "7.a",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 118,
+              "quote": "which"
+            }
+          },
+          "introducing": {
+            "path": "7",
+            "anchor": {
+              "startChar": 76,
+              "endChar": 93,
+              "quote": "a support element"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "path": "15.a",
+      "anchor": {
+        "startChar": 118,
+        "endChar": 126,
+        "quote": "a manner"
+      },
+      "action": "add-determiner-noun-phrase",
+      "reason": "A manner is a determiner-bearing noun phrase despite adverbial function. Entity-mentions/v1 explicitly preserves it. Split only the existing connecting span; no same-manner antecedent is inferred.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 18,
+      "path": "18.a",
+      "anchor": {
+        "startChar": 119,
+        "endChar": 127,
+        "quote": "a manner"
+      },
+      "action": "add-determiner-noun-phrase",
+      "reason": "A manner is a determiner-bearing noun phrase despite adverbial function. Entity-mentions/v1 explicitly preserves it. Split only the existing connecting span; no same-manner antecedent is inferred.",
+      "removedAntecedents": []
+    }
+  ],
+  "verifiedExactChanges": {
+    "removedTerms": [
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 113,
+          "endChar": 118,
+          "quote": "which"
+        },
+        "determiner": "bare",
+        "head": "which"
+      }
+    ],
+    "addedTerms": [
+      {
+        "path": "15.a",
+        "anchor": {
+          "startChar": 118,
+          "endChar": 126,
+          "quote": "a manner"
+        },
+        "determiner": "a",
+        "head": "manner"
+      },
+      {
+        "path": "18.a",
+        "anchor": {
+          "startChar": 119,
+          "endChar": 127,
+          "quote": "a manner"
+        },
+        "determiner": "a",
+        "head": "manner"
+      }
+    ],
+    "removedNonfunctionalEdges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 118,
+            "quote": "which"
+          }
+        },
+        "introducing": {
+          "path": "7",
+          "anchor": {
+            "startChar": 76,
+            "endChar": 93,
+            "quote": "a support element"
+          }
+        }
+      }
+    ],
+    "unchangedElementStructure": true,
+    "unchangedFunctionalSourceReconstruction": true,
+    "referenceSha256": "eac83ca86808db73a59b886cea1c5ad89343474f47e6a025d95008bb012a2acd"
+  },
+  "reviewScope": {
+    "claimCount": 9,
+    "elementCount": 22,
+    "termCount": 92,
+    "edgeCount": 82
+  },
+  "reviewNotes": [
+    "Targeted independent review under semantic-reference/v2/entity-mentions/v1 and the specific SPEC granularity decision; read the per-family granularity-review receipt, exact canonical changed contexts, prior/current reference snapshots and prior critic receipt. This is not a new source-eligibility or full original-document audit.",
+    "Independently compared the immediate pre-repair snapshot with current expected: element paths, kinds and spans are unchanged; term changes are exactly the listed removals/additions; nonfunctional edge changes are exactly the associated antecedent removals; every functional edge reconstructs the identical entire owner text before and after, with contiguous ordered source spans and valid local term ownership.",
+    "All current element/term/functional/antecedent anchors were checked against canonical UTF-16 text. Owned terms are ordered and nonoverlapping, local/foreign references exist, and typed containment/dependency endpoints are coherent. No source wording or unsupported introduction was supplied. Runtime schema success is reported in the extractor granularity receipt; this critic independently checked the specified geometry/schema constraints without rerunning production code.",
+    "Each removed relative/reciprocal surface retains its complete literal source clause or functional text and explicit governing participant(s). This applies source grammar individually; it is not a spelling-based blanket pronoun deletion rule.",
+    "Accepted removal of relative which governing the explicit root support element and addition of a manner at claim 15 [118,126) and claim 18 [119,127), both determiner a/head manner with local ordered functional term parts and no invented cross-manner antecedent."
+  ],
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "12447956-root-7",
+      "role": "critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.96,
+      "confidenceScope": "Independent native-source semantic structure and identified corrections; separately accepted source qualification is not re-certified, and attorney adjudication is pending.",
+      "verdict": "accepted",
+      "reviewedClaimNumbers": [
+        7,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "findings": [],
+      "sourceEligibility": "Separate source critic accepted at0.98; native text is canonical. For12447956 the PDF resolves earlier amended-root7 hold and merged XML numbering.",
+      "audit": {
+        "treesReviewed": 9,
+        "elementsReviewed": 22,
+        "termsReviewed": 91,
+        "typedEdgesReviewed": 83,
+        "edgeKinds": {
+          "antecedent": 49,
+          "part-of": 13,
+          "functional": 13,
+          "depends-on-element": 8
+        },
+        "allElementAndTermUtf16SlicesVerified": true,
+        "allFunctionalTextSlicesVerified": true,
+        "allFunctionalPartsOrderedLocallyOwnedAndCoverRelation": true,
+        "allLocalAndCrossClaimTermEndpointsVerified": true,
+        "schemaDecode": "passed all supplied trees",
+        "selectedScopeComplete": true
+      },
+      "attorneyAdjudication": "pending",
+      "sourceOrNormalizationAnomalies": [
+        "Earlier amended-root7/source XML merged-claim issue is explicitly resolved by separate marked original PDF receipt. No new source/version or normalized-span anomaly found."
+      ],
+      "independence": "Independent critic, not producer of these families. Reviewed exact claims/context, provenance/source audit/source critic, fresh extractor/expected, semantic-reference/v2 and schema contracts. No rules, predictions, synthetic fixtures, archived conformance, network, secrets, git or delegation. Helpers verified supplied spans/schema/reference geometry only.",
+      "rationale": [
+        "Reviewed22 elements/91 terms/83 typed edges and13 functional relationships. Full root7 preamble, nested guided/end-side/lid/gudgeon relationships, protected-tip limitation and later limitations retain exact source grammar and locally owned nonduplicated terms. No actionable structural defect found.",
+        "Actual11->7,12->11,13/14/15->7,16->12,17->16,18->17 chains are preserved. Claim13 skirts remain unintroduced;16 can inherit11 skirts through12. Claim17 cutout/top-wall introductions are local and not borrowed from sibling14.",
+        "Source PDF independently resolves root7 strikeouts and separated claim8; this review uses native reference text without repairing it."
+      ],
+      "ambiguityResolution": [
+        {
+          "claimNumber": 13,
+          "quote": "the skirts",
+          "resolution": "Claim13->7 excludes11, so no antecedent edge is fabricated. Claim16->12->11 includes the skirt introduction and correctly links it."
+        },
+        {
+          "claimNumber": 7,
+          "quote": "its side",
+          "resolution": "Exact possessive noun phrase is retained within the lid/gudgeon relation; no prior standalone side introduction is invented. Parenthetical reference numerals remain outside lexical anchors."
+        },
+        {
+          "claimNumber": 15,
+          "quote": "the open position",
+          "resolution": "State/position wording does not automatically establish an introduced position entity. Existing absent edge preserves source drafting rather than guessing equivalence."
+        }
+      ]
+    }
+  ],
+  "sourceConcerns": [],
+  "attorneyAdjudication": "pending; critic confidence is not attorney agreement",
+  "roundLimit": {
+    "finalPermittedRound": false,
+    "noFourthAgentRound": true
+  },
+  "independence": "Independent targeted semantic critic. Only this family critic.json written. No expected/source/code edits, production rules/predictions, synthetic/conformance archives, network, secrets, git or delegation. Helpers compare authorized reference snapshots and check exact span/schema geometry only.",
+  "corpusStatus": "Incremental reference consistency review; no active sample admission, goal completion, or attorney agreement claimed."
+}

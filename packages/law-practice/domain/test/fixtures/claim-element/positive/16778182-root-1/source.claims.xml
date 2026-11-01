@@ -1,0 +1,51 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for predicting the dosage based on human physiological parameters, comprising:
+<claim-text>obtaining dosage data and multiple human physiological parameter data of multiple testers as raw data;</claim-text>
+<claim-text>preprocessing the raw data to obtain input data as a training set;</claim-text>
+<claim-text>based on the input data, establishing a decision tree by classification and regression tree algorithm, which includes:</claim-text>
+<claim-text>generating the decision tree based on the feature extraction of the input data, and pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set;</claim-text>
+<claim-text>inputting a user's human physiological parameter data, and predicting the required dosage according to the established decision tree.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>using generalized regression neural network to post-optimize the output of the decision tree.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>using BADT to process null data specifically to post-optimize the output of the decision tree.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein
+<claim-text>the generation of the decision tree uses the Gini index to select the optimal feature, and to determine the optimal splitting point of the feature at the same time.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the pruning comprising:
+<claim-text>cutting off the sub-trees continuously from the bottom of the complete tree form of the decision tree; testing the sequence of the sub-trees on the independent verification data set by the cross-validation method, from which the optimal sub-tree is selected.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the preprocessing comprising:
+<claim-text>correlating the dosage data with the human physiological parameters on the time axis.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the preprocessing further comprising:
+<claim-text>processing the input data by ETL, and processing the output data of the decision tree by ETL again as input data, thereby continuously iterating.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A storage medium, which stores instructions that can be executed by a computer device and can be read by the computer device;
+<claim-text>the instructions cause the computer device to perform the following steps:</claim-text>
+<claim-text>obtaining dosage data and multiple human physiological parameter data of multiple testers as raw data;</claim-text>
+<claim-text>preprocessing the raw data to obtain input data as a training set;</claim-text>
+<claim-text>based on the input data, establishing a decision tree by classification and regression tree algorithm, which includes:</claim-text>
+<claim-text>generating the decision tree based on the feature extraction of the input data, and pruning the generated decision tree and selecting the optimal sub-tree by using a validation data set;</claim-text>
+<claim-text>receiving a user's human physiological parameter data, and predicting the required dosage according to the established decision tree.</claim-text>
+</claim-text>
+</claim>
+</claims>

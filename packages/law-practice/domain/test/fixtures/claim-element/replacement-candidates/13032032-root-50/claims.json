@@ -1,0 +1,951 @@
+{
+  "familyId": "13032032-root-50",
+  "rootClaimNumber": 50,
+  "labelClaimNumbers": [
+    50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68,
+    69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+    88, 89, 90, 91, 92
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A coated sleeved oil and gas well production device comprising: one or more cylindrical bodies, one or more sleeves proximal to the outer diameter or inner diameter of the one or more cylindrical bodies, hardbanding on at least a portion of the exposed outer surface, exposed inner surface, or a combination of both exposed outer or inner surface of the one or more sleeves, a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the hardbanding and the ultra-low friction coating.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The coated sleeved device of claim 1 wherein the hardbanding has a patterned surface.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The coated sleeved device of claim 2 wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The coated sleeved device of claim 2 wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The coated sleeved device of claim 2 wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The coated sleeved device of claim 1 wherein the ultra-low friction coating further comprises one or more buffer layers.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The coated sleeved device of claim 1 or claim 6 wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1, 6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS2, WS2, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The coated sleeved device of claim 8, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).",
+      "sourceXmlParentClaimNumbers": [8]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The coated sleeved device of claim 1, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The coated sleeved device of claim 10, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The coated sleeved device of claim 1, wherein the ultra-low friction coating provides a surface energy less than 1 J/m2.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The coated sleeved device of claim 1, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The coated sleeved device of claim 1, wherein the coefficient of friction of the coating is less than or equal to 0.15.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The coated sleeved device of claim 1, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The coated sleeved device of claim 1, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The coated sleeved device of claim 1 or 6 wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.",
+      "sourceXmlParentClaimNumbers": [1, 6]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "The coated sleeved device of claim 1 or 6 wherein the thicknesses of each of the one or more ultra-low friction, buttering, and buffer layers is between 0.001 and 5000 microns.",
+      "sourceXmlParentClaimNumbers": [1, 6]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "The coated sleeved device of claim 7 wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.",
+      "sourceXmlParentClaimNumbers": [7]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "The coated sleeved device of claim 6, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 21,
+      "claimText": "The coated sleeved device of claim 1, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 22,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 23,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, ion implantation, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 24,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 25,
+      "claimText": "The coated sleeved device of claim 1 wherein at least one of the buttering layers has a minimum hardness of 400 VHN.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 26,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies include two or more cylindrical bodies in relative motion to each other.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 27,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies include two or more cylindrical bodies that are static relative to each other.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 28,
+      "claimText": "The coated sleeved device of claim 26 or 27, wherein the two or more cylindrical bodies include two or more radii.",
+      "sourceXmlParentClaimNumbers": [26, 27]
+    },
+    {
+      "claimNumber": 29,
+      "claimText": "The coated sleeved device of claim 28, wherein the two or more cylindrical bodies include one or more cylindrical bodies substantially within one or more other cylindrical bodies.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 30,
+      "claimText": "The coated sleeved device of claim 28, wherein the two or more cylindrical bodies are contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 31,
+      "claimText": "The coated sleeved device of claim 28, wherein the two or more cylindrical bodies are not contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [28]
+    },
+    {
+      "claimNumber": 32,
+      "claimText": "The coated sleeved device of claim 30 or 31, wherein the two or more cylindrical bodies are coaxial or non-coaxial.",
+      "sourceXmlParentClaimNumbers": [30, 31]
+    },
+    {
+      "claimNumber": 33,
+      "claimText": "The coated sleeved device of claim 32, wherein the two or more cylindrical bodies have substantially parallel axes.",
+      "sourceXmlParentClaimNumbers": [32]
+    },
+    {
+      "claimNumber": 34,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies are helical in inner surface, helical in outer surface or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 35,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies are solid, hollow or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 36,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies include at least one cylindrical body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 37,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more cylindrical bodies further include threads.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 38,
+      "claimText": "The coated sleeved device of claim 37, wherein at least a portion of the threads are coated.",
+      "sourceXmlParentClaimNumbers": [37]
+    },
+    {
+      "claimNumber": 39,
+      "claimText": "The coated sleeved device of claim 37 or 38, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.",
+      "sourceXmlParentClaimNumbers": [37, 38]
+    },
+    {
+      "claimNumber": 40,
+      "claimText": "The coated sleeved device of any one of claim 1, 26, or 27, wherein the one or more cylindrical bodies are well construction devices.",
+      "sourceXmlParentClaimNumbers": [1, 26]
+    },
+    {
+      "claimNumber": 41,
+      "claimText": "The coated sleeved device of claim 40, wherein the well construction devices are chosen from: drill stem, casing, tubing string, wireline/braided line/multi-conductor/single conductor/slickline; coiled tubing, vaned rotors and stators of Moyno™ and progressive cavity pumps, expandable tubulars, expansion mandrels, centralizers, contact rings, wash pipes, shaker screens for solids control, overshot and grapple, marine risers, surface flow lines, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [40]
+    },
+    {
+      "claimNumber": 42,
+      "claimText": "The coated sleeved device of any one of claim 1, 26 or 27, wherein the one or more cylindrical bodies are completion and production devices.",
+      "sourceXmlParentClaimNumbers": [1, 26, 27]
+    },
+    {
+      "claimNumber": 43,
+      "claimText": "The coated sleeved device of claim 42, wherein the completion and production devices are chosen from: plunger lifts; completion sliding sleeve assemblies; coiled tubing; sucker rods; Corods™; tubing string; pumping jacks; stuffing boxes; packoffs and lubricators; pistons and piston liners; vaned rotors and stators of Moyno™ and progressive cavity pumps; expandable tubulars; expansion mandrels; control lines and conduits; tools operated in well bores; wireline/braided line/multi-conductor/single conductor/slickline; centralizers; contact rings; perforated basepipe; slotted basepipe; screen basepipe for sand control; wash pipes; shunt tubes; service tools used in gravel pack operations; blast joints; sand screens disposed within completion intervals; Mazeflo™ completion screens; sintered screens; wirewrap screens; shaker screens for solids control; overshot and grapple; marine risers; surface flow lines, stimulation treatment lines, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [42]
+    },
+    {
+      "claimNumber": 44,
+      "claimText": "The coated sleeved device of claim 1 wherein the one or more cylindrical bodies are a pin or box connection of a pipe tool joint.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 45,
+      "claimText": "The coated sleeved device of claim 44 wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is circular in cross-section.",
+      "sourceXmlParentClaimNumbers": [44]
+    },
+    {
+      "claimNumber": 46,
+      "claimText": "The coated sleeved device of claim 44 wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is non-circular in cross-section.",
+      "sourceXmlParentClaimNumbers": [44]
+    },
+    {
+      "claimNumber": 47,
+      "claimText": "The coated sleeved device of claim 44 wherein the pin or box connection is oriented such that the pin is facing up and the box is facing down relative to the direction of gravity.",
+      "sourceXmlParentClaimNumbers": [44]
+    },
+    {
+      "claimNumber": 48,
+      "claimText": "The coated sleeved device of claim 44 wherein the pin or box connection is oriented such that the pin is facing down and the box is facing up relative to the direction of gravity.",
+      "sourceXmlParentClaimNumbers": [44]
+    },
+    {
+      "claimNumber": 49,
+      "claimText": "The coated sleeved device of claim 1, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 50,
+      "claimText": "A coated sleeved oil and gas well production device comprising: an oil and gas well production device including one or more bodies with the proviso that the one or more bodies does not include a drill bit, one or more sleeves proximal to the outer surface or inner surface of the one or more bodies, a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the one or more sleeves and the ultra-low friction coating, wherein at least one of the buttering layers has a minimum hardness of 400 VHN.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 51,
+      "claimText": "The coated sleeved device of claim 50 wherein the ultra-low friction coating further comprises one or more buffer layers.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 52,
+      "claimText": "The coated sleeved device of claim 50 or claim 51 wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [50, 51]
+    },
+    {
+      "claimNumber": 53,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS2, WS2, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 54,
+      "claimText": "The coated sleeved device of claim 53, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).",
+      "sourceXmlParentClaimNumbers": [53]
+    },
+    {
+      "claimNumber": 55,
+      "claimText": "The coated sleeved device of claim 50, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 56,
+      "claimText": "The coated sleeved device of claim 55, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [55]
+    },
+    {
+      "claimNumber": 57,
+      "claimText": "The coated sleeved device of claim 50, wherein the ultra-low friction coating provides a surface energy less than 1 J/m2.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 58,
+      "claimText": "The coated sleeved device of claim 50, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 59,
+      "claimText": "The coated sleeved device of claim 50, wherein the coefficient of friction of the coating is less than or equal to 0.15.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 60,
+      "claimText": "The coated sleeved device of claim 50, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 61,
+      "claimText": "The coated sleeved device of claim 50, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 62,
+      "claimText": "The coated sleeved device of claim 50 or 51 wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.",
+      "sourceXmlParentClaimNumbers": [50, 51]
+    },
+    {
+      "claimNumber": 63,
+      "claimText": "The coated sleeved device of claim 50 or 51 wherein the thicknesses of the one or more layers are between 0.001 and 5000 microns.",
+      "sourceXmlParentClaimNumbers": [50, 51]
+    },
+    {
+      "claimNumber": 64,
+      "claimText": "The coated sleeved device of claim 52 wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.",
+      "sourceXmlParentClaimNumbers": [52]
+    },
+    {
+      "claimNumber": 65,
+      "claimText": "The coated sleeved device of claim 51, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [51]
+    },
+    {
+      "claimNumber": 66,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more sleeves further includes hardbanding on at least a portion thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 67,
+      "claimText": "The coated sleeved device of claim 66, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [66]
+    },
+    {
+      "claimNumber": 68,
+      "claimText": "The coated sleeved device of claim 66 wherein the hardbanding has a patterned surface.",
+      "sourceXmlParentClaimNumbers": [66]
+    },
+    {
+      "claimNumber": 69,
+      "claimText": "The coated sleeved device of claim 68 wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 70,
+      "claimText": "The coated sleeved device of claim 69 wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.",
+      "sourceXmlParentClaimNumbers": [69]
+    },
+    {
+      "claimNumber": 71,
+      "claimText": "The coated sleeved device of claim 68 wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [68]
+    },
+    {
+      "claimNumber": 72,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 73,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 74,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 75,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies include two or more bodies in relative motion to each other.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 76,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies include two or more bodies that are static relative to each other.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 77,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies include spheres and complex geometries.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 78,
+      "claimText": "The coated sleeved device of claim 77, wherein the complex geometries have at least a portion that is non-cylindrical in shape.",
+      "sourceXmlParentClaimNumbers": [77]
+    },
+    {
+      "claimNumber": 79,
+      "claimText": "The coated sleeved device of claim 75 or 76, wherein the two or more bodies include one or more bodies substantially within one or more other bodies.",
+      "sourceXmlParentClaimNumbers": [75, 76]
+    },
+    {
+      "claimNumber": 80,
+      "claimText": "The coated sleeved device of claim 75 or 76, wherein the two or more bodies are contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [75, 76]
+    },
+    {
+      "claimNumber": 81,
+      "claimText": "The coated sleeved device of claim 75 or 76, wherein the two or more bodies are not contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [75, 76]
+    },
+    {
+      "claimNumber": 82,
+      "claimText": "The coated sleeved device of claim 75 or 76, wherein the two or more bodies are coaxial or non-coaxial.",
+      "sourceXmlParentClaimNumbers": [75, 76]
+    },
+    {
+      "claimNumber": 83,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies are solid, hollow or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 84,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies include at least one body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 85,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more bodies further include threads.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 86,
+      "claimText": "The coated sleeved device of claim 85, wherein at least a portion of the threads are coated.",
+      "sourceXmlParentClaimNumbers": [85]
+    },
+    {
+      "claimNumber": 87,
+      "claimText": "The coated sleeved device of claim 85 or 86, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.",
+      "sourceXmlParentClaimNumbers": [85, 86]
+    },
+    {
+      "claimNumber": 88,
+      "claimText": "The coated sleeved device of any one of claim 50, 75, or 76, wherein the one or more cylindrical bodies are well construction devices.",
+      "sourceXmlParentClaimNumbers": [50, 75]
+    },
+    {
+      "claimNumber": 89,
+      "claimText": "The coated sleeved device of claim 88, wherein the well construction devices are chosen from: chokes, valves, valve seats, nipples, ball valves, annular isolation valves, subsurface safety valves, centrifuges, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, rig skidding equipment, pallets, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [88]
+    },
+    {
+      "claimNumber": 90,
+      "claimText": "The coated sleeved device of any one of claim 50, 75, or 76, wherein the one or more bodies are completion and production devices.",
+      "sourceXmlParentClaimNumbers": [50, 75]
+    },
+    {
+      "claimNumber": 91,
+      "claimText": "The coated sleeved device of claim 90, wherein the completion and production devices are chosen from: chokes, valves, valve seats, nipples, ball valves, inflow control devices, smart well valves, annular isolation valves, subsurface safety valves, centrifuges, gas lift and chemical injection valves, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, sidepockets, mandrels, packer slips, packer latches, sand probes, wellstream gauges, non-cylindrical components of sand screens, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [90]
+    },
+    {
+      "claimNumber": 92,
+      "claimText": "The coated sleeved device of claim 50, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [50]
+    },
+    {
+      "claimNumber": 93,
+      "claimText": "A method of using a coated sleeved oil and gas well production device comprising: providing a coated oil and gas well production device including one or more cylindrical bodies with one or more sleeves proximal to the outer diameter or the inner diameter of the one or more cylindrical bodies, hardbanding on at least a portion of the exposed outer surface, exposed inner surface, or a combination of both exposed outer or inner surface of the one or more sleeves, and a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the hardbanding and the ultra-low friction coating, and utilizing the coated sleeved oil and gas well production device in well construction, completion, or production operations.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 94,
+      "claimText": "The method of claim 93 wherein the hardbanding has a patterned surface.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 95,
+      "claimText": "The method of claim 94 wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.",
+      "sourceXmlParentClaimNumbers": [94]
+    },
+    {
+      "claimNumber": 96,
+      "claimText": "The method of claim 94 wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.",
+      "sourceXmlParentClaimNumbers": [94]
+    },
+    {
+      "claimNumber": 97,
+      "claimText": "The method of claim 94 wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [94]
+    },
+    {
+      "claimNumber": 98,
+      "claimText": "The method of claim 93 wherein the ultra-low friction coating further comprises one or more buffer layers.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 99,
+      "claimText": "The method of claim 93 or claim 98 wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93, 98]
+    },
+    {
+      "claimNumber": 100,
+      "claimText": "The method of claim 93, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS2, WS2, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-like-carbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 101,
+      "claimText": "The method of claim 100, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).",
+      "sourceXmlParentClaimNumbers": [100]
+    },
+    {
+      "claimNumber": 102,
+      "claimText": "The method of claim 93, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 103,
+      "claimText": "The method of claim 102, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [102]
+    },
+    {
+      "claimNumber": 104,
+      "claimText": "The method of claim 93, wherein the ultra-low friction coating provides a surface energy less than 1 J/m2.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 105,
+      "claimText": "The method of claim 93, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 106,
+      "claimText": "The method of claim 93, wherein the coefficient of friction of the coating is less than or equal to 0.15.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 107,
+      "claimText": "The method of claim 93, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 108,
+      "claimText": "The method of claim 93, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 109,
+      "claimText": "The method of claim 93 or 98 wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.",
+      "sourceXmlParentClaimNumbers": [93, 98]
+    },
+    {
+      "claimNumber": 110,
+      "claimText": "The method of claim 93 or 98 wherein the thicknesses of each of the one or more ultra-low friction, buttering, and buffer layers is between 0.001 and 5000 microns.",
+      "sourceXmlParentClaimNumbers": [93, 98]
+    },
+    {
+      "claimNumber": 111,
+      "claimText": "The method of claim 99 wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.",
+      "sourceXmlParentClaimNumbers": [99]
+    },
+    {
+      "claimNumber": 112,
+      "claimText": "The method of claim 98, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [98]
+    },
+    {
+      "claimNumber": 113,
+      "claimText": "The method of claim 93, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 114,
+      "claimText": "The method of claim 93, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 115,
+      "claimText": "The method of claim 93, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, ion implantation, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 116,
+      "claimText": "The method of claim 93, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 117,
+      "claimText": "The method of claim 93 wherein at least one of the buttering layers has a minimum hardness of 400 VHN.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 118,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies include two or more cylindrical bodies in relative motion to each other.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 119,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies include two or more cylindrical bodies that are static relative to each other.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 120,
+      "claimText": "The method of claim 119, wherein the two or more cylindrical bodies include two or more radii.",
+      "sourceXmlParentClaimNumbers": [119]
+    },
+    {
+      "claimNumber": 121,
+      "claimText": "The method of claim 120, wherein the two or more cylindrical bodies include one or more cylindrical bodies substantially within one or more other cylindrical bodies.",
+      "sourceXmlParentClaimNumbers": [120]
+    },
+    {
+      "claimNumber": 122,
+      "claimText": "The method of claim 120, wherein the two or more cylindrical bodies are contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [120]
+    },
+    {
+      "claimNumber": 123,
+      "claimText": "The method of claim 120, wherein the two or more cylindrical bodies are not contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [120]
+    },
+    {
+      "claimNumber": 124,
+      "claimText": "The method of claim 122 or 123, wherein the two or more cylindrical bodies are coaxial or non-coaxial.",
+      "sourceXmlParentClaimNumbers": [122, 123]
+    },
+    {
+      "claimNumber": 125,
+      "claimText": "The method of claim 124, wherein the two or more cylindrical bodies have substantially parallel axes.",
+      "sourceXmlParentClaimNumbers": [124]
+    },
+    {
+      "claimNumber": 126,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies are helical in inner surface, helical in outer surface or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 127,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies are solid, hollow or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 128,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies include at least one cylindrical body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 129,
+      "claimText": "The method of claim 93, wherein the one or more cylindrical bodies further include threads.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 130,
+      "claimText": "The method of claim 129, wherein at least a portion of the threads are coated.",
+      "sourceXmlParentClaimNumbers": [129]
+    },
+    {
+      "claimNumber": 131,
+      "claimText": "The method of claim 129 or 130, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.",
+      "sourceXmlParentClaimNumbers": [129, 130]
+    },
+    {
+      "claimNumber": 132,
+      "claimText": "The method of any one of claim 93, 118, or 119, wherein the one or more cylindrical bodies are well construction devices.",
+      "sourceXmlParentClaimNumbers": [93, 118]
+    },
+    {
+      "claimNumber": 133,
+      "claimText": "The method of claim 132, wherein the well construction devices are chosen from: drill stem, casing, tubing string, wireline/braided line/multi-conductor/single conductor/slickline; coiled tubing, vaned rotors and stators of Moyno™ and progressive cavity pumps, expandable tubulars, expansion mandrels, centralizers, contact rings, wash pipes, shaker screens for solids control, overshot and grapple, marine risers, surface flow lines, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [132]
+    },
+    {
+      "claimNumber": 134,
+      "claimText": "The method of any one of claim 93, 118 or 119, wherein the one or more cylindrical bodies are completion and production devices.",
+      "sourceXmlParentClaimNumbers": [93, 118, 119]
+    },
+    {
+      "claimNumber": 135,
+      "claimText": "The method of claim 134, wherein the completion and production devices are chosen from: plunger lifts; completion sliding sleeve assemblies; coiled tubing; sucker rods; Corods™; tubing string; pumping jacks; stuffing boxes; packoffs and lubricators; pistons and piston liners; vaned rotors and stators of Moyno™ and progressive cavity pumps; expandable tubulars; expansion mandrels; control lines and conduits; tools operated in well bores; wireline/braided line/multi-conductor/single conductor/slickline; centralizers; contact rings; perforated basepipe; slotted basepipe; screen basepipe for sand control; wash pipes; shunt tubes; service tools used in gravel pack operations; blast joints; sand screens disposed within completion intervals; Mazeflo™ completion screens; sintered screens; wirewrap screens; shaker screens for solids control; overshot and grapple; marine risers; surface flow lines, stimulation treatment lines, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [134]
+    },
+    {
+      "claimNumber": 136,
+      "claimText": "The method of claim 93 wherein the one or more cylindrical bodies are a pin or box connection of a pipe tool joint.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 137,
+      "claimText": "The method of claim 136 wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is circular in cross-section.",
+      "sourceXmlParentClaimNumbers": [136]
+    },
+    {
+      "claimNumber": 138,
+      "claimText": "The method of claim 136 wherein the one or more cylindrical bodies are configured with a proximal cylindrical cross-section that is non-circular in cross-section.",
+      "sourceXmlParentClaimNumbers": [136]
+    },
+    {
+      "claimNumber": 139,
+      "claimText": "The method of claim 136 wherein the pin or box connection is oriented such that the pin is facing up and the box is facing down relative to the direction of gravity.",
+      "sourceXmlParentClaimNumbers": [136]
+    },
+    {
+      "claimNumber": 140,
+      "claimText": "The method of claim 136 wherein the pin or box connection is oriented such that the pin is facing down and the box is facing up relative to the direction of gravity.",
+      "sourceXmlParentClaimNumbers": [136]
+    },
+    {
+      "claimNumber": 141,
+      "claimText": "The method of claim 93, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [93]
+    },
+    {
+      "claimNumber": 142,
+      "claimText": "The method of claim 100, wherein the diamond-like-carbon (DLC) is applied by physical vapor deposition, chemical vapor deposition, or plasma assisted chemical vapor deposition coating techniques.",
+      "sourceXmlParentClaimNumbers": [100]
+    },
+    {
+      "claimNumber": 143,
+      "claimText": "The method of claim 142, wherein the physical vapor deposition coating method is chosen from: RF-DC plasma reactive magnetron sputtering, ion beam assisted deposition, cathodic arc deposition and pulsed laser deposition.",
+      "sourceXmlParentClaimNumbers": [142]
+    },
+    {
+      "claimNumber": 144,
+      "claimText": "A method of using a coated sleeved oil and gas well production device comprising: providing a coated oil and gas well production device including one or more bodies with the proviso that the one or more bodies does not include a drill bit, with one or more sleeves proximal to the outer surface or inner surface of the one or more bodies, and a coating on at least a portion of the inner sleeve surface, the outer sleeve surface, or a combination thereof of the one or more sleeves, wherein the coating comprises one or more ultra-low friction layers, and one or more buttering layers interposed between the one or more sleeves and the ultra-low friction coating, wherein at least one of the buttering layers has a minimum hardness of 400 VHN, and utilizing the coated sleeved oil and gas well production device in well construction, completion, or production operations.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 145,
+      "claimText": "The method of claim 144 wherein the ultra-low friction coating further comprises one or more buffer layers.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 146,
+      "claimText": "The method of claim 144 or claim 145 wherein at least one of the layers is graded, or at least one of the interfaces between adjacent layers is graded, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [144, 145]
+    },
+    {
+      "claimNumber": 147,
+      "claimText": "The method of claim 144, wherein the one or more ultra-low friction layers are chosen from: an amorphous alloy, an electroless nickel-phosphorous composite, graphite, MoS2, WS2, a fullerene based composite, a boride based cermet, a quasicrystalline material, a diamond based material, diamond-likecarbon (DLC), boron nitride, carbon nanotubes, graphene sheets, metallic particles of high aspect ratio (i.e. relatively long and thin), ring-shaped materials including carbon nanorings, oblong particles and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 148,
+      "claimText": "The method of claim 147, wherein the diamond based material is chemical vapor deposited (CVD) diamond or polycrystalline diamond compact (PDC).",
+      "sourceXmlParentClaimNumbers": [147]
+    },
+    {
+      "claimNumber": 149,
+      "claimText": "The method of claim 144, wherein at least one ultra-low friction layer is diamond-like-carbon (DLC).",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 150,
+      "claimText": "The method of claim 149, wherein the diamond-like-carbon (DLC) is chosen from: to-C, ta-C:H, DLCH, PLCH, GLCH, Si-DLC, Ti-DLC, Cr-DLC, N-DLC, O-DLC, B-DLC, Me-DLC, F-DLC, S-DLC and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [149]
+    },
+    {
+      "claimNumber": 151,
+      "claimText": "The method of claim 144, wherein the ultra-low friction coating provides a surface energy less than 1 J/m2.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 152,
+      "claimText": "The method of claim 144, wherein the ultra-low friction coating on at least a portion of the exposed outer surface of the body assembly provides a hardness greater than 400 VHN.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 153,
+      "claimText": "The method of claim 144, wherein the coefficient of friction of the coating is less than or equal to 0.15.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 154,
+      "claimText": "The method of claim 144, wherein the coating provides at least 3 times greater wear resistance than an uncoated device.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 155,
+      "claimText": "The method of claim 144, wherein the water contact angle of the ultra-low friction coating is greater than 60 degrees.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 156,
+      "claimText": "The method of claim 144 or 145 wherein the thickness of the ultra-low friction coating ranges from 0.5 microns to 5000 microns.",
+      "sourceXmlParentClaimNumbers": [144, 145]
+    },
+    {
+      "claimNumber": 157,
+      "claimText": "The method of claim 144 or 145 wherein the thicknesses of the one or more layers are between 0.001 and 5000 microns.",
+      "sourceXmlParentClaimNumbers": [144, 145]
+    },
+    {
+      "claimNumber": 158,
+      "claimText": "The method of claim 146 wherein the thicknesses of the one or more interfaces are between 0.01 to 10 microns or between 5% to 95% of the thickness of the thinnest adjacent layer.",
+      "sourceXmlParentClaimNumbers": [146]
+    },
+    {
+      "claimNumber": 159,
+      "claimText": "The method of claim 145, wherein the one or more buffer layers are chosen from elements, alloys, carbides, nitrides, carbo-nitrides, borides, sulfides, silicides, and oxides of silicon, aluminum, copper, molybdenum, titanium, chromium, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [145]
+    },
+    {
+      "claimNumber": 160,
+      "claimText": "The method of claim 144, wherein the one or more bodies further includes hardbanding on at least a portion thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 161,
+      "claimText": "The method of claim 160, wherein the hardbanding comprises cermet based materials; metal matrix composites; nanocrystalline metallic alloys; amorphous alloys; hard metallic alloys; carbides, nitrides, borides, or oxides of elemental tungsten, titanium, niobium, molybdenum, iron, chromium, and silicon dispersed within a metallic alloy matrix; or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [160]
+    },
+    {
+      "claimNumber": 162,
+      "claimText": "The method of claim 160 wherein the hardbanding has a patterned surface.",
+      "sourceXmlParentClaimNumbers": [160]
+    },
+    {
+      "claimNumber": 163,
+      "claimText": "The method of claim 162 wherein the patterned hardbanding surface includes recessed and raised features that range from 1 mm to 5 mm in depth.",
+      "sourceXmlParentClaimNumbers": [162]
+    },
+    {
+      "claimNumber": 164,
+      "claimText": "The method of claim 163 wherein the recessed features comprise 10% to 90% of the area in the hardbanding region.",
+      "sourceXmlParentClaimNumbers": [163]
+    },
+    {
+      "claimNumber": 165,
+      "claimText": "The method of claim 162 wherein the hardbanding has a pattern chosen from: lateral grooves or slots, longitudinal grooves or slots, angled grooves or slots, spiral grooves or slots, chevron shaped grooves or slots, recessed dimples, proud dimples, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [162]
+    },
+    {
+      "claimNumber": 166,
+      "claimText": "The method of claim 144, wherein the one or more buttering layers comprise a stainless steel, a chrome-based alloy, an iron-based alloy, a cobalt-based alloy, a titanium-based alloy, or a nickel-based alloy, alloys or carbides or nitrides or carbo-nitrides or borides or silicides or sulfides or oxides of the following elements: silicon, titanium, chromium, aluminum, copper, iron, nickel, cobalt, molybdenum, tungsten, tantalum, niobium, vanadium, zirconium, hafnium, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 167,
+      "claimText": "The method of claim 144, wherein the one or more buttering layers is formed by one or more processes chosen from: PVD, PACVD, CVD, carburizing, nitriding, boronizing, sulfiding, siliciding, oxidizing, an electrochemical process, an electroless plating process, a thermal spray process, a kinetic spray process, a laser-based process, a friction-stir process, a shot peening process, a laser shock peening process, a welding process, a brazing process, an ultra-fine superpolishing process, a tribochemical polishing process, an electrochemical polishing process, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 168,
+      "claimText": "The method of claim 144, wherein the one or more buttering layers provide an ultra-smooth surface finish of average surface roughness lower than 0.25 micron.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 169,
+      "claimText": "The method of claim 144, wherein the one or more bodies include two or more bodies in relative motion to each other.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 170,
+      "claimText": "The method of claim 144, wherein the one or more bodies include two or more bodies that are static relative to each other.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 171,
+      "claimText": "The method of claim 144, wherein the one or more bodies include spheres and complex geometries.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 172,
+      "claimText": "The method of claim 171, wherein the complex geometries have at least a portion that is non-cylindrical in shape.",
+      "sourceXmlParentClaimNumbers": [171]
+    },
+    {
+      "claimNumber": 173,
+      "claimText": "The method of claim 169 or 170, wherein the two or more bodies include one or more bodies substantially within one or more other bodies.",
+      "sourceXmlParentClaimNumbers": [169, 170]
+    },
+    {
+      "claimNumber": 174,
+      "claimText": "The method of claim 169 or 170, wherein the two or more bodies are contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [169, 170]
+    },
+    {
+      "claimNumber": 175,
+      "claimText": "The method of claim 169 or 170, wherein the two or more bodies are not contiguous to each other.",
+      "sourceXmlParentClaimNumbers": [169, 170]
+    },
+    {
+      "claimNumber": 176,
+      "claimText": "The method of claim 169 or 170, wherein the two or more bodies are coaxial or non-coaxial.",
+      "sourceXmlParentClaimNumbers": [169, 170]
+    },
+    {
+      "claimNumber": 177,
+      "claimText": "The method of claim 144, wherein the one or more bodies are solid, hollow or a combination thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 178,
+      "claimText": "The method of claim 144, wherein the one or more bodies include at least one body that is substantially circular, substantially elliptical, or substantially polygonal in outer cross-section, inner cross-section or inner and outer cross-section.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 179,
+      "claimText": "The method of claim 144, wherein the one or more bodies further include threads.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 180,
+      "claimText": "The method of claim 179, wherein at least a portion of the threads are coated.",
+      "sourceXmlParentClaimNumbers": [179]
+    },
+    {
+      "claimNumber": 181,
+      "claimText": "The method of claim 179 or 180, further comprising a sealing surface, wherein at least a portion of the sealing surface is coated.",
+      "sourceXmlParentClaimNumbers": [179, 180]
+    },
+    {
+      "claimNumber": 182,
+      "claimText": "The method of any one of claim 144, 169, or 170, wherein the one or more cylindrical bodies are well construction devices.",
+      "sourceXmlParentClaimNumbers": [144, 169]
+    },
+    {
+      "claimNumber": 183,
+      "claimText": "The method of claim 182, wherein the well construction devices are chosen from: chokes, valves, valve seats, nipples, ball valves, annular isolation valves, subsurface safety valves, centrifuges, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, rig skidding equipment, pallets, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [182]
+    },
+    {
+      "claimNumber": 184,
+      "claimText": "The method of any one of claim 144, 169, or 170, wherein the one or more bodies are completion and production devices.",
+      "sourceXmlParentClaimNumbers": [144, 169]
+    },
+    {
+      "claimNumber": 185,
+      "claimText": "The method of claim 184, wherein the completion and production devices are chosen from: chokes, valves, valve seats, nipples, ball valves, inflow control devices, smart well valves, annular isolation valves, subsurface safety valves, centrifuges, gas lift and chemical injection valves, elbows, tees, couplings, blowout preventers, wear bushings, dynamic metal-to-metal seals in reciprocating and/or rotating seals assemblies, springs in safety valves, shock subs, and jars, logging tool arms, sidepockets, mandrels, packer slips, packer latches, sand probes, wellstream gauges, non-cylindrical components of sand screens, and combinations thereof.",
+      "sourceXmlParentClaimNumbers": [184]
+    },
+    {
+      "claimNumber": 186,
+      "claimText": "The method of claim 144, wherein the one or more sleeves comprise iron based materials, carbon steels, steel alloys, stainless steels, Al-base alloys, Ni-base alloys, Ti-base alloys, ceramics, cermets, polymers, tungsten carbide cobalt, or combinations thereof.",
+      "sourceXmlParentClaimNumbers": [144]
+    },
+    {
+      "claimNumber": 187,
+      "claimText": "The method of claim 147, wherein the diamond-like-carbon (DLC) is applied by physical vapor deposition, chemical vapor deposition, or plasma assisted chemical vapor deposition coating techniques.",
+      "sourceXmlParentClaimNumbers": [147]
+    },
+    {
+      "claimNumber": 188,
+      "claimText": "The method of claim 187, wherein the physical vapor deposition coating method is chosen from: RF-DC plasma reactive magnetron sputtering, ion beam assisted deposition, cathodic arc deposition and pulsed laser deposition.",
+      "sourceXmlParentClaimNumbers": [187]
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+  "schemaVersion": "agent-observation-inventory/v1",
+  "observedAt": "2026-10-27T12:00:00Z",
+  "boundaryEvidenceId": "0663f673b3e7e755dff53bc59034e32f6c2f532bcec6240a9e96f5d4af5fe067",
+  "hosts": [
+    {
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "identityNamespaceId": "56f36d1114c934c183b27c16bef0f8a0e7eae5f2cec62c51e469703e53f85ba8"
+    }
+  ],
+  "roots": [],
+  "routes": [
+    {
+      "routeId": "4c1c584581d5887953d89d70cbcc6214bf448714b981fc4bf372c30ee2e0ca29",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "grok",
+      "surface": "cli",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "f50f57a32efead00616d7b008a6be3b8e0ec28311ee501175763eb648bd0e547",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "claude-code",
+      "surface": "cli",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "77de573b00e3be7d712da973d277b785033278625f783662c404745a6afc7536",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "claude-desktop",
+      "surface": "desktop",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "b1bbf208a5ae8e539a5fcc0425e9305bac62113a20f520745716b3833bbf9160",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "codex-cli",
+      "surface": "cli",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "2994aae3b876a6e9d39ec89e5705631ccc46e7b821d218b6c87e08e84b1f6908",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "chatgpt-desktop",
+      "surface": "desktop",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "cf0123d8b62cc5e0724bf8919cfbce301eae93086379b4df5ccb0bf1565cbd5e",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "muse",
+      "surface": "cli",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    },
+    {
+      "routeId": "e9a9e26826d5a37996d07fcae03b75df84aa39f9d4a1685b2ef9b73d03136817",
+      "hostId": "e73f00710882934c68a61025ed3228fe12bd283a70e908e0d756fe17201551db",
+      "harness": "cursor-agent",
+      "surface": "cli",
+      "transport": "native-otlp",
+      "root": {
+        "_tag": "Unknown"
+      },
+      "capability": {
+        "_tag": "Unknown"
+      },
+      "policy": {
+        "_tag": "Included"
+      },
+      "heartbeat": {
+        "_tag": "Unknown"
+      },
+      "knownLaunches": {
+        "_tag": "Unknown"
+      },
+      "expectedEvents": {
+        "_tag": "Unknown"
+      }
+    }
+  ],
+  "populationWindowStart": "2026-10-27T11:00:00Z",
+  "populationWindowEnd": "2026-10-27T12:00:00Z"
+}

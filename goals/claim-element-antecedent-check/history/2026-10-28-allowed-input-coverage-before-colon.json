@@ -1,0 +1,1962 @@
+[
+  {
+    "patentNumber": "12458444",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 123
+  },
+  {
+    "patentNumber": "12465814",
+    "cpcSection": "A",
+    "sourceClaimCount": 11,
+    "status": "checked",
+    "checkedClaims": 11,
+    "trees": 11,
+    "undecomposed": 0,
+    "findings": 8
+  },
+  {
+    "patentNumber": "12495892",
+    "cpcSection": "A",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 22
+  },
+  {
+    "patentNumber": "12501522",
+    "cpcSection": "A",
+    "sourceClaimCount": 7,
+    "status": "checked",
+    "checkedClaims": 7,
+    "trees": 7,
+    "undecomposed": 0,
+    "findings": 5
+  },
+  {
+    "patentNumber": "12426823",
+    "cpcSection": "A",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12485306",
+    "cpcSection": "A",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 70
+  },
+  {
+    "patentNumber": "12446668",
+    "cpcSection": "A",
+    "sourceClaimCount": 27,
+    "status": "checked",
+    "checkedClaims": 27,
+    "trees": 27,
+    "undecomposed": 0,
+    "findings": 98
+  },
+  {
+    "patentNumber": "12440032",
+    "cpcSection": "A",
+    "sourceClaimCount": 11,
+    "status": "checked",
+    "checkedClaims": 11,
+    "trees": 11,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12478485",
+    "cpcSection": "A",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 41
+  },
+  {
+    "patentNumber": "12495940",
+    "cpcSection": "A",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 3
+  },
+  {
+    "patentNumber": "12433555",
+    "cpcSection": "A",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 7
+  },
+  {
+    "patentNumber": "12465024",
+    "cpcSection": "A",
+    "sourceClaimCount": 13,
+    "status": "checked",
+    "checkedClaims": 13,
+    "trees": 13,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12507844",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 41
+  },
+  {
+    "patentNumber": "12465499",
+    "cpcSection": "A",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 272
+  },
+  {
+    "patentNumber": "12491073",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 17
+  },
+  {
+    "patentNumber": "12486970",
+    "cpcSection": "A",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 5
+  },
+  {
+    "patentNumber": "12427086",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 18
+  },
+  {
+    "patentNumber": "12507709",
+    "cpcSection": "A",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 5
+  },
+  {
+    "patentNumber": "12491125",
+    "cpcSection": "A",
+    "sourceClaimCount": 2,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12491327",
+    "cpcSection": "A",
+    "sourceClaimCount": 14,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00004 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12471567",
+    "cpcSection": "A",
+    "sourceClaimCount": 9,
+    "status": "checked",
+    "checkedClaims": 9,
+    "trees": 9,
+    "undecomposed": 0,
+    "findings": 42
+  },
+  {
+    "patentNumber": "12447068",
+    "cpcSection": "A",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 28
+  },
+  {
+    "patentNumber": "12458116",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 117
+  },
+  {
+    "patentNumber": "12503273",
+    "cpcSection": "A",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12508610",
+    "cpcSection": "A",
+    "sourceClaimCount": 10,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12453398",
+    "cpcSection": "A",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 12
+  },
+  {
+    "patentNumber": "12507761",
+    "cpcSection": "A",
+    "sourceClaimCount": 22,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12495765",
+    "cpcSection": "A",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 24
+  },
+  {
+    "patentNumber": "12485361",
+    "cpcSection": "A",
+    "sourceClaimCount": 7,
+    "status": "checked",
+    "checkedClaims": 7,
+    "trees": 7,
+    "undecomposed": 0,
+    "findings": 32
+  },
+  {
+    "patentNumber": "12507847",
+    "cpcSection": "A",
+    "sourceClaimCount": 11,
+    "status": "checked",
+    "checkedClaims": 11,
+    "trees": 11,
+    "undecomposed": 0,
+    "findings": 15
+  },
+  {
+    "patentNumber": "12502657",
+    "cpcSection": "B",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 23
+  },
+  {
+    "patentNumber": "12479352",
+    "cpcSection": "B",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 46
+  },
+  {
+    "patentNumber": "12420242",
+    "cpcSection": "B",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 22
+  },
+  {
+    "patentNumber": "12486036",
+    "cpcSection": "B",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12485985",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00014 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12473192",
+    "cpcSection": "B",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 8
+  },
+  {
+    "patentNumber": "12486181",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 32
+  },
+  {
+    "patentNumber": "12472672",
+    "cpcSection": "B",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 6
+  },
+  {
+    "patentNumber": "12502738",
+    "cpcSection": "B",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 36
+  },
+  {
+    "patentNumber": "12434344",
+    "cpcSection": "B",
+    "sourceClaimCount": 10,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12502656",
+    "cpcSection": "B",
+    "sourceClaimCount": 21,
+    "status": "checked",
+    "checkedClaims": 21,
+    "trees": 21,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12485924",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 66
+  },
+  {
+    "patentNumber": "12485663",
+    "cpcSection": "B",
+    "sourceClaimCount": 10,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00010 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12486082",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 57
+  },
+  {
+    "patentNumber": "12466093",
+    "cpcSection": "B",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 16
+  },
+  {
+    "patentNumber": "12501195",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 39
+  },
+  {
+    "patentNumber": "12502629",
+    "cpcSection": "B",
+    "sourceClaimCount": 12,
+    "status": "checked",
+    "checkedClaims": 12,
+    "trees": 12,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12502685",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 82
+  },
+  {
+    "patentNumber": "12479127",
+    "cpcSection": "B",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 67
+  },
+  {
+    "patentNumber": "12479667",
+    "cpcSection": "B",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12420230",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00006 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12420663",
+    "cpcSection": "B",
+    "sourceClaimCount": 9,
+    "status": "checked",
+    "checkedClaims": 9,
+    "trees": 9,
+    "undecomposed": 0,
+    "findings": 51
+  },
+  {
+    "patentNumber": "12441518",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 11
+  },
+  {
+    "patentNumber": "12459604",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 38
+  },
+  {
+    "patentNumber": "12479105",
+    "cpcSection": "B",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12497773",
+    "cpcSection": "E",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 25
+  },
+  {
+    "patentNumber": "12509900",
+    "cpcSection": "E",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 22
+  },
+  {
+    "patentNumber": "12480330",
+    "cpcSection": "E",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 19
+  },
+  {
+    "patentNumber": "12497798",
+    "cpcSection": "E",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 48
+  },
+  {
+    "patentNumber": "12509899",
+    "cpcSection": "E",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 4
+  },
+  {
+    "patentNumber": "12454797",
+    "cpcSection": "E",
+    "sourceClaimCount": 15,
+    "status": "checked",
+    "checkedClaims": 15,
+    "trees": 15,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12473718",
+    "cpcSection": "E",
+    "sourceClaimCount": 9,
+    "status": "checked",
+    "checkedClaims": 9,
+    "trees": 9,
+    "undecomposed": 0,
+    "findings": 28
+  },
+  {
+    "patentNumber": "12497739",
+    "cpcSection": "E",
+    "sourceClaimCount": 21,
+    "status": "checked",
+    "checkedClaims": 21,
+    "trees": 21,
+    "undecomposed": 0,
+    "findings": 43
+  },
+  {
+    "patentNumber": "12480266",
+    "cpcSection": "E",
+    "sourceClaimCount": 13,
+    "status": "checked",
+    "checkedClaims": 13,
+    "trees": 13,
+    "undecomposed": 0,
+    "findings": 13
+  },
+  {
+    "patentNumber": "12503874",
+    "cpcSection": "E",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 18
+  },
+  {
+    "patentNumber": "12492881",
+    "cpcSection": "F",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12510001",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 42
+  },
+  {
+    "patentNumber": "12510213",
+    "cpcSection": "F",
+    "sourceClaimCount": 7,
+    "status": "checked",
+    "checkedClaims": 7,
+    "trees": 7,
+    "undecomposed": 0,
+    "findings": 4
+  },
+  {
+    "patentNumber": "12504021",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12442562",
+    "cpcSection": "F",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 35
+  },
+  {
+    "patentNumber": "12486998",
+    "cpcSection": "F",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 33
+  },
+  {
+    "patentNumber": "12497985",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 31
+  },
+  {
+    "patentNumber": "12455028",
+    "cpcSection": "F",
+    "sourceClaimCount": 13,
+    "status": "checked",
+    "checkedClaims": 13,
+    "trees": 13,
+    "undecomposed": 0,
+    "findings": 75
+  },
+  {
+    "patentNumber": "12487053",
+    "cpcSection": "F",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 24
+  },
+  {
+    "patentNumber": "12473999",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 34
+  },
+  {
+    "patentNumber": "12504135",
+    "cpcSection": "F",
+    "sourceClaimCount": 12,
+    "status": "checked",
+    "checkedClaims": 12,
+    "trees": 12,
+    "undecomposed": 0,
+    "findings": 11
+  },
+  {
+    "patentNumber": "12480513",
+    "cpcSection": "F",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12454942",
+    "cpcSection": "F",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12498173",
+    "cpcSection": "F",
+    "sourceClaimCount": 5,
+    "status": "checked",
+    "checkedClaims": 5,
+    "trees": 5,
+    "undecomposed": 0,
+    "findings": 19
+  },
+  {
+    "patentNumber": "12467534",
+    "cpcSection": "F",
+    "sourceClaimCount": 9,
+    "status": "checked",
+    "checkedClaims": 9,
+    "trees": 9,
+    "undecomposed": 0,
+    "findings": 44
+  },
+  {
+    "patentNumber": "12510099",
+    "cpcSection": "F",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 155
+  },
+  {
+    "patentNumber": "12510313",
+    "cpcSection": "F",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 63
+  },
+  {
+    "patentNumber": "12498206",
+    "cpcSection": "F",
+    "sourceClaimCount": 30,
+    "status": "checked",
+    "checkedClaims": 30,
+    "trees": 30,
+    "undecomposed": 0,
+    "findings": 69
+  },
+  {
+    "patentNumber": "12510318",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00004 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12474037",
+    "cpcSection": "F",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 31
+  },
+  {
+    "patentNumber": "12498471",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00015 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12513853",
+    "cpcSection": "G",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 15
+  },
+  {
+    "patentNumber": "12511598",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 16
+  },
+  {
+    "patentNumber": "12505908",
+    "cpcSection": "G",
+    "sourceClaimCount": 4,
+    "status": "checked",
+    "checkedClaims": 4,
+    "trees": 4,
+    "undecomposed": 0,
+    "findings": 74
+  },
+  {
+    "patentNumber": "12469080",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 72
+  },
+  {
+    "patentNumber": "12494574",
+    "cpcSection": "G",
+    "sourceClaimCount": 15,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00008 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12511749",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 34
+  },
+  {
+    "patentNumber": "12510516",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 37
+  },
+  {
+    "patentNumber": "12493734",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 26
+  },
+  {
+    "patentNumber": "12511482",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 90
+  },
+  {
+    "patentNumber": "12449773",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 17
+  },
+  {
+    "patentNumber": "12429404",
+    "cpcSection": "G",
+    "sourceClaimCount": 7,
+    "status": "checked",
+    "checkedClaims": 7,
+    "trees": 7,
+    "undecomposed": 0,
+    "findings": 1
+  },
+  {
+    "patentNumber": "12503939",
+    "cpcSection": "G",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 39
+  },
+  {
+    "patentNumber": "12467992",
+    "cpcSection": "G",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 31
+  },
+  {
+    "patentNumber": "12444032",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 118
+  },
+  {
+    "patentNumber": "12512209",
+    "cpcSection": "G",
+    "sourceClaimCount": 34,
+    "status": "checked",
+    "checkedClaims": 34,
+    "trees": 34,
+    "undecomposed": 0,
+    "findings": 47
+  },
+  {
+    "patentNumber": "12469187",
+    "cpcSection": "G",
+    "sourceClaimCount": 26,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00017 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12493459",
+    "cpcSection": "G",
+    "sourceClaimCount": 17,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00009 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12511392",
+    "cpcSection": "G",
+    "sourceClaimCount": 28,
+    "status": "checked",
+    "checkedClaims": 28,
+    "trees": 28,
+    "undecomposed": 0,
+    "findings": 35
+  },
+  {
+    "patentNumber": "12482341",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12483898",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 26
+  },
+  {
+    "patentNumber": "12505648",
+    "cpcSection": "G",
+    "sourceClaimCount": 30,
+    "status": "checked",
+    "checkedClaims": 30,
+    "trees": 30,
+    "undecomposed": 0,
+    "findings": 52
+  },
+  {
+    "patentNumber": "12481627",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 26
+  },
+  {
+    "patentNumber": "12505205",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00008 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12499243",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 24
+  },
+  {
+    "patentNumber": "12462482",
+    "cpcSection": "G",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 132
+  },
+  {
+    "patentNumber": "12493957",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 23
+  },
+  {
+    "patentNumber": "12483343",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 20
+  },
+  {
+    "patentNumber": "12504288",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 93
+  },
+  {
+    "patentNumber": "12505683",
+    "cpcSection": "G",
+    "sourceClaimCount": 15,
+    "status": "checked",
+    "checkedClaims": 15,
+    "trees": 15,
+    "undecomposed": 0,
+    "findings": 149
+  },
+  {
+    "patentNumber": "12499272",
+    "cpcSection": "G",
+    "sourceClaimCount": 15,
+    "status": "checked",
+    "checkedClaims": 15,
+    "trees": 15,
+    "undecomposed": 0,
+    "findings": 68
+  },
+  {
+    "patentNumber": "12511925",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 60
+  },
+  {
+    "patentNumber": "12469375",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 28
+  },
+  {
+    "patentNumber": "12430405",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12511301",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 79
+  },
+  {
+    "patentNumber": "12462305",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 72
+  },
+  {
+    "patentNumber": "12499172",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 67
+  },
+  {
+    "patentNumber": "12492939",
+    "cpcSection": "G",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 45
+  },
+  {
+    "patentNumber": "12500909",
+    "cpcSection": "G",
+    "sourceClaimCount": 26,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00024 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12455940",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 5
+  },
+  {
+    "patentNumber": "12475154",
+    "cpcSection": "G",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 46
+  },
+  {
+    "patentNumber": "12499859",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 2
+  },
+  {
+    "patentNumber": "12456380",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 26
+  },
+  {
+    "patentNumber": "12511550",
+    "cpcSection": "G",
+    "sourceClaimCount": 4,
+    "status": "checked",
+    "checkedClaims": 4,
+    "trees": 4,
+    "undecomposed": 0,
+    "findings": 107
+  },
+  {
+    "patentNumber": "12510405",
+    "cpcSection": "G",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 5
+  },
+  {
+    "patentNumber": "12487975",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 107
+  },
+  {
+    "patentNumber": "12504499",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 57
+  },
+  {
+    "patentNumber": "12498959",
+    "cpcSection": "G",
+    "sourceClaimCount": 18,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00003 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12469209",
+    "cpcSection": "G",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 27
+  },
+  {
+    "patentNumber": "12467749",
+    "cpcSection": "G",
+    "sourceClaimCount": 6,
+    "status": "checked",
+    "checkedClaims": 6,
+    "trees": 6,
+    "undecomposed": 0,
+    "findings": 62
+  },
+  {
+    "patentNumber": "12488711",
+    "cpcSection": "G",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 44
+  },
+  {
+    "patentNumber": "12505228",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12461941",
+    "cpcSection": "G",
+    "sourceClaimCount": 30,
+    "status": "checked",
+    "checkedClaims": 30,
+    "trees": 30,
+    "undecomposed": 0,
+    "findings": 47
+  },
+  {
+    "patentNumber": "12505083",
+    "cpcSection": "G",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 71
+  },
+  {
+    "patentNumber": "12505335",
+    "cpcSection": "G",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12463819",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 12
+  },
+  {
+    "patentNumber": "12457782",
+    "cpcSection": "H",
+    "sourceClaimCount": 4,
+    "status": "checked",
+    "checkedClaims": 4,
+    "trees": 4,
+    "undecomposed": 0,
+    "findings": 54
+  },
+  {
+    "patentNumber": "12489778",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 33
+  },
+  {
+    "patentNumber": "12471189",
+    "cpcSection": "H",
+    "sourceClaimCount": 2,
+    "status": "checked",
+    "checkedClaims": 2,
+    "trees": 2,
+    "undecomposed": 0,
+    "findings": 7
+  },
+  {
+    "patentNumber": "12501232",
+    "cpcSection": "H",
+    "sourceClaimCount": 17,
+    "status": "checked",
+    "checkedClaims": 17,
+    "trees": 17,
+    "undecomposed": 0,
+    "findings": 72
+  },
+  {
+    "patentNumber": "12490284",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 27
+  },
+  {
+    "patentNumber": "12464371",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 12
+  },
+  {
+    "patentNumber": "12463856",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 172
+  },
+  {
+    "patentNumber": "12452565",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 46
+  },
+  {
+    "patentNumber": "12490362",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 18
+  },
+  {
+    "patentNumber": "12490105",
+    "cpcSection": "H",
+    "sourceClaimCount": 17,
+    "status": "checked",
+    "checkedClaims": 17,
+    "trees": 17,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12490408",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 12
+  },
+  {
+    "patentNumber": "12500611",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 72
+  },
+  {
+    "patentNumber": "12512566",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 30
+  },
+  {
+    "patentNumber": "12470084",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 18
+  },
+  {
+    "patentNumber": "12452296",
+    "cpcSection": "H",
+    "sourceClaimCount": 30,
+    "status": "checked",
+    "checkedClaims": 30,
+    "trees": 30,
+    "undecomposed": 0,
+    "findings": 138
+  },
+  {
+    "patentNumber": "12494647",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 72
+  },
+  {
+    "patentNumber": "12512637",
+    "cpcSection": "H",
+    "sourceClaimCount": 7,
+    "status": "checked",
+    "checkedClaims": 7,
+    "trees": 7,
+    "undecomposed": 0,
+    "findings": 28
+  },
+  {
+    "patentNumber": "12513351",
+    "cpcSection": "H",
+    "sourceClaimCount": 21,
+    "status": "checked",
+    "checkedClaims": 21,
+    "trees": 21,
+    "undecomposed": 0,
+    "findings": 58
+  },
+  {
+    "patentNumber": "12500316",
+    "cpcSection": "H",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 17
+  },
+  {
+    "patentNumber": "12506697",
+    "cpcSection": "H",
+    "sourceClaimCount": 15,
+    "status": "checked",
+    "checkedClaims": 15,
+    "trees": 15,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12507313",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00007 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12494663",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 46
+  },
+  {
+    "patentNumber": "12476458",
+    "cpcSection": "H",
+    "sourceClaimCount": 8,
+    "status": "checked",
+    "checkedClaims": 8,
+    "trees": 8,
+    "undecomposed": 0,
+    "findings": 49
+  },
+  {
+    "patentNumber": "12483479",
+    "cpcSection": "H",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 69
+  },
+  {
+    "patentNumber": "12477183",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 77
+  },
+  {
+    "patentNumber": "12489521",
+    "cpcSection": "H",
+    "sourceClaimCount": 11,
+    "status": "checked",
+    "checkedClaims": 11,
+    "trees": 11,
+    "undecomposed": 0,
+    "findings": 22
+  },
+  {
+    "patentNumber": "12501393",
+    "cpcSection": "H",
+    "sourceClaimCount": 3,
+    "status": "checked",
+    "checkedClaims": 3,
+    "trees": 3,
+    "undecomposed": 0,
+    "findings": 9
+  },
+  {
+    "patentNumber": "12495307",
+    "cpcSection": "H",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 35
+  },
+  {
+    "patentNumber": "12506605",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 36
+  },
+  {
+    "patentNumber": "12477047",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 17
+  },
+  {
+    "patentNumber": "12506549",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 43
+  },
+  {
+    "patentNumber": "12477359",
+    "cpcSection": "H",
+    "sourceClaimCount": 12,
+    "status": "checked",
+    "checkedClaims": 12,
+    "trees": 12,
+    "undecomposed": 0,
+    "findings": 50
+  },
+  {
+    "patentNumber": "12506619",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 60
+  },
+  {
+    "patentNumber": "12506028",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 1
+  },
+  {
+    "patentNumber": "12494662",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 69
+  },
+  {
+    "patentNumber": "12483706",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 35
+  },
+  {
+    "patentNumber": "12501206",
+    "cpcSection": "H",
+    "sourceClaimCount": 9,
+    "status": "checked",
+    "checkedClaims": 9,
+    "trees": 9,
+    "undecomposed": 0,
+    "findings": 49
+  },
+  {
+    "patentNumber": "12485779",
+    "cpcSection": "H",
+    "sourceClaimCount": 16,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00003 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12501120",
+    "cpcSection": "H",
+    "sourceClaimCount": 17,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12470072",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "failed",
+    "failureReason": "public-claims-unavailable",
+    "failureMessage": "Public USPTO claims are unavailable (malformed-claims): The full-text claims do not normalize: Claim 00002 must have a positive number and a supported transition phrase."
+  },
+  {
+    "patentNumber": "12425356",
+    "cpcSection": "H",
+    "sourceClaimCount": 18,
+    "status": "checked",
+    "checkedClaims": 18,
+    "trees": 18,
+    "undecomposed": 0,
+    "findings": 222
+  },
+  {
+    "patentNumber": "12512977",
+    "cpcSection": "H",
+    "sourceClaimCount": 22,
+    "status": "checked",
+    "checkedClaims": 22,
+    "trees": 22,
+    "undecomposed": 0,
+    "findings": 61
+  },
+  {
+    "patentNumber": "12489633",
+    "cpcSection": "H",
+    "sourceClaimCount": 19,
+    "status": "checked",
+    "checkedClaims": 19,
+    "trees": 19,
+    "undecomposed": 0,
+    "findings": 49
+  },
+  {
+    "patentNumber": "12489902",
+    "cpcSection": "H",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 8
+  },
+  {
+    "patentNumber": "12505766",
+    "cpcSection": "H",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 46
+  },
+  {
+    "patentNumber": "12501553",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 50
+  },
+  {
+    "patentNumber": "12460946",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 22
+  },
+  {
+    "patentNumber": "12494660",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 48
+  },
+  {
+    "patentNumber": "12501021",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 495
+  },
+  {
+    "patentNumber": "12483324",
+    "cpcSection": "H",
+    "sourceClaimCount": 15,
+    "status": "checked",
+    "checkedClaims": 15,
+    "trees": 15,
+    "undecomposed": 0,
+    "findings": 35
+  },
+  {
+    "patentNumber": "12483934",
+    "cpcSection": "H",
+    "sourceClaimCount": 12,
+    "status": "checked",
+    "checkedClaims": 12,
+    "trees": 12,
+    "undecomposed": 0,
+    "findings": 44
+  },
+  {
+    "patentNumber": "12494661",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 61
+  },
+  {
+    "patentNumber": "12512877",
+    "cpcSection": "H",
+    "sourceClaimCount": 17,
+    "status": "checked",
+    "checkedClaims": 17,
+    "trees": 17,
+    "undecomposed": 0,
+    "findings": 21
+  },
+  {
+    "patentNumber": "12483038",
+    "cpcSection": "H",
+    "sourceClaimCount": 16,
+    "status": "checked",
+    "checkedClaims": 16,
+    "trees": 16,
+    "undecomposed": 0,
+    "findings": 44
+  },
+  {
+    "patentNumber": "12513272",
+    "cpcSection": "H",
+    "sourceClaimCount": 14,
+    "status": "checked",
+    "checkedClaims": 14,
+    "trees": 14,
+    "undecomposed": 0,
+    "findings": 53
+  },
+  {
+    "patentNumber": "12513139",
+    "cpcSection": "H",
+    "sourceClaimCount": 21,
+    "status": "checked",
+    "checkedClaims": 21,
+    "trees": 21,
+    "undecomposed": 0,
+    "findings": 41
+  },
+  {
+    "patentNumber": "12494675",
+    "cpcSection": "H",
+    "sourceClaimCount": 10,
+    "status": "checked",
+    "checkedClaims": 10,
+    "trees": 10,
+    "undecomposed": 0,
+    "findings": 1
+  },
+  {
+    "patentNumber": "12495342",
+    "cpcSection": "H",
+    "sourceClaimCount": 20,
+    "status": "checked",
+    "checkedClaims": 20,
+    "trees": 20,
+    "undecomposed": 0,
+    "findings": 48
+  },
+  {
+    "patentNumber": "12504644",
+    "cpcSection": "H",
+    "sourceClaimCount": 11,
+    "status": "checked",
+    "checkedClaims": 11,
+    "trees": 11,
+    "undecomposed": 0,
+    "findings": 48
+  }
+]

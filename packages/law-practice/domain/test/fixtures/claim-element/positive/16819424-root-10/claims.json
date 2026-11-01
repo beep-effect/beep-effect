@@ -1,0 +1,97 @@
+{
+  "familyId": "16819424-root-10",
+  "rootClaimNumber": 10,
+  "labelClaimNumbers": [10, 11, 12, 13, 14, 15, 16, 17],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "A device for carrying out a setting process for setting a connecting element, the device comprising: a control device for controlling the setting process in operation; a setting unit that is attached to a tool carrier and that is movable in a feed direction via a feed unit; a component carrier fastened opposite the setting unit on the tool carrier and against which the setting unit is moveable in the feed direction, the setting unit comprising: a hold-down device with the aid of which the workpiece is pressed against the component carrier during operation; a punch that is moveable in the feed direction relative to the hold-down device for punching a hole in the workpiece; and a punch sleeve to press the connecting element into the hole; wherein the component carrier comprises has: a base body with a component support for the workpiece; and an embossing sleeve that is displaceably arranged in the base body and moveable against the workpiece during operation, such that in operation a deep-drawn collar is formed around the hole, wherein the control device is designed such that in operation in a multi-stage setting process, in a first stage, a hole punching and hole forming operation to form the hole with the deep-drawn collar and, in a second stage, a setting process for setting the connecting element takes place, and wherein no lateral relative movement between the workpiece and the device takes place between the two stages.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The device according to claim 1, wherein the control device is configured such that the hole punching and the hole forming operation takes place substantially simultaneously.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The device according to claim 1, wherein the control device is configured such that the punch sleeve forms an abutment for the embossing sleeve during the hole-forming operation.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The device according to claim 1, wherein a centering pin is moveable against the feed direction within the embossing sleeve, and wherein the control device is configured such that after the first stage the centering pin is moved into the formed hole.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The device according to claim 1, wherein the embossing sleeve is moveable with the aid of a mechanical linkage, and wherein the mechanical linkage has a knee lever mechanism, and wherein the embossing sleeve is moved against the workpiece by actuating the knee lever mechanism to form the deep-drawn collar.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The device according to claim 1, wherein the control device is configured such that the embossing sleeve is moved back into a retracted position before the connecting element is pressed in, and wherein the embossing sleeve forms an abutment for the connecting element during the setting process.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The device according to claim 6, wherein the embossing sleeve is moveable into the retracted position against a second fixed stop.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The device according to claim 1, wherein the hold-down device has a first fixed stop that bears against a stop surface of the feed unit during the punching and hole-forming operation",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The device according to claim 1, wherein the feed unit has a plunger, a spring element and a plunger tube that receives the plunger and the spring element, wherein the setting unit is fastened to the plunger tube, wherein the plunger moves against the punch, wherein the spring element acts on the hold-down device and the punch is further designed as a sleeve in which an ejector pin is guided so as to be displaceable relative to the punch sleeve.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "A device for carrying out a setting process for setting a connecting element on a workpiece, the device comprising: a setting unit that comprises: a punch that is moveable in a feed direction relative to the hold-down device for punching a hole in the workpiece; and a punch sleeve for pressing the connecting element into the hole, wherein the punch and the punch sleeve are connected to one another via an axial forced guidance for a common feed movement in the feed direction, the axial forced guidance being able to be released in a controlled manner, so that the punch is moveable relative to the punch sleeve for the hole punching operation.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The device according to claim 10, wherein the punch sleeve and the punch are adapted to be rotated relative to one another, so that in a predetermined rotational position the axial forced guidance is released and the punch is movable relative to the punch sleeve for performing the punching operation.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The device according to claim 10, wherein the punch sleeve and the punch are adapted to be rotated relative to one another with the aid of a drive unit that is controllable freely, a rotation taking place with the aid of a driver that engages in the punch sleeve or the punch.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The device according to claim 10, wherein the plunger sleeve is guided in the feed direction within the hold-down device in a rotationally secure manner up to a predetermined axial position at which the axial forced guidance is released by rotating the plunger sleeve.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "The device according to claim 10, wherein front and retracted driver stops are formed on the punch sleeve and on the punch, wherein the front driver stops are disengaged for releasing the forced guidance by rotating the plunger sleeve.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "The device according to claim 10, wherein the control device is set up in such a way that the following steps are carried out: in an initial position, the workpiece rests on the component support; the setting unit moves in the feed direction and the hold-down device presses the workpiece against the component support and the hole punching and hole-forming operation is carried out; the position of the workpiece is fixed by moving in the centering pin; resetting the setting unit against the feed direction and feeding the connecting element into the setting unit; feeding the setting unit in the feed direction and pressing in the connecting element into the workpiece; and returning to a starting position.",
+      "sourceXmlParentClaimNumbers": [10]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "The device according to claim 15, wherein the control device is configured such that the following steps are carried out during the hole punching and hole forming operation: the hold-down device moves towards the workpiece until a first fixed stop of the hold-down device comes to rest on a stop surface of the feed unit and the hold-down device is blocked from moving back against the feed direction; the embossing sleeve is moved upwards against the feed direction and forms the collar; the hole is punched and a punching slug is removed; and for punching the hole, an axial forced guidance between the punch sleeve and the punch is released",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "The device according to claim 15, wherein the control device is configured such that the following steps take place between the hole punching/hole forming operation and the setting process for fixing the workpiece: return stroke of a plunger tube of the feed unit into an intermediate position in which the workpiece is still clamped; return stroke of the embossing sleeve to a second fixed stop; moving a centering pin into the hole.",
+      "sourceXmlParentClaimNumbers": [15]
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A method for setting a connecting element on a workpiece with the aid of a device, which has a setting unit with a hold-down device and a component carrier opposite the setting unit with a component support, the method comprising: performing a hole punching and hole forming operation in a first stage, in which the workpiece is clamped between the hold-down device and the component support; punching a hole with the aid of a punch of the setting unit; moving the punch relative to the hold-down device in the feed direction; forming a deep-drawn collar surrounding the hole using an embossing sleeve, which is arranged in the component carrier and is moved counter to the feed direction; and pressing the connecting element into the hole in a second stage with the aid of the setting unit, wherein between the two stages no lateral relative movement between the workpiece and the device takes place.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

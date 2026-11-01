@@ -1,0 +1,5656 @@
+[
+  {
+    "claimNumber": 61,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "61",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 223,
+          "quote": "A boundary proximity determining system for wirelessly defining a boundary having a programmable shape and for indicating the location of a rover unit with respect to the boundary, said boundary proximity determining system"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 39,
+              "quote": "A boundary proximity determining system"
+            },
+            "determiner": "a",
+            "head": "boundary proximity determining system"
+          },
+          {
+            "anchor": {
+              "startChar": 64,
+              "endChar": 74,
+              "quote": "a boundary"
+            },
+            "determiner": "a",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 82,
+              "endChar": 102,
+              "quote": "a programmable shape"
+            },
+            "determiner": "a",
+            "head": "programmable shape"
+          },
+          {
+            "anchor": {
+              "startChar": 122,
+              "endChar": 134,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 138,
+              "endChar": 150,
+              "quote": "a rover unit"
+            },
+            "determiner": "a",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 179,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 181,
+              "endChar": 223,
+              "quote": "said boundary proximity determining system"
+            },
+            "determiner": "said",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "61.a",
+        "anchor": {
+          "startChar": 236,
+          "endChar": 548,
+          "quote": "a base station unit, said base station unit generates at least one pair of orthogonal magnetic fields, each magnetic field being separately identifiable and having a principal axis, the principal axes being mutually directionally diverse and lying substantially within a common two-dimensional plane of operation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 255,
+              "quote": "a base station unit"
+            },
+            "determiner": "a",
+            "head": "base station unit"
+          },
+          {
+            "anchor": {
+              "startChar": 257,
+              "endChar": 279,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          },
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 307,
+              "quote": "at least one pair"
+            },
+            "determiner": "at-least-one",
+            "head": "pair"
+          },
+          {
+            "anchor": {
+              "startChar": 311,
+              "endChar": 337,
+              "quote": "orthogonal magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "orthogonal magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 339,
+              "endChar": 358,
+              "quote": "each magnetic field"
+            },
+            "determiner": "bare",
+            "head": "magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 400,
+              "endChar": 416,
+              "quote": "a principal axis"
+            },
+            "determiner": "a",
+            "head": "principal axis"
+          },
+          {
+            "anchor": {
+              "startChar": 418,
+              "endChar": 436,
+              "quote": "the principal axes"
+            },
+            "determiner": "the",
+            "head": "principal axes"
+          },
+          {
+            "anchor": {
+              "startChar": 505,
+              "endChar": 535,
+              "quote": "a common two-dimensional plane"
+            },
+            "determiner": "a",
+            "head": "common two-dimensional plane"
+          },
+          {
+            "anchor": {
+              "startChar": 539,
+              "endChar": 548,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          }
+        ]
+      },
+      {
+        "path": "61.b",
+        "anchor": {
+          "startChar": 554,
+          "endChar": 628,
+          "quote": "a rover unit being mobile and including an auxiliary communications module"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 554,
+              "endChar": 566,
+              "quote": "a rover unit"
+            },
+            "determiner": "a",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 594,
+              "endChar": 628,
+              "quote": "an auxiliary communications module"
+            },
+            "determiner": "an",
+            "head": "auxiliary communications module"
+          }
+        ]
+      },
+      {
+        "path": "61.c",
+        "anchor": {
+          "startChar": 630,
+          "endChar": 793,
+          "quote": "said rover unit measures magnetic field properties of each respective magnetic field generated by said base station unit at the current location of said rover unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 630,
+              "endChar": 645,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 655,
+              "endChar": 680,
+              "quote": "magnetic field properties"
+            },
+            "determiner": "bare",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 684,
+              "endChar": 714,
+              "quote": "each respective magnetic field"
+            },
+            "determiner": "bare",
+            "head": "respective magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 728,
+              "endChar": 750,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          },
+          {
+            "anchor": {
+              "startChar": 754,
+              "endChar": 774,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 778,
+              "endChar": 793,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          }
+        ]
+      },
+      {
+        "path": "61.d",
+        "anchor": {
+          "startChar": 795,
+          "endChar": 1052,
+          "quote": "said rover unit calculates the magnetic field properties of at least one pair of calculated magnetic fields at the current location of said rover unit based on the measured magnetic field properties of the magnetic fields generated by said base station unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 795,
+              "endChar": 810,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 822,
+              "endChar": 851,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 855,
+              "endChar": 872,
+              "quote": "at least one pair"
+            },
+            "determiner": "at-least-one",
+            "head": "pair"
+          },
+          {
+            "anchor": {
+              "startChar": 876,
+              "endChar": 902,
+              "quote": "calculated magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "calculated magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 906,
+              "endChar": 926,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 930,
+              "endChar": 945,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 955,
+              "endChar": 993,
+              "quote": "the measured magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "measured magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 997,
+              "endChar": 1016,
+              "quote": "the magnetic fields"
+            },
+            "determiner": "the",
+            "head": "magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 1030,
+              "endChar": 1052,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          }
+        ]
+      },
+      {
+        "path": "61.e",
+        "anchor": {
+          "startChar": 1054,
+          "endChar": 1240,
+          "quote": "the magnetic field properties measured and calculated at the current location of said rover unit indicating the current location of said rover unit with respect to said base station unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1054,
+              "endChar": 1083,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 1111,
+              "endChar": 1131,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 1135,
+              "endChar": 1150,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1162,
+              "endChar": 1182,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 1186,
+              "endChar": 1201,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1218,
+              "endChar": 1240,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          }
+        ]
+      },
+      {
+        "path": "61.f",
+        "anchor": {
+          "startChar": 1242,
+          "endChar": 1326,
+          "quote": "said rover unit operates in a first mode of operation and a second mode of operation"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1242,
+              "endChar": 1257,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1270,
+              "endChar": 1282,
+              "quote": "a first mode"
+            },
+            "determiner": "a",
+            "head": "first mode"
+          },
+          {
+            "anchor": {
+              "startChar": 1286,
+              "endChar": 1295,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          },
+          {
+            "anchor": {
+              "startChar": 1300,
+              "endChar": 1313,
+              "quote": "a second mode"
+            },
+            "determiner": "a",
+            "head": "second mode"
+          },
+          {
+            "anchor": {
+              "startChar": 1317,
+              "endChar": 1326,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          }
+        ]
+      },
+      {
+        "path": "61.g",
+        "anchor": {
+          "startChar": 1328,
+          "endChar": 1684,
+          "quote": "when said rover unit operates in the first mode of operation, said rover unit defines the boundary by measuring and calculating the magnetic field properties of each respective magnetic field at a multiplicity of sample locations along the contour of the boundary and by storing the magnetic field properties measured and calculated at the sample locations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1333,
+              "endChar": 1348,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1361,
+              "endChar": 1375,
+              "quote": "the first mode"
+            },
+            "determiner": "the",
+            "head": "first mode"
+          },
+          {
+            "anchor": {
+              "startChar": 1379,
+              "endChar": 1388,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          },
+          {
+            "anchor": {
+              "startChar": 1390,
+              "endChar": 1405,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1414,
+              "endChar": 1426,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 1456,
+              "endChar": 1485,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 1489,
+              "endChar": 1519,
+              "quote": "each respective magnetic field"
+            },
+            "determiner": "bare",
+            "head": "respective magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 1523,
+              "endChar": 1537,
+              "quote": "a multiplicity"
+            },
+            "determiner": "a",
+            "head": "multiplicity"
+          },
+          {
+            "anchor": {
+              "startChar": 1541,
+              "endChar": 1557,
+              "quote": "sample locations"
+            },
+            "determiner": "bare",
+            "head": "sample locations"
+          },
+          {
+            "anchor": {
+              "startChar": 1564,
+              "endChar": 1575,
+              "quote": "the contour"
+            },
+            "determiner": "the",
+            "head": "contour"
+          },
+          {
+            "anchor": {
+              "startChar": 1579,
+              "endChar": 1591,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 1607,
+              "endChar": 1636,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 1664,
+              "endChar": 1684,
+              "quote": "the sample locations"
+            },
+            "determiner": "the",
+            "head": "sample locations"
+          }
+        ]
+      },
+      {
+        "path": "61.h",
+        "anchor": {
+          "startChar": 1686,
+          "endChar": 1860,
+          "quote": "the magnetic field properties measured and calculated at each sample location indicating the location of the respective sample location with respect to said base station unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1686,
+              "endChar": 1715,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 1743,
+              "endChar": 1763,
+              "quote": "each sample location"
+            },
+            "determiner": "bare",
+            "head": "sample location"
+          },
+          {
+            "anchor": {
+              "startChar": 1775,
+              "endChar": 1787,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 1791,
+              "endChar": 1821,
+              "quote": "the respective sample location"
+            },
+            "determiner": "the",
+            "head": "respective sample location"
+          },
+          {
+            "anchor": {
+              "startChar": 1838,
+              "endChar": 1860,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          }
+        ]
+      },
+      {
+        "path": "61.i",
+        "anchor": {
+          "startChar": 1862,
+          "endChar": 2211,
+          "quote": "when said rover unit operates in the second mode of operation, said rover unit determines the current location of said rover unit with respect to the boundary by comparing the magnetic field properties measured and calculated at the current location of said rover unit to the magnetic field properties measured and calculated at the sample locations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1867,
+              "endChar": 1882,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1895,
+              "endChar": 1910,
+              "quote": "the second mode"
+            },
+            "determiner": "the",
+            "head": "second mode"
+          },
+          {
+            "anchor": {
+              "startChar": 1914,
+              "endChar": 1923,
+              "quote": "operation"
+            },
+            "determiner": "bare",
+            "head": "operation"
+          },
+          {
+            "anchor": {
+              "startChar": 1925,
+              "endChar": 1940,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 1952,
+              "endChar": 1972,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 1976,
+              "endChar": 1991,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 2008,
+              "endChar": 2020,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 2034,
+              "endChar": 2063,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 2091,
+              "endChar": 2111,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 2115,
+              "endChar": 2130,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 2134,
+              "endChar": 2163,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 2191,
+              "endChar": 2211,
+              "quote": "the sample locations"
+            },
+            "determiner": "the",
+            "head": "sample locations"
+          }
+        ]
+      },
+      {
+        "path": "61.j",
+        "anchor": {
+          "startChar": 2213,
+          "endChar": 2353,
+          "quote": "the auxiliary communications module transmitting an indicator signal indicating the location of said rover unit with respect to the boundary"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 2213,
+              "endChar": 2248,
+              "quote": "the auxiliary communications module"
+            },
+            "determiner": "the",
+            "head": "auxiliary communications module"
+          },
+          {
+            "anchor": {
+              "startChar": 2262,
+              "endChar": 2281,
+              "quote": "an indicator signal"
+            },
+            "determiner": "an",
+            "head": "indicator signal"
+          },
+          {
+            "anchor": {
+              "startChar": 2293,
+              "endChar": 2305,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 2309,
+              "endChar": 2324,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 2341,
+              "endChar": 2353,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 179,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61",
+          "anchor": {
+            "startChar": 181,
+            "endChar": 223,
+            "quote": "said boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 257,
+            "endChar": 279,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 339,
+            "endChar": 358,
+            "quote": "each magnetic field"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 418,
+            "endChar": 436,
+            "quote": "the principal axes"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 400,
+            "endChar": 416,
+            "quote": "a principal axis"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.a",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 255,
+                "quote": "a base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 257,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 257,
+                "endChar": 279,
+                "quote": "said base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 279,
+              "endChar": 290,
+              "quote": " generates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 290,
+                "endChar": 307,
+                "quote": "at least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 307,
+              "endChar": 311,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 311,
+                "endChar": 337,
+                "quote": "orthogonal magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 337,
+              "endChar": 339,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 339,
+                "endChar": 358,
+                "quote": "each magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 358,
+              "endChar": 400,
+              "quote": " being separately identifiable and having "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 400,
+                "endChar": 416,
+                "quote": "a principal axis"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 416,
+              "endChar": 418,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 418,
+                "endChar": 436,
+                "quote": "the principal axes"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 436,
+              "endChar": 505,
+              "quote": " being mutually directionally diverse and lying substantially within "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 505,
+                "endChar": 535,
+                "quote": "a common two-dimensional plane"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 535,
+              "endChar": 539,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.a",
+              "anchor": {
+                "startChar": 539,
+                "endChar": 548,
+                "quote": "operation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "part-of",
+        "child": "61.b",
+        "parent": "61"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 630,
+            "endChar": 645,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 684,
+            "endChar": 714,
+            "quote": "each respective magnetic field"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 728,
+            "endChar": 750,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 778,
+            "endChar": 793,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.c",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 630,
+                "endChar": 645,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 645,
+              "endChar": 655,
+              "quote": " measures "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 655,
+                "endChar": 680,
+                "quote": "magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 680,
+              "endChar": 684,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 684,
+                "endChar": 714,
+                "quote": "each respective magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 714,
+              "endChar": 728,
+              "quote": " generated by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 728,
+                "endChar": 750,
+                "quote": "said base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 750,
+              "endChar": 754,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 754,
+                "endChar": 774,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 774,
+              "endChar": 778,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.c",
+              "anchor": {
+                "startChar": 778,
+                "endChar": 793,
+                "quote": "said rover unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 795,
+            "endChar": 810,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 930,
+            "endChar": 945,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 955,
+            "endChar": 993,
+            "quote": "the measured magnetic field properties"
+          }
+        },
+        "introducing": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 655,
+            "endChar": 680,
+            "quote": "magnetic field properties"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 997,
+            "endChar": 1016,
+            "quote": "the magnetic fields"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 1030,
+            "endChar": 1052,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.d",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.d",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 795,
+                "endChar": 810,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 810,
+              "endChar": 822,
+              "quote": " calculates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 822,
+                "endChar": 851,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 851,
+              "endChar": 855,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 855,
+                "endChar": 872,
+                "quote": "at least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 872,
+              "endChar": 876,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 876,
+                "endChar": 902,
+                "quote": "calculated magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 902,
+              "endChar": 906,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 906,
+                "endChar": 926,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 926,
+              "endChar": 930,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 930,
+                "endChar": 945,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 945,
+              "endChar": 955,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 955,
+                "endChar": 993,
+                "quote": "the measured magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 993,
+              "endChar": 997,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 997,
+                "endChar": 1016,
+                "quote": "the magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1016,
+              "endChar": 1030,
+              "quote": " generated by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.d",
+              "anchor": {
+                "startChar": 1030,
+                "endChar": 1052,
+                "quote": "said base station unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.e",
+          "anchor": {
+            "startChar": 1135,
+            "endChar": 1150,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.e",
+          "anchor": {
+            "startChar": 1186,
+            "endChar": 1201,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.e",
+          "anchor": {
+            "startChar": 1218,
+            "endChar": 1240,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.e",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.e",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1054,
+                "endChar": 1083,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1083,
+              "endChar": 1111,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1111,
+                "endChar": 1131,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1131,
+              "endChar": 1135,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1135,
+                "endChar": 1150,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1150,
+              "endChar": 1162,
+              "quote": " indicating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1162,
+                "endChar": 1182,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1182,
+              "endChar": 1186,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1186,
+                "endChar": 1201,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1201,
+              "endChar": 1218,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.e",
+              "anchor": {
+                "startChar": 1218,
+                "endChar": 1240,
+                "quote": "said base station unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.f",
+          "anchor": {
+            "startChar": 1242,
+            "endChar": 1257,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.f",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.f",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.f",
+              "anchor": {
+                "startChar": 1242,
+                "endChar": 1257,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1257,
+              "endChar": 1270,
+              "quote": " operates in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.f",
+              "anchor": {
+                "startChar": 1270,
+                "endChar": 1282,
+                "quote": "a first mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1282,
+              "endChar": 1286,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.f",
+              "anchor": {
+                "startChar": 1286,
+                "endChar": 1295,
+                "quote": "operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1295,
+              "endChar": 1300,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.f",
+              "anchor": {
+                "startChar": 1300,
+                "endChar": 1313,
+                "quote": "a second mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1313,
+              "endChar": 1317,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.f",
+              "anchor": {
+                "startChar": 1317,
+                "endChar": 1326,
+                "quote": "operation"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1333,
+            "endChar": 1348,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1361,
+            "endChar": 1375,
+            "quote": "the first mode"
+          }
+        },
+        "introducing": {
+          "path": "61.f",
+          "anchor": {
+            "startChar": 1270,
+            "endChar": 1282,
+            "quote": "a first mode"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1390,
+            "endChar": 1405,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1414,
+            "endChar": 1426,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1579,
+            "endChar": 1591,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1664,
+            "endChar": 1684,
+            "quote": "the sample locations"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.g",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1328,
+              "endChar": 1333,
+              "quote": "when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1333,
+                "endChar": 1348,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1348,
+              "endChar": 1361,
+              "quote": " operates in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1361,
+                "endChar": 1375,
+                "quote": "the first mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1375,
+              "endChar": 1379,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1379,
+                "endChar": 1388,
+                "quote": "operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1388,
+              "endChar": 1390,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1390,
+                "endChar": 1405,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1405,
+              "endChar": 1414,
+              "quote": " defines "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1414,
+                "endChar": 1426,
+                "quote": "the boundary"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1426,
+              "endChar": 1456,
+              "quote": " by measuring and calculating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1456,
+                "endChar": 1485,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1485,
+              "endChar": 1489,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1489,
+                "endChar": 1519,
+                "quote": "each respective magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1519,
+              "endChar": 1523,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1523,
+                "endChar": 1537,
+                "quote": "a multiplicity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1537,
+              "endChar": 1541,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1541,
+                "endChar": 1557,
+                "quote": "sample locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1557,
+              "endChar": 1564,
+              "quote": " along "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1564,
+                "endChar": 1575,
+                "quote": "the contour"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1575,
+              "endChar": 1579,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1579,
+                "endChar": 1591,
+                "quote": "the boundary"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1591,
+              "endChar": 1607,
+              "quote": " and by storing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1607,
+                "endChar": 1636,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1636,
+              "endChar": 1664,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.g",
+              "anchor": {
+                "startChar": 1664,
+                "endChar": 1684,
+                "quote": "the sample locations"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.h",
+          "anchor": {
+            "startChar": 1743,
+            "endChar": 1763,
+            "quote": "each sample location"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.h",
+          "anchor": {
+            "startChar": 1791,
+            "endChar": 1821,
+            "quote": "the respective sample location"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.h",
+          "anchor": {
+            "startChar": 1838,
+            "endChar": 1860,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.h",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.h",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.h",
+              "anchor": {
+                "startChar": 1686,
+                "endChar": 1715,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1715,
+              "endChar": 1743,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.h",
+              "anchor": {
+                "startChar": 1743,
+                "endChar": 1763,
+                "quote": "each sample location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1763,
+              "endChar": 1775,
+              "quote": " indicating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.h",
+              "anchor": {
+                "startChar": 1775,
+                "endChar": 1787,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1787,
+              "endChar": 1791,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.h",
+              "anchor": {
+                "startChar": 1791,
+                "endChar": 1821,
+                "quote": "the respective sample location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1821,
+              "endChar": 1838,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.h",
+              "anchor": {
+                "startChar": 1838,
+                "endChar": 1860,
+                "quote": "said base station unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 1867,
+            "endChar": 1882,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 1895,
+            "endChar": 1910,
+            "quote": "the second mode"
+          }
+        },
+        "introducing": {
+          "path": "61.f",
+          "anchor": {
+            "startChar": 1300,
+            "endChar": 1313,
+            "quote": "a second mode"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 1925,
+            "endChar": 1940,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 1976,
+            "endChar": 1991,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 2008,
+            "endChar": 2020,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 2115,
+            "endChar": 2130,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.i",
+          "anchor": {
+            "startChar": 2191,
+            "endChar": 2211,
+            "quote": "the sample locations"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.i",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.i",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1862,
+              "endChar": 1867,
+              "quote": "when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1867,
+                "endChar": 1882,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1882,
+              "endChar": 1895,
+              "quote": " operates in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1895,
+                "endChar": 1910,
+                "quote": "the second mode"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1910,
+              "endChar": 1914,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1914,
+                "endChar": 1923,
+                "quote": "operation"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1923,
+              "endChar": 1925,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1925,
+                "endChar": 1940,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1940,
+              "endChar": 1952,
+              "quote": " determines "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1952,
+                "endChar": 1972,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1972,
+              "endChar": 1976,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 1976,
+                "endChar": 1991,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1991,
+              "endChar": 2008,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2008,
+                "endChar": 2020,
+                "quote": "the boundary"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2020,
+              "endChar": 2034,
+              "quote": " by comparing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2034,
+                "endChar": 2063,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2063,
+              "endChar": 2091,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2091,
+                "endChar": 2111,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2111,
+              "endChar": 2115,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2115,
+                "endChar": 2130,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2130,
+              "endChar": 2134,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2134,
+                "endChar": 2163,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2163,
+              "endChar": 2191,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.i",
+              "anchor": {
+                "startChar": 2191,
+                "endChar": 2211,
+                "quote": "the sample locations"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.j",
+          "anchor": {
+            "startChar": 2213,
+            "endChar": 2248,
+            "quote": "the auxiliary communications module"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 594,
+            "endChar": 628,
+            "quote": "an auxiliary communications module"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.j",
+          "anchor": {
+            "startChar": 2309,
+            "endChar": 2324,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "61.j",
+          "anchor": {
+            "startChar": 2341,
+            "endChar": 2353,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "61.j",
+        "parent": "61"
+      },
+      {
+        "kind": "functional",
+        "element": "61.j",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.j",
+              "anchor": {
+                "startChar": 2213,
+                "endChar": 2248,
+                "quote": "the auxiliary communications module"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2248,
+              "endChar": 2262,
+              "quote": " transmitting "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.j",
+              "anchor": {
+                "startChar": 2262,
+                "endChar": 2281,
+                "quote": "an indicator signal"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2281,
+              "endChar": 2293,
+              "quote": " indicating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.j",
+              "anchor": {
+                "startChar": 2293,
+                "endChar": 2305,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2305,
+              "endChar": 2309,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.j",
+              "anchor": {
+                "startChar": 2309,
+                "endChar": 2324,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 2324,
+              "endChar": 2341,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "61.j",
+              "anchor": {
+                "startChar": 2341,
+                "endChar": 2353,
+                "quote": "the boundary"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 62,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "62",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 53,
+          "quote": "The boundary proximity determining system of claim 61"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 41,
+              "quote": "The boundary proximity determining system"
+            },
+            "determiner": "the",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "62.a",
+        "anchor": {
+          "startChar": 54,
+          "endChar": 320,
+          "quote": "wherein said rover unit measures the magnetic field properties by way of at least one magnetic field sensor, the magnetic field properties including the intensity and the polarity of each respective magnetic field as measured by each respective magnetic field sensor"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 87,
+              "endChar": 116,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 127,
+              "endChar": 161,
+              "quote": "at least one magnetic field sensor"
+            },
+            "determiner": "at-least-one",
+            "head": "magnetic field sensor"
+          },
+          {
+            "anchor": {
+              "startChar": 163,
+              "endChar": 192,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 203,
+              "endChar": 216,
+              "quote": "the intensity"
+            },
+            "determiner": "the",
+            "head": "intensity"
+          },
+          {
+            "anchor": {
+              "startChar": 221,
+              "endChar": 233,
+              "quote": "the polarity"
+            },
+            "determiner": "the",
+            "head": "polarity"
+          },
+          {
+            "anchor": {
+              "startChar": 237,
+              "endChar": 267,
+              "quote": "each respective magnetic field"
+            },
+            "determiner": "bare",
+            "head": "respective magnetic field"
+          },
+          {
+            "anchor": {
+              "startChar": 283,
+              "endChar": 320,
+              "quote": "each respective magnetic field sensor"
+            },
+            "determiner": "bare",
+            "head": "respective magnetic field sensor"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 41,
+            "quote": "The boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 87,
+            "endChar": 116,
+            "quote": "the magnetic field properties"
+          }
+        },
+        "introducing": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 655,
+            "endChar": 680,
+            "quote": "magnetic field properties"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 163,
+            "endChar": 192,
+            "quote": "the magnetic field properties"
+          }
+        },
+        "introducing": {
+          "path": "61.c",
+          "anchor": {
+            "startChar": 655,
+            "endChar": 680,
+            "quote": "magnetic field properties"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 237,
+            "endChar": 267,
+            "quote": "each respective magnetic field"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 283,
+            "endChar": 320,
+            "quote": "each respective magnetic field sensor"
+          }
+        },
+        "introducing": {
+          "path": "62.a",
+          "anchor": {
+            "startChar": 127,
+            "endChar": 161,
+            "quote": "at least one magnetic field sensor"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "62.a",
+        "parent": "62"
+      },
+      {
+        "kind": "functional",
+        "element": "62.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 87,
+              "quote": " measures "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 87,
+                "endChar": 116,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 116,
+              "endChar": 127,
+              "quote": " by way of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 127,
+                "endChar": 161,
+                "quote": "at least one magnetic field sensor"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 161,
+              "endChar": 163,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 163,
+                "endChar": 192,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 192,
+              "endChar": 203,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 203,
+                "endChar": 216,
+                "quote": "the intensity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 216,
+              "endChar": 221,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 221,
+                "endChar": 233,
+                "quote": "the polarity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 233,
+              "endChar": 237,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 237,
+                "endChar": 267,
+                "quote": "each respective magnetic field"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 267,
+              "endChar": 283,
+              "quote": " as measured by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "62.a",
+              "anchor": {
+                "startChar": 283,
+                "endChar": 320,
+                "quote": "each respective magnetic field sensor"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "62",
+        "ancestor": "61"
+      }
+    ]
+  },
+  {
+    "claimNumber": 63,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "63",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 53,
+          "quote": "The boundary proximity determining system of claim 62"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 41,
+              "quote": "The boundary proximity determining system"
+            },
+            "determiner": "the",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "63.a",
+        "anchor": {
+          "startChar": 54,
+          "endChar": 258,
+          "quote": "wherein said rover unit calculates variables indicative of the current location of said rover unit based on the magnetic field properties measured and calculated at the current location of said rover unit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 98,
+              "quote": "variables"
+            },
+            "determiner": "bare",
+            "head": "variables"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 133,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 152,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 162,
+              "endChar": 191,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 219,
+              "endChar": 239,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 258,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          }
+        ]
+      },
+      {
+        "path": "63.b",
+        "anchor": {
+          "startChar": 260,
+          "endChar": 496,
+          "quote": "said rover unit calculates variables indicative of the respective location of each sample location of the multiplicity of sample locations based on the magnetic field properties measured and calculated at each respective sample location"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 275,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 296,
+              "quote": "variables"
+            },
+            "determiner": "bare",
+            "head": "variables"
+          },
+          {
+            "anchor": {
+              "startChar": 311,
+              "endChar": 334,
+              "quote": "the respective location"
+            },
+            "determiner": "the",
+            "head": "respective location"
+          },
+          {
+            "anchor": {
+              "startChar": 338,
+              "endChar": 358,
+              "quote": "each sample location"
+            },
+            "determiner": "bare",
+            "head": "sample location"
+          },
+          {
+            "anchor": {
+              "startChar": 362,
+              "endChar": 378,
+              "quote": "the multiplicity"
+            },
+            "determiner": "the",
+            "head": "multiplicity"
+          },
+          {
+            "anchor": {
+              "startChar": 382,
+              "endChar": 398,
+              "quote": "sample locations"
+            },
+            "determiner": "bare",
+            "head": "sample locations"
+          },
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 437,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 465,
+              "endChar": 496,
+              "quote": "each respective sample location"
+            },
+            "determiner": "bare",
+            "head": "respective sample location"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 41,
+            "quote": "The boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.a",
+          "anchor": {
+            "startChar": 137,
+            "endChar": 152,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.a",
+          "anchor": {
+            "startChar": 243,
+            "endChar": 258,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "63.a",
+        "parent": "63"
+      },
+      {
+        "kind": "functional",
+        "element": "63.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 89,
+              "quote": " calculates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 98,
+                "quote": "variables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 113,
+              "quote": " indicative of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 133,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 137,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 152,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 162,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 162,
+                "endChar": 191,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 191,
+              "endChar": 219,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 219,
+                "endChar": 239,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 239,
+              "endChar": 243,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.a",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 258,
+                "quote": "said rover unit"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 260,
+            "endChar": 275,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 338,
+            "endChar": 358,
+            "quote": "each sample location"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 362,
+            "endChar": 378,
+            "quote": "the multiplicity"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1523,
+            "endChar": 1537,
+            "quote": "a multiplicity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 382,
+            "endChar": 398,
+            "quote": "sample locations"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 465,
+            "endChar": 496,
+            "quote": "each respective sample location"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "63.b",
+        "parent": "63"
+      },
+      {
+        "kind": "functional",
+        "element": "63.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 260,
+                "endChar": 275,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 275,
+              "endChar": 287,
+              "quote": " calculates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 296,
+                "quote": "variables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 296,
+              "endChar": 311,
+              "quote": " indicative of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 311,
+                "endChar": 334,
+                "quote": "the respective location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 334,
+              "endChar": 338,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 338,
+                "endChar": 358,
+                "quote": "each sample location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 358,
+              "endChar": 362,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 362,
+                "endChar": 378,
+                "quote": "the multiplicity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 378,
+              "endChar": 382,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 382,
+                "endChar": 398,
+                "quote": "sample locations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 398,
+              "endChar": 408,
+              "quote": " based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 437,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 437,
+              "endChar": 465,
+              "quote": " measured and calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "63.b",
+              "anchor": {
+                "startChar": 465,
+                "endChar": 496,
+                "quote": "each respective sample location"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "63",
+        "ancestor": "62"
+      }
+    ]
+  },
+  {
+    "claimNumber": 64,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "64",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 53,
+          "quote": "The boundary proximity determining system of claim 63"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 41,
+              "quote": "The boundary proximity determining system"
+            },
+            "determiner": "the",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "64.a",
+        "anchor": {
+          "startChar": 54,
+          "endChar": 346,
+          "quote": "wherein said rover unit determines the current location of said rover unit with respect to the boundary by comparing the variables indicative of the current location of said rover unit to the variables indicative of the location of each sample location of the multiplicity of sample locations"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 89,
+              "endChar": 109,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 113,
+              "endChar": 128,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 145,
+              "endChar": 157,
+              "quote": "the boundary"
+            },
+            "determiner": "the",
+            "head": "boundary"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 184,
+              "quote": "the variables"
+            },
+            "determiner": "the",
+            "head": "variables"
+          },
+          {
+            "anchor": {
+              "startChar": 199,
+              "endChar": 219,
+              "quote": "the current location"
+            },
+            "determiner": "the",
+            "head": "current location"
+          },
+          {
+            "anchor": {
+              "startChar": 223,
+              "endChar": 238,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 242,
+              "endChar": 255,
+              "quote": "the variables"
+            },
+            "determiner": "the",
+            "head": "variables"
+          },
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 282,
+              "quote": "the location"
+            },
+            "determiner": "the",
+            "head": "location"
+          },
+          {
+            "anchor": {
+              "startChar": 286,
+              "endChar": 306,
+              "quote": "each sample location"
+            },
+            "determiner": "bare",
+            "head": "sample location"
+          },
+          {
+            "anchor": {
+              "startChar": 310,
+              "endChar": 326,
+              "quote": "the multiplicity"
+            },
+            "determiner": "the",
+            "head": "multiplicity"
+          },
+          {
+            "anchor": {
+              "startChar": 330,
+              "endChar": 346,
+              "quote": "sample locations"
+            },
+            "determiner": "bare",
+            "head": "sample locations"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 41,
+            "quote": "The boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 113,
+            "endChar": 128,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 145,
+            "endChar": 157,
+            "quote": "the boundary"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 64,
+            "endChar": 74,
+            "quote": "a boundary"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 184,
+            "quote": "the variables"
+          }
+        },
+        "introducing": {
+          "path": "63.a",
+          "anchor": {
+            "startChar": 89,
+            "endChar": 98,
+            "quote": "variables"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 223,
+            "endChar": 238,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 242,
+            "endChar": 255,
+            "quote": "the variables"
+          }
+        },
+        "introducing": {
+          "path": "63.b",
+          "anchor": {
+            "startChar": 287,
+            "endChar": 296,
+            "quote": "variables"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 286,
+            "endChar": 306,
+            "quote": "each sample location"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 310,
+            "endChar": 326,
+            "quote": "the multiplicity"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1523,
+            "endChar": 1537,
+            "quote": "a multiplicity"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "64.a",
+          "anchor": {
+            "startChar": 330,
+            "endChar": 346,
+            "quote": "sample locations"
+          }
+        },
+        "introducing": {
+          "path": "61.g",
+          "anchor": {
+            "startChar": 1541,
+            "endChar": 1557,
+            "quote": "sample locations"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "64.a",
+        "parent": "64"
+      },
+      {
+        "kind": "functional",
+        "element": "64.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 89,
+              "quote": " determines "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 89,
+                "endChar": 109,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 113,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 113,
+                "endChar": 128,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 145,
+              "quote": " with respect to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 145,
+                "endChar": 157,
+                "quote": "the boundary"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 171,
+              "quote": " by comparing "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 184,
+                "quote": "the variables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 184,
+              "endChar": 199,
+              "quote": " indicative of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 199,
+                "endChar": 219,
+                "quote": "the current location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 219,
+              "endChar": 223,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 223,
+                "endChar": 238,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 238,
+              "endChar": 242,
+              "quote": " to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 242,
+                "endChar": 255,
+                "quote": "the variables"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 270,
+              "quote": " indicative of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 270,
+                "endChar": 282,
+                "quote": "the location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 282,
+              "endChar": 286,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 286,
+                "endChar": 306,
+                "quote": "each sample location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 306,
+              "endChar": 310,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 310,
+                "endChar": 326,
+                "quote": "the multiplicity"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 326,
+              "endChar": 330,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "64.a",
+              "anchor": {
+                "startChar": 330,
+                "endChar": 346,
+                "quote": "sample locations"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "64",
+        "ancestor": "63"
+      }
+    ]
+  },
+  {
+    "claimNumber": 65,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "65",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 53,
+          "quote": "The boundary proximity determining system of claim 64"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 41,
+              "quote": "The boundary proximity determining system"
+            },
+            "determiner": "the",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "65.a",
+        "anchor": {
+          "startChar": 54,
+          "endChar": 143,
+          "quote": "wherein said base station unit generates at least two pairs of orthogonal magnetic fields"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 84,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          },
+          {
+            "anchor": {
+              "startChar": 95,
+              "endChar": 113,
+              "quote": "at least two pairs"
+            },
+            "determiner": "bare",
+            "head": "at least two pairs"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 143,
+              "quote": "orthogonal magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "orthogonal magnetic fields"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "65",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 41,
+            "quote": "The boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "65.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 84,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "65.a",
+        "parent": "65"
+      },
+      {
+        "kind": "functional",
+        "element": "65.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "65.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 84,
+                "quote": "said base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 95,
+              "quote": " generates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "65.a",
+              "anchor": {
+                "startChar": 95,
+                "endChar": 113,
+                "quote": "at least two pairs"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 117,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "65.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 143,
+                "quote": "orthogonal magnetic fields"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "65",
+        "ancestor": "64"
+      }
+    ]
+  },
+  {
+    "claimNumber": 67,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "67",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 53,
+          "quote": "The boundary proximity determining system of claim 61"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 41,
+              "quote": "The boundary proximity determining system"
+            },
+            "determiner": "the",
+            "head": "boundary proximity determining system"
+          }
+        ]
+      },
+      {
+        "path": "67.a",
+        "anchor": {
+          "startChar": 54,
+          "endChar": 416,
+          "quote": "wherein said rover unit virtually rotates said base station unit by calculating the magnetic field properties of the at least one pair of orthogonal magnetic fields and the at least one pair of calculated magnetic fields at a particular location as the magnetic field properties would be at the particular location if said base station unit were actually rotated"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "said rover unit"
+            },
+            "determiner": "said",
+            "head": "rover unit"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 118,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          },
+          {
+            "anchor": {
+              "startChar": 134,
+              "endChar": 163,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 167,
+              "endChar": 188,
+              "quote": "the at least one pair"
+            },
+            "determiner": "the",
+            "head": "at least one pair"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 218,
+              "quote": "orthogonal magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "orthogonal magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 223,
+              "endChar": 244,
+              "quote": "the at least one pair"
+            },
+            "determiner": "the",
+            "head": "at least one pair"
+          },
+          {
+            "anchor": {
+              "startChar": 248,
+              "endChar": 274,
+              "quote": "calculated magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "calculated magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 278,
+              "endChar": 299,
+              "quote": "a particular location"
+            },
+            "determiner": "a",
+            "head": "particular location"
+          },
+          {
+            "anchor": {
+              "startChar": 303,
+              "endChar": 332,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 368,
+              "quote": "the particular location"
+            },
+            "determiner": "the",
+            "head": "particular location"
+          },
+          {
+            "anchor": {
+              "startChar": 372,
+              "endChar": 394,
+              "quote": "said base station unit"
+            },
+            "determiner": "said",
+            "head": "base station unit"
+          }
+        ]
+      },
+      {
+        "path": "67.b",
+        "anchor": {
+          "startChar": 418,
+          "endChar": 725,
+          "quote": "said rover unit's virtual rotation calculations being based on the magnetic field properties of the least one pair of orthogonal magnetic fields measured at the particular location and the magnetic field properties of the at least one pair of calculated magnetic fields calculated at the particular location"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 418,
+              "endChar": 465,
+              "quote": "said rover unit's virtual rotation calculations"
+            },
+            "determiner": "said",
+            "head": "rover unit's virtual rotation calculations"
+          },
+          {
+            "anchor": {
+              "startChar": 481,
+              "endChar": 510,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 514,
+              "endChar": 532,
+              "quote": "the least one pair"
+            },
+            "determiner": "the",
+            "head": "least one pair"
+          },
+          {
+            "anchor": {
+              "startChar": 536,
+              "endChar": 562,
+              "quote": "orthogonal magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "orthogonal magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 575,
+              "endChar": 598,
+              "quote": "the particular location"
+            },
+            "determiner": "the",
+            "head": "particular location"
+          },
+          {
+            "anchor": {
+              "startChar": 603,
+              "endChar": 632,
+              "quote": "the magnetic field properties"
+            },
+            "determiner": "the",
+            "head": "magnetic field properties"
+          },
+          {
+            "anchor": {
+              "startChar": 636,
+              "endChar": 657,
+              "quote": "the at least one pair"
+            },
+            "determiner": "the",
+            "head": "at least one pair"
+          },
+          {
+            "anchor": {
+              "startChar": 661,
+              "endChar": 687,
+              "quote": "calculated magnetic fields"
+            },
+            "determiner": "bare",
+            "head": "calculated magnetic fields"
+          },
+          {
+            "anchor": {
+              "startChar": 702,
+              "endChar": 725,
+              "quote": "the particular location"
+            },
+            "determiner": "the",
+            "head": "particular location"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 41,
+            "quote": "The boundary proximity determining system"
+          }
+        },
+        "introducing": {
+          "path": "61",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 39,
+            "quote": "A boundary proximity determining system"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "said rover unit"
+          }
+        },
+        "introducing": {
+          "path": "61.b",
+          "anchor": {
+            "startChar": 554,
+            "endChar": 566,
+            "quote": "a rover unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 118,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 167,
+            "endChar": 188,
+            "quote": "the at least one pair"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 290,
+            "endChar": 307,
+            "quote": "at least one pair"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 218,
+            "quote": "orthogonal magnetic fields"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 223,
+            "endChar": 244,
+            "quote": "the at least one pair"
+          }
+        },
+        "introducing": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 855,
+            "endChar": 872,
+            "quote": "at least one pair"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 248,
+            "endChar": 274,
+            "quote": "calculated magnetic fields"
+          }
+        },
+        "introducing": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 876,
+            "endChar": 902,
+            "quote": "calculated magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 345,
+            "endChar": 368,
+            "quote": "the particular location"
+          }
+        },
+        "introducing": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 299,
+            "quote": "a particular location"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 372,
+            "endChar": 394,
+            "quote": "said base station unit"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 255,
+            "quote": "a base station unit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "67.a",
+        "parent": "67"
+      },
+      {
+        "kind": "functional",
+        "element": "67.a",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 54,
+              "endChar": 62,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "said rover unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 96,
+              "quote": " virtually rotates "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 118,
+                "quote": "said base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 118,
+              "endChar": 134,
+              "quote": " by calculating "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 134,
+                "endChar": 163,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 163,
+              "endChar": 167,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 167,
+                "endChar": 188,
+                "quote": "the at least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 192,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 218,
+                "quote": "orthogonal magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 218,
+              "endChar": 223,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 223,
+                "endChar": 244,
+                "quote": "the at least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 244,
+              "endChar": 248,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 248,
+                "endChar": 274,
+                "quote": "calculated magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 274,
+              "endChar": 278,
+              "quote": " at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 278,
+                "endChar": 299,
+                "quote": "a particular location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 299,
+              "endChar": 303,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 303,
+                "endChar": 332,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 332,
+              "endChar": 345,
+              "quote": " would be at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 345,
+                "endChar": 368,
+                "quote": "the particular location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 368,
+              "endChar": 372,
+              "quote": " if "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.a",
+              "anchor": {
+                "startChar": 372,
+                "endChar": 394,
+                "quote": "said base station unit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 394,
+              "endChar": 416,
+              "quote": " were actually rotated"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 536,
+            "endChar": 562,
+            "quote": "orthogonal magnetic fields"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 311,
+            "endChar": 337,
+            "quote": "orthogonal magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 575,
+            "endChar": 598,
+            "quote": "the particular location"
+          }
+        },
+        "introducing": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 299,
+            "quote": "a particular location"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 636,
+            "endChar": 657,
+            "quote": "the at least one pair"
+          }
+        },
+        "introducing": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 855,
+            "endChar": 872,
+            "quote": "at least one pair"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 661,
+            "endChar": 687,
+            "quote": "calculated magnetic fields"
+          }
+        },
+        "introducing": {
+          "path": "61.d",
+          "anchor": {
+            "startChar": 876,
+            "endChar": 902,
+            "quote": "calculated magnetic fields"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 702,
+            "endChar": 725,
+            "quote": "the particular location"
+          }
+        },
+        "introducing": {
+          "path": "67.a",
+          "anchor": {
+            "startChar": 278,
+            "endChar": 299,
+            "quote": "a particular location"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "67.b",
+        "parent": "67"
+      },
+      {
+        "kind": "functional",
+        "element": "67.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 418,
+                "endChar": 465,
+                "quote": "said rover unit's virtual rotation calculations"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 465,
+              "endChar": 481,
+              "quote": " being based on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 481,
+                "endChar": 510,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 510,
+              "endChar": 514,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 514,
+                "endChar": 532,
+                "quote": "the least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 532,
+              "endChar": 536,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 536,
+                "endChar": 562,
+                "quote": "orthogonal magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 562,
+              "endChar": 575,
+              "quote": " measured at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 575,
+                "endChar": 598,
+                "quote": "the particular location"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 598,
+              "endChar": 603,
+              "quote": " and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 603,
+                "endChar": 632,
+                "quote": "the magnetic field properties"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 632,
+              "endChar": 636,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 636,
+                "endChar": 657,
+                "quote": "the at least one pair"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 657,
+              "endChar": 661,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 661,
+                "endChar": 687,
+                "quote": "calculated magnetic fields"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 687,
+              "endChar": 702,
+              "quote": " calculated at "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "67.b",
+              "anchor": {
+                "startChar": 702,
+                "endChar": 725,
+                "quote": "the particular location"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "67",
+        "ancestor": "61"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "67.b",
+          "anchor": {
+            "startChar": 514,
+            "endChar": 532,
+            "quote": "the least one pair"
+          }
+        },
+        "introducing": {
+          "path": "61.a",
+          "anchor": {
+            "startChar": 290,
+            "endChar": 307,
+            "quote": "at least one pair"
+          }
+        }
+      }
+    ]
+  }
+]

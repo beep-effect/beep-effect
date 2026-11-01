@@ -1,0 +1,7142 @@
+[
+  {
+    "claimNumber": 1,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "1",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 14,
+          "quote": "A battery pack"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 14,
+              "quote": "A battery pack"
+            },
+            "determiner": "a",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "anchor": {
+          "startChar": 27,
+          "endChar": 127,
+          "quote": "a battery assembly including a plurality of rectangular battery cells that are arranged side by side"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 27,
+              "endChar": 45,
+              "quote": "a battery assembly"
+            },
+            "determiner": "a",
+            "head": "battery assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 56,
+              "endChar": 96,
+              "quote": "a plurality of rectangular battery cells"
+            },
+            "determiner": "plurality-of",
+            "head": "rectangular battery cells"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "anchor": {
+          "startChar": 129,
+          "endChar": 248,
+          "quote": "a pair of end plates that are arranged on the side-by-side arrangement directional end surfaces of the battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 129,
+              "endChar": 149,
+              "quote": "a pair of end plates"
+            },
+            "determiner": "a",
+            "head": "pair of end plates"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 224,
+              "quote": "the side-by-side arrangement directional end surfaces"
+            },
+            "determiner": "the",
+            "head": "side-by-side arrangement directional end surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 228,
+              "endChar": 248,
+              "quote": "the battery assembly"
+            },
+            "determiner": "the",
+            "head": "battery assembly"
+          }
+        ]
+      },
+      {
+        "path": "1.c",
+        "anchor": {
+          "startChar": 254,
+          "endChar": 392,
+          "quote": "a plurality of metal bind bars that couple said end plates, which are arranged on the end surfaces of said battery assembly, to each other"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 254,
+              "endChar": 284,
+              "quote": "a plurality of metal bind bars"
+            },
+            "determiner": "plurality-of",
+            "head": "metal bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 312,
+              "quote": "said end plates"
+            },
+            "determiner": "said",
+            "head": "end plates"
+          },
+          {
+            "anchor": {
+              "startChar": 336,
+              "endChar": 352,
+              "quote": "the end surfaces"
+            },
+            "determiner": "the",
+            "head": "end surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 356,
+              "endChar": 377,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      },
+      {
+        "path": "1.d",
+        "anchor": {
+          "startChar": 394,
+          "endChar": 703,
+          "quote": "wherein each of the bind bars includes bent parts that are formed by bending the both end parts of the bind bar toward a common direction, and the bind bar is formed in a substantially rectangular U shape as viewed from the bar edge side by forming the bent parts by bending the both end parts of the bind bar"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 410,
+              "endChar": 423,
+              "quote": "the bind bars"
+            },
+            "determiner": "the",
+            "head": "bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 433,
+              "endChar": 443,
+              "quote": "bent parts"
+            },
+            "determiner": "bare",
+            "head": "bent parts"
+          },
+          {
+            "anchor": {
+              "startChar": 471,
+              "endChar": 489,
+              "quote": "the both end parts"
+            },
+            "determiner": "the",
+            "head": "both end parts"
+          },
+          {
+            "anchor": {
+              "startChar": 493,
+              "endChar": 505,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 513,
+              "endChar": 531,
+              "quote": "a common direction"
+            },
+            "determiner": "a",
+            "head": "common direction"
+          },
+          {
+            "anchor": {
+              "startChar": 537,
+              "endChar": 549,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 563,
+              "endChar": 598,
+              "quote": "a substantially rectangular U shape"
+            },
+            "determiner": "a",
+            "head": "substantially rectangular u shape"
+          },
+          {
+            "anchor": {
+              "startChar": 614,
+              "endChar": 631,
+              "quote": "the bar edge side"
+            },
+            "determiner": "the",
+            "head": "bar edge side"
+          },
+          {
+            "anchor": {
+              "startChar": 643,
+              "endChar": 657,
+              "quote": "the bent parts"
+            },
+            "determiner": "the",
+            "head": "bent parts"
+          },
+          {
+            "anchor": {
+              "startChar": 669,
+              "endChar": 687,
+              "quote": "the both end parts"
+            },
+            "determiner": "the",
+            "head": "both end parts"
+          },
+          {
+            "anchor": {
+              "startChar": 691,
+              "endChar": 703,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          }
+        ]
+      },
+      {
+        "path": "1.e",
+        "anchor": {
+          "startChar": 705,
+          "endChar": 870,
+          "quote": "wherein the bent parts on the both ends of the bind bar are coupled to said end plates so that said battery assembly is interposed and secured between the end plates"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 713,
+              "endChar": 727,
+              "quote": "the bent parts"
+            },
+            "determiner": "the",
+            "head": "bent parts"
+          },
+          {
+            "anchor": {
+              "startChar": 731,
+              "endChar": 744,
+              "quote": "the both ends"
+            },
+            "determiner": "the",
+            "head": "both ends"
+          },
+          {
+            "anchor": {
+              "startChar": 748,
+              "endChar": 760,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 776,
+              "endChar": 791,
+              "quote": "said end plates"
+            },
+            "determiner": "said",
+            "head": "end plates"
+          },
+          {
+            "anchor": {
+              "startChar": 800,
+              "endChar": 821,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 856,
+              "endChar": 870,
+              "quote": "the end plates"
+            },
+            "determiner": "the",
+            "head": "end plates"
+          }
+        ]
+      },
+      {
+        "path": "1.f",
+        "anchor": {
+          "startChar": 872,
+          "endChar": 1009,
+          "quote": "wherein said bent part includes a bent-part-side engagement structure in a coupling area of the bent part to be coupled to said end plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 880,
+              "endChar": 894,
+              "quote": "said bent part"
+            },
+            "determiner": "said",
+            "head": "bent part"
+          },
+          {
+            "anchor": {
+              "startChar": 904,
+              "endChar": 941,
+              "quote": "a bent-part-side engagement structure"
+            },
+            "determiner": "a",
+            "head": "bent-part-side engagement structure"
+          },
+          {
+            "anchor": {
+              "startChar": 945,
+              "endChar": 960,
+              "quote": "a coupling area"
+            },
+            "determiner": "a",
+            "head": "coupling area"
+          },
+          {
+            "anchor": {
+              "startChar": 964,
+              "endChar": 977,
+              "quote": "the bent part"
+            },
+            "determiner": "the",
+            "head": "bent part"
+          },
+          {
+            "anchor": {
+              "startChar": 995,
+              "endChar": 1009,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          }
+        ]
+      },
+      {
+        "path": "1.g",
+        "anchor": {
+          "startChar": 1011,
+          "endChar": 1129,
+          "quote": "wherein said end plate includes an end-plate-side engagement structure that is positioned so as to face said bent part"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1019,
+              "endChar": 1033,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          },
+          {
+            "anchor": {
+              "startChar": 1043,
+              "endChar": 1081,
+              "quote": "an end-plate-side engagement structure"
+            },
+            "determiner": "an",
+            "head": "end-plate-side engagement structure"
+          },
+          {
+            "anchor": {
+              "startChar": 1115,
+              "endChar": 1129,
+              "quote": "said bent part"
+            },
+            "determiner": "said",
+            "head": "bent part"
+          }
+        ]
+      },
+      {
+        "path": "1.h",
+        "anchor": {
+          "startChar": 1135,
+          "endChar": 1328,
+          "quote": "wherein said end plates are securely held by the bind bars when said bent-part-side engagement structures of the bind bars engage with the end-plate-side engagement structures of the end plates"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 1143,
+              "endChar": 1158,
+              "quote": "said end plates"
+            },
+            "determiner": "said",
+            "head": "end plates"
+          },
+          {
+            "anchor": {
+              "startChar": 1180,
+              "endChar": 1193,
+              "quote": "the bind bars"
+            },
+            "determiner": "the",
+            "head": "bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 1199,
+              "endChar": 1240,
+              "quote": "said bent-part-side engagement structures"
+            },
+            "determiner": "said",
+            "head": "bent-part-side engagement structures"
+          },
+          {
+            "anchor": {
+              "startChar": 1244,
+              "endChar": 1257,
+              "quote": "the bind bars"
+            },
+            "determiner": "the",
+            "head": "bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 1270,
+              "endChar": 1310,
+              "quote": "the end-plate-side engagement structures"
+            },
+            "determiner": "the",
+            "head": "end-plate-side engagement structures"
+          },
+          {
+            "anchor": {
+              "startChar": 1314,
+              "endChar": 1328,
+              "quote": "the end plates"
+            },
+            "determiner": "the",
+            "head": "end plates"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 27,
+                "endChar": 45,
+                "quote": "a battery assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 45,
+              "endChar": 56,
+              "quote": " including "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 56,
+                "endChar": 96,
+                "quote": "a plurality of rectangular battery cells"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 96,
+              "endChar": 127,
+              "quote": " that are arranged side by side"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 228,
+            "endChar": 248,
+            "quote": "the battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 129,
+                "endChar": 149,
+                "quote": "a pair of end plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 149,
+              "endChar": 171,
+              "quote": " that are arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 224,
+                "quote": "the side-by-side arrangement directional end surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 224,
+              "endChar": 228,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.b",
+              "anchor": {
+                "startChar": 228,
+                "endChar": 248,
+                "quote": "the battery assembly"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 297,
+            "endChar": 312,
+            "quote": "said end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 336,
+            "endChar": 352,
+            "quote": "the end surfaces"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 171,
+            "endChar": 224,
+            "quote": "the side-by-side arrangement directional end surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 356,
+            "endChar": 377,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.c",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 254,
+                "endChar": 284,
+                "quote": "a plurality of metal bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 284,
+              "endChar": 297,
+              "quote": " that couple "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 297,
+                "endChar": 312,
+                "quote": "said end plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 312,
+              "endChar": 336,
+              "quote": ", which are arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 336,
+                "endChar": 352,
+                "quote": "the end surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 352,
+              "endChar": 356,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.c",
+              "anchor": {
+                "startChar": 356,
+                "endChar": 377,
+                "quote": "said battery assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 377,
+              "endChar": 392,
+              "quote": ", to each other"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 410,
+            "endChar": 423,
+            "quote": "the bind bars"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 493,
+            "endChar": 505,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 537,
+            "endChar": 549,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 643,
+            "endChar": 657,
+            "quote": "the bent parts"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 669,
+            "endChar": 687,
+            "quote": "the both end parts"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 471,
+            "endChar": 489,
+            "quote": "the both end parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 691,
+            "endChar": 703,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.d",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.d",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 394,
+              "endChar": 410,
+              "quote": "wherein each of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 410,
+                "endChar": 423,
+                "quote": "the bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 423,
+              "endChar": 433,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 433,
+                "endChar": 443,
+                "quote": "bent parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 443,
+              "endChar": 471,
+              "quote": " that are formed by bending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 471,
+                "endChar": 489,
+                "quote": "the both end parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 489,
+              "endChar": 493,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 493,
+                "endChar": 505,
+                "quote": "the bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 505,
+              "endChar": 513,
+              "quote": " toward "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 513,
+                "endChar": 531,
+                "quote": "a common direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 531,
+              "endChar": 537,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 537,
+                "endChar": 549,
+                "quote": "the bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 549,
+              "endChar": 563,
+              "quote": " is formed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 563,
+                "endChar": 598,
+                "quote": "a substantially rectangular U shape"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 598,
+              "endChar": 614,
+              "quote": " as viewed from "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 614,
+                "endChar": 631,
+                "quote": "the bar edge side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 631,
+              "endChar": 643,
+              "quote": " by forming "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 643,
+                "endChar": 657,
+                "quote": "the bent parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 657,
+              "endChar": 669,
+              "quote": " by bending "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 669,
+                "endChar": 687,
+                "quote": "the both end parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 687,
+              "endChar": 691,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.d",
+              "anchor": {
+                "startChar": 691,
+                "endChar": 703,
+                "quote": "the bind bar"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 713,
+            "endChar": 727,
+            "quote": "the bent parts"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 731,
+            "endChar": 744,
+            "quote": "the both ends"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 471,
+            "endChar": 489,
+            "quote": "the both end parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 748,
+            "endChar": 760,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 776,
+            "endChar": 791,
+            "quote": "said end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 800,
+            "endChar": 821,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.e",
+          "anchor": {
+            "startChar": 856,
+            "endChar": 870,
+            "quote": "the end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.e",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.e",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 705,
+              "endChar": 713,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 713,
+                "endChar": 727,
+                "quote": "the bent parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 727,
+              "endChar": 731,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 731,
+                "endChar": 744,
+                "quote": "the both ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 744,
+              "endChar": 748,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 748,
+                "endChar": 760,
+                "quote": "the bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 760,
+              "endChar": 776,
+              "quote": " are coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 776,
+                "endChar": 791,
+                "quote": "said end plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 791,
+              "endChar": 800,
+              "quote": " so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 800,
+                "endChar": 821,
+                "quote": "said battery assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 821,
+              "endChar": 856,
+              "quote": " is interposed and secured between "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.e",
+              "anchor": {
+                "startChar": 856,
+                "endChar": 870,
+                "quote": "the end plates"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 880,
+            "endChar": 894,
+            "quote": "said bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 964,
+            "endChar": 977,
+            "quote": "the bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 995,
+            "endChar": 1009,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.f",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.f",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 872,
+              "endChar": 880,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 880,
+                "endChar": 894,
+                "quote": "said bent part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 894,
+              "endChar": 904,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 904,
+                "endChar": 941,
+                "quote": "a bent-part-side engagement structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 941,
+              "endChar": 945,
+              "quote": " in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 945,
+                "endChar": 960,
+                "quote": "a coupling area"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 960,
+              "endChar": 964,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 964,
+                "endChar": 977,
+                "quote": "the bent part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 977,
+              "endChar": 995,
+              "quote": " to be coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.f",
+              "anchor": {
+                "startChar": 995,
+                "endChar": 1009,
+                "quote": "said end plate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1019,
+            "endChar": 1033,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1115,
+            "endChar": 1129,
+            "quote": "said bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.g",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.g",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1011,
+              "endChar": 1019,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1019,
+                "endChar": 1033,
+                "quote": "said end plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1033,
+              "endChar": 1043,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1043,
+                "endChar": 1081,
+                "quote": "an end-plate-side engagement structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1081,
+              "endChar": 1115,
+              "quote": " that is positioned so as to face "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.g",
+              "anchor": {
+                "startChar": 1115,
+                "endChar": 1129,
+                "quote": "said bent part"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1143,
+            "endChar": 1158,
+            "quote": "said end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1180,
+            "endChar": 1193,
+            "quote": "the bind bars"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1199,
+            "endChar": 1240,
+            "quote": "said bent-part-side engagement structures"
+          }
+        },
+        "introducing": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 904,
+            "endChar": 941,
+            "quote": "a bent-part-side engagement structure"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1244,
+            "endChar": 1257,
+            "quote": "the bind bars"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1270,
+            "endChar": 1310,
+            "quote": "the end-plate-side engagement structures"
+          }
+        },
+        "introducing": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1043,
+            "endChar": 1081,
+            "quote": "an end-plate-side engagement structure"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "1.h",
+          "anchor": {
+            "startChar": 1314,
+            "endChar": 1328,
+            "quote": "the end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "1.h",
+        "parent": "1"
+      },
+      {
+        "kind": "functional",
+        "element": "1.h",
+        "parts": [
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1135,
+              "endChar": 1143,
+              "quote": "wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1143,
+                "endChar": 1158,
+                "quote": "said end plates"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1158,
+              "endChar": 1180,
+              "quote": " are securely held by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1180,
+                "endChar": 1193,
+                "quote": "the bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1193,
+              "endChar": 1199,
+              "quote": " when "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1199,
+                "endChar": 1240,
+                "quote": "said bent-part-side engagement structures"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1240,
+              "endChar": 1244,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1244,
+                "endChar": 1257,
+                "quote": "the bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1257,
+              "endChar": 1270,
+              "quote": " engage with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1270,
+                "endChar": 1310,
+                "quote": "the end-plate-side engagement structures"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 1310,
+              "endChar": 1314,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "1.h",
+              "anchor": {
+                "startChar": 1314,
+                "endChar": 1328,
+                "quote": "the end plates"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 2,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "2",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "2.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 197,
+          "quote": "said bind bar is constructed so that the bent parts on both ends of said bind bar can be in press contact with the outside surfaces of said end plates"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 60,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 84,
+              "endChar": 98,
+              "quote": "the bent parts"
+            },
+            "determiner": "the",
+            "head": "bent parts"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 111,
+              "quote": "both ends"
+            },
+            "determiner": "bare",
+            "head": "both ends"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 128,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 152,
+              "quote": "press contact"
+            },
+            "determiner": "bare",
+            "head": "press contact"
+          },
+          {
+            "anchor": {
+              "startChar": 158,
+              "endChar": 178,
+              "quote": "the outside surfaces"
+            },
+            "determiner": "the",
+            "head": "outside surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 182,
+              "endChar": 197,
+              "quote": "said end plates"
+            },
+            "determiner": "said",
+            "head": "end plates"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "2",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 60,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 84,
+            "endChar": 98,
+            "quote": "the bent parts"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 102,
+            "endChar": 111,
+            "quote": "both ends"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 471,
+            "endChar": 489,
+            "quote": "the both end parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "2.a",
+          "anchor": {
+            "startChar": 182,
+            "endChar": 197,
+            "quote": "said end plates"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "2.a",
+        "parent": "2"
+      },
+      {
+        "kind": "functional",
+        "element": "2.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 60,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 84,
+              "quote": " is constructed so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 84,
+                "endChar": 98,
+                "quote": "the bent parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 98,
+              "endChar": 102,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 111,
+                "quote": "both ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 111,
+              "endChar": 115,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 128,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 139,
+              "quote": " can be in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 139,
+                "endChar": 152,
+                "quote": "press contact"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 152,
+              "endChar": 158,
+              "quote": " with "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 158,
+                "endChar": 178,
+                "quote": "the outside surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 178,
+              "endChar": 182,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "2.a",
+              "anchor": {
+                "startChar": 182,
+                "endChar": 197,
+                "quote": "said end plates"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 3,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "3",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "3.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 135,
+          "quote": "said bent-part-side engagement structure is a slit that is formed in a rectangular shape"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 87,
+              "quote": "said bent-part-side engagement structure"
+            },
+            "determiner": "said",
+            "head": "bent-part-side engagement structure"
+          },
+          {
+            "anchor": {
+              "startChar": 91,
+              "endChar": 97,
+              "quote": "a slit"
+            },
+            "determiner": "a",
+            "head": "slit"
+          },
+          {
+            "anchor": {
+              "startChar": 116,
+              "endChar": 135,
+              "quote": "a rectangular shape"
+            },
+            "determiner": "a",
+            "head": "rectangular shape"
+          }
+        ]
+      },
+      {
+        "path": "3.b",
+        "anchor": {
+          "startChar": 141,
+          "endChar": 245,
+          "quote": "said end-plate-side engagement structure is an engagement protrusion that can be inserted into said slit"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 141,
+              "endChar": 181,
+              "quote": "said end-plate-side engagement structure"
+            },
+            "determiner": "said",
+            "head": "end-plate-side engagement structure"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 209,
+              "quote": "an engagement protrusion"
+            },
+            "determiner": "an",
+            "head": "engagement protrusion"
+          },
+          {
+            "anchor": {
+              "startChar": 236,
+              "endChar": 245,
+              "quote": "said slit"
+            },
+            "determiner": "said",
+            "head": "slit"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "3",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 87,
+            "quote": "said bent-part-side engagement structure"
+          }
+        },
+        "introducing": {
+          "path": "1.f",
+          "anchor": {
+            "startChar": 904,
+            "endChar": 941,
+            "quote": "a bent-part-side engagement structure"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.a",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 87,
+                "quote": "said bent-part-side engagement structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 87,
+              "endChar": 91,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 91,
+                "endChar": 97,
+                "quote": "a slit"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 97,
+              "endChar": 116,
+              "quote": " that is formed in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.a",
+              "anchor": {
+                "startChar": 116,
+                "endChar": 135,
+                "quote": "a rectangular shape"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 141,
+            "endChar": 181,
+            "quote": "said end-plate-side engagement structure"
+          }
+        },
+        "introducing": {
+          "path": "1.g",
+          "anchor": {
+            "startChar": 1043,
+            "endChar": 1081,
+            "quote": "an end-plate-side engagement structure"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 236,
+            "endChar": 245,
+            "quote": "said slit"
+          }
+        },
+        "introducing": {
+          "path": "3.a",
+          "anchor": {
+            "startChar": 91,
+            "endChar": 97,
+            "quote": "a slit"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "3.b",
+        "parent": "3"
+      },
+      {
+        "kind": "functional",
+        "element": "3.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 141,
+                "endChar": 181,
+                "quote": "said end-plate-side engagement structure"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 181,
+              "endChar": 185,
+              "quote": " is "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 185,
+                "endChar": 209,
+                "quote": "an engagement protrusion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 209,
+              "endChar": 236,
+              "quote": " that can be inserted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "3.b",
+              "anchor": {
+                "startChar": 236,
+                "endChar": 245,
+                "quote": "said slit"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 4,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "4",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "4.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 172,
+          "quote": "said end plate includes a metal plate, wherein the metal plate is partially bent so that said engagement protrusion is formed"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 61,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 84,
+              "quote": "a metal plate"
+            },
+            "determiner": "a",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 109,
+              "quote": "the metal plate"
+            },
+            "determiner": "the",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 162,
+              "quote": "said engagement protrusion"
+            },
+            "determiner": "said",
+            "head": "engagement protrusion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "4",
+        "ancestor": "3"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 61,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 94,
+            "endChar": 109,
+            "quote": "the metal plate"
+          }
+        },
+        "introducing": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 84,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "4.a",
+          "anchor": {
+            "startChar": 136,
+            "endChar": 162,
+            "quote": "said engagement protrusion"
+          }
+        },
+        "introducing": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 185,
+            "endChar": 209,
+            "quote": "an engagement protrusion"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "4.a",
+        "parent": "4"
+      },
+      {
+        "kind": "functional",
+        "element": "4.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 61,
+                "quote": "said end plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 71,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 84,
+                "quote": "a metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 84,
+              "endChar": 94,
+              "quote": ", wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 109,
+                "quote": "the metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 136,
+              "quote": " is partially bent so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "4.a",
+              "anchor": {
+                "startChar": 136,
+                "endChar": 162,
+                "quote": "said engagement protrusion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 162,
+              "endChar": 172,
+              "quote": " is formed"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 5,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "5",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 3"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "5.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 118,
+          "quote": "an inclined surface is formed on one side of said engagement protrusion"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 66,
+              "quote": "an inclined surface"
+            },
+            "determiner": "an",
+            "head": "inclined surface"
+          },
+          {
+            "anchor": {
+              "startChar": 80,
+              "endChar": 88,
+              "quote": "one side"
+            },
+            "determiner": "bare",
+            "head": "one side"
+          },
+          {
+            "anchor": {
+              "startChar": 92,
+              "endChar": 118,
+              "quote": "said engagement protrusion"
+            },
+            "determiner": "said",
+            "head": "engagement protrusion"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "5",
+        "ancestor": "3"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "5.a",
+          "anchor": {
+            "startChar": 92,
+            "endChar": 118,
+            "quote": "said engagement protrusion"
+          }
+        },
+        "introducing": {
+          "path": "3.b",
+          "anchor": {
+            "startChar": 185,
+            "endChar": 209,
+            "quote": "an engagement protrusion"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "5.a",
+        "parent": "5"
+      },
+      {
+        "kind": "functional",
+        "element": "5.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 66,
+                "quote": "an inclined surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 66,
+              "endChar": 80,
+              "quote": " is formed on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 80,
+                "endChar": 88,
+                "quote": "one side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 88,
+              "endChar": 92,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "5.a",
+              "anchor": {
+                "startChar": 92,
+                "endChar": 118,
+                "quote": "said engagement protrusion"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 6,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 341,
+          "quote": "said end plate includes an inclined surface on a side part of the outside surface that is located on the engagement side where the substantially rectangular U-shaped opening of said bind bar is coupled, wherein the inclined surface descends toward the substantially rectangular U-shaped opening"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 61,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 90,
+              "quote": "an inclined surface"
+            },
+            "determiner": "an",
+            "head": "inclined surface"
+          },
+          {
+            "anchor": {
+              "startChar": 94,
+              "endChar": 105,
+              "quote": "a side part"
+            },
+            "determiner": "a",
+            "head": "side part"
+          },
+          {
+            "anchor": {
+              "startChar": 109,
+              "endChar": 128,
+              "quote": "the outside surface"
+            },
+            "determiner": "the",
+            "head": "outside surface"
+          },
+          {
+            "anchor": {
+              "startChar": 148,
+              "endChar": 167,
+              "quote": "the engagement side"
+            },
+            "determiner": "the",
+            "head": "engagement side"
+          },
+          {
+            "anchor": {
+              "startChar": 174,
+              "endChar": 220,
+              "quote": "the substantially rectangular U-shaped opening"
+            },
+            "determiner": "the",
+            "head": "substantially rectangular u-shaped opening"
+          },
+          {
+            "anchor": {
+              "startChar": 224,
+              "endChar": 237,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 258,
+              "endChar": 278,
+              "quote": "the inclined surface"
+            },
+            "determiner": "the",
+            "head": "inclined surface"
+          },
+          {
+            "anchor": {
+              "startChar": 295,
+              "endChar": 341,
+              "quote": "the substantially rectangular U-shaped opening"
+            },
+            "determiner": "the",
+            "head": "substantially rectangular u-shaped opening"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "6",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 61,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 224,
+            "endChar": 237,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 258,
+            "endChar": 278,
+            "quote": "the inclined surface"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 90,
+            "quote": "an inclined surface"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 295,
+            "endChar": 341,
+            "quote": "the substantially rectangular U-shaped opening"
+          }
+        },
+        "introducing": {
+          "path": "6.a",
+          "anchor": {
+            "startChar": 174,
+            "endChar": 220,
+            "quote": "the substantially rectangular U-shaped opening"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "functional",
+        "element": "6.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 61,
+                "quote": "said end plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 71,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 90,
+                "quote": "an inclined surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 90,
+              "endChar": 94,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 94,
+                "endChar": 105,
+                "quote": "a side part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 105,
+              "endChar": 109,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 109,
+                "endChar": 128,
+                "quote": "the outside surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 148,
+              "quote": " that is located on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 148,
+                "endChar": 167,
+                "quote": "the engagement side"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 167,
+              "endChar": 174,
+              "quote": " where "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 174,
+                "endChar": 220,
+                "quote": "the substantially rectangular U-shaped opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 220,
+              "endChar": 224,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 224,
+                "endChar": 237,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 237,
+              "endChar": 258,
+              "quote": " is coupled, wherein "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 258,
+                "endChar": 278,
+                "quote": "the inclined surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 278,
+              "endChar": 295,
+              "quote": " descends toward "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "6.a",
+              "anchor": {
+                "startChar": 295,
+                "endChar": 341,
+                "quote": "the substantially rectangular U-shaped opening"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 7,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "7",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "7.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 186,
+          "quote": "said end plate includes a main plate that is formed of plastic, and a metal plate that is arranged on the outside surface of the main plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 61,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          },
+          {
+            "anchor": {
+              "startChar": 71,
+              "endChar": 83,
+              "quote": "a main plate"
+            },
+            "determiner": "a",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 102,
+              "endChar": 109,
+              "quote": "plastic"
+            },
+            "determiner": "bare",
+            "head": "plastic"
+          },
+          {
+            "anchor": {
+              "startChar": 115,
+              "endChar": 128,
+              "quote": "a metal plate"
+            },
+            "determiner": "a",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 149,
+              "endChar": 168,
+              "quote": "the outside surface"
+            },
+            "determiner": "the",
+            "head": "outside surface"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 186,
+              "quote": "the main plate"
+            },
+            "determiner": "the",
+            "head": "main plate"
+          }
+        ]
+      },
+      {
+        "path": "7.b",
+        "anchor": {
+          "startChar": 196,
+          "endChar": 328,
+          "quote": "said metal plate is coupled to said main plate and arranged in a predetermined position on the main plate by a positioning mechanism"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 196,
+              "endChar": 212,
+              "quote": "said metal plate"
+            },
+            "determiner": "said",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 242,
+              "quote": "said main plate"
+            },
+            "determiner": "said",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 259,
+              "endChar": 283,
+              "quote": "a predetermined position"
+            },
+            "determiner": "a",
+            "head": "predetermined position"
+          },
+          {
+            "anchor": {
+              "startChar": 287,
+              "endChar": 301,
+              "quote": "the main plate"
+            },
+            "determiner": "the",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 305,
+              "endChar": 328,
+              "quote": "a positioning mechanism"
+            },
+            "determiner": "a",
+            "head": "positioning mechanism"
+          }
+        ]
+      },
+      {
+        "path": "7.c",
+        "anchor": {
+          "startChar": 334,
+          "endChar": 452,
+          "quote": "the bent part of said bind bar is arranged in a predetermined position on said end plate by said positioning mechanism"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 334,
+              "endChar": 347,
+              "quote": "the bent part"
+            },
+            "determiner": "the",
+            "head": "bent part"
+          },
+          {
+            "anchor": {
+              "startChar": 351,
+              "endChar": 364,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 380,
+              "endChar": 404,
+              "quote": "a predetermined position"
+            },
+            "determiner": "a",
+            "head": "predetermined position"
+          },
+          {
+            "anchor": {
+              "startChar": 408,
+              "endChar": 422,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          },
+          {
+            "anchor": {
+              "startChar": 426,
+              "endChar": 452,
+              "quote": "said positioning mechanism"
+            },
+            "determiner": "said",
+            "head": "positioning mechanism"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "7",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 61,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 172,
+            "endChar": 186,
+            "quote": "the main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.a",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 61,
+                "quote": "said end plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 71,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 71,
+                "endChar": 83,
+                "quote": "a main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 83,
+              "endChar": 102,
+              "quote": " that is formed of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 102,
+                "endChar": 109,
+                "quote": "plastic"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 109,
+              "endChar": 115,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 115,
+                "endChar": 128,
+                "quote": "a metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 128,
+              "endChar": 149,
+              "quote": " that is arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 149,
+                "endChar": 168,
+                "quote": "the outside surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 172,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.a",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 186,
+                "quote": "the main plate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 196,
+            "endChar": 212,
+            "quote": "said metal plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 242,
+            "quote": "said main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 287,
+            "endChar": 301,
+            "quote": "the main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.b",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 196,
+                "endChar": 212,
+                "quote": "said metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 212,
+              "endChar": 227,
+              "quote": " is coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 227,
+                "endChar": 242,
+                "quote": "said main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 242,
+              "endChar": 259,
+              "quote": " and arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 259,
+                "endChar": 283,
+                "quote": "a predetermined position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 283,
+              "endChar": 287,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 287,
+                "endChar": 301,
+                "quote": "the main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 301,
+              "endChar": 305,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.b",
+              "anchor": {
+                "startChar": 305,
+                "endChar": 328,
+                "quote": "a positioning mechanism"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 334,
+            "endChar": 347,
+            "quote": "the bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 351,
+            "endChar": 364,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 408,
+            "endChar": 422,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 426,
+            "endChar": 452,
+            "quote": "said positioning mechanism"
+          }
+        },
+        "introducing": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 305,
+            "endChar": 328,
+            "quote": "a positioning mechanism"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "7.c",
+        "parent": "7"
+      },
+      {
+        "kind": "functional",
+        "element": "7.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 334,
+                "endChar": 347,
+                "quote": "the bent part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 347,
+              "endChar": 351,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 351,
+                "endChar": 364,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 364,
+              "endChar": 380,
+              "quote": " is arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 380,
+                "endChar": 404,
+                "quote": "a predetermined position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 404,
+              "endChar": 408,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 408,
+                "endChar": 422,
+                "quote": "said end plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 422,
+              "endChar": 426,
+              "quote": " by "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "7.c",
+              "anchor": {
+                "startChar": 426,
+                "endChar": 452,
+                "quote": "said positioning mechanism"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 8,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "8",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 7"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "8.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 376,
+          "quote": "said positioning mechanism includes a positioning protruding part that is arranged on said main plate, a positioning hole that is arranged in said metal plate, and can receive said positioning protruding part, and a coupling hole that is arranged in the bent part of said bind bar and can receive said positioning protruding part"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 73,
+              "quote": "said positioning mechanism"
+            },
+            "determiner": "said",
+            "head": "positioning mechanism"
+          },
+          {
+            "anchor": {
+              "startChar": 83,
+              "endChar": 112,
+              "quote": "a positioning protruding part"
+            },
+            "determiner": "a",
+            "head": "positioning protruding part"
+          },
+          {
+            "anchor": {
+              "startChar": 133,
+              "endChar": 148,
+              "quote": "said main plate"
+            },
+            "determiner": "said",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 150,
+              "endChar": 168,
+              "quote": "a positioning hole"
+            },
+            "determiner": "a",
+            "head": "positioning hole"
+          },
+          {
+            "anchor": {
+              "startChar": 189,
+              "endChar": 205,
+              "quote": "said metal plate"
+            },
+            "determiner": "said",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 223,
+              "endChar": 255,
+              "quote": "said positioning protruding part"
+            },
+            "determiner": "said",
+            "head": "positioning protruding part"
+          },
+          {
+            "anchor": {
+              "startChar": 261,
+              "endChar": 276,
+              "quote": "a coupling hole"
+            },
+            "determiner": "a",
+            "head": "coupling hole"
+          },
+          {
+            "anchor": {
+              "startChar": 297,
+              "endChar": 310,
+              "quote": "the bent part"
+            },
+            "determiner": "the",
+            "head": "bent part"
+          },
+          {
+            "anchor": {
+              "startChar": 314,
+              "endChar": 327,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 344,
+              "endChar": 376,
+              "quote": "said positioning protruding part"
+            },
+            "determiner": "said",
+            "head": "positioning protruding part"
+          }
+        ]
+      },
+      {
+        "path": "8.b",
+        "anchor": {
+          "startChar": 386,
+          "endChar": 610,
+          "quote": "the positioning protruding part of said main plate is inserted into the positioning hole of said metal plate so that said metal plate is coupled to said main plate and arranged in the predetermined position on the main plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 386,
+              "endChar": 417,
+              "quote": "the positioning protruding part"
+            },
+            "determiner": "the",
+            "head": "positioning protruding part"
+          },
+          {
+            "anchor": {
+              "startChar": 421,
+              "endChar": 436,
+              "quote": "said main plate"
+            },
+            "determiner": "said",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 454,
+              "endChar": 474,
+              "quote": "the positioning hole"
+            },
+            "determiner": "the",
+            "head": "positioning hole"
+          },
+          {
+            "anchor": {
+              "startChar": 478,
+              "endChar": 494,
+              "quote": "said metal plate"
+            },
+            "determiner": "said",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 503,
+              "endChar": 519,
+              "quote": "said metal plate"
+            },
+            "determiner": "said",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 534,
+              "endChar": 549,
+              "quote": "said main plate"
+            },
+            "determiner": "said",
+            "head": "main plate"
+          },
+          {
+            "anchor": {
+              "startChar": 566,
+              "endChar": 592,
+              "quote": "the predetermined position"
+            },
+            "determiner": "the",
+            "head": "predetermined position"
+          },
+          {
+            "anchor": {
+              "startChar": 596,
+              "endChar": 610,
+              "quote": "the main plate"
+            },
+            "determiner": "the",
+            "head": "main plate"
+          }
+        ]
+      },
+      {
+        "path": "8.c",
+        "anchor": {
+          "startChar": 624,
+          "endChar": 829,
+          "quote": "the positioning protruding part that is inserted into said metal plate is inserted into the coupling hole of said bent part so that said bind bar is arranged in the predetermined position on said end plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 624,
+              "endChar": 655,
+              "quote": "the positioning protruding part"
+            },
+            "determiner": "the",
+            "head": "positioning protruding part"
+          },
+          {
+            "anchor": {
+              "startChar": 678,
+              "endChar": 694,
+              "quote": "said metal plate"
+            },
+            "determiner": "said",
+            "head": "metal plate"
+          },
+          {
+            "anchor": {
+              "startChar": 712,
+              "endChar": 729,
+              "quote": "the coupling hole"
+            },
+            "determiner": "the",
+            "head": "coupling hole"
+          },
+          {
+            "anchor": {
+              "startChar": 733,
+              "endChar": 747,
+              "quote": "said bent part"
+            },
+            "determiner": "said",
+            "head": "bent part"
+          },
+          {
+            "anchor": {
+              "startChar": 756,
+              "endChar": 769,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 785,
+              "endChar": 811,
+              "quote": "the predetermined position"
+            },
+            "determiner": "the",
+            "head": "predetermined position"
+          },
+          {
+            "anchor": {
+              "startChar": 815,
+              "endChar": 829,
+              "quote": "said end plate"
+            },
+            "determiner": "said",
+            "head": "end plate"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "8",
+        "ancestor": "7"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 73,
+            "quote": "said positioning mechanism"
+          }
+        },
+        "introducing": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 305,
+            "endChar": 328,
+            "quote": "a positioning mechanism"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 133,
+            "endChar": 148,
+            "quote": "said main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 189,
+            "endChar": 205,
+            "quote": "said metal plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 223,
+            "endChar": 255,
+            "quote": "said positioning protruding part"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 112,
+            "quote": "a positioning protruding part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 297,
+            "endChar": 310,
+            "quote": "the bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 314,
+            "endChar": 327,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 344,
+            "endChar": 376,
+            "quote": "said positioning protruding part"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 112,
+            "quote": "a positioning protruding part"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.a",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 73,
+                "quote": "said positioning mechanism"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 73,
+              "endChar": 83,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 83,
+                "endChar": 112,
+                "quote": "a positioning protruding part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 112,
+              "endChar": 133,
+              "quote": " that is arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 133,
+                "endChar": 148,
+                "quote": "said main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 148,
+              "endChar": 150,
+              "quote": ", "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 150,
+                "endChar": 168,
+                "quote": "a positioning hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 189,
+              "quote": " that is arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 189,
+                "endChar": 205,
+                "quote": "said metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 205,
+              "endChar": 223,
+              "quote": ", and can receive "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 223,
+                "endChar": 255,
+                "quote": "said positioning protruding part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 255,
+              "endChar": 261,
+              "quote": ", and "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 261,
+                "endChar": 276,
+                "quote": "a coupling hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 276,
+              "endChar": 297,
+              "quote": " that is arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 297,
+                "endChar": 310,
+                "quote": "the bent part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 310,
+              "endChar": 314,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 314,
+                "endChar": 327,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 327,
+              "endChar": 344,
+              "quote": " and can receive "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.a",
+              "anchor": {
+                "startChar": 344,
+                "endChar": 376,
+                "quote": "said positioning protruding part"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 386,
+            "endChar": 417,
+            "quote": "the positioning protruding part"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 112,
+            "quote": "a positioning protruding part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 421,
+            "endChar": 436,
+            "quote": "said main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 454,
+            "endChar": 474,
+            "quote": "the positioning hole"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 150,
+            "endChar": 168,
+            "quote": "a positioning hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 478,
+            "endChar": 494,
+            "quote": "said metal plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 503,
+            "endChar": 519,
+            "quote": "said metal plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 534,
+            "endChar": 549,
+            "quote": "said main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 566,
+            "endChar": 592,
+            "quote": "the predetermined position"
+          }
+        },
+        "introducing": {
+          "path": "7.b",
+          "anchor": {
+            "startChar": 259,
+            "endChar": 283,
+            "quote": "a predetermined position"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.b",
+          "anchor": {
+            "startChar": 596,
+            "endChar": 610,
+            "quote": "the main plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 71,
+            "endChar": 83,
+            "quote": "a main plate"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.b",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 386,
+                "endChar": 417,
+                "quote": "the positioning protruding part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 417,
+              "endChar": 421,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 421,
+                "endChar": 436,
+                "quote": "said main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 436,
+              "endChar": 454,
+              "quote": " is inserted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 454,
+                "endChar": 474,
+                "quote": "the positioning hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 474,
+              "endChar": 478,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 478,
+                "endChar": 494,
+                "quote": "said metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 494,
+              "endChar": 503,
+              "quote": " so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 503,
+                "endChar": 519,
+                "quote": "said metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 519,
+              "endChar": 534,
+              "quote": " is coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 534,
+                "endChar": 549,
+                "quote": "said main plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 549,
+              "endChar": 566,
+              "quote": " and arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 566,
+                "endChar": 592,
+                "quote": "the predetermined position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 592,
+              "endChar": 596,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.b",
+              "anchor": {
+                "startChar": 596,
+                "endChar": 610,
+                "quote": "the main plate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 624,
+            "endChar": 655,
+            "quote": "the positioning protruding part"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 83,
+            "endChar": 112,
+            "quote": "a positioning protruding part"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 678,
+            "endChar": 694,
+            "quote": "said metal plate"
+          }
+        },
+        "introducing": {
+          "path": "7.a",
+          "anchor": {
+            "startChar": 115,
+            "endChar": 128,
+            "quote": "a metal plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 712,
+            "endChar": 729,
+            "quote": "the coupling hole"
+          }
+        },
+        "introducing": {
+          "path": "8.a",
+          "anchor": {
+            "startChar": 261,
+            "endChar": 276,
+            "quote": "a coupling hole"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 733,
+            "endChar": 747,
+            "quote": "said bent part"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 756,
+            "endChar": 769,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 785,
+            "endChar": 811,
+            "quote": "the predetermined position"
+          }
+        },
+        "introducing": {
+          "path": "7.c",
+          "anchor": {
+            "startChar": 380,
+            "endChar": 404,
+            "quote": "a predetermined position"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "8.c",
+          "anchor": {
+            "startChar": 815,
+            "endChar": 829,
+            "quote": "said end plate"
+          }
+        },
+        "introducing": {
+          "path": "1.b",
+          "anchor": {
+            "startChar": 129,
+            "endChar": 149,
+            "quote": "a pair of end plates"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "8.c",
+        "parent": "8"
+      },
+      {
+        "kind": "functional",
+        "element": "8.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 624,
+                "endChar": 655,
+                "quote": "the positioning protruding part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 655,
+              "endChar": 678,
+              "quote": " that is inserted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 678,
+                "endChar": 694,
+                "quote": "said metal plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 694,
+              "endChar": 712,
+              "quote": " is inserted into "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 712,
+                "endChar": 729,
+                "quote": "the coupling hole"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 729,
+              "endChar": 733,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 733,
+                "endChar": 747,
+                "quote": "said bent part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 747,
+              "endChar": 756,
+              "quote": " so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 756,
+                "endChar": 769,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 769,
+              "endChar": 785,
+              "quote": " is arranged in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 785,
+                "endChar": 811,
+                "quote": "the predetermined position"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 811,
+              "endChar": 815,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "8.c",
+              "anchor": {
+                "startChar": 815,
+                "endChar": 829,
+                "quote": "said end plate"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 9,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "9",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 1"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "9.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 120,
+          "quote": "said bind bars are arranged on the side surfaces of said battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 61,
+              "quote": "said bind bars"
+            },
+            "determiner": "said",
+            "head": "bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 78,
+              "endChar": 95,
+              "quote": "the side surfaces"
+            },
+            "determiner": "the",
+            "head": "side surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 99,
+              "endChar": 120,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "9",
+        "ancestor": "1"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 61,
+            "quote": "said bind bars"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 99,
+            "endChar": 120,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "9.a",
+        "parent": "9"
+      },
+      {
+        "kind": "functional",
+        "element": "9.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 61,
+                "quote": "said bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 61,
+              "endChar": 78,
+              "quote": " are arranged on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 78,
+                "endChar": 95,
+                "quote": "the side surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 95,
+              "endChar": 99,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "9.a",
+              "anchor": {
+                "startChar": 99,
+                "endChar": 120,
+                "quote": "said battery assembly"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 10,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "10",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "10.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 213,
+          "quote": "a plurality of strip-shaped bars are arranged as said bind bars and spaced away from each other in the vertical direction on the side surface of said battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 79,
+              "quote": "a plurality of strip-shaped bars"
+            },
+            "determiner": "plurality-of",
+            "head": "strip-shaped bars"
+          },
+          {
+            "anchor": {
+              "startChar": 96,
+              "endChar": 110,
+              "quote": "said bind bars"
+            },
+            "determiner": "said",
+            "head": "bind bars"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 168,
+              "quote": "the vertical direction"
+            },
+            "determiner": "the",
+            "head": "vertical direction"
+          },
+          {
+            "anchor": {
+              "startChar": 172,
+              "endChar": 188,
+              "quote": "the side surface"
+            },
+            "determiner": "the",
+            "head": "side surface"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 213,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "10",
+        "ancestor": "9"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 96,
+            "endChar": 110,
+            "quote": "said bind bars"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 172,
+            "endChar": 188,
+            "quote": "the side surface"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 95,
+            "quote": "the side surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "10.a",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 213,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "10.a",
+        "parent": "10"
+      },
+      {
+        "kind": "functional",
+        "element": "10.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 79,
+                "quote": "a plurality of strip-shaped bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 79,
+              "endChar": 96,
+              "quote": " are arranged as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 96,
+                "endChar": 110,
+                "quote": "said bind bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 110,
+              "endChar": 146,
+              "quote": " and spaced away from each other in "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 168,
+                "quote": "the vertical direction"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 168,
+              "endChar": 172,
+              "quote": " on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 172,
+                "endChar": 188,
+                "quote": "the side surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 192,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "10.a",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 213,
+                "quote": "said battery assembly"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 11,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "11",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 38,
+          "quote": "The battery pack according to claim 10"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "11.a",
+        "anchor": {
+          "startChar": 48,
+          "endChar": 188,
+          "quote": "the height of said bent parts, which are located on the both ends of the bind bar, is larger than the strip-shaped main part of the bind bar"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 48,
+              "endChar": 58,
+              "quote": "the height"
+            },
+            "determiner": "the",
+            "head": "height"
+          },
+          {
+            "anchor": {
+              "startChar": 62,
+              "endChar": 77,
+              "quote": "said bent parts"
+            },
+            "determiner": "said",
+            "head": "bent parts"
+          },
+          {
+            "anchor": {
+              "startChar": 100,
+              "endChar": 113,
+              "quote": "the both ends"
+            },
+            "determiner": "the",
+            "head": "both ends"
+          },
+          {
+            "anchor": {
+              "startChar": 117,
+              "endChar": 129,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 146,
+              "endChar": 172,
+              "quote": "the strip-shaped main part"
+            },
+            "determiner": "the",
+            "head": "strip-shaped main part"
+          },
+          {
+            "anchor": {
+              "startChar": 176,
+              "endChar": 188,
+              "quote": "the bind bar"
+            },
+            "determiner": "the",
+            "head": "bind bar"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "11",
+        "ancestor": "10"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 62,
+            "endChar": 77,
+            "quote": "said bent parts"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 433,
+            "endChar": 443,
+            "quote": "bent parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 100,
+            "endChar": 113,
+            "quote": "the both ends"
+          }
+        },
+        "introducing": {
+          "path": "1.d",
+          "anchor": {
+            "startChar": 471,
+            "endChar": 489,
+            "quote": "the both end parts"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 117,
+            "endChar": 129,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "11.a",
+          "anchor": {
+            "startChar": 176,
+            "endChar": 188,
+            "quote": "the bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "11.a",
+        "parent": "11"
+      },
+      {
+        "kind": "functional",
+        "element": "11.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 48,
+                "endChar": 58,
+                "quote": "the height"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 58,
+              "endChar": 62,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 62,
+                "endChar": 77,
+                "quote": "said bent parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 77,
+              "endChar": 100,
+              "quote": ", which are located on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 100,
+                "endChar": 113,
+                "quote": "the both ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 113,
+              "endChar": 117,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 117,
+                "endChar": 129,
+                "quote": "the bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 129,
+              "endChar": 146,
+              "quote": ", is larger than "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 146,
+                "endChar": 172,
+                "quote": "the strip-shaped main part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 172,
+              "endChar": 176,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "11.a",
+              "anchor": {
+                "startChar": 176,
+                "endChar": 188,
+                "quote": "the bind bar"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 12,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "12",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "12.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 178,
+          "quote": "upper and lower bar portions as said strip-shaped bars cover the upper and lower parts of the side surface of said battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 75,
+              "quote": "upper and lower bar portions"
+            },
+            "determiner": "bare",
+            "head": "upper and lower bar portions"
+          },
+          {
+            "anchor": {
+              "startChar": 79,
+              "endChar": 101,
+              "quote": "said strip-shaped bars"
+            },
+            "determiner": "said",
+            "head": "strip-shaped bars"
+          },
+          {
+            "anchor": {
+              "startChar": 108,
+              "endChar": 133,
+              "quote": "the upper and lower parts"
+            },
+            "determiner": "the",
+            "head": "upper and lower parts"
+          },
+          {
+            "anchor": {
+              "startChar": 137,
+              "endChar": 153,
+              "quote": "the side surface"
+            },
+            "determiner": "the",
+            "head": "side surface"
+          },
+          {
+            "anchor": {
+              "startChar": 157,
+              "endChar": 178,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      },
+      {
+        "path": "12.b",
+        "anchor": {
+          "startChar": 188,
+          "endChar": 394,
+          "quote": "the both ends of said upper bar portion are coupled to the both ends of said lower bar portion so that said bind bar has an opening that exposes the central part of the side surface of said battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 188,
+              "endChar": 201,
+              "quote": "the both ends"
+            },
+            "determiner": "the",
+            "head": "both ends"
+          },
+          {
+            "anchor": {
+              "startChar": 205,
+              "endChar": 227,
+              "quote": "said upper bar portion"
+            },
+            "determiner": "said",
+            "head": "upper bar portion"
+          },
+          {
+            "anchor": {
+              "startChar": 243,
+              "endChar": 256,
+              "quote": "the both ends"
+            },
+            "determiner": "the",
+            "head": "both ends"
+          },
+          {
+            "anchor": {
+              "startChar": 260,
+              "endChar": 282,
+              "quote": "said lower bar portion"
+            },
+            "determiner": "said",
+            "head": "lower bar portion"
+          },
+          {
+            "anchor": {
+              "startChar": 291,
+              "endChar": 304,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 309,
+              "endChar": 319,
+              "quote": "an opening"
+            },
+            "determiner": "an",
+            "head": "opening"
+          },
+          {
+            "anchor": {
+              "startChar": 333,
+              "endChar": 349,
+              "quote": "the central part"
+            },
+            "determiner": "the",
+            "head": "central part"
+          },
+          {
+            "anchor": {
+              "startChar": 353,
+              "endChar": 369,
+              "quote": "the side surface"
+            },
+            "determiner": "the",
+            "head": "side surface"
+          },
+          {
+            "anchor": {
+              "startChar": 373,
+              "endChar": 394,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "12",
+        "ancestor": "9"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 137,
+            "endChar": 153,
+            "quote": "the side surface"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 95,
+            "quote": "the side surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.a",
+          "anchor": {
+            "startChar": 157,
+            "endChar": 178,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "12.a",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 75,
+                "quote": "upper and lower bar portions"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 75,
+              "endChar": 79,
+              "quote": " as "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 79,
+                "endChar": 101,
+                "quote": "said strip-shaped bars"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 108,
+              "quote": " cover "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 108,
+                "endChar": 133,
+                "quote": "the upper and lower parts"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 133,
+              "endChar": 137,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 137,
+                "endChar": 153,
+                "quote": "the side surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 153,
+              "endChar": 157,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.a",
+              "anchor": {
+                "startChar": 157,
+                "endChar": 178,
+                "quote": "said battery assembly"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 291,
+            "endChar": 304,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 353,
+            "endChar": 369,
+            "quote": "the side surface"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 95,
+            "quote": "the side surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "12.b",
+          "anchor": {
+            "startChar": 373,
+            "endChar": 394,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "12.b",
+        "parent": "12"
+      },
+      {
+        "kind": "functional",
+        "element": "12.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 188,
+                "endChar": 201,
+                "quote": "the both ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 201,
+              "endChar": 205,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 205,
+                "endChar": 227,
+                "quote": "said upper bar portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 227,
+              "endChar": 243,
+              "quote": " are coupled to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 243,
+                "endChar": 256,
+                "quote": "the both ends"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 256,
+              "endChar": 260,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 260,
+                "endChar": 282,
+                "quote": "said lower bar portion"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 282,
+              "endChar": 291,
+              "quote": " so that "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 291,
+                "endChar": 304,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 304,
+              "endChar": 309,
+              "quote": " has "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 309,
+                "endChar": 319,
+                "quote": "an opening"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 319,
+              "endChar": 333,
+              "quote": " that exposes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 333,
+                "endChar": 349,
+                "quote": "the central part"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 349,
+              "endChar": 353,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 353,
+                "endChar": 369,
+                "quote": "the side surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 369,
+              "endChar": 373,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "12.b",
+              "anchor": {
+                "startChar": 373,
+                "endChar": 394,
+                "quote": "said battery assembly"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 13,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "13",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 37,
+          "quote": "The battery pack according to claim 9"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 16,
+              "quote": "The battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      },
+      {
+        "path": "13.a",
+        "anchor": {
+          "startChar": 47,
+          "endChar": 126,
+          "quote": "said bind bar is dimensioned to cover the side surface of said battery assembly"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 47,
+              "endChar": 60,
+              "quote": "said bind bar"
+            },
+            "determiner": "said",
+            "head": "bind bar"
+          },
+          {
+            "anchor": {
+              "startChar": 85,
+              "endChar": 101,
+              "quote": "the side surface"
+            },
+            "determiner": "the",
+            "head": "side surface"
+          },
+          {
+            "anchor": {
+              "startChar": 105,
+              "endChar": 126,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          }
+        ]
+      },
+      {
+        "path": "13.b",
+        "anchor": {
+          "startChar": 136,
+          "endChar": 207,
+          "quote": "said battery assembly is placed on the upper surface of a cooling plate"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 136,
+              "endChar": 157,
+              "quote": "said battery assembly"
+            },
+            "determiner": "said",
+            "head": "battery assembly"
+          },
+          {
+            "anchor": {
+              "startChar": 171,
+              "endChar": 188,
+              "quote": "the upper surface"
+            },
+            "determiner": "the",
+            "head": "upper surface"
+          },
+          {
+            "anchor": {
+              "startChar": 192,
+              "endChar": 207,
+              "quote": "a cooling plate"
+            },
+            "determiner": "a",
+            "head": "cooling plate"
+          }
+        ]
+      },
+      {
+        "path": "13.c",
+        "anchor": {
+          "startChar": 217,
+          "endChar": 343,
+          "quote": "said cooling plate includes a coolant pipe and is thermally connected to the bottom surfaces of said rectangular battery cells"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 217,
+              "endChar": 235,
+              "quote": "said cooling plate"
+            },
+            "determiner": "said",
+            "head": "cooling plate"
+          },
+          {
+            "anchor": {
+              "startChar": 245,
+              "endChar": 259,
+              "quote": "a coolant pipe"
+            },
+            "determiner": "a",
+            "head": "coolant pipe"
+          },
+          {
+            "anchor": {
+              "startChar": 290,
+              "endChar": 309,
+              "quote": "the bottom surfaces"
+            },
+            "determiner": "the",
+            "head": "bottom surfaces"
+          },
+          {
+            "anchor": {
+              "startChar": 313,
+              "endChar": 343,
+              "quote": "said rectangular battery cells"
+            },
+            "determiner": "said",
+            "head": "rectangular battery cells"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 16,
+            "quote": "The battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "13",
+        "ancestor": "9"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 47,
+            "endChar": 60,
+            "quote": "said bind bar"
+          }
+        },
+        "introducing": {
+          "path": "1.c",
+          "anchor": {
+            "startChar": 254,
+            "endChar": 284,
+            "quote": "a plurality of metal bind bars"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 85,
+            "endChar": 101,
+            "quote": "the side surface"
+          }
+        },
+        "introducing": {
+          "path": "9.a",
+          "anchor": {
+            "startChar": 78,
+            "endChar": 95,
+            "quote": "the side surfaces"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.a",
+          "anchor": {
+            "startChar": 105,
+            "endChar": 126,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "13.a",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 47,
+                "endChar": 60,
+                "quote": "said bind bar"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 60,
+              "endChar": 85,
+              "quote": " is dimensioned to cover "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 85,
+                "endChar": 101,
+                "quote": "the side surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 101,
+              "endChar": 105,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.a",
+              "anchor": {
+                "startChar": 105,
+                "endChar": 126,
+                "quote": "said battery assembly"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.b",
+          "anchor": {
+            "startChar": 136,
+            "endChar": 157,
+            "quote": "said battery assembly"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 27,
+            "endChar": 45,
+            "quote": "a battery assembly"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "13.b",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.b",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.b",
+              "anchor": {
+                "startChar": 136,
+                "endChar": 157,
+                "quote": "said battery assembly"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 157,
+              "endChar": 171,
+              "quote": " is placed on "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.b",
+              "anchor": {
+                "startChar": 171,
+                "endChar": 188,
+                "quote": "the upper surface"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 188,
+              "endChar": 192,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.b",
+              "anchor": {
+                "startChar": 192,
+                "endChar": 207,
+                "quote": "a cooling plate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.c",
+          "anchor": {
+            "startChar": 217,
+            "endChar": 235,
+            "quote": "said cooling plate"
+          }
+        },
+        "introducing": {
+          "path": "13.b",
+          "anchor": {
+            "startChar": 192,
+            "endChar": 207,
+            "quote": "a cooling plate"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "13.c",
+          "anchor": {
+            "startChar": 313,
+            "endChar": 343,
+            "quote": "said rectangular battery cells"
+          }
+        },
+        "introducing": {
+          "path": "1.a",
+          "anchor": {
+            "startChar": 56,
+            "endChar": 96,
+            "quote": "a plurality of rectangular battery cells"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "13.c",
+        "parent": "13"
+      },
+      {
+        "kind": "functional",
+        "element": "13.c",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 217,
+                "endChar": 235,
+                "quote": "said cooling plate"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 235,
+              "endChar": 245,
+              "quote": " includes "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 245,
+                "endChar": 259,
+                "quote": "a coolant pipe"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 259,
+              "endChar": 290,
+              "quote": " and is thermally connected to "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 290,
+                "endChar": 309,
+                "quote": "the bottom surfaces"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 309,
+              "endChar": 313,
+              "quote": " of "
+            }
+          },
+          {
+            "kind": "term",
+            "term": {
+              "path": "13.c",
+              "anchor": {
+                "startChar": 313,
+                "endChar": 343,
+                "quote": "said rectangular battery cells"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "claimNumber": 14,
+    "producer": "llm",
+    "elements": [
+      {
+        "path": "14",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 9,
+          "quote": "A vehicle"
+        },
+        "kind": "preamble-subject",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 9,
+              "quote": "A vehicle"
+            },
+            "determiner": "a",
+            "head": "vehicle"
+          }
+        ]
+      },
+      {
+        "path": "14.a",
+        "anchor": {
+          "startChar": 21,
+          "endChar": 58,
+          "quote": "the battery pack according to claim 1"
+        },
+        "kind": "functional-relation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 21,
+              "endChar": 37,
+              "quote": "the battery pack"
+            },
+            "determiner": "the",
+            "head": "battery pack"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "14.a",
+          "anchor": {
+            "startChar": 21,
+            "endChar": 37,
+            "quote": "the battery pack"
+          }
+        },
+        "introducing": {
+          "path": "1",
+          "anchor": {
+            "startChar": 0,
+            "endChar": 14,
+            "quote": "A battery pack"
+          }
+        }
+      },
+      {
+        "kind": "part-of",
+        "child": "14.a",
+        "parent": "14"
+      },
+      {
+        "kind": "functional",
+        "element": "14.a",
+        "parts": [
+          {
+            "kind": "term",
+            "term": {
+              "path": "14.a",
+              "anchor": {
+                "startChar": 21,
+                "endChar": 37,
+                "quote": "the battery pack"
+              }
+            }
+          },
+          {
+            "kind": "text",
+            "anchor": {
+              "startChar": 37,
+              "endChar": 58,
+              "quote": " according to claim 1"
+            }
+          }
+        ]
+      },
+      {
+        "kind": "depends-on-element",
+        "dependent": "14.a",
+        "ancestor": "1"
+      }
+    ]
+  }
+]

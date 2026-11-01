@@ -1,0 +1,81 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system for mitigating rain-induced crosstalk in wireless communication between an unmanned aerial vehicle (UAV) and a ground-based receiver, the system comprising:
+<claim-text>a dual-polarized Multiple-Input Multiple-Output (MIMO) antenna array mounted on the UAV and configured to transmit a signal on an orthogonal polarization channel;</claim-text>
+<claim-text>a rain sensor mounted on the UAV and electrically connected to a processing unit mounted on the UAV;</claim-text>
+<claim-text>an altitude sensor mounted on the UAV and electrically connected to the processing unit;</claim-text>
+<claim-text>the processing unit comprising electronic circuitry configured to:
+<claim-text>receive a signal from the rain sensor and receive a signal from the altitude sensor;</claim-text>
+<claim-text>calculate a measured phase shift and an attenuation for a vertical polarization channel and a horizontal polarization channel based on a rainfall intensity and a UAV height; and</claim-text>
+<claim-text>generate a pre-equalization parameter to compensate for differential phase shifts and the attenuation between the vertical polarization channel and the horizontal polarization channel; and</claim-text>
+</claim-text>
+<claim-text>an equalization circuit mounted on a circuit board with the processing unit and electrically connected to the dual-polarized MIMO antenna array, the equalization circuit is configured to:
+<claim-text>receive the pre-equalization parameter from the processing unit;</claim-text>
+<claim-text>apply the pre-equalization parameter to an input signal received from a communication source within the UAV before the input signal is transmitted through the dual-polarized MIMO antenna array; and</claim-text>
+<claim-text>adjust a phase and an amplitude of each of the vertical polarization channel and the horizontal polarization channel to counteract the rain-induced crosstalk.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the dual-polarized MIMO antenna array utilizes a +45° and a −45° linear polarization.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit is further configured to calculate the pre-equalization parameter based on an elevation angle between the UAV and the ground-based receiver.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the pre-equalization parameter includes a phase correction, and an amplitude correction calculated to reduce a Cross Polarization Discrimination (XPD) resulting from a rain-induced effect.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit is configured to calculate the measured phase shift and the attenuation for a rainfall rate ranging from 50 millimeter per hour (mm/h) to 200 mm/h.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a temperature sensor and a humidity sensor mounted on the UAV and electrically connected to the processing unit, wherein the processing unit is configured to distinguish between a rain-induced signal degradation and a degradation caused by another atmospheric condition.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the equalization circuit is configured to maintain a signal integrity for a Fifth Generation (5G) wireless communication frequency and a Sixth Generation (6G) wireless communication frequency band during a rainfall event exceeding 100 mm/h.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the equalization circuit is configured to compensate for a signal variation when the UAV is at height ranging from 100 meters to 2000 meters above a ground level.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the equalization circuit is configured to maintain a measurement-to-adjustment latency of less than 200 milliseconds.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the rain sensor comprises a configurable sampling mechanism electrically connected to the processing unit that adjusts a measurement frequency based on a detected rate of change in the rainfall intensity.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit is configured to calculate the pre-equalization parameter for an operating frequency between 5 gigahertz (GHz) and 100 GHz.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the equalization circuit is further configured to:
+<claim-text>update the pre-equalization parameter in real-time for a continuous transmission mode; or</claim-text>
+<claim-text>update the pre-equalization parameter immediately before each packet transmission for a packet-based transmission mode.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein generating the pre-equalization parameter comprises:
+<claim-text>decomposing the vertical polarization channel and the horizontal polarization channel into a vertical plane and a horizontal plane;</claim-text>
+<claim-text>calculating a rain-induced effect separately for a component in each of the vertical plane and the horizontal plane; and</claim-text>
+<claim-text>determining a compensatory phase adjustment and a compensatory amplitude adjustment for each component.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the pre-equalization parameter is specifically calculated to counteract a phase shift disparity between a vertical polarization component and a horizontal polarization component exceeding 30 degrees per kilometer.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit is further configured to establish an emergency communication channel during a severe weather event to facilitate a rescue operation.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the processing unit is further configured to establish a communication link with the ground-based receiver located in a tropical region characterized by a rainfall.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A method for mitigating rain-induced crosstalk in wireless communication from an unmanned aerial vehicle (UAV), the method comprising:
+<claim-text>measuring a rainfall intensity in real-time using a rain sensor mounted on the UAV;</claim-text>
+<claim-text>monitoring a UAV height above a ground level using an altitude sensor mounted on the UAV;</claim-text>
+<claim-text>calculating a measured phase shift and an attenuation for a vertical polarization component and a horizontal polarization component based on the measured rainfall intensity, the UAV height, and an elevation angle using a processing unit mounted on the UAV and electrically connected to the rain sensor and the altitude sensor;</claim-text>
+<claim-text>generating a pre-equalization parameter with the processing unit to compensate for a differential effect between a vertical polarization channel and a horizontal polarization channel;</claim-text>
+<claim-text>applying the pre-equalization parameter with an equalization circuit mounted on the UAV and to an input signal received from a communication source within the UAV before the input signal is transmitted through a dual-polarized Multiple-Input Multiple-Output (MIMO) antenna array mounted on the UAV; and</claim-text>
+<claim-text>dynamically adjusting the pre-equalization parameter in response to a change in the rainfall intensity.</claim-text>
+</claim-text>
+</claim>
+</claims>

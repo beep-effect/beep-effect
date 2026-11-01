@@ -1,0 +1,38 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A plug adapter, comprising a housing, a rotating housing, a panel, a first plug assembly, a second plug assembly, and a third plug assembly;
+<claim-text>wherein the rotating housing is rotatably connected to an inner wall of the housing, the panel is disposed over the rotating housing, and the first, the second, and the third plug assemblies are disposed within the rotating housing and are arranged below the panel;</claim-text>
+<claim-text>wherein a guide protrusion is disposed on the inner wall of the rotating housing and is configured to assist the first, the second and the third plug assemblies to move upward, respectively;</claim-text>
+<claim-text>wherein multiple guide rods are disposed below the panel and are configured to guide an axial movement of the first, the second, and the third plug assemblies, respectively; and</claim-text>
+<claim-text>wherein the guide rods are sleeved with reset springs, and the reset springs are configured to reset the first, the second, and the third plug assemblies, respectively.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The plug adapter according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first plug assembly comprises a first moving seat, a first metal pin, a first guide block, and a fourth moving seat;
+<claim-text>wherein the first moving seat and the fourth moving seat are slidably connected to an outer side of the guide rods, respectively; and the first metal pin is fixedly installed on a top of the first moving seat and the fourth moving seat; and</claim-text>
+<claim-text>wherein the first guide block is fixedly installed on a side of the first moving seat, one of the reset springs is arranged at the top of the first moving seat and the fourth moving seat.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The plug adapter according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second plug assembly comprises a second moving seat, a second guide block, and a second metal pin; and
+<claim-text>wherein the second moving seat is slidably connected to an outer side of the guide rods, the second guide block is fixedly installed on a side of the second moving seat, the second metal pin is rotatably connected to a top of the second moving seat, and the reset springs are arranged at the top of the second moving seat.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The plug adapter according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the third plug assembly comprises an installation housing, a third guide block, a threaded stud, a driven threaded pipe, a support column, a third moving seat, and a third metal pin;
+<claim-text>wherein the installation housing is slidably connected to an outer side of the guide rods, and the third guide block is fixedly installed on an outer wall of the installation housing;</claim-text>
+<claim-text>wherein a bottom of the threaded stud is fixedly installed on a bottom of the inner wall of the outer housing, and the driven threaded pipe is configured to engage with a side of the threaded stud;</claim-text>
+<claim-text>wherein the support column is rotatably connected to an inner wall of the driven threaded pipe, with its top and bottom being fixedly installed at a top and a bottom of the inner wall of the installation housing, respectively; and</claim-text>
+<claim-text>wherein the third moving seat is configured to engage with an outer side of the driven threaded pipe, the third metal pin is fixedly installed on a top of the third moving seat, and one of the reset springs is located on a side of the top of the installation housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The plug adapter according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein further comprises an elastic sheet, toothed blocks and a gear ring; wherein the toothed blocks are configured to engage with a periphery of the gear ring, and the elastic sheet is fixedly installed on a side of the toothed blocks.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The plug adapter according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein a mounting groove is provided on the inner wall of the housing and a groove is provided on the outer side of the rotary housing.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The plug adapter according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the elastic sheet is fixedly installed on an inner wall of the mounting groove, and the gear ring is fixedly installed on an inner wall of the groove.</claim-text>
+</claim>
+</claims>

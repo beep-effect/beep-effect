@@ -1,0 +1,256 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system comprising:
+<claim-text>one or more processors; and</claim-text>
+<claim-text>one or more memories including program code that is executable by the one or more processors to:
+<claim-text>execute a first processing operation on a dataset comprising a plurality of records and having a dependency hierarchy with a plurality of levels, each level of the dependency hierarchy comprising one or more records and having at least one lower level except a lowest level,
+<claim-text>wherein the first processing operation involves identifying a first set of records in the dataset that are independent from any other records in the dataset and storing the first set of records in a datastore,
+<claim-text>wherein the first set of records correspond to the lowest level of the dependency hierarchy, and</claim-text>
+</claim-text>
+<claim-text>wherein the first processing operation further involves identifying a second set of records in the dataset that are dependent on other records in the dataset and storing the second set of records in a temporary memory that is different from the datastore; and</claim-text>
+</claim-text>
+<claim-text>after completing the first processing operation, execute a second processing operation to process the second set of records stored in the temporary memory in accordance with an iterative hierarchical processing scheme, wherein each iteration of the iterative hierarchical processing scheme involves:
+<claim-text>identifying a subset of records in the temporary memory corresponding to a particular level of the dependency hierarchy; and
+<claim-text>for each record in the subset of records:</claim-text>
+<claim-text>obtaining one or more previously processed records on which the record depends,</claim-text>
+<claim-text>wherein the one or more previously processed records are associated with one or more lower levels of the dependency hierarchy, and</claim-text>
+<claim-text>wherein the one or more previously processed records were previously processed during the first processing operation or one or more previous iterations of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>processing the record using the one or more previously processed records;</claim-text>
+<claim-text>storing the processed record in the datastore; and</claim-text>
+<claim-text>removing the record from the temporary memory.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein processing the record using the one or more previously processed records comprises:
+<claim-text>performing a validation operation involving determining whether the record and the one or more previously processed records satisfy one or more criteria.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>each record of the one or more previously processed records includes a column; and</claim-text>
+<claim-text>the one or more criteria include a constraint on a value of the column for each record in the one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the one or more criteria include a constraint on a number of one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein a given record depends on one or more other records when the validation operation requires data from each of the one or more other records.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the datastore is a database;</claim-text>
+<claim-text>storing the first set of records in the datastore comprises logically storing the first set of records without making the first set of records durable in the datastore;</claim-text>
+<claim-text>the iterative hierarchical processing scheme further involves:
+<claim-text>for each iteration of the iterative hierarchical processing scheme:
+<claim-text>for each record in the subset of records:
+<claim-text>after processing the record using the one or more previously processed records, logically storing the record without making the record durable in the datastore; and</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>the one or more memories include additional program code that is executable by the one or more processors to:
+<claim-text>after processing the second set of records, receive an indication to store the first set of records and the second set of records in the database; and</claim-text>
+<claim-text>in response to the indication, durably write the first set of records and the second set of records to the database.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein:
+<claim-text>the first processing operation and the second processing operation are executed in relation to a database transaction; and</claim-text>
+<claim-text>the indication to store the first set of records and the second set of records in the database is an instruction to commit the database transaction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more memories include additional program code that is executable by the one or more processors to:
+<claim-text>prior to executing the first processing operation:
+<claim-text>receive a file including the dataset; and</claim-text>
+<claim-text>generate a data stream including the plurality of records by processing the file to extract the plurality of records; and</claim-text>
+</claim-text>
+<claim-text>wherein executing the first processing operation involves processing records received via the data stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system of <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the file is a spreadsheet file, a comma-separated values (“CSV”) file, or a representation of a database table.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the one or more memories include additional program code that is executable by the one or more processors to:
+<claim-text>receive an indication of a maximum number of records that are dependent on one or more other records to process during an iteration of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>and wherein:
+<claim-text>each iteration of the iterative hierarchical processing scheme further involves identifying a plurality of subsets of records, wherein each subset of the plurality of subsets of records has a number of records less than or equal to the maximum number of records.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A method comprising:
+<claim-text>executing a first processing operation on a dataset comprising a plurality of records and having a dependency hierarchy with a plurality of levels, each level of the dependency hierarchy comprising one or more records and having at least one lower level except a lowest level,
+<claim-text>wherein the first processing operation involves identifying a first set of records in the dataset that are independent from any other records in the dataset and storing the first set of records in a datastore,
+<claim-text>wherein the first set of records correspond to the lowest level of the dependency hierarchy, and</claim-text>
+</claim-text>
+<claim-text>wherein the first processing operation further involves identifying a second set of records in the dataset that are dependent on other records in the dataset and storing the second set of records in a temporary memory that is different from the datastore; and</claim-text>
+</claim-text>
+<claim-text>after completing the first processing operation, executing a second processing operation to process the second set of records stored in the temporary memory in accordance with an iterative hierarchical processing scheme, wherein each iteration of the iterative hierarchical processing scheme involves:
+<claim-text>identifying a subset of records in the temporary memory corresponding to a particular level of the dependency hierarchy; and
+<claim-text>for each record in the subset of records:
+<claim-text>obtaining one or more previously processed records on which the record depends,</claim-text>
+<claim-text>wherein the one or more previously processed records are associated with one or more lower levels of the dependency hierarchy, and</claim-text>
+<claim-text>wherein the one or more previously processed records were previously processed during the first processing operation or one or more previous iterations of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>processing the record using the one or more previously processed records;</claim-text>
+<claim-text>storing the processed record in the datastore; and</claim-text>
+<claim-text>removing the record from the temporary memory.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein processing the record using the one or more previously processed records comprises:
+<claim-text>performing a validation operation involving determining whether the record and the one or more previously processed records satisfy one or more criteria.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>each record of the one or more previously processed records includes a column; and</claim-text>
+<claim-text>the one or more criteria include a constraint on a value of the column for each record in the one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein:
+<claim-text>the one or more criteria include a constraint on a number of one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a given record depends on one or more other records when the validation operation requires data from each of the one or more other records.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein:
+<claim-text>the datastore is a database;</claim-text>
+<claim-text>storing the first set of records in the datastore comprises logically storing the first set of records without making the first set of records durable in the datastore;</claim-text>
+<claim-text>the iterative hierarchical processing scheme further involves:
+<claim-text>for each iteration of the iterative hierarchical processing scheme:
+<claim-text>for each record in the subset of records:
+<claim-text>after processing the record using the one or more previously processed records, logically storing the record without making the record durable in the datastore; and</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>the method further comprises:
+<claim-text>after processing the second set of records, receiving an indication to store the first set of records and the second set of records in the database; and</claim-text>
+<claim-text>in response to the indication, durably writing the first set of records and the second set of records to the database.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The method of <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein:
+<claim-text>the first processing operation and the second processing operation are executed in relation to a database transaction; and</claim-text>
+<claim-text>the indication to store the first set of records and the second set of records in the database is an instruction to commit the database transaction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>prior to executing the first processing operation:
+<claim-text>receive a file including the dataset; and</claim-text>
+<claim-text>generate a data stream including the plurality of records by processing the file to extract the plurality of records; and</claim-text>
+</claim-text>
+<claim-text>wherein executing the first processing operation involves processing records received via the data stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The method of <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the file is a spreadsheet file, a CSV file, or a representation of a database table.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The method of <claim-ref idref="CLM-00011">claim 11</claim-ref>, further comprising:
+<claim-text>receive an indication of a maximum number of records that are dependent on one or more other records to process during an iteration of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>and wherein:
+<claim-text>each iteration of the iterative hierarchical processing scheme further involves identifying a plurality of subsets of records, wherein each subset of the plurality of subsets of records has a number of records less than or equal to the maximum number of records.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00021" num="00021">
+<claim-text><b>21</b>. A non-transitory computer-readable medium comprising program code that is executable by one or more processors for causing the one or more processors to:
+<claim-text>execute a first processing operation on a dataset comprising a plurality of records and having a dependency hierarchy with a plurality of levels, each level of the dependency hierarchy comprising one or more records and having at least one lower level except a lowest level,
+<claim-text>wherein the first processing operation involves identifying a first set of records in the dataset that are independent from any other records in the dataset and storing the first set of records in a datastore,
+<claim-text>wherein the first set of records correspond to the lowest level of the dependency hierarchy, and</claim-text>
+</claim-text>
+<claim-text>wherein the first processing operation further involves identifying a second set of records in the dataset that are dependent on other records in the dataset and storing the second set of records in a temporary memory that is different from the datastore; and</claim-text>
+</claim-text>
+<claim-text>after completing the first processing operation, execute a second processing operation to process the second set of records stored in the temporary memory in accordance with an iterative hierarchical processing scheme, wherein each iteration of the iterative hierarchical processing scheme involves:
+<claim-text>identifying a subset of records in the temporary memory corresponding to a particular level of the dependency hierarchy; and
+<claim-text>for each record in the subset of records:
+<claim-text>obtaining one or more previously processed records on which the record depends,</claim-text>
+<claim-text>wherein the one or more previously processed records are associated with one or more lower levels of the dependency hierarchy, and</claim-text>
+<claim-text>wherein the one or more previously processed records were previously processed during the first processing operation or one or more previous iterations of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>processing the record using the one or more previously processed records;</claim-text>
+<claim-text>storing the processed record in the datastore; and</claim-text>
+<claim-text>removing the record from the temporary memory.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00022" num="00022">
+<claim-text><b>22</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein processing the record using the one or more previously processed records comprises:
+<claim-text>performing a validation operation involving determining whether the record and the one or more previously processed records satisfy one or more criteria.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00023" num="00023">
+<claim-text><b>23</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00022">claim 22</claim-ref>, wherein:
+<claim-text>each record of the one or more previously processed records includes a column; and</claim-text>
+<claim-text>the one or more criteria include a constraint on a value of the column for each record in the one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00024" num="00024">
+<claim-text><b>24</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00022">claim 22</claim-ref>, wherein:
+<claim-text>the one or more criteria include a constraint on a number of one or more previously processed records.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00025" num="00025">
+<claim-text><b>25</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00022">claim 22</claim-ref>, wherein a given record depends on one or more other records when the validation operation requires data from each of the one or more other records.</claim-text>
+</claim>
+<claim id="CLM-00026" num="00026">
+<claim-text><b>26</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00021">claim 21</claim-ref>, wherein:
+<claim-text>the datastore is a database;</claim-text>
+<claim-text>storing the first set of records in the datastore comprises logically storing the first set of records without making the first set of records durable in the datastore;</claim-text>
+<claim-text>the iterative hierarchical processing scheme further involves:
+<claim-text>for each iteration of the iterative hierarchical processing scheme:
+<claim-text>for each record in the subset of records:
+<claim-text>after processing the record using the one or more previously processed records, logically storing the record without making the record durable in the datastore; and</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>the non-transitory computer-readable medium further comprises additional program code that is executable by the one or more processors for causing the one or more processors to:
+<claim-text>after processing the second set of records, receive an indication to store the first set of records and the second set of records in the database; and</claim-text>
+<claim-text>in response to the indication, durably write the first set of records and the second set of records to the database.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00027" num="00027">
+<claim-text><b>27</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00026">claim 26</claim-ref>, wherein:
+<claim-text>the first processing operation and the second processing operation are executed in relation to a database transaction; and</claim-text>
+<claim-text>the indication to store the first set of records and the second set of records in the database is an instruction to commit the database transaction.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00028" num="00028">
+<claim-text><b>28</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00021">claim 21</claim-ref>, further comprising additional program code that is executable by the one or more processors for causing the one or more processors to:
+<claim-text>prior to executing the first processing operation:
+<claim-text>receive a file including the dataset; and</claim-text>
+<claim-text>generate a data stream including the plurality of records by processing the file to extract the plurality of records; and</claim-text>
+</claim-text>
+<claim-text>wherein executing the first processing operation involves processing records received via the data stream.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00029" num="00029">
+<claim-text><b>29</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00028">claim 28</claim-ref>, wherein the file is a spreadsheet file, a CSV file, or a representation of a database table.</claim-text>
+</claim>
+<claim id="CLM-00030" num="00030">
+<claim-text><b>30</b>. The non-transitory computer-readable medium of <claim-ref idref="CLM-00021">claim 21</claim-ref>, further comprising additional program code that is executable by the one or more processors for causing the one or more processors to:
+<claim-text>receive an indication of a maximum number of records that are dependent on one or more other records to process during an iteration of the iterative hierarchical processing scheme;</claim-text>
+<claim-text>and wherein:
+<claim-text>each iteration of the iterative hierarchical processing scheme further involves identifying a plurality of subsets of records, wherein each subset of the plurality of subsets of records has a number of records less than or equal to the maximum number of records.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,105 @@
+{
+  "familyId": "13978201-root-24",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.8,
+  "resolvedClaimNumbers": [],
+  "unresolved": [
+    {
+      "claimNumber": 24,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 25,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 26,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 27,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 28,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 29,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 30,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 31,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 32,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 33,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 34,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    },
+    {
+      "claimNumber": 35,
+      "reason": "Source-unqualified positive family: examiner claim26 wording conflicts with native claim26; draft structural tree is unscored pending archive/replacement.",
+      "sourceQuote": "the scanner tool holder is on the vehicle or on a trolley attachable to the vehicle.",
+      "examinerSourceQuote": "claim 26, line 2, the locations” lacks antecedent basis."
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "UNRESOLVED MATERIAL SOURCE ASSOCIATION: office-action claim26 quotes the locations, the wheel retaining nuts, the plane, the wheel rim, the angular orientation. Native claim26 only places a scanner tool holder on a vehicle/trolley; none of those examiner phrases occurs in it. Matching claim numbers24–27 alone does not establish version identity. These structural trees are not accepted positive gold.",
+    "Claim24 is independent. Natural-language alternatives expand27→24/25/26,28→24/25/26/27,30→24–29,33→24–32;35→33/34. XML proposals for range references include only24 and are not authoritative. Other dependencies:25→24,26→25,29→28,31→30,32→31,34→33. All selected claims descend from24.",
+    "Publication precedes office action, but chronology/no-intervening-CLM assertion cannot cure conflicting examiner claim wording. Original-document extracted counts24 and45 require source-version reconciliation. Only native26/29/30 from this family appear in exact original comparison list.",
+    "Expected trees are independently source-labelled structural proposals retained for critic inspection. Confidence is deliberately below0.95 because source/rejection association is unresolved; no clean-positive acceptance is claimed."
+  ],
+  "rationale": "Every element, term, lexical head and intra-claim exact-head edge was manually selected. Quote helpers validated93 source slices and existing term refs. Structural parsing is representable; family source qualification remains unresolved and root was notified twice. No implementations/predictions/network/git/delegation used.",
+  "structurallyLabelledClaimNumbers": [
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35
+  ],
+  "unscoredStructuralDraft": true
+}

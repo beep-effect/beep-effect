@@ -1,0 +1,90 @@
+{
+  "scope": "Existing managed-owner command recovery through actual private worker, synthetic protocol only",
+  "recordedAt": "2026-10-29T03:08:14.661747+00:00",
+  "result": "focused qualification passed; broad CLI gate unverified",
+  "syntheticOnly": true,
+  "actualProviderSessions": 0,
+  "productionRollout": false,
+  "recoveryHoldPreserved": true,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.ts": "669fa0d5b950559d5bb174065f35244dd12ebeacb1689d9713484a705185055f",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.observation.command.ts": "b1bbf4cdfd7944ad0558f1a49c6c3ec0519d02405303105847df11393d19f86e",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.command.ts": "6301e99c8579eb396aedfc1e555cabe88a0c8cd7b22f85e4e24344b0c33cc9af",
+    "packages/tooling/tool/cli/src/commands/AgentMessage/AgentMessage.runtime.ts": "286a399084bbb92e1f5a0b82ee7cab23717a3d6c7dc8ea4df29dc67ba102ffa6",
+    "packages/tooling/tool/cli/test/AgentMessage.observation.test.ts": "c5e4df4abd7e8091b6ae615d76d41dc9efbaba80eeee3270eeace3a4776997d7",
+    "packages/tooling/tool/cli/test/AgentMessage.runtime.test.ts": "050d3d461b2602881704d540890cddd8ce765cd8237231c46bab92e2eb51cae6",
+    "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts": "dc75c50443d7c360931d91d8c4c651ff89edb55ff5929bba880c71f4f643d93c",
+    "goals/agent-observability-foundation/ops/managed-owner-typecheck.json": "73d22eb148dae90af3be6e0f08882426fb5dd6e7cc9585453543baf444416504",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "cb172c5cf977eb7b089b30fcbbd8463ac434aaefd3ce1a1d0812f17f5091d435",
+    "packages/tooling/library/ai-metrics/src/observation-launch-client.ts": "8684c04b687f69912fad37166bdbf978e4391563206786d901932d7b5d2640ed",
+    "packages/tooling/library/ai-metrics/test/observation-launch-client.test.ts": "1a8d1451e720ccb49d1ceae1a8223fcd22834ea0bcd316ee1e77117a3faac9e4"
+  },
+  "focusedCliVerification": {
+    "result": "passed",
+    "typecheckConfig": "goals/agent-observability-foundation/ops/managed-owner-typecheck.json",
+    "typecheckTools": ["tsgo --noEmit", "tsrs --noEmit"],
+    "lint": "biome check exact seven changed source/test files",
+    "files": 2,
+    "tests": 17,
+    "swapLimitBytes": 0,
+    "log": "/tmp/foundation-owner-recovery-quality.log",
+    "finalFixtureTypecheck": "/tmp/foundation-owner-recovery-quality.log"
+  },
+  "commandWorkerProof": {
+    "result": "passed",
+    "receipt": "goals/agent-observability-foundation/ops/managed-owner-command-worker-verification.json",
+    "ownedProcessesStopped": 10,
+    "committedLaunchFacts": 16,
+    "managedCommand": {
+      "actualServeCommand": true,
+      "actualRecoveryCommand": true,
+      "actualChildLaunches": 1,
+      "actualProviderSessions": 0,
+      "localCaptureWhileCollectorPaused": true,
+      "childStoppedBeforeFinished": true,
+      "facts": 4,
+      "recoveredAfterOwnerExitAndCollectorRestart": true,
+      "independentClaimRefusedRelaunch": true,
+      "recoveryChildLaunches": 0,
+      "backendVisibilityRemainsUnknown": true,
+      "processLivenessRemainsUnknown": true,
+      "privateMetadataAbsent": true
+    },
+    "boundary": "Actual registered agent-message serve and observation subcommands plus actual collector entrypoint; synthetic Codex child, collector journal acknowledgments only. No real provider or new Phoenix visibility proof.",
+    "rawEvidence": "/tmp/obs-entry-883id8yj/evidence.json"
+  },
+  "broaderCliGate": {
+    "result": "unverified",
+    "waived": false,
+    "priorEvidence": "goals/agent-observability-foundation/ops/managed-owner-verification.json"
+  },
+  "remaining": [
+    "Explicit provisioning and claim-store recovery ownership; independent expected-launch populations",
+    "Real CLI/desktop canaries and rollback, deployment and external health evidence",
+    "Broad CLI verification, final review panel, repository delivery and full SPEC acceptance"
+  ],
+  "combinedVerification": {
+    "result": "passed",
+    "metricsPackageCommand": "bun run beep quality package-verify @beep/repo-ai-metrics",
+    "auditSeconds": 123.5,
+    "docgenSeconds": 11.9,
+    "then": "Both scoped typechecks and 17 focused CLI tests",
+    "runtimeSeconds": 147.066,
+    "memoryPeakGiB": 5.6,
+    "swapLimitBytes": 0,
+    "guard": "goals/agent-observability-foundation/ops/managed-owner-recovery-quality-guard.json",
+    "log": "/tmp/foundation-owner-recovery-quality.log"
+  },
+  "privateClientIsolation": {
+    "reproducedBeforeFix": true,
+    "beforeFixTests": {
+      "failed": 1,
+      "passed": 4
+    },
+    "reproductionLog": "/tmp/foundation-owner-client-isolation-repro.log",
+    "fix": "Layer.fresh on the private socket client options layer",
+    "regression": "Enclosing default HTTP client and two independently addressed private socket clients",
+    "finalVerification": "Full metrics package gate and actual registered-command collector proof"
+  }
+}

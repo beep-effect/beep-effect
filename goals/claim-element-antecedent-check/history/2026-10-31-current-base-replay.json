@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "claim-base-dependency-replay/v1",
+  "featureParent": "bf3bd2deab",
+  "mergedMainCommit": "92db2438c1",
+  "runtimeFreeze": "research/implementation-repair-v19-freeze.json",
+  "lockfileSha256": "1d6cabcf5379792bda0d893099ded17ac442b0c4d085e15c2e628e9b75f7afe7",
+  "strictMatches": 37,
+  "all34ProtectedPassesRetained": true,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "runs": [
+    {
+      "lane": "positive",
+      "fullResultsIdentical": true,
+      "byteIdenticalPredictionCount": 55,
+      "resultsSha256": "2d4f12fdd4839802436c0ac1a70a51b1cc00338936ffbe7c8f2006cd75543d42"
+    },
+    {
+      "lane": "allowed",
+      "fullResultsIdentical": true,
+      "byteIdenticalPredictionCount": 196,
+      "resultsSha256": "481c4afe47d3a3bc2e10968cb9423811db1c18c285325812c703b8f0a7e22fa5"
+    }
+  ],
+  "mergeCommit": "e6ac553d3abfe521aae0e21170402536b6ee06ad"
+}

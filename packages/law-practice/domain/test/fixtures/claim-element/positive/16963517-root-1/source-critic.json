@@ -1,0 +1,179 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "16963517-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
+  "findings": [],
+  "evidence": [
+    "Actual112(b)1\u201312 ground present. Original process/panel reference corrupted; full inventory preliminary amendment at07:33:07 versus original CLM07:33:08 does not prove current semantic reference.",
+    "Complete marked original PDF1-6 corroborates selected1-5/7-12, including source7: any of the claims1to6 visibly struck and Claim1 inserted. Other selected references3->2,2/4/5->1,8->7,9-12->8 agree. Actual substantive clauses and visible deletion/wherein changes match native. Original process/panel reference is therefore resolved by direct visual evidence rather than chronology. Actual retained112(b) rejection1-12 remains verified. Native canonical text retains printed1)/2)/etc; this is a separately visible normalization issue, not source-version uncertainty; no text was changed."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "0aae135514685e15077bbaf5335643ef4f4436232e18a596083c3703c03c5cb0",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "871e25b9ebd0a5056df764c0f022fa48293593231cf3186f4453d325133a4930",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "2ce5e45eae237ef78d05b6d7bc53f05e405d484c8d6e400ff3d555d6f4b9e6b6",
+    "inventoryReportedCount": 51,
+    "inventoryActualRows": 51,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "KCVV03IURXEAPX3",
+        "documentCode": "CLM",
+        "officialDate": "2020-07-21T07:33:08.000-0400",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "KCXLHJ9ILXEAPX4",
+        "documentCode": "A.PE",
+        "officialDate": "2020-07-21T07:33:07.000-0400",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "KCXLHJ9JLXEAPX4",
+        "documentCode": "CLM",
+        "officialDate": "2020-07-21T07:33:07.000-0400",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "KCXLHJ9KLXEAPX4",
+        "documentCode": "REM",
+        "officialDate": "2020-07-21T07:33:07.000-0400",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "KUD6JY03LDFLYX7",
+        "documentCode": "CTNF",
+        "officialDate": "2021-10-06T17:43:27.000-0400"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "KCVV03IURXEAPX3",
+        "exists": true,
+        "sha256": "219007d49aee7de0eac4347a8ddbc4f25fda8c91f67f4ef882f766e5f427835e",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "KCXLHJ9JLXEAPX4",
+        "exists": true,
+        "sha256": "b5f570896f0204c440b2471c5d786b8f81d4650018c91cabdfe11f15f580339a",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Complete marked original PDF1-6 corroborates selected1-5/7-12, including source7: any of the claims1to6 visibly struck and Claim1 inserted. Other selected references3->2,2/4/5->1,8->7,9-12->8 agree. Actual substantive clauses and visible deletion/wherein changes match native. Original process/panel reference is therefore resolved by direct visual evidence rather than chronology. Actual retained112(b) rejection1-12 remains verified. Native canonical text retains printed1)/2)/etc; this is a separately visible normalization issue, not source-version uncertainty; no text was changed.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "16963517-root-1",
+      "role": "source-eligibility-critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.99,
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
+      "findings": [
+        {
+          "claimNumber": 7,
+          "evidence": {
+            "nativeQuote": "the panel is made according to the process of claim 1",
+            "markedOriginalQuote": "the panel di494 is made according to the process of .ay e: 4;iis- ; e4CKi i :"
+          },
+          "requiredCorrection": "Keep unresolved until authoritative amended claim7 reference and affected clauses are readable; do not fill the reference from native/version chronology."
+        }
+      ],
+      "evidence": [
+        "Actual112(b)1\u201312 ground present. Original process/panel reference corrupted; full inventory preliminary amendment at07:33:07 versus original CLM07:33:08 does not prove current semantic reference.",
+        "Complete marked original PDF1-6 corroborates selected1-5/7-12, including source7: any of the claims1to6 visibly struck and Claim1 inserted. Other selected references3->2,2/4/5->1,8->7,9-12->8 agree. Actual substantive clauses and visible deletion/wherein changes match native. Original process/panel reference is therefore resolved by direct visual evidence rather than chronology. Actual retained112(b) rejection1-12 remains verified. Native canonical text retains printed1)/2)/etc; this is a separately visible normalization issue, not source-version uncertainty; no text was changed."
+      ],
+      "sourceChecks": {
+        "nativeApplicationPublicationDateMatch": true,
+        "nativePublicationSha256": "0aae135514685e15077bbaf5335643ef4f4436232e18a596083c3703c03c5cb0",
+        "nativePublicationHashMatches": true,
+        "sourceClaimsXmlSha256": "871e25b9ebd0a5056df764c0f022fa48293593231cf3186f4453d325133a4930",
+        "sourceClaimsHashMatches": true,
+        "fullInventorySha256": "2ce5e45eae237ef78d05b6d7bc53f05e405d484c8d6e400ff3d555d6f4b9e6b6",
+        "inventoryReportedCount": 51,
+        "inventoryActualRows": 51,
+        "preOfficeActionClaimAndAmendmentDocuments": [
+          {
+            "documentIdentifier": "KCVV03IURXEAPX3",
+            "documentCode": "CLM",
+            "officialDate": "2020-07-21T07:33:08.000-0400",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "KCXLHJ9ILXEAPX4",
+            "documentCode": "A.PE",
+            "officialDate": "2020-07-21T07:33:07.000-0400",
+            "description": "Preliminary Amendment"
+          },
+          {
+            "documentIdentifier": "KCXLHJ9JLXEAPX4",
+            "documentCode": "CLM",
+            "officialDate": "2020-07-21T07:33:07.000-0400",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "KCXLHJ9KLXEAPX4",
+            "documentCode": "REM",
+            "officialDate": "2020-07-21T07:33:07.000-0400",
+            "description": "Applicant Arguments/Remarks Made in an Amendment"
+          }
+        ],
+        "citedOfficeActionInventoryRows": [
+          {
+            "documentIdentifier": "KUD6JY03LDFLYX7",
+            "documentCode": "CTNF",
+            "officialDate": "2021-10-06T17:43:27.000-0400"
+          }
+        ],
+        "originalCachedHashes": [
+          {
+            "documentIdentifier": "KCVV03IURXEAPX3",
+            "exists": true,
+            "sha256": "219007d49aee7de0eac4347a8ddbc4f25fda8c91f67f4ef882f766e5f427835e",
+            "sha256Matches": true
+          },
+          {
+            "documentIdentifier": "KCXLHJ9JLXEAPX4",
+            "exists": true,
+            "sha256": "b5f570896f0204c440b2471c5d786b8f81d4650018c91cabdfe11f15f580339a",
+            "sha256Matches": true
+          }
+        ]
+      },
+      "extractorVerdictReviewed": "unresolved",
+      "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+      "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+    }
+  ],
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "pdfClarificationReviewer": {
+    "role": "independent-source-critic",
+    "model": "gpt-6.1-sol",
+    "effort": "medium"
+  },
+  "pdfCorroboration": [
+    {
+      "documentIdentifier": "KCXLHJ9JLXEAPX4",
+      "sha256": "5d080bfcd26e41b8f3735335762e5d3f55b5b7c40c8680e939e22f9ef1216081",
+      "pdfPagesInspected": [1, 2, 3, 4, 5, 6],
+      "printedPages": [2, 3, 4, 5, 6, 7],
+      "purpose": "Independent visual corroboration only; exact native source unchanged."
+    }
+  ]
+}

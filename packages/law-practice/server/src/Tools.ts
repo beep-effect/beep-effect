@@ -37,7 +37,7 @@ import type { PracticeKgBundle } from "./PracticeKg.host.ts";
  * import { PracticeKgToolkit } from "@beep/law-practice-server"
  * import * as R from "effect/Record"
  *
- * console.log(R.keys(PracticeKgToolkit.tools).length) // 9
+ * console.log(R.keys(PracticeKgToolkit.tools).length) // 12
  * ```
  *
  * @category tools
@@ -175,7 +175,7 @@ export const practiceKgMcpProtocols: Arr.NonEmptyReadonlyArray<McpProtocol.Proto
  * @since 0.0.0
  */
 export const PRACTICE_KG_MCP_INSTRUCTIONS =
-  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Every result names its bundle_version. Clients may open with an initialize handshake or call tools directly; both work.";
+  "Local practice knowledge graph over a pre-built bundle: look up clients, docket families and applications, search corpus text and emails, read documents by digest and trace provenance. Bundle lookup results name their bundle_version. The local claim_self_check tool checks supplied normalized claims and returns advisory, unreviewed claim-finding review items and unchecked claims without fetching or storing data. Clients may open with an initialize handshake or call tools directly; both work.";
 
 /**
  * Build the stdio MCP server layer from the toolkit registration.

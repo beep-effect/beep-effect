@@ -1,0 +1,58 @@
+{
+  "recordedAt": "2026-10-29T04:07:37.125316+00:00",
+  "result": "scoped CLI and actual-command disaster rehearsal passed",
+  "syntheticOnly": true,
+  "productionRollout": false,
+  "productionBackupQualified": false,
+  "goalComplete": false,
+  "sourceSha256": {
+    "packages/tooling/tool/cli/test/fixtures/managed-observation-command.ts": "b69c8b2f8c6a5d53e5d9b9a7731d2ad249569548e9ed4911f4b076a982515210",
+    "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts": "73a3505af561b07e1802cfa086f763954c9cc4b1edc2a4cee244c75c93563359",
+    "packages/tooling/tool/cli/test/ai-metrics-inventory.test.ts": "72f5990010a3af43287dc420ef6fd6abb0c2ac472d1577e984ee0d0545df52a1",
+    "goals/agent-observability-foundation/ops/verify-worker-entrypoint.py": "b41bb1c11b615e14420bbb862e473567ac4951fa0217e6c1b4153d64b6075aae"
+  },
+  "proof": {
+    "syntheticOnly": true,
+    "actualCommandRefusals": ["serve", "status", "reconcile", "population"],
+    "scenarios": ["missing-store", "quarantined-stale-snapshot", "torn-claim"],
+    "childLaunches": 0,
+    "missingStoreNotRecreated": true,
+    "partialStateNotRepaired": true,
+    "originalOutboxPreserved": true,
+    "snapshotNotInstalledAsAuthority": true,
+    "snapshotClaimCount": 0,
+    "retainedClaimCount": 1,
+    "snapshotFilesSha256": {
+      "anchor.json": "14b0abfa542f923efb6dc3d46ea0ed7bdd2ae11aad6a8d108a933946b0edcd67"
+    },
+    "retainedFilesSha256": {
+      "anchor.json": "14b0abfa542f923efb6dc3d46ea0ed7bdd2ae11aad6a8d108a933946b0edcd67",
+      "claim-0.json": "98f21978059c4147fec985c3439ce532be4ebd44bd7a3d065becca99a7335283",
+      "fact-0-1.json": "fda81481c2d3e8612109e66cb4e1ebc16d8a35ba15e38d703f1da517ba0a859f",
+      "fact-0-2.json": "47f3ab92751c388f3faa301b173784d4d21a0a72419ef3817d22b8d2aea20e49",
+      "fact-0-3.json": "015fc76dd04d07ceb241926a7af81770462bfd9ace9b578e2e748c8815e6874c",
+      "receipt-0-0.json": "51a50ee3d75b3f3bcd11190c9fe3608773102d99add0517345790b149bf849e2",
+      "receipt-0-1.json": "387ebe14dd0f6f1ae037b4174e3803c9773b53dbcf463357d79bc844f7d1196a",
+      "receipt-0-2.json": "3698c08c23d0213c04b3712a672b672c9d27c4822eacffdbfdb4a6fc16be369a",
+      "receipt-0-3.json": "c75e622f9d6efb9cdc1df735d6f907ae7935821f7a0b3fffe78ba09c3a94e1c3"
+    },
+    "productionBackupQualified": false,
+    "automaticClaimRestoreSupported": false
+  },
+  "workerReceipt": "goals/agent-observability-foundation/ops/claim-store-disaster-worker-verification.json",
+  "ownedServiceProcessesStopped": 13,
+  "committedLaunchFacts": 16,
+  "scopedCli": {
+    "typechecks": ["tsgo", "tsrs"],
+    "testFiles": 3,
+    "tests": 25,
+    "log": "/tmp/foundation-claim-hold-final-cli.log",
+    "resourceGuard": "goals/agent-observability-foundation/ops/claim-store-disaster-cli-resource-guard.json",
+    "lint": "three changed source/test files passed Biome"
+  },
+  "limits": [
+    "No automatic claim-store restoration or hold release",
+    "No real provider session or production backup/deployment",
+    "Broad CLI gate and final review remain open"
+  ]
+}

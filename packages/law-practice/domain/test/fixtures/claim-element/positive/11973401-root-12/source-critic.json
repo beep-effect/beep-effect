@@ -1,0 +1,106 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "11973401-root-12",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "extractorSourceEligibleConclusionStands": true,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [12, 13, 14, 17],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20080126506", "A1", "20080529"],
+    "applicationReference": ["US", "11973401", "20071005"],
+    "officeActionDocumentIdentifiers": ["G202YQG3PPOPPY5"],
+    "officeActionMailDate": "2009-11-17"
+  },
+  "digestEvidence": [
+    {
+      "file": "11973401.publication.xml",
+      "sha256": "8c44d2ee16e9422a5dfee6f36f60594fa90104ee54afdfc1424071f33298c4bd",
+      "matchesProvenance": true
+    },
+    {
+      "file": "11973401.claims.xml",
+      "sha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "F7TG5KYXPPOPPY5",
+      "xmlAvailable": false
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 68,
+    "actualRows": 68,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2007-10-05T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "F7TG5KYXPPOPPY5"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 1-18 are rejected under 35 u.s.c. 112, second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which applicant regards as the invention. the scope of the following claim language is unclear."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "said computer system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said computer system"
+    },
+    {
+      "claimNumber": 12,
+      "examinerPhrase": "the contents or values",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the contents or values"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "said first computers",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said first computers"
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "said plurality of first computers",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "said plurality of first computers"
+    },
+    {
+      "claimNumber": 17,
+      "examinerPhrase": "the progress of execution",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the progress of execution"
+    }
+  ],
+  "assessment": "Original PDF2-3 (printed58-59) confirms independent12 and selected13->12,14->13,17->14, with complete wording. OA actual second-paragraph ground1-18 includes selected. Original15/16 incorrectly refer1 but lie outside selected family and are not repaired.",
+  "findings": [],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "pdfCorroboration": {
+    "documentIdentifier": "F7TG5KYXPPOPPY5",
+    "sha256": "91ca2d6b655090495d6e76064dd038501b8316e40621c5d32bec9275d83f4d5c",
+    "pdfPagesInspected": [2, 3],
+    "printedPages": [58, 59],
+    "purpose": "Independent visual corroboration only."
+  }
+}

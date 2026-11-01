@@ -2448,6 +2448,9 @@
       ],
       "@beep/epistemic-use-cases/Retention": [
         "./packages/epistemic/use-cases/src/Retention/index.ts"
+      ],
+      "@beep/repo-cli/commands/Holds": [
+        "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
       ]
     }
   }

@@ -1,0 +1,82 @@
+{
+  "recordedAt": "2026-10-29T07:56:20.592491+00:00",
+  "results": [
+    {
+      "package": "@beep/phoenix",
+      "result": "passed",
+      "scope": "full package audit and docgen",
+      "sourceHashes": {
+        "packages/drivers/phoenix/src/Phoenix.config.ts": "f1f3ea8402998d31043ffa29934bd886f67f0660edffff8b2f9008d36ed44364",
+        "packages/drivers/phoenix/src/Phoenix.errors.ts": "5c30d59605c8995b458360b045beaea85796ba1908cbb486e0a988e5008ee200",
+        "packages/drivers/phoenix/src/Phoenix.models.ts": "027616bea7a834705b715268f151a7f12934519aeb1455f808ca9671138da434",
+        "packages/drivers/phoenix/src/Phoenix.service.ts": "a79aee00a7d098ba293ef5d651fadf231929657c413335e039b81914aa976787",
+        "packages/drivers/phoenix/src/Phoenix.span-readback.ts": "d98813dc156ae4b718265a08f624a4dbbfb42a059f0c5e88bb25015cd0c98857",
+        "packages/drivers/phoenix/src/index.ts": "f22f2016ad736207787ac946323d64ce68a6c864d9e11267ca52095ea02f5eb5",
+        "packages/drivers/phoenix/test/Phoenix.equivalence.test.ts": "1ec86ed74903b085db33d70b08cfb4310aecb74aea6b35ee1706a91e9a2ff274",
+        "packages/drivers/phoenix/test/Phoenix.service.test.ts": "d626a6f51305fcb21b3e0b7f6f98771d7afde1f13d4064094ae9905d7ffbb2fd",
+        "packages/drivers/phoenix/test/Phoenix.span-readback.test.ts": "dfd87ca2a7c83d2832d36e686613be8d23879f33ba08d9e1217865e1e7819660"
+      },
+      "guard": {
+        "unit": "foundation-review-phoenix-quality-final.service",
+        "memoryStopBytes": 8589934592,
+        "hostAvailableFloorBytes": 8589934592,
+        "initialAvailableBytes": 59967918080,
+        "peakObservedBytes": 6018117632,
+        "minimumAvailableBytes": 45974646784,
+        "stoppedFor": null,
+        "exitCode": 0
+      },
+      "log": "/tmp/foundation-review-phoenix-quality-final.log",
+      "logSha256": "34fd51bcce3654d6ebc5785d56e5cc33561f29ea908c6a7612e6322695ff7ffd"
+    },
+    {
+      "package": "@beep/ai-provider-cli",
+      "result": "passed",
+      "scope": "full package audit and docgen",
+      "sourceHashes": {
+        "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts": "6eb88f3ad5c3a81d5a0afcac8b3998f0e4d7dff8caf016c6cdaa9a36ef7688bc",
+        "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts": "42f470f0606d5d51f5c116061ba335558d1c14c2b916a75b20ef63252fb85f62",
+        "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts": "9bfe79f69d790fed220c3304d8a0b325000b501deb9e48fbdde7f291bc702d89",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliHome.errors.ts": "96f01fb3a52fbd8670bfc3fb3484ab9027e8e53b0df2712934914e1265deb4af",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliHome.models.ts": "e644a8fbc2600d0587ca897729d32406ceea7f2c4acbe4a0799d695b38602781",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliHome.service.ts": "86346c44f9d4c5506e8185443fff3595cd7ba683382193519d2343c5b8c787d6",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.claude.service.ts": "ed1e0fa4233ce08f5499282276a1d8423c775b7855f05a33b19adff4da8ef25d",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.codex.service.ts": "8bb7adc6ce118da82080b0769d3800fdb8a77107ba28c49d31e9fcf1f829eef8",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.cursor.service.ts": "01414b3cdc1c77ca6bec66d4a2281e065fb87c6998d6061c2bbe9a9338b3bb02",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.errors.ts": "e934248a5639837c19c38acf658d297acee10d96837b9ad9c9f87bd69b51b4bc",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.grok.service.ts": "bbd777b2ddbdb293d16d7e53e2a7a89e1af4e5225873c96d9105fe5fb3771bfd",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.lifecycle.ts": "6e67e6a4bb1f5740a8d6ade5327254bc71b9d788682f8e5c1bd62fe147b455af",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.models.ts": "f5f3168ed2e0622d811710ade60862272d018b56ec435e62ff67c79615295847",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.profile.service.ts": "456d7b283a78be5634b75c7456d28f711fd7fc467390eb0fa853325a4290a17f",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.service.ts": "5089bd893151d7acb1e1770dc7899fb283a13a85a89bca825c145913ec2566d7",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.stdio.service.ts": "2bf2154d56b9a1b9092e5e22f966be7ff3ea8d09b18b88d6bb1c2a9634c50fa8",
+        "packages/drivers/ai-provider-cli/src/AiProviderCliSession.wire.models.ts": "72a7488aa6ef5bc3133cd7818c234cce25fef0255b1fe6cd2bc2434b3c5a555f",
+        "packages/drivers/ai-provider-cli/src/index.ts": "40ec4319f00be81943d330e809841b93e7d5b9ff4d75c3cb4b8106fcf275131f",
+        "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts": "ea68e6f9f73e488645f70ac5360031550856646bbd915aa26eeaf891dba0ece7",
+        "packages/drivers/ai-provider-cli/test/AiProviderCli.snapshot.test.ts": "dc192849470bbaeb918bbb3c35869fbad976e727474316bd57bd33f78931a796",
+        "packages/drivers/ai-provider-cli/test/AiProviderCliHome.equivalence.test.ts": "e8c8be3ea15122d4724f0baa84cc0c867cda957d29704ea609f05bd89be8eab8",
+        "packages/drivers/ai-provider-cli/test/AiProviderCliSession.test.ts": "7f482fe8ea18200fc7bcca38444e93bced0d4521fa82358e5e2fdf565c2d27d7",
+        "packages/drivers/ai-provider-cli/test/fixtures/managed-acp-v1-peer.ts": "68f6e47c09c0f6acd97438445613ef2688346217a62e627bbcc7cf62aae852cc",
+        "packages/drivers/ai-provider-cli/test/fixtures/managed-claude-peer.ts": "69d8664444c475f5a07fad4cd7340799711bf4d408d3927a36d54848b386cc21",
+        "packages/drivers/ai-provider-cli/test/fixtures/managed-codex-peer.ts": "162b5ede901fd11192f48ef194bc5170ea8f15cacd36dda1d5a22153df87b992",
+        "packages/drivers/ai-provider-cli/test/fixtures/managed-cursor-peer.ts": "c38d95fdd191d65325f8d2dd16dfd1a7e4bd31cf3b80074114d4ab78f1a3b526",
+        "packages/drivers/ai-provider-cli/test/fixtures/managed-grok-peer.ts": "af5fed20b68726dc20fbb508202d0e933e16ab0776caf6955c33a6fe64d58982",
+        "packages/drivers/ai-provider-cli/test/fixtures/session-options.ts": "0cfb73a1e5a02517cdb6b81c6cffad90c1d5a029ba8fa3c69f159e9e7e8a1f86"
+      },
+      "guard": {
+        "unit": "foundation-review-provider-cli-quality-final.service",
+        "memoryStopBytes": 8589934592,
+        "hostAvailableFloorBytes": 8589934592,
+        "initialAvailableBytes": 55321702400,
+        "peakObservedBytes": 6011121664,
+        "minimumAvailableBytes": 47585923072,
+        "stoppedFor": null,
+        "exitCode": 0
+      },
+      "log": "/tmp/foundation-review-provider-cli-quality-final.log",
+      "logSha256": "dccf46c5f9f48e24de65b077f76402d7dcd1cd578359bc386104d631b8b0d597"
+    }
+  ],
+  "productionRollout": false,
+  "wholeCliVerified": false
+}

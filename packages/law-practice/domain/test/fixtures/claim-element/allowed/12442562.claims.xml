@@ -1,0 +1,67 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A control method for an energy storage heat exchange electric water heater, wherein the energy storage heat exchange electric water heater comprises a water tank, an energy storage electric heater, a heat exchanger, a flow-through electric heater and a thermostatic valve; the energy storage electric heater and the heat exchanger are arranged in the water tank, the flow-through electric heater and the thermostatic valve are arranged outside the water tank, and the thermostatic valve is connected to an outlet of the heat exchanger, the flow-through electric heater and a water inlet of the energy storage heat exchange electric water heater; and the control method comprises:
+<claim-text>preliminarily heating a liquid in the water tank to a first preset temperature value by using the energy storage electric heater, and maintaining the temperature;</claim-text>
+<claim-text>performing heat exchange on a water in the heat exchanger by using the heated liquid in the water tank to obtain a water of the first preset temperature value;</claim-text>
+<claim-text>acquiring a water flow signal value of the energy storage heat exchange electric water heater;</claim-text>
+<claim-text>judging whether the water flow signal value satisfies a first preset trigger requirement;</claim-text>
+<claim-text>if the water flow signal value satisfies the first preset trigger requirement, outputting the water of the first preset temperature value in the heat exchanger to the thermostatic valve;</claim-text>
+<claim-text>controlling the flow-through electric heater and the thermostatic valve to be in an activated operating state at the same time, and using the thermostatic valve to mix the water of the first preset temperature value with a cold water inputted from the water inlet, to obtain a mixed water; and</claim-text>
+<claim-text>heating the mixed water outputted by the thermostatic valve to a second preset temperature value by using the flow-through electric heater, the second preset temperature value is greater than the first preset temperature value;</claim-text>
+<claim-text>before controlling the flow-through electric heater and the thermostatic valve to be in the activated operating state at the same time, the control method further comprises:</claim-text>
+<claim-text>acquiring an outlet water temperature of the thermostatic valve;</claim-text>
+<claim-text>judging whether the outlet water temperature satisfies a second preset trigger requirement; and</claim-text>
+<claim-text>if the outlet water temperature satisfies the second preset trigger requirement, controlling the flow-through electric heater and the thermostatic valve to be in the activated operating state at the same time;</claim-text>
+<claim-text>in a step of judging whether the outlet water temperature satisfies the second preset trigger requirement, the control method comprises:</claim-text>
+<claim-text>acquiring a preset temperature rise value of the flow-through electric heater;</claim-text>
+<claim-text>determining a temperature difference value between the second preset temperature value and the preset temperature rise value;</claim-text>
+<claim-text>judging whether the outlet water temperature is greater than or equal to the temperature difference value; and</claim-text>
+<claim-text>if the outlet water temperature is greater than or equal to the temperature difference value, determining that the outlet water temperature satisfies the second preset trigger requirement.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The control method for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein in a step of judging whether the water flow signal value satisfies the first preset trigger requirement, the control method comprises:
+<claim-text>judging whether the water flow signal value is greater than a preset water flow value; and</claim-text>
+<claim-text>if the water flow signal value is greater than the preset water flow value, determining that the water flow signal value satisfies the first preset trigger requirement.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The control method for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein in a step of judging whether the water flow signal value satisfies the first preset trigger requirement, the control method further comprises:
+<claim-text>if the water flow signal value does not satisfy the first preset trigger requirement, acquiring a water tank temperature in the energy storage heat exchange electric water heater;</claim-text>
+<claim-text>judging whether the water tank temperature in the energy storage heat exchange electric water heater satisfies a third preset trigger requirement; and</claim-text>
+<claim-text>if the water tank temperature in the energy storage heat exchange electric water heater satisfies the third preset trigger requirement, controlling the energy storage electric heater to be in an activated operating state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The control method for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein in a step of judging whether the water tank temperature in the energy storage heat exchange electric water heater satisfies the third preset trigger requirement, the control method comprises:
+<claim-text>determining a target set temperature of the energy storage heat exchange electric water heater;</claim-text>
+<claim-text>judging whether the water tank temperature in the energy storage heat exchange electric water heater is less than or equal to the target set temperature; and</claim-text>
+<claim-text>if the water tank temperature in the energy storage heat exchange electric water heater is less than or equal to the target set temperature, determining that the water tank temperature in the energy storage heat exchange electric water heater satisfies the third preset trigger requirement.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The control method for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein in a step of determining the target set temperature of the energy storage heat exchange electric water heater, the control method comprises:
+<claim-text>acquiring an initial set temperature and a hysteresis temperature of the energy storage heat exchange electric water heater; and</claim-text>
+<claim-text>obtaining the target set temperature of the energy storage heat exchange electric water heater on a basis of a difference value between the initial set temperature and the hysteresis temperature.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The control method for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein in a step of judging whether the water tank temperature in the energy storage heat exchange electric water heater satisfies the third preset trigger requirement, the control method further comprises:
+<claim-text>if the water tank temperature in the energy storage heat exchange electric water heater does not satisfy the third preset trigger requirement, controlling the energy storage electric heater to be in an inactive operating state.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. A control apparatus for an energy storage heat exchange electric water heater, wherein the control apparatus comprises: an energy storage heat exchange electric water heater and a controller; the controller is configured for executing steps of the control method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>;
+<claim-text>the energy storage heat exchange electric water heater comprises a water tank, a heat exchanger, an energy storage electric heater, a flow-through electric heater, a thermostatic valve, a water flow sensor, a first temperature sensor and a second temperature sensor;</claim-text>
+<claim-text>the energy storage electric heater is arranged in the water tank;</claim-text>
+<claim-text>the heat exchanger and the first temperature sensor are arranged in the water tank;</claim-text>
+<claim-text>the second temperature sensor is arranged between the thermostatic valve and the flow-through electric heater;</claim-text>
+<claim-text>the thermostatic valve is connected to an outlet of the heat exchanger, the flow-through electric heater and a water inlet of the energy storage heat exchange electric water heater;</claim-text>
+<claim-text>the flow-through electric heater is connected to a water outlet of the energy storage heat exchange electric water heater; and</claim-text>
+<claim-text>an inlet of the heat exchanger is connected to the water inlet of the energy storage heat exchange electric water heater.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The control apparatus for an energy storage heat exchange electric water heater according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the heat exchanger is a stainless steel heat exchange pipeline or a plate heat exchange structure.</claim-text>
+</claim>
+</claims>

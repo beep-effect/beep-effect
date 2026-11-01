@@ -1,0 +1,30 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A molecular sieve confined noble metal catalyst for CO-SCR denitrification, wherein the molecular sieve confined noble metal catalyst consists of a molecular sieve carrier and Ir metal nanoclusters loaded in the molecular sieve carrier through confined encapsulation;
+<claim-text>the molecular sieve carrier is an A-type molecular sieve, an X-type molecular sieve or a Y-type molecular sieve; a loading of the Ir metal nanoclusters in the molecular sieve confined noble metal catalyst is 0.1-1 wt. %; and a particle size of the Ir metal nanoclusters is ≤2 nm, and the Ir metal nanoclusters comprise an oxidized state of Ir<sup>δ</sup>+ and a metallic state of Ir<sup>0</sup>, wherein a proportion of the Ir<sup>0 </sup>is 10-70 wt. %;</claim-text>
+<claim-text>wherein the molecular sieve confined noble metal catalyst is prepared by a method comprises the following steps:
+<claim-text>mixing a first metal precursor solution with a first ligand, and stirring to obtain a first mixed solution;</claim-text>
+<claim-text>mixing a second metal precursor solution with a second ligand, and stirring to obtain a second mixed solution;</claim-text>
+<claim-text>mixing silicon source, aluminum source, alkali and solvent, and stirring to obtain molecular sieve precursor solution; mixing the molecular sieve precursor solution with the first mixed solution and stirring, then adding the second mixed solution and stirring to obtain a third mixed solution; carrying out hydrothermal crystallization reaction on the third mixed solution, and after finishing the hydrothermal crystallization reaction, carrying out centrifugal washing, drying and calcining to obtain the molecular sieve confined noble metal catalyst for the CO-SCR denitrification; wherein
+<claim-text>the first metal precursor solution and the second metal precursor solution are both Ir salt solutions; and</claim-text>
+<claim-text>the first ligand is a C1-6 linear amine compound; the second ligand is alkoxy silane containing sulfhydryl or amino group.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The molecular sieve confined noble metal catalyst for CO-SCR denitrification according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a solute of the Ir salt solution comprises at least one of iridium nitrate, iridium acetate or iridium chloride acid, and a solvent of the Ir salt solution is water.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The molecular sieve confined noble metal catalyst for CO-SCR denitrification according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the aluminum source comprises at least one of sodium metaaluminate, boehmite, pseudo-boehmite, amorphous aluminum hydroxide powder or aluminum isopropoxide; the silicon source comprises at least one of water glass, silica sol, silica gel or amorphous SiO<sub>2 </sub>powder; and the alkali is at least one of NaOH or KOH.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The molecular sieve confined noble metal catalyst for CO-SCR denitrification according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a molar ratio of Ir salt of the Ir salt solution to the first ligand in the first mixed solution is 1:3-8, based on Ir; and a molar ratio of the Ir salt to the second ligand in the second mixed solution is 1:6-12.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The molecular sieve confined noble metal catalyst for CO-SCR denitrification according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the silicon source is calculated as SiO<sub>2</sub>, the aluminum source is calculated as Al<sub>2</sub>O<sub>3</sub>, the alkali is calculated as at least one of Na<sub>2</sub>O or K<sub>2</sub>O, Ir salt of the Ir salt solution is calculated as Ir, and a molar ratio of the silicon source, the aluminum source, the alkali, the Ir salt, the first ligand and the second ligand in the third mixed solution is 1-8:1: 1-4:0.003-0 0.020:0.001-0.16:0.001-0.24.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The molecular sieve confined noble metal catalyst for CO-SCR denitrification according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a temperature of the hydrothermal crystallization reaction is 80-120° C. and a time is 3-48 h; a drying temperature is 80-120° C.; and a calcination temperature is 400-600° C., a time is 4-8 h, and a heating rate is 1-10° C./min.</claim-text>
+</claim>
+</claims>

@@ -1,0 +1,52 @@
+{
+  "applicationNumber": "13575735",
+  "publicationNumber": "US20120294970A1",
+  "publicationDate": "2012-11-22",
+  "nativeXmlSha256": "5e3be35db5b293afee7a714c92ec44cf92e90830787632f2fdf814ef02c193d3",
+  "claimsXmlSha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+  "officeActionDocumentIdentifiers": [
+    "I8A52WO0PXXIFW4"
+  ],
+  "officeActionMailDate": "2015-04-13",
+  "officeActionSection112Text": [
+    "claims 1-8 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nin claim 1, line 4, “the top surface” lacks antecedent basis in the claim; line 5, “the ends” and “the shafts” each lacks antecedent basis; line 6, “to connect the supporting frames one another” should be --to connect the supporting frames to one another-- for clarity; lines 8-9, “the connection frame” lacks antecedent basis and should be --the connecting frame--; line 9, “the lateral direction” lacks antecedent basis and is unclear as to exactly where this direction is located (i.e., lateral to what?); line 11, “the lateral side” lacks antecedent basis; line 13, “the underside surface” and “the lateral end” each lacks antecedent basis; line17, “the first stepped protrusion surface” lacks antecedent basis; and lines 23-24, “in the shape” is unclear and indefinite as to exactly what is intended to be claimed.\r\nin claim 3, line 5, “the opposite side to one side of the paperboard where the curled portion is formed” is unclear (the examiner suggests that the phrase be replaced by --said opposite side--); line 6, the ends and the shafts lacks antecedent basis; line 7, --to-- should — inserted before “one another”, and “the inside” lacks antecedent basis; line 9, “the rear side” lacks antecedent basis; and line13, “the rear side” lacks antecedent basis.\r\nin claim 4, line 3, “the rear end” lacks antecedent basis.\r\nin claim 6, line 5, “the underside surface” and “the lateral end” each lacks antecedent basis; lines 9-10, “the first stepped protrusion surface” lacks antecedent basis; lines 15-16, “in the shape” is unclear and indefinite as to exactly what is intended to be claimed; line 19, “the external sides” lacks antecedent basis; and line 21, “the center portions and the external sides each lacks antecedent basis.\r\nin claim 7, line 3, “the top surface” lacks antecedent basis; line 4, “the ends” and “the shafts” each lacks antecedent basis; line 6, --to-- should be inserted before “one another”; and line 8, “the top surface” lacks antecedent basis, “the connection frame” lacks antecedent basis and should be --the connecting frame--, and “the lateral direction” lacks antecedent basis and is unclear as to exactly where this direction is located (i.e., lateral to what?).\r\nin claim 8, line 3, “the top surface” lacks antecedent basis; line 4, “the ends” and “the shafts” each lacks antecedent basis; line 6, --to-- should be inserted before “one another”; and line 8, “the top surface” lacks antecedent basis, “the connection frame” lacks antecedent basis and should be --the connecting frame--, and “the lateral direction” lacks antecedent basis and is unclear as to exactly where this direction is located (i.e., lateral to what?)."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "H55LI68PPXXIFW3",
+      "officialDate": "2012-07-27T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "H5AXG8LHPXXIFW1",
+      "officialDate": "2012-07-27T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "H55LI68PPXXIFW3",
+      "officialDate": "2012-07-27T00:00:00.000-0400",
+      "sha256": "6cdba1c869a96682a11a916e421685e1f2542e287eabfbad452b7c935cdacec9",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    },
+    {
+      "documentIdentifier": "H5AXG8LHPXXIFW1",
+      "officialDate": "2012-07-27T00:00:00.000-0400",
+      "sha256": "27eb3b2215d859e017ef2b1db6e687b6058a25188f678f5fe704ad6e142b3aff",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [],
+      "sourceClaimCount": 0
+    }
+  ],
+  "documentInventoryCount": 43,
+  "documentInventoryRows": 43,
+  "primaryCpc": "B31F   1/0016",
+  "inForceEvidence": "Source-only replacement proposal. Native publication precedes OA and inventory chronology is preliminary only; numbered examiner association and actual operative original/adoption must be independently audited. No predictions inspected.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13575735",
+    "https://api.uspto.gov/api/v1/patent/applications/13575735/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "semantic-attorney-decision-required"
+}
