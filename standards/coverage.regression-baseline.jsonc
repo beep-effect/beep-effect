@@ -34853,6 +34853,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.inventory.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 90.47,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 2,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts": {
           "lines": 100,
           "statements": 100,
@@ -34887,6 +34899,18 @@
             "statements": 5,
             "branches": 0,
             "functions": 5
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Holds/Holds.sites.ts": {
+          "lines": 100,
+          "statements": 98.46,
+          "branches": 60,
+          "functions": 96.96,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts": {
