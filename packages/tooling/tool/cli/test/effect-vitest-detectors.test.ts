@@ -2110,6 +2110,37 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
     })
   );
 
+  it.effect("treats a spawned process the test kills as the native subject of a platform bundle", () =>
+    Effect.gen(function* () {
+      const imports =
+        'import { layer } from "@effect/vitest"; import { NodeServices } from "@effect/platform-node"; import * as ChildProcess from "effect/process/ChildProcess"; import * as FileSystem from "effect/FileSystem";';
+      const suite = (statements: string) =>
+        `layer(NodeServices.layer)((it) => { it.effect("x", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); ${statements} })); });`;
+      const reviewClasses = Effect.fnUntraced(function* (body: string) {
+        return A.map(
+          A.filter(yield* findings(body), (row) => row.ruleId === "EV010"),
+          (row) => row.class
+        );
+      });
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", ["fixture.ts"]); yield* child.kill({ killSignal: "SIGKILL" });')}`,
+        `${imports} const run = Fx.fnUntraced(function* () { const child = yield* ChildProcess.make("bun", []); yield* child.kill(); }); ${suite("yield* run();")}`,
+        `${imports} ${suite('const spawn = (mode) => ChildProcess.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), [], body);
+      for (const body of [
+        `${imports} ${suite('const child = yield* ChildProcess.make("bun", []); expect(yield* child.exitCode).toBe(0);')}`,
+        `${imports} ${suite('const child = yield* Fake.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite("const other = makeFake(); yield* other.kill();")}`,
+        `${imports} ${suite('let child = yield* ChildProcess.make("bun", []); yield* child.kill();')}`,
+        `${imports} ${suite('const spawn = (mode) => Fake.make("bun", [mode]); const child = yield* spawn("crash"); yield* child.kill();')}`,
+        `${imports} layer(NodeServices.layer)((it) => { it.effect("a", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); const child = yield* ChildProcess.make("bun", []); yield* child.kill(); })); }); layer(NodeServices.layer)((it) => { it.effect("b", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFileString("a"); yield* ChildProcess.make("bun", []); })); });`,
+      ])
+        deepStrictEqual(yield* reviewClasses(body), ["platform-resource-provenance-review"], body);
+    })
+  );
+
   it.effect("follows same-file helpers that read FileSystem in the harness context", () =>
     Effect.gen(function* () {
       const harness = 'import { layer } from "@effect/vitest";';
