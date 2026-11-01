@@ -1,0 +1,99 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "entityMentionConvention": "entity-mentions/v1",
+  "familyId": "11279554-root-25",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.95,
+  "resolvedClaimNumbers": [
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "25-28, 31-32",
+      "reason": "Numbered second-paragraph ground covers these selected claims. Selected 29/30/33/34 remain actual dependency context rather than independently asserted rejected claims; no sibling roots enter scope."
+    },
+    {
+      "quote": "claim 21, line 3",
+      "reason": "Retained office-action isolated 21 adjacent to claim-31 issue is not silently rewritten. Source critic independently accepted actual 31 rejection association."
+    },
+    {
+      "quote": "at least one solutions / the least one aspect / comprise the termination conditions include",
+      "reason": "Published grammatical defects stay exact; they do not force whole-claim abstention or authorize source repair."
+    }
+  ],
+  "referenceConcerns": [
+    {
+      "claimNumbers": [
+        26,
+        30
+      ],
+      "quotes": [
+        "at least one solutions",
+        "the modified solution"
+      ],
+      "reason": "The source modifies a quantified solution collection and later names a singular modified result without a unique singular introducing noun phrase. Result wording is preserved without arbitrarily assigning a single member or forcing identity across cross-breeding versus prior modification."
+    },
+    {
+      "claimNumber": 31,
+      "quote": "the one or more solutions",
+      "reason": "Direct dependency is 25; the quantified selection expression at least one of the solutions is retained in connecting text plus the explicit the solutions term. It does not borrow the selected-solution introduction from sibling 27 or invent a group antecedent."
+    },
+    {
+      "claimNumber": 32,
+      "quote": "the termination conditions",
+      "reason": "Plural conditions refine the single termination condition of 25, but no single member/collective identity is forced across the cardinality change. Literal criteria and duplicate comprise/include wording remain recorded."
+    },
+    {
+      "claimNumbers": [
+        25,
+        26,
+        31
+      ],
+      "quote": "the solutions",
+      "reason": "References to solution members of the introduced population are retained as surface terms without conflating the population entity with its members. The explicit each solution variable in 25.b.ii supplies the repeated quantified each solution in 25.b.iii, not an arbitrarily chosen member."
+    },
+    {
+      "claimNumbers": [
+        26,
+        27,
+        28,
+        31
+      ],
+      "quote": "the feasible operational state",
+      "reason": "Linked semantically to a feasible production state in 25.b.ii: the unique feasible state specified by each population solution. No alternate state is introduced on the relevant ancestry. Current operational state in sibling 34 is not used."
+    }
+  ],
+  "annotationRationale": "Fresh source-grammar extraction with explicit 25(a)/(b) nesting, six program functions under 25.b, five ordered genetic-modification steps under 26.a and three technique-selection steps under 27.a. Claim 32 four stated alternatives are explicit nested children. Clear functional relations preserve qualifiers, comparisons, selection and operating-state wording. The feasible operational state is the uniquely described feasible pipeline production state encoded by each solution in 25.b.ii, a source-semantic shortened name rather than a conclusion from examiner allegations. No contexts from independent roots 1/13/35 are used as antecedents. Relative clauses connect explicit participating terms; absent definite introductions stay visible.",
+  "counts": {
+    "trees": 10,
+    "elements": 39,
+    "terms": 115,
+    "edges": 129
+  },
+  "sourceValidation": {
+    "nativeClaimsMatchCanonicalIgnoringPermittedWhitespace": true,
+    "claimsXmlSha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+    "sourceEligibility": "Accepted retained source critic reviewed; source-audit historical gaps reconciled by its later source/PDF evidence where applicable. No new PDF or inventory authentication claimed."
+  },
+  "independence": "Fresh source-semantic extraction. No prior structural labels, production rules, P2-DESIGN, predictions, synthetic fixtures, conformance, network, secrets, git or delegation. Helpers locate manually specified source quotations, serialize chosen trees and validate spans; no decomposer used. Only this family expected.json and extractor.json written.",
+  "attorneyAdjudication": "pending; agent confidence is not attorney agreement",
+  "verification": {
+    "schema": "All resolved trees decoded successfully through the declared ClaimElementTree schema; schema contracts only, no decomposer.",
+    "spans": "All element/term/functional-part anchors are exact canonical UTF-16 spans; ordered nonoverlapping terms and complete functional partitions checked.",
+    "references": "All antecedent endpoints name actual labeled terms and targets stay on independently read natural dependency ancestry.",
+    "scope": "Every selected claim occurs exactly once as resolved; unselected context is not included."
+  }
+}

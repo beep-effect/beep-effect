@@ -1,0 +1,68 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A multiple computer system comprising:
+<claim-text>a first plurality of computers each interconnected via a communications network and a second like plurality of computers interconnected therewith;</claim-text>
+<claim-text>at least one memory location in each said second computer being a replica of a corresponding memory location in the corresponding first computer; and</claim-text>
+<claim-text>updating means for transmitting changes to the contents or values of said memory locations in said first computers to the corresponding memory locations of said second computers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said first computers each have a local memory which is accessible by each other first computer wherein said first computers form a distributed shared memory system.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system as in <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein said second computers each have a local memory which is updateable by the corresponding first computer.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory location via said communications network.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said updating means transmits changes in said first computer memory locations so the corresponding second computer memory locations by transmission directly from each said first computer to the corresponding second computer.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system as in <claim-ref idref="CLM-00001">claims 1</claim-ref>, including failure means to re-direct communications to and from any one of said first computers which fails to the corresponding second computer.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system as in <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein said failure means causes said second computer corresponding to said failed first computer to undertake the tasks previously undertaken by said failed first computer.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>each of said first computers executes a different portion of at least one application program each of which is written to execute on only a simple computer;</claim-text>
+<claim-text>each said second computer has a like application program portion as its corresponding first computer and all of said computers have an independent local memory; and</claim-text>
+<claim-text>at least one memory location in the independent memory of one of said first computers is replicated in each of said other first computers.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The system as in <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory location via said communications network.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The system as in <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein said updating means transmits changes in said first computer memory locations to the corresponding second computer memory locations by transmission directly from each said first computer to the corresponding second computer.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The system as in <claim-ref idref="CLM-00010">claim 10</claim-ref>, including failure means operable in the event of failure of any one or more of said first computers to cause the second computer corresponding to each said failed first computer to undertake the tasks previously undertaken by said failed first computer.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A dual computer system comprising:
+<claim-text>a first computer having an application program which is intolerant of computer failure;</claim-text>
+<claim-text>a second computer connected thereto to mirror said first computer, said second computer having a replica of said application program and having memory locations which replicate those of said first computer; and</claim-text>
+<claim-text>said computer system having updating means for updating said second computer memory locations with changes to the contents or values of the corresponding memory locations of said first computer.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system as in <claim-ref idref="CLM-00012">claim 12</claim-ref>, and having a plurality of interconnected said first computers, each of which has a corresponding second computer connected thereto to mirror the corresponding first computer.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system as in <claim-ref idref="CLM-00013">claim 13</claim-ref>, wherein said plurality of first computers comprises a cluster.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said updating means transmits to each said second computer data relating to the progress of execution of instructions achieved by the corresponding first computer.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system as in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each of said first computers executes an application program, or a portion thereof, which is intolerant of failure of the executing first computer.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system as in <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein said updating means transmits to each said second computer data relating to the progress of execution of instructions achieved by the corresponding first computer.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system as in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein each of said first computers executes an application program, or a portion thereof, which is intolerant of failure of the executing first computer. </claim-text>
+</claim>
+</claims>

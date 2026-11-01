@@ -1,0 +1,55 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An integrated physiological monitoring system comprising:
+<claim-text>a flexible substrate configured for skin contact;</claim-text>
+<claim-text>a plurality of sensors, each disposed on said substrate, comprising:
+<claim-text>a perspiration sensing system, comprising interdigitated electrodes for measuring sweat conductivity;</claim-text>
+<claim-text>a heatflux sensing system, comprising a thermopile array for measuring heat flux between skin and ambient environment;</claim-text>
+<claim-text>a heart rate sensing system, comprising a photoplethysmography sensor;</claim-text>
+</claim-text>
+<claim-text>a GPS positioning system disposed on said substrate, comprising a multi-constellation GNSS receiver for determining position, distance, velocity, and acceleration;</claim-text>
+<claim-text>a microprocessor disposed on said substrate configured to receive data from the plurality of sensors, and the GPS positioning system;</claim-text>
+<claim-text>a battery disposed on said substrate providing electrical power to the purality of sensors;</claim-text>
+<claim-text>programmable logic executed by said microprocessor, configured to compute energy expenditure, calories per mile, and calories per mile-per-hour by relating data from said plurality of sensors with GPS-derived distance and time measurements;</claim-text>
+<claim-text>a wireless communication system disposed on said substrate for transmitting computed metrics and for connecting to optional sensors; and</claim-text>
+<claim-text>a multi-modal display interface supporting smartwatch, smartphone, and bicycle handlebar-mounted display options.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of sensors also comprises a microneedle array with suitable enzyme coatings for measuring paracetamol in a user's blood.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said programmable logic calculates the calories per mile using a relationship: Calories/Mile=Total Energy Expenditure/GPS-derived Distance, where total energy expenditure is computed from integrated physiological sensor data.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said programmable logic also calculates the calories per mile-per-hour using a relationship: Calories/Speed=(Total Energy Expenditure/(Distance)/Average GPS-derived Velocity).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said GPS positioning system comprises a multi-constellation GNSS receiver capable of receiving signals from GPS, GLONASS, Galileo, and BeiDou satellite systems with position accuracy of ±2 meters.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said multi-modal display interface comprises:
+<claim-text>a Bluetooth Low Energy connectivity for smartwatch integration;</claim-text>
+<claim-text>a smartphone application with comprehensive analytics and route mapping;</claim-text>
+<claim-text>a bicycle handlebar display unit with weatherproof housing and universal mounting system.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising real-time efficiency optimization algorithms that provide pacing recommendations based on current physiological state, gastric emptying rate (GER) data, GPS-derived terrain analysis, and target performance goals.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said wireless communication system comprises a plurality of wireless modules including WiFi, Bluetooth Low Energy, and ANT+ protocols for simultaneous connection to multiple display devices.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising enhanced power management with GPS-optimized duty cycling that adjusts GPS update rates based on movement patterns and activity type.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said programmable logic implements terrain-adjusted efficiency calculations using GPS-derived elevation data to account for grade and environmental factors in energy expenditure per distance computations.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The integrated physiological monitoring system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a charging system connected to the battery; and</claim-text>
+<claim-text>a circuit that receives electrical current from the heatflux sensors and makes it available to the charging system.</claim-text>
+</claim-text>
+</claim>
+</claims>

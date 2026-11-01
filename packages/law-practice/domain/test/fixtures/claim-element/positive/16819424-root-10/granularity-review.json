@@ -1,0 +1,64 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "entity-mentions/v1",
+  "familyId": "16819424-root-10",
+  "role": "extractor-granularity-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "reviewedAnchors": [
+    {
+      "claimNumber": 10,
+      "path": "10.a.iii",
+      "anchor": {
+        "startChar": 389,
+        "endChar": 400,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states mutual coupling of explicit punch and punch sleeve through axial forced guidance. Keep both participants and the complete source coupling relation.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 11,
+      "path": "11.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states relative rotation of the explicit punch sleeve and punch. Keep both participants and the full rotation/release/movement function.",
+      "removedAntecedents": []
+    },
+    {
+      "claimNumber": 12,
+      "path": "12.a",
+      "anchor": {
+        "startChar": 111,
+        "endChar": 122,
+        "quote": "one another"
+      },
+      "action": "term-to-functional-text",
+      "reason": "One another states relative rotation of the explicit punch sleeve and punch. Keep both participant terms and complete drive/driver rotation relation.",
+      "removedAntecedents": []
+    }
+  ],
+  "before": {
+    "claims": 8,
+    "elements": 34,
+    "terms": 122,
+    "edges": 111
+  },
+  "after": {
+    "claims": 8,
+    "elements": 34,
+    "terms": 119,
+    "edges": 111
+  },
+  "remainingUncertainty": [],
+  "existingConcerns": "All prior source/referent concerns retained in extractor receipt. This is a bounded consistency correction, not source eligibility or attorney acceptance.",
+  "independence": "Read clarified v2/entity-mentions convention and decision entry, exact canonical source and reviewed annotations. No implementation/rules/predictions/synthetic/conformance artifacts/network/secrets/git/delegation. Helpers transform only the manually reviewed listed anchors, merge contiguous source text, and verify geometry.",
+  "validation": "Exact source spans; unchanged element anchors/kinds/paths; unrelated terms retained; ordered nonoverlapping terms; local/foreign reference coherence; full contiguous functional reconstruction; runtime ClaimElementTree decode all passed."
+}

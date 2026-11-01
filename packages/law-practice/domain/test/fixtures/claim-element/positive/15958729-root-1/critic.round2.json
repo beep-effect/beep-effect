@@ -1,0 +1,71 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "annotationConvention": "entity-mentions/v1",
+  "headConvention": "lexical-head/v1",
+  "familyId": "15958729-root-1",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "findings": [],
+  "reviewScope": {
+    "kind": "independent lexical-head-only revision review",
+    "headCount": 1,
+    "preservedSemanticReview": "critic.round1.json",
+    "previousRound": 1,
+    "currentRound": 2
+  },
+  "headReviewEvidence": [
+    {
+      "claimNumber": 1,
+      "path": "1.a",
+      "anchor": {
+        "startChar": 216,
+        "endChar": 244,
+        "quote": "its oppositely disposed side"
+      },
+      "determiner": "bare",
+      "priorHead": "its oppositely disposed side",
+      "acceptedHead": "oppositely disposed side",
+      "disposition": "accepted under lexical-head/v1; exact source anchor and all non-head fields preserved"
+    }
+  ],
+  "reviewNotes": [
+    "In claim 1, its grammatically determines oppositely disposed side. Oppositely disposed is a substantive directional modifier and remains in the head; the piercing-die clause stays outside this term. The whole possessive quote and its existing referential treatment remain unchanged.",
+    "The current change is accepted as a lexical-head-only revision of the prior independently accepted semantic reference. Earlier full semantic/source review evidence remains in the immutable prior-round critic receipt; this review does not claim fresh original-PDF or attorney authentication."
+  ],
+  "verification": [
+    "Read lexical-head/v1 and manually adjudicated each listed correction against exact canonical and native source claim context. Checked nearby pronominal/cardinal/minimum/partitive term heads for consistency with supported determiner tags.",
+    "Verified all head-review preservedPriorReceipts SHA-256 values, including the prior critic receipt. Existing critic.json was byte-identical to that preserved prior-round receipt before replacement.",
+    "Independently reversed exactly the reviewed head fields and compared the entire resulting JSON tree with expected.round1.json: equal. All anchors, determiners, elements, typed edges, dependency structure, functional parts and claim scope therefore remain unchanged.",
+    "Checked each changed term source anchor as half-open UTF-16 offsets. Native source.claims.xml SHA-256 matches provenance.claimsXmlSha256, and all native claims match canonical claims after only printed-number removal and whitespace normalization. No decomposer or implementation rule was used."
+  ],
+  "referenceSha256": "bfe32abe2b9b6e3267a3e6d627d9aa6435be8b46e058cec4f5bde3f4cb2ba627",
+  "extractorSha256": "023f12ba599c4d3c76efef1ae31cf30fc3dc9a8f9cf1d87a10680e0eb7d0f0c0",
+  "headReviewSha256": "8b26201047fb948a46496b69a1cbdce7289f462d52a9a6870b193e39efb122ac",
+  "preservedPriorCritic": {
+    "file": "critic.round1.json",
+    "sha256": "ee8d443f0dd3bff7853a0765500d63ef0b10e87c016eb80faac77053c4a7535f",
+    "round": 1,
+    "verdict": "accepted",
+    "confidence": 0.96
+  },
+  "referenceConcernsDisposition": "Prior semantic and source concerns remain unchanged and explicitly documented in extractor.json and the preserved prior-round critic. Head changes add no antecedent, identity assertion, source repair or scope expansion.",
+  "independence": "Separate GPT-6.1-Sol medium critic session, independent of extractor. Only current critic.json files written. Reviewed protocol, canonical/native sources, existing semantic receipts and head-review diffs. No production/decomposer, P2-DESIGN, predictions, synthetic/conformance fixtures or source/expected/extractor edits.",
+  "attorneyAdjudication": "unchanged; pending actual human review where required; agent confidence is not attorney agreement",
+  "corpusStatus": "Incremental semantic-reference acceptance only; no active sample admission, goal completion, accuracy result or human agreement claimed."
+}

@@ -1,0 +1,88 @@
+{
+  "familyId": "16628033-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "confidenceScope": "Unsupported intended source-transition classification only; no resolved reference trees.",
+  "resolvedClaimNumbers": [],
+  "unresolved": [
+    {
+      "claimNumber": 1,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 2,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 3,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 4,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 5,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 6,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 7,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 8,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 9,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    },
+    {
+      "claimNumber": 10,
+      "reason": "Intended source preamble/body transition characterized in that is unsupported by PatentClaimTransition. Later includes/including/wherein are incidental constituents and cannot faithfully replace the intended boundary.",
+      "sourceQuote": "characterized in that,"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action KMUHYPEFLDFLYX7 dated 2021-03-29 explicitly rejects selected claims 1, 3-4, 8-10; claims 2,5,6,7 are family context, not individually cited positives. Publication US20200383794A1 on 2020-12-10 precedes rejection.",
+    "Natural language matches XML dependencies: 2->1,3->2,4->3,5->4,6->1,7->1,8->7,9->1,10->1. Claim 10 changes category to a use method but expressly refers to claim 1; preserve source dependency.",
+    "All selected claims are reported exact non-whitespace matches to original OCR corroboration. In-force association still rests on complete-inventory evidence; no attorney adjudication.",
+    "All ten source coverage failures remain in the frozen sample denominator; empty expected array must not be interpreted as a clean family."
+  ],
+  "familyStatus": "unresolved",
+  "rationale": "Every selected claim uses the same unsupported leading characterized in that transition. No source wording was rewritten to construct preamble/body fields.",
+  "independence": "No decomposer/policy, fixtures or predictions inspected/run. Critic and attorney review pending.",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}

@@ -1,0 +1,186 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12451999-root-15",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [15, 16, 17, 18, 19, 20, 21],
+  "findings": [],
+  "evidence": [
+    "Retained excerpt has no112(b)/second-paragraph ground. Full inventory shows Preliminary Amendment and two same-date CLMs; this identifies conflicting versions, not their reliable struck/deleted interpretation. No structured Del/Ins recovered.",
+    "Full OA record HT7HN8AGPXXIFW4 matches retained action mail date2014-03-27. Its actual Claim Rejections -35USC112 heading and explicit112(b)/pre-AIA second-paragraph quotations directly precede numbered antecedent grounds, including selected15 running direction and19 borders. Together with independently inspected marked original PDF5-6 (printed6-7), which explicitly resolves19-21->15 and selected15-21 wording, this resolves both prior source holds. Do not infer every selected number has a separate detailed ground; selected15/19 association suffices for the meaningful natural root15 family. Examiner21 plural strips differs from native singular strip in strip run; it is an isolated inaccurate quotation and is not used as sole version evidence."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "f53a448d8a343db20c3f89d13a5fd99f4562207696b3f7bd1a94ea7ed5cfe4d3",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "b657f25012192ecd3cb6721a3f9cd49f8d29976b1633fa43e584822eea28386d",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "fa3c0fe7399d9b1b9649db1377462d84f553ca0fcb14daca0f5bc40e7596a894",
+    "inventoryReportedCount": 90,
+    "inventoryActualRows": 90,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "G3BGXCDLPPOPPY5",
+        "documentCode": "A.PE",
+        "officialDate": "2009-12-11T00:00:00.000-0500",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "G3BGXCE8PPOPPY5",
+        "documentCode": "CLM",
+        "officialDate": "2009-12-11T00:00:00.000-0500",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "G3BGXCEKPPOPPY5",
+        "documentCode": "REM",
+        "officialDate": "2009-12-11T00:00:00.000-0500",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      },
+      {
+        "documentIdentifier": "G3BGXCGDPPOPPY5",
+        "documentCode": "CLM",
+        "officialDate": "2009-12-11T00:00:00.000-0500",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "HT7HN8AGPXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2014-03-27T00:00:00.000-0400"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "G3BGXCE8PPOPPY5",
+        "exists": true,
+        "sha256": "f51c4025ab353badcb82d5e02701d5dbff50a775eac240c62f5840bfc2aa7e73",
+        "sha256Matches": true
+      },
+      {
+        "documentIdentifier": "G3BGXCGDPPOPPY5",
+        "exists": true,
+        "sha256": "2ffcb85ac2b20bd39978b9da0fbc9826e8e1ac9de79d8cec53303e3e52c3c97a",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Full OA record HT7HN8AGPXXIFW4 matches retained action mail date2014-03-27. Its actual Claim Rejections -35USC112 heading and explicit112(b)/pre-AIA second-paragraph quotations directly precede numbered antecedent grounds, including selected15 running direction and19 borders. Together with independently inspected marked original PDF5-6 (printed6-7), which explicitly resolves19-21->15 and selected15-21 wording, this resolves both prior source holds. Do not infer every selected number has a separate detailed ground; selected15/19 association suffices for the meaningful natural root15 family. Examiner21 plural strips differs from native singular strip in strip run; it is an isolated inaccurate quotation and is not used as sole version evidence.",
+  "previousRounds": [
+    {
+      "protocolVersion": "semantic-reference/v2",
+      "familyId": "12451999-root-15",
+      "role": "source-eligibility-critic",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "round": 1,
+      "confidence": 0.99,
+      "verdict": "unresolved",
+      "reviewedClaimNumbers": [15, 16, 17, 18, 19, 20, 21],
+      "findings": [
+        {
+          "claimNumber": 21,
+          "evidence": {
+            "examinerQuote": "claim 21 recites the limitation the strips",
+            "nativeQuote": "in case of a strip breakage, is automatically pulled out of the strip run",
+            "original19Quote": "A method according to any one o f th e claim 15 to 18",
+            "native19Quote": "A method according to claim 15"
+          },
+          "requiredCorrection": "Keep source unresolved. Supply actual statutory rejection heading/scope and authoritative adopted amendment text; raw marked-OCR alternatives cannot establish operative dependencies."
+        }
+      ],
+      "evidence": [
+        "Retained excerpt has no112(b)/second-paragraph ground. Full inventory shows Preliminary Amendment and two same-date CLMs; this identifies conflicting versions, not their reliable struck/deleted interpretation. No structured Del/Ins recovered.",
+        "Full OA record HT7HN8AGPXXIFW4 matches retained action mail date2014-03-27. Its actual Claim Rejections -35USC112 heading and explicit112(b)/pre-AIA second-paragraph quotations directly precede numbered antecedent grounds, including selected15 running direction and19 borders. Together with independently inspected marked original PDF5-6 (printed6-7), which explicitly resolves19-21->15 and selected15-21 wording, this resolves both prior source holds. Do not infer every selected number has a separate detailed ground; selected15/19 association suffices for the meaningful natural root15 family. Examiner21 plural strips differs from native singular strip in strip run; it is an isolated inaccurate quotation and is not used as sole version evidence."
+      ],
+      "sourceChecks": {
+        "nativeApplicationPublicationDateMatch": true,
+        "nativePublicationSha256": "f53a448d8a343db20c3f89d13a5fd99f4562207696b3f7bd1a94ea7ed5cfe4d3",
+        "nativePublicationHashMatches": true,
+        "sourceClaimsXmlSha256": "b657f25012192ecd3cb6721a3f9cd49f8d29976b1633fa43e584822eea28386d",
+        "sourceClaimsHashMatches": true,
+        "fullInventorySha256": "fa3c0fe7399d9b1b9649db1377462d84f553ca0fcb14daca0f5bc40e7596a894",
+        "inventoryReportedCount": 90,
+        "inventoryActualRows": 90,
+        "preOfficeActionClaimAndAmendmentDocuments": [
+          {
+            "documentIdentifier": "G3BGXCDLPPOPPY5",
+            "documentCode": "A.PE",
+            "officialDate": "2009-12-11T00:00:00.000-0500",
+            "description": "Preliminary Amendment"
+          },
+          {
+            "documentIdentifier": "G3BGXCE8PPOPPY5",
+            "documentCode": "CLM",
+            "officialDate": "2009-12-11T00:00:00.000-0500",
+            "description": "Claims"
+          },
+          {
+            "documentIdentifier": "G3BGXCEKPPOPPY5",
+            "documentCode": "REM",
+            "officialDate": "2009-12-11T00:00:00.000-0500",
+            "description": "Applicant Arguments/Remarks Made in an Amendment"
+          },
+          {
+            "documentIdentifier": "G3BGXCGDPPOPPY5",
+            "documentCode": "CLM",
+            "officialDate": "2009-12-11T00:00:00.000-0500",
+            "description": "Claims"
+          }
+        ],
+        "citedOfficeActionInventoryRows": [
+          {
+            "documentIdentifier": "HT7HN8AGPXXIFW4",
+            "documentCode": "CTNF",
+            "officialDate": "2014-03-27T00:00:00.000-0400"
+          }
+        ],
+        "originalCachedHashes": [
+          {
+            "documentIdentifier": "G3BGXCE8PPOPPY5",
+            "exists": true,
+            "sha256": "f51c4025ab353badcb82d5e02701d5dbff50a775eac240c62f5840bfc2aa7e73",
+            "sha256Matches": true
+          },
+          {
+            "documentIdentifier": "G3BGXCGDPPOPPY5",
+            "exists": true,
+            "sha256": "2ffcb85ac2b20bd39978b9da0fbc9826e8e1ac9de79d8cec53303e3e52c3c97a",
+            "sha256Matches": true
+          }
+        ]
+      },
+      "extractorVerdictReviewed": "unresolved",
+      "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+      "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+    }
+  ],
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": false,
+  "pdfCorroboration": {
+    "documentIdentifier": "G3BGXCE8PPOPPY5",
+    "sha256": "725fb49cb558334c600c64883b4137372a83a1c7e7d2be162e3f37cf762767bb",
+    "pdfPagesInspected": [5, 6],
+    "printedPages": [6, 7],
+    "purpose": "Independent visual original corroboration only."
+  },
+  "additionalOfficeActionEvidence": {
+    "documentIdentifier": "HT7HN8AGPXXIFW4",
+    "submissionDate": "2014-03-27",
+    "cachedResponseSha256": "afe6d164ca40807b17935e6b29ebafbd891dc99b8500e3ddacf2afb255e6e671",
+    "groundHeading": "Claim Rejections - 35 USC \u00a7 112",
+    "statuteHeadingQuotes": [
+      "The following is a quotation of 35 U.S.C. 112(b):",
+      "The following is a quotation of 35 U.S.C. 112 (pre-AIA ), second paragraph:"
+    ],
+    "numberedGroundQuote": "Claim 15 recites the limitation the running direction in line 6, appears to lack antecedent basis.",
+    "scopeLimitation": "Actual heading/statute and specific selected15/19 numbered grounds establish statutory association; no invented blanket language."
+  }
+}

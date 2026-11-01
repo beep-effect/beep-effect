@@ -1,0 +1,90 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A pool cleaning robot, comprising:
+<claim-text>a body (<b>101</b>);</claim-text>
+<claim-text>a filtering box (<b>711</b>) detachably mounted on the body (<b>101</b>); and</claim-text>
+<claim-text>an in-position detection mechanism for the filtering box, wherein the in-position detection mechanism for the filtering box is configured to detect whether the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>),</claim-text>
+<claim-text>wherein the in-position detection mechanism for the filtering box comprises a sensing assembly (<b>980</b>), and the sensing assembly (<b>980</b>) comprises a sensing part (<b>981</b>) and a sensing mating part (<b>982</b>),</claim-text>
+<claim-text>wherein the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) are both disposed at a position other than the filtering box (<b>711</b>), and the filtering box (<b>711</b>) moves, so that the sensing part (<b>981</b>) mates with the sensing mating part (<b>982</b>) to detect whether the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The pool cleaning robot according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein that the sensing part (<b>981</b>) mates with the sensing mating part (<b>982</b>) to detect whether the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>) indicates that if a distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is less than or equal to a detection distance, it indicates that the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), or if the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is greater than the detection distance, it indicates that the filtering box (<b>711</b>) is not mounted in position on the body (<b>101</b>),
+<claim-text>wherein the detection distance is a maximum distance at which the sensing part (<b>981</b>) is capable of sensing the sensing mating part (<b>982</b>) or the sensing mating part (<b>982</b>) is capable of sensing the sensing part (<b>981</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The pool cleaning robot according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, comprising a filtering box cavity (<b>1023</b>) and a first sealed cavity (<b>1021</b>), wherein the filtering box (<b>711</b>) is detachably disposed in the filtering box cavity (<b>1023</b>); and
+<claim-text>the in-position detection mechanism for the filtering box further comprises a sensing drive assembly (<b>990</b>), wherein the sensing part (<b>981</b>) is disposed on the sensing drive assembly (<b>990</b>), and the sensing mating part (<b>982</b>) is disposed in the first sealed cavity (<b>1021</b>), or the sensing part (<b>981</b>) is disposed in the first sealed cavity (<b>1021</b>), and the sensing mating part (<b>982</b>) is disposed on the sensing drive assembly (<b>990</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The pool cleaning robot according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the filtering box (<b>711</b>) acts on the sensing drive assembly (<b>990</b>), so that the sensing part (<b>981</b>) mates with the sensing mating part (<b>982</b>) to detect whether the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>).</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein in a process of placing the filtering box (<b>711</b>) in the filtering box cavity (<b>1023</b>), the filtering box (<b>711</b>) presses down on the sensing drive assembly (<b>990</b>), and then the sensing drive assembly (<b>990</b>) moves, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is less than or equal to the detection distance.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein in a process of removing the filtering box (<b>711</b>) from the filtering box cavity (<b>1023</b>), the sensing drive assembly (<b>990</b>) rises, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is greater than the detection distance.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the sensing drive assembly (<b>990</b>) is disposed between the filtering box cavity (<b>1023</b>) and the first sealed cavity (<b>1021</b>).</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the sensing drive assembly (<b>990</b>) is telescopically connected to the filtering box cavity (<b>1023</b>);
+<claim-text>in a process of placing the filtering box (<b>711</b>) in the filtering box cavity (<b>1023</b>), the filtering box (<b>711</b>) presses down on the sensing drive assembly (<b>990</b>), and then the sensing drive assembly (<b>990</b>) is pressed down and lowered, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is less than or equal to the detection distance; and</claim-text>
+<claim-text>in a process of removing the filtering box (<b>711</b>) from the filtering box cavity (<b>1023</b>), the sensing drive assembly (<b>990</b>) rises and is reset, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is greater than the detection distance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the sensing drive assembly (<b>990</b>) is rotatably disposed;
+<claim-text>in a process of placing the filtering box (<b>711</b>) in the filtering box cavity (<b>1023</b>), the filtering box (<b>711</b>) acts on one end of the sensing drive assembly (<b>990</b>), enabling the end of the sensing drive assembly (<b>990</b>) to be lowered, and then the sensing drive assembly (<b>990</b>) rotates, enabling another end of the sensing drive assembly (<b>990</b>) to rise, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is less than or equal to the detection distance; and</claim-text>
+<claim-text>in a process of removing the filtering box (<b>711</b>) from the filtering box cavity (<b>1023</b>), the end of the sensing drive assembly (<b>990</b>) rises and is reset, and the another end of the sensing drive assembly (<b>990</b>) is lowered and reset, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is greater than the detection distance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The pool cleaning robot according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the sensing drive assembly (<b>990</b>) comprises a sensing bracket (<b>991</b>) and a sensing elastic part (<b>992</b>), wherein a first bracket portion (<b>99111</b>) is disposed on one end of the sensing bracket (<b>991</b>), and a second bracket portion (<b>99121</b>) is disposed on another end of the sensing bracket (<b>991</b>), wherein the first bracket portion (<b>99111</b>) is located inside the filtering box cavity (<b>1023</b>), the second bracket portion (<b>99121</b>) is provided with the sensing mating part (<b>982</b>) and located outside the filtering box cavity (<b>1023</b>), and the sensing elastic part (<b>992</b>) is connected between the sensing bracket (<b>991</b>) and the filtering box cavity (<b>1023</b>).</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The pool cleaning robot according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein in a process of placing the filtering box (<b>711</b>) in the filtering box cavity (<b>1023</b>), the filtering box (<b>711</b>) presses down on the first bracket portion (<b>99111</b>), the second bracket portion (<b>99121</b>) is pressed down with the first bracket portion (<b>99111</b>), and the sensing elastic part (<b>992</b>) is compressed, so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is less than or equal to the detection distance; and
+<claim-text>in a process of removing the filtering box (<b>711</b>) from the filtering box cavity (<b>1023</b>), the sensing bracket (<b>991</b>) rises under an action of the sensing elastic part (<b>992</b>), enabling the sensing mating part (<b>982</b>) to be away from the sensing part (<b>981</b>), so that the distance between the sensing part (<b>981</b>) and the sensing mating part (<b>982</b>) is greater than the detection distance.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The pool cleaning robot according to <claim-ref idref="CLM-00010">claim 10</claim-ref>, wherein the sensing bracket (<b>991</b>) comprises a first sensing bracket (<b>9911</b>) and a second sensing bracket (<b>9912</b>), wherein the first sensing bracket (<b>9911</b>) is detachably connected to the second sensing bracket (<b>9912</b>), the first sensing bracket (<b>9911</b>) is disposed inside the filtering box cavity (<b>1023</b>), the second sensing bracket (<b>9912</b>) is disposed outside the filtering box cavity (<b>1023</b>), the first bracket portion (<b>99111</b>) is disposed on an end of the first sensing bracket (<b>9911</b>), wherein the end of the first sensing bracket (<b>9911</b>) faces the interior of the filtering box cavity (<b>1023</b>), and the second bracket portion (<b>99121</b>) is disposed on an end of the second sensing bracket (<b>9912</b>), wherein the end of the second sensing bracket (<b>9912</b>) faces the exterior of the filtering box cavity (<b>1023</b>).</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The pool cleaning robot according to <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein a sensing sliding groove is disposed on the filtering box cavity (<b>1023</b>), and the first sensing bracket (<b>9911</b>) or the second sensing bracket (<b>9912</b>) slides in the sensing sliding groove.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The pool cleaning robot according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the sensing part (<b>981</b>) is a Hall sensing part, and the sensing mating part (<b>982</b>) is a magnet, wherein when the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), the magnet and the Hall sensing part sense each other.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The pool cleaning robot according to <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the sensing part (<b>981</b>) is waterproofed or is disposed in a sealed space.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The pool cleaning robot according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a controller disposed on the body (<b>101</b>) and communicatively connected to the in-position detection mechanism for the filtering box.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The pool cleaning robot according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the in-position detection mechanism for the filtering box further comprises:
+<claim-text>an alarm part configured to give an alarm when the filtering box (<b>711</b>) is not mounted in position on the body (<b>101</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The pool cleaning robot according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>a positioning assembly disposed between the body (<b>101</b>) and the filtering box (<b>711</b>) and configured to constrain a position of the filtering box (<b>711</b>) on the body (<b>101</b>).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The pool cleaning robot according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the positioning assembly comprises a positioning groove and a positioning protrusion, wherein the positioning groove is disposed on the body (<b>101</b>), the positioning protrusion is disposed on the filtering box (<b>711</b>), and when the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), the positioning protrusion is located in the positioning groove; or
+<claim-text>the positioning assembly comprises a positioning groove and a positioning protrusion, wherein the positioning protrusion is disposed on the body (<b>101</b>), the positioning groove is disposed on the filtering box (<b>711</b>), and when the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), the positioning protrusion is located in the positioning groove.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The pool cleaning robot according to <claim-ref idref="CLM-00018">claim 18</claim-ref>, wherein the positioning assembly comprises a fastening groove and a fastening hook, wherein the fastening groove is disposed on the body (<b>101</b>), the fastening hook is disposed on the filtering box (<b>711</b>), and when the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), the fastening groove is clamped with the fastening hook; or
+<claim-text>the positioning assembly comprises a fastening groove and a fastening hook, wherein the fastening hook is disposed on the body (<b>101</b>), the fastening groove is disposed on the filtering box (<b>711</b>), and when the filtering box (<b>711</b>) is mounted in position on the body (<b>101</b>), the fastening groove is clamped with the fastening hook.</claim-text>
+</claim-text>
+</claim>
+</claims>

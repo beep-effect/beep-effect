@@ -1,0 +1,149 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A system, comprising:
+<claim-text>a processor; and</claim-text>
+<claim-text>a memory coupled to the processor and configured to provide the processor with instructions which when executed cause the processor to:
+<claim-text>obtain a representation of a printed circuit board assembly (PCBA) that includes a bare printed circuit board (PCB) comprising one or more copper layers and one or more dielectric layers; and</claim-text>
+<claim-text>generate a representation of a connected PCBA based on the bare PCB, including by:
+<claim-text>positioning a set of voltage supply terminals and a set of ground terminals that are associated with supplying power to a plurality of circuit board components;</claim-text>
+<claim-text>positioning a plurality of component pads, wherein a component pad in the plurality of component pads is electrically connected to either (1) at least one voltage supply terminal in the set of voltage supply terminals or (2) at least one ground terminal in the set of ground terminals, but not to both;</claim-text>
+<claim-text>configuring, based at least in part on a set of via-to-via spacing rules, a plurality of conductive paths, including:
+<claim-text>at least one voltage supply conductive path between a first voltage supply terminal and a second voltage supply terminal in the set of voltage supply terminals;</claim-text>
+<claim-text>at least one ground conductive path between a first ground terminal and a second ground terminal in the set of ground terminals; and</claim-text>
+<claim-text>at least one data conductive path associated with data communication; and</claim-text>
+</claim-text>
+<claim-text>electrically connecting at least some of the plurality of circuit board components to at least some of the plurality of component pads, via at least some of the set of voltage supply terminals and via at least some of the set of ground terminals.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The system recited in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein:
+<claim-text>the set of via-to-via spacing rules includes (1) an initial subset of via-to-via spacing rules and (2) a second subset of via-to-via spacing rules with closer via-to-via spacing than is permitted by the initial subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>initially applying, independent of a signal property associated with a pair of conductive paths being evaluated, the initial subset of via-to-via spacing rules to the pair of conductive paths being evaluated;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated violates the initial subset of via-to-via spacing rules, determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to be associated with a high-current power/ground signal, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to not be associated with a high-current power/ground signal, generating a failure report for the pair of conductive paths being evaluated for violating the initial subset of via-to-via spacing rules.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The system recited in <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal includes one or more of the following: selecting a plurality of top highest current power signals and associated ground signals, or using a threshold associated with a current level.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The system recited in <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein:
+<claim-text>the second subset of via-to-via spacing rules is associated with different high-current power/ground signals;</claim-text>
+<claim-text>the set of via-to-via spacing rules further includes a third subset of via-to-via spacing rules that is associated with same high-current power/ground signals with closer via-to-via spacing than is permitted by the second subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>determining whether the pair of conductive paths being evaluated is associated with same high-current power/ground signals or different high-current power/ground signals;</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with different high-current power/ground signals, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with same high-current power/ground signals, applying the third subset of via-to-via spacing rules to the pair of conductive paths being evaluated.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The system recited in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the set of via-to-via spacing rules includes at least one spacing rule associated with a pitch between a first center of a first drill hole and a second center of a second drill hole.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The system recited in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein at least one of the following includes a plated-through-hole (PTH) via: the at least one voltage supply conductive path, the at least one ground conductive path, or the at least one data conductive path.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The system recited in <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the plurality of circuit board components includes one or more of the following: an integrated circuit (IC), an application specific integrated circuit (ASIC), an area array package (AAP), a direct current (DC)-to-direct current (DC) converter, a switching power supplier, a low dropout (LDO) power supplier, a socket, a connector, or a discrete component.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. A method, comprising:
+<claim-text>obtaining a representation of a printed circuit board assembly (PCBA) that includes a bare printed circuit board (PCB) comprising one or more copper layers and one or more dielectric layers; and</claim-text>
+<claim-text>generating a representation of a connected PCBA based on the bare PCB, including by:
+<claim-text>positioning a set of voltage supply terminals and a set of ground terminals that are associated with supplying power to a plurality of circuit board components;</claim-text>
+<claim-text>positioning a plurality of component pads, wherein a component pad in the plurality of component pads is electrically connected to either (1) at least one voltage supply terminal in the set of voltage supply terminals or (2) at least one ground terminal in the set of ground terminals, but not to both;</claim-text>
+<claim-text>configuring, based at least in part on a set of via-to-via spacing rules, a plurality of conductive paths, including:
+<claim-text>at least one voltage supply conductive path between a first voltage supply terminal and a second voltage supply terminal in the set of voltage supply terminals;</claim-text>
+<claim-text>at least one ground conductive path between a first ground terminal and a second ground terminal in the set of ground terminals; and</claim-text>
+<claim-text>at least one data conductive path associated with data communication; and</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>electrically connecting at least some of the plurality of circuit board components to at least some of the plurality of component pads, via at least some of the set of voltage supply terminals and via at least some of the set of ground terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method recited in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein:
+<claim-text>the set of via-to-via spacing rules includes (1) an initial subset of via-to-via spacing rules and (2) a second subset of via-to-via spacing rules with closer via-to-via spacing than is permitted by the initial subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>initially applying, independent of a signal property associated with a pair of conductive paths being evaluated, the initial subset of via-to-via spacing rules to the pair of conductive paths being evaluated;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated violates the initial subset of via-to-via spacing rules, determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to be associated with a high-current power/ground signal, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to not be associated with a high-current power/ground signal, generating a failure report for the pair of conductive paths being evaluated for violating the initial subset of via-to-via spacing rules.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method recited in <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal includes one or more of the following: selecting a plurality of top highest current power signals and associated ground signals, or using a threshold associated with a current level.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method recited in <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein:
+<claim-text>the second subset of via-to-via spacing rules is associated with different high-current power/ground signals;</claim-text>
+<claim-text>the set of via-to-via spacing rules further includes a third subset of via-to-via spacing rules that is associated with same high-current power/ground signals with closer via-to-via spacing than is permitted by the second subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>determining whether the pair of conductive paths being evaluated is associated with same high-current power/ground signals or different high-current power/ground signals;</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with different high-current power/ground signals, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with same high-current power/ground signals, applying the third subset of via-to-via spacing rules to the pair of conductive paths being evaluated.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The method recited in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the set of via-to-via spacing rules includes at least one spacing rule associated with a pitch between a first center of a first drill hole and a second center of a second drill hole.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The method recited in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein at least one of the following includes a plated-through-hole (PTH) via: the at least one voltage supply conductive path, the at least one ground conductive path, or the at least one data conductive path.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The method recited in <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein the plurality of circuit board components includes one or more of the following: an integrated circuit (IC), an application specific integrated circuit (ASIC), an area array package (AAP), a direct current (DC)-to-direct current (DC) converter, a switching power supplier, a low dropout (LDO) power supplier, a socket, a connector, or a discrete component.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A computer program product embodied in a non-transitory computer readable medium and comprising computer instructions for:
+<claim-text>obtaining a representation of a printed circuit board assembly (PCBA) that includes a bare printed circuit board (PCB) comprising one or more copper layers and one or more dielectric layers; and</claim-text>
+<claim-text>generating a representation of a connected PCBA based on the bare PCB, including by:
+<claim-text>positioning a set of voltage supply terminals and a set of ground terminals that are associated with supplying power to a plurality of circuit board components;</claim-text>
+<claim-text>positioning a plurality of component pads, wherein a component pad in the plurality of component pads is electrically connected to either (1) at least one voltage supply terminal in the set of voltage supply terminals or (2) at least one ground terminal in the set of ground terminals, but not to both;</claim-text>
+<claim-text>configuring, based at least in part on a set of via-to-via spacing rules, a plurality of conductive paths, including:
+<claim-text>at least one voltage supply conductive path between a first voltage supply terminal and a second voltage supply terminal in the set of voltage supply terminals;</claim-text>
+<claim-text>at least one ground conductive path between a first ground terminal and a second ground terminal in the set of ground terminals; and</claim-text>
+<claim-text>at least one data conductive path associated with data communication; and</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>electrically connecting at least some of the plurality of circuit board components to at least some of the plurality of component pads, via at least some of the set of voltage supply terminals and via at least some of the set of ground terminals.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The computer program product recited in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein:
+<claim-text>the set of via-to-via spacing rules includes (1) an initial subset of via-to-via spacing rules and (2) a second subset of via-to-via spacing rules with closer via-to-via spacing than is permitted by the initial subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>initially applying, independent of a signal property associated with a pair of conductive paths being evaluated, the initial subset of via-to-via spacing rules to the pair of conductive paths being evaluated;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated violates the initial subset of via-to-via spacing rules, determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal;</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to be associated with a high-current power/ground signal, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event the pair of conductive paths being evaluated is determined to not be associated with a high-current power/ground signal, generating a failure report for the pair of conductive paths being evaluated for violating the initial subset of via-to-via spacing rules.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The computer program product recited in <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein determining whether the pair of conductive paths being evaluated is associated with a high-current power/ground signal includes one or more of the following: selecting a plurality of top highest current power signals and associated ground signals, or using a threshold associated with a current level.</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The computer program product recited in <claim-ref idref="CLM-00016">claim 16</claim-ref>, wherein:
+<claim-text>the second subset of via-to-via spacing rules is associated with different high-current power/ground signals;</claim-text>
+<claim-text>the set of via-to-via spacing rules further includes a third subset of via-to-via spacing rules that is associated with same high-current power/ground signals with closer via-to-via spacing than is permitted by the second subset of via-to-via spacing rules; and</claim-text>
+<claim-text>configuring, based at least in part on the set of via-to-via spacing rules, the plurality of conductive paths, further includes:
+<claim-text>determining whether the pair of conductive paths being evaluated is associated with same high-current power/ground signals or different high-current power/ground signals;</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with different high-current power/ground signals, applying the second subset of via-to-via spacing rules to the pair of conductive paths being evaluated; and</claim-text>
+<claim-text>in the event it is determined that the pair of conductive paths being evaluated is associated with same high-current power/ground signals, applying the third subset of via-to-via spacing rules to the pair of conductive paths being evaluated.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The computer program product recited in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein at least one of the following includes a plated-through-hole (PTH) via: the at least one voltage supply conductive path, the at least one ground conductive path, or the at least one data conductive path.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The computer program product recited in <claim-ref idref="CLM-00015">claim 15</claim-ref>, wherein the plurality of circuit board components includes one or more of the following: an integrated circuit (IC), an application specific integrated circuit (ASIC), an area array package (AAP), a direct current (DC)-to-direct current (DC) converter, a switching power supplier, a low dropout (LDO) power supplier, a socket, a connector, or a discrete component.</claim-text>
+</claim>
+</claims>

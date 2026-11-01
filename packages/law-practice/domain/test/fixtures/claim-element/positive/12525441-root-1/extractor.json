@@ -1,0 +1,32 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "12525441-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "unresolved": [],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "The method of claim 1",
+      "reason": "All selected dependents 2-5 follow the operative native claim-1 dependency. Source-critic round 2 accepted after direct marked-PDF corroboration; earlier source-audit unresolved chronology is superseded by that specific evidence."
+    },
+    {
+      "quote": "the threaded bolt",
+      "reason": "No explicit threaded-bolt introduction; do not silently equate to tensioning bolt. Missing introductions for the protruding end, hydraulic pressure, event, blocking, beginning, start, magnitude, pressure build-up, lengthening, hydraulic oil and course are retained as terms without fabricated antecedent edges."
+    },
+    {
+      "quote": "the blocking",
+      "reason": "Nominalization of is blocked hydraulically has no determiner-bearing introduction; no invented anchor. Definite the pressure in claim 3 likewise has no unambiguous introduced pressure entity; hydraulic pressure target value is a value."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required."
+}

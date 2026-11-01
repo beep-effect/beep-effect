@@ -1,0 +1,56 @@
+{
+  "familyId": "15927789-root-6",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Resolved P2 labels and explicit source-coverage classification only; attorney and critic pending.",
+  "resolvedClaimNumbers": [
+    6
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 7,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 8,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 9,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 10,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceFamilyConcerns": [
+    "Office action KGTL26UADFLYX10 dated 2020-10-30 rejects claims 1-10 and explicitly cites selected 6-10. Publication US20180208423A1 dated 2018-07-26 precedes rejection.",
+    "Children 7-10 expressly depend on 6, matching source XML. Claim 6 is independent and root family association is explicit in OA.",
+    "Root 6 intended supported comprising boundary follows literal characterized by, retained in preamble. Nested comprising: introduces P2 colon absorption.",
+    "OCR comparison has no exact claim matches; in-force link relies on native XML and retained no-intervening-CLM inventory evidence. Attorney spot-check pending.",
+    "Only root 6 is resolved; four descendants remain visible unresolved. No family-clean or complete-family conclusion follows."
+  ],
+  "rationale": "Root 6 has one colon-ended limitation and three sub-limitations. Introductory a wire is later than parent the wire; only the two later sub-limitation wire references get exact-head local antecedent edges.",
+  "independence": "Manual selection of element spans, term surfaces/heads and edge pairs. No decomposer/policy, existing rule fixtures or predictions read/run. Helpers only locate manual quotes and verify spans/endpoints.",
+  "familyStatus": "unresolved",
+  "sourceChecks": {
+    "selectedClaimsMatchNativeXml": [
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "allElementAndTermUtf16SlicesVerified": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending"
+  }
+}

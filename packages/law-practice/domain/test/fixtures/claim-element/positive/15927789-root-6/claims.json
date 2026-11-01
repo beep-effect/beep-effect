@@ -1,0 +1,57 @@
+{
+  "familyId": "15927789-root-6",
+  "rootClaimNumber": 6,
+  "labelClaimNumbers": [6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Positioning module characterized by comprising: a wire which is unwound by an external force; a length calculation unit calculating the unwinding length when the wire is unwound; an angle calculation unit calculating the unwinding angle when the wire is unwound; and a location information calculation unit calculating the location information of at least some points on the wire by using the unwinding length and the unwinding angle calculated.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "Positioning module of claim 1, characterized by further including a speed calculation unit calculating a speed value (V) using the moving distance (ΔL) of at least a point on the wire during a unit interval of time (ΔT).",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "Positioning module of claim 2, characterized by further including a control signal generator generating a control signal by comparing the speed value, which is calculated in the speed calculated unit, with the threshold value set in advance.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "Positioning module of claim 3, characterized by comprising the control signal generator which generates the control signal corresponding to the number of curves where the speed value exceeds the threshold value within a unit interval of time.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "Positioning module of claim 4, characterized in that the control signal is one of the control signals that either accelerate, decelerate or stop the traveling device.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "Driving control device of carrier unit, characterized by comprising an operator, which is designed to be detachable from the distal end of the wire and the transport unit equipped with a location measurement module comprising: a wire which is unwound by external force; a length calculation unit calculating an unwinding length of the wire; and an angle calculation unit calculating an unwinding angle of the wire, and controls the travelling motion of the transport unit.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "Driving control device of carrier unit of claim 6, characterized in that: the positioning module acquire the location information of distal end point of the wire based on the unwinding length and unwinding angle of the wire, indicate and save the location information in a time-ordered sequence in the coordinate system.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "Driving control device of carrier unit of claim 6, characterized in that: the wire is electrically conductive; the positioning module supplies power to the operator through the electrically conductive wire, and then the operator can control the travel of transport unit.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "Driving control device of carrier unit of claim 6, characterized in that the transport unit is induced to move to the distal end point of one side of the wire which is calculated by the positioning module, under the first travelling mode set by the operator.",
+      "sourceXmlParentClaimNumbers": [6]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "Driving control device of carrier unit of claim 6, characterized in that the transport unit receives the user's operation signal which is input to a controller module through the wire; travelling direction is controlled by the operation signal; under the second travelling mode set by the operator.",
+      "sourceXmlParentClaimNumbers": [6]
+    }
+  ]
+}

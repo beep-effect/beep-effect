@@ -1,0 +1,120 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text>1. A system comprising:
+<claim-text>a reservoir configured to contain a liquid mixture comprising a first organic constituent, a second organic constituent, and a solvent;</claim-text>
+<claim-text>a first feed line and a second feed line in communication with the reservoir; and</claim-text>
+<claim-text>a separation cell comprising:
+<claim-text>an upper cell, a membrane support frame, and a lower cell, with the membrane support frame located between the upper cell and the lower cell,</claim-text>
+<claim-text>the upper cell comprises a stirrer, the upper cell in communication with the first feed line and the second feed line, wherein the upper cell is configured to receive the liquid mixture via the first feed line, the stirrer is configured to stir the liquid mixture, and the second feed line is configured to receive a retentate comprising the second organic constituent and the solvent in the upper cell and send the retentate to the reservoir;</claim-text>
+<claim-text>the membrane support frame comprises a gasket configured to receive a membrane therein and provide a hermetic seal between the upper cell and the lower cell;</claim-text>
+<claim-text>wherein the membrane is configured to:
+<claim-text>absorb the first organic constituent of the liquid mixture received in the upper cell via the first feed line at a first peripheral section of the membrane thereby causing the retentate to reside in the upper cell; and</claim-text>
+<claim-text>desorb the absorbed first organic constituent of the liquid mixture at a second peripheral section of the membrane to obtain a first organic constituent permeate vapor;</claim-text>
+</claim-text>
+<claim-text>and the lower cell in communication with a third feed line configured to receive the first organic constituent permeate vapor; wherein the first organic constituent, the second organic constituent, and the solvent comprise thiophene, heptane, and water, respectively; and wherein the membrane comprises polyvinyl acetate and water.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text>2. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the stirrer comprises a motor, an extension rod, and a stirrer bar, wherein the extension rod is attached and located between the motor and the stirrer bar.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text>3. The system of <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the upper cell further comprises a concentric wall surrounding exterior sides of the upper cell.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text>4. The system of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the upper cell further comprises:
+<claim-text>a first portion, a second portion, a third portion, and a fourth portion, with the second portion and the third portion located sequentially between the first portion and the fourth portion;</claim-text>
+<claim-text>wherein the motor, located at the first portion of the upper cell, is configured to provide rotation to the stirrer bar via the extension rod;</claim-text>
+<claim-text>a liquid inlet and a liquid outlet located at the third portion and the second portion, respectively, of the concentric wall, wherein the concentric wall is configured to receive a liquid via the liquid inlet to maintain the upper cell at a predetermined temperature; and</claim-text>
+<claim-text>a bottom end of the upper cell, located at the fourth portion of the upper cell, configured to contact the gasket.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text>5. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the gasket comprises polytetrafluoroethylene.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text>6. The system of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a vacuum pump, indirectly in communication with the third feed line, configured to provide a vacuum suction to the lower cell thereby facilitating the absorption and desorption of the first organic constituent at the first peripheral section and the second peripheral section, respectively, of the membrane.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text>7. The system of <claim-ref idref="CLM-00006">claim 6</claim-ref>, further comprising:
+<claim-text>a first three-way valve, in communication with the third feed line, configured to receive the first organic constituent permeate vapor from the third feed line;</claim-text>
+<claim-text>a fourth inlet feed line, in communication with the first three-way valve, configured to receive a portion of the first organic constituent permeate vapor;</claim-text>
+<claim-text>a first cold trap tank, in communication with the fourth inlet feed line, configured to condense the portion of the first organic constituent permeate vapor received from the fourth inlet feed line to obtain a first condensate;</claim-text>
+<claim-text>a fifth outlet feed line in communication with the first cold trap tank; and</claim-text>
+<claim-text>a second three-way valve, in communication with the fifth outlet feed line, configured to receive the first condensate from the first cold trap tank via the fifth outlet feed line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text>8. The system of <claim-ref idref="CLM-00007">claim 7</claim-ref>, further comprising:
+<claim-text>a sixth inlet feed line, in communication with the first three-way valve, configured to receive another portion of the first organic constituent permeate vapor;</claim-text>
+<claim-text>a second cold trap tank, in communication with the sixth inlet feed line, configured to condense the another portion of the first organic constituent permeate vapor received from the sixth inlet feed line to obtain a second condensate;</claim-text>
+<claim-text>a seventh outlet feed line in communication with the second cold trap tank;</claim-text>
+<claim-text>wherein the second three-way valve, in communication with the seventh outlet feed line, is further configured to receive the second condensate from the second cold trap tank via the seventh outlet feed line; and</claim-text>
+<claim-text>wherein the first condensate and the second condensate within the second three-way valve are mixed together to obtain a condensate mixture.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text>9. The system of <claim-ref idref="CLM-00008">claim 8</claim-ref>, further comprising:
+<claim-text>an eighth inlet feed line in communication with the second three-way valve;</claim-text>
+<claim-text>a pump protection trap tank, in communication with the eighth inlet feed line, configured to receive the condensate mixture;</claim-text>
+<claim-text>a ninth outlet feed line in communication with the pump protection trap tank; and</claim-text>
+<claim-text>wherein the vacuum pump, in communication with the ninth outlet feed line, is configured to receive the condensate mixture from the pump protection trap tank via the ninth outlet feed line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text>10. The system of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising:
+<claim-text>a third three-way valve located in the fifth outlet feed line between the first cold trap tank and the second three-way valve;</claim-text>
+<claim-text>a first vacuum line in communication with the third three-way valve; and</claim-text>
+<claim-text>a Pirani gauge, in communication with the first vacuum line, configured to measure a vacuum pressure within the fifth outlet feed line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text>11. The system of <claim-ref idref="CLM-00010">claim 10</claim-ref>, further comprising:
+<claim-text>a second vacuum line, in communication with the sixth inlet feed line, located between the first three-way valve and the second cold trap tank;</claim-text>
+<claim-text>a fourth three-way valve in communication with the second vacuum line;</claim-text>
+<claim-text>a third vacuum line in communication with the fourth three-way valve and the first vacuum line; and</claim-text>
+<claim-text>wherein the Pirani gauge is further configured to measure a vacuum pressure within the sixth inlet feed line via the second vacuum line, the third vacuum line, and the first vacuum line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text>12. A method of using the system of <claim-ref idref="CLM-00001">claim 1</claim-ref> for separating the first organic constituent from the liquid mixture, the method comprising:
+<claim-text>supplying the liquid mixture comprising the first organic constituent, the second organic constituent, and the solvent to the reservoir;</claim-text>
+<claim-text>injecting the liquid mixture from the reservoir to the upper cell via the first feed line to receive the liquid mixture in the upper cell;</claim-text>
+<claim-text>stirring the liquid mixture in the upper cell using the stirrer;</claim-text>
+<claim-text>separating the first organic constituent from the liquid mixture by absorbing the first organic constituent of the liquid mixture at the first peripheral section of the membrane thereby causing the retentate comprising the second organic constituent and the solvent to reside in the upper cell;</claim-text>
+<claim-text>desorbing the first organic constituent of the liquid mixture at the second peripheral section of the membrane to obtain the first organic constituent permeate vapor;</claim-text>
+<claim-text>receiving the first organic constituent permeate vapor in the third feed line of the lower cell;</claim-text>
+<claim-text>receiving the retentate in the second feed line of the upper cell; and</claim-text>
+<claim-text>sending the retentate to the reservoir via the second feed line; wherein the first organic constituent, the second organic constituent, and the solvent comprise thiophene, heptane, and water, respectively; and wherein the membrane comprises polyvinyl acetate and water.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text>13. The method of <claim-ref idref="CLM-00012">claim 12</claim-ref>, further comprising a vacuum pump, indirectly in communication with the third feed line, configured to provide a vacuum suction to the lower cell thereby facilitating the absorption and desorption of the first organic constituent at the first peripheral section and the second peripheral section, respectively, of the membrane.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text>14. The method of <claim-ref idref="CLM-00013">claim 13</claim-ref>, further comprising:
+<claim-text>a first three-way valve, in communication with the third feed line, configured to receive the first organic constituent permeate vapor from the third feed line;</claim-text>
+<claim-text>a fourth inlet feed line, in communication with the first three-way valve, configured to receive a portion of the first organic constituent permeate vapor;</claim-text>
+<claim-text>a first cold trap tank, in communication with the fourth inlet feed line, configured to condense the portion of the first organic constituent permeate vapor received from the fourth inlet feed line to obtain a first condensate;</claim-text>
+<claim-text>a fifth outlet feed line in communication with the first cold trap tank; and</claim-text>
+<claim-text>a second three-way valve, in communication with the fifth outlet feed line, configured to receive the first condensate from the first cold trap tank via the fifth outlet feed line.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text>15. The method of <claim-ref idref="CLM-00014">claim 14</claim-ref>, further comprising:
+<claim-text>a sixth inlet feed line, in communication with the first three-way valve, configured to receive another portion of the first organic constituent permeate vapor;</claim-text>
+<claim-text>a second cold trap tank, in communication with the sixth inlet feed line, configured to condense the another portion of the first organic constituent permeate vapor received from the sixth inlet feed line to obtain a second condensate;</claim-text>
+<claim-text>a seventh outlet feed line in communication with the second cold trap tank;</claim-text>
+<claim-text>wherein the second three-way valve, in communication with the seventh outlet feed line, is further configured to receive the second condensate from the second cold trap tank via the seventh outlet feed line; and</claim-text>
+<claim-text>wherein the first condensate and the second condensate within the second three-way valve are mixed together to obtain a condensate mixture.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text>16. The method of <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising:
+<claim-text>an eighth inlet feed line in communication with the second three-way valve;</claim-text>
+<claim-text>a pump protection trap tank, in communication with the eighth inlet feed line, configured to receive the condensate mixture;</claim-text>
+<claim-text>a ninth outlet feed line in communication with the pump protection trap tank; and</claim-text>
+<claim-text>wherein the vacuum pump, in communication with the ninth outlet feed line, is configured to receive the condensate mixture from the pump protection trap tank via the ninth outlet feed line.</claim-text>
+</claim-text>
+</claim>
+</claims>

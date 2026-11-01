@@ -1,0 +1,47 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18018354-root-6",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.97,
+  "resolvedClaimNumbers": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+  "unresolved": [],
+  "sourceConcerns": [
+    "Independent source critic accepted at 0.98. Original selected 6–17 corroborates native apart from quote typography, AI/Al and thranstheoretical/transtheoretical spellings; native text is never repaired from OCR. OA expressly discusses 6/7 and rejects derivative 8–17 through the natural chain.",
+    "Definite user ID, positive/negative aspect, approval/non-approval item, higher/lower step, change steps, movement, decisional balance and self efficacy phrases first appear without introductory noun entities. They remain exact terms without fabricated antecedents from unrelated context claims 1/3.",
+    "Theoretical/transtheoretical model is not extracted as a standalone introduced entity from the providing-module compound name. No synonym or substring edge invents that introduction.",
+    "Claim 13 calls its approval-item outputs first/second information, while 10/11 label component information first/second information. Those competing label uses remain separate terms without forcing output identity; claim 12 expressly qualifies component identities by positive/negative relevance and links those four qualified antecedents.",
+    "Claim 15 native oil/oily, intelligence, message and plural/mass information wording remains unchanged. Its shampoo references are resolved through their full surrounding state qualifiers in round 2; generic head equality alone is not used.",
+    "Claim 17 thereto and repeated positive/negative aspects have several surrounding candidates. They are explicit bare reference terms without invented single-target edges; conditional case/parameter content remains exact."
+  ],
+  "annotationRationale": [
+    "Root system ends before including; component list and the two explicit server modules follow actual source grammar. Related-factor aggregation and conditional output clauses retain their connected operation and conditions as functional relations.",
+    "Every determiner-bearing noun phrase and explicit claimed bare information/entity is manually selected with complete lexical modifiers; long parenthetical information definitions are retained, not truncated to component names. Answer-scale examples remain connecting text.",
+    "Natural chain 7→6 through 17→16 controls inheritance. System, mobile terminal, network, server and modules get source-clear cross-claim edges. No sibling-independent module/data introductions are borrowed.",
+    "Claims 10/11 positive and negative component information are distinct source-qualified entities; claim 12 maps the four relevance-qualified occurrences to those introductions. It preserves quoted positive/negative element information lexical names and timeline relation.",
+    "Claims 14–17 source operations are split only at clear coordinated predicates and explicit conditional source sections. Complex shampoo/scaling/massage content retains complete source phrases and exact internal punctuation. No semicolon/parser heuristic chooses grammar.",
+    "Missing introductions and true competing local labels are recorded as reference concerns. Clear functional structure is annotated directly with producer llm, never dropped because of unsupported implementation transitions.",
+    "Round 2 independently accepts all three critic findings. Claim 6 [102,132) is one plurality-of term with head hair diagnosers; every existing reference to the former split introduction now targets that exact full anchor. Claim 15’s brace-delimited shampoo alternatives and scalp-scaling option steps are explicit nested source lists: added shampoo/scaling groups, six shampoo alternative children and an option group with first/second/third functional step children. Terms moved to their deepest selected source owner without duplication, all existing local/cross-claim references were transferred, and affected functional parts were rebuilt from those exact terms/text. Claim 17 normal/dry/sensitive shampoos map to the distinct claim 15 state-qualified introductions. The remaining oily/oil alias is also source-clear: both lists have the same ordered normal/dry/oil-or-oily/sensitive/dandruff/hair-loss alternatives, with exactly one oil-qualified shampoo and no competing oily-specific introduction. All four shampoo edges therefore resolve, and the two exact the oily state terms link to an oil state while preserving their different source heads. No generic shampoo collapse or source spelling repair is made."
+  ],
+  "sourceStatus": "Independent source critic accepted; independent semantic critic and attorney review pending.",
+  "independence": "Fresh manual source grammar, lexical heads, exact quote boundaries and referent assignments. Only source/context/provenance/audits/critic, protocol and schema contracts read. No production/rules/predictions/synthetic fixtures/conformance archives/network/secrets/git/delegation. Helpers only locate manually supplied quotes, format schema data and verify span/reference geometry.",
+  "validation": "Round-1 receipts preserved byte-for-byte. All exact source slices, unique paths, nonoverlapping term ownership, cross-claim endpoints, nested list containment and ordered functional-part coverage rechecked. Selected claim scope unchanged.",
+  "roundReview": {
+    "previousRound": 1,
+    "findingDisposition": "accepted-and-corrected",
+    "previousReceipts": [
+      "expected.round1.json",
+      "extractor.round1.json",
+      "critic.round1.json"
+    ],
+    "changes": [
+      "Merged split plurality phrase into exact plurality-of term and transferred targets.",
+      "Added 12 nested source-list/group elements and part-of edges; assigned each original term to one owner.",
+      "Added three explicit scalp-scaling step functional relationships and rebuilt 15.c parts.",
+      "Added four qualified shampoo antecedents and two oil/oily state aliases."
+    ],
+    "criticRound2Status": "pending"
+  }
+}

@@ -1,0 +1,37 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An LED lamp, comprising a connector, a lamp holder, a battery, a support member, a light source, and a lampshade; the light source is sleeved on the support member; the battery is located inside the support member; the support member is connected to the lamp holder; the lampshade is connected to the lamp holder; the connector is detachably connected to the lamp holder; the connector comprises a connection bottom shell;
+<claim-text>wherein the connector is magnetically connected to the lamp holder, and the lamp holder comprises a lamp holder housing and a first magnetic attraction member;</claim-text>
+<claim-text>the first magnetic attraction member is connected to the lamp holder housing.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The LED lamp according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the support member comprises a support control part and a support part;
+<claim-text>the support control part is connected to the support part;</claim-text>
+<claim-text>the support control part comprises a support circuit board and a first connection terminal;</claim-text>
+<claim-text>the first connection terminal is connected to the support circuit board;</claim-text>
+<claim-text>the light source is connected to the support circuit board, and the battery is connected to the support circuit board.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The LED lamp according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the connector further comprises a connection part and a second magnetic attraction member;
+<claim-text>the connection bottom shell is connected to the connection part;</claim-text>
+<claim-text>the second magnetic attraction member is connected to the connection bottom shell.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The LED lamp according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the connection part comprises a connection housing and a plug, wherein the plug is connected to the connection housing.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The LED lamp according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the connector is fastened to the lamp holder, and the connection bottom shell comprises a bottom shell body and a connection clamp block,
+<claim-text>wherein the connection clamp block is connected to the bottom shell body;</claim-text>
+<claim-text>the lamp holder housing is provided with a connection clamp slot; the connection clamp block is inserted into the connection clamp slot.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The LED lamp according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the connector comprises a connection control part; the connection control part comprises a connection circuit board and a second connection terminal; the connection circuit board is connected to the second connection terminal.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The LED lamp according to <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein the second connection terminal is one or more of an electrode pin, a DC interface, and a USB interface.</claim-text>
+</claim>
+</claims>

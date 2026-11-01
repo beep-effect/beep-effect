@@ -1,0 +1,61 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14172895-root-10",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.99,
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [10, 11, 12, 13, 14, 15, 16],
+  "findings": [
+    {
+      "claimNumber": 12,
+      "evidence": {
+        "nativeQuote": "{dot over (x)}inc=auinc+Vdr",
+        "originalQuote": "inc inc Vdr",
+        "retainedActionQuote": "claim 12 recites the limitation the model predictive control scheme"
+      },
+      "requiredCorrection": "Keep unresolved; actual112 statutory heading/scope and reliable formula rendering needed. Do not classify algebraic sign/subscript differences as mere typography."
+    }
+  ],
+  "evidence": [
+    "Retained action is antecedent commentary with page/number artifacts, no explicit112(b)/second-paragraph ground. Original12/15 formula OCR loses signs/subscripts; native source formula correctness/in-force identity unresolved."
+  ],
+  "sourceChecks": {
+    "nativeApplicationPublicationDateMatch": true,
+    "nativePublicationSha256": "c415a79dba008a251bd5132594bf3bb1d2c3a0861d34a6de16682989d64d877a",
+    "nativePublicationHashMatches": true,
+    "sourceClaimsXmlSha256": "ef300846d62785a1015c3a8ec00d295bb822dd0ec7e1004e38c1ffd7d9173d16",
+    "sourceClaimsHashMatches": true,
+    "fullInventorySha256": "ce4c9f810b693e2beabc4c91c0ab422fad49ef27ff60bf1ec8f9706d1330e9e2",
+    "inventoryReportedCount": 92,
+    "inventoryActualRows": 92,
+    "preOfficeActionClaimAndAmendmentDocuments": [
+      {
+        "documentIdentifier": "HRA3SSZAPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2014-02-04T00:00:00.000-0500",
+        "description": "Claims"
+      }
+    ],
+    "citedOfficeActionInventoryRows": [
+      {
+        "documentIdentifier": "IHP4IYYTPXXIFW4",
+        "documentCode": "CTNF",
+        "officialDate": "2015-12-04T00:00:00.000-0500"
+      }
+    ],
+    "originalCachedHashes": [
+      {
+        "documentIdentifier": "HRA3SSZAPXXIFW3",
+        "exists": true,
+        "sha256": "d5c4edbd97ea5a7c9e90bdca7c73fec1f6214ea67e811304d18fd0a2a578f954",
+        "sha256Matches": true
+      }
+    ]
+  },
+  "extractorVerdictReviewed": "unresolved",
+  "independence": "Independent critic did not extract source-audit for these indices. Read native claims/context, retained examiner/provenance, full cached inventories and relevant original XML. No structural expected trees, implementations, rules, predictions, network or attorney adjudication.",
+  "rationale": "Numbered ground, actual family membership and operative source versions assessed separately. Full inventory chronology is supporting evidence only; unreadable/missing/dependency-conflicting originals remain unresolved."
+}

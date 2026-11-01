@@ -1,0 +1,70 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A battery cell, comprising:
+<claim-text>a shell, having a circular wall portion;</claim-text>
+<claim-text>an electrode assembly, accommodated in the shell; and</claim-text>
+<claim-text>a first terminal post and a second terminal post having opposite polarities, spaced apart on the wall portion and both electrically connected to the electrode assembly, wherein</claim-text>
+<claim-text>a minimum distance between the first terminal post and a central axis of the wall portion is greater than a minimum distance between the second terminal post and the central axis of the wall portion in a radial direction of the wall portion, wherein at least one of the first terminal post and the second terminal post is arc-shaped.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first terminal post is arc-shaped and comprises an inner arc surface, a projection of the inner arc surface in a thickness direction of the wall portion is located on a circumference of a first circle, and a center of the first circle is located on the central axis of the wall portion, wherein
+<claim-text>the second terminal post is located within the first circle in the radial direction of the wall portion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The battery cell according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein two ends of the first terminal post separately form two first end faces in an arc extension direction of the first terminal post, and the two first end faces are coplanar.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The battery cell according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein the second terminal post comprises an outer arc surface, a projection of the outer arc surface in the thickness direction of the wall portion is located on a circumference of a second circle, the second circle and the first circle are concentric, and a radius of the second circle is less than a radius of the first circle.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The battery cell according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the second terminal post is arc-shaped.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The battery cell according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein two ends of the second terminal post separately form two second end faces in the arc extension direction of the second terminal post, and the two second end faces are coplanar.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an orthographic projection of the first terminal post is located in a first semicircular region and an orthographic projection of the second terminal post is located in a second semicircular region in the thickness direction of the wall portion, and the first semicircular region and the second semicircular region jointly form a circular region of which a center is located on the central axis of the wall portion.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the first terminal post is annular, and the first terminal post and the wall portion are disposed coaxially; and/or
+<claim-text>the second terminal post is annular, and the second terminal post and the wall portion are disposed coaxially.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electrode assembly has a first tab and a second tab having opposite polarities, the first tab and the second tab are both located at an end, facing the wall portion, of the electrode assembly in the thickness direction of the wall portion, and the first tab and the second tab are respectively electrically connected to the first terminal post and the second terminal post.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the battery cell further comprises a first insulating element, the first insulating element being disposed between the first terminal post and the wall portion, to insulate the first terminal post from the wall portion; and/or
+<claim-text>the battery cell further comprises a second insulating element, the second insulating element being disposed between the second terminal post and the wall portion, to insulate the second terminal post from the wall portion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the battery cell further comprises a first connecting element, the first connecting element being penetrated in the wall portion in the thickness direction of the wall portion, the first connecting element being connected to the first terminal post, and the first connecting element being electrically connected to the electrode assembly; and/or
+<claim-text>the battery cell further comprises a second connecting element, the second connecting element being penetrated in the wall portion in the thickness direction of the wall portion, the second connecting element being connected to the second terminal post, and the second connecting element being electrically connected to the electrode assembly.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the shell is cylindrical, and an axis direction of the shell is the thickness direction of the wall portion.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the shell comprises:
+<claim-text>a case, an accommodating cavity having an opening being formed inside the case, and the accommodating cavity being configured to accommodate the electrode assembly; and</claim-text>
+<claim-text>an end cover, closing the opening, wherein</claim-text>
+<claim-text>the end cover is the wall portion.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the shell comprises:
+<claim-text>a case, comprising a side wall and the wall portion that are integrally formed, the side wall being disposed around the wall portion, one end of the side wall being connected to the wall portion and the other end of the side wall being closed to form an opening in the thickness direction of the wall portion, and the side wall and the wall portion jointly defining an accommodating cavity for accommodating the electrode assembly; and</claim-text>
+<claim-text>an end cover, closing the opening.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. A battery, comprising a battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. A power consuming apparatus, comprising a battery cell according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, the battery cell being configured to supply electric energy.</claim-text>
+</claim>
+</claims>

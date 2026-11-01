@@ -1,0 +1,132 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method comprising:
+<claim-text>receiving, by one or more processors, a dataset comprising a plurality of images;</claim-text>
+<claim-text>executing, by the one or more processors, an embedding model using the plurality of images to generate a plurality of image embeddings, an image embedding for each of the plurality of images;</claim-text>
+<claim-text>clustering, by the one or more processors, the plurality of image embeddings of the plurality of images into a plurality of clusters based on similarities between the plurality of image embeddings;</claim-text>
+<claim-text>determining, by the one or more processors, a density for each of the plurality of clusters based on an aggregate similarity of image embeddings of the cluster; and</claim-text>
+<claim-text>based on the density for each of the plurality of clusters satisfying a criterion, for each cluster of the plurality of clusters:
+<claim-text>receiving, by the one or more processors, via a user input, a first set of annotations for one or more pixels of each of a first subset of the images included in the cluster;</claim-text>
+<claim-text>inputting, by the one or more processors, the annotated first subset of images of the cluster into a vision transformer with a remaining unannotated subset of images of the cluster not included in the annotated first subset of images; and</claim-text>
+<claim-text>generating, by the one or more processors, based on the input annotated first subset of images and the remaining unannotated subset of images input into the vision transformer, a second plurality of annotations for the remaining unannotated subset of images of the cluster not included in the annotated first subset of images.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein each of the image embeddings included in a particular cluster of the plurality of clusters each have a similarity score at or above a threshold value, the similarity score indicating a similarity of the image embedding to other image embeddings of the cluster.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>comparing, by the one or more processors, each of the determined densities for each of the plurality of clusters to a predetermined threshold value; and</claim-text>
+<claim-text>discarding, by the one or more processors, responsive to a determination that a density of a cluster is less than the predetermined threshold value, the cluster.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method of <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein discarding the cluster comprises:
+<claim-text>preventing the images in the discarded cluster from being annotated by the user.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>comparing, by the one or more processors, each of the determined densities for each of the plurality of clusters to a predetermined threshold value; and</claim-text>
+<claim-text>automatically generating the second plurality of annotations for a particular cluster without user input, responsive to a determination that the density of the cluster is greater than or equal to the predetermined threshold value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>receiving, by the one or more processors, a user input regarding the second plurality of annotations;</claim-text>
+<claim-text>updating, by the one or more processors, at least one of the second plurality of annotations based on the user input; and</claim-text>
+<claim-text>updating, by the one or more processors, one or more images corresponding to the updated at least one of the second plurality of annotations based on the updated annotations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method of <claim-ref idref="CLM-00006">claim 6</claim-ref>, wherein updating the at least one of the second plurality of annotations causes the vision transformer to reannotate the remaining images in the cluster.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein receiving the first set of annotations comprises:
+<claim-text>receiving, via the user input, an indication from the user indicating a number of prompts to be used for a cluster;</claim-text>
+<claim-text>displaying, to the user, a number of images included in the cluster corresponding to the number of prompts indicated by the user; and</claim-text>
+<claim-text>receiving, via the user input, one or more annotations on each of the displayed images, the one or more annotations included in the first set of annotations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the density for each of the plurality of clusters satisfies the criterion based on a user input from a user.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method of <claim-ref idref="CLM-00009">claim 9</claim-ref>, further comprising, for each cluster of the plurality of clusters:
+<claim-text>presenting the density to the user via a user interface;</claim-text>
+<claim-text>receiving an indication of a number of clusters from the user interface via a user input; and</claim-text>
+<claim-text>reclustering the plurality of image embeddings based on the received number of clusters.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The method of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising:
+<claim-text>responsive to generating the second plurality of annotations for a last cluster of the plurality of clusters, updating a database with the annotated plurality of images.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. A system comprising:
+<claim-text>one or more non-transitory computer-readable media storing instructions thereon that, when executed by one or more processors, cause the one or more processors to:
+<claim-text>receive a dataset comprising a plurality of images;</claim-text>
+<claim-text>execute an embedding model using the plurality of images to generate a plurality of image embeddings, an image embedding for each of the plurality of images;</claim-text>
+<claim-text>cluster the plurality of image embeddings of the plurality of images into a plurality of clusters based on similarities between the plurality of image embeddings;</claim-text>
+<claim-text>determine a density for each of the plurality of clusters based on an aggregate similarity of image embeddings of the cluster; and</claim-text>
+<claim-text>based on the density for each of the plurality of clusters satisfying a criterion, for each cluster of the plurality of clusters:
+<claim-text>receive, via a user input, a first set of annotations for one or more pixels of each of a first subset of the images included in the cluster;</claim-text>
+<claim-text>input the annotated first subset of images of the cluster into a vision transformer with a remaining unannotated subset of images of the cluster not included in the annotated first subset of images; and</claim-text>
+<claim-text>generate, based on the input annotated first subset of images and the remaining unannotated subset of images input into the vision transformer, a second plurality of annotations for the remaining unannotated subset of images of the cluster not included in the annotated first subset of images.</claim-text>
+</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein each of the image embeddings included in a particular cluster of the plurality of clusters each have a similarity score at or above a threshold value, the similarity score indicating a similarity of the image embedding to the remaining image embeddings.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>Compare each of the determined densities for each of the plurality of clusters to a predetermined threshold value.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The system of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>discard, responsive to a determination that a density of a cluster is less than the predetermined threshold value, the cluster.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The system of <claim-ref idref="CLM-00014">claim 14</claim-ref>, wherein the second plurality of annotations for a particular cluster are generated automatically without user input responsive to a determination that the density of the cluster is greater than or equal to the predetermined threshold value.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the instructions further cause the one or more processors to:
+<claim-text>receive a user input regarding the second plurality of annotations;</claim-text>
+<claim-text>update at least one of the second plurality of annotations based on the user input; and</claim-text>
+<claim-text>update one or more images corresponding to the updated at least one of the second plurality of annotations based on the updated annotations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein receiving the first set of annotations comprises:
+<claim-text>receiving, via the user input, an indication from the user indicating a number of prompts to be used for a cluster;</claim-text>
+<claim-text>displaying, to the user, a number of images included in the cluster corresponding to the number of prompts indicated by the user; and</claim-text>
+<claim-text>receiving, via the user input, one or more annotations on each of the displayed images, the one or more annotations included in the first set of annotations.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The system of <claim-ref idref="CLM-00012">claim 12</claim-ref>, wherein the density for each of the plurality of clusters satisfies the criterion based on a user input from a user, and wherein the instructions further cause the one or more processors to, for each cluster of the plurality of clusters:
+<claim-text>present the density to the user via a user interface;</claim-text>
+<claim-text>receive a number of clusters from the user interface via a user input; and</claim-text>
+<claim-text>recluster the plurality of image embeddings based on the received number of clusters.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. One or more non-transitory computer-readable media storing instructions thereon that, when executed by one or more processors, cause the one or more processors to perform operations comprising:
+<claim-text>receiving a dataset comprising a plurality of images;</claim-text>
+<claim-text>executing an embedding model using the plurality of images to generate a plurality of image embeddings, an image embedding for each of the plurality of images;</claim-text>
+<claim-text>clustering the plurality of image embeddings of the plurality of images into a plurality of clusters based on similarities between the plurality of image embeddings;</claim-text>
+<claim-text>determining a density for each of the plurality of clusters based on an aggregate similarity of image embeddings of the cluster; and</claim-text>
+<claim-text>based on the density for each of the plurality of clusters satisfying a criterion, for each cluster of the plurality of clusters:
+<claim-text>receiving, via a user input, a first set of annotations for one or more pixels of each of a first subset of the images included in the cluster;</claim-text>
+<claim-text>inputting the annotated first subset of images of the cluster into a vision transformer with a remaining unannotated subset of images of the cluster not included in the annotated first subset of images; and</claim-text>
+<claim-text>generating, based on the input annotated first subset of images and the remaining unannotated subset of images input into the vision transformer, a second plurality of annotations for the remaining unannotated subset of images of the cluster not included in the annotated first subset of images.</claim-text>
+</claim-text>
+</claim-text>
+</claim>
+</claims>

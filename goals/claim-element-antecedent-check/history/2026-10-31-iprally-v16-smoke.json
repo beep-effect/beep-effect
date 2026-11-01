@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "claim-non-us-smoke/v2",
+  "implementationDigest": "63d2b7a823f56d33620fbd651e9b30bd4f5f986a761bd92607e39d969eb85f47",
+  "basis": "non-US-non-gold",
+  "result": {
+    "status": "checked",
+    "basis": "non-US-non-gold",
+    "sourceId": "KR-100380121-B1",
+    "country": "KR",
+    "ipcCodes": "F15",
+    "tokens": 523,
+    "sourceCommit": "51ba1e69b471021f225fe6787100b0f69d78da24",
+    "archiveSha256": "35307451747a8ae65d4d359aed23cff2f0d8ce02dfc8b8e3bfe6db7cbdadab0a",
+    "claims": 1,
+    "trees": 1,
+    "findings": 78,
+    "undecomposed": 0,
+    "manualReviewPatterns": 16
+  },
+  "structuralAccuracy": null
+}

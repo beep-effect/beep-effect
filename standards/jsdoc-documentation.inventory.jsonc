@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T00:15:28.295Z",
+  "generatedAt": "2026-11-01T00:41:31.390Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 166,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 16,
-    "publicModules": 3622,
-    "publicExports": 25590,
+    "publicModules": 3631,
+    "publicExports": 25661,
     "openModules": 165,
     "openExports": 97,
     "missingExportExamples": 3,
@@ -197543,8 +197543,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 609,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-609-sanitizedtoolkit",
+          "line": 616,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-616-sanitizedtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -204310,9 +204310,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 251,
-        "publicModuleCount": 251,
-        "publicExportCount": 949
+        "sourceFileCount": 252,
+        "publicModuleCount": 252,
+        "publicExportCount": 953
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -206337,6 +206337,28 @@
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
           "line": 1,
           "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-tree-model-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 1,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-1-module",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -215369,8 +215391,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/Antecedent.policy.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
-          "line": 103,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-103-antecedentpolicy",
+          "line": 108,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-108-antecedentpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -215391,8 +215413,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/Antecedent.policy.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/Antecedent.policy.ts",
-          "line": 468,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-468-antecedentpolicy",
+          "line": 499,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-antecedent-policy-ts-499-antecedentpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -215589,8 +215611,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 53,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-53-claimtermintroducingdeterminer",
+          "line": 60,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-60-claimtermintroducingdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -215611,8 +215633,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 70,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-70-claimtermintroducingdeterminer",
+          "line": 77,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-77-claimtermintroducingdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -215633,8 +215655,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 88,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-88-claimtermreferringdeterminer",
+          "line": 95,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-95-claimtermreferringdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -215655,8 +215677,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 100,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-100-claimtermreferringdeterminer",
+          "line": 107,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-107-claimtermreferringdeterminer",
           "currentTags": [
             "@category",
             "@since"
@@ -215677,8 +215699,8 @@
           "exportKind": "type",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 156,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-156-claimelementdecomposer",
+          "line": 163,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-163-claimelementdecomposer",
           "currentTags": [
             "@category",
             "@since"
@@ -215699,8 +215721,8 @@
           "exportKind": "const",
           "filePath": "src/values/ClaimElement/ClaimElement.behavior.ts",
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.behavior.ts",
-          "line": 563,
-          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-563-decomposeclaim",
+          "line": 909,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-behavior-ts-909-decomposeclaim",
           "currentTags": [
             "@category",
             "@since"
@@ -216317,6 +216339,94 @@
           "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
           "line": 301,
           "anchor": "packages-law-practice-domain-src-values-claimelement-claimelement-tree-model-ts-301-claimelementtree",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isSingleModifiedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 21,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-21-issinglemodifiedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isExplicitAbbreviatedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 37,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-37-isexplicitabbreviatedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isDesignatedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 66,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-66-isdesignatedhead",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isCountedHead",
+          "exportKind": "const",
+          "filePath": "src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "repoPath": "packages/law-practice/domain/src/values/ClaimElement/ClaimTerm.compatibility.ts",
+          "line": 82,
+          "anchor": "packages-law-practice-domain-src-values-claimelement-claimterm-compatibility-ts-82-iscountedhead",
           "currentTags": [
             "@category",
             "@since"
@@ -224677,8 +224787,8 @@
           "exportKind": "class",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 74,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-74-patentdocumentnormalizationerror",
+          "line": 76,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-76-patentdocumentnormalizationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -224699,8 +224809,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 478,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-478-normalizepatentclaims",
+          "line": 537,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-537-normalizepatentclaims",
           "currentTags": [
             "@category",
             "@since"
@@ -224721,8 +224831,8 @@
           "exportKind": "const",
           "filePath": "src/values/PatentDocument/PatentDocument.normalizer.ts",
           "repoPath": "packages/law-practice/domain/src/values/PatentDocument/PatentDocument.normalizer.ts",
-          "line": 543,
-          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-543-normalizepatentapplicationdocument",
+          "line": 602,
+          "anchor": "packages-law-practice-domain-src-values-patentdocument-patentdocument-normalizer-ts-602-normalizepatentapplicationdocument",
           "currentTags": [
             "@effects",
             "@category",
@@ -297039,7 +297149,7 @@
         "srcDir": "src",
         "sourceFileCount": 5,
         "publicModuleCount": 5,
-        "publicExportCount": 25
+        "publicExportCount": 27
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -297141,7 +297251,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 15,
           "remediationStatus": "resolved"
         },
         {
@@ -297547,12 +297657,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "UsptoPublishedDocumentReference",
+          "exportKind": "class",
+          "filePath": "src/Uspto.models.ts",
+          "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
+          "line": 353,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-353-usptopublisheddocumentreference",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "UsptoApplicationMetadata",
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 348,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-348-usptoapplicationmetadata",
+          "line": 382,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-382-usptoapplicationmetadata",
           "currentTags": [
             "@category",
             "@since"
@@ -297573,8 +297705,30 @@
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 391,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-391-usptocontinuity",
+          "line": 431,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-431-usptocontinuity",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "UsptoDocumentDownloadOption",
+          "exportKind": "class",
+          "filePath": "src/Uspto.models.ts",
+          "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
+          "line": 466,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-466-usptodocumentdownloadoption",
           "currentTags": [
             "@category",
             "@since"
@@ -297595,8 +297749,8 @@
           "exportKind": "class",
           "filePath": "src/Uspto.models.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.models.ts",
-          "line": 422,
-          "anchor": "packages-drivers-uspto-src-uspto-models-ts-422-usptodocumentreference",
+          "line": 494,
+          "anchor": "packages-drivers-uspto-src-uspto-models-ts-494-usptodocumentreference",
           "currentTags": [
             "@category",
             "@since"
@@ -297617,8 +297771,8 @@
           "exportKind": "interface",
           "filePath": "src/Uspto.service.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.service.ts",
-          "line": 56,
-          "anchor": "packages-drivers-uspto-src-uspto-service-ts-56-usptoshape",
+          "line": 58,
+          "anchor": "packages-drivers-uspto-src-uspto-service-ts-58-usptoshape",
           "currentTags": [
             "@category",
             "@since"
@@ -297639,8 +297793,8 @@
           "exportKind": "class",
           "filePath": "src/Uspto.service.ts",
           "repoPath": "packages/drivers/uspto/src/Uspto.service.ts",
-          "line": 400,
-          "anchor": "packages-drivers-uspto-src-uspto-service-ts-400-uspto",
+          "line": 438,
+          "anchor": "packages-drivers-uspto-src-uspto-service-ts-438-uspto",
           "currentTags": [
             "@category",
             "@since"
@@ -300490,9 +300644,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 104,
-        "publicModuleCount": 103,
-        "publicExportCount": 651
+        "sourceFileCount": 105,
+        "publicModuleCount": 104,
+        "publicExportCount": 656
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -300708,6 +300862,28 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 1,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -302783,7 +302959,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 18,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -303411,6 +303587,94 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ClaimSelfCheckReviewRequest",
+          "exportKind": "class",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 58,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-58-claimselfcheckreviewrequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaimSelfCheckReviewResult",
+          "exportKind": "class",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 91,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-91-claimselfcheckreviewresult",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ClaimSelfCheckTool",
+          "exportKind": "const",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 125,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-125-claimselfchecktool",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "claimSelfCheckReview",
+          "exportKind": "const",
+          "filePath": "src/ClaimSelfCheck.tools.ts",
+          "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck.tools.ts",
+          "line": 172,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-tools-ts-172-claimselfcheckreview",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "UsptoClaimsFailureReason",
           "exportKind": "const",
           "filePath": "src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
@@ -303503,8 +303767,8 @@
           "exportKind": "type",
           "filePath": "src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
-          "line": 140,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-140-claimselfcheckfailurereason",
+          "line": 142,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-142-claimselfcheckfailurereason",
           "currentTags": [
             "@category",
             "@since"
@@ -303525,8 +303789,8 @@
           "exportKind": "class",
           "filePath": "src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
           "repoPath": "packages/law-practice/use-cases/src/ClaimSelfCheck/ClaimSelfCheck.errors.ts",
-          "line": 168,
-          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-168-claimselfcheckerror",
+          "line": 170,
+          "anchor": "packages-law-practice-use-cases-src-claimselfcheck-claimselfcheck-errors-ts-170-claimselfcheckerror",
           "currentTags": [
             "@category",
             "@since"
@@ -316342,8 +316606,8 @@
           "exportKind": "const",
           "filePath": "src/Tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/Tools.ts",
-          "line": 36,
-          "anchor": "packages-law-practice-use-cases-src-tools-ts-36-practicekgtoolkit",
+          "line": 37,
+          "anchor": "packages-law-practice-use-cases-src-tools-ts-37-practicekgtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -316364,8 +316628,8 @@
           "exportKind": "type",
           "filePath": "src/Tools.ts",
           "repoPath": "packages/law-practice/use-cases/src/Tools.ts",
-          "line": 66,
-          "anchor": "packages-law-practice-use-cases-src-tools-ts-66-practicekgtoolkit",
+          "line": 68,
+          "anchor": "packages-law-practice-use-cases-src-tools-ts-68-practicekgtoolkit",
           "currentTags": [
             "@category",
             "@since"
@@ -316714,12 +316978,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export * from \"./ClaimSelfCheck.tools.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/law-practice/use-cases/src/server.ts",
+          "line": 30,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-30-export-from-claimselfcheck-tools-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "export * as DailyNotice from \"./DailyNotice/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 39,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-39-export-as-dailynotice-from-dailynotice-index-ts",
+          "line": 46,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-46-export-as-dailynotice-from-dailynotice-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316740,8 +317026,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 41,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-41-export-as-documentidentification-from-documentidentification-index-ts",
+          "line": 48,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-48-export-as-documentidentification-from-documentidentification-index-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -316759,8 +317045,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 56,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-56-export-as-irtolaw-from-irtolaw-index-ts",
+          "line": 63,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-63-export-as-irtolaw-from-irtolaw-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316781,8 +317067,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 72,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-72-export-as-mailtagging-from-mailtagging-index-ts",
+          "line": 79,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-79-export-as-mailtagging-from-mailtagging-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316803,8 +317089,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 87,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-87-export-as-officeactionreview-from-officeactionreview-index-ts",
+          "line": 94,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-94-export-as-officeactionreview-from-officeactionreview-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316825,8 +317111,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 89,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-89-export-as-officeactionstructure-from-officeactionstructure-index-ts",
+          "line": 96,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-96-export-as-officeactionstructure-from-officeactionstructure-index-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -316844,8 +317130,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 96,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-96-export-from-patentclaimcandidate-index-ts",
+          "line": 103,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-103-export-from-patentclaimcandidate-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316866,8 +317152,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 111,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-111-export-from-practicekg-correspondent-lookup-ts",
+          "line": 118,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-118-export-from-practicekg-correspondent-lookup-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316888,8 +317174,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 112,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-112-export-from-practicekg-matter-lookup-ts",
+          "line": 119,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-119-export-from-practicekg-matter-lookup-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -316907,8 +317193,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 113,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-113-export-from-practicekg-tools-ts",
+          "line": 120,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-120-export-from-practicekg-tools-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -316926,8 +317212,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 129,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-129-export-as-questionqueue-from-questionqueue-index-ts",
+          "line": 136,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-136-export-as-questionqueue-from-questionqueue-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316948,8 +317234,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 145,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-145-export-as-questionwrites-from-questionwrites-index-ts",
+          "line": 152,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-152-export-as-questionwrites-from-questionwrites-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316970,8 +317256,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 161,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-161-export-as-reviewhub-from-reviewhub-index-ts",
+          "line": 168,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-168-export-as-reviewhub-from-reviewhub-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -316992,8 +317278,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 176,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-176-export-as-reviewitemstore-from-reviewitemstore-index-ts",
+          "line": 183,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-183-export-as-reviewitemstore-from-reviewitemstore-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -317014,8 +317300,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 192,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-192-export-as-reviewqueue-from-reviewqueue-index-ts",
+          "line": 199,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-199-export-as-reviewqueue-from-reviewqueue-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -317036,8 +317322,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 199,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-199-export-from-tools-ts",
+          "line": 206,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-206-export-from-tools-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -317058,8 +317344,8 @@
           "exportKind": "re-export",
           "filePath": "src/server.ts",
           "repoPath": "packages/law-practice/use-cases/src/server.ts",
-          "line": 215,
-          "anchor": "packages-law-practice-use-cases-src-server-ts-215-export-as-verdictprojector-from-verdictprojector-index-ts",
+          "line": 222,
+          "anchor": "packages-law-practice-use-cases-src-server-ts-222-export-as-verdictprojector-from-verdictprojector-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -437898,8 +438184,8 @@
           "exportKind": "const",
           "filePath": "src/PracticeKg.tool-handlers.ts",
           "repoPath": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
-          "line": 234,
-          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-234-practicekgfailurereasonkey",
+          "line": 242,
+          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-242-practicekgfailurereasonkey",
           "currentTags": [
             "@category",
             "@since"
@@ -437920,8 +438206,8 @@
           "exportKind": "const",
           "filePath": "src/PracticeKg.tool-handlers.ts",
           "repoPath": "packages/law-practice/server/src/PracticeKg.tool-handlers.ts",
-          "line": 315,
-          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-315-practicekgtoolkithandlerslive",
+          "line": 323,
+          "anchor": "packages-law-practice-server-src-practicekg-tool-handlers-ts-323-practicekgtoolkithandlerslive",
           "currentTags": [
             "@category",
             "@since"
@@ -438566,8 +438852,8 @@
           "exportKind": "const",
           "filePath": "src/UsptoClaims/UsptoClaims.layer.ts",
           "repoPath": "packages/law-practice/server/src/UsptoClaims/UsptoClaims.layer.ts",
-          "line": 162,
-          "anchor": "packages-law-practice-server-src-usptoclaims-usptoclaims-layer-ts-162-usptoclaimslive",
+          "line": 217,
+          "anchor": "packages-law-practice-server-src-usptoclaims-usptoclaims-layer-ts-217-usptoclaimslive",
           "currentTags": [
             "@category",
             "@since"
@@ -460279,9 +460565,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 484,
-        "publicModuleCount": 481,
-        "publicExportCount": 4459
+        "sourceFileCount": 491,
+        "publicModuleCount": 488,
+        "publicExportCount": 4519
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -465222,6 +465508,160 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 30,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 11,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/Holds.verdict.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-verdict-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -515028,6 +515468,1335 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "holdsListCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 63,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-63-holdslistcommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsProbeCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 84,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-84-holdsprobecommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.command.ts",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-command-ts-118-holdscommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldsErrorReason",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+          "line": 29,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-errors-ts-29-holdserrorreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldsErrorReason",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+          "line": 39,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-errors-ts-39-holdserrorreason",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldsError",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-errors-ts-56-holdserror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdsPlatformError",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.errors.ts",
+          "line": 82,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-errors-ts-82-holdsplatformerror",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runHoldsList",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-42-runholdslist",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldsProbeInput",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-72-holdsprobeinput",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runHoldsProbe",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.program.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.program.ts",
+          "line": 103,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-program-ts-103-runholdsprobe",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldId",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 31,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-31-holdid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldId",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-42-holdid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldKind",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 58,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-58-holdkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldKind",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-68-holdkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldAnchor",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-85-holdanchor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldSubject",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 114,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-114-holdsubject",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRuntime",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-139-proberuntime",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRuntime",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 149,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-149-proberuntime",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldFalsifier",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 179,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-179-holdfalsifier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldFalsifier",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-199-holdfalsifier",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldWatchTarget",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-216-holdwatchtarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldWatchTarget",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-228-holdwatchtarget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldExitAction",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-244-holdexitaction",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldExitAction",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 256,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-256-holdexitaction",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldProposition",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 273,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-273-holdproposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldProposition",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 293,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-293-holdproposition",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldVersionId",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-310-holdversionid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRunId",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 330,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-330-proberunid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRunId",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 341,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-341-proberunid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldActivityId",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 358,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-358-holdactivityid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldPrincipalId",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 378,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-378-holdprincipalid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldClaimVersion",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 411,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-411-holdclaimversion",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldClaimVersion",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 419,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-419-holdclaimversion",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeOutcome",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 442,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-442-probeoutcome",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeOutcome",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 454,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-454-probeoutcome",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRunVerdict",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 470,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-470-proberunverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRunVerdict",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 480,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-480-proberunverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ProbeRun",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 498,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-498-proberun",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldVerdict",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 539,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-539-holdverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldVerdict",
+          "exportKind": "type",
+          "filePath": "src/commands/Holds/Holds.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.schemas.ts",
+          "line": 549,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-schemas-ts-549-holdverdict",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "holdLedgerDirectory",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-53-holdledgerdirectory",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldLedgerShape",
+          "exportKind": "interface",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 73,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-73-holdledgershape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldLedger",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-101-holdledger",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeHoldLedger",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-118-makeholdledger",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldProbeRequest",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 192,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-192-holdproberequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldProbeShape",
+          "exportKind": "interface",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-223-holdprobeshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldProbe",
+          "exportKind": "class",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-246-holdprobe",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "classifyProbeOutput",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 277,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-277-classifyprobeoutput",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeHoldProbe",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 415,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-415-makeholdprobe",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerHoldLedger",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 448,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-448-layerholdledger",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerHoldProbe",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.service.ts",
+          "line": 467,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-service-ts-467-layerholdprobe",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "judgeProbeRun",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.verdict.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
+          "line": 35,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-verdict-ts-35-judgeproberun",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "confirmHoldVerdict",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.verdict.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-verdict-ts-72-confirmholdverdict",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "confirmHoldRuns",
+          "exportKind": "const",
+          "filePath": "src/commands/Holds/Holds.verdict.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/Holds.verdict.ts",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-holds-verdict-ts-113-confirmholdruns",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.command.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 20,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-20-export-from-holds-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.errors.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 27,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-27-export-from-holds-errors-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.program.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-34-export-from-holds-program-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 35,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-35-export-from-holds-schemas-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-42-export-from-holds-service-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Holds.verdict.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Holds/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Holds/index.ts",
+          "line": 49,
+          "anchor": "packages-tooling-tool-cli-src-commands-holds-index-ts-49-export-from-holds-verdict-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "imageCommand",
           "exportKind": "const",
           "filePath": "src/commands/Image/Image.command.ts",
@@ -553738,8 +555507,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 79,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-79-rootcommand",
+          "line": 80,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-80-rootcommand",
           "currentTags": [
             "@internal",
             "@category",
@@ -624779,8 +626548,8 @@
           "exportKind": "type",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 74,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-74-practicekgtoolid",
+          "line": 75,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-75-practicekgtoolid",
           "currentTags": [
             "@category",
             "@since"
@@ -624801,8 +626570,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 90,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-90-practicekgtoolkey",
+          "line": 91,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-91-practicekgtoolkey",
           "currentTags": [
             "@category",
             "@since"
@@ -624823,8 +626592,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 107,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-107-practicekgfailurereasonattribute",
+          "line": 108,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-108-practicekgfailurereasonattribute",
           "currentTags": [
             "@category",
             "@since"
@@ -624845,8 +626614,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 131,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-131-practicekgprocesscpu",
+          "line": 132,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-132-practicekgprocesscpu",
           "currentTags": [
             "@category",
             "@since"
@@ -624867,8 +626636,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 163,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-163-practicekgprocessrss",
+          "line": 164,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-164-practicekgprocessrss",
           "currentTags": [
             "@category",
             "@since"
@@ -624889,8 +626658,8 @@
           "exportKind": "const",
           "filePath": "src/telemetry/PracticeKgTelemetry.instruments.ts",
           "repoPath": "apps/practice-kg-mcp/src/telemetry/PracticeKgTelemetry.instruments.ts",
-          "line": 190,
-          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-190-practicekgtelemetryinstruments",
+          "line": 191,
+          "anchor": "apps-practice-kg-mcp-src-telemetry-practicekgtelemetry-instruments-ts-191-practicekgtelemetryinstruments",
           "currentTags": [
             "@category",
             "@since"

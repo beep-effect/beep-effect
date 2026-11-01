@@ -1,0 +1,62 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "18643465-root-1",
+  "role": "extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.94,
+  "resolvedClaimNumbers": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "unresolved": [
+    {
+      "claimNumber": 10,
+      "quotes": [
+        "an electric motor",
+        "the rotor structure (16), having at least one permanent magnet (16a), of an electric motor"
+      ],
+      "reason": "Two indefinite electric-motor recitations in preamble and body can introduce distinct motors or repeat the same motor. Examiner expressly identifies this as unclear. A unique term-to-introduction graph cannot be supplied without construing the repeated introduction; retained unresolved for independent critic and attorney review. This is annotation/referent uncertainty, not operative-source uncertainty."
+    }
+  ],
+  "sourceFamilyConcerns": [
+    {
+      "quote": "the workpiece comprising a shaft",
+      "reason": "Root 1 carries extensive embedded apparatus/workpiece context before the method main transition the method being characterised in that. That embedded comprising is not selected as the method transition. Four coordinated in-that machining functions are individual functional elements."
+    },
+    {
+      "quote": "claims 1-10 are rejected",
+      "reason": "Source-audit confirms actual rejection applies to 1-10; selected 11-15 are root-family context, not separately asserted rejected claims. All selected context remains labelled in frozen scope."
+    },
+    {
+      "quote": "the machining tool",
+      "reason": "Manual semantic link to a tool for machining, not an exact-head match. Tool holder is separately introduced; no conflation. Examiner allegation retained as source evidence, not imposed as the annotation answer."
+    },
+    {
+      "quote": "the front radial bearing",
+      "reason": "Candidate front air or gas radial bearing exists but examiner explicitly raises changed-name ambiguity; no antecedent edge added to this disputed shortening. Same for rear radial bearing. First/second machined portion changed-name phrases and two faces collective reference likewise remain unlinked rather than adding introductions."
+    },
+    {
+      "quote": "the flanges",
+      "reason": "Claim 13 explicitly permits two flanges OR one flange and a shoulder. The plural referring phrase in 14 has no single unambiguous branch-independent introducing term, so no antecedent edge."
+    },
+    {
+      "quote": "the reciprocating motions",
+      "reason": "Source presents this nominal phrase definitely without an explicit determiner-bearing introduction. Similar first definite recitations of beginning/end, sinusoidal program, desired programmed arrangement, displacement, head, halfway point, length, periphery, bottom, annular area, placing or attachment and centrifugal forces remain terms without invented introducing anchors."
+    }
+  ],
+  "annotationRationale": "Fresh manual source-grammar annotation from canonical claims and native XML. Exact manually selected quote locations only; no decomposer, implementation, predictions, synthetic fixtures or prior conformance references read. Complete lexical noun heads, nested enumeration and explicit function represented; inferred introductions omitted. Functional parts preserve intervening source text. Confidence is an extractor assessment, not attorney agreement. Independent critic review remains required."
+}

@@ -26,15 +26,30 @@ import type { UsptoClaimsFailureReason } from "@beep/law-practice-use-cases/Clai
 import type { UsptoDocumentReference, UsptoError, UsptoShape } from "@beep/uspto";
 
 type ApplicationSource = Extract<UsptoClaimSource, { readonly kind: "application" }>;
+type PublicationSource = Extract<UsptoClaimSource, { readonly kind: "publication" }>;
 
 const CLAIMS_DOCUMENT_CODE = "CLM";
+
+// Only explicitly labelled XML representations qualify; PDF/OCR is never a fallback.
+const xmlDownloadUrl = (document: UsptoDocumentReference): O.Option<string> =>
+  O.fromUndefinedOr(document.downloadOptions).pipe(
+    O.flatMap((options) =>
+      A.findFirst(options, ({ mimeTypeIdentifier }) =>
+        O.fromUndefinedOr(mimeTypeIdentifier).pipe(
+          O.map(Str.toLowerCase),
+          O.exists((format) => format === "xml" || format === "application/xml" || format === "text/xml")
+        )
+      )
+    ),
+    O.map(({ downloadUrl }) => downloadUrl)
+  );
 
 // A `<claim>` element (not `<claims>` or `<claim-text>`), its attributes and its markup.
 const claimElementPattern = /<claim(?=[\s>])([^>]*)>([\s\S]*?)<\/claim>/gu;
 const claimNumberAttributePattern = /\bnum="([0-9]+)"/u;
 const claimTextTagPattern = /<\/?claim-text\b[^>]*>/gu;
 const anyTagPattern = /<[^>]*>/gu;
-const leadingClaimNumberPattern = /^\s*[0-9]+\s*\.\s*/u;
+const leadingClaimNumberPattern = /^\s*[0-9]+\s*[.:]\s*/u;
 
 // The flattened claim text is wrapped in one element so the shared XML decoder resolves its entities.
 const decodeClaimText = decodeXmlTextAs(S.Struct({ "claim-text": S.String }));
@@ -113,12 +128,50 @@ const applicationClaims = Effect.fn("UsptoClaims.applicationClaims")(function* (
     claimsDocumentOf(documents, O.fromUndefinedOr(source.documentIdentifier)),
     () => portError("not-found")(`Application ${source.applicationNumber} has no matching claims document.`)
   );
-  const downloadUrl = yield* Effect.fromOption(O.fromUndefinedOr(document.downloadUrl), () =>
-    portError("no-full-text-claims")(`Claims document ${document.documentIdentifier} has no download.`)
+  const downloadUrl = yield* Effect.fromOption(xmlDownloadUrl(document), () =>
+    portError("no-full-text-claims")(`Claims document ${document.documentIdentifier} has no XML download.`)
   );
   const bytes = yield* uspto.downloadDocument(downloadUrl).pipe(Effect.mapError(fromDriver));
   const claims = yield* claimsFromXml(yield* utf8Text(bytes));
   return UsptoClaimSet.make({ claims, documentIdentifier: document.documentIdentifier, source });
+});
+
+const publicationClaims = Effect.fn("UsptoClaims.publicationClaims")(function* (
+  uspto: UsptoShape,
+  source: PublicationSource
+): Effect.fn.Return<UsptoClaimSet, UsptoClaimsError> {
+  const number = source.publicationNumber;
+  const pregrant = Str.length(number) === 11;
+  const metadata = yield* uspto
+    .searchApplications(
+      pregrant
+        ? `applicationMetaData.earliestPublicationNumber:US${number}A*`
+        : `applicationMetaData.patentNumber:${number}`
+    )
+    .pipe(Effect.mapError(fromDriver));
+  const matches = A.filter(metadata, (row) =>
+    pregrant
+      ? O.exists(row.earliestPublicationNumber, Str.startsWith(`US${number}A`))
+      : O.contains(row.patentNumber, number)
+  );
+  if (matches.length !== 1) {
+    return yield* portError("not-found")("The publication did not resolve to one matching USPTO application.");
+  }
+  const publication = yield* Effect.fromOption(
+    A.head(matches).pipe(
+      O.flatMap((row) => O.fromUndefinedOr(pregrant ? row.pgpubDocumentMetaData : row.grantDocumentMetaData))
+    ),
+    () => portError("no-full-text-claims")("The publication has no native XML reference.")
+  );
+  const bytes = yield* uspto.downloadDocument(publication.fileLocationURI).pipe(Effect.mapError(fromDriver));
+  const xml = yield* utf8Text(bytes);
+  if (Str.includes("OCRConfidenceData")(xml)) {
+    return yield* portError("no-full-text-claims")(
+      "OCR-derived claims are excluded from the native publication source."
+    );
+  }
+  const claims = yield* claimsFromXml(xml);
+  return UsptoClaimSet.make({ claims, documentIdentifier: publication.xmlFileName, source });
 });
 
 /**
@@ -128,11 +181,14 @@ const applicationClaims = Effect.fn("UsptoClaims.applicationClaims")(function* (
  *
  * - `application`: lists the file wrapper's documents, takes the `CLM`
  *   document named by `documentIdentifier` (or, without one, the latest by
- *   official date), downloads it, and reads its `<claim num>` elements.
+ *   official date), selects its explicitly labelled XML download, and reads
+ *   its `<claim num>` elements.
  *   Nested `<claim-text>` boundaries become spaces and inline markup is
  *   dropped; the texts then go through the domain claim normalizer.
- * - `publication`: not supported yet and fails with `unavailable`; reading
- *   published claims from ppubs or the bulk XML is the follow-up.
+ * - `publication`: resolves an exact grant number or pre-grant publication
+ *   number through ODP metadata, downloads the individual native bulk XML
+ *   reference, and reads its claims. This is the published version, which
+ *   can differ from later amended file-wrapper claims.
  *
  * A download that is not UTF-8 or has no XML claim elements fails with
  * `no-full-text-claims`: OCR text is never read or repaired. Claims that do
@@ -141,9 +197,8 @@ const applicationClaims = Effect.fn("UsptoClaims.applicationClaims")(function* (
  *
  * **Gotchas**
  *
- * The driver keeps only the first download option of a document, without its
- * MIME type. When a `CLM` document lists a PDF before its XML, the adapter
- * reads the PDF and fails with `no-full-text-claims`.
+ * A document without an explicitly labelled XML option fails with
+ * `no-full-text-claims` before any download, even if a PDF is available.
  *
  * **Example** (Provide the adapter over the driver)
  *
@@ -166,12 +221,7 @@ export const UsptoClaimsLive: Layer.Layer<UsptoClaims, never, Uspto> = Layer.eff
       claims: Effect.fn("UsptoClaims.claims")((source: UsptoClaimSource) =>
         UsptoClaimSource.match(source, {
           application: (application) => applicationClaims(uspto, application),
-          publication: ({ publicationNumber }) =>
-            Effect.fail(
-              portError("unavailable")(
-                `Claims of publication ${publicationNumber} are not supported yet; ppubs or bulk XML is the follow-up.`
-              )
-            ),
+          publication: (publication) => publicationClaims(uspto, publication),
         })
       ),
     })

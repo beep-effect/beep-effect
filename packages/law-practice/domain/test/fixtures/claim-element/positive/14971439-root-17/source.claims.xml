@@ -1,0 +1,66 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A tube-fitting-assembly ferrule for a tube-fitting assembly having sections of tube, having a circumferential point-seal surface, longitudinal axis, transverse shoulder, threaded socket, and threaded plug-nut, the tube-fitting-assembly ferrule comprising:
+<claim-text>(i) a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket; and</claim-text>
+<claim-text>(ii) a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression;</claim-text>
+</claim-text>
+<claim-text>where pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface; and</claim-text>
+<claim-text>where said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections.</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a circumferential groove.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising at least one cutout on said ferrule front face.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a circumferential notch defining said transverse shoulder.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a collar defining said transverse shoulder.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an arcuate camming surface is formed in said bore opposite the notch.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said notch is defined by a first arcuate surface and a second straight surface extending transversely to the longitudinal axis of the tube.</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the arcuate camming surface extends a distance from the first arcuate surface, and wherein the front end of the tube gripping member fits between the arcuate camming surface and the first arcuate surface when sealing the tube end.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the front end of the tube gripping member is configured to plastically deform along the first arcuate surface of the tube when the tube gripping member is in a sealing engagement with the tube.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the internally threaded end of the first tube fitting member is configured to threadably engage with externally threaded end of the second tube fitting member.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said tube gripping member has plasticity and resiliency sufficient to deform and partially fit into the notch when the first tube fitting member is tightened against the second tube fitting member.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second tube fitting member is provided with a drive shoulder configured to engage a back end of the tube gripping member.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the threaded end of the first tube fitting member is configured to receive the threaded end of the second tube fitting member when the second fitting member is pulled up.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the tube, the first tube fitting member, the first tube fitting member, and the tube gripping member are formed of metal or metal alloy.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the tube gripping member comprises a tapered front end configured to fit into the notch.</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The tube-fitting-assembly ferrule of <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the second tube fitting member is a nut.</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. A tube-fitting-assembly method comprising:
+<claim-text>(i) providing a tube-fitting assembly having sections of tube, having a circumferential point-seal surface, longitudinal axis, transverse shoulder, threaded socket, and threaded plug-nut;</claim-text>
+<claim-text>(ii) providing a the tube-fitting-assembly ferrule comprising:
+<claim-text>(a) a ferrule body adapted to encircle the longitudinal axis of the tube, having an inner and outer surface in relation to the tube, and having a forward end oriented toward the transverse shoulder and the threaded socket; and</claim-text>
+<claim-text>(b) a ferrule forward face on said forward end of said ferrule body, adapted to contact the transverse shoulder at an angle which promotes a desired deformation of said ferrule body upon compression;</claim-text>
+</claim-text>
+</claim-text>
+<claim-text>where pressure applied by the threaded plug nut against a rearward end of said ferrule body compresses said ferrule forward face against the transverse shoulder, producing a deformation constricting said inner surface of said ferrule body against the tube exterior surface, and bulging said outer surface of said ferrule body against the threaded socket interior surface; and</claim-text>
+<claim-text>where said deformations of said ferrule body create an additional sealing force against the circumferential point-seal surface between the connected tube sections.</claim-text>
+</claim>
+</claims>

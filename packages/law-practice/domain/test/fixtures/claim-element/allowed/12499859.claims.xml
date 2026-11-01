@@ -1,0 +1,68 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. An intelligent singing bowl, comprising:
+<claim-text>a base (<b>100</b>);</claim-text>
+<claim-text>a sound production element (<b>200</b>), wherein the sound production element (<b>200</b>) is connected to an upper surface of the base (<b>100</b>);</claim-text>
+<claim-text>a supporting element (<b>300</b>), wherein the supporting element (<b>300</b>) is connected to the base (<b>100</b>) and extends upwards from the base (<b>100</b>);</claim-text>
+<claim-text>a knocking element (<b>400</b>), wherein a bottom end of the knocking element (<b>400</b>) is located on one side of the sound production element (<b>200</b>); and</claim-text>
+<claim-text>a driving element (<b>500</b>), wherein the driving element (<b>500</b>) is located inside the supporting element (<b>300</b>); the driving element (<b>500</b>) comprises a rotating shaft (<b>510</b>), an electromagnetic clutch (<b>520</b>), and a motor (<b>530</b>); a top end of the knocking element (<b>400</b>) is rotatably connected to a middle of the rotating shaft (<b>510</b>); the electromagnetic clutch (<b>520</b>) and the motor (<b>530</b>) are respectively connected to two ends of the rotating shaft (<b>510</b>); the electromagnetic clutch (<b>520</b>) attracts or releases the rotating shaft (<b>510</b>); when the electromagnetic clutch (<b>520</b>) attracts the rotating shaft (<b>510</b>), the rotating shaft (<b>510</b>) is fixedly connected to the knocking element (<b>400</b>); and the motor (<b>530</b>) drives the rotating shaft (<b>510</b>) to rotate, to enable the rotating shaft (<b>510</b>) to drive the knocking element (<b>400</b>) to rotate synchronously.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a control element (<b>600</b>), wherein the control element (<b>600</b>) controls a rotation angle and rotation frequency of the knocking element (<b>400</b>).</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the electromagnetic clutch (<b>520</b>) comprises an electromagnetic assembly (<b>521</b>); the electromagnetic assembly (<b>521</b>) is connected to the knocking element (<b>400</b>); and after the electromagnetic clutch (<b>520</b>) is turned on, the electromagnetic assembly (<b>521</b>) attracts at least a part of the rotating shaft (<b>510</b>), to enable the rotating shaft (<b>510</b>) to drive the knocking element (<b>400</b>) to rotate synchronously.</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00003">claim 3</claim-ref>, wherein the electromagnetic clutch (<b>520</b>) further comprises a first gear (<b>522</b>) connected to the knocking element (<b>400</b>); the first gear (<b>522</b>) is fixedly connected to the electromagnetic assembly (<b>521</b>); and the electromagnetic assembly (<b>521</b>) is connected to the knocking element (<b>400</b>) through the first gear (<b>522</b>), to enable the rotating shaft (<b>510</b>) to drive the knocking element (<b>400</b>) to rotate synchronously.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein the driving element (<b>500</b>) further comprises a transmission member (<b>540</b>) connected to the knocking element (<b>400</b>); a second gear (<b>541</b>) that meshes with the first gear (<b>522</b>) is arranged at one end of the transmission member (<b>540</b>); and the first gear (<b>522</b>) is connected to the knocking element (<b>400</b>) through the transmission member (<b>540</b>), to enable the rotating shaft (<b>510</b>) to drive the knocking element (<b>400</b>) to rotate synchronously.</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the rotating shaft (<b>510</b>) is located inside the transmission member (<b>540</b>); a connection protruding column (<b>410</b>) is arranged at a top end of the knocking element (<b>400</b>); the connection protruding column (<b>410</b>) is connected to an outer wall of the transmission member (<b>540</b>); and the transmission member (<b>540</b>) is connected to the knocking element (<b>400</b>) through the connection protruding column (<b>410</b>), to enable the rotating shaft (<b>510</b>) to drive the knocking element (<b>400</b>) to rotate synchronously.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein an output end (<b>531</b>) is arranged at one end of the motor (<b>530</b>) that is close to the rotating shaft (<b>510</b>); the rotating shaft (<b>510</b>) is provided with an output channel (<b>512</b>) that accommodates the output end (<b>531</b>); and the output end (<b>531</b>) is in interference insertion into the output channel (<b>512</b>), to enable the motor (<b>530</b>) to drive the rotating shaft (<b>510</b>) to rotate synchronously through the output end (<b>531</b>).</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein a rotating shaft channel (<b>523</b>) is arranged in the electromagnetic clutch (<b>520</b>), and at least a part of the rotating shaft (<b>510</b>) is inserted into the rotating shaft channel (<b>523</b>).</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00007">claim 7</claim-ref>, wherein the driving element (<b>500</b>) further comprises a spigot (<b>550</b>); and the spigot (<b>550</b>) is adjacent to the motor (<b>530</b>), and sleeves an outer surface of the output end (<b>531</b>) to restrict movement of the output end (<b>531</b>).</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the driving element (<b>500</b>) further comprises oppositely arranged stoppers (<b>560</b>); the stoppers (<b>560</b>) sleeve an outer wall of the rotating shaft (<b>510</b>); and outer walls of the stoppers (<b>560</b>) resist against an inner wall of the transmission member (<b>540</b>) to restrict movement of the rotating shaft (<b>510</b>).</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the supporting element (<b>300</b>) is provided with a swinging channel (<b>310</b>) that allows the knocking element (<b>400</b>) to swing.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising a switch button (<b>610</b>), wherein after the switch button (<b>610</b>) generates a signal, the control element (<b>600</b>) receives the signal to control turning on or turning off of the intelligent singing bowl.</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising at least one control button (<b>620</b>), wherein the control button (<b>620</b>) is electrically connected to the control element (<b>600</b>); and the control button (<b>620</b>) is configured to adjust the rotation angle, rotation frequency, and operating time of the knocking element (<b>400</b>).</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00013">claim 13</claim-ref>, further comprising a display screen (<b>630</b>), wherein the display screen (<b>630</b>) is electrically connected to the control element (<b>600</b>); and the display screen (<b>630</b>) displays the rotation angle, rotation frequency, and operating time of the knocking element (<b>400</b>) in real time.</claim-text>
+</claim>
+<claim id="CLM-00015" num="00015">
+<claim-text><b>15</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a charging port (<b>640</b>), wherein the intelligent singing bowl is charged through the charging port (<b>640</b>).</claim-text>
+</claim>
+<claim id="CLM-00016" num="00016">
+<claim-text><b>16</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00015">claim 15</claim-ref>, further comprising a battery (<b>650</b>), wherein the battery (<b>650</b>) is located inside the base (<b>100</b>), and the charging port (<b>640</b>) is configured to be connected with an external power source to supply power to the battery (<b>650</b>).</claim-text>
+</claim>
+<claim id="CLM-00017" num="00017">
+<claim-text><b>17</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the base (<b>100</b>) is provided with a mounting slot (<b>110</b>), and a bottom end of the sound production element (<b>200</b>) is movably connected to the mounting slot (<b>110</b>).</claim-text>
+</claim>
+<claim id="CLM-00018" num="00018">
+<claim-text><b>18</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein at least a part of a bottom surface of the base (<b>100</b>) is of a planar structure for resisting against a supporting surface, and the bottom surface of the base (<b>100</b>) is provided with an antislip member (<b>120</b>).</claim-text>
+</claim>
+<claim id="CLM-00019" num="00019">
+<claim-text><b>19</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the supporting element (<b>300</b>) and the base (<b>100</b>) are of an integrated structure.</claim-text>
+</claim>
+<claim id="CLM-00020" num="00020">
+<claim-text><b>20</b>. The intelligent singing bowl according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the motor (<b>530</b>) is a stepping motor, and the electromagnetic clutch (<b>520</b>) is a gear electromagnetic clutch.</claim-text>
+</claim>
+</claims>

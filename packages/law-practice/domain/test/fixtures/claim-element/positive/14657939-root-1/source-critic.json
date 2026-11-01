@@ -1,0 +1,240 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "14657939-root-1",
+  "role": "source-eligibility-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.96,
+  "verdict": "accepted",
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+  "findings": [],
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the wide face",
+      "nativeQuote": "the wide face",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the horizontal segment",
+      "nativeQuote": "the horizontal segment",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the total length",
+      "nativeQuote": "the total length",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 2,
+      "examinerPhrase": "the length S",
+      "nativeQuote": "the length S",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 3,
+      "examinerPhrase": "the horizontal plane",
+      "nativeQuote": "the horizontal plane",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the thickness",
+      "nativeQuote": "the thickness",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the original chamfer angle β",
+      "nativeQuote": "the original chamfer angle β",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the length S",
+      "nativeQuote": "the length S",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 4,
+      "examinerPhrase": "the height H",
+      "nativeQuote": "the height H",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the plane parts",
+      "nativeQuote": "the plane parts",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the supporting plane",
+      "nativeQuote": "the supporting plane",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the inner arc or outer arc",
+      "nativeQuote": "the inner arc or outer arc",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the working positions",
+      "nativeQuote": "the working positions",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the last back-up roll",
+      "nativeQuote": "the last back-up roll",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the last horizontal segment",
+      "nativeQuote": "the last horizontal segment",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the outlet",
+      "nativeQuote": "the outlet",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the horizontal segment",
+      "nativeQuote": "the horizontal segment",
+      "literalMatchIgnoringCase": true,
+      "explanation": "Same-numbered selected native phrase; statutory rejection expressly covers1–11."
+    }
+  ],
+  "sourceIdentity": {
+    "applicationNumber": "14657939",
+    "publicationNumber": "US20150258604A1",
+    "publicationDate": "20150917"
+  },
+  "digestEvidence": [
+    {
+      "file": "14657939.publication.xml",
+      "sha256": "19d406c4308a3edac82e0e9d841cea7a9d051d5f83acffd17d3840c971f1e6fc",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14657939.claims.xml",
+      "sha256": "9a0763a20098b088f6180c12eaca2a1219e69dd9f59651e6000b5e7b2b5cec12",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "9a0763a20098b088f6180c12eaca2a1219e69dd9f59651e6000b5e7b2b5cec12",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14657939.I788PISEPXXIFW3.original.xml",
+      "sha256": "24fa25d7e8ac253313a4b36c1104cb99065785f0a7f8f7576696023ddc8a2091",
+      "matchesProvenance": true
+    },
+    {
+      "file": "14657939.I788PITYPXXIFW3.original.xml",
+      "sha256": "f424d882e67c25b2d134efe80084f743026af938632d7356aa9394a97bd11813",
+      "matchesProvenance": true
+    }
+  ],
+  "versionEvidence": [
+    {
+      "claimNumber": 4,
+      "unamendedQuote": "claim 1 or 2",
+      "markedEvidence": "ClaimReference1 followed by DeletedText \" or \" and DeletedText \"2\"",
+      "nativeQuote": "of claim 1",
+      "conclusion": "Explicit deleted alternative corroborates native dependency1; no inferred OCR strike deletion."
+    },
+    {
+      "claimNumber": 9,
+      "unamendedQuote": "claim 1 or 2",
+      "markedEvidence": "ClaimReference1 followed by DeletedText \" or \" and DeletedText \"2\"",
+      "nativeQuote": "of claim 1",
+      "conclusion": "Explicit deleted alternative corroborates native dependency1."
+    },
+    {
+      "claimNumber": 1,
+      "markedEvidence": "Reference numerals are explicitly DeletedText; one DeletedText also captures the o in of after frames(5). Printed label says Currently Amended, while metadata ClaimStatusCategory incorrectly says original.",
+      "conclusion": "Visible amendment wording plus native correspondence used. Clipped o/f and Greek glyph OCR are explicit transcription qualifications, not substantive claim alternatives."
+    }
+  ],
+  "inventoryEvidence": {
+    "sha256": "e1eb86388f631ca59cfc46f40ba524550fc82618ccc17204dfcf29d23e91f6f1",
+    "declaredCount": 59,
+    "actualRows": 59,
+    "preOrOnActionClaimAndAmendmentRows": [
+      {
+        "documentIdentifier": "I788PIRWPXXIFW3",
+        "documentCode": "A.PE",
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "description": "Preliminary Amendment"
+      },
+      {
+        "documentIdentifier": "I788PISEPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "I788PITAPXXIFW3",
+        "documentCode": "REM",
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      },
+      {
+        "documentIdentifier": "I788PITYPXXIFW3",
+        "documentCode": "CLM",
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "description": "Claims"
+      },
+      {
+        "documentIdentifier": "I788PIVFPXXIFW3",
+        "documentCode": "REM",
+        "officialDate": "2015-03-13T00:00:00.000-0400",
+        "description": "Applicant Arguments/Remarks Made in an Amendment"
+      }
+    ],
+    "officeActionRow": [
+      {
+        "documentIdentifier": "IS1UW83PRXEAPX3",
+        "documentCode": "CTNF",
+        "officialDate": "2016-08-19T00:00:00.000-0400"
+      }
+    ],
+    "assessment": "Full59-row inventory inspected. Preliminary Amendment I788PIRW, marked CLM I788PISE, unamended CLM I788PITY and remarks filed2015-03-13; no later CLM/amendment/non-entry notice before2016-08-19 rejection. Chronology supports explicit amendment semantics and numbered examiner correspondence; not the sole eligibility evidence."
+  },
+  "membershipEvidence": "Native1 independently claims device;2–9 each expressly reference1. Context10 independently claims method and11→10; neither is silently added to selected device family. Selected1–9 have separate coherent numbered native bodies.",
+  "qualifications": [
+    "Both cached originals are OCR corroboration only. Native supplies reference characters; no original text was repaired into source.",
+    "Surviving marked2/3/5/6/7/8 independently read and correspond to native except LI/L1, a/α, p/β, degree glyphs, spacing and clipped of. Claim4 numerical ranges130–450mm,25–45degrees,30–85mm,10–50mm,3–25mm agree.",
+    "Extra duplicate original ClaimNumber2 node contains a page5 continuation of unselected method10; actual selected2 first numbered body is unambiguous. Native selected2 does not merge that continuation.",
+    "Acceptance is bounded source eligibility, not semantic annotation acceptance or attorney adjudication. Active sample unchanged."
+  ],
+  "rationale": "Independent source critic verifies real numbered112(b)/second-paragraph1–11 rejection, selected same-number wording, explicit deletion/adoption corroboration, full inventory and immutable identity/digests. Substantive original alternative dependencies4/9 are reconciled by structured DeletedText rather than hand-inferred strike glyphs.",
+  "independence": "Read source-audit, native/provenance, full cached inventory and both originals; no structural expected files, production/rules/predictions, network/secrets/git/delegation, or source/sample edits."
+}

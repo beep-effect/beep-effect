@@ -1,0 +1,176 @@
+{
+  "familyId": "14659462-root-1",
+  "role": "source-eligibility-extractor",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.97,
+  "verdict": "eligible",
+  "quotedEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the first item",
+      "nativeQuote": "the first item",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the axis",
+      "nativeQuote": "the axis",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the second item",
+      "nativeQuote": "the second item",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the base",
+      "nativeQuote": "the base",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 6,
+      "examinerPhrase": "the base portion",
+      "nativeQuote": "the base portion",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 8,
+      "examinerPhrase": "the periphery",
+      "nativeQuote": "the periphery",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "the distance",
+      "nativeQuote": "the distance",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "said pin hole",
+      "nativeQuote": "said pin hole",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 10,
+      "examinerPhrase": "said floatably seated position",
+      "nativeQuote": "said floatably seated position",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the flange base",
+      "nativeQuote": "the flange base",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the barrel nut assembly",
+      "nativeQuote": "the barrel nut assembly",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 14,
+      "examinerPhrase": "the outer periphery",
+      "nativeQuote": "the outer periphery",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the distance",
+      "nativeQuote": "the distance",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the center point",
+      "nativeQuote": "the center point",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the aperture",
+      "nativeQuote": "the aperture",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    },
+    {
+      "claimNumber": 15,
+      "examinerPhrase": "the edge",
+      "nativeQuote": "the edge",
+      "literalMatch": true,
+      "explanation": "Case-insensitive native substring match; singular prefixes noted separately."
+    }
+  ],
+  "concerns": [
+    "Cached original18-Claim-node count investigated: source Claim4 embeds printed5 and Claim17 embeds printed18, resolving count18 vs native20 as OCR segmentation.Claim9 examiner singular pin hole occurs as prefix of native pin holes; claim15 aperture occurs as prefix apertures. Examiner abbreviations recorded, not version changes."
+  ],
+  "rationale": "Read actual112(b)/second-paragraph indefiniteness ground and all selected claims. Natural dependency membership checked, including unusual reference wording; all selected descendants connect to root1. Identity/original/inventory checks retained before handoff. Not attorney adjudication.",
+  "identityEvidence": {
+    "nativeApplicationNumber": "14659462",
+    "nativePublicationNumber": "US20150192169A1",
+    "nativePublicationDate": "20150709",
+    "provenanceIdentityMatches": true,
+    "publicationSha256Matches": true,
+    "claimsXmlSha256Matches": true,
+    "publicationPrecedesOfficeAction": true,
+    "nativePublicationSha256": "5219d69e084510b969a647809cfeb3c8ea2ed4b1deba247000917b384d01f168",
+    "sourceClaimsXmlSha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb"
+  },
+  "inventoryEvidence": {
+    "retainedInventoryRows": 43,
+    "retainedInventoryCount": 43,
+    "rowsEqualCount": true,
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "I7CKNTCNPXXIFW3",
+        "officialDate": "2015-03-16T00:00:00.000-0400"
+      }
+    ],
+    "officeActionMailDate": "2016-05-17",
+    "limitation": "Underlying inventory entries and full office-action document not independently retrieved; this audit uses retained public excerpts and cached originals. Date-only consistency does not establish in-force identity."
+  },
+  "originalEvidence": [
+    {
+      "documentIdentifier": "I7CKNTCNPXXIFW3",
+      "officialDate": "2015-03-16T00:00:00.000-0400",
+      "sha256": "51d739934e30f89c831553be337853018fe44faab0975a3118051c62986d4454",
+      "ocrCorroborationOnly": false,
+      "exactNonWhitespaceClaimNumbers": [3, 6, 11, 12, 16, 19],
+      "sourceClaimCount": 18
+    }
+  ],
+  "nativeContextClaimCount": 20,
+  "selectedClaimNumbers": [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+  ],
+  "naturalMembershipAudit": "Selected numbered natural dependency text read independently; no XML proposal overrides wording. Any identified range/alternative discrepancy is described in concerns.",
+  "cachedOriginalChecks": [
+    {
+      "documentIdentifier": "I7CKNTCNPXXIFW3",
+      "cachedOriginalPresent": true,
+      "sha256Matches": true,
+      "headerApplicationNumbers": ["14659462"],
+      "headerMailRoomDates": ["2015-03-16"],
+      "applicationMatches": true,
+      "claimNodeCount": 18
+    }
+  ]
+}

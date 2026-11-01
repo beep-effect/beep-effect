@@ -1,0 +1,148 @@
+{
+  "familyId": "14970678-root-17",
+  "rootClaimNumber": 17,
+  "labelClaimNumbers": [
+    17,
+    18,
+    19,
+    20
+  ],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "Apparatus for holding a slidable body at a selected position intermediate fully retracted and fully extended positions with respect to a housing for the body, comprising: a first latch element mounted to the housing adjacent the path traversed by the slidable body; and a second latch element on the slidable body; wherein one of the latch elements is mounted for movement into and out of engagement with the other latch element to hold the slidable body at an intermediate position defined by the other latch element; and wherein said one latch element is biased either into or out of said engagement, and is movable against the bias from outside the housing.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "Apparatus according to claim 1 wherein said one latch element is movable against said bias by hand from outside the housing.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "Apparatus according to claim 1 wherein said one latch element is pivotable into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "Apparatus according to claim 1 wherein said one latch element is elongate and is rotatable about its longitudinal axis into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "Apparatus according to claim 1, wherein the first and second latch elements comprise a projection and a seat for the projection that serves as a positive detent against sliding movement of the slidable body.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "Apparatus according to claim 1 wherein there are plural said other latch elements that define respective spaced intermediate positions of the slidable body.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "Apparatus according to claim 1 wherein the one, i.e. moveable, latch element is said second latch element on the slidable body.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "Apparatus according to claim 7 wherein the other latch element is fixed to the housing.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "Apparatus according to claim 7 wherein said one latch element is moveable against the bias by hand by protruding from the slidable member at an outer end thereof.",
+      "sourceXmlParentClaimNumbers": [
+        7
+      ]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "Apparatus according to claim 9 wherein the one latch element protrudes from the slidable member through a slot in a front panel of the slidable member.",
+      "sourceXmlParentClaimNumbers": [
+        9
+      ]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "Apparatus according to claim 1 wherein said one latch element is moveable against the bias by hand, being operably linked to a locking handle for the slidable member.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "Apparatus according to claim 1 wherein the slidable member is a drawer in a cabinet drawer.",
+      "sourceXmlParentClaimNumbers": [
+        1
+      ]
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "Apparatus according to claim 5 wherein said one latch element is pivotable into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        5
+      ]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "Apparatus according to claim 5 wherein said one latch element is elongate and is rotatable about its longitudinal axis into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        5
+      ]
+    },
+    {
+      "claimNumber": 15,
+      "claimText": "Apparatus according to claim 3 wherein said one latch element is movable against said bias by hand from outside the housing.",
+      "sourceXmlParentClaimNumbers": [
+        3
+      ]
+    },
+    {
+      "claimNumber": 16,
+      "claimText": "Apparatus according to claim 4 wherein said one latch element is movable against said bias by hand from outside the housing.",
+      "sourceXmlParentClaimNumbers": [
+        4
+      ]
+    },
+    {
+      "claimNumber": 17,
+      "claimText": "A cabinet drawer comprising a cabinet housing and a drawer forming a slidable body mounted to be slidable in and out of the housing, and apparatus for holding the slidable body at a selected position intermediate fully retracted and fully extended positions with respect to a housing for the body, wherein the apparatus comprises: a first latch element mounted to the housing adjacent the path traversed by the slidable body; and a second latch element on the slidable body; wherein one of the latch elements is mounted for movement into and out of engagement with the other latch element to hold the slidable body at an intermediate position defined by the other latch element; and wherein said one latch element is biased either into or out of said engagement, and is movable against the bias from outside the housing.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 18,
+      "claimText": "A cabinet drawer according to claim 17 wherein said one latch element is movable against said bias by hand from outside the housing.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    },
+    {
+      "claimNumber": 19,
+      "claimText": "A cabinet drawer according to claim 17 wherein said one latch element is pivotable into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    },
+    {
+      "claimNumber": 20,
+      "claimText": "A cabinet drawer according to claim 17 wherein said one latch element is elongate and is rotatable about its longitudinal axis into and out of said engagement.",
+      "sourceXmlParentClaimNumbers": [
+        17
+      ]
+    }
+  ]
+}

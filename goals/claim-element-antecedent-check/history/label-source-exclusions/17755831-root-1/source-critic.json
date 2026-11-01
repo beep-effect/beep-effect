@@ -1,0 +1,156 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "17755831-root-1",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20220387188", "A1", "20221208"],
+    "applicationReference": ["US", "17755831", "20201119"],
+    "officeActionDocumentIdentifiers": ["MKEEAXEVX137X95"],
+    "officeActionMailDate": "2026-01-15"
+  },
+  "digestEvidence": [
+    {
+      "file": "17755831.publication.xml",
+      "sha256": "a3350521514fecb53fefdeb95e94383db2c5f8929e651055488a26d46dbc4450",
+      "matchesProvenance": true
+    },
+    {
+      "file": "17755831.claims.xml",
+      "sha256": "5799ce00768b6bf3ec8bfca714e141ce9773618fb451ec0fd1df78c03e7dc556",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "5799ce00768b6bf3ec8bfca714e141ce9773618fb451ec0fd1df78c03e7dc556",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "L2ZY7EC7XBLUEX1",
+      "available": true,
+      "sha256": "94651f18e674486339eb764f8ed55fb6fefa15de1389d429946383b09210b05f",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "L314HJTZXBLUEX5",
+      "available": true,
+      "sha256": "a916e138ab2bad8a0adf0719186fd0888d19171c19be32ea6401a3a91265ec91",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 53,
+    "actualRows": 53,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2022-05-10T05:26:17.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "L2ZY7EC4XBLUEX1"
+      },
+      {
+        "officialDate": "2022-05-10T05:26:17.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "L2ZY7EC7XBLUEX1"
+      },
+      {
+        "officialDate": "2022-05-10T05:26:17.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "L2ZY7EC9XBLUEX1"
+      },
+      {
+        "officialDate": "2022-05-10T05:24:50.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "8e6d70d0-8fd7-4cb4-a929-19ec736625f0"
+      },
+      {
+        "officialDate": "2022-05-10T01:09:55.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "L314HJTZXBLUEX5"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 1,
+      "examinerPhrase": "the distance",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the distance"
+    },
+    {
+      "claimNumber": 9,
+      "examinerPhrase": "its end regions",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "its end regions"
+    },
+    {
+      "claimNumber": 13,
+      "examinerPhrase": "the elastic arm",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the elastic arm"
+    }
+  ],
+  "assessment": "Complete marked PDF pages1-4 (printed4-7) and higher-resolution page2 corroborate original amendment status, all substantive deletions and dependencies including13->9. Higher-resolution page2 resolves8: retain first in and delete particular in a, yielding native in recess. Remaining6 source XML accepted rendering leaves residual r from and/or; visual strikeout endpoint at final r is not sufficiently unambiguous to establish the native complete connector omission. Native6 says first adjustment device the second adjustment device comprises. Keep only this localized connector/deletion fidelity point unresolved for attorney adjudication rather than reconstructing accepted text from intended grammar.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "claimNumber": 6,
+      "evidence": "Original marked and/or deletion endpoint and residual r in accepted XML versus native complete connector omission. Claim8 previously held deletion is visually resolved.",
+      "requiredAction": "Attorney/source adjudication of original6 strikeout endpoint and exact operative connector text. Three source critic rounds reached; do not silently choose grammar."
+    }
+  ],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-15 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor (or for applications subject to pre-aia 35 u.s.c. 112, the applicant), regards as the invention."
+  ],
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Amended L2ZY7EC7XBLUEX1 Del/Ins resolves most clean-original changes including13->9; double-bracket deletion rendering, residual r in6, and original8 in a recess versus native in recess remain. OA examination under substituted dependency10 does not amend native13->9.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Amended L2ZY7EC7XBLUEX1 Del/Ins resolves most clean-original changes including13->9; double-bracket deletion rendering, residual r in6, and original8 in a recess versus native in recess remain. OA examination under substituted dependency10 does not amend native13->9.",
+          "requiredAction": "Inspect rendered amendment6/8 and bracketed deletions to verify exact operative wording."
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Original amendment PDF2 (printed5 of8) confirms strikeout of and/or in6, explaining native missing connector, and numerous bracketed deletions. However8 original visible recess phrase/deletion boundary remains insufficiently clear against native in recess, and other accepted residual glyph wording is unverified. Keep source unresolved pending complete authoritative accepted-text reconciliation; do not infer that matching OA phrases settles version.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Original amendment PDF2 (printed5 of8) confirms strikeout of and/or in6, explaining native missing connector, and numerous bracketed deletions. However8 original visible recess phrase/deletion boundary remains insufficiently clear against native in recess, and other accepted residual glyph wording is unverified. Keep source unresolved pending complete authoritative accepted-text reconciliation; do not infer that matching OA phrases settles version.",
+          "requiredAction": "Reconcile authoritative operative text against native source without changing source words to force a match."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "L2ZY7EC7XBLUEX1",
+    "sha256": "ad46b8aaf55c0d5d1fd720e30c39c77625758f02cb9193e2ca6ea2c945737692",
+    "pdfPagesInspected": [1, 2, 3, 4],
+    "printedPages": [4, 5, 6, 7],
+    "purpose": "Independent visual corroboration only.",
+    "additionalVisualEvidence": "Page2 rendered at3000px to inspect strikeout endpoints."
+  }
+}

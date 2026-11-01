@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "head-review/v2",
+  "protocolVersion": "semantic-reference/v2",
+  "convention": "lexical-head/v1",
+  "familyId": "14813790-root-1",
+  "role": "extractor-head-consistency-review",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 3,
+  "previousRound": 2,
+  "confidence": 0.99,
+  "verdict": "heads-corrected-awaiting-independent-critic",
+  "actions": [
+    {
+      "claimNumber": 3,
+      "path": "3.a",
+      "anchor": {
+        "startChar": 140,
+        "endChar": 188,
+        "quote": "each pair of adjacent frustoconical sub-sections"
+      },
+      "determiner": "bare",
+      "beforeHead": "each pair of adjacent frustoconical sub-sections",
+      "afterHead": "pair of adjacent frustoconical sub-sections",
+      "action": "changed",
+      "reason": "Each distributes over pairs of adjacent sub-sections in the axial row. The complete pair of adjacent frustoconical sub-sections lexical/partitive head remains, including pair and all geometric modifiers; only outer each is removed. This does not change the two-member pair or select any particular pair.",
+      "sourceContext": "A low pressure shaft according to claim 1, wherein the aft section is formed as an axial row of two or more frustoconical sub-sections, for each pair of adjacent frustoconical sub-sections the cone angle of the rearward sub-section being less than the cone angle of the forward sub-section.",
+      "confidence": 0.99
+    }
+  ],
+  "semanticDecisionFlags": [],
+  "falsePositiveLiteralFlags": [],
+  "preservedPriorReceipts": [
+    {
+      "file": "expected.round2.json",
+      "sha256": "afd97720f0ce7cff12b8a377d72f066822286fefcf87b626ceb0c41d16d381ef"
+    },
+    {
+      "file": "extractor.round2.json",
+      "sha256": "7e6a883698d22d483df4a1a1edefd634a87d8f77fe02a1ca3663917c68a9074b"
+    },
+    {
+      "file": "critic.round2.json",
+      "sha256": "05506c5b12dea40523f0e5e9d7d3f1545c2d447f645029532a1d08e6a6f3c408"
+    },
+    {
+      "file": "head-review.round2.json",
+      "sha256": "468c23ae55294971fd45b6f2b7b7c980ad9837d5065610fc7793fc5e3eedaa2a"
+    }
+  ],
+  "structureInvariant": "Reversing exactly these manually adjudicated head fields restores the complete prior expected JSON tree. Raw expected text differs only at the declared head string values; all source anchors, determiners, functional parts, typed edges, element structure and source/claim scope remain unchanged.",
+  "sourceValidation": {
+    "claimsXmlSha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+    "nativeCanonical": "All canonical/context claims match native XML under permitted printed-number/whitespace normalization; digest matches provenance. Every action anchor checked as exact half-open UTF-16 source span."
+  },
+  "independence": "Bounded source-based lexical-head/v1 extractor review. Each listed source phrase manually judged before serialization; no automatic regex head selection, decomposition implementation, P2-DESIGN, predictions or conformance rules used. No new source gold derivation or semantic acceptance claimed.",
+  "attorneyAdjudication": "unchanged; agent confidence is not attorney agreement",
+  "humanHolds": "Known six count/selector head holds and16068637 each edge/each other preserved; no round4 or out-of-scope modification."
+}

@@ -1,0 +1,57 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. A method for efficiently encoding navigational state in a Portal, wherein said Portal is running in a server system, wherein said server system includes a communication component which allows communication between said Portal and client's browser via a communication channel, wherein said Portal determines the layout of the requested Portal page, invokes rendering of the various page elements belonging to said Portal page, and transmits said Portal page to the client's browser for displaying, wherein at least one page element of said Portal page provides an URL functionality for initiating rendering a new page or new page element by said Portal, wherein each user interaction by clicking said URL at said page element generates a new navigational state at said Portal side, wherein the latest navigational state describes the current view of said Portal as the result of all previous navigational interactions of a particular client, wherein said at least latest navigational state is saved by said Portal, wherein in response to a client request for a new Portal page said method is characterized by the steps of:
+<claim-text>creating a base navigational state which describes that part of the latest navigational state that is identical across all URLs of said new Portal page, </claim-text>
+<claim-text>creating for each URL included in said new Portal page to be rendered and not contained in said base navigational state an URL specific delta navigational state which describes the state transition of said specific URL when said specific URL is invoked, </claim-text>
+<claim-text>encoding said base navigational state into the header of said Portal page once, </claim-text>
+<claim-text>encoding each URL specific delta navigational state into its assigned URL being part of said Portal page, and </claim-text>
+<claim-text>generating and transmitting a response to said client's browser including said new Portal page for displaying by said client's browser. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. The method according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said base navigational state and said delta navigational state are encoded in said Portal page in a serialized form. </claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, further comprising the steps of:
+<claim-text>receiving client request for a new Portal page which includes said base navigational state and said delta navigation state, </claim-text>
+<claim-text>de-serializing said base navigational state and said delta navigational state, </claim-text>
+<claim-text>merging said delta navigational state with base navigational state resulting in a new latest base navigational state, </claim-text>
+<claim-text>presenting said new latest base navigational state in a hierarchical tree-like object representation for serialization purposes, </claim-text>
+<claim-text>pre-serializing said new latest base navigational state before starting rendering of said Portal page, and </claim-text>
+<claim-text>including said pre-serialized new latest base navigational state into the HTML base tag of said Portal page. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein said encoding of each URL specific delta navigational state is based on a serialization method which operates on a delta proxy object that records the modifications on the underlying hierarchical tree-like object representation representing said new latest base navigational state. </claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. The method according to <claim-ref idref="CLM-00004">claim 4</claim-ref>, wherein said hierarchical tree-like object representation contains nodes which are described by name, value, and attributes being all represented by character based strings. </claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. The method according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein the structure and/or nodes within said structure of said hierarchical tree-like object representation is read by a read-only programming interface and modified by a read-write programming interface. </claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein said serialization method for the URL specific delta navigational state is executed during the rendering of said Portal page to be submitted to said client's browser. </claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. The method according to <claim-ref idref="CLM-00002">claim 2</claim-ref>, wherein said serialization result is further compressed by one or more standard compression algorithms. </claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. The method according to <claim-ref idref="CLM-00008">claim 8</claim-ref>, wherein said compression algorithms are GZip, Zip, RLE. </claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. The method according to <claim-ref idref="CLM-00009">claim 9</claim-ref>, wherein said compressed serialization result representing said delta navigational state is encoded into the path information of said URL. </claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. A system for efficiently encoding navigational state in a Portal, wherein said Portal is running in said system, wherein said system includes a communication component which allows communication between said Portal and client's browser via a communication channel, wherein said Portal determines the layout of the requested Portal page, invokes rendering of the various page elements belonging to said Portal page, and transmits said Portal page to the client's browser for displaying, wherein at least one page element of said Portal page provides an URL functionality for initiating rendering a new page or new page element by said Portal, wherein each user interaction by clicking said URL at said page element generates a new navigational state at said Portal side, wherein the latest navigational state describes the current view of said Portal as the result of all previous navigational interactions of a particular client, wherein said at least latest navigational state is saved by said Portal, wherein said system is characterized by the following components:
+<claim-text>component for creating a base navigational state which describes that part of the latest navigational state that is identical across all URLs of said new Portal page, </claim-text>
+<claim-text>component for creating for each URL included in said new Portal page to be rendered and not contained in said base navigational state an URL specific delta navigational state which describes the state transition of said specific URL when said specific URL is invoked, </claim-text>
+<claim-text>component for encoding said base navigational state into the header of said Portal page once, </claim-text>
+<claim-text>component for encoding each URL specific delta navigational state into its assigned URL being part of said Portal page, and </claim-text>
+<claim-text>component for generating and transmitting a response to said client's browser including said new Portal page for displaying by said client's browser. </claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. The system according to <claim-ref idref="CLM-00011">claim 11</claim-ref>, wherein said components are part of said Portal.</claim-text>
+</claim>
+</claims>
