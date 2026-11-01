@@ -7439,48 +7439,6 @@
       "reason": "CapacityPreflightServiceLive probes free space with a child process over the real archive root, and the manifest rows carry native mtimes. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when every block provides a scripted capacity spawner and reads seeded timestamps."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:27:@effect/platform-bun@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
-      "line": 27,
-      "endLine": 27,
-      "symbol": "@effect/platform-bun",
-      "occurrence": "v2:e000d1d50f6df04446c55437d379107d446898566534c48f71ad1377c8133e5f",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { BunCrypto, BunServices } from \"@effect/platform-bun\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/corpus-provenance-index.test.ts:28:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/corpus-provenance-index.test.ts",
-      "line": 28,
-      "endLine": 28,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/coverage-baseline-subtraction.test.ts:7:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
