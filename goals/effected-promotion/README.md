@@ -60,6 +60,11 @@ and [`research/wave-4-plan-2026-10-23.md`](./research/wave-4-plan-2026-10-23.md)
   `scratchpad/test` directories (143 files) are deleted with their wiring;
   every deferred module and `PORT_LEDGER.json` is pinned at
   `bb2134fcb952e07580c4cebf2586c901f090ef5b` (SPEC D-60).
+- 2026-11-01 C (#2476): `quality package-verify` passed for all 20 touched
+  packages and `yeet final-check` passed on `e75c1447b9`; the `--until-ready`
+  monitor reported every hard merge criterion green. After the merge,
+  `bun run beep goals completion refresh --slug effected-promotion` verifies
+  the `proposedCloseout`.
 
 ## Notes
 
