@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-01T01:13:35.216Z",
+  "generatedAt": "2026-11-01T01:28:01.307Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -314661,8 +314661,8 @@
           "exportKind": "class",
           "filePath": "src/WorkspacePatterns.ts",
           "repoPath": "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
-          "line": 187,
-          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-187-workspacepatterns",
+          "line": 204,
+          "anchor": "packages-tooling-library-repo-workspaces-src-workspacepatterns-ts-204-workspacepatterns",
           "currentTags": [
             "@category",
             "@since"
