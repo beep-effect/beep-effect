@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "tool": "goals/effected-promotion/ops/jsonc-parser-drop-differential.ts",
-  "codeRev": "5bef6aca150e8b936939c83bec314a48b0271bcb",
+  "codeRev": "e33b80e59061f7e23ba9723fe15c474400f07e88",
   "codeDirty": false,
   "inputsRev": "bb2134fcb952e07580c4cebf2586c901f090ef5b",
   "corpus": {
@@ -34,7 +34,8 @@
         "site": "applyJsoncModification",
         "cases": 141730,
         "outcomes": {
-          "identical": 141730
+          "identical": 141108,
+          "intended:last-element-delete": 622
         }
       },
       {
@@ -45,7 +46,3740 @@
         }
       }
     ],
-    "nonIdentical": [],
+    "nonIdentical": [
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": ".claude/settings.json#array-delete-last:[\"enabledMcpjsonServers\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": ".oxlintrc.circular.json#array-delete-last:[\"plugins\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/architecture-lab-proof/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/labs/lejeune-bolt-workbench/src/fixtures/fixture-manifest.json#array-delete-last:[\"missingFields\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/oip-web/tsconfig.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/practice-claude-mod/plugin-test/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/practice-gateway/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/practice-gateway/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/practice-kg-mcp/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/practice-kg-mcp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/professional-desktop/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "apps/professional-desktop/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "biome.identity.jsonc#array-delete-last:[\"plugins\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "docker/grafana/chat-dashboard.json#array-delete-last:[\"tags\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "docs/reports/git-main-sync-cache-request-2026-10-31.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/lanes.json#array-delete-last:[\"fan\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/lanes.json#array-delete-last:[\"touched\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "explorations/beep-ci-operational-ontology/assets/agentic-yoyo/subdag.json#array-delete-last:[\"touched\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/agent-observability-foundation/ops/history/cache-baseline-verification.json#array-delete-last:[\"reviewSubjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/agent-observability-foundation/ops/history/cache-graft-sync-verification-20261031.json#array-delete-last:[\"reviewedSubjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/agent-observability-foundation/ops/history/cache-main-sync-verification-20261031.json#array-delete-last:[\"reviewSubjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/agentic-professional-runtime/ops/manifest.json#array-delete-last:[\"runtimeSlices\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/2026-09-22-classifier-recovery-cardinality.json#array-delete-last:[\"projection\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/2026-09-22-test-selection-parser-probe.json#array-delete-last:[\"resolvedPairs\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/html-select-behavior-probe-2026-09-22.json#array-delete-last:[\"pairs\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/r32-owner-reviews/cache-pilot-run-observations/finite-table.json#array-delete-last:[\"axes\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/r33-owner-reviews/obs-qa-scene/finite-table.json#array-delete-last:[\"axes\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/boolean-creep/data/r44-partial-reconciliation/r44-schema-independent.json#array-delete-last:[\"lanes\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/11479265-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",10]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/12267381-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",10]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/14172895-root-10/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/14438042-root-4/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/15572618-root-22/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/15773469-root-5/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/17045367-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/17755831-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",14]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/claim-element-antecedent-check/history/label-source-exclusions/18107161-root-18/claims.json#array-delete-last:[\"labelClaimNumbers\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-rules-diagnostics-lane/research/cache-baseline-request-1b-final.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-rules-diagnostics-lane/research/cache-baseline-request-1b.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-rules-diagnostics-lane/research/cache-baseline-request-performance.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-brand-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-brand-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-chalk-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-chalk-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-ciops-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-ciops-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-discord-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/capability-leaves-preparation/capability-discord-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/acp/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/acp/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_anthropic-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_anthropic.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_brand-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_brand.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_chalk-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_chalk.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_ciops-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_ciops.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_discord-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_discord.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_effect-drizzle-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_effect-drizzle.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_html-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_html.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_mcp-kit-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_mcp-kit.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_md-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_md.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_nlp-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_nlp.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_openai-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_openai-compat-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_openai-compat.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_openai.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_provenance-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/beep_provenance.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/drizzle-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/drizzle-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/duckdb-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/duckdb-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/postgres-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/database-drivers/postgres-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/repo-configs/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/repo-configs/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/repo-utils/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/after/repo-utils/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/acp/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/acp/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/cli-config/ai-provider-cli-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/cli-config/ai-provider-cli-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/cli-config/architecture-lab-config-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/cli-config/architecture-lab-config-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/drizzle-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/drizzle-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/duckdb-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/duckdb-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/postgres-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/database-drivers/postgres-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/media-drivers/exiftool-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/media-drivers/exiftool-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/observability/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/observability/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/repo-configs/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/repo-configs/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/repo-utils/bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/baseline/repo-utils/node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_effect-drizzle.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_html.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_md.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_nlp-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_nlp.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_provenance-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/before/beep_provenance.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_freshbooks-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_freshbooks.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_hubspot-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_hubspot.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_m365-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_m365.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_uspto-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/business-drivers/beep_uspto.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/cli-config/ai-provider-cli-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/cli-config/ai-provider-cli-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/cli-config/architecture-lab-config-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/cli-config/architecture-lab-config-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/media-drivers/exiftool-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/media-drivers/exiftool-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/service-drivers/beep_runpod-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/service-drivers/beep_runpod.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/service-drivers/beep_sanity-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/service-drivers/beep_sanity.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/transport-sync/beep_ai-sync-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/transport-sync/beep_ai-sync-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/transport-sync/beep_api-transport-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/final/transport-sync/beep_api-transport-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_freshbooks-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_freshbooks.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_hubspot-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_hubspot.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_m365-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_m365.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_uspto-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/business-drivers/beep_uspto.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_anthropic-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_anthropic.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_openai-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_openai-compat-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_openai-compat.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/provider-drivers/beep_openai.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/service-drivers/beep_runpod-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/service-drivers/beep_runpod.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/service-drivers/beep_sanity-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/service-drivers/beep_sanity.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/transport-sync/beep_ai-sync-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/transport-sync/beep_ai-sync-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/transport-sync/beep_api-transport-bun.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/context/preparation/transport-sync/beep_api-transport-node.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/mcp-kit-preparation/mcp-kit-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/mcp-kit-preparation/mcp-kit-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/nlp-preparation/nlp-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/nlp-preparation/nlp-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/provenance-preparation/provenance-before-bun-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/effect-vitest-canon/ops/inventory/timings/provenance-preparation/provenance-before-node-context.json#array-delete-last:[\"loadBefore\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/entity-optimistic-concurrency/research/cache-baseline-request-2026-10-21.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json#array-delete-last:[\"candidates\",15]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/epistemic-retention-policy-calibration/ops/fixture-v1.json#array-delete-last:[\"queries\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/exact-optional-keys/research/codemod-dry-run.jsonc#array-delete-last:[\"paths\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/exact-optional-keys/research/codemod-write.jsonc#array-delete-last:[\"paths\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/exact-optional-keys/research/detection-reconciliation-2026-10-28.jsonc#array-delete-last:[\"scope\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/aba-ratings.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/agreements.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/audio.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/courts.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/debts.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/disclosure-positions.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/educations.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/financial-disclosures.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/gifts.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/increment-event.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/investments.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/non-investment-incomes.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/people.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/political-affiliations.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/positions.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/recap-fetch.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/reimbursements.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/retention-events.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/schools.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/search.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/sources.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/spouse-incomes.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/gov-legal-data-driver-delivery/research/specs/courtlistener/options/tags.json#array-delete-last:[\"renders\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/law-doc-structure-oa-slice/history/p2/2026-10-09-floor-vectors.json#array-delete-last:[\"total\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/lint-advisory-hardening/tasks/tasks.schema.json#array-delete-last:[\"required\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/public-origin-beep-effect-com/research/retired-iri-authorities-baseline-request.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/repository-simplification-confidence/history/receipts/d-consumer-census.json#array-delete-last:[\"roots\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/schema-opaque-default/research/cache-baseline-request-close-2.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/schema-opaque-default/research/cache-baseline-request-close-3.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/schema-opaque-default/research/cache-baseline-request-close.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/todox-marketing-site/history/cache-baseline-request.json#array-delete-last:[\"scope\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/tsconfig.ops.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/tsconfig.ops.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/tsrs-gates/research/cache-baseline-request-2026-10-27-fold.json#array-delete-last:[\"subjects\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-cache-conformance/research/complete-protocol-validation.json#array-delete-last:[\"validationBoundary\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-dependency-edge.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-ignore-repair.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-installed-launcher.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-installed-v3.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-lane-merge.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-pilot.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-post-main.json#array-delete-last:[\"executions\",76]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-post-merge.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-runtime-key.json#array-delete-last:[\"executions\",31]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/command-groups-runtime-routing.json#array-delete-last:[\"executions\",37]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/dependency-edge-entrypoint-request.json#array-delete-last:[\"sources\",285]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/dependency-edge-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-dependency-edge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-dependency-edge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-installed-v3.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-lane-merge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-pilot.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-post-main.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-post-merge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-hosted-runtime-routing.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-installed-v3.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-lane-merge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-pilot.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-post-main.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-post-merge.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-plans-runtime-routing.json#array-delete-last:[\"variants\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-downstream-routing.json#array-delete-last:[\"sources\",303]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-downstream-routing.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-downstream-routing.json#array-delete-last:[\"reviews\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-generator-routing.json#array-delete-last:[\"sources\",314]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-generator-routing.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-generator-routing.json#array-delete-last:[\"reviews\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-post-main.json#array-delete-last:[\"sources\",323]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-post-main.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-post-main.json#array-delete-last:[\"reviews\",4]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-root-routing.json#array-delete-last:[\"sources\",302]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-root-routing.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-root-routing.json#array-delete-last:[\"reviews\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-runtime-routing.json#array-delete-last:[\"sources\",298]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/entrypoint-review-runtime-routing.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/ignore-repair-entrypoint-request.json#array-delete-last:[\"sources\",274]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/ignore-repair-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/impeccable-root-script-baseline-request.json#array-delete-last:[\"scope\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/installed-launcher-entrypoint-request.json#array-delete-last:[\"sources\",293]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/installed-launcher-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/lane-merge-entrypoint-request.json#array-delete-last:[\"sources\",285]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/lane-merge-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/pilot-entrypoint-request.json#array-delete-last:[\"sources\",284]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/pilot-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/post-merge-entrypoint-request.json#array-delete-last:[\"sources\",273]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/post-merge-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/runtime-boundary-checkpoint.json#array-delete-last:[\"ownedWorkspaces\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/runtime-key-entrypoint-request.json#array-delete-last:[\"sources\",293]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/runtime-key-entrypoint-request.json#array-delete-last:[\"artifacts\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-dependency-edge.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-installed-v3.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-lane-merge.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-pilot.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-post-main.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-post-merge.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/workflow-sources-runtime-routing.json#array-delete-last:[\"files\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-dependency-edge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-dependency-edge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-installed-v3.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-lane-merge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-pilot.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-post-main.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-post-merge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-hosted-runtime-routing.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-installed-v3.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-lane-merge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-pilot.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-post-main.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-post-merge.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "goals/turborepo-task-qualification/research/yeet-plans-runtime-routing.json#array-delete-last:[\"plans\",29]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "infra/lambda/turbo-cache/tsconfig.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/_internal/db-admin/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/_internal/db-admin/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/agents/client/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/agents/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/agents/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/agents/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/agents/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/client/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/config/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/ui/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/architecture-lab/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/documents/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/documents/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/documents/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/documents/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/acp/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/acp/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/acp/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/acp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ai-provider-cli/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ai-provider-cli/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/anthropic/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/box-provisioning/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/box/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/box/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/box/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/box/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/commands/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/cosmos/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/discord/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/doc-text/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/drizzle/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/duckdb/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ecfr/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ecfr/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ecfr/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/exiftool/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/ffmpeg/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/freshbooks/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/git/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/github-actions/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/github/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/gov-legal-mcp/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/gov-legal-mcp/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/gov-legal-mcp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/govinfo/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/govinfo/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/govinfo/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/govinfo/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/graph-3d/stories/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/graph-3d/tsconfig.stories.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/graph-3d/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/hubspot/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/libpff/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/m365-mcp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/m365/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/n3/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/nlp-mcp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/obs/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/occt/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/onepassword-cli/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/openai-compat/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/openai/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/openclaw/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/openclaw/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/oxigraph/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/pacer/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/pdf-tools/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/pglite/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/phoenix/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/poppler/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/postgres/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/pretext/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/rdf-canonize/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/runpod/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/runpod/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/runpod/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/sanity/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/shacl/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/t3-code/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/tailscale/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/tesseract/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/tika/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/uspto-mcp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/uspto/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/windows-secrets/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/windows-secrets/tsconfig.test.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/wink/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/xstate/test/fixtures/tsconfig.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/drivers/xstate/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ecosystem/effect-drizzle/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.check.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ecosystem/effect-drizzle/tsconfig.test.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/client/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/config/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/domain/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/server/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/server/tsconfig.test.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/ui/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/epistemic/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/api-transport/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/chalk/docgen.json#array-delete-last:[\"exclude\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/chalk/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/cli-kit/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/colors/docgen.json#array-delete-last:[\"exclude\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/colors/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/config-file/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/file-processing/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/file-processing/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/langextract/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/mcp-kit/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/mcp-kit/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/mcp-kit/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/nlp-processing/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/examples/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/test/fixtures/tsconfig.browser.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/test/fixtures/tsconfig.experimental-server.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/test/fixtures/tsconfig.server.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/tsconfig.examples.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/observability/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/runtime-env/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/semantic-web/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/technical-drawing/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/technical-drawing/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/technical-drawing/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/walker/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/capability/xdg/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/epistemics/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/github-commands/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/github-references/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/github-reporting/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/glob/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/html/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/html/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/html/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/identity/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/jsonc/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/jsonl/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lexical/data/conformance/coverage.json#array-delete-last:[\"profileIds\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lexical/data/conformance/invariants.json#array-delete-last:[\"profileIds\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lexical/data/conformance/inventory.json#array-delete-last:[\"profileIds\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lexical/data/conformance/sources.json#array-delete-last:[\"profileIds\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lexical/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/lockfiles/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/managed-section/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/markdown/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/markdown/tsconfig.check.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/markdown/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/md/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/nlp/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/npm-spec/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/ontology/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/package-json/test/fixtures/manifests/with-custom-fields/package.fixture.json#array-delete-last:[\"customArray\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/package-json/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/pandoc-ast/test/fixtures/gap-docx-styles.pandoc.json#array-delete-last:[\"pandoc-api-version\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/pandoc-ast/test/fixtures/green-core.pandoc.json#array-delete-last:[\"pandoc-api-version\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/pandoc-ast/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/provenance/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/public-site/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/rdf/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/sbom/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/schema-org/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/schema/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/semver/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/skill-contract/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/spdx/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/array-subtables.json#array-delete-last:[\"arr\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/array.json#array-delete-last:[\"comments\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/array.json#array-delete-last:[\"dates\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/array.json#array-delete-last:[\"floats\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/array.json#array-delete-last:[\"ints\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/bool.json#array-delete-last:[\"a\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/hetergeneous.json#array-delete-last:[\"mixed\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/mixed-int-array.json#array-delete-last:[\"arrays-and-ints\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/mixed-int-float.json#array-delete-last:[\"ints-and-floats\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/mixed-int-string.json#array-delete-last:[\"strings-and-ints\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/mixed-string-table.json#array-delete-last:[\"contributors\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/mixed-string-table.json#array-delete-last:[\"mixed\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/nested.json#array-delete-last:[\"nest\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/nospaces.json#array-delete-last:[\"ints\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/string-quote-comma-01.json#array-delete-last:[\"title\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/string-with-comma-01.json#array-delete-last:[\"title\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/string-with-comma-02.json#array-delete-last:[\"title\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/strings.json#array-delete-last:[\"string_array\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/trailing-comma.json#array-delete-last:[\"arr-2\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/array/trailing-comma.json#array-delete-last:[\"arr-4\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/comment/everywhere.json#array-delete-last:[\"aot\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/array-01.json#array-delete-last:[\"arr\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/array-01.json#array-delete-last:[\"people\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/empty.json#array-delete-last:[\"empty_in_array\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/key-dotted-04.json#array-delete-last:[\"arr\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/key-dotted-05.json#array-delete-last:[\"arr-2\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/key-dotted-05.json#array-delete-last:[\"arr-3\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/inline-table/key-dotted-05.json#array-delete-last:[\"arr-4\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/key/dotted-04.json#array-delete-last:[\"arr\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-35.json#array-delete-last:[\"colors\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-35.json#array-delete-last:[\"contributors\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-35.json#array-delete-last:[\"integers\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-35.json#array-delete-last:[\"nested_arrays_of_ints\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-36.json#array-delete-last:[\"integers2\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-36.json#array-delete-last:[\"integers3\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-51.json#array-delete-last:[\"product\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-52.json#array-delete-last:[\"fruits\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/spec-1.1.0/common-53.json#array-delete-last:[\"points\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/table/array-empty-name.json#array-delete-last:[\"\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/table/array-many.json#array-delete-last:[\"people\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/test/fixtures/toml-test/valid/table/array-nest.json#array-delete-last:[\"albums\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/toml/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/tsconfig/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/utils/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/modeling/yaml/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/primitive/data/docgen.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/primitive/data/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/primitive/types/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/brand/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/brand/tsconfig.test.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/dock-react/tsconfig.stories.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/dock-react/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/dock/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/dock/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/editor/tsconfig.stories.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/editor/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/ui/tsconfig.stories.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/foundation/ui-system/ui/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11279554-root-25/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11341804-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",8]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11457178-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11502512-root-11/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11575704-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",10]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11670278-root-61/claims.json#array-delete-last:[\"labelClaimNumbers\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/11973401-root-12/claims.json#array-delete-last:[\"labelClaimNumbers\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12117564-root-7/claims.json#array-delete-last:[\"labelClaimNumbers\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12268372-root-10/claims.json#array-delete-last:[\"labelClaimNumbers\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12360911-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",8]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12447956-root-7/claims.json#array-delete-last:[\"labelClaimNumbers\",8]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12451999-root-15/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12525441-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",4]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12536794-root-19/claims.json#array-delete-last:[\"labelClaimNumbers\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12656234-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12749812-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/12838228-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13070851-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13275397-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13687596-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",11]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13822885-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",13]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/13846690-root-15/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/14260199-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",7]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/14262251-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json#array-delete-last:[\"labelClaimNumbers\",3]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/14657939-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",8]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/14813790-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",7]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/15276859-root-19/claims.json#array-delete-last:[\"labelClaimNumbers\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/15752303-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",15]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/15927789-root-6/claims.json#array-delete-last:[\"labelClaimNumbers\",4]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/15958729-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16052309-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json#array-delete-last:[\"labelClaimNumbers\",5]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16135952-root-20/claims.json#array-delete-last:[\"labelClaimNumbers\",7]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16628033-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16778182-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16819424-root-10/claims.json#array-delete-last:[\"labelClaimNumbers\",7]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/16963517-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",10]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/17139442-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",6]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/18018354-root-6/claims.json#array-delete-last:[\"labelClaimNumbers\",11]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/18087856-root-11/claims.json#array-delete-last:[\"labelClaimNumbers\",9]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/18643465-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",14]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/positive/18734099-root-1/claims.json#array-delete-last:[\"labelClaimNumbers\",11]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/12610700-root-5/claims.json#array-delete-last:[\"labelClaimNumbers\",7]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/test/fixtures/claim-element/replacement-candidates/14414970-root-20/claims.json#array-delete-last:[\"labelClaimNumbers\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/use-cases/test/fixtures/office-action-structure/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/law-practice/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/client/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/config/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/ui/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/ontology/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/shared/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/shared/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/shared/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/ai-metrics/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/ai-metrics/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/ai-sync/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/ai-sync/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/ai-sync/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/codegen-kit/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/mcpb-kit/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/palantiri/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/palantiri/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/qa-capture/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/repo-tsconfig/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-late-file/src/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/repo-utils/test/fixtures/tsmorph-outline-order/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/repo-utils/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/library/repo-workspaces/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/policy-pack/lint-rules/test/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/policy-pack/repo-configs/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/policy-pack/repo-configs/tsconfig.scripts.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/test-kit/fc-runs/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/test-kit/memfs/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/test-kit/test-runner/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/test-kit/test-utils/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/scripts/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/test/fixtures/bun-spawn-env/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/test/fixtures/doctest-lane/package/tsconfig.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/test/fixtures/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/test/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/cli/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/docgen/test/fixtures/section-example/src/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/tooling/tool/docgen/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/workspace/domain/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/workspace/server/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/workspace/tables/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "packages/workspace/use-cases/tsconfig.test.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effect-ontology/tsconfig.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effected/cli/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effected/engine/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effected/npm/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effected/runner/tsconfig.json#array-delete-last:[\"include\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/effected/sbom/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/party/tsconfig.json#array-delete-last:[\"exclude\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/temp/out/index.pandoc.json#array-delete-last:[\"pandoc-api-version\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/temp/out/index.pandoc.json#array-delete-last:[\"blocks\",11]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/tsconfig.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "scratchpad/tsconfig.json#array-delete-last:[\"exclude\",2]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "standards/cache-qualification.json#array-delete-last:[\"entries\",4]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "standards/cache-qualification.json#array-delete-last:[\"history\",4]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "statelyai.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      },
+      {
+        "leg": "edit",
+        "site": "applyJsoncModification",
+        "id": "tsconfig.configs.json#array-delete-last:[\"include\",1]",
+        "outcome": "intended:last-element-delete"
+      }
+    ],
     "unclassified": 0
   },
   "parse": {
