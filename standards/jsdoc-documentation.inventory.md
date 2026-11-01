@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-10-31T23:37:35.398Z
+Generated: 2026-11-01T00:36:50.326Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 165 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 17 |
-| publicModules | 3583 |
-| publicExports | 25344 |
+| publicModules | 3584 |
+| publicExports | 25346 |
 | openModules | 165 |
 | openExports | 99 |
 | missingExportExamples | 3 |
@@ -60,7 +60,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 2 | `@beep/test-runner` | `packages/tooling/test-kit/test-runner` | clean | 4 | 6 | 0 | 0 |
 | 3 | `@beep/types` | `packages/foundation/primitive/types` | needs-remediation | 5 | 12 | 1 | 12 |
 | 4 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 8 | 281 | 0 | 0 |
-| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 228 | 0 | 0 |
+| 5 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 29 | 229 | 0 | 0 |
 | 6 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 162 | 10 | 16 |
 | 7 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 168 | 969 | 0 | 0 |
 | 8 | `@beep/semver` | `packages/foundation/modeling/semver` | clean | 6 | 23 | 0 | 0 |
@@ -124,7 +124,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 66 | `@beep/lockfiles` | `packages/foundation/modeling/lockfiles` | clean | 14 | 47 | 0 | 0 |
 | 67 | `@beep/git` | `packages/drivers/git` | clean | 7 | 46 | 0 | 0 |
 | 68 | `@beep/technical-drawing` | `packages/foundation/capability/technical-drawing` | clean | 19 | 224 | 0 | 0 |
-| 69 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 5 | 111 | 0 | 0 |
+| 69 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
 | 70 | `@beep/pretext` | `packages/drivers/pretext` | clean | 6 | 36 | 0 | 0 |
 | 71 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
 | 72 | `@beep/cosmos` | `packages/drivers/cosmos` | clean | 6 | 22 | 0 | 0 |

@@ -18,7 +18,7 @@ const descriptionFromOptions = (options: { readonly description: string }): stri
  *
  * **Example** (Trim and drop empties)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Trim and drop empties"
  * import * as Text from "@beep/utils/Text"
  *
  * const tags = Text.splitCommaSeparatedTrimmed(" foo , bar , , baz ")
@@ -42,7 +42,7 @@ export const splitCommaSeparatedTrimmed = flow(Str.split(","), A.map(Str.trim), 
  *
  * **Example** (Format name with aliases)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Format name with aliases"
  * import * as Text from "@beep/utils/Text"
  *
  * const row = Text.formatNameWithAliases("ls", ["list", "dir"], { description: "List files" })
@@ -78,7 +78,7 @@ export const formatNameWithAliases: {
  *
  * **Example** (Join lines with newline)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Join lines with newline"
  * import * as Text from "@beep/utils/Text"
  *
  * const block = Text.joinLines(["hello", "world"])
@@ -137,12 +137,12 @@ const lineBreakWidth = (text: string, index: number, pairEnd: number, unicodeSep
  *
  * **Example** (Locate offsets under two newline grammars)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Locate offsets under two newline grammars"
  * import { lineCharacterAt } from "@beep/utils/Text"
  *
- * console.log(lineCharacterAt("ab\r\ncd", 5)) // { line: 1, character: 1 }
- * console.log(lineCharacterAt(3, { crlfLookahead: "prefix" })("ab\r\ncd")) // { line: 1, character: 0 }
- * console.log(lineCharacterAt("a\u2028b", 2, { unicodeSeparators: true })) // { line: 1, character: 0 }
+ * lineCharacterAt("ab\r\ncd", 5) // => { line: 1, character: 1 }
+ * lineCharacterAt(3, { crlfLookahead: "prefix" })("ab\r\ncd") // => { line: 1, character: 0 }
+ * lineCharacterAt("a\u2028b", 2, { unicodeSeparators: true }) // => { line: 1, character: 0 }
  * ```
  *
  * @param text - The source text the offset indexes into.
@@ -173,5 +173,65 @@ export const lineCharacterAt: {
       }
     }
     return { line, character: offset - lineStart };
+  }
+);
+
+/**
+ * Indexes one source for repeated code-unit offset lookups.
+ *
+ * **Details**
+ *
+ * Preserves {@link lineCharacterAt} positions, including fractional offsets,
+ * offsets outside the text and either CRLF lookahead rule. Construction scans
+ * the text once; each lookup searches the recorded line breaks in logarithmic
+ * time. The returned function owns its index and does not rescan the source.
+ *
+ * **Example** (Locate several diagnostics in one source)
+ *
+ * ```ts import.meta.vitest name="Locate several diagnostics in one source"
+ * import { lineCharacterIndex } from "@beep/utils/Text"
+ *
+ * const position = lineCharacterIndex("ab\r\ncd", { crlfLookahead: "prefix" })
+ * position(3) // => { line: 1, character: 0 }
+ * position(5) // => { line: 1, character: 1 }
+ * ```
+ *
+ * @param text - The source shared by the offset lookups.
+ * @param grammar - The newline and CRLF lookahead rules to preserve.
+ * @returns An independent lookup using the same positions as `lineCharacterAt`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineCharacterIndex: {
+  (text: string, grammar?: LineBreakGrammar): (offset: number) => { readonly line: number; readonly character: number };
+  (
+    grammar?: LineBreakGrammar
+  ): (text: string) => (offset: number) => { readonly line: number; readonly character: number };
+} = dual(
+  (args) => P.isString(args[0]),
+  (text: string, grammar?: LineBreakGrammar) => {
+    const breaks: Array<number> = [];
+    const starts: Array<number> = [0];
+    const lineBreak = grammar?.unicodeSeparators === true ? /\r\n|[\n\r\u2028\u2029]/g : /\r\n|[\n\r]/g;
+    const prefixLookahead = grammar?.crlfLookahead === "prefix";
+    const textLength = text.length;
+    for (let match = lineBreak.exec(text); match !== null; match = lineBreak.exec(text)) {
+      breaks.push(match.index + 1);
+      starts.push(match.index + match[0].length);
+    }
+    return (offset: number) => {
+      const limit = Math.min(offset, textLength);
+      let low = 0;
+      let high = breaks.length;
+      while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (A.getUnsafe(breaks, middle) <= Math.ceil(limit)) low = middle + 1;
+        else high = middle;
+      }
+      const start = A.getUnsafe(starts, low);
+      const lineStart =
+        prefixLookahead && low > 0 && breaks[low - 1] === start - 1 && limit <= start - 1 ? start - 1 : start;
+      return { line: low, character: offset - lineStart };
+    };
   }
 );

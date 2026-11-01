@@ -5025,13 +5025,13 @@
       "reason": "Native DuckDB SQL, database files and Parquet paths are the subjects; scoped native directories and separate instance and connection finalizers keep host-visible compatibility. Owner: @beep/duckdb. Exit: retire when the service cases run on an in-memory DuckDB database with Parquet paths in a dedicated native block."
     },
     {
-      "id": "EV010:packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts:12:@effect/platform-node@0#1",
+      "id": "EV010:packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts:14:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/ffmpeg",
       "file": "packages/drivers/ffmpeg/test/FFmpeg.capture.failures.test.ts",
-      "line": 12,
-      "endLine": 12,
+      "line": 14,
+      "endLine": 14,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
