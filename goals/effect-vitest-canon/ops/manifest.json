@@ -13,12 +13,23 @@
   "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by a lint ratchet whose baseline holds no open rows and no new exceptions.",
   "executionCapable": true,
   "reflectionRequired": true,
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2493
+  },
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. The fleet orchestrator owns merges at the complete gate.",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/claude_rulings-1102-decision-logs-dd69c5-daea97f131d8/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
