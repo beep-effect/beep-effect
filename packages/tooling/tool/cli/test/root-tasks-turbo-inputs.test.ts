@@ -665,3 +665,79 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     );
   });
 });
+
+// Nested lanes under `.claude/worktrees/` are full gitignored checkouts. A task glob that starts at
+// the repository root reaches them and hashes every lane's files on each run (quality audit M8,
+// 2026-11-02: 528,370 inputs and 9.1 s for one dry run with ten live lanes), although every scanner
+// lists files through git. Root `//#` tasks resolve globs from the root, package overlays only
+// through `$TURBO_ROOT$`.
+const turboRootPrefix = "$TURBO_ROOT$/";
+const TurboInputsFile = S.Struct({ tasks: S.Record(S.String, S.Struct({ inputs: Strings })) });
+const decodeTurboInputsFile = S.decodeEffect(S.fromJsonString(TurboInputsFile));
+const rootRelativeGlob = (id: string, glob: string): O.Option<string> =>
+  Str.startsWith(turboRootPrefix)(glob)
+    ? O.some(Str.slice(Str.length(turboRootPrefix))(glob))
+    : Str.startsWith("//#")(id)
+      ? O.some(glob)
+      : O.none();
+const reachesNestedLanes = (id: string) => (glob: string) =>
+  O.exists(
+    rootRelativeGlob(id, glob),
+    (relative) => Str.startsWith("**")(relative) || Str.startsWith(".claude/*")(relative)
+  );
+// The exclusion resolves through the same scope rule: a package task's bare `!.claude/worktrees/**`
+// is package-relative and removes nothing, so only the `$TURBO_ROOT$` form counts there.
+const excludesNestedLanes = (id: string) => (glob: string) =>
+  Str.startsWith("!")(glob) && O.contains(rootRelativeGlob(id, Str.slice(1)(glob)), ".claude/worktrees/**");
+
+describe("Root-reaching task inputs", () => {
+  it.layer(PlatformLayer)("tracked Turbo configurations", (it) => {
+    it.effect(
+      "exclude nested lanes from every task whose inputs glob from the repository root",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* findRepoRoot();
+        const listing = yield* StepExec.runCaptured({
+          command: "git",
+          args: ["ls-files", "-z", "--", "turbo.json", "*/turbo.json"],
+          cwd: repo,
+          source: "stdout",
+          extendEnv: true,
+          env: { GIT_LITERAL_PATHSPECS: "0" },
+        });
+        expect(listing.exitCode, listing.output).toBe(0);
+        const files = A.filter(Str.split("\0")(listing.output), Str.isNonEmpty);
+        expect(files).toContain("turbo.json");
+        expect(files).toContain("packages/foundation/modeling/identity/turbo.json");
+        const offenders = yield* Effect.forEach(
+          files,
+          Effect.fnUntraced(function* (file) {
+            const { tasks } = yield* decodeTurboInputsFile(yield* fs.readFileString(path.join(repo, file)));
+            return A.flatMap(R.toEntries(tasks), ([id, { inputs }]) =>
+              A.some(inputs, reachesNestedLanes(id)) && !A.some(inputs, excludesNestedLanes(id))
+                ? [`${file} ${id}`]
+                : []
+            );
+          })
+        );
+        expect(A.flatten(offenders)).toEqual([]);
+      })
+    );
+
+    it("classifies root-reaching globs by task scope", () => {
+      expect(reachesNestedLanes("//#lint:typos")("**/*")).toBe(true);
+      expect(reachesNestedLanes("//#lint:holds")("**/package.json")).toBe(true);
+      expect(reachesNestedLanes("lint")("$TURBO_ROOT$/**/package.json")).toBe(true);
+      expect(reachesNestedLanes("lint")("**/*.ts")).toBe(false);
+      expect(reachesNestedLanes("//#lint:typos")("!**/*")).toBe(false);
+      expect(reachesNestedLanes("//#fallow:audit:check")("apps/**")).toBe(false);
+      expect(reachesNestedLanes("//#fallow:audit:check")(".claude/skills/**")).toBe(false);
+      expect(excludesNestedLanes("//#lint:holds")("!.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("//#lint:holds")("!$TURBO_ROOT$/.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("lint")("!$TURBO_ROOT$/.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("lint")("!.claude/worktrees/**")).toBe(false);
+      expect(excludesNestedLanes("lint")("$TURBO_ROOT$/.claude/worktrees/**")).toBe(false);
+    });
+  });
+});
