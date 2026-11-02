@@ -17,23 +17,28 @@
  * @since 0.0.0
  */
 
+import { Run } from "@beep/commands/Run";
+import { Git } from "@beep/git/Git";
 import { GitHubApp } from "@beep/github/GitHubApp";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo, RepoRef } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as Redacted from "effect/Redacted";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { configStringOption } from "../cli/EnvConfig.ts";
-import { runRepoCommandCaptureRaw } from "../repo-run/RepoRun.executor.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type { CommandFailedError, CommandOutputError } from "@beep/commands/Run";
+import type { GitHubClientOptions } from "@beep/github/GitHubClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentity");
@@ -240,6 +245,12 @@ export const selectGithubIdentity = Effect.fn("GithubIdentity.select")(function*
   return GithubIdentity.make({ kind: "github-app", tokenRef: O.none(), appId, installationId, privateKeyRef });
 });
 
+// What a failed secret read reports: the command and how it ended, never its output.
+const secretReadFailure = (command: string, what: string, error: CommandFailedError | CommandOutputError): string =>
+  error._tag === "CommandFailedError" && error.kind === "spawn"
+    ? `could not run ${command} to read ${what}`
+    : `${command} did not return ${what} (exit ${error.exitCode ?? "none"})`;
+
 const readSecretOutput = Effect.fn("GithubIdentity.readSecretOutput")(function* (
   command: string,
   args: ReadonlyArray<string>,
@@ -247,20 +258,49 @@ const readSecretOutput = Effect.fn("GithubIdentity.readSecretOutput")(function* 
   reason: typeof GithubIdentityErrorReason.Type,
   what: string
 ) {
-  // stdout only: stderr would mix diagnostics into the secret. The failure
-  // message names the command, never its output, because the output is the secret.
-  const result = yield* runRepoCommandCaptureRaw(command, args, cwd).pipe(
-    Effect.mapError(() => identityError(reason, `could not run ${command} to read ${what}`))
+  // `Run.text` returns trimmed stdout only, so stderr diagnostics never mix
+  // into the secret. The secret is the output, so no value is known before
+  // the read for `RunOptions.redact` to scrub; instead the failure message
+  // names the command and its exit, never the captured streams.
+  const value = yield* Run.text(ChildProcess.make(command, args, { cwd })).pipe(
+    Effect.mapError((error) => identityError(reason, secretReadFailure(command, what, error)))
   );
-  const value = Str.trim(result.output);
-  if (result.exitCode !== 0 || result.truncated || Str.isEmpty(value)) {
-    return yield* identityError(reason, `${command} did not return ${what} (exit ${result.exitCode})`);
+  if (Str.isEmpty(value)) {
+    return yield* identityError(reason, `${command} did not return ${what} (exit 0)`);
   }
   return Redacted.make(value);
 });
 
 const readOpReference = (reference: string, cwd: string, what: string) =>
   readSecretOutput("op", ["read", "--no-newline", reference], cwd, "op-read-failed", what);
+
+/**
+ * The `fetch` every client {@link layerGithubClientFor} builds sends its requests through.
+ *
+ * **Details**
+ *
+ * `Option.none()` (the default) leaves the `@beep/github` transport on the
+ * global `fetch`. A suite that drives a command end to end provides a recording
+ * fake here instead of patching the global; an explicit `options.fetch` passed
+ * to {@link layerGithubClientFor} still wins.
+ *
+ * **Example** (Read the default transport)
+ *
+ * ```ts
+ * import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(Effect.runSync(Effect.service(GithubTransportFetch)))) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const GithubTransportFetch: Context.Reference<O.Option<typeof globalThis.fetch>> = Context.Reference(
+  $I`GithubTransportFetch`,
+  { defaultValue: () => O.none<typeof globalThis.fetch>() }
+);
 
 /**
  * The identity to speak as and the working directory for its `gh`/`op` child processes.
@@ -284,7 +324,9 @@ export class GithubClientRequest extends S.Opaque<GithubClientRequest, { readonl
  * `gh-cli` reads `gh auth token`; `op-ref` reads the reference through the
  * PATH `op` shim; `github-app` reads the PEM key through `op` and mints an
  * installation token with `GitHubApp.clientLayer`, so the client carries the
- * App's own rate-limit budget.
+ * App's own rate-limit budget. The `gh` and `op` reads run through
+ * `@beep/commands` `Run.text`; a failure names the command and its exit code,
+ * never the captured output.
  *
  * **Example** (Build the default client layer)
  *
@@ -302,52 +344,66 @@ export class GithubClientRequest extends S.Opaque<GithubClientRequest, { readonl
  * console.log(typeof layerGithubClientFor(GithubClientRequest.make({ identity, cwd: process.cwd() }))) // "object"
  * ```
  *
- * @param options - The selected identity and the working directory for the `gh`/`op` child processes.
+ * @param request - The selected identity and the working directory for the `gh`/`op` child processes.
+ * @param options - Transport settings for the client (retry policy, base URL, `fetch`); the token comes from the identity.
  * @returns A layer providing `GitHubClient`.
  * @category layers
  * @since 0.0.0
  */
-export const layerGithubClientFor = ({
-  identity,
-  cwd,
-}: GithubClientRequest): Layer.Layer<
-  GitHubClient,
-  GithubIdentityError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      if (identity.kind === "github-app") {
-        const appId = yield* Effect.fromOption(identity.appId, () => identityError("app-config", "missing app id"));
-        const installationId = yield* Effect.fromOption(identity.installationId, () =>
-          identityError("app-config", "missing installation id")
-        );
-        const keyRef = yield* Effect.fromOption(identity.privateKeyRef, () =>
-          identityError("app-config", "missing private key reference")
-        );
-        const privateKey = yield* readOpReference(keyRef, cwd, "the GitHub App private key");
-        return GitHubApp.clientLayer({ appId, privateKey, installationId }).pipe(
-          Layer.catchTag("GitHubAppError", (error) =>
-            Layer.effect(
-              GitHubClient,
-              Effect.fail(
-                identityError("app-token-failed", `could not mint a GitHub App installation token: ${error.message}`)
+export const layerGithubClientFor: {
+  (
+    request: GithubClientRequest,
+    options?: Omit<GitHubClientOptions.Encoded, "token">
+  ): Layer.Layer<GitHubClient, GithubIdentityError, ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    options?: Omit<GitHubClientOptions.Encoded, "token">
+  ): (
+    request: GithubClientRequest
+  ) => Layer.Layer<GitHubClient, GithubIdentityError, ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  (args) => P.hasProperty(args[0], "identity"),
+  (
+    { identity, cwd }: GithubClientRequest,
+    options: Omit<GitHubClientOptions.Encoded, "token"> = {}
+  ): Layer.Layer<GitHubClient, GithubIdentityError, ChildProcessSpawner.ChildProcessSpawner> =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const transport = O.match(yield* GithubTransportFetch, {
+          onNone: () => options,
+          onSome: (fetch) => ({ fetch, ...options }),
+        });
+        if (identity.kind === "github-app") {
+          const appId = yield* Effect.fromOption(identity.appId, () => identityError("app-config", "missing app id"));
+          const installationId = yield* Effect.fromOption(identity.installationId, () =>
+            identityError("app-config", "missing installation id")
+          );
+          const keyRef = yield* Effect.fromOption(identity.privateKeyRef, () =>
+            identityError("app-config", "missing private key reference")
+          );
+          const privateKey = yield* readOpReference(keyRef, cwd, "the GitHub App private key");
+          return GitHubApp.clientLayer({ appId, privateKey, installationId }, transport).pipe(
+            Layer.catchTag("GitHubAppError", (error) =>
+              Layer.effect(
+                GitHubClient,
+                Effect.fail(
+                  identityError("app-token-failed", `could not mint a GitHub App installation token: ${error.message}`)
+                )
               )
             )
-          )
-        );
-      }
-      const token =
-        identity.kind === "op-ref"
-          ? yield* readOpReference(
-              O.getOrElse(identity.tokenRef, () => ""),
-              cwd,
-              "the GitHub token"
-            )
-          : yield* readSecretOutput("gh", ["auth", "token"], cwd, "token-unavailable", "a gh login token");
-      return GitHubClient.layerFromToken({ token });
-    })
-  );
+          );
+        }
+        const token =
+          identity.kind === "op-ref"
+            ? yield* readOpReference(
+                O.getOrElse(identity.tokenRef, () => ""),
+                cwd,
+                "the GitHub token"
+              )
+            : yield* readSecretOutput("gh", ["auth", "token"], cwd, "token-unavailable", "a gh login token");
+        return GitHubClient.layerFromToken({ ...transport, token });
+      })
+    )
+);
 
 const remotePattern =
   /^(?:[^@/\s]+@[^:/\s]+:|ssh:\/\/[^/]+\/|https?:\/\/[^/]+\/)([^/?#\s]+)\/([^/?#\s]+?)(?:\.git)?\/?$/;
@@ -396,14 +452,18 @@ export const repoSlugFromRemote = (remote: string): O.Option<string> =>
  */
 export const layerGithubRepoFor = (
   cwd: string
-): Layer.Layer<Repo, GithubIdentityError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
+): Layer.Layer<Repo, GithubIdentityError, ChildProcessSpawner.ChildProcessSpawner> =>
   Layer.unwrap(
     Effect.gen(function* () {
       const override = yield* configStringOption("GH_REPO");
+      // Any git failure (no origin, not a repository, spawn failure) reads as
+      // "no remote", the same answer the old capture's non-zero exit gave. The
+      // leaf `Git.make` keeps `Git` out of the Yeet GitHub layer unions (W4 lifts them).
       const slug = O.isSome(override)
         ? override
-        : yield* runRepoCommandCaptureRaw("git", ["remote", "get-url", "origin"], cwd).pipe(
-            Effect.map((result) => (result.exitCode === 0 ? repoSlugFromRemote(result.output) : O.none())),
+        : yield* Git.use((git) => git.remoteUrl(cwd)).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
+            Effect.map(O.flatMap(repoSlugFromRemote)),
             Effect.orElseSucceed(O.none<string>)
           );
       const value = yield* Effect.fromOption(slug, () =>
