@@ -99,6 +99,39 @@ the same "directory mid-walk is unreadable" case. Mechanism: as uid 0, `ls` of a
 expected `DomainError` never happens. Environment-only. The test is not root-safe; a
 root-skip would be a separate small PR, outside this lane.
 
+### Coverage ratchet: repo-utils statements 78.4 < 79.36
+
+The parent ran `yeet final-check` on `9fb517a9` as a non-root user. It **failed**:
+the coverage ratchet put repo-utils statements at 78.4 against the 79.36 baseline,
+and aggregate Docgen also failed. Both results stand as history.
+
+Diagnosis used one identical focused command on both trees, with the same checkout,
+config and Node/V8 provider:
+`bunx vitest run --coverage --coverage.reportOnFailure --coverage.reporter=json-summary`
+in `packages/tooling/library/repo-utils`. `reportOnFailure` is needed only because the
+uid-0 FsUtils case fails here.
+
+| Tree | Statements covered / total | % | Uncovered |
+| --- | ---: | ---: | ---: |
+| exact merge-base `e0b14ca4` (unchanged main) | 1147 / 1466 | 78.24 | 319 |
+| head `9fb517a9` | 1158 / 1477 | 78.40 | 319 |
+
+- Split area at head: `JSDoc.ts` 2/2, each of 10 `tags/*.model.ts` 2/2,
+  `StructuralJSDoc.model.ts` 4/5, and `JSDoc.shared.ts` 0/0 (type-only). In total that is
+  27/28, against 15/16 for the base `JSDoc.ts`. The one uncovered statement is the same
+  `matchStructuralJSDoc` body as before.
+- Attribution: **inherited**, not introduced. Unchanged main is already below 79.36
+  under the same config. The split adds 11 covered statements and no uncovered ones, so it
+  raises the percentage by 0.16 points. The drift comes from the package's statement
+  denominator: the baseline implies about 1,788 statements (369 uncovered), main now
+  has 1,466. Per-file uncovered counts fell everywhere they differ (FsUtils,
+  Root, TSMorph.service, JSDocCategories, PackageJson, PackageJsonTools).
+- No source or test change in this PR. Covering `matchStructuralJSDoc` would add one
+  statement, and the package would still be about 14 short of 79.36, so a test written
+  for the metric alone would not be meaningful. Baseline untouched. The repo-utils
+  ratchet drift on main goes to the parent for routing. The `@beep/git` coverage
+  and infra-SDK Docgen reds are parent-routed and were not touched.
+
 ### Environment preparation
 
 The fresh container needed `turbo run build --filter=@beep/repo-utils^...` and later
@@ -132,5 +165,7 @@ install both tools in the cloud bootstrap.
 ## Remaining
 
 None for the JSDoc file. The other P3 mega-files (HTML and Quality) belong to other
-owners. An exact-head `yeet final-check` receipt for the final head, the parent's
-re-review of that head, the ready flip and the merge are all still open.
+owners. The parent's non-root final-check on `9fb517a9` produced a FAIL receipt
+(Coverage and aggregate Docgen, attributed above and parent-routed). Still open: an
+eventual-head receipt, the parent's delta review of the head that carries this note,
+the ready flip and the merge.
