@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — retain the second premature final merge and qualify accepted main
+
+PR #2513 merged at 12:29:09 UTC before a successful terminal readiness record was retained. Its job later reports terminated without a verdict, and the canonical refresh is unknown rather than verified. Retain that result and bind prospective draft final #2577 to its canonical branch evidence path; do not weaken Completion.ts or infer passing proof from merge state. Accepted main includes #2568 coverage repair and subsequent CI fixes. Only package.json differs from the 29-file v26 freeze, adding schema-catalog lint scripts. Archive v27 before predictions and retain both complete replays: 37/538, no lost passes, full values identical except the digest, and 251 identical report bytes. No reference change or fresh/attorney review is claimed. Reversal: retain all receipts and measurements and supersede the prospective declaration in another explicitly qualified final; do not relabel historical failures.
+
 ### 2026-11-02 — integrate complete shared coverage repairs
 
 Consume accepted main #2548 (RouteCensus/Graph/PruneWindow) and #2553 (PackageScripts) after the actual hosted comparison reports eight shared CLI floors. The PackageScripts repair removes obsolete audit backfill and exposes the existing reducer through a documented testing alias; focused tests retain the defensive cases and all 33 canonical scaffold outputs. This changes no claim API or schema. All 29 v26 selected source/environment files remain byte-identical, and fresh positive/allowed replays reproduce both complete result files and all 251 prediction reports exactly. Retain the failed hosted comparison and the scoped local-proof/archive limitations; the new final-head comparison remains required. Reversal: revert the shared repair in a separately reviewed change, retaining the prior failures, source references and every claim measurement.

@@ -37,6 +37,7 @@
     "research/is-ancestor-prune-differential-w0.json",
     "research/git-readers-differential-w1a.json",
     "research/yeet-git-differential-w1b.json",
+    "research/dirty-axis-differential-w2.json",
     "research/reviewer-ci-github-differential-w3.json"
   ],
   "agentLaunchers": [
@@ -101,6 +102,10 @@
     {
       "path": "ops/yeet-git-differential-w1b.ts",
       "purpose": "W1b differential: the frozen Yeet git bodies (base-ref refresh with and without an origin remote, current commit sha on a branch, detached and unborn, the is-ancestor probes, and the head-install preflight's worktree add, remove --force and prune) compared with their Git-backed replacements over scratch repositories with a bare origin carrying a tag, an option-like ref and a non-repository."
+    },
+    {
+      "path": "ops/dirty-axis-differential-w2.ts",
+      "purpose": "W2 differential: the frozen dirty-axis readers (ChangedFiles probes and base range, the lockfile pathspec, the ResidueReap, TmpfsReap and Fleet status reads, the Worktree listing parser, Fleet's origin and common-dir probes, the CiLane, ChangesetStatus, Codex Security, SessionLedger and rev-parse one-liners) compared with their Git-backed replacements over scratch repositories with a dirty worktree (staged, unstaged, untracked, a nested untracked directory, a staged rename, a non-ASCII path, a path with a space), a branched history with a rename and a deletion, diff-filter and pathspec scopes, linked and locked worktrees, a detached head, an unborn repository and a non-repository."
     },
     {
       "path": "ops/reviewer-ci-github-differential-w3.ts",

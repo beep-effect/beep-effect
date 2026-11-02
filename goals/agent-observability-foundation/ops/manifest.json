@@ -38,13 +38,17 @@
       },
       {
         "number": 2508,
+        "role": "supporting"
+      },
+      {
+        "number": 2578,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_agent-observability-foundation-closeout-65000fa11cae/verdict.json",
+        "ref": ".beep/yeet/runs/fix_agent-observability-qualified-final-b110fe798213/verdict.json",
         "gating": true
       },
       {
@@ -114,13 +118,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Lifecycle active. PR2364 retains its unsatisfied historical completion result;2519 and2534 are supporting source delivery, not final readiness. FinalPR2508 has published870/40/73/44 package proof and independently accepted same-root synthetic stages. After main integration d240a7da, package applicability is244 exact inputs, four uninvoked script-only manifests and one test file with additional HarnessLedger cases awaiting final-head hosted proof. The original44-test result remains historical. Review fix94ccf096 requires explicit reviewed pins: six boundary tests and22 refusal controls pass; root84/84 exact and stage88/90,87/89 exact plus two reviewed guard-only helper deltas. Original executions/hashes remain unchanged. Final-head hosted/review/merge and canonical completion pending; recovery hold intact.",
+  "statusNote": "Lifecycle active. Historical PR2364 and PR2508 completion results remain unsatisfied;2519/2534 are supporting source delivery. FinalPR2578 is the owner-held follow-up on main including coverage repair2568. Original870/40/73/44 executions remain historical; hosted51-test HarnessLedger proof covers appended cases at4afad5c6. Selected package comparison is244exact plus four script-only manifests and that test file. Root84/84 and stage88/90,87/89 applicability retain the reviewed two-helper explicit-pin bridge. New final-head hosted/review/readiness/merge and canonical completion pending; recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2508
+    "finalPullRequest": 2578
   }
 }
