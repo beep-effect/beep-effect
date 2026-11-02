@@ -38,6 +38,7 @@
     "research/git-readers-differential-w1a.json",
     "research/yeet-git-differential-w1b.json",
     "research/dirty-axis-differential-w2.json",
+    "research/yeet-remainder-differential-w2b.json",
     "research/reviewer-ci-github-differential-w3.json"
   ],
   "agentLaunchers": [
@@ -106,6 +107,10 @@
     {
       "path": "ops/dirty-axis-differential-w2.ts",
       "purpose": "W2 differential: the frozen dirty-axis readers (ChangedFiles probes and base range, the lockfile pathspec, the ResidueReap, TmpfsReap and Fleet status reads, the Worktree listing parser, Fleet's origin and common-dir probes, the CiLane, ChangesetStatus, Codex Security, SessionLedger and rev-parse one-liners) compared with their Git-backed replacements over scratch repositories with a dirty worktree (staged, unstaged, untracked, a nested untracked directory, a staged rename, a non-ASCII path, a path with a space), a branched history with a rename and a deletion, diff-filter and pathspec scopes, linked and locked worktrees, a detached head, an unborn repository and a non-repository."
+    },
+    {
+      "path": "ops/yeet-remainder-differential-w2b.ts",
+      "purpose": "W2b differential: the frozen Yeet Settle/ProofShadow/Sweep/Retire/MergedPreview/ReadyGate/PullRequest/Status git bodies, the Library inventory commit read and the ai-metrics ls-files read compared with their Git-backed replacements over scratch repositories with a bare origin, a linked worktree, a detached HEAD, a dirty tree, a spaced and a non-ASCII path, a lockfile change, merged, upstream-only and unpushed branches, a non-fast-forward push, an unmerged index and a non-repository, plus the CommandProbe adapter spawn-failure case."
     },
     {
       "path": "ops/reviewer-ci-github-differential-w3.ts",

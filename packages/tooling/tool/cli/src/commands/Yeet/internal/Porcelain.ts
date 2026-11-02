@@ -569,6 +569,7 @@ export const runYeetMergeLoop: {
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >;
   (
     options: YeetPorcelainOptions,
@@ -581,6 +582,7 @@ export const runYeetMergeLoop: {
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >;
 } = dual(
   (args) => P.hasProperty(args[0], "base"),

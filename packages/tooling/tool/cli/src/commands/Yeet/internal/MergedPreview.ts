@@ -36,6 +36,7 @@
  * @since 0.0.0
  */
 
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -46,13 +47,19 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { RepoRunContext, removeGitWorktree, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import {
+  adaptGitKitError,
+  RepoRunContext,
+  removeGitWorktree,
+  runRepoCommandCapture,
+} from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
-import { runGitOutput } from "./GitExec.ts";
+import { patientGit, runGitOutput } from "./GitExec.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MergedPreview");
 
@@ -462,6 +469,36 @@ const gitCapture = Effect.fn("Yeet.mergedPreviewGitCapture")(function* (
   return { exitCode: result.exitCode, output: result.output };
 });
 
+// The worktree add runs through `Git` (a patient instance: checking out a whole tree can outlive the
+// edge's 30 s timeout) and reads back exactly as `gitCapture` did: git's exit code and stderr, or
+// exit 128 with "git could not be executed" when git never ran (repo-cli-gh-git-consolidation W2b,
+// SPEC D-11). `merge-tree --write-tree` and `commit-tree` have no kit member and stay on the capture.
+const gitKitCaptureAdapter: GitCommandErrorAdapter<{ readonly exitCode: number; readonly output: string }> = {
+  onSpawnFailure: () => () => ({ exitCode: 128, output: "git could not be executed" }),
+  onNonZeroExit: ({ exitCode, output }) => ({ exitCode, output }),
+  onTruncated: O.none(),
+};
+
+const addPreviewWorktree = Effect.fn("Yeet.mergedPreviewAddWorktree")(function* (
+  repoRoot: string,
+  worktreePath: string,
+  commitSha: string
+): Effect.fn.Return<
+  { readonly exitCode: number; readonly output: string },
+  never,
+  ChildProcessSpawner.ChildProcessSpawner
+> {
+  const git = yield* patientGit;
+  return yield* git.worktreeAdd(repoRoot, worktreePath, { ref: commitSha, detach: true }).pipe(
+    Effect.as({ exitCode: 0, output: "" }),
+    Effect.catch((error) =>
+      Effect.succeed(
+        adaptGitKitError(error, GitCommand.worktreeAdd(worktreePath, commitSha, true), gitKitCaptureAdapter)
+      )
+    )
+  );
+});
+
 /**
  * Resolve the absolute preview worktree path for a run context.
  *
@@ -585,7 +622,7 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
   );
 
   yield* removeMergePreviewWorktree(context, worktreePath);
-  const added = yield* gitCapture(context.repoRoot, ["worktree", "add", "--detach", worktreePath, commitSha]);
+  const added = yield* addPreviewWorktree(context.repoRoot, worktreePath, commitSha);
   if (added.exitCode !== 0) {
     return yield* YeetCommandError.make({
       message: `yeet verify --merged could not check out the merge preview worktree:\n${added.output}`,
