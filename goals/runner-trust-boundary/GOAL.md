@@ -68,6 +68,5 @@ Stop on missing authority, failed integrity or security proof, a credential
 path reachable by job privilege other than the accepted E1 residual, a
 hosted-heavy-lane proposal, or fleet-packet ownership collision.
 
-Done: P8 closed on live proof plus the operator's E1 decision, green checks,
-zero review threads, merge, updated lifecycle, and a valid closeout
-reflection are retained.
+Done: P8 live proof and the operator's E1 decision, green checks, zero
+threads, merge, lifecycle update, and a valid reflection, all retained.
