@@ -178,6 +178,22 @@ const Cell = S.TaggedUnion({ Deleted: {}, Active: { entryId: S.Natural } }).pipe
 const Hit = S.Struct({ entryId: S.Natural, bucket: S.Natural }).pipe(
   $I.annoteSchema("Hit", { description: "Private located entry and probe bucket." })
 );
+const ProbeResult = S.TaggedUnion({ Continue: {}, Restart: {}, Missing: {}, Match: Hit.fields }).pipe(
+  $I.annoteSchema("ProbeResult", {
+    description: "Private probe decision retaining key-change restart separately from an empty bucket.",
+  })
+);
+const textLength = (value: string | CitationPythonUnicodeStorage) =>
+  P.isString(value) ? Str.length(value) : value.bytes.byteLength / value.width;
+const textPoint = (value: string | CitationPythonUnicodeStorage, index: number) => {
+  if (P.isString(value)) return O.getOrElse(Str.codePointAt(value, index), () => -1);
+  let result = 0;
+  for (let part = 0; part < value.width; part++)
+    result += O.getOrElse(O.fromUndefinedOr(value.bytes[index * value.width + part]), () => 0) * 2 ** (8 * part);
+  return result;
+};
+const textAdvance = (value: string | CitationPythonUnicodeStorage, point: number) =>
+  P.isString(value) && point > 65535 ? 2 : 1;
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const exceeded = () => CitationRuntimeDictionaryFailure.make({ reason: "limit-exceeded" });
 const freshFailure = (failure: CitationRuntimeDictionaryFailure) =>
@@ -239,29 +255,20 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     left: string | CitationPythonUnicodeStorage,
     right: string | CitationPythonUnicodeStorage
   ) {
-    const length = (value: string | CitationPythonUnicodeStorage) =>
-      P.isString(value) ? Str.length(value) : value.bytes.byteLength / value.width;
-    const point = (value: string | CitationPythonUnicodeStorage, index: number) => {
-      if (P.isString(value)) return O.getOrElse(Str.codePointAt(value, index), () => -1);
-      let result = 0;
-      for (let part = 0; part < value.width; part++)
-        result += O.getOrElse(O.fromUndefinedOr(value.bytes[index * value.width + part]), () => 0) * 2 ** (8 * part);
-      return result;
-    };
     let a = 0;
     let b = 0;
     let iterations = 0;
-    while (a < length(left) && b < length(right)) {
+    while (a < textLength(left) && b < textLength(right)) {
       if (iterations++ % 4096 === 0) {
         yield* comparison.step;
         yield* Effect.yieldNow;
       }
-      const current = point(left, a);
-      if (current !== point(right, b)) return false;
-      a += P.isString(left) && current > 65535 ? 2 : 1;
-      b += P.isString(right) && current > 65535 ? 2 : 1;
+      const current = textPoint(left, a);
+      if (current !== textPoint(right, b)) return false;
+      a += textAdvance(left, current);
+      b += textAdvance(right, current);
     }
-    return a === length(left) && b === length(right);
+    return a === textLength(left) && b === textLength(right);
   });
   let keysEpoch = 0;
   let capacity = 0;
@@ -279,38 +286,66 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     const decoded = yield* S.decodeEffect(CitationRuntimeDictionaryKeyType)(key).pipe(Effect.mapError(invalid));
     return CitationRuntimeDictionaryKey.make({ objectId: decoded.objectId, hash: decoded.hash });
   });
+  const compareEntry = Effect.fn("Citation.runtimeDictionaryCompareEntry")(
+    (
+      entry: CitationRuntimeDictionaryEntry,
+      key: CitationRuntimeDictionaryKey,
+      text: O.Option<string | CitationPythonUnicodeStorage>
+    ) =>
+      unicode && O.isSome(text)
+        ? exactText(entry.objectId).pipe(
+            Effect.flatMap((stored) =>
+              O.isSome(stored) ? equalText(stored.value, text.value) : Effect.fail(invalid())
+            )
+          )
+        : comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure))
+  );
+  const matchEntry = Effect.fn("Citation.runtimeDictionaryMatchEntry")(function* (
+    entry: CitationRuntimeDictionaryEntry,
+    key: CitationRuntimeDictionaryKey,
+    text: O.Option<string | CitationPythonUnicodeStorage>,
+    index: number,
+    epoch: number
+  ) {
+    if (entry.objectId === key.objectId) return ProbeResult.cases.Match.make({ entryId: entry.entryId, bucket: index });
+    if (entry.storedHash !== key.hash) return ProbeResult.cases.Continue.make({});
+    const equal = yield* compareEntry(entry, key, text);
+    const current = HashMap.get(entries, entry.entryId);
+    if (keysEpoch !== epoch || O.isNone(current) || current.value.objectId !== entry.objectId)
+      return ProbeResult.cases.Restart.make({});
+    return equal
+      ? ProbeResult.cases.Match.make({ entryId: entry.entryId, bucket: index })
+      : ProbeResult.cases.Continue.make({});
+  });
+  const probeEpoch = Effect.fn("Citation.runtimeDictionaryProbeEpoch")(function* (
+    key: CitationRuntimeDictionaryKey,
+    text: O.Option<string | CitationPythonUnicodeStorage>
+  ) {
+    const epoch = keysEpoch;
+    let perturb = unsigned(key.hash);
+    let index = indexOfHash(perturb, capacity);
+    while (true) {
+      yield* step;
+      const cell = HashMap.get(buckets, index);
+      if (O.isNone(cell)) return ProbeResult.cases.Missing.make({});
+      if (cell.value._tag === "Active") {
+        const entry = yield* Effect.fromOption(HashMap.get(entries, cell.value.entryId), invalid);
+        const decision = yield* matchEntry(entry, key, text, index, epoch);
+        if (decision._tag !== "Continue") return decision;
+      }
+      perturb >>= BigInt(5);
+      index = indexOfHash(BigInt(index) * BigInt(5) + perturb + BigInt(1), capacity);
+    }
+  });
   const lookup = Effect.fn("Citation.runtimeDictionaryLookup")(function* (key: CitationRuntimeDictionaryKey) {
     const text = yield* exactText(key.objectId);
-    // CPython's DKIX_KEY_CHANGED retries with the original caller-supplied
-    // hash. Replacing only a value or deleting an unrelated key does not retry.
+    // CPython's DKIX_KEY_CHANGED retries with the original caller-supplied hash.
+    // Value replacement and unrelated deletion do not restart the probe.
     while (true) {
       if (capacity === 0) return O.none<typeof Hit.Type>();
-      const epoch = keysEpoch;
-      let perturb = unsigned(key.hash);
-      let index = indexOfHash(perturb, capacity);
-      while (true) {
-        yield* step;
-        const cell = HashMap.get(buckets, index);
-        if (O.isNone(cell)) return O.none<typeof Hit.Type>();
-        if (cell.value._tag === "Active") {
-          const entry = yield* Effect.fromOption(HashMap.get(entries, cell.value.entryId), invalid);
-          if (entry.objectId === key.objectId) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
-          if (entry.storedHash === key.hash) {
-            const equal = yield* unicode && O.isSome(text)
-              ? exactText(entry.objectId).pipe(
-                  Effect.flatMap((stored) =>
-                    O.isSome(stored) ? equalText(stored.value, text.value) : Effect.fail(invalid())
-                  )
-                )
-              : comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure));
-            const current = HashMap.get(entries, entry.entryId);
-            if (keysEpoch !== epoch || O.isNone(current) || current.value.objectId !== entry.objectId) break;
-            if (equal) return O.some(Hit.make({ entryId: entry.entryId, bucket: index }));
-          }
-        }
-        perturb >>= BigInt(5);
-        index = indexOfHash(BigInt(index) * BigInt(5) + perturb + BigInt(1), capacity);
-      }
+      const decision = yield* probeEpoch(key, text);
+      if (decision._tag === "Missing") return O.none<typeof Hit.Type>();
+      if (decision._tag === "Match") return O.some(Hit.make({ entryId: decision.entryId, bucket: decision.bucket }));
     }
   });
   const emptySlot = Effect.fn("Citation.runtimeDictionaryEmptySlot")(function* (

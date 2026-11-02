@@ -117,6 +117,130 @@ export class CitationLiteralCleanerFailure extends S.TaggedError<
 const failure = (reason: typeof Reason.Type) => CitationLiteralCleanerFailure.make({ reason });
 const whitespace = HashSet.fromIterable(citationPythonTextData.whitespace);
 const at = (text: string, index: number) => O.getOrElse(Str.charAt(text, index), () => "");
+const literalMatch = (cleaner: CitationLiteralCleaner, char: string) => {
+  if (cleaner === "underscores") return char === "_";
+  if (cleaner === "inline_whitespace") return char === " " || char === "\t";
+  return char === "\u200b" || HashSet.has(whitespace, char);
+};
+const xmlTerminator = (text: string, index: number) => at(text, index) === "?" && at(text, index + 1) === ">";
+const xmlEnd = Effect.fnUntraced(function* (text: string) {
+  if (!Str.startsWith("<?xml")(text)) return 0;
+  for (let index = 5; index < Str.length(text); index++) {
+    if (index % 4096 === 5) yield* Effect.yieldNow;
+    const char = at(text, index);
+    // Python dot excludes LF, while CR and Unicode separators match.
+    if (char === "\n") break;
+    if (xmlTerminator(text, index)) return index + 2;
+  }
+  return 0;
+});
+const selectRange = Effect.fnUntraced(function* (selection: O.Option<Uint8Array>, start: number, end: number) {
+  if (O.isNone(selection)) return;
+  for (let index = start; index < end; index++) {
+    if (index % 8192 === 0) yield* Effect.yieldNow;
+    selection.value[index] = 1;
+  }
+});
+const scanRuns = Effect.fnUntraced(function* <E>(
+  text: string,
+  cleaner: CitationLiteralCleaner,
+  appendRange: (start: number, end: number) => Effect.Effect<void, E>,
+  appendSpace: (start: number) => Effect.Effect<void, E>
+) {
+  const length = Str.length(text);
+  let unchanged = 0;
+  let run = -1;
+  let matches = 0;
+  let wholeWhitespace = false;
+  const flush = Effect.fnUntraced(function* (end: number) {
+    if (cleaner === "underscores" && end - run < 2) return;
+    yield* appendRange(unchanged, run);
+    if (cleaner !== "underscores") yield* appendSpace(run);
+    matches++;
+    wholeWhitespace = cleaner !== "underscores" && run === 0 && end === length;
+    unchanged = end;
+  });
+  const consume = Effect.fnUntraced(function* (index: number) {
+    if (literalMatch(cleaner, at(text, index))) {
+      if (run < 0) run = index;
+      return;
+    }
+    if (run < 0) return;
+    yield* flush(index);
+    run = -1;
+  });
+  for (let index = 0; index <= length; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    yield* consume(index);
+  }
+  yield* appendRange(unchanged, length);
+  return matches === 0 ? "unchanged" : wholeWhitespace ? "space" : "fresh";
+});
+const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
+const pointWidth = (point: number) => (point <= 255 ? 1 : point <= 65535 ? 2 : 4);
+const readNativePoint = (source: CitationPythonUnicodeStorage, index: number) => {
+  let point = 0;
+  for (let part = 0; part < source.width; part++)
+    point += O.getOrElse(O.fromUndefinedOr(source.bytes[index + part]), () => 0) * 2 ** (8 * part);
+  return point;
+};
+const selectedPoint = (original: number, flag: number | undefined) =>
+  flag === 1 || flag === 2 ? O.some(flag === 2 ? 32 : original) : O.none<number>();
+const visitNative = Effect.fnUntraced(function* <E>(
+  source: CitationPythonUnicodeStorage,
+  selection: Uint8Array,
+  consume: (original: number, flag: number | undefined, offset: number) => Effect.Effect<void, E>
+) {
+  let offset = 0;
+  for (let index = 0; index < source.bytes.length; index += source.width) {
+    if (index % (source.width * 4096) === 0) yield* Effect.yieldNow;
+    const original = readNativePoint(source, index);
+    yield* consume(original, selection[offset], offset);
+    offset += pointUnits(original);
+  }
+});
+const writeNativePoint = (bytes: Uint8Array, cursor: number, width: number, original: number) => {
+  let point = original;
+  for (let part = 0; part < width; part++) {
+    bytes[cursor++] = point & 255;
+    point >>>= 8;
+  }
+  return cursor;
+};
+const encodeSelection = Effect.fnUntraced(function* (
+  source: CitationPythonUnicodeStorage,
+  selection: Uint8Array,
+  expectedUnits: number
+) {
+  let points = 0;
+  let largest = 0;
+  let units = 0;
+  yield* visitNative(
+    source,
+    selection,
+    Effect.fnUntraced(function* (original, flag, offset) {
+      if (original > 65535 && selection[offset + 1] !== flag) return yield* failure("invalid-input");
+      const selected = selectedPoint(original, flag);
+      if (O.isNone(selected)) return;
+      if (flag === 2 && original > 65535) return yield* failure("invalid-input");
+      if (selected.value > largest) largest = selected.value;
+      units += pointUnits(selected.value);
+      points++;
+    })
+  );
+  if (units !== expectedUnits) return yield* failure("invalid-input");
+  const width = pointWidth(largest);
+  // All result slices and replacements have already reserved their units.
+  const bytes = new Uint8Array(points * width);
+  let cursor = 0;
+  yield* visitNative(source, selection, (original, flag) =>
+    Effect.sync(() => {
+      const selected = selectedPoint(original, flag);
+      if (O.isSome(selected)) cursor = writeNativePoint(bytes, cursor, width, selected.value);
+    })
+  );
+  return CitationPythonUnicodeStorage.make({ width, bytes });
+});
 /**
  * Capture count ceilings, deadline and Clock. Each apply owns its output budget
  * and returns R = never. Scans yield at most every 4096 input UTF-16 units;
@@ -157,8 +281,7 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
         return yield* Effect.gen(function* () {
           const output = MutableList.make<string>();
           let produced = 0;
-          let matches = 0;
-          let wholeWhitespace = false;
+          let allocation: CitationCleanerTextAllocation = "unchanged";
           const append = Effect.fn("Citation.appendCleanedText")((size: number, render: () => string) =>
             Effect.gen(function* () {
               if (size > outputCeiling - produced) return yield* failure("limit-exceeded");
@@ -168,64 +291,23 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
             })
           );
           const appendRange = Effect.fn("Citation.appendCleanedRange")(function* (start: number, end: number) {
-            if (O.isSome(selection))
-              for (let index = start; index < end; index++) {
-                if (index % 8192 === 0) yield* Effect.yieldNow;
-                selection.value[index] = 1;
-              }
+            yield* selectRange(selection, start, end);
             return yield* append(end - start, () => Str.slice(start, end)(text));
           });
           if (cleaner === "xml") {
-            let end = 0;
-            if (Str.startsWith("<?xml")(text)) {
-              for (let index = 5; index < length; index++) {
-                if (index % 4096 === 5) yield* Effect.yieldNow;
-                const char = at(text, index);
-                // Python dot excludes LF, while CR and Unicode separators match.
-                if (char === "\n") break;
-                if (char === "?" && at(text, index + 1) === ">") {
-                  end = index + 2;
-                  break;
-                }
-              }
-            }
-            if (end > 0) matches++;
+            const end = yield* xmlEnd(text);
+            if (end > 0) allocation = "fresh";
             yield* appendRange(end, length);
           } else {
-            let unchanged = 0;
-            let run = -1;
-            for (let index = 0; index <= length; index++) {
-              if (index % 4096 === 0) yield* Effect.yieldNow;
-              const char = at(text, index);
-              const isMatch =
-                cleaner === "underscores"
-                  ? char === "_"
-                  : cleaner === "inline_whitespace"
-                    ? char === " " || char === "\t"
-                    : char === "\u200b" || HashSet.has(whitespace, char);
-              if (isMatch && run < 0) {
-                run = index;
-              } else if (!isMatch && run >= 0) {
-                if (cleaner !== "underscores" || index - run >= 2) {
-                  yield* appendRange(unchanged, run);
-                  if (cleaner !== "underscores") {
-                    if (O.isSome(selection)) selection.value[run] = 2;
-                    yield* append(1, () => " ");
-                  }
-                  matches++;
-                  wholeWhitespace = cleaner !== "underscores" && run === 0 && index === length;
-                  unchanged = index;
-                }
-                run = -1;
-              }
-            }
-            yield* appendRange(unchanged, length);
+            allocation = yield* scanRuns(text, cleaner, appendRange, (start) => {
+              if (O.isSome(selection)) selection.value[start] = 2;
+              return append(1, () => " ");
+            });
           }
           const result = pipe(output, MutableList.takeAll, A.join(""));
           return CitationCleanerTextOutput.make({
             text: result,
-            allocation:
-              Str.length(result) === 0 ? "empty" : matches === 0 ? "unchanged" : wholeWhitespace ? "space" : "fresh",
+            allocation: Str.length(result) === 0 ? "empty" : allocation,
           });
         }).pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(failure("deadline-exceeded")) }));
       },
@@ -285,52 +367,10 @@ export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleane
       // 1 retains a source point; 2 emits the one replacement space at a run start.
       const selection = new Uint8Array(source.utf16Units);
       const result = yield* stageSelection({ cleaner: name, text: source.text }, work, O.some(selection));
-      const readPoint = (index: number) => {
-        let point = 0;
-        for (let part = 0; part < source.storage.width; part++)
-          point += O.getOrElse(O.fromUndefinedOr(source.storage.bytes[index + part]), () => 0) * 2 ** (8 * part);
-        return point;
-      };
-      let points = 0;
-      let largest = 0;
-      let units = 0;
-      let offset = 0;
-      for (let index = 0; index < source.storage.bytes.length; index += source.storage.width) {
-        if (index % (source.storage.width * 4096) === 0) yield* Effect.yieldNow;
-        const original = readPoint(index);
-        const flag = selection[offset];
-        if (original > 65535 && selection[offset + 1] !== flag) return yield* failure("invalid-input");
-        if (flag === 1 || flag === 2) {
-          if (flag === 2 && original > 65535) return yield* failure("invalid-input");
-          const point = flag === 2 ? 32 : original;
-          if (point > largest) largest = point;
-          units += point > 65535 ? 2 : 1;
-          points++;
-        }
-        offset += original > 65535 ? 2 : 1;
-      }
-      if (units !== Str.length(result.text)) return yield* failure("invalid-input");
-      const width = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
-      // All result slices and replacements have already reserved their units.
-      const bytes = new Uint8Array(points * width);
-      offset = 0;
-      let cursor = 0;
-      for (let index = 0; index < source.storage.bytes.length; index += source.storage.width) {
-        if (index % (source.storage.width * 4096) === 0) yield* Effect.yieldNow;
-        const original = readPoint(index);
-        const flag = selection[offset];
-        if (flag === 1 || flag === 2) {
-          let point = flag === 2 ? 32 : original;
-          for (let part = 0; part < width; part++) {
-            bytes[cursor++] = point & 255;
-            point >>>= 8;
-          }
-        }
-        offset += original > 65535 ? 2 : 1;
-      }
+      const encoded = yield* encodeSelection(source.storage, selection, Str.length(result.text));
       return CitationLiteralCleanerUnicodeStage.make({
         ...result,
-        storage: CitationPythonUnicodeStorage.make({ width, bytes }),
+        storage: encoded,
       });
     },
     Effect.timeoutOrElse({

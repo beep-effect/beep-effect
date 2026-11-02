@@ -277,7 +277,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/LiteralCleaners.ts",
-          "sha256": "bd820239e4de5c3d83e8beec041d1c239baf94a39b1e2fc9b4a44d065071885f"
+          "sha256": "39744575a9a0764db7533871a9f9aa10d91242a320540b594b96c3b9dc870da2"
         },
         {
           "path": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
