@@ -39,7 +39,7 @@ import {
   CitationCallbackResult,
 } from "./CallbackResource.ts";
 
-export { CitationCallbackFailure, CitationCallbackResource, CitationCallbackResult } from "./CallbackResource.ts";
+export { CitationCallbackFailure, CitationCallbackResource } from "./CallbackResource.ts";
 
 import { CitationAuthorityIdentityInput } from "./AuthorityIdentity.ts";
 import { CitationDefaultObservation, readCitationDefaultObservation } from "./CallbackObservations.ts";

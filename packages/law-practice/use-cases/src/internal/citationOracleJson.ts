@@ -59,7 +59,15 @@ export const CitationOracleJson = <Value, Encoded>(schema: S.Codec<Value, Encode
   );
 };
 
-class TokenizerExtractorsArtifact extends S.Opaque<TokenizerExtractorsArtifact, { readonly brand: unique symbol }>()(
+/**
+ * Pinned tokenizer configuration with its exact source payload.
+ * @category testing
+ * @since 0.0.0
+ */
+export class TokenizerExtractorsArtifact extends S.Opaque<
+  TokenizerExtractorsArtifact,
+  { readonly brand: unique symbol }
+>()(
   S.Struct({ kind: S.tag("tokenizer-extractors"), payload: S.JsonObject.pipe(S.Array, CitationOracleJson) }).pipe(
     $I.annoteSchema("TokenizerExtractorsArtifact", {
       description: "Pinned tokenizer extractors retaining the exact source JSON payload bytes.",
@@ -67,7 +75,12 @@ class TokenizerExtractorsArtifact extends S.Opaque<TokenizerExtractorsArtifact, 
   )
 ) {}
 
-class ModelValueArtifact extends S.Opaque<ModelValueArtifact, { readonly brand: unique symbol }>()(
+/**
+ * Pinned model or vocabulary object with its exact source payload.
+ * @category testing
+ * @since 0.0.0
+ */
+export class ModelValueArtifact extends S.Opaque<ModelValueArtifact, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("model-value"), payload: S.JsonObject.pipe(CitationOracleJson) }).pipe(
     $I.annoteSchema("ModelValueArtifact", {
       description: "Pinned model or vocabulary object retaining the exact source JSON payload bytes.",
