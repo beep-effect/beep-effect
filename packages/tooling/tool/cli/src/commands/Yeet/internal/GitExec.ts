@@ -12,10 +12,11 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
+import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -35,6 +36,7 @@ import {
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import type { GitShape } from "@beep/git/Git";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -268,6 +270,52 @@ export const optionFromNonEmpty = (value: string): O.Option<string> =>
 export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
 
 /**
+ * The `GitOptions` for Yeet's long-running git mutations: a 15-minute per-run
+ * timeout instead of the kit's 30-second default, with the default output bound.
+ *
+ * **Details**
+ *
+ * `Git.layer` at the runtime edge runs every call under the default 30 s
+ * timeout, which the old unbounded repo-run capture never had. Two Yeet steps
+ * legitimately outlive it: the head-install preflight's `worktree add` and
+ * `worktree remove --force` (the remove deletes a checkout that `bun install`
+ * just filled with about 227k entries) and `refreshBaseRef`'s network fetch.
+ * Those sites build their own `Git` from these options (SPEC D-09) instead of
+ * taking the edge instance.
+ *
+ * **Example** (Read the patient timeout)
+ *
+ * ```ts
+ * import { PATIENT_GIT_OPTIONS } from "@beep/repo-cli/test/Yeet"
+ * import * as Duration from "effect/Duration"
+ *
+ * console.log(Duration.toMinutes(PATIENT_GIT_OPTIONS.timeout)) // 15
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PATIENT_GIT_OPTIONS: GitOptions = GitOptions.make({ timeout: Duration.minutes(15) });
+
+/**
+ * A `Git` service under {@link PATIENT_GIT_OPTIONS}, built from the ambient spawner.
+ *
+ * **Example** (Build the patient service)
+ *
+ * ```ts
+ * import { patientGit } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(patientGit)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const patientGit: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> =
+  Git.makeWith(PATIENT_GIT_OPTIONS);
+
+/**
  * Refresh the configured base ref, preserving Yeet's unsafe-ref errors.
  *
  * **Details**
@@ -295,8 +343,9 @@ export const safeOriginBranchFromBaseForTesting = safeOriginBranchFromBase;
 export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
   repoRoot: string,
   base: string
-): Effect.fn.Return<void, YeetCommandError, Git> {
-  const git = yield* Git;
+): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  // A network fetch may outlive the edge instance's 30 s timeout (SPEC D-09).
+  const git = yield* patientGit;
   const originBranch = originBranchFromBase(base);
   if (O.isSome(originBranch)) {
     if (!isSafeOriginBranch(originBranch.value)) {

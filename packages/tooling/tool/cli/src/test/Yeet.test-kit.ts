@@ -40,6 +40,8 @@ export {
   currentYeetBranch,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
+  PATIENT_GIT_OPTIONS,
+  patientGit,
   refreshBaseRef,
   runGitFoldedStdout,
   safeOriginBranchFromBaseForTesting,

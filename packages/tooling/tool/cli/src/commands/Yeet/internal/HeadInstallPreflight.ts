@@ -10,7 +10,6 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
@@ -25,7 +24,8 @@ import {
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { captureGitKitExit } from "./GitExec.ts";
+import { captureGitKitExit, patientGit } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -99,7 +99,9 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const git = yield* Git;
+  // The add fills nothing, but the remove deletes a checkout `bun install` just filled, which can
+  // outlive the edge instance's 30 s timeout: run the lifecycle under the patient options (SPEC D-09).
+  const git = yield* patientGit;
   const commandText = commandTextForStep(step);
   const cacheRoot = yield* resolveBeepCacheRoot().pipe(
     Effect.mapError(YeetCommandError.new("Failed to resolve the head-install preflight cache root."))
