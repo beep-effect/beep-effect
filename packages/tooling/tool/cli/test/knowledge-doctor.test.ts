@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CommandNodeWitness,
   classifyKnowledgeSpan,
@@ -53,7 +54,7 @@ import type {
   KnowledgeFindingKind,
 } from "@beep/repo-cli/commands/Knowledge";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const testLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const CITED = "1111111111111111111111111111111111111111";
 const FOREIGN = "2222222222222222222222222222222222222222";

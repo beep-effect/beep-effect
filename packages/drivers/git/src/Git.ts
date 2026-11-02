@@ -340,6 +340,24 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  const isAncestor: GitShape["isAncestor"] = dual(
+    3,
+    Effect.fn("Git.isAncestor")(function* (cwd: string, ancestor: string, descendant: string) {
+      yield* Effect.annotateCurrentSpan({ cwd, ancestor, descendant });
+      yield* rejectOptionLikeRefs(cwd, [ancestor, descendant]);
+      // "quiet" kind: a non-ancestor is a SILENT exit 1 — the negative
+      // answer this member promises, never an error. An unknown object still
+      // exits 128 with a `Not a valid object name` stderr and stays
+      // UnknownRefError; a NOISY exit 1 stays a loud GitCommandError.
+      const classified = yield* runFor(GitCommand.isAncestor(ancestor, descendant), cwd, "quiet");
+      return yield* Match.valueTags(classified, {
+        success: () => Effect.succeed(true),
+        absent: () => Effect.succeed(false),
+        ...refFailureArms(cwd, `${ancestor}...${descendant}`),
+      });
+    })
+  );
+
   const changedFiles: GitShape["changedFiles"] = dual(
     2,
     Effect.fn("Git.changedFiles")(function* (
@@ -1786,6 +1804,11 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     );
   });
 
+  const worktreePrune = Effect.fn("Git.worktreePrune")(function* (cwd: string) {
+    yield* Effect.annotateCurrentSpan({ cwd });
+    return yield* runVoid("Git.worktreePrune", GitCommand.worktreePrune(), cwd, "worktrees");
+  });
+
   const worktreeRemove: GitShape["worktreeRemove"] = dual(
     stringAt(1),
     Effect.fn("Git.worktreeRemove")(function* (cwd: string, path: string, options?: { readonly force?: boolean }) {
@@ -1845,6 +1868,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     lsTree,
     mergeBase,
     mergeBaseOption,
+    isAncestor,
     mv,
     nameStatus,
     pull,
@@ -1888,6 +1912,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     worktreeAdd,
     worktreeList,
     worktreeRemove,
+    worktreePrune,
   };
 };
 
@@ -2431,6 +2456,32 @@ export interface GitShape {
     }): (
       cwd: string
     ) => Effect.Effect<ReadonlyArray<RefEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
+  /**
+   * `git merge-base --is-ancestor <ancestor> <descendant>` — whether
+   * `ancestor` is reachable from `descendant` (a commit counts as its own
+   * ancestor). The negative answer is git's silent exit 1, read as `false`,
+   * never an error; an unknown object is still `UnknownRefError`, and a noisy
+   * exit 1 stays a loud `GitCommandError`.
+   *
+   * **Details**
+   *
+   * The reachability sibling of `mergeBaseOption`: where that member answers
+   * "where do these histories meet", this one answers "is this commit already
+   * contained in that one" without printing a sha. A caller that needs to tell
+   * a missing object in a shallow clone apart from a bad citation checks
+   * `isShallow` on the `UnknownRefError` arm.
+   */
+  readonly isAncestor: {
+    (
+      cwd: string,
+      ancestor: string,
+      descendant: string
+    ): Effect.Effect<boolean, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      ancestor: string,
+      descendant: string
+    ): (cwd: string) => Effect.Effect<boolean, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
    * `git rev-parse --is-shallow-repository` — whether the repository is a
@@ -3370,6 +3421,12 @@ export interface GitShape {
     cwd: string
   ) => Effect.Effect<ReadonlyArray<WorktreeEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   /**
+   * Mutating: `git worktree prune` — drops the registrations of linked
+   * working trees whose directory no longer exists. Directories still on
+   * disk are never touched, so it is safe to run after every removal.
+   */
+  readonly worktreePrune: (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
+  /**
    * Mutating: `git worktree remove [--force] <path>` — removes a linked
    * working tree. A dirty worktree fails loudly unless `options.force` is
    * set.
@@ -3610,6 +3667,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     refExists: dual(2, stubOf(overrides, "refExists")),
     mergeBase: dual(3, stubOf(overrides, "mergeBase")),
     mergeBaseOption: dual(3, stubOf(overrides, "mergeBaseOption")),
+    isAncestor: dual(3, stubOf(overrides, "isAncestor")),
     changedFiles: dual(2, stubOf(overrides, "changedFiles")),
     workingChanges: dual(hasStringSubject, stubOf(overrides, "workingChanges")),
     revParse: dual(2, stubOf(overrides, "revParse")),
@@ -3678,6 +3736,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     worktreeAdd: dual(stringAt(1), stubOf(overrides, "worktreeAdd")),
     worktreeList: stubOf(overrides, "worktreeList"),
     worktreeRemove: dual(stringAt(1), stubOf(overrides, "worktreeRemove")),
+    worktreePrune: stubOf(overrides, "worktreePrune"),
     lsFiles: dual(hasStringSubject, stubOf(overrides, "lsFiles")),
   });
 
