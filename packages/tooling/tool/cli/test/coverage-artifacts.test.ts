@@ -1,4 +1,5 @@
 import { Git } from "@beep/git/Git";
+import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import {
   CoveragePackageArtifact,
@@ -503,6 +504,30 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         );
       }
 
+      it.effect("records the resolved CLI coverage-processing library version", () =>
+        Effect.gen(function* () {
+          const f = yield* sealedFixture();
+          // Resolve the same direct package as the CLI, independently of its manifest version pin.
+          const packageJsonPath = yield* f.path.fromFileUrl(
+            new URL("../package.json", import.meta.resolve("@vitest/istanbul-lib-coverage"))
+          );
+          const library = yield* f.fs.readFileString(packageJsonPath).pipe(Effect.flatMap(LenientManifest.parse));
+          expect(library.name).toBe("@vitest/istanbul-lib-coverage");
+          expect(f.manifest.coverageLibraryVersion).toBe(library.version);
+        })
+      );
+      it.effect("rejects a producer manifest claiming the stale coverage library version", () =>
+        Effect.gen(function* () {
+          const f = yield* sealedFixture();
+          // Tamper with serialized metadata rather than constructing a schema-valid manifest.
+          yield* f.fs.writeFileString(
+            f.manifestPath,
+            yield* encode({ ...f.manifest, coverageLibraryVersion: "1.0.2" })
+          );
+          const failure = yield* collectCoverageProducerArtifacts(f.root, f.options).pipe(Effect.flip);
+          expect(failure.message).toContain("invalid producer manifest");
+        })
+      );
       it.effect("merges every explicit Bun and Node invocation while preserving their runtime receipts", () =>
         Effect.gen(function* () {
           const f = yield* compoundFixture("node");

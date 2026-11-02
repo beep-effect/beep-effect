@@ -1,23 +1,17 @@
 /**
- * The one-call `gh` invocation the gate-side modules share: run `gh` from the
- * repo root, map any failure to a `YeetCommandError`, and decode the JSON it
- * printed. Reads and writes alike go through it (the merge `PUT`, the S11
- * comment `POST` and run cancels included), so nothing about the name promises
- * a side-effect-free call.
- *
- * @packageDocumentation
- * @since 0.0.0
+ * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/GhCall.ts`, verbatim from
+ * main 930758e06b except for import paths and the identity namespace.
  */
 
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
-import { ghOutput } from "../../../internal/github/index.ts";
-import { YeetCommandError } from "../Yeet.errors.ts";
+import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
+import { ghOutput } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as S from "effect/Schema";
-import type { GhCommandFailure } from "../../../internal/github/index.ts";
-import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { GhCommandFailure } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
+import type { RepoRunContext } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
 
 const ghFailure = (what: string) => (failure: GhCommandFailure) =>
   YeetCommandError.make({

@@ -91,7 +91,6 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     HttpServer.HttpServer
   );
   yield* fs.chmod(`${directory}/worker.sock`, 0o600);
-  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined));
   const receiptRow = Effect.gen(function* () {
     const row = (yield* facts.read(id("1"), 0))[0];
     if (row === undefined) return yield* Effect.die("Missing synthetic receipt");
@@ -154,6 +153,8 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
   });
   const uid = process.geteuid?.() ?? -1;
   const rawClient = yield* makeObservationLaunchClient(policy, uid);
+  // Release held replies before either client or graceful server shutdown runs.
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined));
   const client = {
     context: Effect.provideService(rawClient.context, Clock.Clock, clock),
     submit: (submission: ObservationLaunchSubmission) =>
@@ -251,6 +252,24 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(yield* f.client.submit(f.submission)).toEqual(rows[0]);
       expect(yield* Ref.get(f.posts)).toBe(2);
       expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
+    }).pipe(Effect.timeout("3 seconds"))
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("releases held replies before shutdown when the enclosing scope fails", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          yield* f.control.resume;
+          yield* Ref.set(f.mode, "lost");
+          yield* f.client.submit(f.submission).pipe(Effect.forkChild);
+          yield* Deferred.await(f.reached);
+          return yield* Effect.fail("synthetic-scope-failure");
+        })
+      ).pipe(Effect.flip);
+      expect(failure).toBe("synthetic-scope-failure");
     }).pipe(Effect.timeout("3 seconds"))
   )
 );
