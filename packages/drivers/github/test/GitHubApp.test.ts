@@ -10,6 +10,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -990,6 +991,19 @@ describe("InstallationToken", () => {
       const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
       assert.strictEqual(Redacted.value(decoded.token), "ghs_x");
       assert.isTrue(DateTime.toEpochMillis(decoded.expiresAt) === DateTime.toEpochMillis(token.expiresAt));
+    })
+  );
+
+  it.effect.prop(
+    "round-trips every schema-derived token through its JSON boundary",
+    [Arbitrary.schema(InstallationToken)],
+    Effect.fnUntraced(function* ([generated]) {
+      // Re-encoding the decoded value must reproduce the wire form exactly: the
+      // redacted token, the UTC expiry, the installation id and every optional field.
+      const encoded = yield* S.encodeEffect(InstallationToken)(generated);
+      const decoded = yield* S.decodeEffect(InstallationToken)(encoded);
+      assert.deepStrictEqual(yield* S.encodeEffect(InstallationToken)(decoded), encoded);
+      assert.strictEqual(Redacted.value(decoded.token), Redacted.value(generated.token));
     })
   );
 
