@@ -514,3 +514,5 @@ defect. Publish/prove the new source and answer the review before acceptance.
   behaved like missing implicit GitHub inference. Stable returned an SCM-query
   refusal instead. Preserve this stronger boundary, retain the failed attempt,
   and re-execute the corrected source rather than relabeling the old run.
+
+- 2026-11-02: The existing population refresh would replace199 reviewed dispositions with pending rows without retaining their evidence. Require an exclusive sibling archive, verify the bounded prior-history digest chain, and keep changed-source review separate from historical facts. Eleven isolated controls include the reproduced old replacement and altered-ancestor refusal. The actual199-row archive is byte-identical; the qualification ledger remains unchanged.

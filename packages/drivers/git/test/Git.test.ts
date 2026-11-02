@@ -343,6 +343,106 @@ describe("Git", () => {
     );
   });
 
+  describe("isAncestor", () => {
+    it.effect("exit 0 answers true and spawns `merge-base --is-ancestor <ancestor> <descendant>`", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.isAncestor(cwd, "main", "feat/git");
+        });
+        const result = yield* run(program, (args) => {
+          seen.push(args);
+          return { exit: 0 };
+        });
+        assert.isTrue(result);
+        assert.deepStrictEqual(
+          A.findFirst(seen, (args) => args[0] === "merge-base"),
+          O.some(["merge-base", "--is-ancestor", "main", "feat/git"])
+        );
+      })
+    );
+
+    it.effect("a non-ancestor (silent exit 1) answers false, never an error", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.isAncestor(cwd, "feat/git", "main");
+        });
+        assert.isFalse(yield* run(program, () => ({ exit: 1 })));
+      })
+    );
+
+    it.effect("a NOISY exit 1 stays a loud GitCommandError — only the silent shape means non-ancestor", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.isAncestor(cwd, "main", "feat/git");
+        });
+        const failure = yield* Effect.flip(
+          run(program, () => ({ stderr: "error: something else went wrong\n", exit: 1 }))
+        );
+        assert.instanceOf(failure, GitCommandError);
+      })
+    );
+
+    it.effect("an unknown object stays UnknownRefError — the caller decides what a shallow clone means", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.isAncestor(cwd, "deadbeef", "main");
+        });
+        const failure = yield* Effect.flip(
+          run(program, () => ({ stderr: "fatal: Not a valid object name deadbeef\n", exit: 128 }))
+        );
+        assert.instanceOf(failure, UnknownRefError);
+      })
+    );
+
+    it.effect("an option-like ref is refused before spawning", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.isAncestor(cwd, "--all", "main");
+        });
+        const failure = yield* Effect.flip(run(program, () => ({ exit: 0 })));
+        assert.instanceOf(failure, GitCommandError);
+        assert.strictEqual(failure.kind, "refused");
+      })
+    );
+  });
+
+  describe("worktreePrune", () => {
+    it.effect("spawns `worktree prune` and answers void on exit 0", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreePrune(cwd);
+        });
+        yield* run(program, (args) => {
+          seen.push(args);
+          return { exit: 0 };
+        });
+        assert.deepStrictEqual(
+          A.findFirst(seen, (args) => args[0] === "worktree"),
+          O.some(["worktree", "prune"])
+        );
+      })
+    );
+
+    it.effect("a non-zero exit is a GitCommandError carrying stderr", () =>
+      Effect.gen(function* () {
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.worktreePrune(cwd);
+        });
+        const failure = yield* Effect.flip(run(program, () => ({ stderr: "fatal: prune failed\n", exit: 1 })));
+        assert.instanceOf(failure, GitCommandError);
+      })
+    );
+  });
+
   describe("revParse", () => {
     it.effect("returns the trimmed SHA", () =>
       Effect.gen(function* () {
