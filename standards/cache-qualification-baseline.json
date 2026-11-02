@@ -14,7 +14,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/acp": {
@@ -22,7 +22,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/agents-client": {
@@ -30,7 +30,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/agents-domain": {
@@ -38,7 +38,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/agents-server": {
@@ -46,7 +46,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/agents-tables": {
@@ -54,7 +54,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/agents-use-cases": {
@@ -62,7 +62,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ai-provider-cli": {
@@ -70,7 +70,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ai-sync": {
@@ -78,7 +78,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/anthropic": {
@@ -86,7 +86,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/api-docs": {
@@ -94,7 +94,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/api-transport": {
@@ -102,7 +102,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-client": {
@@ -110,7 +110,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-config": {
@@ -118,7 +118,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-domain": {
@@ -126,7 +126,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-proof": {
@@ -134,7 +134,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-server": {
@@ -142,7 +142,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-tables": {
@@ -150,7 +150,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-ui": {
@@ -158,7 +158,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/architecture-lab-use-cases": {
@@ -166,7 +166,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/beep-effect-web": {
@@ -174,7 +174,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/box": {
@@ -182,7 +182,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/box-provisioning": {
@@ -190,7 +190,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/brand": {
@@ -198,7 +198,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/chalk": {
@@ -206,7 +206,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ciops": {
@@ -214,7 +214,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/cli-kit": {
@@ -222,7 +222,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/codegen-kit": {
@@ -230,7 +230,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/colors": {
@@ -238,7 +238,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/commands": {
@@ -246,7 +246,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/config-file": {
@@ -254,7 +254,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/cosmos": {
@@ -262,7 +262,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/data": {
@@ -270,7 +270,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/db-admin": {
@@ -278,7 +278,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/discord": {
@@ -286,7 +286,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/doc-text": {
@@ -294,7 +294,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/dock": {
@@ -302,7 +302,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/dock-react": {
@@ -310,7 +310,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/docket-intake": {
@@ -318,7 +318,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/documents-domain": {
@@ -326,7 +326,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/documents-server": {
@@ -334,7 +334,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/documents-tables": {
@@ -342,7 +342,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/documents-use-cases": {
@@ -350,7 +350,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/drizzle": {
@@ -358,7 +358,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/duckdb": {
@@ -366,7 +366,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ecfr": {
@@ -374,7 +374,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/editor": {
@@ -382,7 +382,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/effect-drizzle": {
@@ -390,7 +390,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-client": {
@@ -398,7 +398,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-config": {
@@ -406,7 +406,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-domain": {
@@ -414,7 +414,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-server": {
@@ -422,7 +422,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-tables": {
@@ -430,7 +430,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-ui": {
@@ -438,7 +438,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemic-use-cases": {
@@ -446,7 +446,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/epistemics": {
@@ -454,7 +454,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/exiftool": {
@@ -462,7 +462,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/fc-runs": {
@@ -470,7 +470,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ffmpeg": {
@@ -478,7 +478,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/file-processing": {
@@ -486,7 +486,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/freshbooks": {
@@ -494,7 +494,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/git": {
@@ -502,7 +502,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/github": {
@@ -510,7 +510,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/github-actions": {
@@ -518,7 +518,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/github-commands": {
@@ -526,7 +526,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/github-references": {
@@ -534,7 +534,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/github-reporting": {
@@ -542,7 +542,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/glob": {
@@ -550,7 +550,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/gov-legal-mcp": {
@@ -558,7 +558,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/govinfo": {
@@ -566,7 +566,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/graph-3d": {
@@ -574,7 +574,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/html": {
@@ -582,7 +582,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/hubspot": {
@@ -590,7 +590,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/identity": {
@@ -598,7 +598,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/infra": {
@@ -606,7 +606,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/jsonc": {
@@ -614,7 +614,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/jsonl": {
@@ -622,7 +622,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/langextract": {
@@ -630,7 +630,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/law-practice-domain": {
@@ -638,7 +638,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/law-practice-server": {
@@ -646,7 +646,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/law-practice-tables": {
@@ -654,7 +654,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/law-practice-use-cases": {
@@ -662,7 +662,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -670,7 +670,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/lexical-schema": {
@@ -678,7 +678,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/libpff": {
@@ -686,7 +686,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/lint-rules": {
@@ -694,7 +694,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/lockfiles": {
@@ -702,7 +702,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/m365": {
@@ -710,7 +710,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/m365-mcp": {
@@ -718,7 +718,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/managed-section": {
@@ -726,7 +726,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/markdown": {
@@ -734,7 +734,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/mcp-kit": {
@@ -742,7 +742,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/mcpb-kit": {
@@ -750,7 +750,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/md": {
@@ -758,7 +758,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/memfs": {
@@ -766,7 +766,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/n3": {
@@ -774,7 +774,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/nlp": {
@@ -782,7 +782,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/nlp-mcp": {
@@ -790,7 +790,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/nlp-processing": {
@@ -798,7 +798,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/npm-spec": {
@@ -806,7 +806,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/obs": {
@@ -814,7 +814,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/observability": {
@@ -822,7 +822,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/occt": {
@@ -830,7 +830,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/oip-web": {
@@ -838,7 +838,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/onepassword-cli": {
@@ -846,7 +846,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology": {
@@ -854,7 +854,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-client": {
@@ -862,7 +862,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-config": {
@@ -870,7 +870,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-domain": {
@@ -878,7 +878,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-server": {
@@ -886,7 +886,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-ui": {
@@ -894,7 +894,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ontology-use-cases": {
@@ -902,7 +902,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/openai": {
@@ -910,7 +910,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/openai-compat": {
@@ -918,7 +918,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/openclaw": {
@@ -926,7 +926,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/oxigraph": {
@@ -934,7 +934,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/pacer": {
@@ -942,7 +942,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/package-json": {
@@ -950,7 +950,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/palantiri": {
@@ -958,7 +958,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/pandoc-ast": {
@@ -966,7 +966,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/pdf-tools": {
@@ -974,7 +974,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/pglite": {
@@ -982,7 +982,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/phoenix": {
@@ -990,7 +990,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/poppler": {
@@ -998,7 +998,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/postgres": {
@@ -1006,7 +1006,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-claude-mod": {
@@ -1014,7 +1014,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-gateway": {
@@ -1022,7 +1022,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-identify": {
@@ -1030,7 +1030,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-kg-mcp": {
@@ -1038,7 +1038,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-m365-contacts": {
@@ -1046,7 +1046,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-mail-tagging": {
@@ -1054,7 +1054,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-review-hub": {
@@ -1062,7 +1062,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/practice-setup": {
@@ -1070,7 +1070,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/pretext": {
@@ -1078,7 +1078,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/professional-desktop": {
@@ -1086,7 +1086,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/provenance": {
@@ -1094,7 +1094,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/public-site": {
@@ -1102,7 +1102,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/qa-capture": {
@@ -1110,7 +1110,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/rdf": {
@@ -1118,7 +1118,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/rdf-canonize": {
@@ -1126,7 +1126,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-ai-metrics": {
@@ -1134,7 +1134,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-cli": {
@@ -1142,7 +1142,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-configs": {
@@ -1150,7 +1150,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-docgen": {
@@ -1158,7 +1158,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-tsconfig": {
@@ -1166,7 +1166,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-utils": {
@@ -1174,7 +1174,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/repo-workspaces": {
@@ -1182,7 +1182,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/runpod": {
@@ -1190,7 +1190,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/runtime-env": {
@@ -1198,7 +1198,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/sanity": {
@@ -1206,7 +1206,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/sbom": {
@@ -1214,7 +1214,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/schema": {
@@ -1222,7 +1222,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/schema-org": {
@@ -1230,7 +1230,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/scratchpad": {
@@ -1246,7 +1246,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/semantica": {
@@ -1254,7 +1254,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/semver": {
@@ -1262,7 +1262,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/shacl": {
@@ -1270,7 +1270,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/shared-domain": {
@@ -1278,7 +1278,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/shared-tables": {
@@ -1286,7 +1286,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/shared-use-cases": {
@@ -1294,7 +1294,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/skill-contract": {
@@ -1302,7 +1302,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/spdx": {
@@ -1310,7 +1310,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/storybook": {
@@ -1318,7 +1318,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/t3-code": {
@@ -1326,7 +1326,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/tailscale": {
@@ -1334,7 +1334,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/technical-drawing": {
@@ -1342,7 +1342,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/tesseract": {
@@ -1350,7 +1350,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/test-runner": {
@@ -1358,7 +1358,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/test-utils": {
@@ -1366,7 +1366,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/tika": {
@@ -1374,7 +1374,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/todox": {
@@ -1382,7 +1382,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/toml": {
@@ -1390,7 +1390,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/trustgraph-workbench": {
@@ -1398,7 +1398,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/tsconfig": {
@@ -1406,7 +1406,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/types": {
@@ -1414,7 +1414,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/ui": {
@@ -1422,7 +1422,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/uspto": {
@@ -1430,7 +1430,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/uspto-mcp": {
@@ -1438,7 +1438,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/utils": {
@@ -1446,7 +1446,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/walker": {
@@ -1454,7 +1454,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/windows-secrets": {
@@ -1462,7 +1462,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/wink": {
@@ -1470,7 +1470,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/workspace-domain": {
@@ -1478,7 +1478,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/workspace-server": {
@@ -1486,7 +1486,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/workspace-tables": {
@@ -1494,7 +1494,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/workspace-use-cases": {
@@ -1502,7 +1502,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/xdg": {
@@ -1510,7 +1510,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/xstate": {
@@ -1518,7 +1518,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     },
     "@beep/yaml": {
@@ -1526,7 +1526,7 @@
       "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "4a4bed82273499c77021c64c2890ee5ba5e012c6f913bf21a748ec52f3a27453"
+        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
       }
     }
   },

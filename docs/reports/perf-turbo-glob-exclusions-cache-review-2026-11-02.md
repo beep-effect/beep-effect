@@ -1,18 +1,18 @@
 # Turbo glob exclusions cache review (quality audit M8)
 
 Several Turbo tasks hashed gitignored trees their commands never read: nested
-lanes under `.claude/worktrees/`, nested `node_modules`, and Cargo artifacts
-under `src-tauri/target/`. This change adds exclusions to the input sets only.
+lanes (excluded by `!.claude/worktrees/**`), nested `node_modules`, and Cargo artifacts
+(excluded by `!**/src-tauri/target/**`). This change adds exclusions to the input sets only.
 
 Input-set changes in root `turbo.json` (subject `//`):
 
 - `!.claude/worktrees/**` on `//#lint:retired-iri-authorities`,
   `//#lint:markdown-fences`, `//#lint:schema-tag-idioms`, `//#lint:holds` and
   `//#lint:tsgo-rules`. All five list files through `git ls-files`, and
-  `.claude/worktrees/` is ignored by the root `.gitignore`.
+  the root `.gitignore` ignores the nested lane directory.
 - `!**/src-tauri/target/**` on `//#lint:retired-effect-paths`,
   `//#lint:retired-iri-authorities`, `//#lint:markdown-fences`,
-  `//#lint:schema-tag-idioms` and every `//#fallow:*` task. `src-tauri/target/`
+  `//#lint:schema-tag-idioms` and every `//#fallow:*` task. The Cargo `target` directory
   is ignored by the root `.gitignore`.
 - `!**/node_modules/**` and `bun.lock` on every `//#fallow:*` task;
   `!**/node_modules/**` on `//#lint:typos`, which honors the Git ignore.
@@ -46,7 +46,7 @@ Drifted computations reported by `bun run beep cache audit`:
 Subjects re-recorded: `//` plus all 188 workspace packages. Every package
 inherits the root `coverage` and `package-test-typecheck` definitions, whose
 input lists gained `!**/src-tauri/target/**`; both tasks are uncached, and the
-glob matches only `apps/professional-desktop/src-tauri/target/`, so no other
+glob matches only the desktop app's Cargo `target` directory, so no other
 package's hash changes. `@beep/identity` also carries its overlay change above.
 
 ## Reversal
