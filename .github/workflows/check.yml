@@ -1399,17 +1399,17 @@ jobs:
               --no-write-fetch-head --recurse-submodules=no --filter=blob:none --stdin origin
           fi
 
-          # gitleaks counts a commit only when it yields a fragment: added text
-          # lines (`-U0`; binaries and empty or delete-only commits yield none).
-          # Count those commits from --numstat, which reads the blobs just
-          # prefetched, so an empty-only or binary-only range expects zero.
-          expected_commits=0
-          for commit in $commits; do
-            if git diff-tree -r --root --no-commit-id --numstat "$commit" \
-              | awk '$1 ~ /^[0-9]+$/ && $1 > 0 { found = 1 } END { exit !found }'; then
-              expected_commits=$((expected_commits + 1))
-            fi
-          done
+          # gitleaks counts a commit only when it yields a fragment: added lines
+          # in its own `git log -p -U0 <log_opts>` view (binaries, pure renames,
+          # empty and delete-only commits yield none; merges print no patch).
+          # Read that same view here, after the prefetch, so the expectation
+          # matches what the scanner sees, rename detection included.
+          expected_commits="$(git log -p -U0 --no-color --no-ext-diff --format='::commit:: %H' $log_opts \
+            | awk '/^::commit:: / { commit = $2; header = 0; next }
+                   /^diff --git / { header = 1; next }
+                   /^@@ / { header = 0; next }
+                   !header && /^\+/ && commit != "" { seen[commit] = 1 }
+                   END { n = 0; for (c in seen) n++; print n }')"
           echo "${expected_commits} commit(s) in ${log_opts} add text lines"
 
           # Global allowlists and targetRules require Gitleaks >= 8.25.0.
