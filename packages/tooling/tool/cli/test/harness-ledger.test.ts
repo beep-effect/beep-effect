@@ -1383,3 +1383,156 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
     })
   );
 });
+
+// The dated namespace projection (issue #1865): a reader joins under the
+// current salt and under the regime the projection superseded, reports the
+// two apart, and never lets a pre-cutover session fill the current window.
+// The live layer captures the ambient `ConfigProvider` when it is built, so
+// the projected ledger is its own layer whose provider names the fixture file.
+const PROJECTION_SALT = "harness-ledger-projection-salt";
+const PROJECTION_CUTOVER = "2026-10-01T00:00:00.000Z";
+const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+
+const hookedTranscript = Effect.fn("test.hookedTranscript")(function* (
+  stateDir: string,
+  file: string,
+  rawSession: string,
+  day: string,
+  salt: O.Option<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(
+    file,
+    yield* encodeUnknownTranscript({ sessionId: rawSession, message: { content: [{ type: "tool_use", id: "x" }] } })
+  );
+  const identity = Sha256Hex.make(yield* hashPrivateIdentifier(rawSession, salt));
+  const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, salt));
+  const row = yield* HookPulseV1.decodeJsonEffect(yield* pulse(identity, `${day}T10:00:00Z`, O.none()));
+  yield* writeShard(stateDir, day, identity, [
+    yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...row, transcriptPath: O.some(transcriptPath) })),
+  ]);
+});
+
+const CURRENT_SESSION = "00000000-0000-4000-8000-00000000000a";
+const PREVIOUS_SESSION = "00000000-0000-4000-8000-00000000000b";
+
+// One transcript hooked after the cutover under the projection salt, one hooked
+// before it by a session that exported no salt (the library-default regime).
+const twoRegimeFixture = Effect.fn("test.twoRegimeFixture")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-regimes-" });
+  const stateDir = yield* makeHookStateDir("harness-reconcile-regimes-hooks-");
+  yield* hookedTranscript(
+    stateDir,
+    path.join(root, `${CURRENT_SESSION}.jsonl`),
+    CURRENT_SESSION,
+    "2026-10-09",
+    O.some(PROJECTION_SALT)
+  );
+  yield* hookedTranscript(
+    stateDir,
+    path.join(root, `${PREVIOUS_SESSION}.jsonl`),
+    PREVIOUS_SESSION,
+    "2026-09-20",
+    O.none()
+  );
+  return { root, stateDir };
+});
+
+const twoSessionFixture = Effect.fn("test.twoSessionFixture")(function* () {
+  const root = yield* makeRepo();
+  const current = yield* repoHarnessHash(root);
+  const stateDir = yield* makeHookStateDir("harness-ledger-cutover-");
+  const active = Effect.fnUntraced(function* (sessionId: Sha256Hex, day: string) {
+    yield* writeShard(stateDir, day, sessionId, [
+      yield* sessionStart(sessionId, `${day}T08:00:00.000Z`, current),
+      yield* pulse(sessionId, `${day}T08:05:00.000Z`, O.none()),
+    ]);
+  });
+  yield* active(sessionA, "2026-09-20");
+  yield* active(sessionB, "2026-10-09");
+  return { root, stateDir };
+});
+
+const ProjectedLayer = Layer.unwrap(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-ledger-projection-" });
+    const file = path.join(dir, "namespace-projection.json");
+    yield* fs.writeFileString(
+      file,
+      yield* encodeUnknownJson({
+        version: 1,
+        cutoverUtc: PROJECTION_CUTOVER,
+        hashSalt: PROJECTION_SALT,
+        previousRegime: "library-default",
+      })
+    );
+    return HarnessLedgerServiceLive.pipe(
+      Layer.provideMerge(NodeServices.layer),
+      Layer.provideMerge(
+        ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
+      )
+    );
+  })
+).pipe(Layer.provide(NodeServices.layer));
+
+layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service without a namespace projection", (it) => {
+  it.effect("reconcile reads only the library-default regime and leaves projection-salted rows unjoined", () =>
+    Effect.gen(function* () {
+      const { root, stateDir } = yield* twoRegimeFixture();
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.namespaceProjection).toBe("absent");
+      assertNone(report.namespaceCutover);
+      expect(report.transcriptToolEvents).toBe(2);
+      expect(report.hookedToolEvents).toBe(1);
+      expect(report.hookedToolEventsByRegime).toEqual({ current: 1, previous: 0 });
+      expect(report.sessionsWithoutHooks).toBe(1);
+    })
+  );
+
+  it.effect("prune-proposals counts every in-regime session when no cutover is applied", () =>
+    Effect.gen(function* () {
+      const { root, stateDir } = yield* twoSessionFixture();
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 2 })
+      );
+      expect(report.sessionsObserved).toBe(2);
+      expect(report.sessionsSkippedPreCutover).toBe(0);
+      assertNone(report.namespaceCutover);
+    })
+  );
+});
+
+layer(ProjectedLayer, { timeout: "30 seconds" })("harness-ledger service under a namespace projection", (it) => {
+  it.effect("reconcile joins hook rows under both salts and reports the regimes apart", () =>
+    Effect.gen(function* () {
+      const { root, stateDir } = yield* twoRegimeFixture();
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.namespaceProjection).toBe("present");
+      assertSome(report.namespaceCutover, DateTime.makeUnsafe(PROJECTION_CUTOVER));
+      expect(report.transcriptToolEvents).toBe(2);
+      expect(report.hookedToolEvents).toBe(2);
+      expect(report.hookedToolEventsByRegime).toEqual({ current: 1, previous: 1 });
+      expect(report.sessionsWithoutHooks).toBe(0);
+      assertSome(report.ratio, 1);
+      expect(report.qualifiedForNonUse).toBe(false);
+    })
+  );
+
+  it.effect("prune-proposals never fills the current window with sessions that began before the cutover", () =>
+    Effect.gen(function* () {
+      const { root, stateDir } = yield* twoSessionFixture();
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(
+        HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 2 })
+      );
+      expect(report.sessionsObserved).toBe(1);
+      expect(report.sessionsSkippedPreCutover).toBe(1);
+      expect(report.windowFull).toBe(false);
+      assertSome(report.namespaceCutover, DateTime.makeUnsafe(PROJECTION_CUTOVER));
+      assertSome(report.windowEnd, DateTime.makeUnsafe("2026-10-09T08:05:00.000Z"));
+    })
+  );
+});
