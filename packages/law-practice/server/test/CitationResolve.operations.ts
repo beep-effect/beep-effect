@@ -14,6 +14,9 @@ import * as Tuple from "effect/Tuple";
 import { CitationAuthorityEdition } from "../src/internal/Citation/AuthorityIdentity.ts";
 import { CitationResolutionContext } from "./CitationResolve.fixtures.ts";
 
+const CitationOracleOperationsJson = S.fromJsonString(CitationOracleOperations);
+const NullableText = S.NullOr(S.String);
+
 type Observation = Extract<CitationOracleOperations["cases"][number], { readonly operation: "resolve_citations" }>;
 type OracleCitation = Observation["payload"]["value"]["input"]["citations"][number];
 const kinds = {
@@ -27,23 +30,25 @@ const kinds = {
   UnknownCitation: "unknown",
 } satisfies Record<OracleCitation["citationType"], (typeof Citation.Encoded)["type"]>;
 const Callbacks = S.Struct({
-  resolve_full_citation: S.Struct({ callable: S.Literal("eyecite.resolve.resolve_full_citation") }),
-  resolve_shortcase_citation: S.Struct({ callable: S.Literal("eyecite.resolve._resolve_shortcase_citation") }),
-  resolve_supra_citation: S.Struct({ callable: S.Literal("eyecite.resolve._resolve_supra_citation") }),
-  resolve_reference_citation: S.Struct({ callable: S.Literal("eyecite.resolve._resolve_reference_citation") }),
-  resolve_id_citation: S.Struct({ callable: S.Literal("eyecite.resolve._resolve_id_citation") }),
+  resolve_full_citation: S.Struct({ callable: S.tag("eyecite.resolve.resolve_full_citation") }),
+  resolve_shortcase_citation: S.Struct({ callable: S.tag("eyecite.resolve._resolve_shortcase_citation") }),
+  resolve_supra_citation: S.Struct({ callable: S.tag("eyecite.resolve._resolve_supra_citation") }),
+  resolve_reference_citation: S.Struct({ callable: S.tag("eyecite.resolve._resolve_reference_citation") }),
+  resolve_id_citation: S.Struct({ callable: S.tag("eyecite.resolve._resolve_id_citation") }),
 });
 const Ref = S.Struct({ artifactSha256: Sha256Hex });
 const ResourceFields = S.Struct({ all_editions: S.Array(Ref), edition_guess: S.NullOr(Ref) });
 const Metadata = S.Struct({ fields: S.JsonObject });
 const Edition = S.Struct({
-  pythonType: S.Literal("eyecite.models.Edition"),
+  pythonType: S.tag("eyecite.models.Edition"),
   fields: S.Struct({ short_name: S.NonEmptyString }),
 });
 const Vocabulary = S.Struct({
   publicArtifactVersion: S.NonEmptyString,
   editions: S.Array(S.Struct({ artifactSha256: Sha256Hex, reporterId: S.optionalKey(S.NonEmptyString) })),
 });
+const VocabularyJson = S.fromJsonString(Vocabulary);
+
 const corpusUrl = new URL("../../use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url);
 const vocabularyUrl = new URL("../../use-cases/test/fixtures/eyecite/vocabulary-mapping.json", import.meta.url);
 
@@ -57,11 +62,9 @@ const vocabularyUrl = new URL("../../use-cases/test/fixtures/eyecite/vocabulary-
 export const loadResolutionOperationContexts = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(fileURLToPath(corpusUrl));
-  const corpus = yield* S.decodeEffect(S.fromJsonString(CitationOracleOperations))(raw);
+  const corpus = yield* S.decodeEffect(CitationOracleOperationsJson)(raw);
   const corpusSha256 = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw));
-  const vocabulary = yield* S.decodeEffect(S.fromJsonString(Vocabulary))(
-    yield* fs.readFileString(fileURLToPath(vocabularyUrl))
-  );
+  const vocabulary = yield* S.decodeEffect(VocabularyJson)(yield* fs.readFileString(fileURLToPath(vocabularyUrl)));
   const editions = HashMap.fromIterable(
     A.map(vocabulary.editions, (edition) => Tuple.make(edition.artifactSha256, edition))
   );
@@ -70,7 +73,7 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
   const project = Effect.fn("ResolveTest.projectOracleCitation")(function* (source: OracleCitation) {
     const meta = yield* S.decodeUnknownEffect(Metadata)(source.fields.metadata);
     const read = Effect.fn("ResolveTest.readMetadata")(function* (key: string) {
-      return yield* S.decodeUnknownEffect(S.NullOr(S.String))(yield* Effect.fromOption(R.get(meta.fields, key)));
+      return yield* S.decodeUnknownEffect(NullableText)(yield* Effect.fromOption(R.get(meta.fields, key)));
     });
     let metadata: S.JsonObject = {
       pinCite: yield* read("pin_cite"),

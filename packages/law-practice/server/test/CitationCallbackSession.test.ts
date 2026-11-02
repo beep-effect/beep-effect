@@ -47,6 +47,8 @@ import type {
 } from "../src/internal/Citation/CallbackSession.ts";
 
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-observations/v1"), cases: S.Array(Row) });
+const CorpusJson = S.fromJsonString(Corpus);
+
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
 const staleId = () => CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
 const fail = () => CitationCallbackFailure.make({ reason: "callback-failed" });
@@ -369,7 +371,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             new URL("../../use-cases/test/fixtures/eyecite/custom-resolution-observations.json", import.meta.url)
           )
         );
-        const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+        const data = yield* S.decodeEffect(CorpusJson)(raw);
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "19ce5a31fbcae943e71a0d580145d499a9fb911cd8fe5cf16226dc08a686a7af"
         );

@@ -23,6 +23,8 @@ import { CitationResourceIdentity } from "../src/internal/Citation/ResourceIdent
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import type * as Digest from "effect/crypto/Digest";
 
+const CorpusJson = S.fromJsonString(S.Struct({ cases: S.Array(CitationResolutionContext) }));
+
 const $I = $LawPracticeServerId.create("test/CitationCallbackSession.fixtures");
 /**
  * Shared test-only callback observation input and captured source outcome.
@@ -115,7 +117,7 @@ const templates = Effect.gen(function* () {
   const raw = yield* fs.readFileString(
     fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
   );
-  const data = yield* S.decodeEffect(S.fromJsonString(S.Struct({ cases: S.Array(CitationResolutionContext) })))(raw);
+  const data = yield* S.decodeEffect(CorpusJson)(raw);
   return HashMap.fromIterable(
     A.flatMap(data.cases, (row) =>
       A.map(row.mentions, (mention) => Tuple.make(mention.citation.type, mention.citation))

@@ -33,6 +33,8 @@ import type { CitationMention, CitationMentionId } from "@beep/law-practice-doma
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
 import type { PreparedCitationResolution } from "./ResolutionInput.ts";
 
+const UnknownMetadata = S.Record(S.String, S.Unknown);
+
 const $I = $LawPracticeServerId.create("internal/Citation/DefaultCallbacks");
 const Reporter = S.Struct({ value: S.NullOr(S.String), defined: S.Boolean, volume: S.NullOr(S.String) }).pipe(
   $I.annoteSchema("Reporter", {
@@ -126,7 +128,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
   });
   const metadataValues = Effect.fn("Citation.defaultMetadataValues")(function* (citation: Citation) {
     const wire = yield* S.encodeEffect(Citation)(citation);
-    const metadata = yield* S.decodeEffect(S.Record(S.String, S.Unknown))(wire.metadata);
+    const metadata = yield* S.decodeEffect(UnknownMetadata)(wire.metadata);
     let values = A.filter(R.values(metadata), S.is(S.NonEmptyString));
     if (citation.type === "case" && O.isSome(citation.metadata.court)) {
       const court = citation.metadata.court.value;

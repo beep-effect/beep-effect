@@ -53,6 +53,8 @@ const Row = S.Struct({
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-prior-full-observations/v1"), cases: S.Array(Row) }).pipe(
   $I.annoteSchema("Corpus", { description: "All eight retained prior-full-list scenes." })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const Presentation = S.Struct({ kind: S.String, value: S.Json }).pipe(
   $I.annoteSchema("Presentation", {
     description: "Finite fixture resource presentation; not a production host normalizer.",
@@ -74,7 +76,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "191b4e7f872ffb886f2532aba1a4fc68f25a5022141df7207197906d49c9b2ac"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(8);
       expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.events))).toBe(31);
       expect(A.map(data.cases, (row) => row.name)).toEqual([

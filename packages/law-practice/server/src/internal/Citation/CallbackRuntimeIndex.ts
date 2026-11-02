@@ -47,6 +47,9 @@ import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationHostResourceAdapter } from "./HostResources.ts";
 import type { CitationRuntimeDictionaryEntry } from "./RuntimeDictionary.ts";
 
+const CitationCallbackResourceType = S.toType(CitationCallbackResource);
+const CitationRuntimeDictionaryKeyType = S.toType(CitationRuntimeDictionaryKey);
+
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackRuntimeIndex");
 const Entry = S.Struct({ entryId: S.Natural, resource: CitationCallbackResource, slot: S.Natural });
 const bad = () => CitationCallbackFailure.make({ reason: "identity-failed" });
@@ -273,7 +276,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
         });
         const resourceEquivalent = S.toEquivalence(CitationCallbackResource);
         const objectOf = Effect.fn("Citation.callbackRuntimeObject")(function* (resource: CitationCallbackResource) {
-          resource = yield* S.decodeEffect(S.toType(CitationCallbackResource))(resource).pipe(Effect.mapError(bad));
+          resource = yield* S.decodeEffect(CitationCallbackResourceType)(resource).pipe(Effect.mapError(bad));
           if (resource._tag === "Unhashable")
             return yield* CitationCallbackFailure.make({ reason: "unhashable-resource" });
           if (resource._tag !== "Registered" || resource.scope !== scope) return yield* bad();
@@ -290,7 +293,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
             yield* owner.step;
             hash = yield* host.value.hash(found.record.handle);
           }
-          return yield* S.decodeUnknownEffect(S.toType(CitationRuntimeDictionaryKey))({
+          return yield* S.decodeUnknownEffect(CitationRuntimeDictionaryKeyType)({
             objectId: found.slot,
             hash,
           }).pipe(Effect.mapError(bad));

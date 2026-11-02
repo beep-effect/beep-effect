@@ -59,6 +59,8 @@ export class CitationAuthorityIdentityInput extends S.Opaque<
     })
   )
 ) {}
+const CitationAuthorityIdentityInputType = S.toType(CitationAuthorityIdentityInput);
+
 const Component = S.Tuple([S.NonEmptyString, S.NullOr(S.String)]);
 const Components = S.Array(Component);
 const Key = S.fromJsonString(
@@ -112,7 +114,7 @@ const componentOrder = Order.mapInput(Order.String, (entry: typeof Component.Typ
 export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(function* (
   input: unknown
 ): Effect.fn.Return<CitationAuthorityId, CitationAuthorityIdentityFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CitationAuthorityIdentityInput))(input).pipe(
+  const decoded = yield* S.decodeUnknownEffect(CitationAuthorityIdentityInputType)(input).pipe(
     Effect.mapError(invalid)
   );
   const citation = decoded.citation;

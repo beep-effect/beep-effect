@@ -15,6 +15,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
 const $I = $LawPracticeServerId.create("internal/Citation/PythonHash");
 const Reason = LiteralKit(["invalid-input", "deadline-exceeded"]).pipe(
   $I.annoteSchema("Reason", {
@@ -60,6 +62,8 @@ export class CitationPythonUnicodeStorage extends S.Opaque<
     })
   )
 ) {}
+const CitationPythonUnicodeStorageType = S.toType(CitationPythonUnicodeStorage);
+
 /**
  * Hash seed zero, SipHash13, 64-bit signed Python result with minus-one remapping.
  * Inputs must remain immutable through evaluation. Each method has R = never.
@@ -85,7 +89,7 @@ const readByte = (bytes: Uint8Array, index: number) => O.getOrElse(O.fromUndefin
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
     Effect.mapError(() => fail("invalid-input"))
   );
   const clock = yield* Clock.Clock;
@@ -148,7 +152,7 @@ export const makeCitationPythonHash = Effect.fn("Citation.makePythonHash")(funct
     unicode: Effect.fn("Citation.hashUnicodeStorage")((input) =>
       bounded(
         Effect.gen(function* () {
-          const { width, bytes } = yield* S.decodeUnknownEffect(S.toType(CitationPythonUnicodeStorage))(input).pipe(
+          const { width, bytes } = yield* S.decodeUnknownEffect(CitationPythonUnicodeStorageType)(input).pipe(
             Effect.mapError(() => fail("invalid-input"))
           );
           if (bytes.length % width !== 0) return yield* fail("invalid-input");

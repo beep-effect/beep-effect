@@ -38,6 +38,9 @@ import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from ".
 import type { CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
+const UnknownMetadata = S.Record(S.String, S.Unknown);
+const CitationDocumentType = S.toType(CitationDocument);
+
 const $I = $LawPracticeServerId.create("internal/Citation/Resolve");
 const Entry = S.Struct({
   citation: FullCitation,
@@ -154,9 +157,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
         );
       }
       const wire = yield* S.encodeEffect(FullCitation)(citation).pipe(Effect.mapError(invalid));
-      const metadata = yield* S.decodeEffect(S.Record(S.String, S.Unknown))(wire.metadata).pipe(
-        Effect.mapError(invalid)
-      );
+      const metadata = yield* S.decodeEffect(UnknownMetadata)(wire.metadata).pipe(Effect.mapError(invalid));
       let values = A.filter(R.values(metadata), S.is(S.NonEmptyString));
       if (citation.type === "case" && O.isSome(citation.metadata.court)) {
         const court = citation.metadata.court.value;
@@ -258,7 +259,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     last = resolution.status === "Resolved" ? O.some(resolution.authorityId) : O.none();
     resolutions = Chunk.append(resolutions, resolution);
   }
-  return yield* S.decodeUnknownEffect(S.toType(CitationDocument))({
+  return yield* S.decodeUnknownEffect(CitationDocumentType)({
     source: snapshot.source,
     engineArtifact: snapshot.engineArtifact,
     mentions,

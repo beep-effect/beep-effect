@@ -50,6 +50,8 @@ export class CitationRuntimeDictionaryKey extends S.Opaque<
     })
   )
 ) {}
+const CitationRuntimeDictionaryKeyType = S.toType(CitationRuntimeDictionaryKey);
+
 /**
  * One insertion entry. Stored hash and key object identity remain unchanged on
  * value replacement; separate entries may reference the same mutated object.
@@ -86,6 +88,8 @@ export class CitationRuntimeDictionaryLimits extends S.Opaque<
     })
   )
 ) {}
+const CitationRuntimeDictionaryLimitsType = S.toType(CitationRuntimeDictionaryLimits);
+
 const Reason = LiteralKit(["invalid-input", "limit-exceeded", "comparison-failed"]).pipe(
   $I.annoteSchema("Reason", {
     description: "Closed private table failures without keys, source data or nested causes.",
@@ -188,7 +192,7 @@ const indexOfHash = (hash: bigint, size: number) => Number(hash & BigInt(size - 
  * @since 0.0.0
  */
 export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDictionary")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationRuntimeDictionaryLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationRuntimeDictionaryLimitsType)(input).pipe(
     Effect.mapError(invalid)
   );
   const maximumEntries = limits.entries;
@@ -238,7 +242,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
     return comparison.step.pipe(Effect.mapError(freshFailure));
   });
   const keySnapshot = Effect.fn("Citation.runtimeDictionaryKey")(function* (key: CitationRuntimeDictionaryKey) {
-    const decoded = yield* S.decodeEffect(S.toType(CitationRuntimeDictionaryKey))(key).pipe(Effect.mapError(invalid));
+    const decoded = yield* S.decodeEffect(CitationRuntimeDictionaryKeyType)(key).pipe(Effect.mapError(invalid));
     return CitationRuntimeDictionaryKey.make({ objectId: decoded.objectId, hash: decoded.hash });
   });
   const lookup = Effect.fn("Citation.runtimeDictionaryLookup")(function* (key: CitationRuntimeDictionaryKey) {

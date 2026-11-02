@@ -20,6 +20,8 @@ import * as Str from "effect/String";
 import { CitationMentionIdentityInput, makeCitationMentionId } from "../src/internal/Citation/MentionIdentity.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
+const TextAnchorVerificationReceiptJson = S.fromJsonString(TextAnchorVerificationReceipt);
+
 const sourceText = "😀 1 U.S. 1; 1 U.S. 1";
 const artifact = Sha256Hex.make("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
 const otherArtifact = Sha256Hex.make("abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789");
@@ -124,8 +126,8 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
       const source = yield* sourceIdentity(sourceText);
       const anchor = yield* verifiedAnchor(sourceText, 3, source);
       const receipt = toTextAnchorVerificationReceipt(anchor);
-      const wire = yield* S.encodeEffect(S.fromJsonString(TextAnchorVerificationReceipt))(receipt);
-      const restored = yield* S.decodeEffect(S.fromJsonString(TextAnchorVerificationReceipt))(wire);
+      const wire = yield* S.encodeEffect(TextAnchorVerificationReceiptJson)(receipt);
+      const restored = yield* S.decodeEffect(TextAnchorVerificationReceiptJson)(wire);
       for (const input of [
         { anchor: receipt, engineArtifact: artifact, semanticKind: "case" },
         { anchor: restored, engineArtifact: artifact, semanticKind: "case" },

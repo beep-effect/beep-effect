@@ -33,6 +33,8 @@ const Input = S.Struct({
     description: "Genuine source capability, ordered verified mentions and trusted policy/artifact inputs.",
   })
 );
+const InputType = S.toType(Input);
+
 const Snapshot = S.Struct({
   source: SourceTextIdentity,
   engineArtifact: Sha256Hex,
@@ -91,7 +93,7 @@ const invalid = () => CitationResolutionInputFailure.make({ reason: "invalid-inp
 export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")(function* (
   input: unknown
 ): Effect.fn.Return<PreparedCitationResolution, CitationResolutionInputFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(Input))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(Effect.mapError(invalid));
   const source = decoded.verifiedSource;
   const json = yield* S.encodeEffect(Json)({
     source: source.source,

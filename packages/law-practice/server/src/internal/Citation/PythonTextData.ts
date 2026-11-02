@@ -18,7 +18,7 @@ const $I = $LawPracticeServerId.create("internal/Citation/PythonTextData");
  */
 export class CitationPythonTextData extends S.Opaque<CitationPythonTextData, { readonly brand: unique symbol }>()(
   S.Struct({
-    unicodeVersion: S.Literal("14.0.0"),
+    unicodeVersion: S.tag("14.0.0"),
     digits: S.String,
     decimalDigits: S.String,
     whitespace: S.String,

@@ -16,6 +16,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const CitationEngineLimitTighteningType = S.toType(CitationEngineLimitTightening);
+
 const rejects = (value: unknown) =>
   S.decodeUnknownEffect(CitationEngineLimits)(value).pipe(Effect.exit, Effect.map(Exit.isFailure));
 
@@ -86,7 +88,7 @@ describe("schema-owned citation safety budgets", () => {
   it.effect("permits equality and tightening but rejects any request-local increase", () =>
     Effect.gen(function* () {
       const policy = yield* defaultCitationEnginePolicy;
-      const guard = S.is(S.toType(CitationEngineLimitTightening));
+      const guard = S.is(CitationEngineLimitTighteningType);
       expect(guard({ effective: policy, requested: policy.limits })).toBe(true);
       const encoded = yield* S.encodeEffect(CitationEngineLimits)(policy.limits);
       for (const [key, value] of R.toEntries(encoded)) {

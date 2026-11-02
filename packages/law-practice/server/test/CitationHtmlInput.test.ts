@@ -27,6 +27,30 @@ import { citationPythonTextData } from "../src/internal/Citation/PythonTextData.
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type { CitationHtmlInput, CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
 
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    testedCodePoints: S.Natural,
+    whitespaceCodePoints: S.Array(S.Natural),
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        text: S.String,
+        outcome: S.Union([
+          S.Struct({
+            kind: S.tag("prepared"),
+            encoding: S.String,
+            byteLength: S.Natural,
+            bytesSha256: S.String,
+            fullHtml: S.Boolean,
+          }),
+          S.Struct({ kind: S.tag("rejected"), reason: S.tag("unicode-encoding-declaration") }),
+        ]).pipe(S.toTaggedUnion("kind")),
+      })
+    ),
+  })
+);
+
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HTML input", (it) => {
   it.effect("matches every source encoding byte and wrapper decision", () =>
     Effect.gen(function* () {
@@ -36,31 +60,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("bounded citation HT
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "66dc28d39e9c82120857af03227dfea59396fb3b7a65202248d52f53fa5a2a8a"
       );
-      const corpus = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            testedCodePoints: S.Natural,
-            whitespaceCodePoints: S.Array(S.Natural),
-            artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-            cases: S.Array(
-              S.Struct({
-                name: S.String,
-                text: S.String,
-                outcome: S.Union([
-                  S.Struct({
-                    kind: S.tag("prepared"),
-                    encoding: S.String,
-                    byteLength: S.Natural,
-                    bytesSha256: S.String,
-                    fullHtml: S.Boolean,
-                  }),
-                  S.Struct({ kind: S.tag("rejected"), reason: S.tag("unicode-encoding-declaration") }),
-                ]).pipe(S.toTaggedUnion("kind")),
-              })
-            ),
-          })
-        )
-      )(raw);
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(1075);
       expect(corpus.artifacts).toHaveLength(1071);
       expect(corpus.testedCodePoints).toBe(0x110000);

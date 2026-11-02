@@ -108,7 +108,7 @@ const Row = S.Struct({
   detachedObjects: S.Array(
     S.Struct({
       slot: S.Natural,
-      citationType: S.Literal("FullCaseCitation"),
+      citationType: S.tag("FullCaseCitation"),
       groups: S.Struct({ volume: S.String, reporter: S.String, page: S.String }),
       metadata: S.Struct({ plaintiff: S.String }),
     })
@@ -123,6 +123,8 @@ const Corpus = S.Struct({
 }).pipe(
   $I.annoteSchema("Corpus", { description: "All sixteen mutation scenes retained independently of target coverage." })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutation group values", (it) => {
@@ -137,7 +139,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "26e81eae9bfcd03ef2370be5d22f7241d96eea18591df602cced8dbc12540a63"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(A.length(data.cases)).toBe(16);
       expect(A.reduce(data.cases, 0, (count, row) => count + A.length(row.kinds))).toBe(38);
       const rows = data.cases;
@@ -423,7 +425,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
             new URL("../../use-cases/test/fixtures/eyecite/callback-mutation-observations.json", import.meta.url)
           )
         );
-        const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+        const data = yield* S.decodeEffect(CorpusJson)(raw);
         expect(data.cases).toHaveLength(16);
         for (const row of data.cases) {
           const input = yield* prepareCallbackObservation(

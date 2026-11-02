@@ -34,6 +34,8 @@ import {
 } from "./CitationCallbackSession.fixtures.ts";
 import type { CitationFullsCallbackInput, CitationIdCallbackInput } from "../src/internal/Citation/CallbackSession.ts";
 
+const JsonMetadata = S.Record(S.String, S.Json);
+
 const $I = $LawPracticeServerId.create("test/CitationModelMutation");
 const Reference = S.Union([
   S.Struct({ kind: S.tag("input"), index: S.Natural }),
@@ -78,6 +80,8 @@ const Corpus = S.Struct({ schemaVersion: S.tag("citation-model-mutation-observat
     description: "Eleven source scenes with explicit semantic-versus-mutable-key accounting.",
   })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const invalid = () => CitationCallbackFailure.make({ reason: "invalid-input" });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semantic mutations", (it) => {
@@ -92,7 +96,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "dca8b55d551d50c6ca0a2917ebce372b20894d4001b7a9738053c7d96d3cf841"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(11);
       const rows = A.filter(data.cases, (row) => row.family === "semantic");
       expect(rows).toHaveLength(8);
@@ -163,7 +167,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
             : Reference.cases.detached.make({ slot: 0 });
         const view = Effect.fn("ModelMutationTest.view")(function* (reference: CitationGroupMember) {
           const wire = yield* S.encodeEffect(Citation)(yield* owner.citationOf(reference));
-          const metadata = yield* S.decodeEffect(S.Record(S.String, S.Json))(wire.metadata);
+          const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
           return {
             reference: referenceView(reference),
             groups: wire.components,
@@ -310,7 +314,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
           citation: Citation
         ) {
           const wire = yield* S.encodeEffect(Citation)(citation);
-          const metadata = yield* S.decodeEffect(S.Record(S.String, S.Json))(wire.metadata);
+          const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
           return {
             reference: referenceView(reference),
             groups: wire.components,

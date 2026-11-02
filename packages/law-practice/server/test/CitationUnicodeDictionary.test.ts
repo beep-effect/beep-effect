@@ -60,6 +60,8 @@ const Corpus = S.Struct({
     description: "Thirteen combined Unicode/general histories with complete hook calls and ordered outcomes.",
   })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode dictionary", (it) => {
   it.effect("matches all pinned transitions, reflected host calls and equality mutation restarts", () =>
@@ -70,7 +72,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b"
       );
-      const corpus = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(13);
       expect(A.reduce(corpus.cases, 0, (n, row) => n + row.events.length)).toBe(40);
       for (const row of corpus.cases) {

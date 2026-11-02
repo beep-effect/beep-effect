@@ -38,6 +38,8 @@ import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./Reso
 import type { CitationAuthorityId, CitationResourceGroup } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
+const CitationDocumentType = S.toType(CitationDocument);
+
 const $I = $LawPracticeServerId.create("internal/Citation/Document");
 const FailureReason = LiteralKit([
   "invalid-input",
@@ -140,6 +142,8 @@ const Snapshot = S.Struct({
     description: "Structural document and trusted edition descriptors copied before asynchronous identity work.",
   })
 );
+const SnapshotType = S.toType(Snapshot);
+
 const SnapshotJson = S.fromJsonString(Snapshot);
 const DefaultBindings = S.toType(ResourceBindings).pipe(
   S.withDecodingDefaultKey(Effect.succeed(A.empty<CitationResourceBinding>()))
@@ -335,7 +339,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
       })),
     },
   };
-  const parsed = yield* S.decodeUnknownEffect(S.toType(Snapshot))(data).pipe(Effect.mapError(invalid));
+  const parsed = yield* S.decodeUnknownEffect(SnapshotType)(data).pipe(Effect.mapError(invalid));
   const json = yield* S.encodeEffect(SnapshotJson)(parsed).pipe(Effect.mapError(invalid));
   const snapshot = yield* S.decodeEffect(SnapshotJson)(json).pipe(Effect.mapError(invalid));
   yield* Effect.forEach(
@@ -392,7 +396,5 @@ export const restoreCitationDocument = Effect.fn("Citation.restoreDocument")(fun
     { concurrency: 1 }
   );
   yield* verifyAuthorities(snapshot);
-  return yield* S.decodeUnknownEffect(S.toType(CitationDocument))({ ...receipt, mentions }).pipe(
-    Effect.mapError(invalid)
-  );
+  return yield* S.decodeUnknownEffect(CitationDocumentType)({ ...receipt, mentions }).pipe(Effect.mapError(invalid));
 });

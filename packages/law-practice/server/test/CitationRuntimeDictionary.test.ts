@@ -47,7 +47,7 @@ const Operation = S.Union([
 );
 const Outcome = S.Union([
   S.Struct({ status: S.tag("value"), result: S.NullOr(S.Natural) }),
-  S.Struct({ status: S.tag("error"), kind: S.Literal("ValueError") }),
+  S.Struct({ status: S.tag("error"), kind: S.tag("ValueError") }),
 ]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("Outcome", { description: "Observed source result or synthetic equality exception." })
@@ -74,6 +74,8 @@ const Corpus = S.Struct({
     description: "Eight source dictionary histories, separate from engine/live hash integration proof.",
   })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime dictionary backend", (it) => {
@@ -88,7 +90,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "1b66065c5ec4abd4564e01d24dda81d20f2f2358dac4911c5c13f12786275d4c"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(A.map(data.cases, (row) => row.name)).toEqual([
         "same-bucket-pointer",
         "changed-bucket-duplicate",

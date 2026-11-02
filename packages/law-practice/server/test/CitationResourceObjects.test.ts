@@ -59,7 +59,7 @@ const Operation = S.Union([
   S.Struct({ kind: S.tag("clear") }),
 ]);
 const Corpus = S.Struct({
-  schemaVersion: S.Literal("citation-live-case-resources/v1"),
+  schemaVersion: S.tag("citation-live-case-resources/v1"),
   cases: S.Array(
     S.Struct({
       name: S.String,
@@ -75,6 +75,8 @@ const Corpus = S.Struct({
     })
   ),
 });
+const CorpusJson = S.fromJsonString(Corpus);
+
 const modelFailure = () => CitationResourceObjectFailure.make({ reason: "model-failed" });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource objects", (it) => {
@@ -87,7 +89,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "ec5e5887236e755082f1c2e56f87f6f0f4de68e815f471fda20505977597b791"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(5);
       let events = 0;
       for (const row of data.cases) {

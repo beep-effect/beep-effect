@@ -21,6 +21,23 @@ import {
   encodeCitationHtmlReply,
 } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        text: S.String,
+        diagnostics: S.Array(S.Struct({ resourceLimit: S.Boolean })),
+        outcome: S.Union([
+          S.Struct({ kind: S.tag("success"), value: S.String }),
+          S.Struct({ kind: S.tag("error"), type: S.String }),
+        ]).pipe(S.toTaggedUnion("kind")),
+      })
+    ),
+  })
+);
+
 const runtime = Effect.gen(function* () {
   return {
     executable: process.execPath,
@@ -39,24 +56,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("HTML worker qualific
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
         );
-        const corpus = yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({
-              artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-              cases: S.Array(
-                S.Struct({
-                  name: S.String,
-                  text: S.String,
-                  diagnostics: S.Array(S.Struct({ resourceLimit: S.Boolean })),
-                  outcome: S.Union([
-                    S.Struct({ kind: S.tag("success"), value: S.String }),
-                    S.Struct({ kind: S.tag("error"), type: S.String }),
-                  ]).pipe(S.toTaggedUnion("kind")),
-                })
-              ),
-            })
-          )
-        )(raw);
+        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.cases).toHaveLength(1097);
         const texts = HashMap.fromIterable(A.map(corpus.artifacts, (a) => [a.sha256, a.value] as const));
 

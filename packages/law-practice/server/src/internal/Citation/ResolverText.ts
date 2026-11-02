@@ -28,6 +28,8 @@ const decimalValues = HashMap.fromIterable(
   )
 );
 const Input = S.Struct({ fullCitation: Citation, idCitation: IdCitation });
+const InputType = S.toType(Input);
+
 const FailureReason = LiteralKit(["invalid-input", "canonical-page-type", "integer-conversion"]).pipe(
   $I.annoteSchema("FailureReason", {
     description:
@@ -119,7 +121,7 @@ const decimalInteger = Effect.fn("Citation.parseResolverDecimal")(function* (cha
 export const hasInvalidCitationPinCite = Effect.fn("Citation.hasInvalidPinCite")(function* (
   input: unknown
 ): Effect.fn.Return<boolean, CitationResolverTextFailure> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(Input))(input).pipe(
+  const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(
     Effect.mapError(() => CitationResolverTextFailure.make({ reason: "invalid-input" }))
   );
   const components = yield* S.encodeEffect(CitationComponents)(decoded.fullCitation.components).pipe(

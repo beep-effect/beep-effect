@@ -14,8 +14,8 @@ import { CitationAuthorityIdentityInput, makeCitationAuthorityId } from "../src/
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.Literal("citation-authority-identity-cases/v1"),
-  oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  schemaVersion: S.tag("citation-authority-identity-cases/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
   cases: S.Array(
     S.Struct({ name: S.NonEmptyString, expectedId: CitationAuthorityId, input: CitationAuthorityIdentityInput })
   ),

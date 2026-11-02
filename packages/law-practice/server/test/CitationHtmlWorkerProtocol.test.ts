@@ -25,6 +25,9 @@ import {
 } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 import type { CitationHtmlWorkerReply } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
+const CorpusJson = S.fromJsonString(S.Struct({ artifacts: S.Array(S.Struct({ value: S.String })) }));
+const StringJson = S.fromJsonString(S.String);
+
 const utf8 = new TextEncoder();
 it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
   it.effect(
@@ -34,9 +37,7 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
         const raw = yield* (yield* FileSystem.FileSystem).readFileString(
           fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-input.json", import.meta.url))
         );
-        const corpus = yield* S.decodeEffect(
-          S.fromJsonString(S.Struct({ artifacts: S.Array(S.Struct({ value: S.String })) }))
-        )(raw);
+        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.artifacts).toHaveLength(1071);
         for (const row of corpus.artifacts) {
           const reply = CitationHtmlWorkerSuccess.make({ text: row.value });
@@ -48,7 +49,7 @@ it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {
           expect(exact).toEqual(bytes);
           const failed = yield* Effect.flip(encodeCitationHtmlReply(reply, bytes.byteLength - 1));
           expect(failed._tag).toBe("CitationSafetyLimitExceeded");
-          const body = yield* S.encodeEffect(S.fromJsonString(S.String))(row.value);
+          const body = yield* S.encodeEffect(StringJson)(row.value);
           const bodyBytes = utf8.encode(body).byteLength - 2;
           expect(yield* citationHtmlJsonBodyBytes(row.value, bodyBytes)).toBe(bodyBytes);
         }

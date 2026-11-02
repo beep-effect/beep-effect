@@ -35,7 +35,7 @@ const Entry = S.Struct({ objectId: S.Natural, value: S.Natural }).pipe(
 );
 const Outcome = S.Union([
   S.Struct({ status: S.tag("value"), result: S.NullOr(S.Natural) }),
-  S.Struct({ status: S.tag("error"), kind: S.Literal("ValueError") }),
+  S.Struct({ status: S.tag("error"), kind: S.tag("ValueError") }),
 ]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("Outcome", { description: "Source lookup/pop result or equality failure." })
@@ -56,6 +56,8 @@ const Corpus = S.Struct({
     description: "Thirteen complete direct-mutation histories; separate from cleaner or Unicode-table proof.",
   })
 );
+const CorpusJson = S.fromJsonString(Corpus);
+
 const invalid = () => CitationRuntimeDictionaryFailure.make({ reason: "invalid-input" });
 const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(7) });
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison reentrancy", (it) => {
@@ -67,7 +69,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "68a3835c917bab252d004d2066b7ca45927deca1d358f68ed957b1ecbfecb9da"
       );
-      const data = yield* S.decodeEffect(S.fromJsonString(Corpus))(raw);
+      const data = yield* S.decodeEffect(CorpusJson)(raw);
       expect(data.cases).toHaveLength(13);
       expect(A.reduce(data.cases, 0, (total, row) => total + row.events.length)).toBe(26);
       for (const row of data.cases) {

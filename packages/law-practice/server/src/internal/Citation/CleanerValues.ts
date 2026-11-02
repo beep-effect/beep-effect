@@ -15,6 +15,8 @@ import * as Str from "effect/String";
 import { CitationCleanerFailure, CitationCleanerObject } from "./CleanerPipeline.ts";
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 
+const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
+
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerValues");
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerValueSnapshot extends S.Opaque<
@@ -192,7 +194,7 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     }),
     materialize: Effect.fn("Citation.materializeCleanerText")(function* (input, output) {
       const entry = yield* get(input);
-      const result = yield* S.decodeUnknownEffect(S.toType(CitationCleanerTextOutput))(output).pipe(
+      const result = yield* S.decodeUnknownEffect(CitationCleanerTextOutputType)(output).pipe(
         Effect.mapError(() => fail("invalid-text-allocation"))
       );
       return yield* Match.value(result.allocation).pipe(

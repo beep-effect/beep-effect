@@ -26,10 +26,12 @@ import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKer
 import type { CitationHtmlWorkerSnapshot } from "../src/internal/Citation/HtmlWorker.ts";
 import type { CitationHtmlWorkerFailure } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
+const StringJson = S.fromJsonString(S.String);
+
 const ready = '{"_tag":"Ready","version":"citation-html-worker/v1"}\\n';
 const started = '{"_tag":"Started","version":"citation-html-worker/v1"}\\n';
 const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
-const quoted = Effect.fn("WorkerTest.quote")((value: string) => S.encodeEffect(S.fromJsonString(S.String))(value));
+const quoted = Effect.fn("WorkerTest.quote")((value: string) => S.encodeEffect(StringJson)(value));
 const waitFor = Effect.fn("WorkerTest.waitFor")(function* (
   predicate: Effect.Effect<boolean, PlatformError.PlatformError>
 ) {

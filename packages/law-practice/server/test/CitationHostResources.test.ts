@@ -52,6 +52,15 @@ import { CitationCallbackObservation, prepareCallbackObservation } from "./Citat
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type { CitationHostComparisonOperand } from "../src/internal/Citation/HostResources.ts";
 
+const HostToken = S.Struct({ token: S.String });
+const HostSlot = S.Struct({ slot: S.Natural });
+const HostFailure = S.Struct({ status: S.tag("error") });
+const HostOperationFailure = S.Struct({
+  status: S.tag("error"),
+  operation: S.Literals(["hash", "bool", "compare"]),
+});
+const HostDescriptor = S.Struct({ kind: S.tag("host") });
+
 const HostState = S.Struct({
   hashRaw: S.String,
   mode: S.Literals(["token", "false", "not-implemented", "normalized", "citation"]),
@@ -62,6 +71,49 @@ const HostState = S.Struct({
   failEq: S.Boolean,
   failBool: S.Boolean,
 });
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        kinds: S.Array(S.Literals(["case", "id", "unknown"])),
+        action: S.Literals([
+          "equal",
+          "falsy",
+          "truth-change",
+          "clear-new",
+          "clear-same",
+          "unknown",
+          "none",
+          "presentation-change",
+        ]),
+        hosts: S.Array(HostState),
+        decisions: S.Array(S.Json),
+        groups: S.Array(
+          S.Struct({ entrySlot: S.Natural, listSlot: S.Natural, resource: S.Json, members: S.Array(S.Natural) })
+        ),
+        trace: S.Array(S.Json),
+      })
+    ),
+  })
+);
+const HostCallbackCorpusJson = S.fromJsonString(
+  S.Struct({
+    callbacks: S.Array(
+      S.Struct({
+        name: S.String,
+        kind: S.Literals(["short", "supra", "reference"]),
+        fullNames: S.Array(S.String),
+        antecedentGuess: S.NullOr(S.String),
+        hosts: S.Array(HostState),
+        returns: S.Array(S.Natural),
+        trace: S.Array(S.Json),
+        groups: S.Natural.pipe(S.Array, S.Array),
+      })
+    ),
+  })
+);
+
 const Operation = S.Union([
   S.Struct({ kind: S.Literals(["set"]), key: S.Natural, value: S.Natural }),
   S.Struct({ kind: S.Literals(["get", "remove", "alias"]), key: S.Natural }),
@@ -85,7 +137,7 @@ const Corpus = S.fromJsonString(
         name: S.String,
         hosts: S.Array(HostState),
         keys: S.Array(
-          S.Union([S.Struct({ kind: S.Literal("canonical") }), S.Struct({ kind: S.Literal("host"), host: S.Natural })])
+          S.Union([S.Struct({ kind: S.tag("canonical") }), S.Struct({ kind: S.tag("host"), host: S.Natural })])
         ),
         events: S.Array(
           S.Struct({
@@ -318,34 +370,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36"
       );
-      const corpus = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            cases: S.Array(
-              S.Struct({
-                name: S.String,
-                kinds: S.Array(S.Literals(["case", "id", "unknown"])),
-                action: S.Literals([
-                  "equal",
-                  "falsy",
-                  "truth-change",
-                  "clear-new",
-                  "clear-same",
-                  "unknown",
-                  "none",
-                  "presentation-change",
-                ]),
-                hosts: S.Array(HostState),
-                decisions: S.Array(S.Json),
-                groups: S.Array(
-                  S.Struct({ entrySlot: S.Natural, listSlot: S.Natural, resource: S.Json, members: S.Array(S.Natural) })
-                ),
-                trace: S.Array(S.Json),
-              })
-            ),
-          })
-        )
-      )(raw);
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(8);
       const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
       const present = (resource: CitationCallbackResource): S.Json =>
@@ -439,9 +464,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             function* (resource: CitationCallbackResource) {
               described += 1;
               if (resource._tag !== "Registered") return yield* bad();
-              const value = yield* S.decodeUnknownEffect(S.Struct({ token: S.String }))(resource.value).pipe(
-                Effect.mapError(bad)
-              );
+              const value = yield* S.decodeUnknownEffect(HostToken)(resource.value).pipe(Effect.mapError(bad));
               const key = yield* S.decodeEffect(Sha256HexFromBytes)(
                 new TextEncoder().encode(`controlled-host-token/v1:${value.token}`)
               ).pipe(Effect.mapError(bad));
@@ -516,9 +539,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             describe: Effect.fn("SessionProjectionTest.opaqueIdentity")(
               function* (resource: CitationCallbackResource) {
                 if (resource._tag !== "Registered") return yield* bad();
-                const value = yield* S.decodeUnknownEffect(S.Struct({ slot: S.Natural }))(resource.value).pipe(
-                  Effect.mapError(bad)
-                );
+                const value = yield* S.decodeUnknownEffect(HostSlot)(resource.value).pipe(Effect.mapError(bad));
                 const key = yield* S.decodeEffect(Sha256HexFromBytes)(
                   new TextEncoder().encode(`controlled-host-object/v1:${value.slot}`)
                 ).pipe(Effect.mapError(bad));
@@ -634,24 +655,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
       );
-      const corpus = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            callbacks: S.Array(
-              S.Struct({
-                name: S.String,
-                kind: S.Literals(["short", "supra", "reference"]),
-                fullNames: S.Array(S.String),
-                antecedentGuess: S.NullOr(S.String),
-                hosts: S.Array(HostState),
-                returns: S.Array(S.Natural),
-                trace: S.Array(S.Json),
-                groups: S.Natural.pipe(S.Array, S.Array),
-              })
-            ),
-          })
-        )
-      )(raw);
+      const corpus = yield* S.decodeEffect(HostCallbackCorpusJson)(raw);
       expect(corpus.callbacks).toHaveLength(12);
       const frozen = yield* makeCitationFrozenEditions((yield* loadCitationFrozenEditionFixtures()).bundle);
       for (const row of corpus.callbacks) {
@@ -837,13 +841,8 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                 host.reset();
                 const result = yield* Effect.result(action(event.operation));
                 if (Result.isFailure(result)) {
-                  expect(
-                    S.is(S.Struct({ status: S.Literal("error") }))(event.outcome),
-                    `${label}:${result.failure.reason}`
-                  ).toBe(true);
-                  const expected = yield* S.decodeUnknownEffect(
-                    S.Struct({ status: S.Literal("error"), operation: S.Literals(["hash", "bool", "compare"]) })
-                  )(event.outcome);
+                  expect(S.is(HostFailure)(event.outcome), `${label}:${result.failure.reason}`).toBe(true);
+                  const expected = yield* S.decodeUnknownEffect(HostOperationFailure)(event.outcome);
                   expect(result.failure.reason, label).toBe(
                     expected.operation === "compare" ? "identity-failed" : "callback-failed"
                   );
@@ -856,7 +855,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                     return {
                       objectId: resource.slot,
                       slot: group.listSlot,
-                      presentation: S.is(S.Struct({ kind: S.Literal("host") }))(resource.value)
+                      presentation: S.is(HostDescriptor)(resource.value)
                         ? resource.value
                         : { kind: "canonical", slot: resource.slot },
                     };

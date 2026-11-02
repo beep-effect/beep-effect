@@ -19,8 +19,8 @@ import {
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.Literal("citation-publication-resource-hashes/v1"),
-  oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  schemaVersion: S.tag("citation-publication-resource-hashes/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
   cases: S.Array(
     S.Struct({
       name: S.NonEmptyString,
@@ -29,6 +29,8 @@ const Cases = S.Struct({
     })
   ),
 });
+const CasesJson = S.fromJsonString(Cases);
+
 const inputs = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
@@ -37,7 +39,7 @@ const inputs = Effect.gen(function* () {
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "57962d12465617aca8f4f483329ac1c0ef94b2f2c866e7f836edc0a29a7e8599"
   );
-  return yield* S.decodeEffect(S.fromJsonString(Cases))(raw);
+  return yield* S.decodeEffect(CasesJson)(raw);
 });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact publication resource hashes", (it) => {

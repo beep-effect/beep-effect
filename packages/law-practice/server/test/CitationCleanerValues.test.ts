@@ -40,6 +40,10 @@ const Row = S.Struct({
     S.Struct({ kind: S.tag("error"), type: S.tag("lxml.etree.ParserError"), message: S.String }),
   ]).pipe(S.toTaggedUnion("kind")),
 });
+const CorpusJson = S.fromJsonString(
+  S.Struct({ artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })), cases: S.Array(Row) })
+);
+
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner values", (it) => {
   it.effect(
     "matches all pinned text identity/subclass relations through the actual builtin implementations",
@@ -52,11 +56,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "cbfc90b78127f947c0f227392cd4af9a51f993271742f950c9802c31522b1eb6"
         );
-        const data = yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({ artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })), cases: S.Array(Row) })
-          )
-        )(raw);
+        const data = yield* S.decodeEffect(CorpusJson)(raw);
         expect(data.cases).toHaveLength(340);
         expect(data.artifacts).toHaveLength(40);
         const strings = HashMap.fromIterable(A.map(data.artifacts, (row) => [row.sha256, row.value] as const));

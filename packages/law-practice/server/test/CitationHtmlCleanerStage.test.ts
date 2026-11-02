@@ -22,6 +22,8 @@ import {
 import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
 import type { CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
 
+const StringJson = S.fromJsonString(S.String);
+
 const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 const owned = (
   worker: Effect.Success<ReturnType<typeof makeCitationHtmlWorker>>,
@@ -174,7 +176,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const fs = yield* FileSystem.FileSystem;
         const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-stage-cancel-" });
         const marker = `${cwd}/started`;
-        const markerLiteral = yield* S.encodeEffect(S.fromJsonString(S.String))(marker);
+        const markerLiteral = yield* S.encodeEffect(StringJson)(marker);
         const workerFile = `${cwd}/worker.mjs`;
         yield* fs.writeFileString(
           workerFile,

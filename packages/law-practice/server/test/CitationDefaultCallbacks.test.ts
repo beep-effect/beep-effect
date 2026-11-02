@@ -51,6 +51,26 @@ import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixt
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 
+const CorpusJson = S.fromJsonString(S.Struct({ cases: S.Array(CitationResolutionContext) }));
+const DefaultCallbackObservationsJson = S.fromJsonString(
+  S.Struct({
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        decisions: S.Array(
+          S.Struct({
+            index: S.Natural,
+            status: S.Literals(["Resolved", "Unresolved", "Ambiguous"]),
+            reason: S.optionalKey(S.String),
+            distinctCount: S.optionalKey(S.Natural),
+            candidateIndices: S.Natural.pipe(S.Array, S.optionalKey),
+          })
+        ),
+      })
+    ),
+  })
+);
+
 const cases = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
@@ -59,7 +79,7 @@ const cases = Effect.gen(function* () {
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "89d86c6aefecc02a30e6d719af9277050d8023949d4fba69912e2b9295d20e05"
   );
-  return yield* S.decodeEffect(S.fromJsonString(S.Struct({ cases: S.Array(CitationResolutionContext) })))(raw);
+  return yield* S.decodeEffect(CorpusJson)(raw);
 });
 const selected = Effect.gen(function* () {
   return yield* Effect.fromOption(A.findFirst((yield* cases).cases, (row) => row.name === "short-unique"));
@@ -104,26 +124,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(observationsText))).toBe(
           "34bf392659ed8699115311a9f04377b7366b691e91e5171145b7cafdec6d1592"
         );
-        const observed = yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({
-              cases: S.Array(
-                S.Struct({
-                  name: S.String,
-                  decisions: S.Array(
-                    S.Struct({
-                      index: S.Natural,
-                      status: S.Literals(["Resolved", "Unresolved", "Ambiguous"]),
-                      reason: S.optionalKey(S.String),
-                      distinctCount: S.optionalKey(S.Natural),
-                      candidateIndices: S.Natural.pipe(S.Array, S.optionalKey),
-                    })
-                  ),
-                })
-              ),
-            })
-          )
-        )(observationsText);
+        const observed = yield* S.decodeEffect(DefaultCallbackObservationsJson)(observationsText);
         const branches = HashMap.fromIterable(A.map(observed.cases, (row) => [row.name, row.decisions] as const));
         let checked = 0;
         for (const row of contexts) {

@@ -25,6 +25,8 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
 /**
  * An adapter-owned runtime value/step/function identity. Decoding this data does
@@ -224,7 +226,7 @@ const Units = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima
  * @since 0.0.0
  */
 export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeline")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(policy).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
     Effect.mapError(() => fail("invalid-input"))
   );
   const clock = yield* Clock.Clock;

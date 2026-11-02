@@ -47,6 +47,12 @@ import { PreparedCitationResolution, prepareCitationResolution } from "./Resolut
 import { CitationResourceIdentity, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type { CitationCallbackRuntimeIndex } from "./CallbackRuntimeIndex.ts";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+const CitationMentionType = S.toType(CitationMention);
+const CitationGroupMemberType = S.toType(CitationGroupMember);
+const CitationType = S.toType(Citation);
+const CitationGroupMemberJson = S.fromJsonString(CitationGroupMember);
+
 const $I = $LawPracticeServerId.create("internal/Citation/CallbackSession");
 /**
  * Prior-full context references either a verified occurrence or a detached semantic object.
@@ -64,6 +70,8 @@ export const CitationCallbackFull = S.Struct({
       "Immutable registered pair node with operation-local identity, explicit semantic reference and falsy resource values.",
   })
 );
+const CitationCallbackFullJson = S.fromJsonString(CitationCallbackFull);
+
 /**
  * Schema-derived prior-full entry.
  * @internal
@@ -154,6 +162,8 @@ export const CitationCallbackEntry = S.Struct({ ...CitationCallbackGroup.fields,
     description: "Identity-bearing final insertion entry, including repeated resource-object keys.",
   })
 );
+const CitationCallbackEntryTypes = S.toType(CitationCallbackEntry).pipe(S.Array);
+
 /**
  * Schema-derived final insertion entry.
  * @internal
@@ -264,7 +274,7 @@ export class CitationResolutionWork extends Context.Service<
  * @since 0.0.0
  */
 export const makeCitationResolutionWork = Effect.fn("Citation.makeResolutionWork")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
     Effect.mapError(() => CitationCallbackFailure.make({ reason: "invalid-input" }))
   );
   const maximum = limits.resolutionIterations;
@@ -368,6 +378,8 @@ const SessionState = S.Struct({
       description: "Private post-dispatch state; not a final document or grouping correctness proof.",
     })
   );
+const SessionStateType = S.toType(SessionState);
+
 const CapturedData = S.Struct({ ...SessionState.fields, mentions: S.Array(CitationMentionReceipt) });
 const CapturedJson = S.fromJsonString(CapturedData);
 const NativeAnchors = S.Struct({
@@ -404,7 +416,7 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
         : O.some(
             CitationFootnoteZone.make({ label: mention.footnote.value.label, anchor: O.getOrThrow(anchors.footnote) })
           );
-      return yield* S.decodeUnknownEffect(S.toType(CitationMention))({
+      return yield* S.decodeUnknownEffect(CitationMentionType)({
         ...mention,
         anchor: anchors.anchor,
         components,
@@ -412,7 +424,7 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
       });
     })
   ).pipe(Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" })));
-  return yield* S.decodeEffect(S.toType(SessionState))({ ...data, mentions }).pipe(
+  return yield* S.decodeEffect(SessionStateType)({ ...data, mentions }).pipe(
     Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
   );
 });
@@ -779,7 +791,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   });
   const citationOf = Effect.fn("Citation.callbackCitationOf")(function* (reference: CitationGroupMember) {
     yield* alive;
-    const decoded = yield* S.decodeEffect(S.toType(CitationGroupMember))(reference).pipe(Effect.mapError(invalid));
+    const decoded = yield* S.decodeEffect(CitationGroupMemberType)(reference).pipe(Effect.mapError(invalid));
     const citation = yield* Effect.fromOption(
       CitationGroupMember.match(decoded, {
         Mention: (reference) => HashMap.get(known, reference.mentionId),
@@ -823,7 +835,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
   const registerDetached = Effect.fn("Citation.registerDetached")(function* (input: Citation) {
     yield* alive;
     yield* work.step;
-    const decoded = yield* S.decodeEffect(S.toType(Citation))(input).pipe(Effect.mapError(invalid));
+    const decoded = yield* S.decodeEffect(CitationType)(input).pipe(Effect.mapError(invalid));
     const existing = O.fromUndefinedOr(detachedObjects.get(input));
     if (O.isSome(existing)) return CitationGroupMember.cases.Detached.make({ detachedId: existing.value });
     if (HashMap.size(known) + detachedSlot >= limits.mentions) return yield* limit();
@@ -869,8 +881,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     resource: CitationCallbackResource
   ) {
     yield* alive;
-    const reference = yield* S.decodeEffect(S.fromJsonString(CitationGroupMember))(
-      yield* S.encodeEffect(S.fromJsonString(CitationGroupMember))(citation).pipe(Effect.mapError(invalid))
+    const reference = yield* S.decodeEffect(CitationGroupMemberJson)(
+      yield* S.encodeEffect(CitationGroupMemberJson)(citation).pipe(Effect.mapError(invalid))
     ).pipe(Effect.mapError(invalid));
     yield* citationOf(reference);
     if (nextPairSlot + nextSlot + nextPairSlot >= limits.resolutionIterations) return yield* limit();
@@ -882,8 +894,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     nextPairSlot += 1;
     pairs = HashMap.set(pairs, pair.pairSlot, pair);
     // The returned data cannot mutate the registered immutable pair.
-    return yield* S.decodeEffect(S.fromJsonString(CitationCallbackFull))(
-      yield* S.encodeEffect(S.fromJsonString(CitationCallbackFull))(pair).pipe(Effect.mapError(invalid))
+    return yield* S.decodeEffect(CitationCallbackFullJson)(
+      yield* S.encodeEffect(CitationCallbackFullJson)(pair).pipe(Effect.mapError(invalid))
     ).pipe(Effect.mapError(invalid));
   });
   const writeFulls = Effect.fn("Citation.writeFulls")(function* (input: ReadonlyArray<CitationCallbackFull>) {
@@ -1107,7 +1119,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
     readEntries: Effect.suspend(() =>
       api.read.pipe(
         Effect.flatMap((groups) =>
-          S.decodeEffect(S.toType(CitationCallbackEntry).pipe(S.Array))(
+          S.decodeEffect(CitationCallbackEntryTypes)(
             A.map(groups, (group, index) => ({ ...group, entrySlot: A.getUnsafe(entries, index).entrySlot }))
           ).pipe(Effect.mapError(invalid))
         )
@@ -1364,7 +1376,7 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
           { concurrency: 1 }
         );
 
-        const result = yield* S.decodeEffect(S.toType(SessionState))({
+        const result = yield* S.decodeEffect(SessionStateType)({
           ...prepared,
           mentions: yield* dictionary.readMentions,
           fulls: yield* dictionary.readFulls,

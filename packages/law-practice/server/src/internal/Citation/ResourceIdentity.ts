@@ -43,6 +43,8 @@ export const CitationResourceIdentity = S.TaggedUnion({
       "Trusted canonical fallback or adapter-scoped external identity descriptor; never taken from a document receipt.",
   })
 );
+const CitationResourceIdentityType = S.toType(CitationResourceIdentity);
+
 /**
  * Schema-derived trusted resource identity.
  * @internal
@@ -137,9 +139,7 @@ const invalid = () => CitationResourceIdentityFailure.make({ reason: "invalid-in
 export const makeCitationResourceAuthorityId = Effect.fn("Citation.makeResourceAuthorityId")(function* (
   input: unknown
 ): Effect.fn.Return<CitationAuthorityId, CitationResourceIdentityFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CitationResourceIdentity))(input).pipe(
-    Effect.mapError(invalid)
-  );
+  const decoded = yield* S.decodeUnknownEffect(CitationResourceIdentityType)(input).pipe(Effect.mapError(invalid));
   const json = yield* S.encodeEffect(Json)(decoded).pipe(Effect.mapError(invalid));
   const snapshot = yield* S.decodeEffect(Json)(json).pipe(Effect.mapError(invalid));
   if (snapshot._tag === "Canonical")

@@ -34,6 +34,9 @@ import { makeCitationMentionId } from "./MentionIdentity.ts";
 import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 
+const CitationMentionType = S.toType(CitationMention);
+const CitationMentionReceiptType = S.toType(CitationMentionReceipt);
+
 const $I = $LawPracticeServerId.create("internal/Citation/Mention");
 const FailureReason = LiteralKit([
   "invalid-input",
@@ -72,6 +75,8 @@ const CreateInput = S.Struct(Struct.omit(CitationMention.fields, ["id"])).pipe(
     description: "Decoded semantic data and existing verified occurrence evidence; the producer assigns the ID.",
   })
 );
+const CreateInputType = S.toType(CreateInput);
+
 const Metadata = S.Struct(
   Struct.omit(CitationMentionReceipt.fields, ["schemaVersion", "id", "anchor", "components", "footnote"])
 ).pipe(
@@ -92,6 +97,8 @@ const RestoreInput = S.Struct({
     description: "Persisted mention, trusted expected source/engine identity and canonical raw text.",
   })
 );
+const RestoreInputType = S.toType(RestoreInput);
+
 const RestoreJson = S.fromJsonString(RestoreInput);
 
 const snapshotMetadata = Effect.fn("Citation.snapshotMentionMetadata")(function* (value: typeof Metadata.Type) {
@@ -109,7 +116,7 @@ const snapshotMetadata = Effect.fn("Citation.snapshotMentionMetadata")(function*
 export const makeCitationMention = Effect.fn("Citation.makeMention")(function* (
   input: unknown
 ): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CreateInput))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(CreateInputType)(input).pipe(Effect.mapError(invalid));
   const metadata = yield* snapshotMetadata(decoded);
   const anchor = decoded.anchor;
   const components = A.map(decoded.components, (component) =>
@@ -123,7 +130,7 @@ export const makeCitationMention = Effect.fn("Citation.makeMention")(function* (
     engineArtifact: metadata.engineArtifact,
     semanticKind: metadata.citation.type,
   }).pipe(Effect.mapError(identityFailure));
-  return yield* S.decodeUnknownEffect(S.toType(CitationMention))({
+  return yield* S.decodeUnknownEffect(CitationMentionType)({
     ...metadata,
     id,
     anchor,
@@ -142,7 +149,7 @@ export const makeCitationMention = Effect.fn("Citation.makeMention")(function* (
 export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionReceipt")(function* (
   input: unknown
 ): Effect.fn.Return<CitationMentionReceipt, CitationMentionFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CitationMention))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(CitationMentionType)(input).pipe(Effect.mapError(invalid));
   const metadata = yield* snapshotMetadata(decoded);
   const id = decoded.id;
   const anchorProof = decoded.anchor;
@@ -162,7 +169,7 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
     semanticKind: metadata.citation.type,
   }).pipe(Effect.mapError(identityFailure));
   if (id !== expected) return yield* CitationMentionFailure.make({ reason: "stale-identity" });
-  return yield* S.decodeUnknownEffect(S.toType(CitationMentionReceipt))({
+  return yield* S.decodeUnknownEffect(CitationMentionReceiptType)({
     schemaVersion: "citation-mention-receipt/v1",
     ...metadata,
     id,
@@ -212,7 +219,7 @@ const reverify = Effect.fn("Citation.reverifyMentionAnchor")(function* (
 export const restoreCitationMention = Effect.fn("Citation.restoreMention")(function* (
   input: unknown
 ): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(RestoreInput))(input).pipe(Effect.mapError(invalid));
+  const decoded = yield* S.decodeUnknownEffect(RestoreInputType)(input).pipe(Effect.mapError(invalid));
   // Copy all structural input before the first asynchronous hash. Receipts are
   // data, and caller-owned objects cannot be allowed to change mid-verification.
   const json = yield* S.encodeEffect(RestoreJson)(decoded).pipe(Effect.mapError(invalid));

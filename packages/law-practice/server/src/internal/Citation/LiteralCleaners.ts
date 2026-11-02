@@ -27,6 +27,8 @@ import { CitationCleanerTextAllocation, CitationCleanerTextOutput } from "./Clea
 import { citationPythonTextData } from "./PythonTextData.ts";
 import type { CitationCleanerTextCharge, CitationCleanerWork } from "./CleanerPipeline.ts";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
 const $I = $LawPracticeServerId.create("internal/Citation/LiteralCleaners");
 /**
  * The four regex-free primitive cleaner implementations. HTML and the public
@@ -113,7 +115,7 @@ const at = (text: string, index: number) => O.getOrElse(Str.charAt(text, index),
  * @since 0.0.0
  */
 export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleaners")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
   const sourceCeiling = limits.sourceUtf16;

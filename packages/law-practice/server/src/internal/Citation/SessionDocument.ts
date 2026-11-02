@@ -37,6 +37,9 @@ import {
 import type { CitationAuthorityId, CitationMentionId, CitationResolution } from "@beep/law-practice-domain/values";
 import type { CitationCallbackResource } from "./CallbackResource.ts";
 
+const CitationResourceIdentityType = S.toType(CitationResourceIdentity);
+const CitationDocumentType = S.toType(CitationDocument);
+
 const $I = $LawPracticeServerId.create("internal/Citation/SessionDocument");
 /**
  * Trusted descriptor port selected by the server composition. It reads final
@@ -99,7 +102,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             resource._tag === "Registered" ? O.some(`${resource.scope}:${resource.slot}`) : O.none<string>();
           const cached = O.flatMap(reference, (key) => HashMap.get(registered, key));
           if (O.isSome(cached)) return cached.value;
-          const identity = yield* S.decodeEffect(S.toType(CitationResourceIdentity))(
+          const identity = yield* S.decodeEffect(CitationResourceIdentityType)(
             yield* descriptors
               .describe(resource)
               .pipe(Effect.mapError((error) => (error.reason === "limit-exceeded" ? limit() : failed())))
@@ -233,7 +236,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             });
           })
         );
-        const document = yield* S.decodeUnknownEffect(S.toType(CitationDocument))({
+        const document = yield* S.decodeUnknownEffect(CitationDocumentType)({
           source: state.source,
           engineArtifact: state.engineArtifact,
           mentions: state.mentions,

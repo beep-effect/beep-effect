@@ -49,7 +49,7 @@ const Operation = S.Union([
 ]);
 const Corpus = S.fromJsonString(
   S.Struct({
-    schemaVersion: S.Literal("citation-live-resources/v1"),
+    schemaVersion: S.tag("citation-live-resources/v1"),
     cases: S.Array(
       S.Struct({
         name: S.String,

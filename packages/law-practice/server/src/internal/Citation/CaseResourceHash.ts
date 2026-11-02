@@ -47,6 +47,8 @@ export class CitationCaseResourceHashInput extends S.Opaque<
     })
   )
 ) {}
+const CitationCaseResourceHashInputType = S.toType(CitationCaseResourceHashInput);
+
 /**
  * Exact source citation and resource hashes without JSON number precision loss.
  * @internal
@@ -104,7 +106,7 @@ const numericHash = Effect.fn("Citation.caseHashPreimage")((preimage: string) =>
 export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResourceHash")(function* (
   input: unknown
 ): Effect.fn.Return<CitationCaseResourceHash, CitationCaseResourceHashFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CitationCaseResourceHashInput))(input).pipe(
+  const decoded = yield* S.decodeUnknownEffect(CitationCaseResourceHashInputType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
   const groups = yield* S.encodeEffect(CitationComponents)(decoded.citation.components).pipe(

@@ -43,6 +43,13 @@ const Row = S.Struct({
     S.Struct({ kind: S.tag("error"), type: S.tag("builtins.TypeError"), message: S.String }),
   ]).pipe(S.toTaggedUnion("kind")),
 });
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    nonTextCases: S.Array(Row),
+  })
+);
+
 const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 it.layer(BunServices.layer, { excludeTestServices: true })("captured builtin cleaner invocation", (it) => {
   it.effect(
@@ -56,14 +63,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("captured builtin cle
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201"
         );
-        const corpus = yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({
-              artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-              nonTextCases: S.Array(Row),
-            })
-          )
-        )(raw);
+        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.nonTextCases).toHaveLength(45);
         const strings = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
         const values = yield* makeCitationCleanerValues();

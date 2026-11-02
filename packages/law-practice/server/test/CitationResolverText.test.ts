@@ -15,12 +15,12 @@ import {
 } from "../src/internal/Citation/ResolverText.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.Literal("citation-resolver-text-cases/v1"),
-  oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
-  unicodeVersion: S.Literal("14.0.0"),
-  integerMaxDigits: S.Literal(4300),
+  schemaVersion: S.tag("citation-resolver-text-cases/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  unicodeVersion: S.tag("14.0.0"),
+  integerMaxDigits: S.tag(4300),
   characterFacts: S.Struct({
-    unicodeVersion: S.Literal("14.0.0"),
+    unicodeVersion: S.tag("14.0.0"),
     digits: S.String,
     decimalDigits: S.String,
     whitespace: S.String,

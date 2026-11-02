@@ -39,6 +39,15 @@ const Case = S.Struct({
   outcome: Outcome,
   diagnostics: S.Array(S.Struct({ resourceLimit: S.Boolean })),
 });
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    producerSha256: S.String,
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    cases: S.Array(Case),
+    nonTextCases: S.Array(S.Struct({ name: S.String, outcome: Outcome, hooks: S.Array(S.String) })),
+  })
+);
+
 const load = Effect.fn("HtmlBytesTest.load")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
@@ -47,16 +56,7 @@ const load = Effect.fn("HtmlBytesTest.load")(function* () {
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "179fc43e44d8d6048b0d4eea38a8a8667d505ce60ee23ded6aa43138cd265201"
   );
-  const data = yield* S.decodeEffect(
-    S.fromJsonString(
-      S.Struct({
-        producerSha256: S.String,
-        artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-        cases: S.Array(Case),
-        nonTextCases: S.Array(S.Struct({ name: S.String, outcome: Outcome, hooks: S.Array(S.String) })),
-      })
-    )
-  )(raw);
+  const data = yield* S.decodeEffect(CorpusJson)(raw);
   expect(data.cases).toHaveLength(589);
   expect(data.artifacts).toHaveLength(488);
   expect(data.nonTextCases).toHaveLength(45);

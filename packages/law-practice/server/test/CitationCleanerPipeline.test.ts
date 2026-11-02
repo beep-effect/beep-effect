@@ -32,6 +32,13 @@ import { CitationLiteralCleaner, makeCitationLiteralCleaners } from "../src/inte
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type { CitationCleanerCursor, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
 
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    cases: S.Array(S.Struct({ cleaner: CitationLiteralCleaner, text: S.String, expected: S.String })),
+  })
+);
+
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 type Callback = (
   value: CitationCleanerObject,
@@ -398,14 +405,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8"
         );
-        const corpus = yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({
-              artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-              cases: S.Array(S.Struct({ cleaner: CitationLiteralCleaner, text: S.String, expected: S.String })),
-            })
-          )
-        )(raw);
+        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         const texts = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const literal = yield* makeCitationLiteralCleaners(limits);

@@ -14,6 +14,29 @@ import * as S from "effect/Schema";
 import { completeCitationHtml } from "../src/internal/Citation/HtmlCompletion.ts";
 import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
 
+const CorpusJson = S.fromJsonString(
+  S.Struct({
+    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
+    cases: S.Array(
+      S.Struct({
+        name: S.String,
+        outcome: S.Union([
+          S.Struct({ kind: S.tag("success"), value: S.String }),
+          S.Struct({ kind: S.tag("error") }),
+        ]).pipe(S.toTaggedUnion("kind")),
+        diagnostics: S.Array(S.Struct({ domain: S.String, type: S.String, level: S.String, depthLimit: S.Boolean })),
+      })
+    ),
+  })
+);
+const CitationSafetyLimitExceededJson = S.fromJsonString(CitationSafetyLimitExceeded);
+const NativeHtmlSafetyFailureJson = S.fromJsonString(
+  S.TaggedStruct("CitationSafetyLimitExceeded", {
+    operation: S.tag("clean"),
+    limit: S.tag("nativeHtmlParserResource"),
+  })
+);
+
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safety completion", (it) => {
   it.effect("changes only the three source native-depth exhaustion outcomes", () =>
     Effect.gen(function* () {
@@ -23,25 +46,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "049bbadd90348588e2e7a1c62daf1f5dba0b6865df9f2001b9461b8b80f9cb71"
       );
-      const corpus = yield* S.decodeEffect(
-        S.fromJsonString(
-          S.Struct({
-            artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-            cases: S.Array(
-              S.Struct({
-                name: S.String,
-                outcome: S.Union([
-                  S.Struct({ kind: S.tag("success"), value: S.String }),
-                  S.Struct({ kind: S.tag("error") }),
-                ]).pipe(S.toTaggedUnion("kind")),
-                diagnostics: S.Array(
-                  S.Struct({ domain: S.String, type: S.String, level: S.String, depthLimit: S.Boolean })
-                ),
-              })
-            ),
-          })
-        )
-      )(raw);
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       const values = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
       let changed = 0;
       let preserved = 0;
@@ -88,19 +93,13 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safet
       expect(reads).toBe(0);
       expect(failed._tag).toBe("CitationSafetyLimitExceeded");
       if (failed._tag !== "CitationSafetyLimitExceeded") return yield* Effect.die("expected safety failure");
-      const encoded = yield* S.encodeEffect(S.fromJsonString(CitationSafetyLimitExceeded))(failed);
+      const encoded = yield* S.encodeEffect(CitationSafetyLimitExceededJson)(failed);
       expect(encoded).not.toContain("private");
-      expect(
-        yield* S.decodeEffect(
-          S.fromJsonString(
-            S.Struct({
-              _tag: S.tag("CitationSafetyLimitExceeded"),
-              operation: S.tag("clean"),
-              limit: S.tag("nativeHtmlParserResource"),
-            })
-          )
-        )(encoded)
-      ).toEqual({ _tag: "CitationSafetyLimitExceeded", operation: "clean", limit: "nativeHtmlParserResource" });
+      expect(yield* S.decodeEffect(NativeHtmlSafetyFailureJson)(encoded)).toEqual({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "clean",
+        limit: "nativeHtmlParserResource",
+      });
     })
   );
 });

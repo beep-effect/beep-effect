@@ -30,6 +30,8 @@ const Row = S.Union([
     javascriptRoundtrip: S.Boolean,
   }),
 ]).pipe(S.toTaggedUnion("kind"));
+const CorpusJson = S.fromJsonString(S.Struct({ cases: S.Array(Row) }));
+
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primitive hashing", (it) => {
   it.effect("matches every full byte/Unicode vector and preserves explicit surrogate storage", () =>
     Effect.gen(function* () {
@@ -39,7 +41,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("frozen Python primi
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "844816162ce40d63b3e21a447bb4d1aa2c2310157a959c8c5c0f4ae8d86b0c89"
       );
-      const corpus = yield* S.decodeEffect(S.fromJsonString(S.Struct({ cases: S.Array(Row) })))(raw);
+      const corpus = yield* S.decodeEffect(CorpusJson)(raw);
       expect(corpus.cases).toHaveLength(1056);
       const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
       let binary = 0;

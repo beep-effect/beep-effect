@@ -34,8 +34,8 @@ const Corpus = S.fromJsonString(
             operation: S.Struct({ kind: S.Literals(["add", "hash", "error"]), key: S.Natural }),
             keys: S.Array(Key),
             outcome: S.Union([
-              S.Struct({ status: S.Literal("value") }),
-              S.Struct({ status: S.Literal("error"), kind: S.Literal("ValueError") }),
+              S.Struct({ status: S.tag("value") }),
+              S.Struct({ status: S.tag("error"), kind: S.tag("ValueError") }),
             ]),
             comparisons: S.Array(S.Tuple([S.Natural, S.Natural])),
             objects: S.Array(S.Natural),

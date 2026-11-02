@@ -20,6 +20,9 @@ import {
   CitationRuntimeDictionaryLimits,
 } from "./RuntimeDictionary.ts";
 
+const CitationRuntimeDictionaryLimitsType = S.toType(CitationRuntimeDictionaryLimits);
+const CitationRuntimeDictionaryKeyType = S.toType(CitationRuntimeDictionaryKey);
+
 const failure = (reason: CitationRuntimeDictionaryFailure["reason"]) =>
   CitationRuntimeDictionaryFailure.make({ reason });
 const indexOf = (value: bigint, size: number) => Number(value & BigInt(size - 1));
@@ -32,7 +35,7 @@ const indexOf = (value: bigint, size: number) => Number(value & BigInt(size - 1)
  * @since 0.0.0
  */
 export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationRuntimeDictionaryLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationRuntimeDictionaryLimitsType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
   const comparison = yield* CitationRuntimeDictionaryComparison;
@@ -80,7 +83,7 @@ export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(funct
     buckets = rebuilt;
   });
   const add = Effect.fn("Citation.setAdd")(function* (inputKey: CitationRuntimeDictionaryKey) {
-    const key = yield* S.decodeEffect(S.toType(CitationRuntimeDictionaryKey))(inputKey).pipe(
+    const key = yield* S.decodeEffect(CitationRuntimeDictionaryKeyType)(inputKey).pipe(
       Effect.mapError(() => failure("invalid-input"))
     );
     let perturb = BigInt.asUintN(64, key.hash);

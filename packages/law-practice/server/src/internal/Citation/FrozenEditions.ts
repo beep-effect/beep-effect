@@ -28,7 +28,7 @@ const Bundle = S.Struct({
 const Manifest = S.fromJsonString(S.Struct({ editions: S.Array(Sha256Hex), reporters: S.Array(Sha256Hex) }));
 const expectedManifest = "b6d3fdd9b6fb4e006c3ede86639c46e7579ff03d39091bdd74ca60919dfe648e";
 const Reporter = S.Struct({
-  pythonType: S.Literal("eyecite.models.Reporter"),
+  pythonType: S.tag("eyecite.models.Reporter"),
   fields: S.Struct({
     short_name: S.String,
     name: S.String,
@@ -37,9 +37,11 @@ const Reporter = S.Struct({
     is_scotus: S.Boolean,
   }),
 });
+const ReporterJson = S.fromJsonString(Reporter);
+
 const DateValue = S.NullOr(S.Struct({ datetime: S.String.check(S.isMaxLength(64)) }));
 const Edition = S.Struct({
-  pythonType: S.Literal("eyecite.models.Edition"),
+  pythonType: S.tag("eyecite.models.Edition"),
   fields: S.Struct({
     short_name: S.String,
     reporter: S.Struct({ artifactSha256: Sha256Hex }),
@@ -47,6 +49,8 @@ const Edition = S.Struct({
     end: DateValue,
   }),
 });
+const EditionJson = S.fromJsonString(Edition);
+
 const Family = LiteralKit(["case", "law", "journal"]);
 const References = S.Array(CitationEditionRef).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates));
 const Reason = LiteralKit([
@@ -136,7 +140,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
   let reporters = HashMap.empty<Sha256Hex, typeof Reporter.fields.fields.Type>();
   for (const row of rows.reporters) {
     if ((yield* digest(row.payload)) !== row.ref) return yield* failure("corrupt-artifact");
-    const value = yield* S.decodeEffect(S.fromJsonString(Reporter))(row.payload).pipe(
+    const value = yield* S.decodeEffect(ReporterJson)(row.payload).pipe(
       Effect.mapError(() => failure("corrupt-artifact"))
     );
     reporters = HashMap.set(reporters, row.ref, value.fields);
@@ -144,7 +148,7 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
   let editions = HashMap.empty<CitationEditionRef, CitationRuntimeEdition>();
   for (const row of rows.editions) {
     if ((yield* digest(row.payload)) !== row.ref) return yield* failure("corrupt-artifact");
-    const value = yield* S.decodeEffect(S.fromJsonString(Edition))(row.payload).pipe(
+    const value = yield* S.decodeEffect(EditionJson)(row.payload).pipe(
       Effect.mapError(() => failure("corrupt-artifact"))
     );
     const reporter = yield* Effect.fromOption(HashMap.get(reporters, value.fields.reporter.artifactSha256), () =>

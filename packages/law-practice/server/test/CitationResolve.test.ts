@@ -20,16 +20,18 @@ import { CitationResolutionContext, prepareCitationResolutionContext as prepare 
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.Literal("citation-default-resolution-cases/v1"),
-  oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  schemaVersion: S.tag("citation-default-resolution-cases/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
   cases: S.Array(CitationResolutionContext),
 });
+const CasesJson = S.fromJsonString(Cases);
+
 const cases = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(
     fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
   );
-  return yield* S.decodeEffect(S.fromJsonString(Cases))(text);
+  return yield* S.decodeEffect(CasesJson)(text);
 });
 
 it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical default resolution", (it) => {

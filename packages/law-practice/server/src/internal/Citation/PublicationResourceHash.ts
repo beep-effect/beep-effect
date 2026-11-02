@@ -75,6 +75,8 @@ export class CitationPublicationResourceHashInput extends S.Opaque<
     })
   )
 ) {}
+const CitationPublicationResourceHashInputType = S.toType(CitationPublicationResourceHashInput);
+
 const Reason = LiteralKit(["invalid-input", "missing-edition", "digest-failed"]);
 /**
  * Closed publication-hash failure without citation data or adapter causes.
@@ -124,7 +126,7 @@ const fieldOrder = Order.mapInput(stringOrder, (field: readonly [string, string]
 export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePublicationResourceHash")(function* (
   input: unknown
 ): Effect.fn.Return<CitationCaseResourceHash, CitationPublicationResourceHashFailure, Digest.Digest> {
-  const decoded = yield* S.decodeUnknownEffect(S.toType(CitationPublicationResourceHashInput))(input).pipe(
+  const decoded = yield* S.decodeUnknownEffect(CitationPublicationResourceHashInputType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
   const refs = decoded.citation.publication.editions;

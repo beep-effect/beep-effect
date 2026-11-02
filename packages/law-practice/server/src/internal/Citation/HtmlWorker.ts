@@ -45,6 +45,9 @@ import {
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 import type { CitationCleanerWork } from "./CleanerPipeline.ts";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+const NaturalJson = S.fromJsonString(S.Natural);
+
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
 const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
   $I.annoteSchema("RuntimePath", {
@@ -125,7 +128,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   policy: unknown,
   runtimeInput: unknown
 ) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(policy).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
     Effect.mapError(() => failure("invalid-runtime"))
   );
   const runtime = yield* S.decodeUnknownEffect(CitationHtmlWorkerRuntime)(runtimeInput).pipe(
@@ -266,7 +269,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
               }),
               limits.processMessageBytes
             );
-            const argument = yield* S.encodeEffect(S.fromJsonString(S.Natural))(limits.processMessageBytes).pipe(
+            const argument = yield* S.encodeEffect(NaturalJson)(limits.processMessageBytes).pipe(
               Effect.mapError(() => failure("invalid-runtime"))
             );
             const resource = yield* birthLock

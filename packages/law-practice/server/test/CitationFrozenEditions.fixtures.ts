@@ -20,8 +20,8 @@ const Corpus = S.fromJsonString(
 );
 const Expected = S.fromJsonString(
   S.Struct({
-    schemaVersion: S.Literal("citation-frozen-editions/v1"),
-    manifestSha256: S.Literal("b6d3fdd9b6fb4e006c3ede86639c46e7579ff03d39091bdd74ca60919dfe648e"),
+    schemaVersion: S.tag("citation-frozen-editions/v1"),
+    manifestSha256: S.tag("b6d3fdd9b6fb4e006c3ede86639c46e7579ff03d39091bdd74ca60919dfe648e"),
     editions: S.Array(
       S.Struct({
         edition: CitationEditionRef,

@@ -23,6 +23,8 @@ import * as Str from "effect/String";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlInput");
 const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", "AUTO"]).pipe(
   $I.annoteSchema("Encoding", {
@@ -126,7 +128,7 @@ const safety = (limit: CitationSafetyBudget) => CitationSafetyLimitExceeded.make
  * @since 0.0.0
  */
 export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
     Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
   );
   const clock = yield* Clock.Clock;

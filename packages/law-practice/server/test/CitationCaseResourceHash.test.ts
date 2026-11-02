@@ -21,8 +21,8 @@ import {
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({
-  schemaVersion: S.Literal("citation-case-resource-hashes/v1"),
-  oracleCommit: S.Literal("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  schemaVersion: S.tag("citation-case-resource-hashes/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
   cases: S.Array(
     S.Struct({
       name: S.NonEmptyString,
@@ -35,6 +35,8 @@ const Cases = S.Struct({
     })
   ),
 });
+const CasesJson = S.fromJsonString(Cases);
+
 const inputs = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
@@ -43,7 +45,7 @@ const inputs = Effect.gen(function* () {
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "b468cd539a9adc728c719ab01c941789d8cae2878c1bcb014e56999b7af462c4"
   );
-  return yield* S.decodeEffect(S.fromJsonString(Cases))(raw);
+  return yield* S.decodeEffect(CasesJson)(raw);
 });
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact source case resource hashes", (it) => {

@@ -30,6 +30,8 @@ import {
   CitationRuntimeDictionaryKey,
 } from "./RuntimeDictionary.ts";
 
+const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceObjects");
 /**
  * Current full citation plus an explicit null-page identity supplied by the semantic owner.
@@ -61,6 +63,8 @@ export class CitationResourceObject extends S.Opaque<CitationResourceObject, { r
     })
   )
 ) {}
+const CitationResourceObjectType = S.toType(CitationResourceObject);
+
 const Reason = LiteralKit([
   "invalid-input",
   "unknown-object",
@@ -148,7 +152,7 @@ const referenceSnapshot = Effect.fn("Citation.resourceReference")(
  * @since 0.0.0
  */
 export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjects")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(S.toType(CitationEngineLimits))(input).pipe(
+  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );
   const maximum = limits.resolutionIterations;
@@ -167,9 +171,7 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
   });
   const ownedId = Effect.fn("Citation.resourceOwnedId")(function* (resource: CitationResourceObject) {
     yield* alive;
-    yield* S.decodeEffect(S.toType(CitationResourceObject))(resource).pipe(
-      Effect.mapError(() => failure("invalid-input"))
-    );
+    yield* S.decodeEffect(CitationResourceObjectType)(resource).pipe(Effect.mapError(() => failure("invalid-input")));
     return yield* Effect.fromOption(O.fromUndefinedOr(handles.get(resource)), () => failure("unknown-object"));
   });
   const hash = Effect.fn("Citation.resourceLiveHash")(function* (id: number) {

@@ -52,6 +52,8 @@ import {
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type { CitationFullsCallbackInput, CitationIdCallbackInput } from "../src/internal/Citation/CallbackSession.ts";
 
+const JsonMetadata = S.Record(S.String, S.Json);
+
 const SourceView = S.Struct({
   groups: S.Record(S.String, S.String),
   metadata: S.Struct({
@@ -151,7 +153,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
           citation: Citation
         ) {
           const wire = yield* S.encodeEffect(Citation)(citation);
-          const metadata = yield* S.decodeEffect(S.Record(S.String, S.Json))(wire.metadata);
+          const metadata = yield* S.decodeEffect(JsonMetadata)(wire.metadata);
           return {
             reference: referenceView(reference),
             groups: wire.components,
