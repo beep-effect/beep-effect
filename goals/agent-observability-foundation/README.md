@@ -34,9 +34,10 @@ that historical result as unsatisfied; a merge alone cannot complete this packet
 The [post-merge qualification](./research/POST-MERGE-QUALIFICATION.md) preserves
 that history and refreshes current source, package and synthetic-route evidence.
 
-A follow-up final PR must retain its own exact-head readiness and complete
-merge-time required-check evidence. Once its number exists, the manifest's final
-role, prospective closeout and verdict reference will be updated together.
+[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) is the final
+follow-up and must retain its own exact-head readiness and complete merge-time
+required-check evidence. The manifest now records PR2364 as supporting delivery
+and synchronizes PR2508's final role, prospective closeout and verdict reference.
 The existing prospective declaration is not achievement. The canonical
 `beep goals completion refresh` writer remains the only completion derivation;
 local passes and synthetic proof do not replace it.
