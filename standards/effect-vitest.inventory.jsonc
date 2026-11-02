@@ -7753,13 +7753,13 @@
       "reason": "The graph command runs in a temp working directory and git status --porcelain spawns in the checkout. process.chdir needs the directory on the real filesystem (#1875 wave 7 trial: ENOENT on chdir). Owner: @beep/repo-cli. Exit: retire when the graph takes an injected root and the git probe runs behind a scripted spawner."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:11:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts:12:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/goals-manifest-capabilities.test.ts",
-      "line": 11,
-      "endLine": 11,
+      "line": 12,
+      "endLine": 12,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -7862,35 +7862,13 @@
       "reason": "NodeChildProcessSpawner.layer runs the inventory tooling over a real temp repository. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inventory runs in process over a seeded volume."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor-evaluators.test.ts:24:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/knowledge-doctor-evaluators.test.ts",
-      "line": 24,
-      "endLine": 24,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "One evaluator reads the live goal packets at findRepoRoot() and the committed skills-provenance lock under import.meta.dirname. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the evaluators run over a seeded packet tree instead of the checkout."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor-grouping.test.ts:24:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor-grouping.test.ts:25:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-doctor-grouping.test.ts",
-      "line": 24,
-      "endLine": 24,
+      "line": 25,
+      "endLine": 25,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -7906,13 +7884,13 @@
       "reason": "listGoalPackets(findRepoRoot()) groups the checkout's real goal packets. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the grouping runs over a seeded packet tree."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:27:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:28:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-doctor.test.ts",
-      "line": 27,
-      "endLine": 27,
+      "line": 28,
+      "endLine": 28,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -8476,28 +8454,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Real filesystem hashing, symlink containment, immutable and atomic artifact publication and scoped cleanup are the subjects of the views fixture. Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models symlink containment and the views cases move to it."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/residue-reap.test.ts:19:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/residue-reap.test.ts",
-      "line": 19,
-      "endLine": 19,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Native descriptor and inode containment, procfs, symlinks, chmod, git and GNU touch/find are the subjects (research/residue-reap-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when the reaper's OS probes become injected services."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/restoration-archive-coverage.test.ts:12:@effect/platform-node@0#1",

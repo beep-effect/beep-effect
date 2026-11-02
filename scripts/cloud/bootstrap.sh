@@ -169,17 +169,44 @@ fi
 
 op_ok=1
 node_ok=1
+denied_hosts=""
+# Stable configuration-error exit, before any toolchain or dependency change.
+exit_denied() {
+  printf "[beep-cloud:%s] ERROR: required download host denied: %s; remedy: add %s to the environment's allowed domains (docs/runbooks/cloud-environments.md).\n" \
+    "${VENDOR}" "${denied_hosts}" "${denied_hosts}" >&2
+  exit 78
+}
+bun_failed=0
+# Wait every required worker (each is bounded by its own timeout) so a Bun
+# failure cannot hide a denial another required worker reports later. Once Bun
+# has failed, the run is fatal, so the optional op worker is not awaited: the
+# EXIT trap cancels it.
 for entry in "${pids[@]:-}"; do
   [ -n "${entry}" ] || continue
   pid="${entry%%:*}"; name="${entry##*:}"
-  if ! wait "${pid}"; then
+  [ "${bun_failed}" = 1 ] && [ "${name}" = op ] && continue
+  worker_status=0
+  wait "${pid}" || worker_status=$?
+  if [ "${worker_status}" -ne 0 ]; then
+    # 78: fetch.sh found a required host denied by the network policy and
+    # recorded the host curl was fetching in <worker>.denied.
+    if [ "${worker_status}" -eq 78 ] && [ "${name}" != "op" ] && [ -s "${run_dir}/${name}.denied" ]; then
+      denied_hosts="${denied_hosts:+${denied_hosts} }$(cat "${run_dir}/${name}.denied")"
+      continue
+    fi
     case "${name}" in
-      bun) die "bun ${BUN_VERSION} download or checksum failed." ;;
+      bun) bun_failed=1 ;;
       node) node_ok=0; warn "Node ${NODE_VERSION} provisioning failed." ;;
       op) op_ok=0; warn "1Password CLI download or signature verification failed; skipping op (op-backed secret runs unavailable)." ;;
     esac
   fi
 done
+# A recorded denial takes precedence (exit 78); a Bun failure is still reported.
+if [ "${bun_failed}" = 1 ]; then
+  printf '[beep-cloud:%s] ERROR: bun %s download or checksum failed.\n' "${VENDOR}" "${BUN_VERSION}" >&2
+fi
+[ -z "${denied_hosts}" ] || exit_denied
+[ "${bun_failed}" = 0 ] || exit 1
 
 # ---------------------------------------------------------------------------
 # 2. Place the toolchain

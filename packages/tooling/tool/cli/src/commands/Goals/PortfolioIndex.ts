@@ -404,14 +404,11 @@ const jsonFlag = Flag.Boolean("json").pipe(
 
 const printPortfolioIndexJson = Effect.fn("Goals.printPortfolioIndexJson")(function* () {
   const report = yield* buildPortfolioIndexReport();
-  const rendered = yield* S.encodeUnknownEffect(PortfolioIndexReport)(report).pipe(
-    Effect.map(canonicalJsonTextPretty),
-    Effect.catch(
-      Effect.fn(function* (error) {
-        yield* Console.error(`[goals:index] could not encode the JSON report: ${error.message}`);
-        return yield* failWithReportedExit("goals index: could not encode the JSON report.");
-      })
-    )
+  // The report is built through `PortfolioIndexReport.make`, so encoding it cannot fail; a failure
+  // here is a defect, not a reportable command outcome.
+  const rendered = yield* S.encodeEffect(PortfolioIndexReport)(report).pipe(
+    Effect.orDie,
+    Effect.map(canonicalJsonTextPretty)
   );
   yield* Console.log(Str.trimEnd(rendered));
 });
