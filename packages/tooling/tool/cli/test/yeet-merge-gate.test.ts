@@ -61,9 +61,9 @@ import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
-import { githubFetch, reply } from "./support/GithubFetch.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
