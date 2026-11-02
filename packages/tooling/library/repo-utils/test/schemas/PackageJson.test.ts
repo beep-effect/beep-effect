@@ -887,6 +887,34 @@ describe("PackageJson schema", () => {
     );
 
     it.effect(
+      "keeps publishConfig imports and typesVersions order while keeping the rest-key layout",
+      Effect.fn(function* () {
+        const normalized = yield* normalizePackageJsonEffect({
+          name: "pkg",
+          publishConfig: {
+            typesVersions: {
+              ">=4.2": { "z/*": ["ts4.2/z/*"], "*": ["ts4.2/*", "ts4.2-fallback/*"] },
+              "*": { "*": ["ts-old/*"] },
+            },
+            imports: {
+              "#z": { node: "./dist/z-node.js", default: "./dist/z.js" },
+              "#a": "./dist/a.js",
+            },
+            access: "public",
+          },
+        });
+
+        const publishConfig = normalized.publishConfig;
+        expect(objectKeys(publishConfig)).toEqual(["access", "imports", "typesVersions"]);
+        expect(objectKeys(childAt(publishConfig, "imports"))).toEqual(["#a", "#z"]);
+        expect(objectKeys(childAt(publishConfig, "imports", "#z"))).toEqual(["node", "default"]);
+        expect(objectKeys(childAt(publishConfig, "typesVersions"))).toEqual([">=4.2", "*"]);
+        expect(objectKeys(childAt(publishConfig, "typesVersions", ">=4.2"))).toEqual(["z/*", "*"]);
+        expect(childAt(publishConfig, "typesVersions", ">=4.2", "*")).toEqual(["ts4.2/*", "ts4.2-fallback/*"]);
+      })
+    );
+
+    it.effect(
       "keeps typesVersions range priority, inner pattern order and fallback order",
       Effect.fn(function* () {
         const normalized = yield* normalizePackageJsonEffect({

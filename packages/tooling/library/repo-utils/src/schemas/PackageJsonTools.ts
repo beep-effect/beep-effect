@@ -126,11 +126,13 @@ const canonicalizePublishConfigValue = (key: string, value: unknown): unknown =>
 };
 
 // Lay out a JSON object with its documented keys first, in `keyOrder`, then every other key sorted, with
-// `canonicalizeKnown` applied to the documented values and the unknown values canonicalized recursively.
+// `canonicalizeKnown` applied to the documented values and `canonicalizeRest` (by default a recursive key sort)
+// applied to the other values.
 const orderObjectKeys = (
   value: Readonly<Record<string, unknown>>,
   keyOrder: ReadonlyArray<string>,
-  canonicalizeKnown: (key: string, value: unknown) => unknown
+  canonicalizeKnown: (key: string, value: unknown) => unknown,
+  canonicalizeRest: (key: string, value: unknown) => unknown = (_, entry) => canonicalizeUnknownValue(entry)
 ): Record<string, unknown> => {
   let out = R.empty<string, unknown>();
   for (const key of keyOrder) {
@@ -144,9 +146,21 @@ const orderObjectKeys = (
     A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
   );
   for (const [key, entryValue] of remaining) {
-    out = R.set(out, key, canonicalizeUnknownValue(entryValue));
+    out = R.set(out, key, canonicalizeRest(key, entryValue));
   }
   return out;
+};
+
+// publishConfig may override order-semantic manifest fields at publish time (for example `imports` or
+// `typesVersions`); those keep the same order rules as their top-level counterparts.
+const canonicalizePublishConfigRestValue = (key: string, value: unknown): unknown => {
+  if (key === "imports") {
+    return canonicalizeImportsValue(value);
+  }
+  if (key === "typesVersions") {
+    return value;
+  }
+  return canonicalizeUnknownValue(value);
 };
 
 const canonicalizePublishConfig = (
@@ -155,7 +169,12 @@ const canonicalizePublishConfig = (
   isStringRecord(value)
     ? Result.getOrThrow(
         S.decodeUnknownResult(PublishConfig)(
-          orderObjectKeys(value, publishConfigKeyOrder, canonicalizePublishConfigValue)
+          orderObjectKeys(
+            value,
+            publishConfigKeyOrder,
+            canonicalizePublishConfigValue,
+            canonicalizePublishConfigRestValue
+          )
         )
       )
     : value;

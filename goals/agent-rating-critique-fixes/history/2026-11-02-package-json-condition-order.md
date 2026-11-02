@@ -80,6 +80,40 @@ The existing case "normalizes top-level ordering and nested map ordering"
 Red-before was re-run after a test-helper fix (see Friction). The fixed source
 was copied aside and restored byte-identical (`cmp`).
 
+## Review follow-up (independent review 6581113281)
+
+- **Advisory A, fixed:** `publishConfig` rest keys were still sorted
+  recursively.
+  - `PublishConfig` allows any extra JSON key. `orderObjectKeys` sent every key
+    outside `access, tag, registry, provenance, bin, exports` through
+    `canonicalizeUnknownValue`, so `publishConfig.imports` and
+    `publishConfig.typesVersions` (publish-time overrides) had the same defect.
+  - `orderObjectKeys` now takes an optional rest canonicalizer. It defaults to
+    the previous recursive sort, so `repository` is unchanged.
+  - `publishConfig` passes `canonicalizePublishConfigRestValue`: `imports` goes
+    through `canonicalizeImportsValue`, and `typesVersions` keeps input order.
+  - The rest-key **layout** is unchanged (documented keys first, others
+    sorted).
+  - No tracked manifest uses either key today (per the review: all 158
+    `publishConfig` blocks use only `access`, `bin`, `exports`,
+    `provenance`), so this was latent.
+- **New regression case:** "keeps publishConfig imports and typesVersions
+  order while keeping the rest-key layout". Against the previous head
+  `97baaee7`: **1 failed, 63 passed (64)** (`imports["#z"]` came out
+  `default, node`). After the fix: **64 passed**. `biome check` and the
+  test-config typecheck are clean.
+- **Advisory B, routed, not fixed here:** the parent routed the
+  `ghaRunners` decode outlier to the runner-trust/infra owner, #2590
+  (comment 6581151528; the prior packet was #2565). That owner decides whether
+  the SDK manifest is intentionally outside generic `PackageJson`
+  normalization (and leaves this canary) or is a model-boundary defect. No
+  schema expansion or infra change is made here.
+- **Parent's evidence, kept separate:** the parent's non-root run at
+  `97baaee7`: all 245 tests in 21 files passed, no skips; repo-utils lint and
+  check passed with qualified (built) dependencies. My uid-0 results below stay
+  as recorded. My `bun run check` failure is a limitation of the cloud VM's
+  unbuilt dependencies and is still not a pass.
+
 ## Real-manifest canary (in memory, nothing written)
 
 All 215 tracked `package.json` files were normalized with the fixed source:
@@ -91,7 +125,8 @@ All 215 tracked `package.json` files were normalized with the fixed source:
 - 1 failed to decode: `infra/ci-runners/sdks/ghaRunners/package.json`,
   `SchemaError(Expected no excess property at ["pulumi"])`. It fails
   **identically with `main`'s source**, so it is inherited and unrelated to
-  ordering. The manifest is in the infra area, out of scope.
+  ordering. It is routed to the infra owner, #2590 (6581151528); see the
+  review follow-up above.
 
 ## Other checks
 
