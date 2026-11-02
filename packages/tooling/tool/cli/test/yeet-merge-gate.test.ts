@@ -934,52 +934,68 @@ const squashAnswers = (script: GhScript): ReadonlyArray<readonly [string, Script
     ],
   ];
 };
-const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAnswer]> => [
-  ["/merge", { exitCode: 0, output: script.mergeResponse }],
-  // S11 post-merge steps: the PR comment, the leftover-run listings, and each cancel.
-  [`/issues/${pullFixture.number}/comments`, { exitCode: script.commentExit ?? 0, output: "{}" }],
-  // Run 14 belongs to another head; the server-side filter should not return it, and the gate never cancels it.
-  [
-    "/actions/runs?",
-    {
-      exitCode: script.queuedExit ?? 0,
-      output: encodeJson(workflowRunPages(script.additionalActiveRuns)),
-    },
-  ],
-  [`/runs/${script.cancelFailId ?? -1}/cancel`, { exitCode: 1, output: "cancel refused" }],
-  ["/cancel", { exitCode: 0, output: "" }],
-  // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
-  [
-    "/timeline",
-    { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
-  ],
-  ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
-  ["graphql", { exitCode: script.threadsExit, output: encodeJson(script.threads ?? threadsFixture) }],
-  ["rules/branches/", { exitCode: script.rulesExit, output: encodeJson(scriptReviewerRules(script)) }],
-  ["?check_name=beep-reviewer", { exitCode: 0, output: encodeJson(scriptReviewerPage(script)) }],
-  // The inherited-red evidence: the merge base of base...head, then its check runs. By
-  // default the base mirrors the head, so a scripted red on the head reads as inherited.
-  [
-    `/compare/${pullFixture.base.ref}...${headSha}`,
-    {
-      exitCode: script.compareExit ?? 0,
-      output: encodeJson({
-        merge_base_commit: { sha: mergeBaseSha },
-        base_commit: { sha: script.baseTipSha ?? mergeBaseSha },
-      }),
-    },
-  ],
-  [
-    `commits/${mergeBaseSha}/check-runs`,
-    { exitCode: 0, output: encodeJson([script.baseCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
-  ],
-  [
-    `commits/${script.baseTipSha ?? "none"}/check-runs`,
-    { exitCode: 0, output: encodeJson([script.baseTipCheckRuns ?? script.checkRuns ?? checkRunsFixture]) },
-  ],
-  ["/check-runs", { exitCode: 0, output: encodeJson([script.checkRuns ?? checkRunsFixture]) }],
-  ...squashAnswers(script),
-];
+// The optional script knobs resolve once, outside the answer table, so the table itself
+// carries no branching (fallow health: the inline `??` chain scored cognitive 11).
+const scriptExits = (script: GhScript) => ({
+  commentExit: script.commentExit ?? 0,
+  queuedExit: script.queuedExit ?? 0,
+  cancelFailId: script.cancelFailId ?? -1,
+  compareExit: script.compareExit ?? 0,
+});
+const scriptCheckRuns = (script: GhScript) => {
+  const checkRuns = script.checkRuns ?? checkRunsFixture;
+  return {
+    checkRuns,
+    baseCheckRuns: script.baseCheckRuns ?? checkRuns,
+    baseTipCheckRuns: script.baseTipCheckRuns ?? checkRuns,
+    baseTipSha: script.baseTipSha ?? mergeBaseSha,
+    baseTipPath: script.baseTipSha ?? "none",
+  };
+};
+const ghAnswers = (script: GhScript): ReadonlyArray<readonly [string, ScriptedAnswer]> => {
+  const exits = scriptExits(script);
+  const runs = scriptCheckRuns(script);
+  return [
+    ["/merge", { exitCode: 0, output: script.mergeResponse }],
+    // S11 post-merge steps: the PR comment, the leftover-run listings, and each cancel.
+    [`/issues/${pullFixture.number}/comments`, { exitCode: exits.commentExit, output: "{}" }],
+    // Run 14 belongs to another head; the server-side filter should not return it, and the gate never cancels it.
+    [
+      "/actions/runs?",
+      {
+        exitCode: exits.queuedExit,
+        output: encodeJson(workflowRunPages(script.additionalActiveRuns)),
+      },
+    ],
+    [`/runs/${exits.cancelFailId}/cancel`, { exitCode: 1, output: "cancel refused" }],
+    ["/cancel", { exitCode: 0, output: "" }],
+    // The review-window reader asks through --jq: timeline rows as `<event>\t<instant>`, suites as instants.
+    [
+      "/timeline",
+      { exitCode: script.windowExit, output: `${timelineFixture[0]?.event ?? "ready_for_review"}\t${readyAtIso}\n` },
+    ],
+    ["/check-suites", { exitCode: script.windowExit, output: A.join(suiteInstants, "\n") }],
+    ["graphql", { exitCode: script.threadsExit, output: encodeJson(script.threads ?? threadsFixture) }],
+    ["rules/branches/", { exitCode: script.rulesExit, output: encodeJson(scriptReviewerRules(script)) }],
+    ["?check_name=beep-reviewer", { exitCode: 0, output: encodeJson(scriptReviewerPage(script)) }],
+    // The inherited-red evidence: the merge base of base...head, then its check runs. By
+    // default the base mirrors the head, so a scripted red on the head reads as inherited.
+    [
+      `/compare/${pullFixture.base.ref}...${headSha}`,
+      {
+        exitCode: exits.compareExit,
+        output: encodeJson({
+          merge_base_commit: { sha: mergeBaseSha },
+          base_commit: { sha: runs.baseTipSha },
+        }),
+      },
+    ],
+    [`commits/${mergeBaseSha}/check-runs`, { exitCode: 0, output: encodeJson([runs.baseCheckRuns]) }],
+    [`commits/${runs.baseTipPath}/check-runs`, { exitCode: 0, output: encodeJson([runs.baseTipCheckRuns]) }],
+    ["/check-runs", { exitCode: 0, output: encodeJson([runs.checkRuns]) }],
+    ...squashAnswers(script),
+  ];
+};
 
 // `bunx commitlint` is scripted too: the gate's own tests never run the real
 // linter (yeet-squash-commitlint.test.ts does); by default it passes.
@@ -1155,7 +1171,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           (calls) =>
             Effect.gen(function* () {
               const result = yield* readMergeGate(context, pullFixture.number);
-              expect(O.map(result.baseRuns, (base) => base.baseTip.sha)).toEqual(O.some(baseTipSha));
+              assertSome(
+                O.map(result.baseRuns, (base) => base.baseTip.sha),
+                baseTipSha
+              );
               return yield* Ref.get(calls);
             })
         );
