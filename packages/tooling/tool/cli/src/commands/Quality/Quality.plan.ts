@@ -176,7 +176,15 @@ export const detectQualityProfile = (): QualityProfileDetection =>
   );
 
 /**
- * Environment names a local concurrency plan reads.
+ * Environment name of the Check and policy lint width override.
+ *
+ * **Example** (Read the override name)
+ *
+ * ```ts
+ * import { QUALITY_CHECK_CONCURRENCY_ENV } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(QUALITY_CHECK_CONCURRENCY_ENV) // "BEEP_QUALITY_CHECK_CONCURRENCY"
+ * ```
  *
  * @category configuration
  * @since 0.0.0
@@ -184,6 +192,14 @@ export const detectQualityProfile = (): QualityProfileDetection =>
 export const QUALITY_CHECK_CONCURRENCY_ENV = "BEEP_QUALITY_CHECK_CONCURRENCY";
 /**
  * Environment name of the cheap-gate lane width override.
+ *
+ * **Example** (Read the override name)
+ *
+ * ```ts
+ * import { QUALITY_CHEAP_GATE_CONCURRENCY_ENV } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(QUALITY_CHEAP_GATE_CONCURRENCY_ENV) // "BEEP_QUALITY_CHEAP_GATE_CONCURRENCY"
+ * ```
  *
  * @category configuration
  * @since 0.0.0

@@ -1,0 +1,20 @@
+{
+  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (profile-derived quality concurrency, claude/perf-quality-concurrency-d42a27)",
+    "reason": "Record Quality.plan.ts, ProcessAttachment.ts and ProcessTable.ts added to the goals-doctor, knowledge and lint-deprecated-apis policy-fingerprint seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/quality-concurrency-cache-review-2026-11-02.md",
+      "sha256": "9f9191532523b9e980ec887c1ca395276ca3d00ffe64dcaac7d32a44bbf5aca1"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
