@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -33,10 +34,10 @@ describe("RootAliasTarget and WildcardAliasTarget", () => {
 describe("resolveRootExportTarget", () => {
   it("resolves a bare string export and rejects non-relative or non-path values", () => {
     expect(O.getOrUndefined(resolveRootExportTarget("./src/index.ts"))).toBe("./src/index.ts");
-    expect(O.isNone(resolveRootExportTarget("src/index.ts"))).toBe(true);
-    expect(O.isNone(resolveRootExportTarget(null))).toBe(true);
-    expect(O.isNone(resolveRootExportTarget(42))).toBe(true);
-    expect(O.isNone(resolveRootExportTarget({ ".": null }))).toBe(true);
+    assertNone(resolveRootExportTarget("src/index.ts"));
+    assertNone(resolveRootExportTarget(null));
+    assertNone(resolveRootExportTarget(42));
+    assertNone(resolveRootExportTarget({ ".": null }));
   });
 
   it("follows the repo condition priority, not object key order", () => {
@@ -74,7 +75,7 @@ describe("resolveRootExportTarget", () => {
   });
 
   it("returns none when the export map only declares subpaths", () => {
-    expect(O.isNone(resolveRootExportTarget({ "./testing": "./src/testing.ts", "./*": "./src/*.ts" }))).toBe(true);
+    assertNone(resolveRootExportTarget({ "./testing": "./src/testing.ts", "./*": "./src/*.ts" }));
   });
 });
 
@@ -92,14 +93,14 @@ describe("resolveSubpathExportTarget and resolveWildcardExportTarget", () => {
   });
 
   it("returns none for missing subpaths, blocked (null) subpaths and non-map exports", () => {
-    expect(O.isNone(resolveSubpathExportTarget(exportsField, "./missing"))).toBe(true);
-    expect(O.isNone(resolveSubpathExportTarget(exportsField, "./internal/*"))).toBe(true);
-    expect(O.isNone(resolveSubpathExportTarget("./src/index.ts", "./testing"))).toBe(true);
+    assertNone(resolveSubpathExportTarget(exportsField, "./missing"));
+    assertNone(resolveSubpathExportTarget(exportsField, "./internal/*"));
+    assertNone(resolveSubpathExportTarget("./src/index.ts", "./testing"));
   });
 
   it("resolves the ./* wildcard entry only when the map declares one", () => {
     expect(O.getOrUndefined(resolveWildcardExportTarget(exportsField))).toBe("./src/*.ts");
-    expect(O.isNone(resolveWildcardExportTarget({ ".": "./src/index.ts" }))).toBe(true);
+    assertNone(resolveWildcardExportTarget({ ".": "./src/index.ts" }));
   });
 });
 
