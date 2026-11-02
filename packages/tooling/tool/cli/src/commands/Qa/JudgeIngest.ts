@@ -27,6 +27,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { encodeQaInventory } from "./Inventory.schemas.ts";
@@ -349,12 +350,14 @@ export const writeQaJudgeCertificate = Effect.fn("QaJudgeIngest.writeQaJudgeCert
   layout: RoundLayout,
   settlement: QaJudgeSettlement
 ): Effect.fn.Return<QaJudgeCertificate, QaCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const encoded = yield* encodeQaJudgeCertificate(settlement);
-  yield* fs
-    .writeFile(path.join(layout.root, GATE_CERTIFICATE_FILE), encoded.bytes)
-    .pipe(QaCommandError.mapError(`qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}.`));
+  // Temporary file plus rename: a failed write never truncates a certificate
+  // already on disk.
+  yield* writeFileWithinRootAtomically({
+    bytes: encoded.bytes,
+    candidate: GATE_CERTIFICATE_FILE,
+    root: layout.root,
+  }).pipe(QaCommandError.mapError(`qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}.`));
   return encoded.certificate;
 });
 
@@ -379,8 +382,9 @@ const encodeQaJudgeCertificate = Effect.fn("QaJudgeIngest.encodeQaJudgeCertifica
  * plus rename). The prior bytes of every target are read first; when a write
  * fails, every target is put back to its prior bytes, or removed if it did
  * not exist, so a failed run never leaves a new inventory beside an old or
- * missing certificate. This is failure rollback, not crash atomicity across
- * files.
+ * missing certificate. Commit and rollback run uninterruptibly, so a
+ * cancelled run also ends with a complete old or new set. This is not crash
+ * atomicity across files (a process kill can still stop between renames).
  */
 const commitRoundArtifacts = Effect.fn("QaJudgeIngest.commitRoundArtifacts")(function* (
   root: string,
@@ -397,36 +401,60 @@ const commitRoundArtifacts = Effect.fn("QaJudgeIngest.commitRoundArtifacts")(fun
         Effect.flatMap((exists) => (exists ? Effect.asSome(fs.readFile(path.join(root, name))) : Effect.succeedNone))
       )
   ).pipe(QaCommandError.mapError(`qa judge-ingest could not read the previous artifacts in ${root}.`));
-  const restore = Effect.forEach(
-    A.zip(artifacts, prior),
-    ([[name], before]) =>
+  // Only targets that were actually committed are rolled back. Every one of
+  // them is restored even if an earlier restore fails; each failure is kept
+  // with the file it belongs to.
+  const committed = yield* Ref.make(0);
+  const restore = (count: number) =>
+    Effect.forEach(A.take(A.zip(artifacts, prior), count), ([[name], before]) =>
       O.match(before, {
-        onNone: () => fs.remove(path.join(root, name), { force: true }),
-        onSome: (bytes) => write(name, bytes),
-      }),
-    { discard: true }
-  );
-  yield* Effect.forEach(artifacts, ([name, bytes]) => write(name, bytes), { discard: true }).pipe(
-    Effect.catch((cause) =>
-      restore.pipe(
-        Effect.matchEffect({
-          onFailure: (restoreCause) =>
-            Effect.fail(
-              QaCommandError.make({
-                cause: [cause, restoreCause],
-                message: `qa judge-ingest could not write into ${root}, and restoring the previous inventory and gate certificate also failed; check ${root} by hand.`,
-              })
-            ),
-          onSuccess: () =>
-            Effect.fail(
-              QaCommandError.make({
-                cause,
-                message: `qa judge-ingest could not write into ${root}; the previous inventory and gate certificate were restored.`,
-              })
-            ),
+        onNone: () =>
+          fs.remove(path.join(root, name), { force: true }).pipe(QaCommandError.mapError(`could not remove ${name}`)),
+        onSome: (bytes) => write(name, bytes).pipe(QaCommandError.mapError(`could not restore ${name}`)),
+      }).pipe(
+        Effect.match({
+          onFailure: (error) => O.some({ error, name }),
+          onSuccess: () => O.none(),
         })
       )
-    )
+    ).pipe(Effect.map((results) => A.getSomes(results)));
+  // The commit and its rollback form one uninterruptible critical section: an
+  // interruption that arrives mid-commit takes effect only once the set is
+  // either fully written or fully restored, never between files.
+  yield* Effect.forEach(
+    artifacts,
+    ([name, bytes]) => write(name, bytes).pipe(Effect.andThen(Ref.update(committed, (count) => count + 1))),
+    { discard: true }
+  ).pipe(
+    Effect.catch((cause) =>
+      Effect.flatMap(Ref.get(committed), (count) =>
+        Effect.flatMap(restore(count), (failures) =>
+          A.match(failures, {
+            onEmpty: () =>
+              Effect.fail(
+                QaCommandError.make({
+                  cause,
+                  message:
+                    count === 0
+                      ? `qa judge-ingest could not write into ${root}; no file was changed.`
+                      : `qa judge-ingest could not write into ${root}; the previous inventory and gate certificate were restored.`,
+                })
+              ),
+            onNonEmpty: (unrestored) =>
+              Effect.fail(
+                QaCommandError.make({
+                  cause: [cause, ...A.map(unrestored, ({ error }) => error)],
+                  message: `qa judge-ingest could not write into ${root}, and restoring ${A.join(
+                    A.map(unrestored, ({ name }) => name),
+                    ", "
+                  )} also failed; the other files were restored. Check ${root} by hand.`,
+                })
+              ),
+          })
+        )
+      )
+    ),
+    Effect.uninterruptible
   );
 });
 

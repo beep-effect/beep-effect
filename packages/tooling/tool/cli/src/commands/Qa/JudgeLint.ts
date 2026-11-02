@@ -18,6 +18,7 @@ import { SessionStore } from "@beep/qa-capture";
 import * as A from "@beep/utils/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
+import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -60,8 +61,7 @@ const utf8Decoder = new TextDecoder();
  * ```ts
  * import { runQaJudgeLint } from "@beep/repo-cli/commands/Qa/JudgeLint"
  * import { QaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect";
  * const program = runQaJudgeLint("/repo", QaJudgeLintOptions.make({ round: 3 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -83,22 +83,21 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
 
   const layout = store.roundLayout(qaRootPath(path, cwd), options.round);
   const inventoryPath = inventoryJsonPath(path, layout);
+  // Only a genuinely missing inventory invalidates a certificate left by an
+  // earlier run; any other read failure (permissions, I/O) keeps it.
+  const removeStaleCertificate = fs
+    .remove(path.join(layout.root, GATE_CERTIFICATE_FILE), { force: true })
+    .pipe(
+      Effect.catch((error) =>
+        Console.error(
+          `qa judge-lint warning: could not remove the stale ${GATE_CERTIFICATE_FILE} in ${layout.root}: ${error.message}`
+        )
+      )
+    );
   const bytes = yield* fs.readFile(inventoryPath).pipe(
+    Effect.tapError((error) => (Eq.equals(error.reason._tag, "NotFound") ? removeStaleCertificate : Effect.void)),
     QaCommandError.mapError(
       `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round ${options.round} --from <file>\` first.`
-    ),
-    // Without an inventory there is nothing a certificate can describe, so a
-    // certificate left by an earlier run is removed rather than left standing.
-    Effect.tapError(() =>
-      fs
-        .remove(path.join(layout.root, GATE_CERTIFICATE_FILE), { force: true })
-        .pipe(
-          Effect.catch((error) =>
-            Console.error(
-              `qa judge-lint warning: could not remove the stale ${GATE_CERTIFICATE_FILE} in ${layout.root}: ${error.message}`
-            )
-          )
-        )
     )
   );
   const subject = yield* inventoryEvidenceSubject(bytes);
