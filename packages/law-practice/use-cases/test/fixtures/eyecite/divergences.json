@@ -357,7 +357,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-          "sha256": "441bbf80da49f262d93c00d5819fa347ad7baf05ec37c16cee53f15c3546c1e4"
+          "sha256": "739b85420b745b7b78fd5d962e9eafb497a92f0415c955b51c038f1b2aaea2bc"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlInput.test.ts",

@@ -109,23 +109,99 @@ const skipSpace = Effect.fnUntraced(function* (read: ReadPoint, length: number, 
 });
 // The same linear declaration detector can read legacy UTF-16 units or exact
 // native Python points. No JavaScript projection is needed for native input.
+const encodingAt = (read: ReadPoint, index: number) =>
+  index >= 7 && HashSet.has(whitespace, read(index - 1)) && matches(read, index, encodingName);
+const quote = (point: number) => point === 34 || point === 39;
+const nextEncoding = Effect.fnUntraced(function* (read: ReadPoint, length: number, start: number) {
+  for (let index = start; index < length; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    if (read(index) === 62) return -1;
+    if (encodingAt(read, index)) return index;
+  }
+  return -1;
+});
+const closesQuote = Effect.fnUntraced(function* (read: ReadPoint, length: number, start: number) {
+  for (let index = start; index < length; index++) {
+    if (index % 4096 === 0) yield* Effect.yieldNow;
+    if (quote(read(index))) return true;
+  }
+  return false;
+});
 const hasDeclaration = Effect.fnUntraced(function* (read: ReadPoint, length: number) {
   if (!matches(read, 0, xmlPrefix)) return false;
-  for (let index = 5; index < length; index++) {
-    if (index % 4096 === 0) yield* Effect.yieldNow;
-    if (read(index) === 62) return false;
-    if (index < 7 || !HashSet.has(whitespace, read(index - 1)) || !matches(read, index, encodingName)) continue;
+  let start = 5;
+  while (start < length) {
+    const index = yield* nextEncoding(read, length, start);
+    if (index < 0) return false;
+    start = index + 1;
     let cursor = yield* skipSpace(read, length, index + 8);
     if (read(cursor) !== 61) continue;
     cursor = yield* skipSpace(read, length, cursor + 1);
-    if (read(cursor) !== 34 && read(cursor) !== 39) continue;
-    for (cursor++; cursor < length; cursor++) {
-      if (cursor % 4096 === 0) yield* Effect.yieldNow;
-      if (read(cursor) === 34 || read(cursor) === 39) return true;
-    }
-    return false;
+    if (!quote(read(cursor))) continue;
+    return yield* closesQuote(read, length, cursor + 1);
   }
   return false;
+});
+const pointUnits = (point: number) => (point > 0xffff ? 2 : 1);
+const nativeWidth = (maximum: number) => (maximum <= 0xff ? 1 : maximum <= 0xffff ? 2 : 4);
+const nativeEncoding = (maximum: number): typeof Encoding.Type =>
+  maximum <= 0x7f ? "UTF-8" : maximum <= 0xff ? "ISO-8859-1" : maximum <= 0xffff ? "UTF-16LE" : "UTF-32LE";
+const fullDocument = (read: ReadPoint, start: number) =>
+  matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
+const nativeReader =
+  (source: typeof NativeStorage.Type): ReadPoint =>
+  (index) => {
+    if (index < 0 || index >= source.bytes.byteLength / source.width) return -1;
+    let point = 0;
+    for (let part = 0; part < source.width; part++)
+      point += O.getOrElse(O.fromUndefinedOr(source.bytes[index * source.width + part]), () => 0) * 2 ** (8 * part);
+    return point;
+  };
+const textLayout = Effect.fnUntraced(function* (text: string) {
+  let maximum = 0;
+  let points = 0;
+  let nextYield = 0;
+  for (let index = 0; index < Str.length(text); ) {
+    if (index >= nextYield) {
+      yield* Effect.yieldNow;
+      nextYield = index + 4096;
+    }
+    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    maximum = Num.max(maximum, point);
+    points++;
+    index += pointUnits(point);
+  }
+  const width = nativeWidth(maximum);
+  return { width, encoding: nativeEncoding(maximum), size: width === 4 ? points * 4 : Str.length(text) * width };
+});
+const encodeText = Effect.fnUntraced(function* (text: string, size: number, width: number) {
+  const bytes = new Uint8Array(size);
+  const view = new DataView(bytes.buffer);
+  let offset = 0;
+  let nextYield = 0;
+  for (let index = 0; index < Str.length(text); ) {
+    if (index >= nextYield) {
+      yield* Effect.yieldNow;
+      nextYield = index + 4096;
+    }
+    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    if (width === 1) view.setUint8(offset, point);
+    else if (width === 2) view.setUint16(offset, point, true);
+    else view.setUint32(offset, point, true);
+    offset += width;
+    index += pointUnits(point);
+  }
+  return bytes;
+});
+const byteSpace = (byte: number | undefined) => byte === 32 || (byte !== undefined && byte >= 9 && byte <= 13);
+const skipByteSpace = Effect.fnUntraced(function* (source: Uint8Array) {
+  let start = 0;
+  while (start < source.byteLength) {
+    if (start % 4096 === 0) yield* Effect.yieldNow;
+    if (!byteSpace(source[start])) break;
+    start++;
+  }
+  return start;
 });
 const rawText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
 const stageText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16));
@@ -149,6 +225,29 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
   const sourceCeiling = limits.sourceUtf16;
   const messageCeiling = limits.processMessageBytes;
   const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);
+  const copyTransport = Effect.fn("Citation.copyHtmlTransport")(function* (source: Uint8Array) {
+    const size = source.byteLength;
+    const bytes = new Uint8Array(size);
+    for (let offset = 0; offset < size; offset += 4096) {
+      yield* Effect.yieldNow;
+      if (source.byteLength !== size) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+      bytes.set(source.subarray(offset, Num.min(offset + 4096, size)), offset);
+    }
+    return bytes;
+  });
+  const nativeMaximum = Effect.fn("Citation.validateNativeHtmlPoints")(function* (read: ReadPoint, length: number) {
+    let largest = 0;
+    let units = 0;
+    for (let index = 0; index < length; index++) {
+      if (index % 4096 === 0) yield* Effect.yieldNow;
+      const point = read(index);
+      if (point > 0x10ffff) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+      largest = Num.max(largest, point);
+      units += pointUnits(point);
+      if (units > CitationEngineAbsoluteMaxima.producedTextUtf16) return yield* safety("producedTextUtf16");
+    }
+    return largest;
+  });
   const prepare = Effect.fn("Citation.prepareHtmlBuffer")(
     function* <E>(
       input: unknown,
@@ -166,42 +265,11 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
         if (yield* hasDeclaration(read, length))
           return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
         const start = yield* skipSpace(read, length, 0);
-        const fullHtml = matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
-        let maximum = 0;
-        let points = 0;
-        let nextYield = 0;
-        for (let index = 0; index < length; ) {
-          if (index >= nextYield) {
-            yield* Effect.yieldNow;
-            nextYield = index + 4096;
-          }
-          const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-          if (point > maximum) maximum = point;
-          points++;
-          index += point > 0xffff ? 2 : 1;
-        }
-        const encoding =
-          maximum <= 0x7f ? "UTF-8" : maximum <= 0xff ? "ISO-8859-1" : maximum <= 0xffff ? "UTF-16LE" : "UTF-32LE";
-        const width = maximum <= 0xff ? 1 : maximum <= 0xffff ? 2 : 4;
-        const size = width === 4 ? points * 4 : length * width;
+        const fullHtml = fullDocument(read, start);
+        const { width, encoding, size } = yield* textLayout(text);
         if (size > messageCeiling) return yield* safety("processMessageBytes");
         yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
-        const bytes = new Uint8Array(size);
-        const view = new DataView(bytes.buffer);
-        let offset = 0;
-        nextYield = 0;
-        for (let index = 0; index < length; ) {
-          if (index >= nextYield) {
-            yield* Effect.yieldNow;
-            nextYield = index + 4096;
-          }
-          const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-          if (width === 1) view.setUint8(offset, point);
-          else if (width === 2) view.setUint16(offset, point, true);
-          else view.setUint32(offset, point, true);
-          offset += width;
-          index += point > 0xffff ? 2 : 1;
-        }
+        const bytes = yield* encodeText(text, size, width);
         return CitationHtmlInput.make({ encoding, bytes, fullHtml });
       }).pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) }));
     },
@@ -217,28 +285,11 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       );
       const size = source.byteLength;
       if (size > messageCeiling) return yield* safety("processMessageBytes");
-      let start = 0;
-      while (start < size) {
-        if (start % 4096 === 0) yield* Effect.yieldNow;
-        const byte = source[start];
-        if (byte !== 32 && (byte === undefined || byte < 9 || byte > 13)) break;
-        start++;
-      }
-      const matches = (prefix: ReadonlyArray<number>) => {
-        for (let index = 0; index < prefix.length; index++) {
-          const byte = source[start + index];
-          if (byte === undefined || (byte >= 65 && byte <= 90 ? byte + 32 : byte) !== prefix[index]) return false;
-        }
-        return true;
-      };
-      const fullHtml = matches([60, 104, 116, 109, 108]) || matches([60, 33, 100, 111, 99, 116, 121, 112, 101]);
+      const start = yield* skipByteSpace(source);
+      const read = (index: number) => O.getOrElse(O.fromUndefinedOr(source[index]), () => -1);
+      const fullHtml = fullDocument(read, start);
       yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding: "AUTO", fullHtml, byteLength: size }));
-      const bytes = new Uint8Array(size);
-      for (let offset = 0; offset < size; offset += 4096) {
-        yield* Effect.yieldNow;
-        if (source.byteLength !== size) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
-        bytes.set(source.subarray(offset, Num.min(offset + 4096, size)), offset);
-      }
+      const bytes = yield* copyTransport(source);
       return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
     },
     (body) =>
@@ -256,37 +307,17 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
       if (size > messageCeiling) return yield* safety("processMessageBytes");
       const length = size / source.width;
-      const read = (index: number) => {
-        if (index < 0 || index >= length) return -1;
-        let point = 0;
-        for (let part = 0; part < source.width; part++)
-          point += O.getOrElse(O.fromUndefinedOr(source.bytes[index * source.width + part]), () => 0) * 2 ** (8 * part);
-        return point;
-      };
-      let largest = 0;
-      let units = 0;
-      for (let index = 0; index < length; index++) {
-        if (index % 4096 === 0) yield* Effect.yieldNow;
-        const point = read(index);
-        if (point > 0x10ffff) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
-        if (point > largest) largest = point;
-        units += point > 65535 ? 2 : 1;
-        if (units > CitationEngineAbsoluteMaxima.producedTextUtf16) return yield* safety("producedTextUtf16");
-      }
-      const width = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
+      const read = nativeReader(source);
+      const largest = yield* nativeMaximum(read, length);
+      const width = nativeWidth(largest);
       if (source.width !== width) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
       if (yield* hasDeclaration(read, length))
         return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
       const start = yield* skipSpace(read, length, 0);
-      const fullHtml = matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
-      const encoding = width === 1 ? (largest <= 127 ? "UTF-8" : "ISO-8859-1") : width === 2 ? "UTF-16LE" : "UTF-32LE";
+      const fullHtml = fullDocument(read, start);
+      const encoding = nativeEncoding(largest);
       yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
-      const bytes = new Uint8Array(size);
-      for (let offset = 0; offset < size; offset += 4096) {
-        yield* Effect.yieldNow;
-        if (source.bytes.byteLength !== size) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
-        bytes.set(source.bytes.subarray(offset, Num.min(offset + 4096, size)), offset);
-      }
+      const bytes = yield* copyTransport(source.bytes);
       return CitationHtmlInput.make({ encoding, bytes, fullHtml });
     },
     (body) =>
