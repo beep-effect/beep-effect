@@ -310,6 +310,10 @@ const runWriter = Effect.fnUntraced(function* (
       CODEX_INTERNAL_ORIGINATOR_OVERRIDE: "",
       CODEX_THREAD_ID: "",
       TERM_PROGRAM: "",
+      // These cases prove the desktop launch path, so they name a non-cloud host;
+      // an ambient cloud container's `BEEP_AGENT_HOST=cloud` would otherwise
+      // suppress the notifier under the D3 guard.
+      BEEP_AGENT_HOST: "",
       ...hostEnv,
     },
     stdin: { stream: Stream.encodeText(Stream.make(stdin)), endOnDone: true },

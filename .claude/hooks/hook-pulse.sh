@@ -890,7 +890,10 @@ printf '%s\n' "${row}" >>"${store}/hook-pulse-${shard}.ndjson" 2>/dev/null || { 
 # request. `setsid -f` prevents the hook runner from waiting through reminder
 # sleeps; both inherited streams are closed so this path cannot influence the
 # permission decision or retain the hook protocol pipe.
-if [ "${notifier_rev}" != "log-only-0" ]; then
+# A hosted cloud container has no desktop to notify (cloud-agent-readiness D3):
+# the explicit `BEEP_AGENT_HOST=cloud` skips only this notifier, after the row
+# above is already durable. Nothing here guesses the host from other signals.
+if [ "${notifier_rev}" != "log-only-0" ] && [ "${BEEP_AGENT_HOST:-}" != "cloud" ]; then
   notification_fields="$(
     jq -r '
       if .hookEvent == "PermissionRequest" and (.toolName | type) == "string" then
