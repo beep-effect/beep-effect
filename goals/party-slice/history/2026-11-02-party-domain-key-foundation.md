@@ -336,3 +336,27 @@ exited 0 with docgen passing and audit explicitly skipped. No aggregate
 repository final-check is claimed. Independent delta acceptance and eventual
 head proof remain separate gates. The parent corrected the stale ledger replay
 status as its single writer.
+
+
+## Parent main reconciliation and canonical package input registration
+
+The parent normally merged main `7740135bc1c945e02f5bea6994e7fef649ab72be`
+into this branch as `402878ccb963e66ae72b2c5fa62627f899561d7c`.
+The authored Party implementation, tests and prior history were unchanged.
+The hosted policy-fingerprint failure was reproduced by the canonical check.
+An isolated comparison established that the older exact base was stale, while
+current main passed the same canonical check and its writer produced no diff.
+The earlier request for a main seal repair was withdrawn on PR #2594.
+
+Against current main, the Party branch differed only by its new package manifest
+in the computed check-input set. Running the canonical policy-fingerprint writer
+added `packages/party/domain/package.json` to the generated declaration and Turbo
+inputs: two files, one addition each. No scripts, qualification scopes or baseline
+thresholds changed. The canonical check then passed, as did all five existing
+policy-fingerprint Turbo input tests. This is scoped red-before/green-after
+evidence; hosted checks and a new exact-head final-check remain separate gates.
+
+Friction: attributing an old base failure to current main initially routed an
+unnecessary repair. Rechecking the exact current main with the canonical writer
+and check prevented a competing root change. Future attribution must identify
+the current revision separately from the failing CI merge and its historical base.
