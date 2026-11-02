@@ -18,7 +18,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PRs #2444 and #2447 merged with required checks pending, so final PR #2523 closes the goal through a verdict-backed strict merge.",
+    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PRs #2444, #2447 and #2523 merged without a merge-ready readiness proof, so final PR #2583 closes the goal through the strict merge-ready gate.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -35,6 +35,10 @@
       },
       {
         "number": 2523,
+        "role": "supporting"
+      },
+      {
+        "number": 2583,
         "role": "final"
       }
     ],
@@ -46,7 +50,7 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-2-34f7d373ffcc/verdict.json",
+        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-3-d7fef6320c1c/verdict.json",
         "gating": true
       }
     ]
@@ -122,6 +126,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2523
+    "finalPullRequest": 2583
   }
 }

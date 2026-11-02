@@ -449,9 +449,9 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  *
  * **Details**
  *
- * KEEP (W1b): this reader stays on the bounded capture because `Git.changedFiles` takes no
- * pathspec yet; it moves onto the kit with the G7 dirty-axis flags in W2
- * (repo-cli-gh-git-consolidation PLAN "Waves").
+ * Runs `Git.changedFiles(repoRoot, { base, head, pathspec: ["bun.lock"] })` (the G7 pathspec,
+ * repo-cli-gh-git-consolidation W2, SPEC D-10); any failure reads as "unchanged", as the tolerant
+ * capture it replaces did.
  *
  * **Example** (Detect bun.lock changes)
  *
@@ -476,29 +476,24 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  */
 export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase")(function* (
   context: RepoRunContext
-): Effect.fn.Return<boolean, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const changed = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${context.base}...${context.head}`,
-    "--",
-    "bun.lock",
-  ]).pipe(Effect.orElseSucceed(A.empty<string>));
-  return !A.isReadonlyArrayEmpty(changed);
+): Effect.fn.Return<boolean, YeetCommandError, Git> {
+  const git = yield* Git;
+  const changed = yield* git
+    .changedFiles(context.repoRoot, { base: context.base, head: context.head, pathspec: ["bun.lock"] })
+    .pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.isReadonlyArrayNonEmpty(changed);
 });
 
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
- * **Example** (Decode a refused worktree add)
+ * **Example** (Represent a successful mutation without captured output)
  *
  * ```ts
  * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
- * import * as S from "effect/Schema"
  *
- * const exit = S.decodeUnknownSync(GitKitExit)({ exitCode: 128, output: "fatal: invalid reference" })
- * console.log(exit.exitCode) // 128
+ * const exit = GitKitExit.make({ exitCode: 0, output: "" })
+ * console.log(exit.exitCode) // 0
  * ```
  *
  * @category models
@@ -506,11 +501,11 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
  */
 export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
   S.Struct({
-    exitCode: S.Int,
+    exitCode: S.Finite,
     output: S.String,
   }).pipe(
     $I.annoteSchema("GitKitExit", {
-      description: "The exit code and output a repo-run capture reported for a git mutation.",
+      description: "A Git mutation's finite exit code and output, with empty output for a successful kit call.",
     })
   )
 ) {}

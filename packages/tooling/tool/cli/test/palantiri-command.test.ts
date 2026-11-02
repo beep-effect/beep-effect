@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   AccountHeadroomInput,
   AccountHeadroomSource,
@@ -206,7 +207,9 @@ describe("beep palantiri parcel account-headroom", () => {
     expect(A.map(parcel, (command) => command.name)).toEqual(["parcel", "parcels", "mcp"]);
   });
 
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })((it) => {
+  it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), {
+    timeout: "30 seconds",
+  })((it) => {
     it.effect("runs the live command over a collector snapshot", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

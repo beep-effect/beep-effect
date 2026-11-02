@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubContent } from "@beep/github/GitHubContent";
 import { CacheProducerEnvelope, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
@@ -87,10 +88,18 @@ const publishedFixture = Effect.fn("PrivateProducerObjectTest.publish")(function
   return { ...fixture, published, metadata };
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer))), {
-  timeout: "30 seconds",
-  concurrent: false,
-})("private producer object", (it) => {
+it.layer(
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+    Git.layer.pipe(Layer.provide(NodeServices.layer))
+  ),
+  {
+    timeout: "30 seconds",
+    concurrent: false,
+  }
+)("private producer object", (it) => {
   it.effect.prop(
     "uploads schema-generated run identities with exact canonical bytes and private S3 options",
     { run: CacheHostedProducerRunReference },

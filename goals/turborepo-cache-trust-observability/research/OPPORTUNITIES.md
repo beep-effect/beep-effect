@@ -1701,3 +1701,12 @@ seconds. The production thirty-second deadline, byte bounds and expected
 timeout/cancellation assertions are unchanged. The synchronized control passes.
 A presentation-only doctor flag was unsupported; the canonical doctor command
 passes without changing its baseline.
+
+### 2026-11-02 — accepted-main command-service integration
+
+Private observation transport integration exposed three missing `Git` contexts in
+`cache-private-producer-object.test.ts` during package checking. Accepted-main Cache CLI
+fixtures already provide `Git.layer` over the Node platform. Reusing that composition
+repairs the tests; all 154 focused cases and package lint/type checks pass. The first
+failing receipt is retained separately. Checking new command fixtures against the
+accepted CLI service layer before integration would have prevented the extra cycle.

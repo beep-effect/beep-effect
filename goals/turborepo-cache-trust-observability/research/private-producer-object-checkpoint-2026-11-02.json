@@ -25,7 +25,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
-      "sha256": "8afd49b6c8b20af821618c412f4049a782e89cbd58a43844952ad5c3d1de2e8e"
+      "sha256": "4ca74689216b6a9cad5c4589c8d61eba95c5d6312a73dca8667eef1e18968992"
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
@@ -194,6 +194,33 @@
       "elapsedSeconds": 24.399,
       "finishedAt": "2026-11-02T17:06:04.081695+00:00",
       "scope": "Exact final production/test source; includes22 transport/CLI controls and the dedicated owned-clock deadline case."
+    },
+    "acceptedMainIntegration": {
+      "acceptedBase": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+      "scope": "Adds the existing Git layer to the private-object command test platform, matching accepted-main Cache CLI fixtures. Production/private-transport sources are unchanged; old receipts retain old bindings.",
+      "focused": {
+        "tests": 154,
+        "files": 8,
+        "exit": 0,
+        "elapsedSeconds": 29.626,
+        "finishedAt": "2026-11-02T17:34:03.695756+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 15.59,
+        "finishedAt": "2026-11-02T17:33:29.648730+00:00"
+      },
+      "inventory": {
+        "packages": 184,
+        "openPackages": 15,
+        "openExports": 94,
+        "openModules": 115,
+        "rootPolicyOpen": 0,
+        "exit": 0,
+        "elapsedSeconds": 347.679,
+        "finishedAt": "2026-11-02T17:31:03.953379+00:00"
+      },
+      "failureRetained": "Initial post-integration package check failed at three real CLI cases because the accepted-main Git service was absent. No production check was weakened."
     }
   },
   "setupFailuresRetained": [
@@ -283,6 +310,48 @@
         {
           "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
           "sha256": "59a7510656ff5726deeb1a1333c31bc1b971effff9d410cd85d5257daa4c6afa"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    },
+    {
+      "scope": "Published c0f0f63 checkpoint before accepted-main Git service integration in the three command tests; historical focused, quick and inventory receipts remain bound to that source.",
+      "commit": "c0f0f63dab7d7d1ff355f9fab1c7a7852f8bdc9a",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "8afd49b6c8b20af821618c412f4049a782e89cbd58a43844952ad5c3d1de2e8e"
         },
         {
           "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
