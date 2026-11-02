@@ -1503,4 +1503,56 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
       );
     })
   );
+
+  it.effect(
+    "keeps catalog drift and reports its own error when config.effectSource is malformed",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      const packageJsonPath = path.join(tmpDir, "package.json");
+      // A numeric commit fails the pin decode; the drifted `@effect/vitest`
+      // entry must still be reported and written.
+      yield* fs.writeFileString(
+        packageJsonPath,
+        yield* encodeJson({
+          name: "@beep/test-root",
+          catalog: { effect: "4.1.1", "@effect/vitest": "4.1.0" },
+          config: { effectSource: { version: "4.1.0", commit: 42 } },
+        })
+      );
+
+      const state = yield* resolveEffectCatalog(tmpDir);
+      strictEqual(state.canonicalSpecifier, "4.1.1");
+      assertNone(state.effectSource);
+      assertSome(
+        state.effectSourceError,
+        "config.effectSource in package.json is malformed (expected { version: string, commit: string }); fix it by hand"
+      );
+
+      const report = buildEffectReport(yield* withEffectReleaseCommit(state, true));
+      strictEqual(report.status, "error");
+      assertTrue(O.exists(report.error, Str.includes("config.effectSource in package.json is malformed")));
+      expect(A.map(report.items, (item) => [item.field, item.current, item.expected])).toEqual([
+        ["catalog.@effect/vitest", "4.1.0", "4.1.1"],
+      ]);
+
+      const updater = yield* UpdateApplierService;
+      const applied = yield* updater.apply(
+        tmpDir,
+        VersionSyncResolution.make({
+          report: VersionSyncReport.make({ categories: [report], hasDrift: true }),
+          nodeLocations: [],
+        })
+      );
+      const written = (yield* decodeUnknownJson(yield* fs.readFileString(packageJsonPath))) as {
+        readonly catalog: Record<string, string>;
+        readonly config: unknown;
+      };
+
+      strictEqual(applied, 1);
+      strictEqual(written.catalog["@effect/vitest"], "4.1.1");
+      deepStrictEqual(written.config, { effectSource: { version: "4.1.0", commit: 42 } });
+    })
+  );
 });

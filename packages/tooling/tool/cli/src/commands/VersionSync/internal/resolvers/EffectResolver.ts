@@ -27,12 +27,12 @@ import {
   VersionCategoryReport,
   VersionCategoryStatusEnum,
   VersionDriftItem,
-  VersionSyncError,
   versionCategoryStatusFromDrift,
 } from "../../VersionSync.schemas.ts";
 import { readRootPackageJson } from "./RootCatalog.ts";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
+import type { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/EffectResolver");
 const VERSION_SPECIFIER_PATTERN = /^([~^<>=\s]*)(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
@@ -105,7 +105,27 @@ const RootConfigEffectSource = S.Struct({
   })
 );
 
-const decodeRootConfigEffectSource = S.decodeUnknownEffect(RootConfigEffectSource);
+const decodeRootConfigEffectSource = S.decodeUnknownOption(RootConfigEffectSource);
+
+const MALFORMED_EFFECT_SOURCE_ERROR =
+  "config.effectSource in package.json is malformed (expected { version: string, commit: string }); fix it by hand";
+
+type EffectSourceRead = {
+  readonly effectSource: O.Option<EffectSourcePin>;
+  readonly effectSourceError: O.Option<string>;
+};
+
+// Decode the provenance pin apart from catalog resolution: a malformed pin
+// must not erase the catalog state, so it becomes `None` plus its own error.
+const readEffectSource = (config: unknown): EffectSourceRead =>
+  O.match(O.fromUndefinedOr(config), {
+    onNone: () => ({ effectSource: O.none(), effectSourceError: O.none() }),
+    onSome: (value) =>
+      O.match(decodeRootConfigEffectSource(value), {
+        onNone: () => ({ effectSource: O.none(), effectSourceError: O.some(MALFORMED_EFFECT_SOURCE_ERROR) }),
+        onSome: (decoded) => ({ effectSource: decoded.effectSource, effectSourceError: O.none() }),
+      }),
+  });
 
 class EffectReleaseCommit extends S.Opaque<EffectReleaseCommit, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -131,11 +151,12 @@ export class EffectCatalogState extends S.Opaque<EffectCatalogState, { readonly 
     ),
     packages: ArrayKeyDefaultEmpty(EffectCatalogPackage),
     effectSource: S.Option(EffectSourcePin).pipe(S.withConstructorDefault(Effect.succeed(O.none<EffectSourcePin>()))),
+    effectSourceError: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     releaseCommit: S.Option(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
   }).pipe(
     $I.annoteSchema("EffectCatalogState", {
       description:
-        "Resolved lockstep Effect catalog dependency state, the config.effectSource pin, and the upstream release commit of the exact catalog version.",
+        "Resolved lockstep Effect catalog dependency state, the config.effectSource pin (or why it could not be decoded), and the upstream release commit of the exact catalog version.",
     })
   )
 ) {}
@@ -242,16 +263,9 @@ export const resolveEffectCatalog: (
       ([name, versionSpecifier]) => EffectCatalogPackage.make({ name, versionSpecifier })
     );
 
-    const rootConfig = yield* Effect.transposeOption(
-      O.map(O.fromUndefinedOr(pkgJson.config), (config) =>
-        decodeRootConfigEffectSource(config).pipe(
-          VersionSyncError.mapError("Failed to decode config.effectSource in package.json", "package.json")
-        )
-      )
-    );
-    const effectSource = O.flatMap(rootConfig, (config) => config.effectSource);
+    const { effectSource, effectSourceError } = readEffectSource(pkgJson.config);
 
-    return EffectCatalogState.make({ canonicalSpecifier, packages, effectSource });
+    return EffectCatalogState.make({ canonicalSpecifier, packages, effectSource, effectSourceError });
   }
 );
 
@@ -434,9 +448,10 @@ const checkEffectSource = (state: EffectCatalogState): EffectSourceCheck => {
  *
  * Reports lockstep `catalog` drift and, for a bare published `effect` version,
  * `config.effectSource.version` and `config.effectSource.commit` drift. When
- * the version drifted but the release commit is unknown, the report is an
- * `error` naming the unresolved commit; write mode then leaves
- * `config.effectSource` untouched.
+ * the version drifted but the release commit is unknown, or when
+ * `config.effectSource` is malformed, the report is an `error` that still
+ * lists the catalog drift; write mode then leaves `config.effectSource`
+ * untouched and applies the `catalog` items.
  *
  * @param state - Resolved Effect catalog dependency state.
  * @returns The Effect-specific version drift report derived from the catalog state.
@@ -492,14 +507,17 @@ export const buildEffectReport: (state: EffectCatalogState) => VersionCategoryRe
 
   const effectSourceCheck = checkEffectSource(state);
   items = A.appendAll(items, effectSourceCheck.items);
+  // A malformed pin decodes to `None`, so the check above is silent about it;
+  // surface the decode error while keeping the catalog drift items.
+  const error = O.orElse(state.effectSourceError, () => effectSourceCheck.error);
 
   return VersionCategoryReport.cases.effect.make({
-    status: O.match(effectSourceCheck.error, {
+    status: O.match(error, {
       onNone: () => versionCategoryStatusFromDrift(items),
       onSome: () => VersionCategoryStatusEnum.error,
     }),
     items,
     latest: O.some(state.canonicalSpecifier),
-    error: effectSourceCheck.error,
+    error,
   });
 };
