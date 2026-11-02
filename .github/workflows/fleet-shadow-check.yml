@@ -683,11 +683,12 @@ jobs:
             INT | KILL) printf '%s\n' "${REPLAY_STOP_SIGNAL:-INT}" | sudo tee "${probe_dir}/stop-signal" > /dev/null ;;
             *) echo "Probe N: replay_stop_signal must be INT or KILL"; exit 1 ;;
           esac
-          if [[ ! "${REPLAY_HOLD_MINUTES:-0}" =~ ^[0-9]{1,2}$ ]] || (( ${REPLAY_HOLD_MINUTES:-0} > 15 )); then
+          # Base 10 explicitly: bash reads 08 and 09 as invalid octal.
+          if [[ ! "${REPLAY_HOLD_MINUTES:-0}" =~ ^[0-9]{1,2}$ ]] || (( 10#${REPLAY_HOLD_MINUTES:-0} > 15 )); then
             echo "Probe N: replay_hold_minutes must be 0 to 15"
             exit 1
           fi
-          printf '%s\n' "$(( ${REPLAY_HOLD_MINUTES:-0} * 60 ))" | sudo tee "${probe_dir}/hold-seconds" > /dev/null
+          printf '%s\n' "$(( 10#${REPLAY_HOLD_MINUTES:-0} * 60 ))" | sudo tee "${probe_dir}/hold-seconds" > /dev/null
           if [[ -z "${REPLAY_RECIPIENT_KEY}" ]]; then
             echo "Probe N: replay_recipient_key is required"
             exit 1

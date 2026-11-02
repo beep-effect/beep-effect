@@ -50,8 +50,13 @@ readonly probe_subnet="${REPLAY_SUBNET_ID:-subnet-01bc446dbd3c68d84}"
 readonly probe_security_group="${REPLAY_SECURITY_GROUP_ID:-sg-0ec4816fcd2af2d4b}"
 readonly ref="${1:-main}"
 readonly stop_signal="${2:-INT}"
-readonly hold_minutes="${3:-0}"
-[[ "${hold_minutes}" =~ ^[0-9]{1,2}$ ]] && (( hold_minutes <= 15 )) || { echo "hold-minutes must be 0 to 15" >&2; exit 64; }
+[[ "${3:-0}" =~ ^[0-9]{1,2}$ ]] || { echo "hold-minutes must be 0 to 15" >&2; exit 64; }
+readonly hold_minutes="$(( 10#${3:-0} ))"
+(( hold_minutes <= 15 )) || { echo "hold-minutes must be 0 to 15" >&2; exit 64; }
+# KILL mode can spend about 35 minutes in replay attempts before an
+# acceptance, then the hold, then a 180 s console-capture pause; poll for all
+# of it with a 10-minute margin.
+readonly console_polls="$(( 200 + hold_minutes * 4 + 12 ))"
 [[ "${hold_minutes}" == 0 || "${stop_signal}" == KILL ]] || { echo "hold-minutes needs KILL" >&2; exit 64; }
 [[ "${stop_signal}" == INT || "${stop_signal}" == KILL ]] || { echo "stop signal must be INT or KILL" >&2; exit 64; }
 
@@ -108,7 +113,7 @@ echo "worker: beep-ci-${instance_id}"
 
 # Accumulate RTB- lines from the serial console until the probe reports DONE.
 : > "${scratch}/console"
-for _ in {1..200}; do
+for (( poll = 1; poll <= console_polls; poll++ )); do
   aws ec2 get-console-output --region "${region}" --instance-id "${instance_id}" --latest \
     --query Output --output text 2> /dev/null | tr -d '\r' \
     | sed -n 's/^.*\(RTB-[A-Z][A-Z-]*.*\)$/\1/p' >> "${scratch}/console" || true
@@ -134,10 +139,13 @@ if [[ -n "${decoy_run}" ]]; then
     [[ "${decoy}" == completed* ]] && break
     sleep 15
   done
+  decoy_status="$(print -r -- "${decoy}" | cut -f1)"
   decoy_runner="$(print -r -- "${decoy}" | cut -f3)"
   echo "DECOY: run ${decoy_run}: ${decoy}"
   if [[ "${decoy_runner}" == "beep-ci-${instance_id}" ]]; then
     echo "DECOY-VERDICT: the hijacked registration received a different job"
+  elif [[ "${decoy_status}" != completed ]]; then
+    echo "DECOY-VERDICT: inconclusive (decoy ${decoy_status:-unread} after the wait; runner ${decoy_runner})"
   else
     echo "DECOY-VERDICT: the decoy ran elsewhere (${decoy_runner})"
   fi
