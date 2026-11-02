@@ -6,6 +6,9 @@
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
+      "path": "../../../drivers/git/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/phoenix/tsconfig.json"
     },
     {

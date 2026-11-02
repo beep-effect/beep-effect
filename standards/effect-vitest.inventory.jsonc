@@ -7048,6 +7048,28 @@
       "reason": "A native git exit-128 is the subject, through the real filesystem and process services, with a scoped layer and TestConsole per scenario. Owner: @beep/repo-cli. Exit: retire when git runs behind a scripted spawner."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/ci-governance.test.ts:17:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-governance.test.ts",
+      "line": 17,
+      "endLine": 17,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The governance commands run through Command.runWith, which needs the platform environment (FileSystem, Path, Terminal); the suite reads and writes no files, GitHub is faked through GithubTransportFetch and the only spawn is a scripted gh auth token. Owner: @beep/repo-cli. Exit: retire when the CLI runner takes a narrower test platform layer."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/ci-heavy-admission.test.ts:22:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",

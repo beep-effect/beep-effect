@@ -2023,6 +2023,11 @@
       "@beep/epistemic-domain/values/ContradictionDetection": [
         "./packages/epistemic/domain/src/values/ContradictionDetection/index.ts"
       ],
+      "@beep/repo-cli/commands/AgentMessage": [
+        "./packages/tooling/tool/cli/src/commands/AgentMessage/index.ts"
+      ],
+      "@beep/t3-code": ["./packages/drivers/t3-code/src/index.ts"],
+      "@beep/t3-code/*": ["./packages/drivers/t3-code/src/*"],
       "@beep/observability/catalog": [
         "./packages/foundation/capability/observability/src/catalog/index.ts"
       ],
@@ -2449,7 +2454,9 @@
       ],
       "@beep/repo-cli/commands/Holds": [
         "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
-      ]
+      ],
+      "@beep/party-domain": ["./packages/party/domain/src/index.ts"],
+      "@beep/party-domain/*": ["./packages/party/domain/src/*"]
     }
   }
 }

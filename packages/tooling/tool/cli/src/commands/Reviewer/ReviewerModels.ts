@@ -34,28 +34,6 @@ export class ReviewerCredentials extends S.Class<ReviewerCredentials, { readonly
 ) {}
 
 /**
- * An opaque installation token with GitHub's expiration timestamp.
- *
- * **Example** (Inspect the expiration contract)
- * ```ts
- * import { ReviewerInstallationToken } from "@beep/repo-cli/commands/Reviewer";
- * console.log(ReviewerInstallationToken.fields.expires_at.ast._tag);
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ReviewerInstallationToken extends S.Class<ReviewerInstallationToken, { readonly brand: unique symbol }>(
-  $I`ReviewerInstallationToken`
-)(
-  {
-    token: S.RedactedFromValue(S.NonEmptyString),
-    expires_at: S.DateTimeUtcFromString,
-  },
-  $I.annote("ReviewerInstallationToken", { description: "Redacted installation access token and expiry." })
-) {}
-
-/**
  * One line annotation accepted by the Checks API.
  *
  * **Example** (Construct an annotation)
@@ -189,7 +167,6 @@ export class ReviewerResult extends S.Class<ReviewerResult, { readonly brand: un
  * @since 0.0.0
  */
 export const reviewerWire = {
-  token: S.decodeUnknownEffect(ReviewerInstallationToken),
   credentials: S.decodeUnknownEffect(ReviewerCredentials),
   review: S.decodeUnknownEffect(S.fromJsonString(ReviewerReview)),
   result: S.decodeUnknownEffect(ReviewerResult),

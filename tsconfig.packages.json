@@ -241,6 +241,9 @@
       "path": "packages/drivers/shacl"
     },
     {
+      "path": "packages/drivers/t3-code"
+    },
+    {
       "path": "packages/drivers/tailscale"
     },
     {
@@ -479,6 +482,9 @@
     },
     {
       "path": "packages/ontology/use-cases"
+    },
+    {
+      "path": "packages/party/domain"
     },
     {
       "path": "packages/shared/domain"

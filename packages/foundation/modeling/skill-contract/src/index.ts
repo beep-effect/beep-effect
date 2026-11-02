@@ -29,6 +29,14 @@ export * from "./EvidenceReceipt.ts";
  */
 export * from "./Gate.ts";
 /**
+ * Digest-bound gate certificates: EARL/ACT outcomes, explicit reach, settled
+ * aggregate, and the apply-by-id plan.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./GateCertificate.ts";
+/**
  * Bounded-recovery policy, budget, attempt, and terminal failure schemas.
  *
  * @category models

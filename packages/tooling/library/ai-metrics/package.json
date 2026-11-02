@@ -65,6 +65,7 @@
     "@beep/cli-kit": "workspace:^",
     "@beep/duckdb": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/git": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/jsonl": "workspace:^",
     "@beep/observability": "workspace:^",

@@ -20,6 +20,9 @@
  *
  * @since 0.0.0
  */
+
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -34,10 +37,9 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ghOutput } from "../../internal/github/index.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
-import { CiWorkflowJobsPage, ghApiJson } from "./LaneTimings.ts";
+import { CiWorkflowJobsPage, ghApiJson, githubStatusSuffix, withCiGithub } from "./LaneTimings.ts";
 import {
   decideRunnerLossRerun,
   RUNNER_LOSS_MAX_JOB_RERUNS,
@@ -51,24 +53,13 @@ import {
   runnerLossCopiedFrom,
   runnerLossFailedJob,
   runnerLossJobReruns,
-  runnerLossRerunArgs,
 } from "./RunnerLossRerun.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiWorkflowJob } from "./LaneTimings.ts";
 import type { RunnerLossFailedJob } from "./RunnerLossRerun.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiRerunRunnerLoss");
 
-const RUN_JQ =
-  "{id,name,event,status,conclusion,run_attempt,head_sha,head_branch,head_owner:.head_repository.owner.login,pull_requests:[.pull_requests[].number]}";
-const JOBS_JQ =
-  "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,labels,name,run_attempt,run_id,runner_name,started_at,status,steps}]}";
-const ANNOTATIONS_JQ = "[.[].message]";
-const PULL_REQUEST_JQ = "{number,state,head_sha:.head.sha,head_ref:.head.ref,head_owner:.head.repo.owner.login}";
-const PULL_REQUESTS_JQ = "[.[]|{number,state,head_sha:.head.sha,head_ref:.head.ref,head_owner:.head.repo.owner.login}]";
-const BRANCH_REF_JQ = "{sha:.object.sha}";
 const JOBS_PER_PAGE = 100;
 const ANNOTATIONS_PER_PAGE = 100;
 // Ten pages bound the loop; a failed heavy job carries one or two annotations.
@@ -137,41 +128,77 @@ class RunnerLossPullRequest extends S.Opaque<RunnerLossPullRequest, { readonly b
   )
 ) {}
 
-class RunnerLossBranchRef extends S.Opaque<RunnerLossBranchRef, { readonly brand: unique symbol }>()(
-  S.Struct({ sha: S.String }).pipe(
-    $I.annoteSchema("RunnerLossBranchRef", {
-      description: "The tip SHA of one branch read by the runner-loss head gate.",
-    })
-  )
-) {}
+// The REST shapes the head gate reads; each is projected onto the decision's own model.
+const RepositoryOwner = S.NullOr(S.Struct({ owner: S.Struct({ login: S.String }) }));
+const RunWire = S.Struct({
+  id: S.Finite,
+  name: S.String,
+  event: S.String,
+  status: S.String,
+  conclusion: S.NullOr(S.String),
+  run_attempt: S.Finite,
+  head_sha: S.String,
+  head_branch: S.NullOr(S.String),
+  head_repository: RepositoryOwner,
+  pull_requests: S.Array(S.Struct({ number: S.Finite })),
+}).pipe($I.annoteSchema("RunnerLossRunWire", { description: "The workflow-run REST fields the decision reads." }));
+const PullRequestWire = S.Struct({
+  number: S.Finite,
+  state: S.String,
+  head: S.Struct({ sha: S.String, ref: S.String, repo: RepositoryOwner }),
+}).pipe($I.annoteSchema("RunnerLossPullRequestWire", { description: "The pull-request REST fields the gate reads." }));
+const AnnotationWire = S.Struct({ message: S.String }).pipe(
+  $I.annoteSchema("RunnerLossAnnotationWire", { description: "One check-run annotation's message." })
+);
+const BranchRefWire = S.Struct({ object: S.Struct({ sha: S.String }) }).pipe(
+  $I.annoteSchema("RunnerLossBranchRefWire", { description: "The tip commit of one branch ref." })
+);
 
-const decodeRun = S.decodeUnknownEffect(S.fromJsonString(RunnerLossRun));
-const decodeJobsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowJobsPage));
-const decodeAnnotations = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
-const decodePullRequest = S.decodeUnknownEffect(S.fromJsonString(RunnerLossPullRequest));
-const decodePullRequests = S.decodeUnknownEffect(S.fromJsonString(S.Array(RunnerLossPullRequest)));
-const decodeBranchRef = S.decodeUnknownEffect(S.fromJsonString(RunnerLossBranchRef));
+const ownerLogin = (repository: typeof RepositoryOwner.Type): string | null => repository?.owner.login ?? null;
+const pullRequestOf = (wire: typeof PullRequestWire.Type): RunnerLossPullRequest =>
+  RunnerLossPullRequest.make({
+    number: wire.number,
+    state: wire.state,
+    head_sha: wire.head.sha,
+    head_ref: wire.head.ref,
+    head_owner: ownerLogin(wire.head.repo),
+  });
 
-type GhRequirements = SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner;
+const decodeRun = S.decodeUnknownEffect(RunWire);
+const decodeJobsPage = S.decodeUnknownEffect(CiWorkflowJobsPage);
+const decodeAnnotations = S.decodeUnknownEffect(S.Array(AnnotationWire));
+const decodePullRequest = S.decodeUnknownEffect(PullRequestWire);
+const decodePullRequests = S.decodeUnknownEffect(S.Array(PullRequestWire));
+const decodeBranchRef = S.decodeUnknownEffect(BranchRefWire);
+
+type GhRequirements = GitHubClient | Repo;
 
 const readRun = Effect.fn("Ci.rerunRunnerLoss.readRun")(function* (
-  cwd: string,
   runId: number
 ): Effect.fn.Return<RunnerLossRun, CiCommandError, GhRequirements> {
-  const output = yield* ghApiJson(cwd, `repos/{owner}/{repo}/actions/runs/${runId}`, O.some(RUN_JQ));
-  return yield* decodeRun(output).pipe(CiCommandError.mapError(`Failed to decode workflow run ${runId}.`));
+  const output = yield* ghApiJson(`repos/{owner}/{repo}/actions/runs/${runId}`);
+  const wire = yield* decodeRun(output).pipe(CiCommandError.mapError(`Failed to decode workflow run ${runId}.`));
+  return RunnerLossRun.make({
+    id: wire.id,
+    name: wire.name,
+    event: wire.event,
+    status: wire.status,
+    conclusion: wire.conclusion,
+    run_attempt: wire.run_attempt,
+    head_sha: wire.head_sha,
+    head_branch: wire.head_branch,
+    head_owner: ownerLogin(wire.head_repository),
+    pull_requests: A.map(wire.pull_requests, (pull) => pull.number),
+  });
 });
 
 const readJobsPage = Effect.fn("Ci.rerunRunnerLoss.readJobsPage")(function* (
-  cwd: string,
   runId: number,
   attempt: number,
   page: number
 ): Effect.fn.Return<CiWorkflowJobsPage, CiCommandError, GhRequirements> {
   const output = yield* ghApiJson(
-    cwd,
-    `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs?per_page=${JOBS_PER_PAGE}&page=${page}`,
-    O.some(JOBS_JQ)
+    `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs?per_page=${JOBS_PER_PAGE}&page=${page}`
   );
   return yield* decodeJobsPage(output).pipe(
     CiCommandError.mapError(`Failed to decode jobs page ${page} of run ${runId} attempt ${attempt}.`)
@@ -179,7 +206,6 @@ const readJobsPage = Effect.fn("Ci.rerunRunnerLoss.readJobsPage")(function* (
 });
 
 const readAttemptJobs = (
-  cwd: string,
   runId: number,
   attempt: number
 ): Effect.Effect<ReadonlyArray<CiWorkflowJob>, CiCommandError, GhRequirements> => {
@@ -187,7 +213,7 @@ const readAttemptJobs = (
     page: number,
     collected: ReadonlyArray<CiWorkflowJob>
   ): Effect.Effect<ReadonlyArray<CiWorkflowJob>, CiCommandError, GhRequirements> =>
-    readJobsPage(cwd, runId, attempt, page).pipe(
+    readJobsPage(runId, attempt, page).pipe(
       Effect.flatMap((jobsPage) => {
         const jobs = A.appendAll(collected, jobsPage.jobs);
         return A.length(jobs) < jobsPage.total_count &&
@@ -201,31 +227,26 @@ const readAttemptJobs = (
 };
 
 const readAnnotationsPage = Effect.fn("Ci.rerunRunnerLoss.readAnnotationsPage")(function* (
-  cwd: string,
   jobId: number,
   page: number
 ): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, GhRequirements> {
   const output = yield* ghApiJson(
-    cwd,
-    `repos/{owner}/{repo}/check-runs/${jobId}/annotations?per_page=${ANNOTATIONS_PER_PAGE}&page=${page}`,
-    O.some(ANNOTATIONS_JQ)
+    `repos/{owner}/{repo}/check-runs/${jobId}/annotations?per_page=${ANNOTATIONS_PER_PAGE}&page=${page}`
   );
   return yield* decodeAnnotations(output).pipe(
+    Effect.map(A.map((annotation) => annotation.message)),
     CiCommandError.mapError(`Failed to decode annotations page ${page} of job ${jobId}.`)
   );
 });
 
 // The lost-communication annotation can sit behind other annotations, so every
 // page is read; a short page is the last one.
-const readAnnotations = (
-  cwd: string,
-  jobId: number
-): Effect.Effect<ReadonlyArray<string>, CiCommandError, GhRequirements> => {
+const readAnnotations = (jobId: number): Effect.Effect<ReadonlyArray<string>, CiCommandError, GhRequirements> => {
   const go = (
     page: number,
     collected: ReadonlyArray<string>
   ): Effect.Effect<ReadonlyArray<string>, CiCommandError, GhRequirements> =>
-    readAnnotationsPage(cwd, jobId, page).pipe(
+    readAnnotationsPage(jobId, page).pipe(
       Effect.flatMap((messages) => {
         const all = A.appendAll(collected, messages);
         return A.length(messages) === ANNOTATIONS_PER_PAGE && page < ANNOTATIONS_MAX_PAGES
@@ -240,7 +261,6 @@ const isFailedJob = (job: CiWorkflowJob): boolean =>
   O.exists(O.fromNullishOr(job.conclusion), (conclusion) => Str.toLowerCase(conclusion) === "failure");
 
 const readFailedJobs = Effect.fn("Ci.rerunRunnerLoss.readFailedJobs")(function* (
-  cwd: string,
   run: RunnerLossRun,
   attempt: number
 ): Effect.fn.Return<ReadonlyArray<RunnerLossFailedJob>, CiCommandError, GhRequirements> {
@@ -250,7 +270,7 @@ const readFailedJobs = Effect.fn("Ci.rerunRunnerLoss.readFailedJobs")(function* 
   // Every attempt up to the evaluated one: a rerun attempt copies the jobs it
   // did not re-run without their annotations, so a copied job is judged by
   // its original, and each job's prior reruns are counted across attempts.
-  const runJobs = yield* Effect.forEach(A.range(1, attempt), (each) => readAttemptJobs(cwd, run.id, each), {
+  const runJobs = yield* Effect.forEach(A.range(1, attempt), (each) => readAttemptJobs(run.id, each), {
     concurrency: 2,
   }).pipe(Effect.map(A.flatten));
   return yield* Effect.forEach(
@@ -261,7 +281,7 @@ const readFailedJobs = Effect.fn("Ci.rerunRunnerLoss.readFailedJobs")(function* 
         O.map((origin) => origin.id),
         O.getOrElse(() => job.id)
       );
-      return readAnnotations(cwd, annotatedId).pipe(
+      return readAnnotations(annotatedId).pipe(
         Effect.map((annotations) =>
           runnerLossFailedJob(
             job,
@@ -275,14 +295,14 @@ const readFailedJobs = Effect.fn("Ci.rerunRunnerLoss.readFailedJobs")(function* 
 });
 
 const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(function* (
-  cwd: string,
   run: RunnerLossRun
 ): Effect.fn.Return<RunnerLossHead, CiCommandError, GhRequirements> {
   const listed = yield* Effect.forEach(
     run.pull_requests,
     Effect.fnUntraced(function* (number) {
-      const output = yield* ghApiJson(cwd, `repos/{owner}/{repo}/pulls/${number}`, O.some(PULL_REQUEST_JQ));
+      const output = yield* ghApiJson(`repos/{owner}/{repo}/pulls/${number}`);
       return yield* decodePullRequest(output).pipe(
+        Effect.map(pullRequestOf),
         CiCommandError.mapError(`Failed to decode pull request #${number}.`)
       );
     })
@@ -299,12 +319,11 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
     A.isReadonlyArrayNonEmpty(owning) || run.head_owner === null || run.head_branch === null
       ? owning
       : yield* ghApiJson(
-          cwd,
-          `repos/{owner}/{repo}/pulls?state=open&per_page=10&head=${encodeURIComponent(`${run.head_owner}:${run.head_branch}`)}`,
-          O.some(PULL_REQUESTS_JQ)
+          `repos/{owner}/{repo}/pulls?state=open&per_page=10&head=${encodeURIComponent(`${run.head_owner}:${run.head_branch}`)}`
         ).pipe(
           Effect.flatMap((output) =>
             decodePullRequests(output).pipe(
+              Effect.map(A.map(pullRequestOf)),
               CiCommandError.mapError(`Failed to decode open pull requests for ${run.head_branch}.`)
             )
           ),
@@ -324,43 +343,41 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
 });
 
 const readBranchHead = Effect.fn("Ci.rerunRunnerLoss.readBranchHead")(function* (
-  cwd: string,
   run: RunnerLossRun,
   branch: string
 ): Effect.fn.Return<RunnerLossHead, CiCommandError, GhRequirements> {
-  const output = yield* ghApiJson(cwd, `repos/{owner}/{repo}/git/ref/heads/${branch}`, O.some(BRANCH_REF_JQ));
+  const output = yield* ghApiJson(`repos/{owner}/{repo}/git/ref/heads/${branch}`);
   const ref = yield* decodeBranchRef(output).pipe(CiCommandError.mapError(`Failed to decode the tip of ${branch}.`));
-  return ref.sha === run.head_sha
+  return ref.object.sha === run.head_sha
     ? RunnerLossHead.make({ status: "current" })
-    : RunnerLossHead.make({ status: "superseded", currentSha: O.some(ref.sha) });
+    : RunnerLossHead.make({ status: "superseded", currentSha: O.some(ref.object.sha) });
 });
 
-const readHead = (cwd: string, run: RunnerLossRun): Effect.Effect<RunnerLossHead, CiCommandError, GhRequirements> => {
+const readHead = (run: RunnerLossRun): Effect.Effect<RunnerLossHead, CiCommandError, GhRequirements> => {
   if (run.event === "pull_request") {
-    return readPullRequestHead(cwd, run);
+    return readPullRequestHead(run);
   }
   if (run.event === "push" && run.head_branch !== null) {
-    return readBranchHead(cwd, run, run.head_branch);
+    return readBranchHead(run, run.head_branch);
   }
   return Effect.succeed(RunnerLossHead.make({ status: "unsupported-event" }));
 };
 
+// `gh run rerun --job <id>`: the job and the jobs that depend on it run again.
 const requestRerun = Effect.fn("Ci.rerunRunnerLoss.requestRerun")(function* (
-  cwd: string,
-  args: ReadonlyArray<string>
+  jobId: number
 ): Effect.fn.Return<void, CiCommandError, GhRequirements> {
-  yield* ghOutput({
-    args,
-    cwd,
-    label: `gh ${A.join(args, " ")}`,
-    onFailure: (failure) =>
-      CiCommandError.make({
-        message:
-          failure._tag === "nonzero-exit"
-            ? `${failure.command} exited ${failure.exitCode}: ${failure.output}`
-            : `${failure.command} failed (${failure._tag}).`,
-      }),
-  });
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  yield* client
+    .requestDecoded("POST /repos/{owner}/{repo}/actions/jobs/{job_id}/rerun", { owner, repo, job_id: jobId }, S.Unknown)
+    .pipe(
+      Effect.mapError((error) =>
+        CiCommandError.make({
+          message: `GitHub API rerun of job ${jobId} failed${githubStatusSuffix(error)}: ${error.reason}`,
+        })
+      )
+    );
 });
 
 /**
@@ -384,9 +401,9 @@ const requestRerun = Effect.fn("Ci.rerunRunnerLoss.requestRerun")(function* (
 export const runCiRerunRunnerLoss = Effect.fn("Ci.runCiRerunRunnerLoss")(function* (
   input: CiRerunRunnerLossInput
 ): Effect.fn.Return<RunnerLossRerunReport, CiCommandError, ActionOutputs | GhRequirements> {
-  const run = yield* readRun(input.cwd, input.runId);
+  const run = yield* readRun(input.runId);
   const attempt = O.getOrElse(input.attempt, () => run.run_attempt);
-  const failedJobs = yield* readFailedJobs(input.cwd, run, attempt);
+  const failedJobs = yield* readFailedJobs(run, attempt);
   const decide = (head: RunnerLossHead) =>
     decideRunnerLossRerun(
       RunnerLossRerunInput.make({
@@ -399,10 +416,9 @@ export const runCiRerunRunnerLoss = Effect.fn("Ci.runCiRerunRunnerLoss")(functio
       })
     );
   const unchecked = decide(RunnerLossHead.make({ status: "unchecked" }));
-  const decision = unchecked.reason === "head-unchecked" ? decide(yield* readHead(input.cwd, run)) : unchecked;
-  const rerunArgs = runnerLossRerunArgs(decision);
-  if (O.isSome(rerunArgs) && !input.dryRun) {
-    yield* requestRerun(input.cwd, rerunArgs.value);
+  const decision = unchecked.reason === "head-unchecked" ? decide(yield* readHead(run)) : unchecked;
+  if (O.isSome(decision.rerunJob) && !input.dryRun) {
+    yield* requestRerun(decision.rerunJob.value.id);
   }
   const report = RunnerLossRerunReport.make({ decision, dryRun: input.dryRun });
   const summary = renderRunnerLossRerunSummary(report);
@@ -482,7 +498,7 @@ export const ciRerunRunnerLossCommand = Command.make(
   (flags) =>
     pipe(
       resolveCiRerunRunnerLossInput(flags),
-      Effect.flatMap(runCiRerunRunnerLoss),
+      Effect.flatMap((input) => runCiRerunRunnerLoss(input).pipe(withCiGithub(input.cwd))),
       Effect.catchTag("CiCommandError", reportCiCommandError)
     )
 ).pipe(

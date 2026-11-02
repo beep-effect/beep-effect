@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   applyHeavyAdmissionLabel,
@@ -70,11 +71,17 @@ const handle = (output: string, exitCode = 0) => {
     unref: Effect.succeed(Effect.void),
   });
 };
+// `Git` is rebuilt over each substituted spawner: the pull request's remote and diff reads run
+// through the kit (W2b).
+const provideSpawner =
+  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
+  <A, E, R>(self: Effect.Effect<A, E, R>) =>
+    self.pipe(
+      Effect.provideServiceEffect(Git, Git.make),
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+    );
 const withGh = (output: string, exitCode = 0) =>
-  Effect.provideService(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.succeed(handle(output, exitCode)))
-  );
+  provideSpawner(ChildProcessSpawner.make(() => Effect.succeed(handle(output, exitCode))));
 const encodeView = S.encodeEffect(
   S.fromJsonString(
     S.Struct({
@@ -101,9 +108,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
               Effect.as(handle(command.command === "git" ? "git@github.com:beep-effect/beep-effect.git" : output))
             );
           });
-          const found = yield* findOpenPullRequest(context).pipe(
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
-          );
+          const found = yield* findOpenPullRequest(context).pipe(provideSpawner(runner));
           if (A.isReadonlyArrayEmpty(views)) assertNone(found);
           else
             assertSome(
@@ -112,9 +117,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
             );
           expect(yield* Ref.get(calls)).toEqual(["git", "gh"]);
           if (A.isReadonlyArrayNonEmpty(views)) {
-            const required = yield* runGhPullRequestView(context).pipe(
-              Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
-            );
+            const required = yield* runGhPullRequestView(context).pipe(provideSpawner(runner));
             expect(required.number).toBe(42);
           }
         }
@@ -138,7 +141,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
                   : handle("GraphQL: API rate limit already exceeded", 1)
             );
           });
-          const provide = Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner);
+          const provide = provideSpawner(runner);
           const failure = yield* findOpenPullRequest(context).pipe(Effect.flip, provide);
           expect(failure.message).toContain(message);
           const direct = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, provide);
@@ -207,8 +210,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
           withGh(Str.repeat(512 * 1024 + 1)("x"))
         );
         expect(truncated.message).toContain("capture limit");
-        const withSpawnFailure = Effect.provideService(
-          ChildProcessSpawner.ChildProcessSpawner,
+        const withSpawnFailure = provideSpawner(
           ChildProcessSpawner.make(() =>
             Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
           )

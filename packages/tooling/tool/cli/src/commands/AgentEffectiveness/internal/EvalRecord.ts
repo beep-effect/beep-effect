@@ -39,6 +39,7 @@ import {
   AgentEffectivenessEvalScoreReport,
   SkillOptTaskManifest,
 } from "../AgentEffectiveness.schemas.ts";
+import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
@@ -213,7 +214,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
 }: RecordAgentEffectivenessEvalScoreOptions): Effect.fn.Return<
   AgentEffectivenessEvalRecordResult,
   AgentEffectivenessEvalScorerError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
