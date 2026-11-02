@@ -2,6 +2,7 @@ import {
   GoalCompletionIo,
   GoalCompletionObservation,
   GoalCompletionReceipt,
+  GoalCompletionReceiptStore,
   GoalCompletionVerifier,
   GoalInitiative,
   GoalManifest,
@@ -11,6 +12,9 @@ import {
   GoalRequiredCheckSnapshot,
   goalCompletionDeclarationDigest,
   goalsCommand,
+  layerGoalCompletionReceiptStoreMemory,
+  makeGoalCompletionReceiptStoreAt,
+  makeGoalCompletionReceiptStoreLive,
   observeGoalCompletion,
   parseGoalManifestText,
   runGoalsDoctor,
@@ -24,11 +28,13 @@ import { expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -439,7 +445,17 @@ const readinessCriteria = {
   reviewWindowElapsed: true,
 };
 
-it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion observations and storage", (it) => {
+// A goal verified in one clone must read as verified in every clone, so these
+// stores stand in for the workstation directory shared across clones.
+const sharedStore = Effect.fn("CompletionTest.sharedStore")(function* (root: string) {
+  const path = yield* Path.Path;
+  const directory = path.join(root, "workstation-state", "goals");
+  return { directory, store: yield* makeGoalCompletionReceiptStoreAt(directory) };
+});
+
+const ReceiptStoreTestLayer = Layer.mergeAll(NodeTestLayer, layerGoalCompletionReceiptStoreMemory);
+
+it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion observations and storage", (it) => {
   it.effect.prop(
     "preserves declaration digests across arbitrary PR-reference codec round trips",
     [Arbitrary.schema(GoalPullRequestRef)],
@@ -814,6 +830,99 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion observations
       );
     })
   );
+  it.effect("a receipt another clone wrote to the shared store is read without a legacy file", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryWorkingDirectory;
+      const value = yield* manifest();
+      const { directory, store } = yield* sharedStore(root);
+      yield* store.append(yield* completeReceipt());
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      expect(yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"))).toBe(true);
+      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
+      assertSome(
+        O.map(
+          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+            Effect.provideService(GoalCompletionIo, fixtureIo(yield* encodeGoalManifestJson(value))),
+            Effect.provideService(GoalCompletionReceiptStore, store)
+          ),
+          (row) => row.outcome
+        ),
+        "verified"
+      );
+    })
+  );
+  it.effect("reads the union of the shared store and the legacy clone file", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryWorkingDirectory;
+      const value = yield* manifest();
+      const io = fixtureIo(yield* encodeGoalManifestJson(value));
+      const verified = yield* completeReceipt();
+      const path = yield* Path.Path;
+      const readOutcome = (store: typeof GoalCompletionReceiptStore.Service) =>
+        storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+          Effect.provideService(GoalCompletionIo, io),
+          Effect.provideService(GoalCompletionReceiptStore, store),
+          Effect.map(O.map((row) => row.outcome))
+        );
+      const legacyOnly = yield* sharedStore(path.join(root, "legacy-only"));
+      yield* writeProjectFile(
+        ".beep/goals/completion-receipts.ndjson",
+        `${yield* encodeGoalCompletionReceiptJson(verified)}\n`
+      );
+      assertSome(yield* readOutcome(legacyOnly.store), "verified");
+      const newerUnknown = GoalCompletionReceipt.make({
+        ...(yield* observe()),
+        verifiedAt: DateTime.add(verified.verifiedAt, { seconds: 1 }),
+      });
+      expect(newerUnknown.outcome).toBe("unknown");
+      const sharedVerified = yield* sharedStore(path.join(root, "shared-verified"));
+      yield* sharedVerified.store.append(verified);
+      yield* writeProjectFile(
+        ".beep/goals/completion-receipts.ndjson",
+        `${yield* encodeGoalCompletionReceiptJson(newerUnknown)}\n`
+      );
+      assertSome(yield* readOutcome(sharedVerified.store), "verified");
+    })
+  );
+  it.effect("a newer definite unknown refresh never displaces a verified receipt", () =>
+    Effect.gen(function* () {
+      const root = yield* temporaryWorkingDirectory;
+      const value = yield* manifest();
+      const verified = yield* completeReceipt();
+      expect(verified.outcome).toBe("verified");
+      const degraded = GoalCompletionReceipt.make({
+        ...(yield* observe()),
+        verifiedAt: DateTime.add(verified.verifiedAt, { seconds: 1 }),
+      });
+      // Definite: merged, complete ruleset reads, verified hosted required checks; only the yeet verdict is unknown.
+      expect(degraded.outcome).toBe("unknown");
+      degraded.merge.pipe(O.isSome, assertTrue);
+      assertSome(
+        O.map(degraded.requiredChecks, (snapshot) => snapshot.rulesetReadsComplete),
+        true
+      );
+      assertTrue(
+        A.some(
+          degraded.evidence,
+          (check) => check.ref.kind === "hosted-required-checks" && check.outcome === "verified"
+        )
+      );
+      const { store } = yield* sharedStore(root);
+      yield* store.append(verified);
+      yield* store.append(degraded);
+      assertSome(
+        O.map(
+          yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
+            Effect.provideService(GoalCompletionIo, fixtureIo(yield* encodeGoalManifestJson(value))),
+            Effect.provideService(GoalCompletionReceiptStore, store)
+          ),
+          (row) => row.outcome
+        ),
+        "verified"
+      );
+    })
+  );
   it.effect("doctor online reads without creating the receipt file; explicit refresh is the writer", () =>
     Effect.gen(function* () {
       yield* temporaryWorkingDirectory;
@@ -823,17 +932,34 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal completion observations
       yield* writeProjectFile("goals/demo/ops/manifest.json", text);
       yield* writeProjectFile("goals/demo/README.md", "# Demo\n\nLifecycle: `completed-retained`\n");
       const io = fixtureIo(text);
-      yield* runGoalsDoctor({ writeBaseline: false, online: true }).pipe(Effect.provideService(GoalCompletionIo, io));
+      const path = yield* Path.Path;
+      const directory = path.join(process.cwd(), "workstation-state", "goals");
+      const store = yield* makeGoalCompletionReceiptStoreLive().pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_GOALS_STATE_ROOT: directory } })
+        )
+      );
+      const sharedFile = path.join(directory, "github.com__example__repo.jsonl");
+      yield* runGoalsDoctor({ writeBaseline: false, online: true }).pipe(
+        Effect.provideService(GoalCompletionIo, io),
+        Effect.provideService(GoalCompletionReceiptStore, store)
+      );
       const fs = yield* FileSystem.FileSystem;
       expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
+      expect(yield* fs.exists(sharedFile)).toBe(false);
       yield* Command.runWith(goalsCommand, { version: "0.0.0" })(["completion", "refresh", "--slug", "demo"]).pipe(
-        Effect.provideService(GoalCompletionIo, io)
+        Effect.provideService(GoalCompletionIo, io),
+        Effect.provideService(GoalCompletionReceiptStore, store)
       );
-      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(true);
+      // The repository resolves from origin, so the shared store is the only writer target.
+      expect(yield* fs.exists(".beep/goals/completion-receipts.ndjson")).toBe(false);
+      expect(yield* fs.exists(sharedFile)).toBe(true);
       assertSome(
         O.map(
           yield* storedGoalCompletion(process.cwd(), "demo", value, final).pipe(
-            Effect.provideService(GoalCompletionIo, io)
+            Effect.provideService(GoalCompletionIo, io),
+            Effect.provideService(GoalCompletionReceiptStore, store)
           ),
           (row) => row.outcome
         ),

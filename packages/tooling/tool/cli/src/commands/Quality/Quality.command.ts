@@ -124,6 +124,7 @@ import {
   QualityHardwareProfile,
 } from "./Quality.schemas.ts";
 import { runQualityTaskGithubCheckLaneWaves, runQualityTaskStreamingStepGroup } from "./Tasks.ts";
+import type { Git } from "@beep/git/Git";
 import type { JsoncParseError } from "@beep/jsonc/Jsonc";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -728,7 +729,8 @@ type QualityScriptEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 type GithubCheckError =
   | QualityScriptCommandError
   | QualityTaskConfigurationError

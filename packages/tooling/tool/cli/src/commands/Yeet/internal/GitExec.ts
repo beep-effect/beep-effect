@@ -24,6 +24,7 @@ import {
   safeOriginBranchFromBase,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
@@ -154,7 +155,7 @@ export const collectStagedPublishPaths = Effect.fn("Yeet.collectStagedPublishPat
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   return yield* collectStagedPaths(repoRoot, gitErrorAdapter);
 });
@@ -181,7 +182,7 @@ export const collectUnstagedTrackedPaths = Effect.fn("Yeet.collectUnstagedTracke
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   return yield* collectUnstagedPaths(repoRoot, gitErrorAdapter);
 });
@@ -208,7 +209,7 @@ export const collectUntrackedPaths = Effect.fn("Yeet.collectUntrackedPaths")(fun
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   return yield* collectGitUntrackedPaths(repoRoot, gitErrorAdapter);
 });
@@ -322,7 +323,11 @@ export const refreshBaseRef = Effect.fn("Yeet.refreshBaseRef")(function* (
  */
 export const currentYeetBranch = Effect.fn("Yeet.currentYeetBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+): Effect.fn.Return<
+  string,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
   return yield* currentBranch(repoRoot, gitErrorAdapter, "abbrev-ref").pipe(Effect.map(Str.trim));
 });
 

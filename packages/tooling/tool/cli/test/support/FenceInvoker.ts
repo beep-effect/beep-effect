@@ -5,6 +5,7 @@
  * one JSON line `{ ok, message }` and exits 0 when the program succeeded.
  */
 
+import { Git } from "@beep/git/Git";
 import { WorktreeRemovalServiceLive } from "@beep/repo-cli/commands/Worktree";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as Console from "effect/Console";
@@ -13,11 +14,14 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 /** Node services plus the live worktree removal service. */
+const platformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 export const FenceInvokerLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+  platformLayer,
+  WorktreeRemovalServiceLive.pipe(Layer.provide(platformLayer))
 );
 
 const encodeOutcome = S.encodeEffect(S.fromJsonString(S.Unknown));

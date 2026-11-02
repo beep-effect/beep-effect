@@ -191,30 +191,20 @@ describe("Git parser and formatter property floor", () => {
     unmerged: "U",
     unknown: "X",
   };
+  /** Whether a name-status entry is one git's `-z` listing can carry: a rename/copy with its old path, anything else without. */
+  const wireNameStatus = (entry: G.NameStatusEntry): boolean =>
+    nonEmpty(entry.path) &&
+    (entry.status === "renamed" || entry.status === "copied"
+      ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
+      : entry.oldPath === undefined && entry.score === undefined);
+  /** One entry's `-z` tokens: `<code><score>\0[<oldPath>\0]<path>\0`. */
+  const nameStatusRecord = (entry: G.NameStatusEntry): string =>
+    `${codes[entry.status]}${entry.score ?? ""}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`;
   parserLaw(
     "nameStatus preserves rename/copy ordering and path bytes",
     names,
-    Arbitrary.schema(names).pipe(
-      Arbitrary.filter((entries) =>
-        A.every(
-          entries,
-          (entry) =>
-            nonEmpty(entry.path) &&
-            (entry.status === "renamed" || entry.status === "copied"
-              ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
-              : entry.oldPath === undefined && entry.score === undefined)
-        )
-      )
-    ),
-    (entries) =>
-      A.join(
-        A.map(
-          entries,
-          (entry) =>
-            `${codes[entry.status]}${entry.score ?? ""}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`
-        ),
-        ""
-      ),
+    Arbitrary.schema(names).pipe(Arbitrary.filter((entries) => A.every(entries, wireNameStatus))),
+    (entries) => A.join(A.map(entries, nameStatusRecord), ""),
     (git) => git.nameStatus(cwd, { base: "HEAD" })
   );
 
@@ -254,17 +244,22 @@ describe("Git parser and formatter property floor", () => {
   );
 
   const log = S.Array(G.CommitLogEntry);
+  /** The six NUL-terminated header fields every log record opens with, in `GitCommand.log`'s format order. */
+  const logHeader = (entry: G.CommitLogEntry): string =>
+    `\0${entry.sha}\0${DateTime.formatIso(entry.authoredAt)}\0${DateTime.formatIso(entry.committedAt)}\0${entry.authorName}\0${entry.authorEmail}\0${entry.subject}\0`;
+  const wireLogHeader = (entry: G.CommitLogEntry): boolean =>
+    noNul(entry.sha) && noNul(entry.authorName) && noNul(entry.authorEmail) && noNul(entry.subject);
   parserLaw(
-    "log preserves empty authors, timestamp instants, and raw path bytes",
+    "log preserves empty authors, an empty subject, timestamp instants, and raw path bytes",
     log,
     Arbitrary.schema(log).pipe(
       Arbitrary.filter((entries) =>
         A.every(
           entries,
           (entry) =>
-            noNul(entry.sha) &&
-            noNul(entry.authorName) &&
-            noNul(entry.authorEmail) &&
+            wireLogHeader(entry) &&
+            // A --name-only read never answers `changes`.
+            entry.changes === undefined &&
             A.every(entry.paths, (path) => noNul(path) && path.length > 0)
         )
       )
@@ -273,12 +268,39 @@ describe("Git parser and formatter property floor", () => {
       A.join(
         A.map(
           entries,
-          (entry) =>
-            `\0${entry.sha}\0${DateTime.formatIso(entry.authoredAt)}\0${DateTime.formatIso(entry.committedAt)}\0${entry.authorName}\0${entry.authorEmail}\0${entry.paths.length === 0 ? "" : `\n${A.join(entry.paths, "\0")}\0`}`
+          (entry) => `${logHeader(entry)}${entry.paths.length === 0 ? "" : `\n${A.join(entry.paths, "\0")}\0`}`
         ),
         ""
       ),
     (git) => git.log(cwd)
+  );
+
+  parserLaw(
+    "log --name-status preserves every change record and derives paths from the new paths",
+    log,
+    Arbitrary.schema(log).pipe(
+      Arbitrary.filter((entries) =>
+        A.every(
+          entries,
+          (entry) => wireLogHeader(entry) && entry.changes !== undefined && A.every(entry.changes, wireNameStatus)
+        )
+      ),
+      // In name-status mode `paths` is DERIVED: the new path of every change.
+      Arbitrary.map((entries) =>
+        A.map(entries, (entry) =>
+          G.CommitLogEntry.make({ ...entry, paths: A.map(entry.changes ?? [], (change) => change.path) })
+        )
+      )
+    ),
+    (entries) =>
+      A.join(
+        A.map(entries, (entry) => {
+          const body = A.join(A.map(entry.changes ?? [], nameStatusRecord), "");
+          return `${logHeader(entry)}${body === "" ? "" : `\n${body}`}`;
+        }),
+        ""
+      ),
+    (git) => git.log(cwd, { nameStatus: true })
   );
 
   const remote = S.Array(G.LsRemoteEntry);
