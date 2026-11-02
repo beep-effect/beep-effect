@@ -2277,14 +2277,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-      "symbol": "ReviewerInstallationToken",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
       "symbol": "ReviewerResult",
       "kind": "plain-data-schema-class",
       "status": "exception",
@@ -2310,14 +2302,6 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
       "symbol": "Check",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-      "symbol": "Checks",
       "kind": "plain-data-schema-class",
       "status": "exception",
       "owner": "@beep/repo-cli",
@@ -2365,14 +2349,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-      "symbol": "CheckPage",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
       "symbol": "CheckRun",
       "kind": "plain-data-schema-class",
       "status": "exception",
@@ -2398,14 +2374,6 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
       "symbol": "CreatedResource",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-      "symbol": "PullRequest",
       "kind": "plain-data-schema-class",
       "status": "exception",
       "owner": "@beep/repo-cli",
@@ -2558,16 +2526,6 @@
       "line": 55,
       "owner": "@beep/repo-cli",
       "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 54,
-      "owner": "@beep/repo-cli",
-      "reason": "Deterministic command/rendering regressions verify expected unit/proxy configuration, journal-derived limits, interpolation/path-overlap refusal, malformed inputs and absence of installation side effects. Deliberate adversarial literals and boundaries are the subject. Exit: a changed escaping/path contract motivates an independently designed rendering property, or reusable schema laws move here. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",

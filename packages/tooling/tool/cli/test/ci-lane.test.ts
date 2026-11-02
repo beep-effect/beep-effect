@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
@@ -138,7 +138,8 @@ const ciExecutionLayer = (
         return Effect.die("the CI lane test never spawns a piped command");
       }
       spawned.push(A.join([command.command, ...commandArgs(command)], " "));
-      const output = command.command === "git" ? A.join(changedFiles, "\n") : "";
+      // The kit reads `-z` output, so the scripted diff answers NUL-separated.
+      const output = command.command === "git" ? A.join(changedFiles, "\0") : "";
       return Effect.succeed(
         commandHandle(output, failedTask !== undefined && A.contains(commandArgs(command), failedTask) ? 1 : 0)
       );
@@ -2050,10 +2051,44 @@ it.layer(ciExecutionLayer(["packages/a/src/index.ts"], [], autoDocgenCommands), 
       Effect.gen(function* () {
         yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-        expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
+        expect(autoDocgenCommands[0]).toBe("git diff --name-only -z --no-relative origin/main...HEAD");
         expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
       })
     );
+  }
+);
+
+// The automatic Docgen scope diff fails before git answers (no exit code) or after git refuses.
+const docgenScopeFailures = [
+  {
+    label: "an unspawnable",
+    failure: GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", stderr: "", detail: "spawn ENOENT" }),
+    message: "Failed to resolve automatic Docgen scope.",
+  },
+  {
+    label: "a refused",
+    failure: GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", exitCode: 128, stderr: "fatal" }),
+    message: "git diff for automatic Docgen scope failed with exit code 128.",
+  },
+] as const;
+
+const failedScopeCommands = A.empty<string>();
+it.layer(ciExecutionLayer([], [], failedScopeCommands), { timeout: "10 seconds" })(
+  "automatic Docgen CI lane over a failing diff",
+  (it) => {
+    for (const { label, failure, message } of docgenScopeFailures) {
+      it.effect(`reports ${label} scope diff without running Docgen`, () =>
+        Effect.gen(function* () {
+          const error = yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" })).pipe(
+            Effect.provideService(Git, Git.makeTest({ changedFiles: () => Effect.fail(failure) })),
+            Effect.flip
+          );
+
+          expect(error.message).toBe(message);
+          expect(failedScopeCommands).toEqual([]);
+        })
+      );
+    }
   }
 );
 
@@ -2065,7 +2100,7 @@ it.layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands), { ti
       Effect.gen(function* () {
         yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-        expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
+        expect(inertDocgenCommands).toEqual(["git diff --name-only -z --no-relative origin/main...HEAD"]);
       })
     );
   }

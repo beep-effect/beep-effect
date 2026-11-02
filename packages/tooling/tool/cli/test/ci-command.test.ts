@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { appendTurboSummary, CiRunnerOutputsLive, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { FsUtilsLive } from "@beep/repo-utils";
@@ -118,6 +118,39 @@ describe("CI commands", () => {
         expect(exit._tag).toBe("Failure");
         expect(errors).toContain("--force requires --partition");
       })
+    );
+  });
+
+  ciTest("folds an unspawnable branch read and plans a detached HEAD as off-main", (it) => {
+    it.effect("runs", () =>
+      withTempRepo(() =>
+        Effect.gen(function* () {
+          const spawnFailure = GitCommandError.make({
+            kind: "failed",
+            args: ["branch", "--show-current"],
+            cwd: "/repo",
+            stderr: "",
+            detail: "spawn ENOENT",
+          });
+          const unspawnable = yield* runCiLocal({
+            affected: false,
+            base: "origin/main",
+            fast: false,
+            lanes: O.some("lint"),
+          }).pipe(
+            Effect.provideService(Git, Git.makeTest({ currentBranch: () => Effect.fail(spawnFailure) })),
+            Effect.flip
+          );
+          expect(unspawnable._tag).toBe("CiCommandError");
+          expect(unspawnable.message).toBe("Failed to resolve the current git branch.");
+
+          // A detached HEAD has no branch: the battery plans as off-main and, with no lane selected, runs nothing.
+          yield* runCiLocal({ affected: false, base: "origin/main", fast: false, lanes: O.some(",") }).pipe(
+            Effect.provideService(Git, Git.makeTest({ currentBranch: () => Effect.succeedNone }))
+          );
+          expect(A.filter(yield* TestConsole.logLines, isString)).toContain("[ci] local battery: ");
+        })
+      )
     );
   });
 

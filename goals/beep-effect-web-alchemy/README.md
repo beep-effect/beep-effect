@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,7 +45,8 @@ P3 and P4 done 2026-10-31: PR #2435 merged as `441c6d94de`, and its merge push d
 - P2 (2026-10-28): `history/2026-10-28-p2-first-deploy.md`: apex 200, www 301 with path and query kept, redeploy no-op, state in the Cloudflare store.
 - P3 (2026-10-31): `history/2026-10-31-p3-ci-deploy.md`: first CI deploy green; smoke check apex 200, www 301.
 - P5 (2026-10-31): `history/reflections/2026-10-31-claude.md`.
-- Completion re-final (2026-11-01, second pass 2026-11-02): `history/2026-11-01-completion-refinal.md`; final PR #2523.
+- Completion re-final (2026-11-01, second and third passes 2026-11-02): `history/2026-11-01-completion-refinal.md`; final PR #2583.
+- Closeout accepted (2026-11-02): `history/2026-11-02-closeout-accepted.md`; required checks verified on #2583, yeet-verdict accepted as a residual.
 
 ## Notes
 

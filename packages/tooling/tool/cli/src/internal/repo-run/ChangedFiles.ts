@@ -1,80 +1,109 @@
 /**
  * Shared changed-file discovery for bounded local quality commands.
  *
+ * Every reader runs through `@beep/git`'s `Git` service (repo-cli-gh-git-consolidation W2, SPEC
+ * D-10): the dirty-axis probes are `Git.unstagedChanges` / `Git.stagedChanges` /
+ * `Git.untrackedFiles` with the G7 `diffFilter`, `noRenames` and `pathspec` options, and the
+ * base-range read is `Git.changedFiles`. The kit's typed errors fold back onto the `DomainError`
+ * wording the bounded capture produced through {@link adaptGitKitError}.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import { runCaptured } from "../process/StepExec.ts";
+import { formatCommandLine } from "../process/StepExec.ts";
+import { adaptGitKitError } from "./GitExec.ts";
+import type { GitInvocation } from "@beep/git/GitCommand";
+import type { GitCommandErrorAdapter, GitKitError } from "./GitExec.ts";
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 const normalizedFilePath = (value: string): string => normalizeSlashes(Str.trim(value));
-const isNonEmptyLine = (value: string): boolean => Str.isNonEmpty(Str.trim(value));
+
+/** The kit's paths in the shape the line capture produced: trimmed, forward slashes, no empties. */
+const normalizedFilePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
+  A.map(normalizedFilePath),
+  A.filter(Str.isNonEmpty)
+);
+
+// The `DomainError` wording of the bounded line capture this module ran before W2: a non-zero
+// exit carried the command line, the code and the trimmed output; a spawn failure its cause.
+const changedFilesErrorAdapter: GitCommandErrorAdapter<DomainError> = {
+  onSpawnFailure: (commandLine) => DomainError.newCause(`${commandLine} failed to run.`),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    DomainError.make({ message: `${commandLine} failed with exit code ${exitCode}: ${Str.trim(output)}` }),
+  onTruncated: O.none(),
+};
+
+/** The diff flags the dirty-axis and base-range readers accept. */
+type ChangedFileFilter = {
+  /** `--diff-filter=<letters>`; omitted when every status counts. */
+  readonly diffFilter?: string;
+  /** `--no-renames`, so a moved file lists as its old and new path. */
+  readonly noRenames?: boolean;
+  /** Pathspecs appended behind `--`; empty for the whole tree. */
+  readonly pathspecs: ReadonlyArray<string>;
+};
+
+const diffOptions = (filter: ChangedFileFilter) =>
+  O.getSomesStruct({
+    diffFilter: O.fromUndefinedOr(filter.diffFilter),
+    noRenames: O.fromUndefinedOr(filter.noRenames),
+    pathspec: O.liftPredicate(filter.pathspecs, A.isReadonlyArrayNonEmpty),
+  });
 
 /**
- * Run a git command and read stdout as normalized repo-relative paths.
+ * Collect the paths changed across a base range.
  *
- * **Example** (Read the staged file list)
+ * **Example** (Collect the TypeScript changed since origin/main)
  *
  * ```ts
- * import { runGitLines } from "@beep/repo-cli/test/SharedInternals"
+ * import { collectBaseRangeChangedFiles } from "@beep/repo-cli/test/SharedInternals"
  *
- * const staged = runGitLines("/repo", ["diff", "--cached", "--name-only"])
- * console.log(staged)
+ * const changed = collectBaseRangeChangedFiles("/repo", {
+ *   base: "origin/main",
+ *   head: "HEAD",
+ *   diffFilter: "ACMR",
+ *   pathspecs: ["*.ts", "*.tsx"]
+ * })
+ * console.log(changed)
  * ```
  *
  * **Details**
  *
- * Blank lines are dropped and backslashes are rewritten to forward slashes so callers
- * compare paths against repo-relative package prefixes. A non-zero exit code fails with
- * a `DomainError` carrying the trimmed command output.
+ * Runs `Git.changedFiles` (`diff --name-only -z <base>...<head>`) with the filter's flags. Paths
+ * come back trimmed with forward slashes, as the line capture it replaces returned them; a failure
+ * is a `DomainError` carrying the kit's command line and exit code.
  *
  * @param repoRoot - Absolute repository root.
- * @param args - Git arguments, excluding the `git` executable itself.
- * @returns Normalized repo-relative paths, one per emitted line.
+ * @param range - The three-dot range and the diff flags.
+ * @returns Normalized repo-relative paths, in git's order.
  * @category utilities
  * @since 0.0.0
  */
-export const runGitLines = Effect.fn("ChangedFiles.runGitLines")(function* (
+export const collectBaseRangeChangedFiles = Effect.fn("ChangedFiles.collectBaseRangeChangedFiles")(function* (
   repoRoot: string,
-  args: ReadonlyArray<string>
-) {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  });
-  if (result.exitCode !== 0) {
-    return yield* DomainError.make({
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}: ${Str.trim(result.output)}`,
-    });
-  }
-
-  return pipe(Str.split(/\r?\n/)(result.output), A.map(normalizedFilePath), A.filter(isNonEmptyLine));
+  range: ChangedFileFilter & { readonly base: string; readonly head: string }
+): Effect.fn.Return<ReadonlyArray<string>, DomainError, Git> {
+  const git = yield* Git;
+  const options = { base: range.base, head: range.head, ...diffOptions(range) };
+  return yield* git.changedFiles(repoRoot, options).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(
+        GitCommand.changedFiles(range.base, range.head, false, options),
+        changedFilesErrorAdapter
+      ),
+      onSuccess: normalizedFilePaths,
+    })
+  );
 });
-
-const pathspecArgs = A.match({
-  onEmpty: A.empty<string>,
-  onNonEmpty: (pathspecs: A.NonEmptyReadonlyArray<string>): ReadonlyArray<string> => ["--", ...pathspecs],
-});
-
-const dirtyWorktreeProbes = (
-  diffArgs: ReadonlyArray<string>,
-  pathspecs: ReadonlyArray<string>
-): ReadonlyArray<ReadonlyArray<string>> => {
-  const pathspec = pathspecArgs(pathspecs);
-  return [
-    ["diff", "--name-only", ...diffArgs, "HEAD", ...pathspec],
-    ["diff", "--cached", "--name-only", ...diffArgs, ...pathspec],
-    ["ls-files", "--others", "--exclude-standard", ...pathspec],
-  ];
-};
 
 /**
  * Collect unstaged, staged, and untracked files from the dirty worktree.
@@ -85,7 +114,7 @@ const dirtyWorktreeProbes = (
  * import { collectDirtyWorktreeFiles } from "@beep/repo-cli/test/SharedInternals"
  *
  * const dirty = collectDirtyWorktreeFiles("/repo", {
- *   diffArgs: ["--diff-filter=ACMR"],
+ *   diffFilter: "ACMR",
  *   pathspecs: ["*.ts", "*.tsx"],
  *   onProbeFailure: "ignore"
  * })
@@ -94,30 +123,44 @@ const dirtyWorktreeProbes = (
  *
  * **Details**
  *
- * `diffArgs` extends the two `git diff` probes only; `pathspecs` are appended to every
- * probe behind a `--` separator. `onProbeFailure` selects between failing the whole scan
- * (`"fail"`) and degrading a single broken probe to no files (`"ignore"`), which callers
- * that must tolerate a repository without a `HEAD` commit rely on.
+ * The three probes are `Git.unstagedChanges` against `HEAD`, `Git.stagedChanges` and
+ * `Git.untrackedFiles`; `diffFilter` and `noRenames` reach the two diff probes only, `pathspecs`
+ * every probe. `onProbeFailure` selects between failing the whole scan (`"fail"`) and degrading a
+ * single broken probe to no files (`"ignore"`), which callers that must tolerate a repository
+ * without a `HEAD` commit rely on.
  *
  * @param repoRoot - Absolute repository root.
- * @param options - Probe arguments and the per-probe failure policy.
+ * @param options - Diff flags, pathspecs and the per-probe failure policy.
  * @returns Repo-relative paths reported by the dirty-worktree probes, in probe order.
  * @category utilities
  * @since 0.0.0
  */
 export const collectDirtyWorktreeFiles = Effect.fn("ChangedFiles.collectDirtyWorktreeFiles")(function* (
   repoRoot: string,
-  options: {
-    readonly diffArgs: ReadonlyArray<string>;
-    readonly pathspecs: ReadonlyArray<string>;
-    readonly onProbeFailure: "fail" | "ignore";
-  }
-) {
+  options: ChangedFileFilter & { readonly onProbeFailure: "fail" | "ignore" }
+): Effect.fn.Return<ReadonlyArray<string>, DomainError, Git> {
+  const git = yield* Git;
+  const diff = diffOptions(options);
+  const unstaged = { head: "HEAD", ...diff };
+  const pathspec = O.getSomesStruct({ pathspec: O.liftPredicate(options.pathspecs, A.isReadonlyArrayNonEmpty) });
+  const probes: ReadonlyArray<readonly [GitInvocation, Effect.Effect<ReadonlyArray<string>, GitKitError>]> = [
+    [GitCommand.unstagedChanges(false, unstaged), git.unstagedChanges(repoRoot, unstaged)],
+    [GitCommand.stagedChanges(false, diff), git.stagedChanges(repoRoot, diff)],
+    [GitCommand.untrackedFiles(false, options.pathspecs), git.untrackedFiles(repoRoot, pathspec)],
+  ];
   const probed = yield* Effect.forEach(
-    dirtyWorktreeProbes(options.diffArgs, options.pathspecs),
-    (args) =>
-      runGitLines(repoRoot, args).pipe(
-        Effect.mapError(DomainError.newCause(`Unable to resolve dirty worktree files via "git ${A.join(args, " ")}".`)),
+    probes,
+    ([invocation, probe]) =>
+      probe.pipe(
+        Effect.mapBoth({
+          onFailure: flow(
+            adaptGitKitError(invocation, changedFilesErrorAdapter),
+            DomainError.newCause(
+              `Unable to resolve dirty worktree files via "${formatCommandLine("git", invocation.redactedArgs)}".`
+            )
+          ),
+          onSuccess: normalizedFilePaths,
+        }),
         Effect.catch((error) =>
           options.onProbeFailure === "ignore" ? Effect.succeed(A.empty<string>()) : Effect.fail(error)
         )
@@ -151,12 +194,15 @@ export const collectChangedFiles = Effect.fn("ChangedFiles.collectChangedFiles")
   repoRoot: string,
   base: string,
   head: string
-) {
-  const baseChanged = yield* runGitLines(repoRoot, ["diff", "--no-renames", "--name-only", `${base}...${head}`]).pipe(
-    Effect.mapError(DomainError.newCause(`Unable to resolve changed-file base range ${base}...${head}.`))
-  );
+): Effect.fn.Return<ReadonlyArray<string>, DomainError, Git> {
+  const baseChanged = yield* collectBaseRangeChangedFiles(repoRoot, {
+    base,
+    head,
+    noRenames: true,
+    pathspecs: A.empty(),
+  }).pipe(Effect.mapError(DomainError.newCause(`Unable to resolve changed-file base range ${base}...${head}.`)));
   const workingTreeChanged = yield* collectDirtyWorktreeFiles(repoRoot, {
-    diffArgs: ["--no-renames"],
+    noRenames: true,
     pathspecs: A.empty(),
     onProbeFailure: "fail",
   });

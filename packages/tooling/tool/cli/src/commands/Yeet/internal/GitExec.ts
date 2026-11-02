@@ -47,22 +47,135 @@ import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
 
-const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
-  onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),
+/**
+ * The wording a {@link yeetGitErrorAdapter} folds git failures into.
+ *
+ * **Details**
+ *
+ * `spawnFailure` is a fixed message for a run git never reached; when it is absent the message is
+ * `Failed to run <command line>.`. A non-zero exit renders `<command line> <nonZeroExit> <code>.`, and
+ * a truncated run `<command line> <truncated>`, carrying `truncatedExitCode` when one is set.
+ *
+ * **Example** (Describe the strict reader wording)
+ *
+ * ```ts
+ * import { YeetGitErrorWording } from "@beep/repo-cli/test/Yeet"
+ *
+ * const wording = YeetGitErrorWording.make({
+ *   spawnFailure: "Failed to read the working-tree status.",
+ *   nonZeroExit: "exited with code",
+ *   truncated: "produced more output than the capture bound.",
+ * })
+ * console.log(wording.nonZeroExit) // exited with code
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetGitErrorWording extends S.Opaque<YeetGitErrorWording, { readonly brand: unique symbol }>()(
+  S.Struct({
+    spawnFailure: S.optionalKey(S.String),
+    nonZeroExit: S.String,
+    truncated: S.String,
+    truncatedExitCode: S.optionalKey(S.Finite),
+  }).pipe(
+    $I.annoteSchema("YeetGitErrorWording", {
+      description: "Message text Yeet renders for a git run that failed to spawn, exited non-zero or was truncated.",
+    })
+  )
+) {}
+
+/**
+ * Build a `GitCommandErrorAdapter` that folds every git failure into `YeetCommandError` with the
+ * given wording.
+ *
+ * **Details**
+ *
+ * Yeet keeps two historical wordings. The bounded capture renders
+ * `<command line> failed with exit code <n>.`, and the strict readers in Settle render
+ * `<command line> exited with code <n>.`. Both share this shape and differ only in their
+ * {@link YeetGitErrorWording} (repo-cli-gh-git-consolidation W2b, SPEC D-11).
+ *
+ * **Example** (Build the strict reader adapter)
+ *
+ * ```ts
+ * import { YeetGitErrorWording, yeetGitErrorAdapter } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const adapter = yeetGitErrorAdapter(
+ *   YeetGitErrorWording.make({ nonZeroExit: "exited with code", truncated: "produced more output than the capture bound." })
+ * )
+ * console.log(O.isSome(adapter.onTruncated)) // true
+ * ```
+ *
+ * @param wording - The message text for each failure kind.
+ * @returns The adapter for `adaptGitKitError` or the bounded capture.
+ * @category execution
+ * @since 0.0.0
+ */
+export const yeetGitErrorAdapter = (wording: YeetGitErrorWording): GitCommandErrorAdapter<YeetCommandError> => ({
+  onSpawnFailure: (commandLine) =>
+    YeetCommandError.new(O.getOrElse(O.fromUndefinedOr(wording.spawnFailure), () => `Failed to run ${commandLine}.`)),
   onNonZeroExit: ({ commandLine, exitCode }) =>
     YeetCommandError.make({
-      message: `${commandLine} failed with exit code ${exitCode}.`,
+      message: `${commandLine} ${wording.nonZeroExit} ${exitCode}.`,
       command: commandLine,
       exitCode,
     }),
   onTruncated: O.some((commandLine) =>
     YeetCommandError.make({
-      message: `${commandLine} output exceeded the repo-run capture limit.`,
+      message: `${commandLine} ${wording.truncated}`,
       command: commandLine,
-      exitCode: 1,
+      ...O.match(O.fromUndefinedOr(wording.truncatedExitCode), {
+        onNone: () => ({}),
+        onSome: (exitCode) => ({ exitCode }),
+      }),
     })
   ),
-};
+});
+
+const gitErrorAdapter = yeetGitErrorAdapter(
+  YeetGitErrorWording.make({
+    nonZeroExit: "failed with exit code",
+    truncated: "output exceeded the repo-run capture limit.",
+    truncatedExitCode: 1,
+  })
+);
+
+/**
+ * Fold a `Git` member's typed error into Yeet's historical `YeetCommandError` wording.
+ *
+ * **Details**
+ *
+ * The same wording {@link runGitOutput} gives the bounded capture: a run git reported is
+ * `<command line> failed with exit code <n>.` (128 for an unknown ref or a non-repository), a
+ * truncated run is the capture-limit wording, and a run git never reached (spawn failure, timeout,
+ * a pre-spawn refusal) is `Failed to run <command line>.`. The command line is `git` plus the kit
+ * invocation's redacted argv (repo-cli-gh-git-consolidation W2b, SPEC D-11).
+ *
+ * **Example** (Fold a kit commit failure)
+ *
+ * ```ts
+ * import { Git } from "@beep/git/Git"
+ * import { GitCommand } from "@beep/git/GitCommand"
+ * import { yeetGitKitError } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const commit = Effect.flatMap(Git, (git) =>
+ *   git.commit("/repo", "chore: empty", { allowEmpty: true }).pipe(
+ *     Effect.mapError(yeetGitKitError(GitCommand.commit("chore: empty", false, true)))
+ *   )
+ * )
+ * console.log(Effect.isEffect(commit)) // true
+ * ```
+ *
+ * @param invocation - The kit invocation the member ran, for the redacted command line.
+ * @returns The fold from one kit failure to Yeet's error.
+ * @category execution
+ * @since 0.0.0
+ */
+export const yeetGitKitError = (invocation: GitInvocation): ((error: GitKitError) => YeetCommandError) =>
+  adaptGitKitError(invocation, gitErrorAdapter);
 
 /**
  * Run Git with Yeet's historical bounded-output error wording.
@@ -449,9 +562,9 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  *
  * **Details**
  *
- * KEEP (W1b): this reader stays on the bounded capture because `Git.changedFiles` takes no
- * pathspec yet; it moves onto the kit with the G7 dirty-axis flags in W2
- * (repo-cli-gh-git-consolidation PLAN "Waves").
+ * Runs `Git.changedFiles(repoRoot, { base, head, pathspec: ["bun.lock"] })` (the G7 pathspec,
+ * repo-cli-gh-git-consolidation W2, SPEC D-10); any failure reads as "unchanged", as the tolerant
+ * capture it replaces did.
  *
  * **Example** (Detect bun.lock changes)
  *
@@ -476,29 +589,24 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  */
 export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase")(function* (
   context: RepoRunContext
-): Effect.fn.Return<boolean, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const changed = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${context.base}...${context.head}`,
-    "--",
-    "bun.lock",
-  ]).pipe(Effect.orElseSucceed(A.empty<string>));
-  return !A.isReadonlyArrayEmpty(changed);
+): Effect.fn.Return<boolean, YeetCommandError, Git> {
+  const git = yield* Git;
+  const changed = yield* git
+    .changedFiles(context.repoRoot, { base: context.base, head: context.head, pathspec: ["bun.lock"] })
+    .pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.isReadonlyArrayNonEmpty(changed);
 });
 
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
- * **Example** (Decode a refused worktree add)
+ * **Example** (Represent a successful mutation without captured output)
  *
  * ```ts
  * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
- * import * as S from "effect/Schema"
  *
- * const exit = S.decodeUnknownSync(GitKitExit)({ exitCode: 128, output: "fatal: invalid reference" })
- * console.log(exit.exitCode) // 128
+ * const exit = GitKitExit.make({ exitCode: 0, output: "" })
+ * console.log(exit.exitCode) // 0
  * ```
  *
  * @category models
@@ -506,11 +614,11 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
  */
 export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
   S.Struct({
-    exitCode: S.Int,
+    exitCode: S.Finite,
     output: S.String,
   }).pipe(
     $I.annoteSchema("GitKitExit", {
-      description: "The exit code and output a repo-run capture reported for a git mutation.",
+      description: "A Git mutation's finite exit code and output, with empty output for a successful kit call.",
     })
   )
 ) {}

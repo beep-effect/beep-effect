@@ -54,7 +54,7 @@ import {
   EffectImportRulesOptions,
 } from "@beep/repo-cli/commands/Laws/EffectImports";
 import { discoverWorkspacePackages } from "@beep/repo-cli/test/Quality";
-import { runGitLines } from "@beep/repo-cli/test/SharedInternals";
+import { runGitLines as runRepoGitLines } from "@beep/repo-cli/test/RepoRun";
 import { NodeCrypto, NodeRuntime, NodeServices } from "@effect/platform-node";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -72,6 +72,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const TOOL = "goals/effected-promotion/ops/glob-adoption-parity.ts";
 const repoRoot = NodeURL.fileURLToPath(new URL("../../..", import.meta.url));
@@ -207,6 +208,18 @@ const decodeReport = S.decodeUnknownEffect(S.fromJsonString(Report));
 class ParityFailed extends S.TaggedError<ParityFailed, { readonly brand: unique symbol }>()("ParityFailed", {
   reasons: S.Array(S.String),
 }) {}
+
+// The git reads this oracle needs, through repo-cli's generic line runner (the ChangedFiles
+// `runGitLines` it used moved onto `@beep/git` in repo-cli-gh-git-consolidation W2); a failed
+// read stops the parity run with the git command named.
+const parityGitAdapter: GitCommandErrorAdapter<ParityFailed> = {
+  onSpawnFailure: (commandLine) => () => ParityFailed.make({ reasons: [`could not run ${commandLine}`] }),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    ParityFailed.make({ reasons: [`${commandLine} failed with exit code ${exitCode}: ${Str.trim(output)}`] }),
+  onTruncated: O.none(),
+};
+
+const runGitLines = (cwd: string, args: ReadonlyArray<string>) => runRepoGitLines(cwd, args, parityGitAdapter);
 
 // --- pattern parity -------------------------------------------------------------------------------------------
 

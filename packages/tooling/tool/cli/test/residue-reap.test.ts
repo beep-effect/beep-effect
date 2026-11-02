@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { WorktreeMergedPullRequest } from "@beep/repo-cli/commands/Worktree";
 import { makeResidueTerminalLaneProbe, renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
@@ -921,6 +921,55 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             expect(yield* fs.exists(owned)).toBe(true);
             expect(yield* fs.exists(occupied)).toBe(true);
             expect(yield* fs.exists(fresh)).toBe(true);
+          }),
+        removeTempDirectory
+      )
+    );
+
+    it.effect("fails closed when the owner, the registration, or an embedded checkout cannot be probed", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const homeRoot = path.join(root, "home");
+            const { repoRoot, yeetRoot } = yield* makePreviewRepo(root, "one");
+            const preview = path.join(yeetRoot, "merged-preview-5151");
+            yield* addPreviewWorktree(root, repoRoot, preview, 3);
+            const worktree = path.join(homeRoot, ".codex", "worktrees", "probe-worktree");
+            yield* makeEmbeddedRepo(worktree);
+            yield* touchTreeDaysAgo(root, worktree, 45);
+            const options = {
+              classes: ["merged-preview", "codex-worktrees"] as const,
+              homeRoot,
+              nowMillis: FIXTURE_NOW_MILLIS,
+              probeLiveCwd: noLiveCwd,
+              repoRoot,
+            };
+
+            const ownerUnknown = yield* runResidueReap({ ...options, probePidAlive: () => Effect.succeedNone });
+            expect(candidateByPath(ownerUnknown, preview).skipReason).toBe("process-probe-failed");
+
+            // Git refuses both the worktree listing and the status read, so neither path is reaped.
+            const refusal = GitCommandError.make({
+              kind: "failed",
+              args: ["status"],
+              cwd: root,
+              exitCode: 128,
+              stderr: "fatal",
+            });
+            const gitUnknown = yield* runResidueReap({ ...options, apply: true, probePidAlive: noLivePid }).pipe(
+              Effect.provideService(
+                Git,
+                Git.makeTest({ worktreeList: () => Effect.fail(refusal), status: () => Effect.fail(refusal) })
+              )
+            );
+            expect(candidateByPath(gitUnknown, preview).skipReason).toBe("git-probe-failed");
+            expect(candidateByPath(gitUnknown, worktree).skipReason).toBe("git-probe-failed");
+            expect(gitUnknown.reapedCount).toBe(0);
+            expect(yield* fs.exists(preview)).toBe(true);
+            expect(yield* fs.exists(worktree)).toBe(true);
           }),
         removeTempDirectory
       )
@@ -2222,6 +2271,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 const path = yield* Path.Path;
                 const encoded = yield* S.encodeEffect(ResidueInvocationJson)(fixture);
                 const script = `
+            import { Git } from "@beep/git/Git";
             import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/RepoRun";
             import { NodeCrypto, NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
@@ -2230,7 +2280,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
             await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
               probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
               archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
-            }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)))));
+            }).pipe(Effect.provide(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone))))));
           `;
                 const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
                   Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })

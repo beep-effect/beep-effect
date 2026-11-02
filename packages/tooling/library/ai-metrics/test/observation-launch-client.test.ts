@@ -21,6 +21,7 @@ import { makeSqlTestLayer, NodeSqliteTestDriver } from "@beep/test-utils/SqlTest
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -34,6 +35,7 @@ import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 
 const sqlLayer = makeSqlTestLayer({ config: undefined, driver: NodeSqliteTestDriver });
 const id = (digit: string) => Sha256Hex.make(Str.repeat(64)(digit));
@@ -55,6 +57,9 @@ const prepare = ObservationLaunchFact.cases.Prepared.make({
 const encodeObservationLaunchReceiptJson = S.encodeEffect(S.fromJsonString(ObservationLaunchReceipt));
 
 const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
+  // Protocol validation uses real IO; only this fixture controls its deadline clock.
+  const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
+  yield* clock.setTime(yield* Clock.currentTimeMillis);
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ directory: "/tmp", prefix: "obs-client-" });
   yield* fs.chmod(directory, 0o700);
@@ -100,8 +105,10 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     return O.none();
   };
   const postResponse = Effect.fnUntraced(function* (scenario: string, result: HttpServerResponse.HttpServerResponse) {
-    // Keep the acknowledgment past the client deadline, but let server cleanup finish.
-    if (scenario === "lost") return yield* Effect.as(Effect.sleep("1 second"), result);
+    if (scenario === "lost") {
+      yield* Deferred.succeed(reached, undefined);
+      return yield* Effect.as(Deferred.await(release), result);
+    }
     if (scenario === "forged") {
       const row = yield* receiptRow;
       return HttpServerResponse.text(
@@ -127,7 +134,7 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const isPost = request.method === "POST";
       if (isPost) yield* Ref.update(posts, (n) => n + 1);
-      const result = yield* intake.handler;
+      const result = yield* Effect.provideService(intake.handler, Clock.Clock, clock);
       const scenario = yield* Ref.get(mode);
       if (scenario === "blocked") {
         yield* Deferred.succeed(reached, undefined);
@@ -145,14 +152,21 @@ const fixture = Effect.fn("LaunchClientTest.fixture")(function* () {
     timeoutMillis: 250,
   });
   const uid = process.geteuid?.() ?? -1;
-  const client = yield* makeObservationLaunchClient(policy, uid);
+  const rawClient = yield* makeObservationLaunchClient(policy, uid);
+  // Release held replies before either client or graceful server shutdown runs.
+  yield* Effect.addFinalizer(() => Deferred.succeed(release, undefined));
+  const client = {
+    context: Effect.provideService(rawClient.context, Clock.Clock, clock),
+    submit: (submission: ObservationLaunchSubmission) =>
+      Effect.provideService(rawClient.submit(submission), Clock.Clock, clock),
+  };
   const submission = ObservationLaunchSubmission.make({
     hostId: id("a"),
     namespaceId: id("b"),
     evidenceEpoch: 0,
     fact: prepare,
   });
-  return { fs, directory, policy, uid, client, control, facts, mode, posts, submission, reached, release };
+  return { fs, directory, policy, uid, client, control, facts, mode, posts, submission, reached, release, clock };
 });
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
@@ -189,7 +203,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       for (const scenario of ["invalid-utf8", "extra-field", "wrong-header", "conflict"]) {
         yield* Ref.set(f.mode, scenario);
         const error = yield* f.client.submit(f.submission).pipe(Effect.flip);
-        expect(error.reason).toBe(scenario === "conflict" ? "conflict" : "invalid-response");
+        expect(error.reason, scenario).toBe(scenario === "conflict" ? "conflict" : "invalid-response");
         expect(String(error)).not.toContain("private-extra");
         expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
       }
@@ -223,14 +237,39 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture();
       yield* f.control.resume;
       yield* Ref.set(f.mode, "lost");
-      expect((yield* f.client.submit(f.submission).pipe(Effect.flip)).reason).toBe("ambiguous");
+      const pending = yield* f.client.submit(f.submission).pipe(Effect.flip, Effect.forkChild);
+      // Advance only after the real handler has committed and withheld the acknowledgment.
+      yield* Deferred.await(f.reached);
+      yield* f.clock.adjust(f.policy.timeoutMillis - 1);
+      expect(pending.pollUnsafe()).toBeUndefined();
+      yield* f.clock.adjust(1);
+      expect((yield* Fiber.join(pending)).reason).toBe("ambiguous");
       const rows = yield* f.facts.read(id("1"), 0);
       expect(rows.length).toBe(1);
       expect(yield* Ref.get(f.posts)).toBe(1);
       yield* Ref.set(f.mode, "normal");
+      yield* Deferred.succeed(f.release, undefined);
       expect(yield* f.client.submit(f.submission)).toEqual(rows[0]);
       expect(yield* Ref.get(f.posts)).toBe(2);
       expect((yield* f.facts.read(id("1"), 0)).length).toBe(1);
+    }).pipe(Effect.timeout("3 seconds"))
+  )
+);
+
+it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
+  it.effect("releases held replies before shutdown when the enclosing scope fails", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.scoped(
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          yield* f.control.resume;
+          yield* Ref.set(f.mode, "lost");
+          yield* f.client.submit(f.submission).pipe(Effect.forkChild);
+          yield* Deferred.await(f.reached);
+          return yield* Effect.fail("synthetic-scope-failure");
+        })
+      ).pipe(Effect.flip);
+      expect(failure).toBe("synthetic-scope-failure");
     }).pipe(Effect.timeout("3 seconds"))
   )
 );

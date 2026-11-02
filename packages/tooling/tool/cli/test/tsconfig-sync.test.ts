@@ -516,6 +516,42 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("fails with a typed DomainError naming package.json when the root export is a wildcard", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+
+          yield* bootstrapRootConfig(rootDir, {
+            workspaces: ["packages/example-domain"],
+            references: ["packages/example-domain"],
+            paths: {
+              "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+              "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+            },
+            syncpackSources: ["package.json", "packages/example-domain/package.json"],
+          });
+          yield* bootstrapWorkspace(rootDir, {
+            relativeDir: "packages/example-domain",
+            packageName: "@beep/example-domain",
+            exports: { ".": "./src/*.ts" },
+          });
+          const packageJsonPath = path.join(rootDir, "packages", "example-domain", "package.json");
+
+          const failure = yield* syncTsconfigAtRoot(
+            rootDir,
+            TsconfigSyncRunOptionsCheck.make({ mode: "check", filter: undefined, verbose: false })
+          ).pipe(Effect.flip);
+
+          expect(failure._tag).toBe("DomainError");
+          expect(Str.startsWith(`Invalid root export "./src/*.ts" in "${packageJsonPath}": `)(failure.message)).toBe(
+            true
+          );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("emits scoped aliases only for file-stem scoped wildcard exports", () =>
       Effect.andThen(
         temporaryRepository,

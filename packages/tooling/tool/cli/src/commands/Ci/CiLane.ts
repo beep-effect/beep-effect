@@ -11,6 +11,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -46,6 +48,7 @@ import {
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/TurboCache.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
+import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
@@ -70,7 +73,6 @@ import {
   PartitionedCiLane as PartitionedCiLaneSchema,
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
-import type { Git } from "@beep/git/Git";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -1894,42 +1896,35 @@ export const docgenLaneModeForChangedPaths = (changedPaths: ReadonlyArray<string
       ? "affected"
       : "none";
 
-const normalizedOutputPaths = (output: string): ReadonlyArray<string> =>
-  pipe(Str.split(/\r?\n/u)(output), A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
+const normalizedOutputPaths = (paths: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(paths, A.map(normalizeSlashes), A.filter(Str.isNonEmpty), A.dedupe, A.sort(Order.String));
 
+// `Git.changedFiles` over `<base>...<head>`, folded onto the capture's two error wordings (SPEC D-10).
 const changedPathsBetween = Effect.fn("CiLane.changedPathsBetween")(function* (
   repoRoot: string,
   base: string,
   head: string,
   purpose: string
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  CiCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["diff", "--name-only", `${base}...${head}`],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(CiCommandError.mapError(`Failed to resolve ${purpose}.`));
-  if (result.exitCode !== 0) {
-    return yield* CiCommandError.make({
-      message: `git diff for ${purpose} failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return normalizedOutputPaths(result.output);
+): Effect.fn.Return<ReadonlyArray<string>, CiCommandError, Git> {
+  const git = yield* Git;
+  return yield* git.changedFiles(repoRoot, { base, head }).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.changedFiles(base, head), {
+        onSpawnFailure: () => CiCommandError.new(`Failed to resolve ${purpose}.`),
+        onNonZeroExit: ({ exitCode }) =>
+          CiCommandError.make({ message: `git diff for ${purpose} failed with exit code ${exitCode}.` }),
+        onTruncated: O.none(),
+      }),
+      onSuccess: normalizedOutputPaths,
+    })
+  );
 });
 
 const resolveAutoDocgenLaneMode = Effect.fn("CiLane.resolveAutoDocgenLaneMode")(function* (
   repoRoot: string,
   base: string,
   head: string
-): Effect.fn.Return<
-  DocgenLaneMode,
-  CiCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<DocgenLaneMode, CiCommandError, Git> {
   const changedPaths = yield* changedPathsBetween(repoRoot, base, head, "automatic Docgen scope");
   const mode = docgenLaneModeForChangedPaths(changedPaths);
   yield* Console.log(`[ci] docgen: auto-selected ${mode} from ${A.length(changedPaths)} changed path(s)`);
@@ -2623,22 +2618,23 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
   return options.fast ? A.filter(requested, (laneId) => !A.contains(CI_LOCAL_FAST_SKIPS, laneId)) : requested;
 });
 
+// `Git.currentBranch` in `show-current` mode; a detached HEAD reads as the empty string the capture
+// trimmed to (SPEC D-10).
 const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   repoRoot: string
-): Effect.fn.Return<string, CiCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["branch", "--show-current"],
-    cwd: repoRoot,
-    source: "stdout",
-    trim: true,
-  }).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
-  if (result.exitCode !== 0) {
-    return yield* CiCommandError.make({
-      message: `git branch --show-current failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return result.output;
+): Effect.fn.Return<string, CiCommandError, Git> {
+  const git = yield* Git;
+  return yield* git.currentBranch(repoRoot, { mode: "show-current" }).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(GitCommand.currentBranch("show-current"), {
+        onSpawnFailure: () => CiCommandError.new("Failed to resolve the current git branch."),
+        onNonZeroExit: ({ exitCode }) =>
+          CiCommandError.make({ message: `git branch --show-current failed with exit code ${exitCode}.` }),
+        onTruncated: O.none(),
+      }),
+      onSuccess: O.getOrElse(() => ""),
+    })
+  );
 });
 
 /**

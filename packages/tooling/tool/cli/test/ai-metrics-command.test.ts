@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   AiMetricsForwarderRunResult,
   AiMetricsInstallApplyDryRunResult,
@@ -52,7 +53,7 @@ const temporaryDirectory = FileSystem.FileSystem.use((fs) =>
 const runAiMetricsCommand = Command.runWith(aiMetricsCommand, {
   version: "0.0.0",
 });
-const CommandTestLayer = NodeServices.layer;
+const CommandTestLayer = Layer.provideMerge(Git.layer, NodeServices.layer);
 const decodeForwarderResult = S.decodeUnknownEffect(S.fromJsonString(AiMetricsForwarderRunResult));
 const decodeInstallApplyDryRun = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallApplyDryRunResult));
 const decodeInstallDoctor = S.decodeUnknownEffect(S.fromJsonString(AiMetricsInstallDoctorResult));

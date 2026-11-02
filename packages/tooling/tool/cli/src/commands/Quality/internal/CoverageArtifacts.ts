@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import * as O from "@beep/utils/Option";
 import { IstanbulCoverageProvider } from "@vitest/coverage-istanbul/dist/provider.js";
@@ -121,14 +122,13 @@ const digest = sha256Hex;
 const jsonDigest = (value: unknown) =>
   encodeJson(value).pipe(Effect.flatMap(digest), mapError("cannot hash identity."));
 
+// `Git.revParse` with the commit peel (`rev-parse --verify --end-of-options <ref>^{commit}`); every kit
+// failure, git's or the spawn's, is the one configuration error the capture produced (SPEC D-10).
 const gitRef = Effect.fn("CoverageArtifacts.gitRef")(function* (repoRoot: string, ref: string) {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["rev-parse", "--verify", `${ref}^{commit}`],
-    cwd: repoRoot,
-  }).pipe(mapError(`cannot resolve ${ref}.`));
-  if (result.exitCode !== 0) return yield* configurationError(`cannot resolve ${ref}.`);
-  return Str.trim(result.output);
+  const git = yield* Git;
+  return yield* git
+    .revParse(repoRoot, ref, { peel: "commit" })
+    .pipe(Effect.catch(() => configurationError(`cannot resolve ${ref}.`)));
 });
 
 /**
@@ -590,7 +590,7 @@ export const writeCoverageProducerArtifact = Effect.fn("CoverageArtifacts.writeP
     identity: options.identity,
     partitionId: options.partitionId,
     rawFormat: "istanbul",
-    coverageLibraryVersion: "1.0.2",
+    coverageLibraryVersion: "2.1.0",
     producerRuntime: "bun",
     producerRuntimeVersion: runtimeVersion.value,
     packages,

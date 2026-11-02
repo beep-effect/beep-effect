@@ -241,6 +241,7 @@
         "packages/drivers/box-provisioning/package.json",
         "packages/drivers/box/package.json",
         "packages/drivers/commands/package.json",
+        "packages/drivers/commands/src/**",
         "packages/drivers/cosmos/package.json",
         "packages/drivers/discord/package.json",
         "packages/drivers/doc-text/package.json",
@@ -393,6 +394,7 @@
         "packages/ontology/server/package.json",
         "packages/ontology/ui/package.json",
         "packages/ontology/use-cases/package.json",
+        "packages/party/domain/package.json",
         "packages/shared/domain/package.json",
         "packages/shared/tables/package.json",
         "packages/shared/use-cases/package.json",
@@ -450,6 +452,10 @@
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:goals"],
       "inputs": [
+        "packages/drivers/commands/package.json",
+        "packages/drivers/commands/src/Redaction.ts",
+        "packages/drivers/commands/src/Run.ts",
+        "packages/drivers/commands/src/internal/capture.ts",
         "packages/drivers/github/package.json",
         "packages/drivers/github/src/GitHubApp.ts",
         "packages/drivers/github/src/GitHubClient.ts",
@@ -938,6 +944,10 @@
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:shared"],
       "inputs": [
+        "packages/drivers/commands/package.json",
+        "packages/drivers/commands/src/Redaction.ts",
+        "packages/drivers/commands/src/Run.ts",
+        "packages/drivers/commands/src/internal/capture.ts",
         "packages/drivers/github/package.json",
         "packages/drivers/github/src/GitHubApp.ts",
         "packages/drivers/github/src/GitHubClient.ts",
@@ -2989,6 +2999,10 @@
       "outputs": [],
       "dependsOn": ["//#lint:policy-fingerprint:shared"],
       "inputs": [
+        "packages/drivers/commands/package.json",
+        "packages/drivers/commands/src/Redaction.ts",
+        "packages/drivers/commands/src/Run.ts",
+        "packages/drivers/commands/src/internal/capture.ts",
         "packages/drivers/github/package.json",
         "packages/drivers/github/src/GitHubApp.ts",
         "packages/drivers/github/src/GitHubClient.ts",
@@ -3164,6 +3178,7 @@
         "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
         "packages/foundation/modeling/skill-contract/src/Gate.ts",
+        "packages/foundation/modeling/skill-contract/src/GateCertificate.ts",
         "packages/foundation/modeling/skill-contract/src/Recovery.ts",
         "packages/foundation/modeling/skill-contract/src/SchemaReference.ts",
         "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
@@ -4435,6 +4450,7 @@
         "server/**",
         "src/**",
         "src-tauri/**",
+        "!**/src-tauri/target/**",
         "test/**",
         "tsconfig*.json",
         "$TURBO_ROOT$/tsconfig.base.json",
@@ -4514,6 +4530,7 @@
         "server/**",
         "src/**",
         "src-tauri/**",
+        "!**/src-tauri/target/**",
         "test/**",
         "tsconfig*.json",
         "vitest.config.ts",
@@ -4794,7 +4811,8 @@
         "vitest.aliases.generated.json",
         "!**/node_modules/**",
         "!**/dist/**",
-        "!**/coverage/**"
+        "!**/coverage/**",
+        "!.claude/worktrees/**"
       ]
     },
     "//#lint:oxlint": {
@@ -4925,6 +4943,7 @@
         "!*.snap",
         "!.repos/**",
         "!node_modules/**",
+        "!**/node_modules/**",
         "!build/**",
         "!tmp/**",
         "!dist/**",
@@ -4969,7 +4988,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:health:check": {
@@ -4991,7 +5013,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:health:advisory": {
@@ -5013,7 +5038,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:boundaries:advisory": {
@@ -5035,7 +5063,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:flags:advisory": {
@@ -5057,7 +5088,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:security:advisory": {
@@ -5079,7 +5113,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:fix-preview:advisory": {
@@ -5101,7 +5138,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#jsdoc:inventory:check": {
@@ -5112,7 +5152,7 @@
         "**/docgen.json",
         "**/package.json",
         "{packages,apps,infra}/**/*.{ts,tsx}",
-        "scratchpad/**/*.ts",
+        "scratchpad/**/*.{ts,tsx}",
         "tools/**/*.{ts,tsx}",
         "tsdoc.json",
         "!**/node_modules/**",
@@ -5123,7 +5163,6 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!**/test/fixtures/**",
         "!scratchpad/docs/**",
         "!scratchpad/.jsdoc-loop/**",
         "!.claude/worktrees/**"
@@ -5205,14 +5244,7 @@
       "inputs": [
         "{packages,apps}/**/src/**/*.{ts,tsx}",
         "standards/jsdoc-totals.regression-baseline.jsonc",
-        "!**/node_modules/**",
-        "!**/.beep/**",
-        "!**/.turbo/**",
-        "!**/dist/**",
-        "!**/build/**",
-        "!**/coverage/**",
-        "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/node_modules/**"
       ]
     },
     "//#changeset:status": {
@@ -5269,7 +5301,8 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!.claude/worktrees/**"
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:retired-iri-authorities": {
@@ -5287,7 +5320,9 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:markdown-fences": {
@@ -5307,7 +5342,9 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:schema-tag-idioms": {
@@ -5325,7 +5362,9 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!**/_generated/**"
+        "!**/_generated/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:holds": {
@@ -5340,6 +5379,7 @@
         "**/package.json",
         "!.git/**",
         "!.repos/**",
+        "!.claude/worktrees/**",
         "!**/node_modules/**",
         "!**/.beep/**",
         "!**/.turbo/**",
@@ -5394,7 +5434,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#config-sync:check": {
@@ -5542,7 +5585,10 @@
         "apps/**",
         "packages/**",
         "infra/**",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#topo-sort": {

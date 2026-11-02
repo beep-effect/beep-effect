@@ -1,5 +1,6 @@
 /** Synthetic file-local rollback proof; never use a real forwarder database. */
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { Git } from "@beep/git/Git";
 import { AiMetricsForwarderInput, runAiMetricsForwarder } from "@beep/repo-ai-metrics/forwarder";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -82,7 +83,8 @@ const result = await Effect.runPromise(
     };
   }).pipe(
     Effect.provide(db),
-    Effect.provide(Layer.merge(NodeServices.layer, NodeCrypto.layer)),
+    // The config snapshot reads the index through `@beep/git` (repo-cli-gh-git-consolidation W2b).
+    Effect.provide(Layer.provideMerge(Git.layer, Layer.merge(NodeServices.layer, NodeCrypto.layer))),
     Effect.provideService(
       ConfigProvider.ConfigProvider,
       ConfigProvider.fromUnknown({ BEEP_AGENT_EVIDENCE_ROOT: `${root}/hooks`, XDG_STATE_HOME: `${root}/state` })

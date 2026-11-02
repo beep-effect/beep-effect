@@ -39,7 +39,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
+import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
@@ -240,6 +240,7 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
     });
   }
   yield* enforceReviewerGate(view.number, pinnedHead.value).pipe(
+    withReviewerOperatorClient(process.cwd()),
     Effect.mapError(() =>
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
     )
