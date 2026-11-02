@@ -292,7 +292,7 @@ E1 is confirmed for the SIGKILL stop, so P8 is stopped under the packet stop
 condition "a credential path reachable by job privilege". Options, cheapest
 first; none is taken without the operator:
 
-1. **Measure the exposure.** Hold one replayed session open in a quiet,
+1. **Measure the exposure.** Done 2026-11-02, run `41452707373` ([receipt](./history/2026-11-02-p8-probe-n-run4-exposure.md)): the replayed session was held 12 minutes and offered no job; a decoy and eleven real heavy jobs went to other runners; the session ended when the original job was cancelled. Hold one replayed session open in a quiet,
    operator-granted window and see whether GitHub assigns it any job other
    than the original. If it never does, the hijack yields only the attacker's
    own job and E1 shrinks to a residual the operator may accept.
