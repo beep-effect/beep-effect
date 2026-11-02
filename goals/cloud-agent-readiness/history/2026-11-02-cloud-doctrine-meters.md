@@ -39,21 +39,25 @@ account's automatic cloud-session bonus credit. Branch
   at 11:59 PM PT. Daylight time ended 2026-11-01, so that is PST (UTC−8):
   `2026-11-05T07:59Z`. No account balance, email or session id is recorded.
 - MCP table: server names and transports from `.mcp.json`; approvals from
-  `.claude/settings.json`, both at `14a4596d`. Observations are vendor start
-  reports only: the startup and cold resume recorded in
+  `.claude/settings.json`, both at `14a4596d`. The table's counts come only
+  from the two starts recorded in
   [`2026-11-02-mcp-scoping-hook-evidence`](./2026-11-02-mcp-scoping-hook-evidence.md)
-  (#2510), plus this session's start, which reinstalled a few packages and
-  reported `nlp` and `fallow` connected, `shadcn` and `next-devtools`
-  connect-timeout (30 s), `beep-m365-outbox` `op` not found, and `stately` and
-  `phoenix-docs` proxy-refused (403). The hermetic hook harness in #2510 is a
+  (#2510): the startup and the cold resume. Separately attributed and **not
+  counted**: this lane's own session start, as reported by its author. It
+  reinstalled a few packages and showed `nlp` and `fallow` connected,
+  `shadcn` and `next-devtools` connect-timeout (30 s), `beep-m365-outbox` `op`
+  not found, and `stately` and `phoenix-docs` proxy-refused (403). The start
+  report lives only in the session context, so no receipt is retained and the
+  report is not independently verified. The hermetic hook harness in #2510 is a
   simulation and is not counted as MCP evidence.
 - Host scoping: no new research. The table reuses #2510's bounded negative
   (no documented host-conditional MCP syntax in the reviewed sources) and
   invents no mechanism.
 - Vendor status: Claude smokes on two accounts have public receipts
   (#2486 and the fleet note); two more were reported privately and are not
-  counted. Codex publication failed twice without diagnostics and is not
-  runnable. Cursor has a bootstrap snapshot and no agent proof. Nothing here
+  counted. Codex publication failed twice without diagnostics, so Codex is
+  not claimed runnable (the cause is unknown; this is not a finding that it
+  cannot run). Cursor has a bootstrap snapshot and no agent proof. Nothing here
   upgrades any of those.
 
 ## Decisions
@@ -65,7 +69,10 @@ account's automatic cloud-session bonus credit. Branch
 | The `nlp` and `fallow` rows say "expected to connect", with a connection-only limit, not "qualified". | Start reports show connection, not tool execution; D42 reserves "qualification" for receipt-backed verdicts. The first draft said "qualified" (review on PR #2536). | Edit the two rows and the scope paragraph. |
 | The meter carries the article's rules, not per-account balances. | Public repo; balances are account state. | Revert the section. |
 | `webstorm` and `phoenix` rows describe the endpoint kind (loopback IDE, private tailnet) without repeating the tailnet hostname. | Keep host detail out of new prose; `.mcp.json` remains the source. | Edit the rows. |
-| The table states its scope and evidence date instead of claiming general availability. | Two sessions, three starts; timeouts have no established cause. | Edit the scope paragraph. |
+| The table states its scope and evidence date instead of claiming general availability. | Timeouts have no established cause. | Edit the scope paragraph. |
+| Table counts use only the two recorded #2510 starts; the author's own third start is attributed separately and not counted. | No receipt for the third start is retained; the first draft counted "three starts in two sessions" (CodeRabbit thread on PR #2536). | Edit the scope paragraph and the three observed cells. |
+| Admission prefers cloud only with a positive, unexpired promotional balance; absent, zero, expired or spent balance falls back to ordinary admission with all other gates kept. | The credit can be missing (never claimed or granted); the earlier text implied it (CodeRabbit thread on PR #2536). | Revert the Admission paragraph. |
+| Codex is "not claimed runnable", not "not runnable". | Two unexplained publication failures do not show it cannot run (CodeRabbit thread on PR #2536). | Edit the vendor row. |
 
 ## Friction
 
@@ -97,6 +104,12 @@ account's automatic cloud-session bonus credit. Branch
 - A second `final-check` at `fbfa78a5` (with `cheap-gates` parked for the
   inherited red) was stopped by its owner during `lint-policy`, because this
   correction makes that head stale. It wrote no receipt.
+- The parent's exact-head `final-check` at `2e98cf68` (receipt with two
+  parked skips, `cheap-gates` and `lint-policy`) and the owner's content-final
+  call on that head were superseded by a later review wave (the balance,
+  start-count and Codex wording above) and a normal merge of `origin/main`.
+  They stay as historical evidence for `2e98cf68` (and its same-tree S32
+  commit `904d1e45`) only, not for any later head.
 
 ## Verification
 

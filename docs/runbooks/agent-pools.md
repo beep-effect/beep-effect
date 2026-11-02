@@ -181,9 +181,11 @@ this public repo; packet notes cite this runbook and the public article instead.
 lane. Every other gate still applies: lane ownership and task boundaries, a working environment
 setup (a failed setup script is fixed first), the data and secret boundaries (no secrets or
 private corpora in the VM), and required capabilities the VM lacks (systemd user bus, recorded
-QA, the workstation-only MCP servers in the cloud runbook's MCP table). Until expiry, a bounded
-Claude lane that clears those gates should run as a cloud session. After expiry, or once credit
-is confirmed spent, cloud work is ordinary plan usage and the Opus meter above governs.
+QA, the workstation-only MCP servers in the cloud runbook's MCP table). Prefer a cloud session
+only when the account shows a **positive, unexpired promotional balance** and the bounded Claude
+lane clears those gates. If the balance is absent (never claimed or granted), zero, expired or
+confirmed spent, do not prefer cloud: cloud work is then ordinary plan usage, ordinary admission
+and the Opus meter above govern, and every other gate above still applies.
 
 ## Seat map
 
