@@ -38,11 +38,11 @@ import {
   verifyCacheHostedProducerUpload,
 } from "./Cache.workflow.github.ts";
 import { CacheProducerExecutionProfile, CacheProducerObservation } from "./Cache.workflow.schemas.ts";
-import { hashCacheProducerUploadTarget, loadCacheProducerExecutionRuntime } from "./Cache.workflow.ts";
+import { hashCacheProducerUploadTarget, loadCacheProducerStorageRuntime } from "./Cache.workflow.ts";
 import type { HttpMethod } from "effect/http/HttpMethod";
 import type { CacheConformanceOutcome } from "./Cache.conformance.schemas.ts";
 import type { CacheHostedProducerReference, CacheHostedProducerRunReference } from "./Cache.workflow.github.schemas.ts";
-import type { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
+import type { CacheProducerStorageRuntime } from "./Cache.workflow.schemas.ts";
 
 const observationCodec = JsonStringCodec(CacheProducerObservation);
 const profileCodec = JsonStringCodec(CacheProducerExecutionProfile);
@@ -80,18 +80,17 @@ const snapshotObservation = Effect.fn("CacheObject.snapshotObservation")(functio
   return Tuple.make(observation, bytes);
 });
 
-const objectKey = (runtime: CacheProducerUploadRuntime, report: CacheHostedProducerCompleteReport) =>
+const objectKey = (runtime: CacheProducerStorageRuntime, report: CacheHostedProducerCompleteReport) =>
   `__beep_private_producer_v1/${runtime.target.namespace.teamId}/${report.runId}/${report.attempt}/${report.observationSha256}.json`;
 
 const exchangeObject = Effect.fn("CacheObject.exchange")(function* (
-  runtime: CacheProducerUploadRuntime,
+  runtime: CacheProducerStorageRuntime,
   key: string,
   method: HttpMethod,
   expectedStatus: number,
   body: O.Option<Uint8Array>,
   maximumResponseBytes: number
 ) {
-  const adapter = yield* runtime.adapter.pipe(Effect.fromOption(() => objectFailure("payload-rejected", method)));
   const storage = yield* runtime.target.storage.pipe(
     Effect.fromOption(() => objectFailure("payload-rejected", method))
   );
@@ -107,8 +106,8 @@ const exchangeObject = Effect.fn("CacheObject.exchange")(function* (
           endpoint: storage.endpoint.origin,
           bucket: storage.bucket,
           region: "auto",
-          accessKeyId: Redacted.value(adapter.accessKey),
-          secretAccessKey: Redacted.value(adapter.secretKey),
+          accessKeyId: Redacted.value(runtime.accessKey),
+          secretAccessKey: Redacted.value(runtime.secretKey),
           sessionToken: "",
           retry: 0,
           queueSize: 1,
@@ -232,7 +231,7 @@ export const readCacheProducerPrivateObservation = Effect.fn("CacheObject.readPr
  * ```
  *
  * @internal
- * @category mutations
+ * @category commands
  * @since 0.0.0
  */
 export const uploadCacheProducerPrivateObservation = Effect.fn("CacheObject.upload")(function* (
@@ -245,7 +244,7 @@ export const uploadCacheProducerPrivateObservation = Effect.fn("CacheObject.uplo
   const approved = yield* verifier.verify(observation.envelope, observation.observation);
   const report = yield* buildCacheHostedProducerCompleteReport(observation, run);
   if ((yield* digest(bytes)) !== report.observationSha256) return yield* objectFailure("payload-rejected", "PUT");
-  const [binding, runtime] = yield* loadCacheProducerExecutionRuntime(directory);
+  const [binding, runtime] = yield* loadCacheProducerStorageRuntime(directory);
   if (!sameBinding(binding, approved.binding)) return yield* objectFailure("payload-rejected", "PUT");
   yield* exchangeObject(runtime, objectKey(runtime, report), "PUT", 200, O.some(bytes), 0);
   return report;
@@ -279,7 +278,7 @@ export const downloadCacheProducerPrivateObservation = Effect.fn("CacheObject.do
 ) {
   const selected = yield* readPublication(directory, reference, archive);
   const verifier = yield* openCacheProducerVerifier(directory);
-  const [binding, runtime] = yield* loadCacheProducerExecutionRuntime(directory);
+  const [binding, runtime] = yield* loadCacheProducerStorageRuntime(directory);
   if (!sameBinding(binding, selected.binding)) return yield* objectFailure("payload-rejected");
   const bytes = yield* exchangeObject(
     runtime,
@@ -315,7 +314,7 @@ export const downloadCacheProducerPrivateObservation = Effect.fn("CacheObject.do
  * ```
  *
  * @internal
- * @category mutations
+ * @category commands
  * @since 0.0.0
  */
 export const removeCacheProducerPrivateObservation = Effect.fn("CacheObject.remove")(function* (
@@ -324,7 +323,7 @@ export const removeCacheProducerPrivateObservation = Effect.fn("CacheObject.remo
   archive: Uint8Array
 ) {
   const selected = yield* readPublication(directory, reference, archive);
-  const [binding, runtime] = yield* loadCacheProducerExecutionRuntime(directory);
+  const [binding, runtime] = yield* loadCacheProducerStorageRuntime(directory);
   if (!sameBinding(binding, selected.binding)) return yield* objectFailure("payload-rejected", "DELETE");
   yield* exchangeObject(runtime, objectKey(runtime, selected.report), "DELETE", 204, O.none(), 0);
   yield* assertPublicationUnchanged(directory, selected.binding, selected.profile, selected.approval);

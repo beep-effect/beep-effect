@@ -1673,3 +1673,31 @@ recognize a finite source-owned hint vocabulary and quote only its fixed member,
 never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
+
+
+### Preserve issued observations and minimize private-transfer authority, 2026-11-02
+
+The protected digest report alone cannot transport the complete private matrices.
+Add an opt-in fixed-prefix R2 handoff rather than placing those matrices in public
+workflow artifacts. Initial reuse of the execution loader would also read the
+artifact signing key and four adapter bearers. Extract the existing destination
+check, load only the two storage capabilities and compare their identities to
+the independently approved artifact-key digest. Keep existing executor checks.
+
+Native probe setup first failed module resolution outside the package; running
+the same source from its package resolved that setup issue. A later large-body
+control reused a completed request's aborted signal. Its corrected independent
+request uses a fresh signal. These failures are retained as setup errors, not
+security controls. The actual native module then passed upload and interruption
+cleanup, with a separate six-MiB same-options size control. Two invalid JSDoc
+categories and new test/CLI boundary type errors were repaired before publication;
+no test, byte limit, baseline or trial budget was weakened.
+
+
+The new deadline control initially advanced TestClock before asynchronous
+private-store reads reached the timed exchange, so it hit the outer test limit.
+Synchronize on actual response creation before advancing the same thirty-one
+seconds. The production thirty-second deadline, byte bounds and expected
+timeout/cancellation assertions are unchanged. The synchronized control passes.
+A presentation-only doctor flag was unsupported; the canonical doctor command
+passes without changing its baseline.

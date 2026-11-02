@@ -1,15 +1,27 @@
 /** Shared independently approved synthetic upload profile and private issuer fixture. */
-import { CacheConformanceTarget, CacheProducerBinding } from "@beep/repo-cli/commands/Cache";
 import {
+  CacheConformanceTarget,
+  CacheProducerBinding,
+  CacheProducerBundle,
+  CacheSignedPilotReceipt,
+} from "@beep/repo-cli/commands/Cache";
+import {
+  CacheAdapterRuntimeObservation,
+  CacheHostedProducerRunReference,
+  CacheHostedProducerUpload,
   CacheProducerAdapterLaunch,
+  CacheProducerAdapterReceipt,
   CacheProducerExecutionProfile,
+  CacheProducerObservation,
   CacheProducerUploadRuntime,
   hashCacheProducerContract,
   hashCacheProducerUploadKey,
   hashCacheProducerUploadTarget,
   initializeCacheProducerIssuer,
+  openCacheProducerIssuer,
 } from "@beep/repo-cli/test/Cache";
 import { CacheTaskContract } from "@beep/repo-configs/cache";
+import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -21,6 +33,7 @@ import * as Tuple from "effect/Tuple";
 import { bearers, targetFor } from "../cache-conformance-server.ts";
 import { input as bundleInput, contractInput } from "./cache-producer-bundle-fixture.ts";
 
+const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservation));
 const namespace = "team_beep_signed_canary_v1";
 const decodeContract = S.decodeUnknownEffect(CacheTaskContract);
 const encodeExecutionProfile = S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile));
@@ -95,4 +108,50 @@ export const makeProducerExecutionFixture = Effect.fn("ProducerUploadRuntimeTest
     [names.unknown]: Redacted.value(runtime.bearers.unknown),
   };
   return { fs, path, directory, file, profile, binding, runtime, environment, contract };
+});
+
+/** Issue a real synthetic MAC envelope for private-object and native-runtime controls. */
+export const makeIssuedProducerObservationFixture = Effect.fn("PrivateProducerObjectTest.issue")(function* () {
+  const base = yield* makeProducerExecutionFixture();
+  const original = yield* S.decodeUnknownEffect(CacheProducerBundle)(bundleInput);
+  const runtime = CacheAdapterRuntimeObservation.make({
+    role: "writer",
+    phase: "ready",
+    tokioNamedThreadsIncludingBlocking: 2,
+    totalThreads: 6,
+    memoryPeakBytes: 1024,
+  });
+  const bundle = CacheProducerBundle.make({
+    ...original,
+    pilot: CacheSignedPilotReceipt.make({ ...original.pilot, client: base.binding.client }),
+    upload: O.some(
+      CacheHostedProducerUpload.make({
+        taskHash: "0123456789abcdef",
+        archiveSha256: Sha256Hex.make(Str.repeat(64)("d")),
+        archiveBytes: 17,
+        status: 200,
+      })
+    ),
+    adapterRuntime: O.some(
+      CacheProducerAdapterReceipt.make({
+        backendSha256: Sha256Hex.make(Str.repeat(64)("d")),
+        targetSha256: O.getOrThrow(base.binding.uploadApproval).targetSha256,
+        ready: { ...runtime, role: "writer", phase: "ready" },
+        afterLoad: { ...runtime, role: "writer", phase: "after-load" },
+      })
+    ),
+  });
+  const issuer = yield* openCacheProducerIssuer(base.directory, base.binding);
+  const observation = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });
+  const run = CacheHostedProducerRunReference.make({ runId: 42, attempt: 1 });
+  return {
+    ...base,
+    observation,
+    run,
+    text: yield* encodeObservation(observation),
+    storageEnvironment: {
+      R2_ACCESS_KEY_ID: base.environment.R2_ACCESS_KEY_ID,
+      R2_SECRET_ACCESS_KEY: base.environment.R2_SECRET_ACCESS_KEY,
+    },
+  };
 });

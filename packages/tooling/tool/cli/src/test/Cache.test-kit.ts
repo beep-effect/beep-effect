@@ -123,6 +123,7 @@ export {
 export {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
+  CacheProducerStorageRuntime,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
@@ -144,6 +145,7 @@ export {
   initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
   loadCacheProducerExecutionRuntime,
+  loadCacheProducerStorageRuntime,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
 export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";

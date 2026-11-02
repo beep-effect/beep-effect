@@ -957,3 +957,36 @@ untrusted diagnostic observation, not root-cause or qualification authority.
 Existing exit/truncation gates, input checks, deadlines and rollout policy stay
 intact. Reversal removes hint recognition from the same guard while retaining
 its existing bounded failure behavior.
+
+
+### Bounded private complete-observation transfer, 2026-11-02
+
+- Reuse the existing private R2 pilot bucket for issued complete observations at
+  a fixed namespace/run/attempt/canonical-digest prefix. Keep private payloads
+  out of GitHub artifacts and logs; only the existing bounded digest report is
+  public. Preserve the eight-MiB complete-observation bound including a local
+  newline, one-MiB archive and sixty-four-KiB report bounds.
+- Share the executor's exact approved destination check. Load only the two R2
+  capabilities for object transfer; compare their identities to the independently
+  approved artifact-key identity and refuse aliasing. Do not load the artifact
+  signing key or any adapter bearer. Preserve every existing executor check.
+- Use Effect's installed Bun HTTP client with explicit S3 credentials, no ambient
+  session token, native retry zero, one queued transfer, eight-MiB part size,
+  redirect refusal, TLS verification and disabled verbose output. Each exchange
+  has a thirty-second bound including streamed-body consumption and interruption
+  cleanup. Preserve typed finite faults; a missing private object is not a cache
+  miss, and uncertain PUT failures are not automatically retried.
+- The optional publisher reads the already saved observation and verifies its
+  issuer before upload. Producer execution and its private outputs remain
+  separate, so publication failure cannot force another native matrix run.
+  Fetch and cleanup select only an authenticated immutable publication and its
+  independently approved private destination. Fetch verifies canonical bytes,
+  issuer MAC, hosted observation join and unchanged approval/profile before
+  creating a new owner-only output outside the checkout.
+- No activation, grant or trial-budget increase is included. Before real use,
+  retain the existing fifty-MiB, two-hundred-Class-A, two-thousand-Class-B and
+  ten-minute aggregate trial limits in its execution preview. Local controls
+  do not qualify a tuple or satisfy the protected R2/representative-window gates.
+- Reversal removes these opt-in commands and the private-object transport.
+  Existing cache artifacts and services are unchanged. Exact-object cleanup and
+  the existing retention policy govern synthetic observations already uploaded.

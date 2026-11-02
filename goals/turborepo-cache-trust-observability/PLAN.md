@@ -1070,3 +1070,22 @@ and type check pass. Canonical inventory regeneration adds seven inherited
 completion exports and updates positions; finding totals and policy floors stay
 unchanged. No native run has yet used this implementation, and no qualification,
 protected producer or whole-goal acceptance is granted.
+
+
+### Private complete-observation transfer component, 2026-11-02
+
+The opt-in publisher now uploads a previously saved issued observation without
+rerunning the native matrices. The authenticated fetch and exact-object cleanup
+reuse the existing approved private R2 destination and immutable hosted-report
+join. A shared destination check keeps executor validation intact while a new
+storage-only capability excludes artifact signing and all four adapter bearers.
+The [checkpoint](research/private-producer-object-checkpoint-2026-11-02.json)
+records actual focused, native and package evidence with their source bindings.
+
+Local native Bun controls prove one canonical upload, one six-MiB request using
+the selected native options and cancellation of a stalled response after
+interruption. All storage is synthetic loopback; no Cloudflare request, signing
+activation, protected execution or tuple qualification occurred. Real protected
+source/runtime approval, private material transfer, workflow publication wiring,
+aggregate trial accounting, R2 replay and authenticated acceptance remain next.
+All whole-goal criteria and representative observation windows remain open.
