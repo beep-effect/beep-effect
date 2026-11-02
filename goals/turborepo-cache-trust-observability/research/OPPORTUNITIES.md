@@ -1715,3 +1715,15 @@ compare every current entry to disk and every historical entry to that commit.
 Keep the original 136-case receipts bound to their original source; no native
 receipt, requirement or acceptance status is changed. Deep-copy retained arrays
 or reconstruct them from immutable blobs before changing current bindings.
+
+### 2026-11-02 — formatter rewrote sealed baseline during integration
+
+The normal merge-commit hook rewrote `goals/knowledge-doctor.baseline.jsonc`
+without changing its decoded entries. The actual canonical text verifier returned
+`KnowledgeSealBroken`; a semantic comparison alone missed this. Restore accepted
+main bytes and exclude only this CI-minted file from Biome. A direct formatter
+write must preserve the canonical hash, and normal commit hooks stay enabled.
+The same introduced correction is required in each of this chat's five affected
+PRs; the first merge establishes the identical repository exclusion. This does
+not copy either declared shared CI unblocker or change the sealed data, mint,
+coverage floor, production cache, or whole-goal acceptance.
