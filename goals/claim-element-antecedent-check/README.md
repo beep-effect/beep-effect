@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [v25 dependency compatibility](history/2026-11-02-v25-dependency-compatibility.json): accepted main coverage fix #2517 and dependency updates are synchronized. All 21 algorithm files are unchanged; 24 pre-prediction pins include the dependency environment. Both cohort result values match v24 apart from implementation digest, and all 251 prediction reports are byte-identical. No accuracy gain, label change or new review is claimed.
+
 - [Strict pre-merge acceptance hold](history/2026-11-02-premerge-acceptance-hold.md): #2502 merged with pending checks and its canonical completion refresh is unsatisfied. Final PR #2513 must earn normal readiness before merge; all measured source and dependency bytes remain unchanged.
 
 - [Post-merge v24 report and closeout](history/2026-11-01-post-merge-evaluation.md): current implementation freeze, fixed replay, retained/lost gate, corrected nesting diagnostic, source-bound historical review identity, exact v11 byte restoration and current package proofs.

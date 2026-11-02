@@ -112,7 +112,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Implementation #2411 and measurement #2502 merged under S11; neither cancelled/pending check is counted as passing. Canonical completion refresh for #2502 is unsatisfied because required checks must finish before merge. Final metadata-only PR #2513 requires strict pre-merge readiness, normal review window and exact-head merge-time evidence. All 21 v24 runtime files and dependency lock are unchanged on current main; 37/538, all 34 protected/all 37 prior passes and all historical evidence remain retained. Operative lifecycle stays active pending verified final acceptance; no local verify/publish queue is used.",
+  "statusNote": "Final PR #2513 requires strict pre-merge readiness. Main coverage unblocker #2517 and dependency bump #2507 are integrated; v25 pins all 21 unchanged algorithm files plus lock/root manifest/Bun pin before prediction. Full positive/allowed result values match v24 except implementation digest; all 251 reports are byte-identical, 37/538 and all 34 protected/all 37 previous matches retained. All 631 pins remain exact. Historical automated review identity carries forward; no fresh or attorney review claimed. No local verify/publish queue; operative lifecycle active pending exact-head hosted readiness and merge proof.",
   "proposedCloseout": {
     "status": "completed-retained",
     "finalPullRequest": 2513

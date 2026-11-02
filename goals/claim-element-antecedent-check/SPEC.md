@@ -238,6 +238,8 @@ them and record each in the Decision Log.
 
 ### 2026-11-02 — strict final acceptance after S11
 
+After the initial strict declaration, main #2507 updated dependencies and #2517 repaired inherited PortfolioIndex coverage. Merge main once and push before compatibility work. v25 then pins the unchanged 21 algorithm files plus the lockfile, root manifest and Bun version; fresh offline replay verifies both result values and all 251 report bytes against v24. This is dependency compatibility, not new recovery or adjudication. Old initial-main lock identity statements refer to their recorded pre-update base. Reversal: retain both dependency versions and all measurements; return to the earlier lock only in a separately reviewed change.
+
 PR #2502 merged under S11 while lint/unit checks were pending, and canonical completion refresh reports unsatisfied. The verifier requires check completion before the merge timestamp, so later reruns cannot recover that proof. Bind prospective final acceptance to metadata-only PR #2513 and hold relaxed/S11 merging until normal, exact-head readiness is recorded. Push/open all ready work promptly and use hosted CI; do not wait for local verify/publish. All 21 measured v24 runtime hashes and the dependency lock match current main. Reversal: release the temporary hold after strict readiness and preserve both S11 records and the measured results.
 
 ### 2026-11-01 — post-merge evidence and lifecycle closeout
