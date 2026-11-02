@@ -1,21 +1,24 @@
 import { Git, GitCommandError } from "@beep/git/Git";
 import { WorktreeMergedPullRequest } from "@beep/repo-cli/commands/Worktree";
-import { makeResidueTerminalLaneProbe, renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
-  layerResidueTerminalLaneProbeTest,
   ProcessTable,
   ProcessTableEntry,
   processTableFromEntries,
+  runRepoCommandCapture,
+} from "@beep/repo-cli/test/RepoRun";
+import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
+import {
+  layerResidueTerminalLaneProbeTest,
+  makeResidueTerminalLaneProbe,
   ResidueReapAction,
   ResidueReapCandidate,
   ResidueReapReport,
   ResidueRetentionRuling,
   ResidueTerminalLaneAuthority,
   ResidueTerminalLaneProbe,
-  runRepoCommandCapture,
+  renderResidueReportLinesForTesting,
   runResidueReap,
-} from "@beep/repo-cli/test/RepoRun";
-import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
+} from "@beep/repo-cli/test/Worktree";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, vi } from "@effect/vitest";
@@ -38,7 +41,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import type { ResidueTerminalLaneProbeShape } from "@beep/repo-cli/test/RepoRun";
+import type { ResidueTerminalLaneProbeShape } from "@beep/repo-cli/test/Worktree";
 
 const decodeResidueReapReportJson = S.decodeEffect(S.fromJsonString(ResidueReapReport));
 const encodeResidueReapReportJson = S.encodeEffect(S.fromJsonString(ResidueReapReport));
@@ -2272,7 +2275,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 const encoded = yield* S.encodeEffect(ResidueInvocationJson)(fixture);
                 const script = `
             import { Git } from "@beep/git/Git";
-            import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/RepoRun";
+            import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/Worktree";
             import { NodeCrypto, NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
             import * as Layer from "effect/Layer";

@@ -24,10 +24,10 @@ import { constant, dual } from "effect/Function";
 import * as Path from "effect/Path";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
-import { ModelsPublicationOwner, ModelsPublicationState } from "../../commands/Models/Models.exchange.schemas.ts";
+import { ModelsPublicationOwner, ModelsPublicationState } from "../Models.exchange.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
-import type { ModelsPublicationStep, ModelsRecoveryResult } from "../../commands/Models/Models.exchange.schemas.ts";
+import type { ModelsPublicationStep, ModelsRecoveryResult } from "../Models.exchange.schemas.ts";
 
 const $I = $RepoCliId.create("internal/publication/PublicationLedger");
 const encodeOwner = S.encodeEffect(S.fromJsonString(ModelsPublicationOwner));
@@ -302,9 +302,9 @@ type SettledResult = Exclude<ModelsRecoveryResult, { readonly _tag: "skipped" }>
  * console.log(publicationTerminalState("staged", refused)._tag) // "refused"
  * ```
  *
- * @param from - The step recovery started from.
- * @param result - The recovered or refused result.
- * @returns The terminal publication state.
+ * @param from - Publication step the interrupted run had reached when recovery began.
+ * @param result - Recovery outcome: `recovered` with its outcome, or `refused` with reason and detail.
+ * @returns A `recovered` or `refused` ledger state carrying `from`, ready to record.
  * @category constructors
  * @since 0.0.0
  */

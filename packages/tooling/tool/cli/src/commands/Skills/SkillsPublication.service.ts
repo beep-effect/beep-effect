@@ -38,7 +38,7 @@ import {
   publicationSuffix,
   publicationTerminalState,
   readPublicationRecord,
-} from "../../internal/publication/PublicationLedger.ts";
+} from "../Models/internal/PublicationLedger.ts";
 import { modelsAtomicExchangeOrLive } from "../Models/Models.apply.service.ts";
 import { ModelsPublicationState, modelsExchangeIdentityKey } from "../Models/Models.exchange.schemas.ts";
 import { SkillPublicationError } from "./Skills.errors.ts";

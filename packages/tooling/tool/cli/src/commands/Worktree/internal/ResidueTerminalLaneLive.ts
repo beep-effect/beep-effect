@@ -23,21 +23,21 @@ import * as Str from "effect/String";
 import {
   invokerAncestryPids,
   isRegisteredWorktree,
-  ResidueTerminalLaneAuthority,
-  ResidueTerminalLaneProbe,
   runRepoCommandCapture,
   scanProcessAttachments,
 } from "../../../internal/repo-run/index.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
-import { mergedPullRequestsForBranch } from "../../Worktree/Worktree.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
+import { mergedPullRequestsForBranch } from "../Worktree.service.ts";
+import { ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
+import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
 import type * as Config from "effect/Config";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { ResidueTerminalLaneProbeShape } from "../../../internal/repo-run/index.ts";
-import type { WorktreeMergedPullRequest } from "../../Worktree/Worktree.service.ts";
+import type { WorktreeMergedPullRequest } from "../Worktree.service.ts";
+import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
 const decodeGitObjectId = S.decodeUnknownEffect(GitObjectId);
 

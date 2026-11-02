@@ -19,6 +19,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { REPO_CLI_ENTRY_PATH } from "../../../internal/cli/EntryPath.ts";
 import { formatCommandLine, runCapturedStreams } from "../../../internal/process/index.ts";
 import {
   decodeSchemaFirstPolicyFindingLine,
@@ -457,7 +458,7 @@ const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSche
   SecureRandom.SecureRandom | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
-  const cliEntrypoint = path.join(repoRoot, "packages", "tooling", "tool", "cli", "src", "bin.ts");
+  const cliEntrypoint = path.join(repoRoot, REPO_CLI_ENTRY_PATH);
   return yield* runLaneSubprocess(
     "schema-first",
     "bun",

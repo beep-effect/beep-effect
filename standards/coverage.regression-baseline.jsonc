@@ -33413,6 +33413,78 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.errors.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 100,
+          "functions": 33.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts": {
+          "lines": 92.45,
+          "statements": 92.59,
+          "branches": 100,
+          "functions": 90.69,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts": {
+          "lines": 86.8,
+          "statements": 84.64,
+          "branches": 73.68,
+          "functions": 71.79,
+          "uncovered": {
+            "lines": 33,
+            "statements": 43,
+            "branches": 35,
+            "functions": 22
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.service.ts": {
+          "lines": 86.66,
+          "statements": 86.66,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts": {
           "lines": 65.47,
           "statements": 64.89,
@@ -36329,6 +36401,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Models/internal/PublicationLedger.ts": {
+          "lines": 95.28,
+          "statements": 92.5,
+          "branches": 81.81,
+          "functions": 94.73,
+          "uncovered": {
+            "lines": 5,
+            "statements": 9,
+            "branches": 8,
+            "functions": 2
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Observability/Observability.command.ts": {
           "lines": 23.52,
           "statements": 21.05,
@@ -39089,6 +39173,54 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReap.ts": {
+          "lines": 91.13,
+          "statements": 88.42,
+          "branches": 78.93,
+          "functions": 87.78,
+          "uncovered": {
+            "lines": 102,
+            "statements": 146,
+            "branches": 130,
+            "functions": 38
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.ts": {
+          "lines": 97.7,
+          "statements": 96.9,
+          "branches": 92.41,
+          "functions": 96.42,
+          "uncovered": {
+            "lines": 12,
+            "statements": 17,
+            "branches": 17,
+            "functions": 6
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/Gh.command.ts": {
           "lines": 80.95,
           "statements": 80.95,
@@ -40385,78 +40517,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 33.33,
-          "uncovered": {
-            "lines": 2,
-            "statements": 3,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts": {
-          "lines": 92.45,
-          "statements": 92.59,
-          "branches": 100,
-          "functions": 90.69,
-          "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 0,
-            "functions": 4
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": {
-          "lines": 86.8,
-          "statements": 84.64,
-          "branches": 73.68,
-          "functions": 71.79,
-          "uncovered": {
-            "lines": 33,
-            "statements": 43,
-            "branches": 35,
-            "functions": 22
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.service.ts": {
-          "lines": 86.66,
-          "statements": 86.66,
-          "branches": 100,
-          "functions": 75,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/tooling/tool/cli/src/internal/cli/RunMode.ts": {
           "lines": 100,
           "statements": 100,
@@ -40719,18 +40779,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/publication/PublicationLedger.ts": {
-          "lines": 95.28,
-          "statements": 92.5,
-          "branches": 81.81,
-          "functions": 94.73,
-          "uncovered": {
-            "lines": 5,
-            "statements": 9,
-            "branches": 8,
-            "functions": 2
           }
         },
         "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts": {
@@ -41009,30 +41057,6 @@
             "functions": 0
           }
         },
-        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/repo-run/ResidueReap.ts": {
-          "lines": 91.13,
-          "statements": 88.42,
-          "branches": 78.93,
-          "functions": 87.78,
-          "uncovered": {
-            "lines": 102,
-            "statements": 146,
-            "branches": 130,
-            "functions": 38
-          }
-        },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {
           "lines": 100,
           "statements": 100,
@@ -41079,30 +41103,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts": {
-          "lines": 97.7,
-          "statements": 96.9,
-          "branches": 92.41,
-          "functions": 96.42,
-          "uncovered": {
-            "lines": 12,
-            "statements": 17,
-            "branches": 17,
-            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts": {
