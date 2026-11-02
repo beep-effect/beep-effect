@@ -118,14 +118,17 @@ uid-0 FsUtils case fails here.
 
 - Split area at head: `JSDoc.ts` 2/2, each of 10 `tags/*.model.ts` 2/2,
   `StructuralJSDoc.model.ts` 4/5, and `JSDoc.shared.ts` 0/0 (type-only). In total that is
-  27/28, against 15/16 for the base `JSDoc.ts`. The one uncovered statement is the same
+  26/27 (2 + 20 + 4 covered out of 2 + 20 + 5), against 15/16 for the base `JSDoc.ts`.
+  That is +11 covered and +11 total, which reconciles exactly with the whole-package
+  delta (1158 − 1147 and 1477 − 1466). The one uncovered statement is the same
   `matchStructuralJSDoc` body as before.
 - Attribution: **inherited**, not introduced. Unchanged main is already below 79.36
-  under the same config. The split adds 11 covered statements and no uncovered ones, so it
-  raises the percentage by 0.16 points. The drift comes from the package's statement
-  denominator: the baseline implies about 1,788 statements (369 uncovered), main now
-  has 1,466. Per-file uncovered counts fell everywhere they differ (FsUtils,
-  Root, TSMorph.service, JSDocCategories, PackageJson, PackageJsonTools).
+  under the same config, and both trees have 319 uncovered statements. The split adds
+  11 statements, all covered, so it raises the percentage by 0.16 points.
+- Context, not a causal analysis: the baseline implies about 1,788 statements
+  (369 uncovered), against 1,466 on main in this run. This experiment shows only that the
+  shortfall exists on unchanged main. It does not establish which commits, provider
+  differences or denominator changes produced it. Those go to the parent for routing.
 - No source or test change in this PR. Covering `matchStructuralJSDoc` would add one
   statement, and the package would still be about 14 short of 79.36, so a test written
   for the metric alone would not be meaningful. Baseline untouched. The repo-utils
