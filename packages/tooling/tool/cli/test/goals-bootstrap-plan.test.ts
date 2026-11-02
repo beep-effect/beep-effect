@@ -488,6 +488,30 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
+
+    it.effect("prints the portfolio as canonical JSON and rejects --json beside --write or --check", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("goals", { recursive: true });
+
+          assertExitSuccess(yield* Effect.exit(runGoalsCommand(["index", "--json"])), undefined);
+          deepStrictEqual(A.filter(yield* TestConsole.logLines, P.isString), [
+            Str.trimEnd(
+              canonicalJsonTextPretty({ invalid: [], packets: [], schemaVersion: "goals-portfolio-index/v1" })
+            ),
+          ]);
+
+          expectReportedExit(yield* Effect.exit(runGoalsCommand(["index", "--json", "--write"])));
+          expectReportedExit(yield* Effect.exit(runGoalsCommand(["index", "--check", "--json"])));
+          deepStrictEqual(A.filter(yield* TestConsole.errorLines, P.isString), [
+            "[goals:index] --write, --check and --json are mutually exclusive.",
+            "[goals:index] --write, --check and --json are mutually exclusive.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
   });
 
   describe("goals plan validation mapping", { concurrent: false }, () => {
