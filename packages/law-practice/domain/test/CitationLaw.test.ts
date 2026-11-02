@@ -9,6 +9,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -39,12 +40,12 @@ describe("canonical full law semantic schema", () => {
     Effect.gen(function* () {
       const regulation = yield* S.decodeEffect(FullLawCitation)(cfrWire);
       const statute = yield* S.decodeEffect(FullLawCitation)(uscWire);
-      expect(regulation.components.chapter).toEqual(O.some("37"));
+      assertSome(O.fromUndefinedOr(regulation.components.chapter).pipe(O.getOrThrow), "37");
       expect(R.has(regulation.components, "title")).toBe(false);
-      expect(statute.components.title).toEqual(O.some("35"));
+      assertSome(O.fromUndefinedOr(statute.components.title).pipe(O.getOrThrow), "35");
       expect(R.has(statute.components, "chapter")).toBe(false);
-      expect(regulation.metadata.day).toEqual(O.some("2"));
-      expect(regulation.metadata.year).toEqual(O.some("2020"));
+      assertSome(regulation.metadata.day, "2");
+      assertSome(regulation.metadata.year, "2020");
       for (const [wire, value] of [
         [cfrWire, regulation],
         [uscWire, statute],
@@ -63,15 +64,15 @@ describe("canonical full law semantic schema", () => {
         custom_section: "§ 2-A",
         title: "0035",
       });
-      expect(components.page).toEqual(O.none());
+      O.fromUndefinedOr(components.page).pipe(O.getOrThrow, assertNone);
       expect(R.has(components, "chapter")).toBe(false);
-      expect(components.title).toEqual(O.some("0035"));
+      assertSome(O.fromUndefinedOr(components.title).pipe(O.getOrThrow), "0035");
       expect(yield* S.encodeEffect(CitationComponents)(components)).toEqual({
         page: null,
         custom_section: "§ 2-A",
         title: "0035",
       });
-      expect(Result.isFailure(S.decodeUnknownResult(CitationComponents)({ title: 35 }))).toBe(true);
+      S.decodeUnknownResult(CitationComponents)({ title: 35 }).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -82,7 +83,7 @@ describe("canonical full law semantic schema", () => {
         editions: [cfr, usc, cfr],
         selectedEdition: null,
       });
-      expect(unknown.selectedEdition).toEqual(O.none());
+      assertNone(unknown.selectedEdition);
       expect(ambiguous.editions).toEqual([cfr, usc, cfr]);
       const retained = yield* S.decodeEffect(CitationPublication)({ editions: [cfr], selectedEdition: usc });
       expect(yield* S.encodeEffect(CitationPublication)(retained)).toEqual({ editions: [cfr], selectedEdition: usc });
@@ -94,7 +95,7 @@ describe("canonical full law semantic schema", () => {
   it.effect("rejects retired donor shapes and keeps occurrence or telemetry fields out of the encoded model", () =>
     Effect.gen(function* () {
       for (const type of ["statute", "regulation"]) {
-        expect(Result.isFailure(S.decodeUnknownResult(Citation)({ ...cfrWire, type }))).toBe(true);
+        S.decodeUnknownResult(Citation)({ ...cfrWire, type }).pipe(Result.isFailure, assertTrue);
       }
       const semantic = yield* S.decodeUnknownEffect(FullLawCitation)({
         ...cfrWire,

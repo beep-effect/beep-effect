@@ -1,10 +1,11 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -67,7 +68,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
   it.effect("matches all pinned transitions, reflected host calls and equality mutation restarts", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/unicode-dictionary.json", import.meta.url))
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/unicode-dictionary.json", import.meta.url))
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "2c8625cb9c7cd72a3a3c030a8606b5d9cada4e14b45e6ffa77065a79162dc22b"
@@ -148,14 +149,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
               : op.kind === "set"
                 ? current.set(yield* key(op.key), op.value).pipe(Effect.as(O.none()))
                 : current.get(yield* key(op.key));
-          const result = yield* Effect.result(run);
           if (event.outcome.status === "error") {
-            expect(result._tag, row.name).toBe("Failure");
-            if (result._tag === "Failure") expect(result.failure.reason).toBe("comparison-failed");
+            const failure = yield* Effect.flip(run);
+            expect(failure.reason, row.name).toBe("comparison-failed");
           } else {
-            expect(result._tag, row.name).toBe("Success");
-            if (result._tag === "Success")
-              expect(O.getOrNull(O.map(result.success, (entry) => entry.value)), row.name).toBe(event.outcome.result);
+            const value = yield* run;
+            expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
           }
           expect(trace, row.name).toEqual(event.trace);
           expect(
@@ -186,7 +185,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       );
       const key = (objectId: number) => CitationRuntimeDictionaryKey.make({ objectId, hash: BigInt(7) });
       yield* table.set(key(0), 10);
-      expect(O.map(yield* table.get(key(1)), (entry) => entry.value)).toEqual(O.some(10));
+      assertSome(
+        O.map(yield* table.get(key(1)), (entry) => entry.value),
+        10
+      );
       expect(calls).toBe(0);
       yield* table.set(key(2), 11);
       expect(calls).toBe(1);
@@ -216,7 +218,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("combined Unicode di
       const key = CitationRuntimeDictionaryKey.make({ objectId: 0, hash: BigInt(7) });
       for (let run = 0; run < 100; run++) {
         yield* table.set(key, run);
-        expect(O.map(yield* table.remove(key), (entry) => entry.value)).toEqual(O.some(run));
+        assertSome(
+          O.map(yield* table.remove(key), (entry) => entry.value),
+          run
+        );
       }
       yield* table.set(key, 100);
       remaining = 0;

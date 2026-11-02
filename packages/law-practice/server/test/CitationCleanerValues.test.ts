@@ -1,17 +1,17 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
@@ -51,7 +51,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const raw = yield* fs.readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/cleaner-identities.json", import.meta.url))
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/cleaner-identities.json", import.meta.url)
+          )
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "cbfc90b78127f947c0f227392cd4af9a51f993271742f950c9802c31522b1eb6"
@@ -65,7 +67,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
         const literal = yield* makeCitationLiteralCleaners(limits);
         const preparation = yield* makeCitationHtmlInput(limits);
         const kernel = yield* makeCitationHtmlKernel(
-          yield* fs.readFile(fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)))
+          yield* fs.readFile(NodeURL.fileURLToPath(new URL("../assets/citation-html/kernel.wasm", import.meta.url)))
         );
         const empty = yield* values.text("");
         const space = yield* values.materialize(empty, { text: " ", allocation: "space" });
@@ -174,8 +176,8 @@ it.effect(
       expect(hooks).toBe(0);
       const host = { state: 0 };
       const hostRef = yield* values.retainHost(host);
-      expect(yield* values.getText(hostRef)).toEqual(O.none());
-      expect(yield* values.getHost(hostRef)).toEqual(O.some(host));
+      assertNone(yield* values.getText(hostRef));
+      assertSome(yield* values.getHost(hostRef), host);
       host.state++;
       const retained = yield* values.getHost(hostRef).pipe(Effect.flatMap(Effect.fromOption));
       expect(retained).toBe(host);

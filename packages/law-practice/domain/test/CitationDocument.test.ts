@@ -34,6 +34,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -349,7 +350,7 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         expect(isDocument(graph)).toBe(true);
         expect(isReceipt(restored)).toBe(true);
         expect(citationAuthorityMentionIds(restored, a)).toEqual([third.id, fourth.id]);
-        expect(A.getUnsafe(restored.authorities, 0).representative).toEqual(O.some(member(third.id)));
+        assertSome(A.getUnsafe(restored.authorities, 0).representative, member(third.id));
         expect(A.every(restored.mentions, (mention) => mention.citation.type === citation.type)).toBe(true);
       }
     })

@@ -15,6 +15,7 @@ import {
 } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -52,13 +53,14 @@ describe("citation engine prerequisite compatibility", () => {
   );
 
   it("keeps a collapsed annotation point outside the verified nonempty range contract", () => {
-    expect(Result.isFailure(S.decodeResult(TextOffsetRange)({ start: 9, end: 9, unit: "unicode-code-point" }))).toBe(
-      true
+    S.decodeResult(TextOffsetRange)({ start: 9, end: 9, unit: "unicode-code-point" }).pipe(
+      Result.isFailure,
+      assertTrue
     );
   });
 
   it("pins the public vocabulary and preserves reporter ambiguity", () => {
-    expect(Result.isSuccess(CourtReporterArtifact)).toBe(true);
+    CourtReporterArtifact.pipe(Result.isSuccess, assertTrue);
     if (Result.isFailure(CourtReporterArtifact)) {
       throw new Error("Public court/reporter artifact failed schema decoding");
     }
@@ -70,7 +72,7 @@ describe("citation engine prerequisite compatibility", () => {
     expect(artifact.reporters.stableIdCount).toBe(1262);
     expect(isCurrentCourtReporterArtifactVersion(artifact.artifactVersion)).toBe(true);
     expect(isCurrentCourtReporterArtifactVersion("stale")).toBe(false);
-    expect(O.isSome(findCourtById(CourtId.make("cafc")))).toBe(true);
+    findCourtById(CourtId.make("cafc")).pipe(O.isSome, assertTrue);
     expect(findReportersByAlias("Woolw.")).toHaveLength(2);
     expect(VERIFIED_SPAN_NORMALIZATION_VERSION).toBe("1");
     expect(MAX_SOURCE_TEXT_LENGTH).toBe(1_000_000);

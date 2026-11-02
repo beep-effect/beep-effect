@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import {
   Citation,
   CitationDocumentReceipt,
@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -85,7 +86,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(
+        NodeURL.fileURLToPath(
           new URL("../../use-cases/test/fixtures/eyecite/model-mutation-observations.json", import.meta.url)
         )
       );
@@ -432,7 +433,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             yield* owner.write(list, []);
             yield* owner.set(first, list);
             expect((yield* owner.read)[0]?.members).toEqual([]);
-            expect(O.map(yield* owner.remove(first), (handle) => handle.slot)).toEqual(O.some(list.slot));
+            assertSome(
+              O.map(yield* owner.remove(first), (handle) => handle.slot),
+              list.slot
+            );
             expect(yield* owner.read).toEqual([]);
             expect(yield* owner.readList(list)).toEqual([]);
           }),

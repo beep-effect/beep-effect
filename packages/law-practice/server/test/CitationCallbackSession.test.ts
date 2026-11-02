@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { Citation, CitationDetachedId, CitationGroupMember, CitationMentionId } from "@beep/law-practice-domain/values";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -6,9 +6,11 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
@@ -212,20 +214,20 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const firstId = A.getUnsafe(prepared.mentions, 0).id;
       const first = member(firstId);
       let calls = 0;
+      let aliasFailure = O.none<Exit.Exit<void, CitationCallbackFailure>>();
+      let writeFailure = O.none<Exit.Exit<void, CitationCallbackFailure>>();
+      let afterAlias = 0;
+      let afterWrite: ReadonlyArray<CitationGroupMember> = [];
       const callbacks = CitationResolutionCallbacks.of({
         ...emptyCallbacks,
         id: Effect.fn("CallbackTest.boundedFailure")(function* () {
           calls += 1;
           const list = yield* dictionary.get(base);
           yield* dictionary.write(list, [first, first]);
-          const aliasFailure = yield* Effect.result(dictionary.set(other, list));
-          expect(aliasFailure._tag).toBe("Failure");
-          if (aliasFailure._tag === "Failure") expect(aliasFailure.failure.reason).toBe("limit-exceeded");
-          expect(yield* dictionary.read).toHaveLength(1);
-          const writeFailure = yield* Effect.result(dictionary.write(list, [first, first, first]));
-          expect(writeFailure._tag).toBe("Failure");
-          if (writeFailure._tag === "Failure") expect(writeFailure.failure.reason).toBe("limit-exceeded");
-          expect(A.getUnsafe(yield* dictionary.read, 0).members).toEqual([first, first]);
+          aliasFailure = O.some(yield* Effect.exit(dictionary.set(other, list)));
+          afterAlias = A.length(yield* dictionary.read);
+          writeFailure = O.some(yield* Effect.exit(dictionary.write(list, [first, first, first])));
+          afterWrite = A.getUnsafe(yield* dictionary.read, 0).members;
           return yield* fail();
         }),
       });
@@ -248,6 +250,15 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       expect((yield* Effect.flip(dictionary.read)).reason).toBe("invalid-input");
       expect((yield* Effect.flip(run)).reason).toBe("invalid-input");
       expect(calls).toBe(1);
+      for (const observed of [aliasFailure, writeFailure]) {
+        const failure = Exit.match(O.getOrThrow(observed), {
+          onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
+          onSuccess: () => expect.fail("Expected the aliased mutation to fail"),
+        });
+        expect(failure.reason).toBe("limit-exceeded");
+      }
+      expect(afterAlias).toBe(1);
+      expect(afterWrite).toEqual([first, first]);
     })
   );
 
@@ -373,7 +384,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const raw = yield* fs.readFileString(
-          fileURLToPath(
+          NodeURL.fileURLToPath(
             new URL("../../use-cases/test/fixtures/eyecite/custom-resolution-observations.json", import.meta.url)
           )
         );

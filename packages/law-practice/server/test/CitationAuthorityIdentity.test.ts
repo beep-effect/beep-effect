@@ -2,6 +2,7 @@ import { CitationAuthorityId } from "@beep/law-practice-domain/values";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -60,7 +61,7 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
   it.effect("rejects missing or mismatched selected edition adapter data", () =>
     Effect.gen(function* () {
       const row = A.getUnsafe((yield* inputs).cases, 0).input;
-      expect(O.isSome(row.selectedEdition)).toBe(true);
+      row.selectedEdition.pipe(O.isSome, assertTrue);
       const noLookup = yield* Effect.flip(makeCitationAuthorityId({ ...row, selectedEdition: O.none() }));
       expect(noLookup.reason).toBe("missing-edition");
       const other = A.getUnsafe((yield* inputs).cases, 6).input.selectedEdition;

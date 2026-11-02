@@ -1,10 +1,11 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { citationAuthorityMentionIds, citationGroupMembers } from "@beep/law-practice-domain/values";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -75,7 +76,9 @@ const DefaultCallbackObservationsJson = S.fromJsonString(
 const cases = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const raw = yield* fs.readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url))
+    NodeURL.fileURLToPath(
+      new URL("../../use-cases/test/fixtures/eyecite/default-resolution-cases.json", import.meta.url)
+    )
   );
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "89d86c6aefecc02a30e6d719af9277050d8023949d4fba69912e2b9295d20e05"
@@ -120,7 +123,9 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
         ];
         expect(contexts).toHaveLength(76);
         const observationsText = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/default-observations.json", import.meta.url))
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/default-observations.json", import.meta.url)
+          )
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(observationsText))).toBe(
           "34bf392659ed8699115311a9f04377b7366b691e91e5171145b7cafdec6d1592"
@@ -316,11 +321,11 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
       const mention = A.getUnsafe(prepared.mentions, 1);
       const result = yield* callbacks.shortCase(CitationFullsCallbackInput.make({ mention, fulls: [] }));
       const evidence = yield* readCitationDefaultObservation(result, mention.id);
-      expect(O.isSome(evidence)).toBe(true);
+      evidence.pipe(O.isSome, assertTrue);
       if (O.isSome(evidence))
         expect(evidence.value).toEqual({ _tag: "Unresolved", mentionId: mention.id, reason: "no-matching-authority" });
-      expect(O.isNone(yield* readCitationDefaultObservation({ ...result }, mention.id))).toBe(true);
-      expect(O.isNone(yield* readCitationDefaultObservation(result, A.getUnsafe(prepared.mentions, 0).id))).toBe(true);
+      assertNone(yield* readCitationDefaultObservation({ ...result }, mention.id));
+      assertNone(yield* readCitationDefaultObservation(result, A.getUnsafe(prepared.mentions, 0).id));
       yield* owner.close;
     })
   );

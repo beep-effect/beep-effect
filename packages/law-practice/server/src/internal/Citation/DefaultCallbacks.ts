@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { Citation, CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
+import { CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -28,13 +28,12 @@ import {
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "./CallbackSession.ts";
+import { citationMetadataValues } from "./MetadataValues.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
-import type { CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
+import type { Citation, CitationMention, CitationMentionId } from "@beep/law-practice-domain/values";
 import type { CitationCallbackFull, CitationFullsCallbackInput, CitationIdCallbackInput } from "./CallbackSession.ts";
 import type { PreparedCitationResolution } from "./ResolutionInput.ts";
-
-const UnknownMetadata = S.Record(S.String, S.Unknown);
 
 const $I = $LawPracticeServerId.create("internal/Citation/DefaultCallbacks");
 const Reporter = S.Struct({ value: S.NullOr(S.String), defined: S.Boolean, volume: S.NullOr(S.String) }).pipe(
@@ -127,17 +126,6 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
     }
     return found;
   });
-  const metadataValues = Effect.fn("Citation.defaultMetadataValues")(function* (citation: Citation) {
-    const wire = yield* S.encodeEffect(Citation)(citation);
-    const metadata = yield* S.decodeEffect(UnknownMetadata)(wire.metadata);
-    let values = A.filter(R.values(metadata), S.is(S.NonEmptyString));
-    if (citation.type === "case" && O.isSome(citation.metadata.court)) {
-      const court = citation.metadata.court.value;
-      const name = court.status === "known" ? court.id : court.value;
-      if (Str.isNonEmpty(name)) values = A.append(values, name);
-    }
-    return values;
-  }, Effect.mapError(invalid));
   return CitationResolutionCallbacks.of({
     full: Effect.fn("Citation.defaultFullCallback")((mention: CitationMention) =>
       dictionary.canonicalResource(CitationGroupMember.cases.Mention.make({ mentionId: mention.id }))
@@ -198,7 +186,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           for (const entry of input.fulls) {
             yield* work.step;
             const prior = yield* citationOf(entry.citation);
-            const values = yield* metadataValues(prior);
+            const values = yield* citationMetadataValues(prior).pipe(Effect.mapError(invalid));
             if (A.some(names, (name) => A.contains(values, name))) candidates = A.append(candidates, entry);
           }
         return yield* choose(candidates, input.mention.id);

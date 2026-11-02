@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -8,7 +8,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
   CitationRuntimeDictionaryComparison,
@@ -51,7 +50,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
     () =>
       Effect.gen(function* () {
         const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
@@ -82,11 +81,11 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("source runtime cand
             const label = `${row.name}:${index}`;
             if (event.operation.kind === "add") {
               const key = A.getUnsafe(current, event.operation.key);
-              const result = yield* Effect.result(
-                set.add(CitationRuntimeDictionaryKey.make({ objectId: key.objectId, hash: key.hash }))
-              );
-              expect(Result.isFailure(result), label).toBe(event.outcome.status === "error");
-              if (Result.isFailure(result)) expect(result.failure.reason, label).toBe("comparison-failed");
+              const run = set.add(CitationRuntimeDictionaryKey.make({ objectId: key.objectId, hash: key.hash }));
+              if (event.outcome.status === "error") {
+                const failure = yield* Effect.flip(run);
+                expect(failure.reason, label).toBe("comparison-failed");
+              } else yield* run;
             }
             expect(comparisons, label).toEqual(event.comparisons);
             expect(

@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -10,6 +10,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -94,7 +95,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const paths = {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-stage-" }),
-          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         };
         const policy = {
           ...limits,
@@ -209,14 +210,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
           Effect.provideService(CitationCleanerRuntime, h.runtime)
         );
         const running = yield* pipeline.run({ text: "x", plan: "cancel-html" }).pipe(Effect.forkChild);
-        let observed = false;
-        for (let attempt = 0; attempt < 3000; attempt++) {
-          if (yield* fs.exists(marker)) {
-            observed = true;
-            break;
-          }
-          yield* Effect.sleep(Duration.millis(10));
-        }
+        const observed = yield* fs
+          .exists(marker)
+          .pipe(
+            Effect.repeat({ times: 2999, until: (exists) => exists, schedule: Schedule.spaced(Duration.millis(10)) })
+          );
         expect(observed).toBe(true);
         expect((yield* (yield* h.work).snapshot).closed).toBe(false);
         yield* Fiber.interrupt(running);
@@ -236,7 +234,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("native cleaner stage
         const worker = yield* makeCitationHtmlWorker(limits, {
           executable: process.execPath,
           cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-byte-stage-" }),
-          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         });
         const h = owned(worker, 0, () => new TextEncoder().encode("<div>A</div>"));
         const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(

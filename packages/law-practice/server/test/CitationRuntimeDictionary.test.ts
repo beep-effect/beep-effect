@@ -1,10 +1,11 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -83,7 +84,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(
+        NodeURL.fileURLToPath(
           new URL("../../use-cases/test/fixtures/eyecite/runtime-dictionary-observations.json", import.meta.url)
         )
       );
@@ -137,13 +138,15 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
               operation.kind === "clear"
                 ? table.clear.pipe(Effect.as(O.none<CitationRuntimeDictionaryEntry>()))
                 : Effect.succeedNone;
-          const result = yield* Effect.result(run);
           let actual: typeof Outcome.Type;
-          if (result._tag === "Failure") {
-            expect(result.failure.reason, row.name).toBe("comparison-failed");
+          if (event.outcome.status === "error") {
+            const failure = yield* Effect.flip(run);
+            expect(failure.reason, row.name).toBe("comparison-failed");
             actual = Outcome.cases.error.make({ kind: "ValueError" });
-          } else
-            actual = Outcome.cases.value.make({ result: O.getOrNull(O.map(result.success, (entry) => entry.value)) });
+          } else {
+            const value = yield* run;
+            actual = Outcome.cases.value.make({ result: O.getOrNull(O.map(value, (entry) => entry.value)) });
+          }
           expect(actual, row.name).toEqual(event.outcome);
           expect(comparisons, row.name).toEqual(event.comparisons);
           expect(
@@ -169,7 +172,10 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("source runtime d
       expect(A.map(yield* table.read, (entry) => entry.value)).toEqual([10, 11]);
       const read = yield* table.read;
       Reflect.set(A.getUnsafe(read, 0), "value", 999);
-      expect(O.map(yield* table.get(key(0)), (entry) => entry.value)).toEqual(O.some(10));
+      assertSome(
+        O.map(yield* table.get(key(0)), (entry) => entry.value),
+        10
+      );
       yield* table.set(key(0), 13);
       expect(A.map(yield* table.read, (entry) => entry.value)).toEqual([13, 11]);
       const tiny = yield* makeCitationRuntimeDictionary(

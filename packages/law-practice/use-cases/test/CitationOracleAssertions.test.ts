@@ -1,6 +1,7 @@
 import { CitationOracleAssertions } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as R from "effect/Record";
@@ -77,7 +78,7 @@ describe("assertion oracle evidence", () => {
         const encoded = yield* S.encodeUnknownEffect(CitationOracleAssertions)(R.remove(decoded, field)).pipe(
           Effect.exit
         );
-        expect(Exit.isFailure(encoded)).toBe(true);
+        encoded.pipe(Exit.isFailure, assertTrue);
       }
     })
   );
@@ -110,7 +111,7 @@ describe("assertion oracle evidence", () => {
         events: [{ ...first, payload: { ...first.payload, value: { ...first.payload.value, operands: [] } } }],
       };
       const result = yield* S.encodeUnknownEffect(CitationOracleAssertions)(forged).pipe(Effect.exit);
-      expect(Exit.isFailure(result)).toBe(true);
+      result.pipe(Exit.isFailure, assertTrue);
     })
   );
 

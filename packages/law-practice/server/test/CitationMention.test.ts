@@ -16,6 +16,7 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
@@ -172,7 +173,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
           { name: "other", anchor: { ...wire.anchor, source: { ...wire.anchor.source, scopeRef: "matter:other" } } },
         ],
       };
-      expect(Result.isFailure(S.decodeResult(CitationMentionReceipt)(altered))).toBe(true);
+      S.decodeResult(CitationMentionReceipt)(altered).pipe(Result.isFailure, assertTrue);
     })
   );
 
@@ -259,10 +260,10 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
         expectedEngineArtifact: artifact,
         sourceText: text,
       });
-      expect(restored.signal).toEqual(O.some("see"));
-      expect(restored.evidenceConfidence).toEqual(O.some(0.5));
+      assertSome(restored.signal, "see");
+      assertSome(restored.evidenceConfidence, UnitInterval.make(0.5));
       expect(restored.warnings).toEqual([{ kind: "unexpected-overlap", previousMentionId }]);
-      expect(restored.footnote).toMatchObject({ _tag: "Some", value: { label: O.some("1") } });
+      assertSome(O.getOrThrow(restored.footnote).label, "1");
     })
   );
 

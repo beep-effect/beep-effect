@@ -17,6 +17,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -48,8 +49,8 @@ describe("canonical semantic citation models", () => {
   it.effect("round-trips case legal components and metadata without numeric coercion or occurrence state", () =>
     Effect.gen(function* () {
       const citation = yield* S.decodeEffect(FullCaseCitation)(fullWire);
-      expect(citation.components.volume).toEqual(O.some("410"));
-      expect(citation.metadata.plaintiff).toEqual(O.some("Smith"));
+      assertSome(O.fromUndefinedOr(citation.components.volume).pipe(O.getOrThrow), "410");
+      assertSome(citation.metadata.plaintiff, "Smith");
       expect(yield* S.encodeEffect(FullCaseCitation)(citation)).toEqual(fullWire);
       const transformInput: FullCitation.Type = citation;
       expect(yield* S.encodeEffect(FullCitation)(transformInput)).toEqual(fullWire);
@@ -59,8 +60,8 @@ describe("canonical semantic citation models", () => {
         metadata: { ...fullMetadata, year: "0999", additionalText: ", 20 F.2d 1" },
       };
       const decoded = yield* S.decodeEffect(FullCaseCitation)(wire);
-      expect(decoded.components.page).toEqual(O.none());
-      expect(decoded.metadata.year).toEqual(O.some("0999"));
+      O.fromUndefinedOr(decoded.components.page).pipe(O.getOrThrow, assertNone);
+      assertSome(decoded.metadata.year, "0999");
       expect(yield* S.encodeEffect(FullCaseCitation)(decoded)).toEqual(wire);
     })
   );
@@ -74,8 +75,9 @@ describe("canonical semantic citation models", () => {
       const wire = { ...fullWire, metadata: { ...fullMetadata, court: { status: "unmapped", value: "" } } } as const;
       const value = yield* S.decodeEffect(FullCaseCitation)(wire);
       expect(yield* S.encodeEffect(FullCaseCitation)(value)).toEqual(wire);
-      expect(Result.isFailure(S.decodeResult(CitationKnownCourt)({ status: "known", id: "", vocabularyVersion }))).toBe(
-        true
+      S.decodeResult(CitationKnownCourt)({ status: "known", id: "", vocabularyVersion }).pipe(
+        Result.isFailure,
+        assertTrue
       );
     })
   );

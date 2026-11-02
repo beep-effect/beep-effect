@@ -1,8 +1,8 @@
 import { SourceRef, TextQuote } from "@beep/law-practice-domain/values";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 describe("review-source quote contract after citation locator retirement", () => {
@@ -13,8 +13,8 @@ describe("review-source quote contract after citation locator retirement", () =>
         expect(yield* S.encodeEffect(TextQuote)(quote)).toEqual(wire);
       }
       const quote = TextQuote.make({ exact: "" });
-      expect(quote.prefix).toEqual(O.none());
-      expect(quote.suffix).toEqual(O.none());
+      assertNone(quote.prefix);
+      assertNone(quote.suffix);
     })
   );
 
@@ -23,7 +23,7 @@ describe("review-source quote contract after citation locator retirement", () =>
       const wire = { boxFileId: "1234567890", page: 3, quote: { exact: "claim language", prefix: "before " } };
       const ref = yield* S.decodeEffect(SourceRef)(wire);
       expect(yield* S.encodeEffect(SourceRef)(ref)).toEqual(wire);
-      expect(ref.crop).toEqual(O.none());
+      assertNone(ref.crop);
     })
   );
 });

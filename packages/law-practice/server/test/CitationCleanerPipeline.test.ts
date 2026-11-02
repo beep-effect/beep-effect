@@ -1,10 +1,11 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
@@ -400,7 +401,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("reserved literal cl
     () =>
       Effect.gen(function* () {
         const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
+          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/literal-cleaners.json", import.meta.url))
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "242701dc5547bc00fa441117925f934e45c4505f1515e4c51ab0e8380dd199e8"
@@ -484,13 +485,14 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
     const entered = yield* Deferred.make<void>();
     const release = yield* Deferred.make<void>();
     let competingFinished = false;
+    let reentry = O.none<Exit.Exit<CitationCleanerTextCharge, Failure>>();
     const step = h.callback((_, work) =>
       Effect.gen(function* () {
         const native = yield* work
           .withTextCapacity((remaining) =>
             Effect.gen(function* () {
               expect(remaining).toBe(4);
-              expect(yield* Effect.exit(work.reserveText(1))).toMatchObject({ _tag: "Failure" });
+              reentry = O.some(yield* Effect.exit(work.reserveText(1)));
               yield* Deferred.succeed(entered, undefined);
               yield* Deferred.await(release);
               return { value: "abc", units: 3 };
@@ -519,6 +521,11 @@ it.effect("lends exclusive remaining text capacity and settles exact issued char
     const result = yield* (yield* pipeline(h, { producedTextUtf16: 4 })).run({ text: "x", plan: "capacity" });
     expect(yield* h.raw(result.value)).toBe("abcd");
     expect(result.producedTextUtf16).toBe(4);
+    const reentryFailure = Exit.match(O.getOrThrow(reentry), {
+      onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.getOrThrow),
+      onSuccess: () => expect.fail("Expected exclusive capacity reentry to fail"),
+    });
+    expect(reentryFailure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-reservation" });
     let called = false;
     expect(
       yield* Effect.flip(
@@ -571,7 +578,7 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
     const step = h.callback((_, work) =>
       Effect.gen(function* () {
         const failed = yield* Effect.exit(work.withTextCapacity(() => Effect.fail(fail("callback-failed"))));
-        expect(Exit.isFailure(failed)).toBe(true);
+        failed.pipe(Exit.isFailure, assertTrue);
         const entered = yield* Deferred.make<void>();
         const retired = yield* Deferred.make<void>();
         const native = yield* work

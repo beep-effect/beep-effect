@@ -35,7 +35,7 @@ import { CitationAuthorityEdition, makeCitationAuthorityId } from "./AuthorityId
 import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
-import type { CitationAuthorityId, CitationResourceGroup } from "@beep/law-practice-domain/values";
+import type { CitationAuthorityId, CitationMentionId, CitationResourceGroup } from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
 const CitationDocumentType = S.toType(CitationDocument);
@@ -196,17 +196,18 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
     CitationDocumentReceipt["authorities"][number]["id"],
     HashSet.HashSet<CitationDocumentReceipt["mentions"][number]["id"]>
   >();
-  for (const binding of snapshot.resourceBindings) {
-    const id = yield* makeCitationResourceAuthorityId(binding.identity).pipe(Effect.mapError(identityFailure));
-    if (HashMap.has(custom, id)) return yield* invalid();
-    if (!A.some(snapshot.receipt.authorities, (authority) => authority.id === id))
+  const verifyDecision = Effect.fn("Citation.verifyBoundDecision")(function* (
+    id: CitationAuthorityId,
+    member: CitationMentionId
+  ) {
+    const resolution = HashMap.get(resolutions, member);
+    if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
       return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-    const members = HashSet.fromIterable(binding.decisions);
-    for (const member of binding.decisions) {
-      const resolution = HashMap.get(resolutions, member);
-      if (O.isNone(resolution) || resolution.value.status !== "Resolved" || resolution.value.authorityId !== id)
-        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-    }
+  });
+  const verifyCandidates = Effect.fn("Citation.verifyBoundCandidates")(function* (
+    id: CitationAuthorityId,
+    binding: CitationResourceBinding
+  ) {
     const expectedCandidates = O.getOrElse(O.fromUndefinedOr(binding.candidates), A.empty);
     const actualCandidates = O.getOrElse(R.get(candidatesByAuthority, id), A.empty);
     if (A.length(expectedCandidates) !== A.length(actualCandidates))
@@ -220,26 +221,46 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
       )
         return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
     }
+  });
+  const verifyGroup = Effect.fn("Citation.verifyBoundGroup")(function* (
+    id: CitationAuthorityId,
+    expected: CitationResourceBinding["groups"][number]
+  ) {
+    const group = A.get(snapshot.receipt.groups, expected.position);
+    const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
+    if (
+      O.isNone(group) ||
+      group.value.id !== expected.id ||
+      group.value.authorityId !== id ||
+      O.isNone(list) ||
+      !listEquivalent(list.value, expected.list)
+    )
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+  });
+  const verifyGroups = Effect.fn("Citation.verifyBoundGroups")(function* (
+    id: CitationAuthorityId,
+    binding: CitationResourceBinding
+  ) {
     const actual = groupsFor(id);
     if (
       A.length(actual) !== A.length(binding.groups) ||
       HashSet.size(HashSet.fromIterable(A.map(binding.groups, (group) => group.id))) !== A.length(binding.groups)
     )
       return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-    for (const expected of binding.groups) {
-      const group = A.get(snapshot.receipt.groups, expected.position);
-      const list = O.flatMap(group, (value) => HashMap.get(listById, value.memberListId));
-      if (
-        O.isNone(group) ||
-        group.value.id !== expected.id ||
-        group.value.authorityId !== id ||
-        O.isNone(list) ||
-        !listEquivalent(list.value, expected.list)
-      )
-        return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-    }
+    yield* Effect.forEach(binding.groups, (expected) => verifyGroup(id, expected), { concurrency: 1, discard: true });
+  });
+  const recordBinding = Effect.fn("Citation.verifyResourceBinding")(function* (binding: CitationResourceBinding) {
+    const id = yield* makeCitationResourceAuthorityId(binding.identity).pipe(Effect.mapError(identityFailure));
+    if (HashMap.has(custom, id)) return yield* invalid();
+    if (!A.some(snapshot.receipt.authorities, (authority) => authority.id === id))
+      return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
+    const members = HashSet.fromIterable(binding.decisions);
+    yield* Effect.forEach(binding.decisions, (member) => verifyDecision(id, member), { concurrency: 1, discard: true });
+    yield* verifyCandidates(id, binding);
+    yield* verifyGroups(id, binding);
     custom = HashMap.set(custom, id, members);
-  }
+  });
+  yield* Effect.forEach(snapshot.resourceBindings, recordBinding, { concurrency: 1, discard: true });
   let verified = custom.pipe(HashMap.keys, HashSet.fromIterable);
   yield* Effect.forEach(
     snapshot.receipt.mentions,
@@ -269,8 +290,10 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
     return yield* CitationDocumentFailure.make({ reason: "authority-key-unavailable" });
   // Unbound default groups must exactly reflect decisions in occurrence order.
   // A callback-produced order, multiplicity, empty group or alias requires a binding.
-  for (const authority of snapshot.receipt.authorities) {
-    if (HashMap.has(custom, authority.id)) continue;
+  const verifyDefaultGroup = Effect.fn("Citation.verifyDefaultAuthorityGroup")(function* (
+    authority: CitationDocumentReceipt["authorities"][number]
+  ) {
+    if (HashMap.has(custom, authority.id)) return;
     const expected = A.map(
       A.filter(snapshot.receipt.mentions, (mention) =>
         O.exists(
@@ -293,7 +316,8 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
         : O.isNone(list) || list.value.id !== expectedListId || !memberEquivalent(list.value.members, expected))
     )
       return yield* CitationDocumentFailure.make({ reason: "stale-authority" });
-  }
+  });
+  yield* Effect.forEach(snapshot.receipt.authorities, verifyDefaultGroup, { concurrency: 1, discard: true });
   // Every persisted list must be attached to a verified or bound group.
   if (
     !A.every(snapshot.receipt.memberLists, (list) =>

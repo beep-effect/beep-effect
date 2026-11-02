@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -44,7 +44,7 @@ const runtime = Effect.gen(function* () {
   return {
     executable: process.execPath,
     cwd: yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped({ prefix: "citation-html-corpus-" }),
-    workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+    workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   };
 });
 const TestRuntime = Layer.merge(BunServices.layer, BunCrypto.layer);
@@ -55,7 +55,9 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
     () =>
       Effect.gen(function* () {
         const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url))
+          NodeURL.fileURLToPath(
+            new URL("../../use-cases/test/fixtures/eyecite/html-kernel-cases.json", import.meta.url)
+          )
         );
         expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
           "34a9b3b4667a71c0234f77fb898f6d6de55a85e7306ea66a55144b3ca95d24d0"
@@ -136,7 +138,9 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         expect(confirmedExits).toBe(859);
         expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
-    { timeout: 600_000 }
+    // The hosted 1,097-case replay exceeded the previous ten-minute suite watchdog.
+    // Per-request clean/operation/cleanup deadlines and every exit assertion remain enforced.
+    { timeout: 1_200_000 }
   );
   it.effect(
     "preserves the absolute source ceiling and exact request/reply boundaries without partial output",

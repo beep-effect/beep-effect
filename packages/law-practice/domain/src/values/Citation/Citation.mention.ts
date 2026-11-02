@@ -165,6 +165,28 @@ type EvidenceFields = {
 const EvidenceFields: EvidenceFields = { anchor: AnchorProof, components: Components, footnote: Footnote };
 const MentionShape = S.Struct({ ...MetadataFields, ...EvidenceFields });
 
+const ReceiptShape = S.Struct({
+  schemaVersion: S.tag("citation-mention-receipt/v1"),
+  ...MetadataFields,
+  anchor: TextAnchorVerificationReceipt,
+  components: S.Array(CitationComponentReceipt),
+  footnote: S.OptionFromNullOr(CitationFootnoteReceipt),
+});
+const coherentEvidence = (mention: typeof MentionShape.Type | typeof ReceiptShape.Type) => {
+  const source = mention.anchor.source;
+  const primary = mention.anchor.anchor;
+  const zone = mention.footnote;
+  return (
+    A.every<CitationComponentAnchor | CitationComponentReceipt>(mention.components, (component) =>
+      sourceEquivalent(source, component.anchor.source)
+    ) &&
+    (O.isNone<CitationFootnoteZone | CitationFootnoteReceipt>(zone) ||
+      (sourceEquivalent(source, zone.value.anchor.source) &&
+        zone.value.anchor.anchor.startChar <= primary.startChar &&
+        zone.value.anchor.anchor.endChar >= primary.endChar))
+  );
+};
+
 /**
  * Semantic citation composed with genuine verified occurrence evidence.
  *
@@ -189,18 +211,7 @@ const MentionShape = S.Struct({ ...MetadataFields, ...EvidenceFields });
 export class CitationMention extends S.Opaque<CitationMention, { readonly brand: unique symbol }>()(
   MentionShape.check(
     S.makeFilter(
-      (mention) => {
-        const source = mention.anchor.source;
-        const primary = mention.anchor.anchor;
-        const zone = mention.footnote;
-        return (
-          A.every(mention.components, (component) => sourceEquivalent(source, component.anchor.source)) &&
-          (O.isNone(zone) ||
-            (sourceEquivalent(source, zone.value.anchor.source) &&
-              zone.value.anchor.anchor.startChar <= primary.startChar &&
-              zone.value.anchor.anchor.endChar >= primary.endChar))
-        );
-      },
+      coherentEvidence,
       $I.annote("MentionEvidenceCoherence", {
         title: "Mention Evidence Coherence",
         description:
@@ -215,14 +226,6 @@ export class CitationMention extends S.Opaque<CitationMention, { readonly brand:
     })
   )
 ) {}
-
-const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-mention-receipt/v1"),
-  ...MetadataFields,
-  anchor: TextAnchorVerificationReceipt,
-  components: S.Array(CitationComponentReceipt),
-  footnote: S.OptionFromNullOr(CitationFootnoteReceipt),
-});
 
 /**
  * Persistable mention data requiring authorized raw-source re-verification.
@@ -245,18 +248,7 @@ const ReceiptShape = S.Struct({
 export class CitationMentionReceipt extends S.Opaque<CitationMentionReceipt, { readonly brand: unique symbol }>()(
   ReceiptShape.check(
     S.makeFilter(
-      (mention) => {
-        const source = mention.anchor.source;
-        const primary = mention.anchor.anchor;
-        const zone = mention.footnote;
-        return (
-          A.every(mention.components, (component) => sourceEquivalent(source, component.anchor.source)) &&
-          (O.isNone(zone) ||
-            (sourceEquivalent(source, zone.value.anchor.source) &&
-              zone.value.anchor.anchor.startChar <= primary.startChar &&
-              zone.value.anchor.anchor.endChar >= primary.endChar))
-        );
-      },
+      coherentEvidence,
       $I.annote("MentionReceiptCoherence", {
         title: "Mention Receipt Coherence",
         description:

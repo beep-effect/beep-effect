@@ -1,6 +1,7 @@
 import { CitationOracleOperations } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
@@ -80,7 +81,7 @@ describe("normalized public-operation oracle evidence", () => {
         ],
       };
       const result = yield* S.encodeUnknownEffect(CitationOracleOperations)(changed).pipe(Effect.exit);
-      expect(Exit.isFailure(result)).toBe(true);
+      result.pipe(Exit.isFailure, assertTrue);
     })
   );
 

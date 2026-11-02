@@ -1,4 +1,5 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
+import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   Citation,
   CitationGroupMember,
@@ -40,6 +41,15 @@ import {
   makeCitationRuntimeDictionary,
 } from "../src/internal/Citation/RuntimeDictionary.ts";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
+
+const $I = $LawPracticeServerId.create("test/CitationResourceObjects");
+class MissingReporterOutcome extends S.Opaque<MissingReporterOutcome, { readonly brand: unique symbol }>()(
+  S.Struct({ status: S.Literal("error"), field: S.Literal("reporter") }).pipe(
+    $I.annoteSchema("MissingReporterOutcome", {
+      description: "Frozen source missing-reporter outcome used to select the expected failure direction.",
+    })
+  )
+) {}
 
 // These histories have no selected edition; any artifact lookup is a regression.
 const unusedEditions = CitationFrozenEditions.of({
@@ -84,7 +94,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const raw = yield* fs.readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/live-case-resources.json", import.meta.url))
+        NodeURL.fileURLToPath(
+          new URL("../../use-cases/test/fixtures/eyecite/live-case-resources.json", import.meta.url)
+        )
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "ec5e5887236e755082f1c2e56f87f6f0f4de68e815f471fda20505977597b791"
@@ -177,10 +189,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                 else if (operation.kind === "clear") yield* table.clear;
                 else {
                   const resource = A.getUnsafe(resources, operation.resource);
-                  const current = yield* Effect.result(objects.key(resource));
-                  if (current._tag === "Failure") {
+                  if (S.is(MissingReporterOutcome)(event.outcome)) {
+                    const failure = yield* Effect.flip(objects.key(resource));
                     expect(operation.kind).toBe("hash");
-                    expect(current.failure.reason).toBe("missing-reporter");
+                    expect(failure.reason).toBe("missing-reporter");
                     outcome = { status: "error", field: "reporter" };
                     expect(outcome, row.name).toEqual(event.outcome);
                     expect(
@@ -190,7 +202,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
                     events += 1;
                     continue;
                   }
-                  const key = current.success;
+                  const key = yield* objects.key(resource);
                   if (operation.kind === "hash") result = yield* S.encodeEffect(S.BigIntFromString)(key.hash);
                   else if (operation.kind === "set") yield* table.set(key, operation.value);
                   else {
@@ -302,7 +314,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
       expect(A.filter(results, Result.isSuccess)).toHaveLength(1);
       expect(A.filter(results, Result.isFailure)).toHaveLength(1);
       const failure = A.findFirst(results, Result.isFailure);
-      expect(O.isSome(failure) && failure.value.failure.reason).toBe("limit-exceeded");
+      expect(O.getOrThrow(failure).failure.reason).toBe("limit-exceeded");
       yield* objects.close;
     })
   );

@@ -1,8 +1,9 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Deferred from "effect/Deferred";
@@ -93,7 +94,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const worker = yield* makeCitationHtmlWorker((yield* defaultCitationEnginePolicy).limits, {
           executable: process.execPath,
           cwd,
-          workerFile: fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
+          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
         }).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,
@@ -175,7 +176,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         const result = yield* Fiber.await(fiber);
         yield* Fiber.interrupt(heartbeat);
         expect(ticks).toBeGreaterThan(0);
-        expect(Exit.isFailure(result)).toBe(true);
+        result.pipe(Exit.isFailure, assertTrue);
         const failed = yield* result.pipe(Effect.flip);
         expect(failed._tag).toBe("CitationSafetyLimitExceeded");
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("cleanDeadline");
@@ -417,7 +418,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         yield* waitFor(f.fs.exists(f.marker));
         yield* Scope.close(owner, Exit.void);
         expect(yield* worker.snapshot).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: true });
-        expect(Exit.isFailure(yield* Fiber.await(running))).toBe(true);
+        (yield* Fiber.await(running)).pipe(Exit.isFailure, assertTrue);
         const closed = yield* Effect.flip(worker.clean("replacement"));
         expect(closed._tag).toBe("CitationHtmlWorkerFailure");
         if (closed._tag === "CitationHtmlWorkerFailure") expect(closed.reason).toBe("closed");

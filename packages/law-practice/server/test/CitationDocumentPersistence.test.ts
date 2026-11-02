@@ -28,6 +28,7 @@ import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -502,7 +503,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
       const document = CitationDocument.make({ ...data.document, authorities });
       const receipt = yield* projectCitationDocumentReceipt({ document, editions: data.editions });
       const restored = yield* restoreCitationDocument({ ...data.restore, receipt });
-      expect(A.getUnsafe(restored.authorities, 0).representative).toEqual(O.some(member(mention.id)));
+      assertSome(A.getUnsafe(restored.authorities, 0).representative, member(mention.id));
       expect(A.getUnsafe(restored.authorities, 0).id).toBe(A.getUnsafe(data.document.authorities, 0).id);
     })
   );

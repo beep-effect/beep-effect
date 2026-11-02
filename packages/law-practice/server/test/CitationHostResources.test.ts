@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import {
   Citation,
   CitationComponentAnchor,
@@ -11,6 +11,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -18,7 +19,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CitationCallbackResult } from "../src/internal/Citation/CallbackResource.ts";
 import {
@@ -291,7 +291,7 @@ const prepare = Effect.fn("HostTest.prepare")(function* (
 });
 const load = Effect.fn("HostTest.load")(function* () {
   const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-    fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/host-resources.json", import.meta.url))
+    NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/host-resources.json", import.meta.url))
   );
   expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
     "2eaf20a0492da410f793712cb7f3b5728bb6e912b9fc7659a07764fd24bdf43f"
@@ -366,7 +366,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
   it.effect("captures actual returned objects and append destinations independently of surviving groups", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/dispatch-decisions.json", import.meta.url))
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/dispatch-decisions.json", import.meta.url))
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "88efa991758699d739ddac709f20efce4ba086da9eb17bca5bb9170e03a79c36"
@@ -533,7 +533,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           expect(A.getUnsafe(A.getUnsafe(output.document.mentions, 0).components, 0).anchor).toBe(
             A.getUnsafe(prepared.mentions, 0).anchor
           );
-          expect(O.getOrThrow(A.getUnsafe(output.document.mentions, 0).footnote).label).toEqual(O.some("n1"));
+          assertSome(O.getOrThrow(A.getUnsafe(output.document.mentions, 0).footnote).label, "n1");
         }
         if (row.action === "equal") {
           const opaque = CitationSessionResourceDescriptors.of({
@@ -651,7 +651,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
   it.effect("matches source set uniqueness and exact hooks through default short, supra and reference callbacks", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
+        NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/runtime-set.json", import.meta.url))
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "58ca087e488c94d2db5b6dfef2dfe1d0280f18228b6088a61b14b227d536adfa"
@@ -840,14 +840,16 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
               for (const [index, event] of A.map(row.events, (event, index) => [index, event] as const)) {
                 const label = `${row.name}:${index}`;
                 host.reset();
-                const result = yield* Effect.result(action(event.operation));
-                if (Result.isFailure(result)) {
-                  expect(S.is(HostFailure)(event.outcome), `${label}:${result.failure.reason}`).toBe(true);
+                if (S.is(HostFailure)(event.outcome)) {
+                  const failure = yield* Effect.flip(action(event.operation));
                   const expected = yield* S.decodeUnknownEffect(HostOperationFailure)(event.outcome);
-                  expect(result.failure.reason, label).toBe(
+                  expect(failure.reason, label).toBe(
                     expected.operation === "compare" ? "identity-failed" : "callback-failed"
                   );
-                } else expect({ status: "value", result: result.success }, label).toEqual(event.outcome);
+                } else {
+                  const value = yield* action(event.operation);
+                  expect({ status: "value", result: value }, label).toEqual(event.outcome);
+                }
                 const entries = yield* owner.read;
                 expect(
                   A.map(entries, (group) => {

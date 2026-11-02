@@ -8,6 +8,7 @@ import {
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -79,7 +80,7 @@ describe("schema-owned citation safety budgets", () => {
           const result = yield* S.encodeUnknownEffect(CitationEngineLimits)({ ...policy.limits, [key]: invalid }).pipe(
             Effect.exit
           );
-          expect(Exit.isFailure(result)).toBe(true);
+          result.pipe(Exit.isFailure, assertTrue);
         }
       }
     })
@@ -111,7 +112,7 @@ describe("schema-owned citation safety budgets", () => {
         { ...encoded, limits: R.remove(encoded.limits, "sourceUtf16") },
       ]) {
         const result = yield* S.decodeUnknownEffect(CitationEngineEffectivePolicy)(value).pipe(Effect.exit);
-        expect(Exit.isFailure(result)).toBe(true);
+        result.pipe(Exit.isFailure, assertTrue);
       }
       expect(A.length(R.keys(encoded.limits))).toBe(29);
     })

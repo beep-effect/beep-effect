@@ -2,6 +2,7 @@ import { CitationAuthorityId, CitationMentionId } from "@beep/law-practice-domai
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -36,7 +37,7 @@ describe("document-local citation identity schemas", () => {
       authority,
       `cm2:${digest}`,
     ]) {
-      expect(Result.isFailure(S.decodeUnknownResult(CitationMentionId)(invalid))).toBe(true);
+      S.decodeUnknownResult(CitationMentionId)(invalid).pipe(Result.isFailure, assertTrue);
     }
     for (const invalid of [
       mention,
@@ -45,7 +46,7 @@ describe("document-local citation identity schemas", () => {
       `ca1:${Str.slice(1)(digest)}`,
       `ca2:${digest}`,
     ]) {
-      expect(Result.isFailure(S.decodeUnknownResult(CitationAuthorityId)(invalid))).toBe(true);
+      S.decodeUnknownResult(CitationAuthorityId)(invalid).pipe(Result.isFailure, assertTrue);
     }
   });
 

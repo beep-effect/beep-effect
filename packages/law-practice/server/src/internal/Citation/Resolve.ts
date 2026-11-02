@@ -35,11 +35,19 @@ import * as Tuple from "effect/Tuple";
 import { makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
-import type { CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
+import type {
+  CitationMention,
+  CitationResolution,
+  IdCitation,
+  ReferenceCitation,
+  ShortFormCaseCitation,
+  SupraCitation,
+} from "@beep/law-practice-domain/values";
 import type * as Digest from "effect/crypto/Digest";
 
-const UnknownMetadata = S.Record(S.String, S.Unknown);
 const CitationDocumentType = S.toType(CitationDocument);
+
+import { citationMetadataValues } from "./MetadataValues.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Resolve");
 const Entry = S.Struct({
@@ -134,128 +142,163 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       return CitationAmbiguous.make({ mentionId: mention.id, candidateAuthorityIds: ids, confidence: O.none() });
     return CitationUnresolved.make({ mentionId: mention.id, reason: "no-matching-authority" });
   });
-  for (const mention of mentions) {
-    yield* step;
-    const citation = mention.citation;
-    let resolution: CitationResolution;
-    if (isFull(citation)) {
-      const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
-      if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
-        return yield* CitationResolveFailure.make({ reason: "edition-missing" });
-      const id = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
-        Effect.mapError(() => CitationResolveFailure.make({ reason: "identity-failed" }))
-      );
-      if (!HashMap.has(representatives, id)) {
-        if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded();
-        representatives = HashMap.set(representatives, id, citation);
-        authorities = Chunk.append(
-          authorities,
-          CitationAuthority.make({
-            id,
-            representative: O.some(CitationGroupMember.cases.Mention.make({ mentionId: mention.id })),
-          })
-        );
-      }
-      const wire = yield* S.encodeEffect(FullCitation)(citation).pipe(Effect.mapError(invalid));
-      const metadata = yield* S.decodeEffect(UnknownMetadata)(wire.metadata).pipe(Effect.mapError(invalid));
-      let values = A.filter(R.values(metadata), S.is(S.NonEmptyString));
-      if (citation.type === "case" && O.isSome(citation.metadata.court)) {
-        const court = citation.metadata.court.value;
-        const value = court.status === "known" ? court.id : court.value;
-        if (Str.isNonEmpty(value)) values = A.append(values, value);
-      }
-      const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(Effect.mapError(invalid));
-      const reporter = O.isSome(selectedEdition)
-        ? selectedEdition.value.shortName
-        : O.getOrElse(R.get(groups, "reporter"), () => null);
-      fulls = Chunk.append(
-        fulls,
-        Entry.make({
-          citation,
-          authorityId: id,
-          reporter,
-          reporterDefined: O.isSome(selectedEdition) || O.isSome(R.get(groups, "reporter")),
-          volume: O.getOrElse(R.get(groups, "volume"), () => null),
-          metadataValues: values,
+  const resolveFull = Effect.fn("Citation.resolveFullMention")(function* (
+    mention: CitationMention,
+    citation: FullCitation
+  ) {
+    const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
+    if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
+      return yield* CitationResolveFailure.make({ reason: "edition-missing" });
+    const id = yield* makeCitationAuthorityId({ citation, mentionId: mention.id, selectedEdition }).pipe(
+      Effect.mapError(() => CitationResolveFailure.make({ reason: "identity-failed" }))
+    );
+    if (!HashMap.has(representatives, id)) {
+      if (Chunk.size(authorities) >= limits.authorities) return yield* exceeded();
+      representatives = HashMap.set(representatives, id, citation);
+      authorities = Chunk.append(
+        authorities,
+        CitationAuthority.make({
+          id,
+          representative: O.some(CitationGroupMember.cases.Mention.make({ mentionId: mention.id })),
         })
       );
-      if (edges >= limits.resolutionEdges) return yield* exceeded();
-      edges += 1;
-      resolution = CitationResolved.make({ mentionId: mention.id, authorityId: id, confidence: O.none() });
-    } else if (citation.type === "id") {
-      if (O.isNone(last))
-        resolution = CitationUnresolved.make({ mentionId: mention.id, reason: "no-previous-authority" });
-      else {
-        const full = yield* Effect.fromOption(HashMap.get(representatives, last.value), invalid);
-        const invalidPin = yield* hasInvalidCitationPinCite({ fullCitation: full, idCitation: citation }).pipe(
-          Effect.mapError(() => CitationResolveFailure.make({ reason: "text-failed" }))
-        );
-        if (invalidPin) resolution = CitationUnresolved.make({ mentionId: mention.id, reason: "invalid-pin-cite" });
-        else {
-          if (edges >= limits.resolutionEdges) return yield* exceeded();
-          edges += 1;
-          resolution = CitationResolved.make({ mentionId: mention.id, authorityId: last.value, confidence: O.none() });
-        }
-      }
-    } else if (citation.type === "unknown")
-      resolution = CitationUnresolved.make({ mentionId: mention.id, reason: "unsupported-citation" });
-    else {
-      let candidates = Chunk.empty<typeof Entry.Type>();
-      let missingAntecedent = false;
-      if (citation.type === "shortFormCase") {
-        const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(Effect.mapError(invalid));
-        const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
-        if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
-          return yield* CitationResolveFailure.make({ reason: "edition-missing" });
-        const reporter = O.isSome(selectedEdition)
-          ? selectedEdition.value.shortName
-          : O.getOrElse(R.get(groups, "reporter"), () => null);
-        const volume = O.getOrElse(R.get(groups, "volume"), () => null);
-        for (const entry of fulls) {
-          yield* step;
-          if (entry.citation.type === "case") {
-            if ((!O.isSome(selectedEdition) && O.isNone(R.get(groups, "reporter"))) || !entry.reporterDefined)
-              return yield* invalid();
-            if (entry.reporter === reporter && entry.volume === volume) candidates = Chunk.append(candidates, entry);
-          }
-        }
-        if (
-          candidates.pipe(A.fromIterable, idsOf, A.length) !== 1 &&
-          O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)
-        ) {
-          const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
-          const unrefined = candidates;
-          candidates = Chunk.empty();
-          for (const entry of unrefined) {
-            yield* step;
-            if (matchesParty(entry, guess)) candidates = Chunk.append(candidates, entry);
-          }
-        }
-      } else if (citation.type === "supra") {
-        if (O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) {
-          const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
-          for (const entry of fulls) {
-            yield* step;
-            if (matchesParty(entry, guess)) candidates = Chunk.append(candidates, entry);
-          }
-        } else missingAntecedent = true;
-      } else {
-        const names = A.filter(
-          A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
-          Str.isNonEmpty
-        );
-        if (A.length(names) === 0) missingAntecedent = true;
-        else
-          for (const entry of fulls) {
-            yield* step;
-            if (A.some(names, (name) => A.contains(entry.metadataValues, name)))
-              candidates = Chunk.append(candidates, entry);
-          }
-      }
-      resolution = yield* select(A.fromIterable(candidates), mention);
-      if (resolution.status === "Unresolved" && missingAntecedent)
-        resolution = CitationUnresolved.make({ mentionId: mention.id, reason: "missing-antecedent" });
     }
+    const values = yield* citationMetadataValues(citation).pipe(Effect.mapError(invalid));
+    const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(Effect.mapError(invalid));
+    const reporter = O.isSome(selectedEdition)
+      ? selectedEdition.value.shortName
+      : O.getOrElse(R.get(groups, "reporter"), () => null);
+    fulls = Chunk.append(
+      fulls,
+      Entry.make({
+        citation,
+        authorityId: id,
+        reporter,
+        reporterDefined: O.isSome(selectedEdition) || O.isSome(R.get(groups, "reporter")),
+        volume: O.getOrElse(R.get(groups, "volume"), () => null),
+        metadataValues: values,
+      })
+    );
+    if (edges >= limits.resolutionEdges) return yield* exceeded();
+    edges += 1;
+    return CitationResolved.make({ mentionId: mention.id, authorityId: id, confidence: O.none() });
+  });
+  const resolveId = Effect.fn("Citation.resolveIdMention")(function* (mention: CitationMention, citation: IdCitation) {
+    if (O.isNone(last)) return CitationUnresolved.make({ mentionId: mention.id, reason: "no-previous-authority" });
+    const full = yield* Effect.fromOption(HashMap.get(representatives, last.value), invalid);
+    const invalidPin = yield* hasInvalidCitationPinCite({ fullCitation: full, idCitation: citation }).pipe(
+      Effect.mapError(() => CitationResolveFailure.make({ reason: "text-failed" }))
+    );
+    if (invalidPin) return CitationUnresolved.make({ mentionId: mention.id, reason: "invalid-pin-cite" });
+    if (edges >= limits.resolutionEdges) return yield* exceeded();
+    edges++;
+    return CitationResolved.make({ mentionId: mention.id, authorityId: last.value, confidence: O.none() });
+  });
+  const partyCandidates = Effect.fn("Citation.partyCandidates")(function* (
+    entries: Chunk.Chunk<typeof Entry.Type>,
+    guess: string
+  ) {
+    let found = Chunk.empty<typeof Entry.Type>();
+    for (const entry of entries) {
+      yield* step;
+      if (matchesParty(entry, guess)) found = Chunk.append(found, entry);
+    }
+    return found;
+  });
+  const matchesShortPublication = Effect.fn("Citation.matchesShortPublication")(function* (
+    entry: typeof Entry.Type,
+    reporter: string | null,
+    volume: string | null,
+    defined: boolean
+  ) {
+    if (entry.citation.type !== "case") return false;
+    if (!defined || !entry.reporterDefined) return yield* invalid();
+    return entry.reporter === reporter && entry.volume === volume;
+  });
+  const refineShortCandidates = Effect.fn("Citation.refineShortCandidates")(function* (
+    candidates: Chunk.Chunk<typeof Entry.Type>,
+    citation: ShortFormCaseCitation
+  ) {
+    if (
+      candidates.pipe(A.fromIterable, idsOf, A.length) !== 1 &&
+      O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)
+    ) {
+      const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
+      return yield* partyCandidates(candidates, guess);
+    }
+    return candidates;
+  });
+  const resolveShort = Effect.fn("Citation.resolveShortMention")(function* (
+    mention: CitationMention,
+    citation: ShortFormCaseCitation
+  ) {
+    let candidates = Chunk.empty<typeof Entry.Type>();
+    const groups = yield* S.encodeEffect(CitationComponents)(citation.components).pipe(Effect.mapError(invalid));
+    const selectedEdition = O.flatMap(citation.publication.selectedEdition, (id) => HashMap.get(editions, id));
+    if (O.isSome(citation.publication.selectedEdition) && O.isNone(selectedEdition))
+      return yield* CitationResolveFailure.make({ reason: "edition-missing" });
+    const reporter = O.isSome(selectedEdition)
+      ? selectedEdition.value.shortName
+      : O.getOrElse(R.get(groups, "reporter"), () => null);
+    const volume = O.getOrElse(R.get(groups, "volume"), () => null);
+    for (const entry of fulls) {
+      yield* step;
+      if (
+        yield* matchesShortPublication(
+          entry,
+          reporter,
+          volume,
+          O.isSome(selectedEdition) || O.isSome(R.get(groups, "reporter"))
+        )
+      )
+        candidates = Chunk.append(candidates, entry);
+    }
+    candidates = yield* refineShortCandidates(candidates, citation);
+    return yield* select(A.fromIterable(candidates), mention);
+  });
+  const missingAntecedent = Effect.fn("Citation.missingResolutionAntecedent")(function* (mention: CitationMention) {
+    const resolution = yield* select([], mention);
+    return resolution.status === "Unresolved"
+      ? CitationUnresolved.make({ mentionId: mention.id, reason: "missing-antecedent" })
+      : resolution;
+  });
+  const resolveSupra = Effect.fn("Citation.resolveSupraMention")(function* (
+    mention: CitationMention,
+    citation: SupraCitation
+  ) {
+    if (!O.exists(citation.metadata.antecedentGuess, Str.isNonEmpty)) return yield* missingAntecedent(mention);
+    const guess = stripCitationAntecedentPunctuation(O.getOrElse(citation.metadata.antecedentGuess, () => ""));
+    return yield* select(A.fromIterable(yield* partyCandidates(fulls, guess)), mention);
+  });
+  const resolveReference = Effect.fn("Citation.resolveReferenceMention")(function* (
+    mention: CitationMention,
+    citation: ReferenceCitation
+  ) {
+    const names = A.filter(
+      A.getSomes(R.values(Struct.pick(citation.metadata, ["plaintiff", "defendant", "shortCaseName", "caseName"]))),
+      Str.isNonEmpty
+    );
+    if (A.length(names) === 0) return yield* missingAntecedent(mention);
+    let candidates = Chunk.empty<typeof Entry.Type>();
+    for (const entry of fulls) {
+      yield* step;
+      if (A.some(names, (name) => A.contains(entry.metadataValues, name))) candidates = Chunk.append(candidates, entry);
+    }
+    return yield* select(A.fromIterable(candidates), mention);
+  });
+  const resolveOne = Effect.fn("Citation.resolveMentionKind")(function* (mention: CitationMention) {
+    const citation = mention.citation;
+    if (isFull(citation)) return yield* resolveFull(mention, citation);
+    if (citation.type === "id") return yield* resolveId(mention, citation);
+    if (citation.type === "unknown")
+      return CitationUnresolved.make({ mentionId: mention.id, reason: "unsupported-citation" });
+    if (citation.type === "shortFormCase") return yield* resolveShort(mention, citation);
+    if (citation.type === "supra") return yield* resolveSupra(mention, citation);
+    return yield* resolveReference(mention, citation);
+  });
+  for (const mention of mentions) {
+    yield* step;
+    const resolution = yield* resolveOne(mention);
     last = resolution.status === "Resolved" ? O.some(resolution.authorityId) : O.none();
     resolutions = Chunk.append(resolutions, resolution);
   }

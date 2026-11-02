@@ -403,50 +403,26 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     },
     Effect.provideService(Clock.Clock, clock)
   );
+  const stage = Effect.fn("Citation.stageHtmlProcess")(
+    (input: unknown, work: CitationCleanerWork, kind: Parameters<typeof clean>[2]) =>
+      work
+        .withTextCapacity((remaining) =>
+          clean(input, remaining, kind).pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
+        )
+        .pipe(
+          Effect.map(({ value, charges }) =>
+            CitationHtmlCleanerStage.make({ ...citationCleanerHtmlTextOutput(value), charges })
+          )
+        )
+  );
   return {
     snapshot,
     reap,
     clean: (input: unknown) => clean(input, limits.producedTextUtf16, "raw"),
     cleanBytes: (input: unknown) => clean(input, limits.producedTextUtf16, "bytes"),
     cleanUnicode: (input: unknown) => clean(input, limits.producedTextUtf16, "unicode"),
-    stageBytes: (input: unknown, work: CitationCleanerWork) =>
-      work
-        .withTextCapacity((remaining) =>
-          clean(input, remaining, "bytes").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
-        )
-        .pipe(
-          Effect.map(({ value, charges }) =>
-            CitationHtmlCleanerStage.make({
-              ...citationCleanerHtmlTextOutput(value),
-              charges,
-            })
-          )
-        ),
-    stageUnicode: (input: unknown, work: CitationCleanerWork) =>
-      work
-        .withTextCapacity((remaining) =>
-          clean(input, remaining, "unicode").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
-        )
-        .pipe(
-          Effect.map(({ value, charges }) =>
-            CitationHtmlCleanerStage.make({
-              ...citationCleanerHtmlTextOutput(value),
-              charges,
-            })
-          )
-        ),
-    stage: (input: unknown, work: CitationCleanerWork) =>
-      work
-        .withTextCapacity((remaining) =>
-          clean(input, remaining, "text").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
-        )
-        .pipe(
-          Effect.map(({ value, charges }) =>
-            CitationHtmlCleanerStage.make({
-              ...citationCleanerHtmlTextOutput(value),
-              charges,
-            })
-          )
-        ),
+    stageBytes: (input: unknown, work: CitationCleanerWork) => stage(input, work, "bytes"),
+    stageUnicode: (input: unknown, work: CitationCleanerWork) => stage(input, work, "unicode"),
+    stage: (input: unknown, work: CitationCleanerWork) => stage(input, work, "text"),
   };
 });

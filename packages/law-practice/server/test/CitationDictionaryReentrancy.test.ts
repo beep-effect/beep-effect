@@ -1,4 +1,4 @@
-import { fileURLToPath } from "node:url";
+import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -64,7 +64,9 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
   it.effect("matches all pinned restart outcomes, nested calls and retained mutation", () =>
     Effect.gen(function* () {
       const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-        fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/dictionary-reentrancy.json", import.meta.url))
+        NodeURL.fileURLToPath(
+          new URL("../../use-cases/test/fixtures/eyecite/dictionary-reentrancy.json", import.meta.url)
+        )
       );
       expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
         "68a3835c917bab252d004d2066b7ca45927deca1d358f68ed957b1ecbfecb9da"
@@ -152,14 +154,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("direct comparison r
               : operation.kind === "remove"
                 ? current.remove(inputKey)
                 : current.set(inputKey, operation.value).pipe(Effect.as(O.none()));
-          const result = yield* Effect.result(run);
           if (event.outcome.status === "error") {
-            expect(result._tag, row.name).toBe("Failure");
-            if (result._tag === "Failure") expect(result.failure.reason, row.name).toBe("comparison-failed");
+            const failure = yield* Effect.flip(run);
+            expect(failure.reason, row.name).toBe("comparison-failed");
           } else {
-            expect(result._tag, row.name).toBe("Success");
-            if (result._tag === "Success")
-              expect(O.getOrNull(O.map(result.success, (entry) => entry.value)), row.name).toBe(event.outcome.result);
+            const value = yield* run;
+            expect(O.getOrNull(O.map(value, (entry) => entry.value)), row.name).toBe(event.outcome.result);
           }
           expect(trace, row.name).toEqual(event.trace);
           expect(yield* project, row.name).toEqual(event.entries);

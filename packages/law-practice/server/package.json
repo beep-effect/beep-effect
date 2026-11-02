@@ -33,7 +33,8 @@
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
+    "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
+    "test:integration:parallel": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",

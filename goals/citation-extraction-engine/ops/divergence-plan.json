@@ -213,7 +213,11 @@
         "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",
         "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts",
         "packages/law-practice/server/test/CitationCleanerRegistry.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-registry-integration.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-registry-integration.md",
+        "packages/law-practice/server/src/internal/Citation/MetadataValues.ts",
+        "packages/law-practice/server/test/CitationCleanerRegistry.fixtures.ts",
+        "packages/law-practice/use-cases/test/CitationOracleArtifact.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
