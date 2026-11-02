@@ -16,9 +16,13 @@ source is still an input when the command scans it. Authored documentation and
 tracked generated source must remain inputs when consumed. Apply exclusions to
 the relevant task, rather than globally hiding outputs from tasks that read them.
 
-Bun loads package-local `.env` and `.env.*` files. Cached executable package
-tasks include those files, even though Git ignores them. Transit nodes retain
-default Git-visible package inputs.
+Bun loads package-local `.env` and `.env.*` files. Only the tasks whose
+command consumes them hash them: `test`, `test:property`, `doctest`,
+`lint:jsdoc`, `lint:deprecated-apis`, and the `build` overrides of the Vite and
+Next apps. `lint`, `check` and `build` dropped `.env`/`.env.*` on 2026-11-02
+(quality audit R8): Biome and tsrs read no dotenv file, and the `.env` globs are
+package-relative, so the only invalidation they bought was a package-local
+dotenv edit. Transit nodes retain default Git-visible package inputs.
 
 The Vitest instrumentation runtime tests create temporary `.runtime-*`
 directories inside their fixture tree. The root Git ignore excludes only those
@@ -49,15 +53,15 @@ match the actual task implementation were discarded.
 
 | Task | Cache boundary |
 | --- | --- |
-| `doctest` | Source, tests, shared Vitest files and the utils dependency graph; no file outputs required. |
+| `doctest` | Source, tests, shared Vitest files and the utils dependency graph; no file outputs required. Every nested `node_modules` is excluded (`!**/node_modules/**`): fixture packages under `test/fixtures/*` carry Vitest result caches in `node_modules/.vite/vitest/**` that each run rewrites, which made `@beep/repo-cli#doctest` miss on every rerun (audit G4, 2026-11-02). |
 | `lint:deprecated-apis` | Explicit source globs must follow the dedicated type-aware Oxlint profile's output exclusions; policy fingerprint and transit carry implementation dependencies. |
 | `lint:jsdoc` | Explicit source globs exclude artifacts ignored by the JSDoc scanner; policy fingerprint carries implementation changes. |
 | `lint:laws` | Law inputs retain authored source and policy files; generated declarations and reports are excluded when the scanner excludes them. |
-| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Declared outputs restore build products. App exceptions are below. |
+| `build` | Defaults retain package source and configuration; the workspace tsgo wrapper is an explicit input. Declared outputs restore build products. No dotenv inputs: `tsrs` reads none, and the Vite/Next apps declare `.env*` in their overrides (below). |
 | `@beep/api-docs#build` | TypeScript validation emits no files; `outputs: []` is intentional. |
-| `lint` | Defaults plus shared Biome/rule configuration; Storybook also scans sibling stories. |
+| `lint` | Defaults plus shared Biome/rule configuration; Storybook also scans sibling stories. No dotenv inputs. |
 | `lint:fix` | Uncached mutation. |
-| `check` | Package inputs, the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. |
+| `check` | Package inputs, the workspace tsgo wrapper and upstream builds; existing app-specific external inputs retained. No dotenv inputs. |
 | `test` | Defaults, shared Vitest files and aliases, package dependency transit and shared utils transit; fast-check seed/count are hashed. |
 | `test:property` | Same test boundary with explicit fast-check settings. |
 | `package-test-typecheck` | Uncached diagnostics/receipt task; outputs declare the package result receipt. |
@@ -111,11 +115,13 @@ maintained representation of the scanner's workspace discovery.
 | `lint:judge-rubric` | Precise rubric input and policy implementation dependency retained. |
 | `lint:circular`, `lint:ecosystem-polarity`, `lint:reflection-artifacts` | Keep precise source/reflection globs; do not exclude legitimate nested source by directory name. |
 | `lint:effect-imports-markdown` | Retain authored Markdown consumed by the scanner, including internal docs it actually reads. |
-| `lint:markdown-fences` | Remains uncached: it compiles every guidance TypeScript fence against the workspace's TypeScript sources and the root tsconfig, so any source edit can change a verdict. |
+| `lint:markdown-fences`, `lint:retired-effect-paths`, `lint:retired-iri-authorities`, `lint:schema-tag-idioms` | Cached since 2026-11-02 (audit G10). Each lists tracked files with `git ls-files`, reads their working-tree bytes, and reads nothing else: no clock, no network, no `.beep` state. `lint:markdown-fences` also spawns the repository's `tsrs` against the root `tsconfig.json`; its inputs already cover every TypeScript source and tsconfig, and the compiler's identity rides on the root dependency hash. The git listing is the one place the scanner and the hash diverge (a file staged without a byte change is not re-hashed), which `lint:effect-imports` and `lint:opaque-roundtrips` already accept. |
 | `goals:index-check` | Retain goal inputs and implementation dependency. |
-| `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. |
+| `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. `goals:doctor` in particular runs `git log --since=<days>` and `git log -n 4000`: its staleness and completion-gate advisories depend on the clock and on git history, neither of which is a Turbo input (audit G10 verdict, 2026-11-02). |
 | `lint:deprecated-imports` | One root Biome pass for the project-domain `noDeprecatedImports` rule (off in the per-package `lint` task so `biome check .` stops scanning the whole repo per package). Inputs: every source file under apps/packages/infra, their manifests, `biome.jsonc` and `bun.lock` (deprecations come from dependency declarations). |
-| `lint:oxlint`, `lint:shadcn`, `lint:jsdoc-module-tags`, `lint:typos` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `lint:oxlint`, `lint:shadcn`, `lint:typos` | Remain uncached; preserve each scanner/report contract. `lint:shadcn` also reads the theme stylesheets, `components.json`, tsconfig paths, and package exports. |
+| `lint:jsdoc-module-tags` | Cached since 2026-11-02 (audit G10): it lists tracked files with `git ls-files`, keeps `.patterns`, `apps`, `packages` and `tooling` sources by extension, and greps each for `@module`. The inputs mirror that scan and exclude generated artifact trees. |
+| `lint:holds` | Cached since 2026-11-02 (audit G10). The check path reads the ledger (`hold-ledger/**`), the root manifest, `osv-scanner.toml`, `syncpack.config.ts` and the workspace manifests the ledger anchors name; the clock is read only by `holds update` and the probe writer, and installed `node_modules` manifests only by the probe. |
 | `jsdoc:inventory:check` | Cached since 2026-10-06: the inventory is a pure function of workspace manifests, `docgen.json`, `tsdoc.json` and the TypeScript sources of every workspace, so the inputs cover `{packages,apps,infra}` plus the `scratchpad` (srcDir `.`, minus its docgen excludes) and `tools` workspaces; artifact directories are excluded. The declared `.beep/ci/jsdoc-documentation.inventory.*` outputs restore on a hit. It was the single largest cost of a warm `bun run lint` (about 250 s). |
 | `jsdoc:ratchet:check` | Depends on `jsdoc:inventory:check` and the fingerprint; inputs are the committed totals baseline and every `{packages,apps}/**/src/**` TypeScript file, fixture trees included, because the zero-legacy gate reads every tracked `src` file (`isPackageSourceFile`). Turbo skips it when the inventory task is red. |
 | `lint:tsconfig-overlay` | Every `tsconfig*.json` under `apps`, `infra` and `packages` (overlays, owners and build configs), artifact directories excluded. |
@@ -162,6 +168,10 @@ zero seconds. Three decisions follow:
 - `apps/professional-desktop`: build hashes `.env*` and the Vite-exposed
   `TAURI_*` family. Check extends inherited inputs before adding sibling stories
   and the external drizzle path.
+- `apps/todox`, `apps/beep-effect-web`, `apps/labs/trustgraph-workbench`,
+  `apps/labs/semantica`, `apps/labs/lejeune-bolt-workbench`: `next build` and
+  `vite build` load `.env*` themselves, so each build override declares `.env*`
+  now that the root `build` task no longer does.
 - `apps/storybook`: lint includes the sibling stories it scans; existing check
   dependencies and uncached dev port passthrough remain. Dev-only HMR port
   settings do not affect the static build.
