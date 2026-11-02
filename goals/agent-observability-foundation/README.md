@@ -1,6 +1,6 @@
 # Trustworthy agent observability foundation
 
-Current delivery: operator-reserved draft final [PR2612](https://github.com/beep-effect/beep-effect/pull/2612). Historical PR2364/2508 results remain unsatisfied; PR2578 is canonical **unknown** after external merge without positive readiness. The goal remains active and the recovery hold stays intact.
+Current delivery: operator-reserved final [PR2612](https://github.com/beep-effect/beep-effect/pull/2612). Historical PR2364/2508 results remain unsatisfied; PR2578 is canonical **unknown** after external merge without positive readiness. The goal remains active and the recovery hold stays intact.
 
 ## Status
 
