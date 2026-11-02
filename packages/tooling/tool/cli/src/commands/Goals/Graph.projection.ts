@@ -26,6 +26,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import { renderGoalCloseoutView } from "./Goals.schemas.ts";
 import {
   CapabilityCatalogEntry,
   CapabilityCatalogReport,
@@ -758,6 +759,7 @@ export const renderExplainHuman = (report: GoalExplainReport): string => {
   return A.join(
     [
       `goals explain ${report.slug} (${report.readiness}): ${verdict}`,
+      ...(report.closeout === undefined ? [] : [`  closeout: ${renderGoalCloseoutView(report.closeout)}`]),
       ...(A.isReadonlyArrayEmpty(report.requirements) ? ["  requirements: none"] : ["  requirements:"]),
       ...A.map(report.requirements, requirementLine),
       ...(report.cycle === undefined ? [] : [`  cycle: ${A.join(report.cycle, " <-> ")}`]),

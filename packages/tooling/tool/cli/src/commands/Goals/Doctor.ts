@@ -38,7 +38,12 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
 import { runGitOutput } from "../../internal/repo-run/index.ts";
 import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
-import { goalCompletionUnknownReasons, observeGoalCompletion, storedGoalCompletion } from "./Completion.ts";
+import {
+  goalCloseoutView,
+  goalCompletionUnknownReasons,
+  observeGoalCompletion,
+  storedGoalCompletion,
+} from "./Completion.ts";
 import { GoalsGitError } from "./Goals.errors.ts";
 import {
   decodeGoalManifest,
@@ -46,6 +51,7 @@ import {
   GoalPhaseStatus,
   GoalStatus,
   goalPullRequestRefs,
+  renderGoalCloseoutView,
 } from "./Goals.schemas.ts";
 import { capabilityProviderRows, compileCapabilityProjection, isStrandedProviderSet } from "./Graph.projection.ts";
 import {
@@ -1219,22 +1225,34 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
     manifest.completionGate.pullRequests === undefined &&
     !online
   )
-    return O.none();
+    return O.none<StructuredCompletionAdvisory>();
   const findings = completionReceiptFindings(packet.record.slug, final, receipt);
-  return O.some({ slug: packet.record.slug, findings });
+  // A proposed closeout reads as its derived status here, verified or not, so
+  // the operator sees the same line `session open` and `goals explain` print.
+  const view = yield* goalCloseoutView(packet.record.slug, manifest, receipt);
+  const notes = O.match(view, {
+    onNone: A.empty<string>,
+    onSome: (value) => A.of(`${packet.record.slug}: ${renderGoalCloseoutView(value)}`),
+  });
+  return O.some({ slug: packet.record.slug, findings, notes });
 });
+
+type StructuredCompletionAdvisory = {
+  readonly slug: string;
+  readonly findings: ReadonlyArray<GoalDoctorFinding>;
+  readonly notes: ReadonlyArray<string>;
+};
 
 const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdvisory")(function* (
   packet: DoctorPacket,
   online: boolean
 ) {
   const eligible = completedManifest(packet);
-  if (O.isNone(eligible))
-    return O.none<{ readonly slug: string; readonly findings: ReadonlyArray<GoalDoctorFinding> }>();
+  if (O.isNone(eligible)) return O.none<StructuredCompletionAdvisory>();
   const manifest = eligible.value;
   const final = A.findFirst(goalPullRequestRefs(manifest), (ref) => ref.role === "final");
   if (O.isNone(final)) {
-    if (manifest.completionGate.pullRequests === undefined) return O.none();
+    if (manifest.completionGate.pullRequests === undefined) return O.none<StructuredCompletionAdvisory>();
     const findings = manifest.completionGate.requiresPullRequest
       ? A.of(
           finding(
@@ -1245,7 +1263,7 @@ const structuredCompletionAdvisory = Effect.fn("Goals.structuredCompletionAdviso
           )
         )
       : A.empty<GoalDoctorFinding>();
-    return O.some({ slug: packet.record.slug, findings });
+    return O.some({ slug: packet.record.slug, findings, notes: A.empty<string>() });
   }
   return yield* completionEvidenceAdvisory(packet, manifest, final.value, online);
 });
@@ -1399,7 +1417,11 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   yield* Console.log(
     `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
   );
-  yield* printNonFatalFindings({ notes: advisoriesFromGit.notes, advisories, classified });
+  yield* printNonFatalFindings({
+    notes: [...advisoriesFromGit.notes, ...A.flatMap(structured, (row) => row.notes)],
+    advisories,
+    classified,
+  });
 
   if (A.isReadonlyArrayNonEmpty(classified.introduced)) {
     yield* Console.error("[goals:doctor] NEW blocking findings (not in baseline):");
