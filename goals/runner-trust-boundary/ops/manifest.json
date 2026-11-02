@@ -146,5 +146,9 @@
     "Required GitHub or AWS authority is unavailable for deployed proof.",
     "Work crosses into fleet performance or architecture ownership without an explicit handoff.",
     "Tracked evidence contains raw findings, secrets, email addresses, machine IDs, or developer-local absolute paths."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2590
+  }
 }
