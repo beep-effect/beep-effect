@@ -5,12 +5,15 @@
  * @since 0.0.0
  */
 
+import { Repo, RepoRef } from "@beep/github/Repo";
+import { ReviewThread } from "@beep/github/ReviewThread";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import { collectTruncatableThreadPages, GhPageInfo, ghOutput } from "../../../../internal/github/index.ts";
+import { GhActor, GhComment, GhPageInfo, ghOutput } from "../../../../internal/github/index.ts";
 import { YeetCommandError } from "../../Yeet.errors.ts";
+import { ghActorFromReviewThread } from "../ReviewThreadState.ts";
 import { PrCloseoutWriteAction } from "./Closeout.schemas.ts";
 import {
   commentsPageQuery,
@@ -18,20 +21,24 @@ import {
   decodeGhPrView,
   decodeGhRepoView,
   decodeGhReviewsDocument,
-  decodeGhReviewThreadsDocument,
   GhCloseoutPullRequest,
   GhPullRequestCommentConnection,
   GhReviewConnection,
+  GhReviewThread,
+  GhReviewThreadCommentConnection,
   GhReviewThreadConnection,
+  GhReviewThreadLatestComment,
+  GhReviewThreadLatestConnection,
   reviewsPageQuery,
-  reviewThreadsPageQuery,
 } from "./Gh.schemas.ts";
-import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
+import type { GitHubError } from "@beep/github/GitHubError";
+import type { GitHubGraphQLError } from "@beep/github/GraphQL";
+import type { ReviewThreadActor, ReviewThreadNode, ReviewThreads } from "@beep/github/ReviewThread";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
+import type { GhPrView } from "../../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
-import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.ts";
+import type { GhRepoView, GhReview } from "./Gh.schemas.ts";
 import type { closeoutWritePlan } from "./WritePlan.ts";
 
 type CloseoutWriteIntent = ReturnType<typeof closeoutWritePlan>["intents"][number];
@@ -182,29 +189,124 @@ const collectCommentPages = Effect.fn("YeetCloseout.collectCommentPages")(functi
   return comments;
 });
 
-const collectReviewThreadPages = (
-  context: RepoRunContext,
-  repo: GhRepoView,
-  pr: GhPrView
-): Effect.Effect<
-  ReadonlyArray<GhReviewThread>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> =>
-  collectTruncatableThreadPages({
-    advance: (pageInfo) => nextCursor("pull request review threads", pageInfo),
-    fetchPage: (cursor) =>
-      ghGraphqlPage(context, repo, pr, reviewThreadsPageQuery, cursor, "gh api graphql review threads").pipe(
-        Effect.flatMap((output) =>
-          decodeGhReviewThreadsDocument(output).pipe(
-            Effect.mapError(YeetCommandError.new("Failed to decode PR closeout review threads GraphQL JSON."))
-          )
-        ),
-        Effect.map((document) => document.data.repository.pullRequest.reviewThreads)
+const closeoutThreadAuthor = (author: O.Option<ReviewThreadActor>): GhActor | null =>
+  O.getOrNull(O.map(author, ghActorFromReviewThread));
+
+// The kit thread in the shape the closeout triage reads: the first 100
+// comments (the kit warns once per page about a thread with more) and the
+// newest comment, quoted as evidence.
+const closeoutReviewThread = (thread: ReviewThreadNode): GhReviewThread =>
+  GhReviewThread.make({
+    comments: GhReviewThreadCommentConnection.make({
+      nodes: A.map(thread.comments, (comment) =>
+        GhComment.make({
+          author: closeoutThreadAuthor(comment.author),
+          body: comment.body,
+          createdAt: comment.createdAt,
+          id: comment.id,
+          url: comment.url,
+        })
       ),
-    truncationWarning: (threadIds) =>
-      `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; Yeet closeout inspects only the first 100 nested comments per thread. Untrusted comment volume cannot block closeout.`,
+      pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: thread.commentsTruncated }),
+    }),
+    id: thread.id,
+    isOutdated: thread.isOutdated,
+    isResolved: thread.isResolved,
+    latest: GhReviewThreadLatestConnection.make({
+      nodes: A.map(O.toArray(thread.newestComment), (comment) =>
+        GhReviewThreadLatestComment.make({
+          author: closeoutThreadAuthor(comment.author),
+          body: comment.body,
+          createdAt: comment.createdAt,
+          url: comment.url,
+        })
+      ),
+    }),
+    line: O.getOrNull(thread.line),
+    path: thread.path,
+    resolvedBy: O.getOrNull(O.map(thread.resolvedBy, (login) => GhActor.make({ login }))),
   });
+
+/**
+ * Name a failed GitHub read or write the way the closeout `gh` capture did:
+ * `<label> failed.` and the kit's own message on the next line, exit 1.
+ *
+ * **Example** (Fold a refused resolve)
+ *
+ * ```ts
+ * import { GitHubGraphQLError } from "@beep/github/GraphQL"
+ * import { closeoutGithubFailure } from "@beep/repo-cli/test/Yeet"
+ *
+ * const error = closeoutGithubFailure("gh api graphql (resolve)")(GitHubGraphQLError.decode("resolveReviewThread", "no thread"))
+ * console.log(error.message.startsWith("gh api graphql (resolve) failed.")) // true
+ * ```
+ *
+ * @param label - Names the call in the message.
+ * @returns The fold from a GitHub failure to a `YeetCommandError`.
+ * @category errors
+ * @since 0.0.0
+ */
+export const closeoutGithubFailure =
+  (label: string) =>
+  (error: GitHubError | GitHubGraphQLError): YeetCommandError =>
+    YeetCommandError.make({ message: `${label} failed.\n${error.message}`, exitCode: 1, cause: error });
+
+/**
+ * Read every review thread of a pull request in the repository `gh repo view`
+ * named, folding a failed read through the caller's `onFailure`.
+ *
+ * **Details**
+ *
+ * The closeout collector and the reply engine both resolve the repository
+ * through `gh repo view` (gh's own base-repository choice) and then walk the
+ * kit's `ReviewThread.list` there, so that choice also names the kit's `Repo`.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { GhRepoOwner, GhRepoView, listGhRepoViewThreads, YeetCommandError } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const read = listGhRepoViewThreads({
+ *   repo: GhRepoView.make({ name: "beep-effect", owner: GhRepoOwner.make({ login: "beep-effect" }) }),
+ *   prNumber: 7,
+ *   onFailure: (error) => YeetCommandError.make({ message: error.message }),
+ * })
+ * console.log(Effect.isEffect(read)) // true
+ * ```
+ *
+ * @param options - The repository, the pull request number and the failure fold.
+ * @returns Every thread with the pull request's author.
+ * @category clients
+ * @since 0.0.0
+ */
+export const listGhRepoViewThreads = Effect.fn("YeetCloseout.listGhRepoViewThreads")(function* ({
+  repo,
+  prNumber,
+  onFailure,
+}: {
+  readonly repo: GhRepoView;
+  readonly prNumber: number;
+  readonly onFailure: (error: GitHubGraphQLError) => YeetCommandError;
+}): Effect.fn.Return<ReviewThreads, YeetCommandError, ReviewThread> {
+  const ref = yield* RepoRef.parse(`${repo.owner.login}/${repo.name}`).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to decode gh repo view JSON."))
+  );
+  return yield* ReviewThread.use((threads) => threads.list(prNumber)).pipe(
+    Repo.provide(ref),
+    Effect.mapError(onFailure)
+  );
+});
+
+const collectReviewThreadPages = (repo: GhRepoView, pr: GhPrView) =>
+  listGhRepoViewThreads({
+    repo,
+    prNumber: pr.number,
+    onFailure: (error) =>
+      error.kind === "decode"
+        ? YeetCommandError.new(`Failed to decode PR closeout review threads GraphQL JSON: ${error.reason}.`)(error)
+        : closeoutGithubFailure("gh api graphql review threads")(error),
+  }).pipe(Effect.map((read) => A.map(read.threads, closeoutReviewThread)));
 
 const collectReviewPages = Effect.fn("YeetCloseout.collectReviewPages")(function* (
   context: RepoRunContext,
@@ -281,7 +383,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
 ): Effect.fn.Return<
   { readonly pullRequest: GhCloseoutPullRequest; readonly pr: GhPrView },
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | ReviewThread
 > {
   const pr = yield* closeoutGhOutput(
     context,
@@ -298,7 +400,7 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
     )
   );
   const comments = yield* collectCommentPages(context, repo, pr);
-  const reviewThreads = yield* collectReviewThreadPages(context, repo, pr);
+  const reviewThreads = yield* collectReviewThreadPages(repo, pr);
   const reviews = yield* collectReviewPages(context, repo, pr);
   const pullRequest = GhCloseoutPullRequest.make({
     comments: GhPullRequestCommentConnection.make({ nodes: comments, pageInfo: closedPageInfo }),
@@ -342,34 +444,22 @@ export const collectPrCloseoutPayload = Effect.fn("YeetCloseout.collectPrCloseou
  * @since 0.0.0
  */
 export const performCloseoutWriteActions = Effect.fn("YeetCloseout.performCloseoutWriteActions")(function* (
-  context: RepoRunContext,
   intents: ReadonlyArray<CloseoutWriteIntent>
-): Effect.fn.Return<
-  ReadonlyArray<PrCloseoutWriteAction>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<ReadonlyArray<PrCloseoutWriteAction>, YeetCommandError, ReviewThread> {
+  const threads = yield* ReviewThread;
   const performWriteIntent = Effect.fnUntraced(function* (
     intent: CloseoutWriteIntent
-  ): Effect.fn.Return<
-    PrCloseoutWriteAction,
-    YeetCommandError,
-    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-  > {
-    const args =
+  ): Effect.fn.Return<PrCloseoutWriteAction, YeetCommandError> {
+    const write =
       intent.kind === "reply"
-        ? [
-            "api",
-            "graphql",
-            "-f",
-            `query=${REPLY_THREAD_MUTATION}`,
-            "-f",
-            `threadId=${intent.threadId}`,
-            "-f",
-            `body=${O.getOrElse(intent.body, () => "")}`,
-          ]
-        : ["api", "graphql", "-f", `query=${RESOLVE_THREAD_MUTATION}`, "-f", `threadId=${intent.threadId}`];
-    yield* closeoutGhOutput(context, args, `gh api graphql (${intent.kind})`);
+        ? Effect.asVoid(
+            threads.reply(
+              intent.threadId,
+              O.getOrElse(intent.body, () => "")
+            )
+          )
+        : Effect.asVoid(threads.resolve(intent.threadId));
+    yield* write.pipe(Effect.mapError(closeoutGithubFailure(`gh api graphql (${intent.kind})`)));
     yield* Effect.log(`[yeet] closeout ${intent.kind} -> ${intent.threadId}`);
     return PrCloseoutWriteAction.make({
       detail: intent.kind === "reply" ? "replied to review thread" : "resolved review thread",

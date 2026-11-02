@@ -48,6 +48,7 @@
  * @since 0.0.0
  */
 
+import { ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -62,18 +63,13 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  collectTruncatableThreadPages,
-  GhActor,
-  GhPageInfo,
-  ghGraphqlPage,
-  ghOutput,
-  nextCursor,
-} from "../../../internal/github/index.ts";
+import { GhActor, GhPageInfo, ghOutput } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { decodeGhRepoView } from "./closeout/Gh.schemas.ts";
-import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./closeout/WritePlan.ts";
+import { listGhRepoViewThreads } from "./closeout/GhCollect.ts";
+import { RESOLVE_THREAD_MUTATION } from "./closeout/WritePlan.ts";
+import { buildYeetGhLogin } from "./GhOps.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   failedReplyOutcomes,
@@ -96,14 +92,18 @@ import {
 import { recordYeetReviewLaneRows, yeetReviewerIdentity } from "./ReviewLane.ts";
 import {
   deriveYeetReviewThreadState,
+  ghActorFromReviewThread,
   YeetReviewThreadNewestComment,
   YeetReviewThreadStateSource,
   YeetReviewThreadStateTag,
   yeetReviewCommentAuthorKind,
   yeetReviewThreadStateInput,
 } from "./ReviewThreadState.ts";
+import type { GitHubGraphQLError } from "@beep/github/GraphQL";
+import type { ReviewThreadActor, ReviewThreadNode } from "@beep/github/ReviewThread";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type * as Scope from "effect/Scope";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { GhRepoView } from "./closeout/Gh.schemas.ts";
@@ -168,55 +168,6 @@ export const REPLY_REPORT_FILE_NAME = "reply-report.json";
  * @since 0.0.0
  */
 export const REPLY_RERUN_COMMAND = "bun run beep yeet reply";
-
-/**
- * GraphQL query paginating a pull request's review threads with the numeric
- * `databaseId` of every thread comment.
- *
- * **Details**
- *
- * `databaseId` is the REST comment id, and it is the only field that joins the
- * two id surfaces a draft may use. Requesting it here is what lets one query
- * per pull request serve both validation and comment-id resolution.
- *
- * **Example** (Confirm the join field is requested)
- *
- * ```ts
- * import { replyReviewThreadsPageQuery } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(replyReviewThreadsPageQuery.includes("databaseId")) // true
- * ```
- *
- * @category queries
- * @since 0.0.0
- */
-export const replyReviewThreadsPageQuery = `
-query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cursor: String) {
-  repository(owner: $owner, name: $name) {
-    pullRequest(number: $number) {
-      author { login }
-      reviewThreads(first: 100, after: $cursor) {
-        pageInfo { hasNextPage endCursor }
-        nodes {
-          id
-          isResolved
-          isOutdated
-          path
-          line
-          resolvedBy { login }
-          comments(first: 100) {
-            pageInfo { hasNextPage endCursor }
-            nodes { id databaseId author { __typename login } }
-          }
-          latest: comments(last: 1) {
-            nodes { author { __typename login } }
-          }
-        }
-      }
-    }
-  }
-}
-`;
 
 /**
  * One comment inside a live review thread, carrying both id surfaces.
@@ -369,22 +320,6 @@ export class ReplyLiveThread extends S.Opaque<ReplyLiveThread, { readonly brand:
   )
 ) {}
 
-const ReplyLiveThreadConnection = S.Struct({
-  nodes: S.Array(ReplyLiveThread),
-  pageInfo: GhPageInfo,
-});
-
-const ReplyReviewThreadsDocument = S.Struct({
-  data: S.Struct({
-    repository: S.Struct({
-      pullRequest: S.Struct({
-        author: GhActor.pipe(S.NullOr, S.optionalKey),
-        reviewThreads: ReplyLiveThreadConnection,
-      }),
-    }),
-  }),
-});
-
 // Prefer the `comments(last: 1)` node; the last node of the first page is only
 // the newest comment when the thread fits in that page.
 const newestCommentActor = (thread: ReplyLiveThread): O.Option<GhActor> =>
@@ -480,8 +415,6 @@ export const markReplyThreadStates: {
 const replyThreadIsOutstanding = (thread: ReplyLiveThread): boolean =>
   YeetReviewThreadStateTag.is.unresolved(thread.state) ||
   YeetReviewThreadStateTag.is["resolved-follow-up"](thread.state);
-
-const decodeReplyReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(ReplyReviewThreadsDocument));
 
 /**
  * A drafted reply that survived validation and is ready to write.
@@ -988,84 +921,66 @@ export const loadReplyDrafts = Effect.fn("Yeet.loadReplyDrafts")(function* (
   );
 });
 
-const collectReplyThreads = (
-  context: RepoRunContext,
-  repo: GhRepoView,
-  prNumber: number
-): Effect.Effect<
-  ReadonlyArray<ReplyLiveThread>,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> =>
-  collectTruncatableThreadPages({
-    advance: (pageInfo) =>
-      nextCursor({
-        label: "pull request review threads",
-        onMissingCursor: (missingLabel) =>
-          YeetCommandError.make({
-            command: "gh api graphql",
-            exitCode: 1,
-            message: `${missingLabel} reported another GraphQL page without an end cursor.`,
-          }),
-        pageInfo,
-      }),
-    fetchPage: (cursor) =>
-      ghGraphqlPage({
-        cursor,
-        cwd: context.repoRoot,
-        label: "gh api graphql reply review threads",
-        name: repo.name,
-        number: prNumber,
-        onFailure: replyGhFailure,
-        owner: repo.owner.login,
-        query: replyReviewThreadsPageQuery,
-      }).pipe(
-        Effect.flatMap((output) =>
-          decodeReplyReviewThreadsDocument(output).pipe(
-            Effect.mapError(YeetCommandError.new("Failed to decode the reply review threads GraphQL JSON."))
-          )
-        ),
-        Effect.map((document) => {
-          const pullRequest = document.data.repository.pullRequest;
-          const author = pipe(
-            O.fromUndefinedOr(pullRequest.author),
-            O.flatMap(O.fromNullishOr),
-            O.map((actor) => actor.login)
-          );
-          return ReplyLiveThreadConnection.make({
-            ...pullRequest.reviewThreads,
-            nodes: markReplyThreadStates(pullRequest.reviewThreads.nodes, author),
-          });
+const replyThreadAuthor = (author: O.Option<ReviewThreadActor>): GhActor | null =>
+  O.getOrNull(O.map(author, ghActorFromReviewThread));
+
+// The kit thread in the shape the drafts are validated against. The kit reads
+// the first 100 comments per thread (and warns past that); `commentsTruncated`
+// is that connection's `hasNextPage`, so a comment id past the page still
+// fails to resolve rather than matching the wrong thread.
+const replyLiveThread = (thread: ReviewThreadNode): ReplyLiveThread =>
+  ReplyLiveThread.make({
+    comments: ReplyThreadCommentConnection.make({
+      nodes: A.map(thread.comments, (comment) =>
+        ReplyThreadComment.make({
+          databaseId: O.getOrNull(comment.databaseId),
+          id: comment.id,
+          author: replyThreadAuthor(comment.author),
         })
       ),
-    truncationWarning: (threadIds) =>
-      `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; yeet reply reads only the first 100 per thread, so a comment id beyond that page will not resolve. Target those threads by PRRT_ thread id.`,
+      pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: thread.commentsTruncated }),
+    }),
+    latest: ReplyThreadLatestConnection.make({
+      nodes: A.map(O.toArray(thread.newestComment), (comment) =>
+        ReplyThreadLatestComment.make({ author: replyThreadAuthor(comment.author) })
+      ),
+    }),
+    id: thread.id,
+    isOutdated: thread.isOutdated,
+    isResolved: thread.isResolved,
+    line: O.getOrNull(thread.line),
+    path: thread.path,
+    resolvedBy: O.getOrNull(O.map(thread.resolvedBy, (login) => GhActor.make({ login }))),
   });
 
+// A GitHub failure in the shape the gh capture's failures had: the call's
+// label, then why, excerpted.
+const replyGithubFailure = (label: string) => (error: GitHubGraphQLError) =>
+  YeetCommandError.make({ exitCode: 1, message: `${label} failed: ${excerpt(error.message)}`, cause: error });
+
+const collectReplyThreads = (repo: GhRepoView, prNumber: number) =>
+  listGhRepoViewThreads({
+    repo,
+    prNumber,
+    onFailure: (error) =>
+      error.kind === "decode"
+        ? YeetCommandError.new(`Failed to decode the reply review threads GraphQL JSON: ${error.reason}.`)(error)
+        : replyGithubFailure("gh api graphql reply review threads")(error),
+  }).pipe(Effect.map((read) => markReplyThreadStates(A.map(read.threads, replyLiveThread), read.pullRequestAuthor)));
+
 const performReplyPost = Effect.fnUntraced(function* (
-  context: RepoRunContext,
   action: ReplyPostAction
-): Effect.fn.Return<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+): Effect.fn.Return<ReplyDraftOutcome, never, ReviewThread> {
+  const threads = yield* ReviewThread;
   const target = {
     commentId: action.draft.commentId,
     disposition: draftDisposition(action.draft),
     threadId: O.some(action.threadId),
   };
   const posted = yield* Effect.result(
-    replyGhOutput(
-      context,
-      [
-        "api",
-        "graphql",
-        "-f",
-        `query=${REPLY_THREAD_MUTATION}`,
-        "-f",
-        `threadId=${action.threadId}`,
-        "-f",
-        `body=${action.draft.body}`,
-      ],
-      "gh api graphql (reply)"
-    )
+    threads
+      .reply(action.threadId, action.draft.body)
+      .pipe(Effect.mapError(replyGithubFailure("gh api graphql (reply)")))
   );
   if (Result.isFailure(posted)) {
     return ReplyDraftOutcome.make({
@@ -1090,11 +1005,7 @@ const performReplyPost = Effect.fnUntraced(function* (
     });
   }
   const resolved = yield* Effect.result(
-    replyGhOutput(
-      context,
-      ["api", "graphql", "-f", `query=${RESOLVE_THREAD_MUTATION}`, "-f", `threadId=${action.threadId}`],
-      "gh api graphql (resolve)"
-    )
+    threads.resolve(action.threadId).pipe(Effect.mapError(replyGithubFailure("gh api graphql (resolve)")))
   );
   if (Result.isFailure(resolved)) {
     return ReplyDraftOutcome.make({
@@ -1110,12 +1021,9 @@ const performReplyPost = Effect.fnUntraced(function* (
   });
 });
 
-const executeReplyAction = (
-  context: RepoRunContext,
-  action: ReplyAction
-): Effect.Effect<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+const executeReplyAction = (action: ReplyAction): Effect.Effect<ReplyDraftOutcome, never, ReviewThread> =>
   Match.value(action).pipe(
-    Match.tag("post", (post) => performReplyPost(context, post)),
+    Match.tag("post", performReplyPost),
     Match.tag("settled", (settled) => Effect.succeed(settled.outcome)),
     Match.exhaustive
   );
@@ -1129,14 +1037,14 @@ const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ReplyLiveThread>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | ReviewThread
 > {
   const repo = yield* replyGhOutput(context, ["repo", "view", "--json", "owner,name"], "gh repo view").pipe(
     Effect.flatMap((output) =>
       decodeGhRepoView(output).pipe(Effect.mapError(YeetCommandError.new("Failed to decode gh repo view JSON.")))
     )
   );
-  return yield* collectReplyThreads(context, repo, prNumber);
+  return yield* collectReplyThreads(repo, prNumber);
 });
 
 /**
@@ -1323,16 +1231,31 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
 ): Effect.fn.Return<
   ReplyReport,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Scope.Scope
 > {
   const drafts = yield* loadReplyDrafts(context);
-  const preflight = yield* Effect.result(replyPreflight(context, drafts.prNumber));
+  // The gh login is part of the preflight: a login that does not resolve
+  // settles every draft exactly like a denied thread page.
+  const preflight = yield* Effect.result(
+    buildYeetGhLogin(context.repoRoot).pipe(
+      Effect.flatMap((services) =>
+        replyPreflight(context, drafts.prNumber).pipe(
+          Effect.provideContext(services),
+          Effect.map((threads) => ({ services, threads }))
+        )
+      )
+    )
+  );
   if (Result.isFailure(preflight) && A.isReadonlyArrayEmpty(drafts.drafts)) {
     return yield* preflight.failure;
   }
-  const actions = Result.isSuccess(preflight) ? planReplyActions(drafts, preflight.success) : A.empty<ReplyAction>();
+  const actions = Result.isSuccess(preflight)
+    ? planReplyActions(drafts, preflight.success.threads)
+    : A.empty<ReplyAction>();
   const outcomes = Result.isSuccess(preflight)
-    ? yield* Effect.forEach(actions, (action) => executeReplyAction(context, action), { concurrency: 1 })
+    ? yield* Effect.forEach(actions, flow(executeReplyAction, Effect.provideContext(preflight.success.services)), {
+        concurrency: 1,
+      })
     : preflightFailureOutcomes(drafts, preflight.failure);
   yield* Effect.forEach(
     outcomes,
@@ -1378,7 +1301,7 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
   }
 
   return report;
-});
+}, Effect.scoped);
 
 /**
  * The operator verdict for a reply pass that could not write every draft.

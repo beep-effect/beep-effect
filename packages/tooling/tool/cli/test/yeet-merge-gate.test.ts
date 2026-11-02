@@ -62,6 +62,8 @@ import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" wi
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { commandArgs } from "./support/commandArgs.ts";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
+import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
@@ -893,6 +895,8 @@ interface GhScript {
   readonly spawnFails?: boolean;
   readonly threads?: unknown;
   readonly threadsExit: number;
+  /** The first thread page's cursor; a second page (the same threads) follows when it names one. */
+  readonly threadsPageInfo?: { readonly hasNextPage: boolean; readonly endCursor: string | null };
   readonly windowExit: number;
 }
 
@@ -917,12 +921,12 @@ const context = RepoRunContext.make({
 const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]) => [
   {
     workflow_runs: [
-      { id: 11, head_sha: pullFixture.head.sha, status: "queued" },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress" },
-      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress" },
-      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress" },
-      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting" },
-      { id: 19, head_sha: pullFixture.head.sha, status: "completed" },
+      { id: 11, head_sha: pullFixture.head.sha, status: "queued", conclusion: null },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
+      { id: 12, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
+      { id: 13, head_sha: pullFixture.head.sha, status: "in_progress", conclusion: null },
+      { id: 14, head_sha: Str.repeat(40)("0"), status: "waiting", conclusion: null },
+      { id: 19, head_sha: pullFixture.head.sha, status: "completed", conclusion: "success" },
     ],
   },
   ...(additionalActiveRuns === true
@@ -932,6 +936,7 @@ const workflowRunPages = (additionalActiveRuns: GhScript["additionalActiveRuns"]
             id: 15 + index,
             head_sha: pullFixture.head.sha,
             status,
+            conclusion: null,
           })),
         },
       ]
@@ -1004,7 +1009,16 @@ const answer = (exitCode: number, output: string): ScriptedAnswer => ({ exitCode
 // gate never cancels it) and each cancel.
 const postMergeAnswers = (script: ResolvedGhScript): ReadonlyArray<GhAnswerRoute> => [
   ["/merge", answer(0, script.mergeResponse)],
-  [`/issues/${pullFixture.number}/comments`, answer(script.commentExit, "{}")],
+  [
+    `/issues/${pullFixture.number}/comments`,
+    answer(
+      script.commentExit,
+      encodeJson({
+        id: 1,
+        html_url: `https://github.com/beep-effect/beep-effect/pull/${pullFixture.number}#issuecomment-1`,
+      })
+    ),
+  ],
   ["/actions/runs?", answer(script.queuedExit, encodeJson(workflowRunPages(script.additionalActiveRuns)))],
   [`/runs/${script.cancelFailId}/cancel`, answer(1, "cancel refused")],
   ["/cancel", answer(0, "")],
@@ -1079,6 +1093,71 @@ const scriptedGh = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>) =>
     return Ref.update(calls, A.append(line)).pipe(Effect.as(stubHandle(answer.exitCode, answer.output)));
   });
 
+// The REST fields GitHub always sends that the recorded #1459 pull omits.
+const restPull = (pull: unknown) => ({
+  node_id: "PR_kwDOPbO_N86w1459",
+  body: null,
+  merged_at: null,
+  html_url: `https://github.com/beep-effect/beep-effect/pull/${pullFixture.number}`,
+  labels: [],
+  updated_at: pullFixture.created_at,
+  ...(pull as object),
+});
+
+interface RecordedThreads {
+  readonly data: {
+    readonly repository: {
+      readonly pullRequest: {
+        readonly reviewThreads: { readonly nodes: ReadonlyArray<{ readonly comments: unknown }> };
+      };
+    };
+  };
+}
+
+// The recorded thread page selected `comments(last: 1)` as `comments`: that is
+// each thread's newest comment, so it is also `latest`; the pull request's author
+// comes from the recorded pull; the first page carries the script's cursor.
+const withLatest = (recorded: RecordedThreads, pageInfo: GhScript["threadsPageInfo"]) => {
+  const threads = recorded.data.repository.pullRequest.reviewThreads;
+  return {
+    data: {
+      repository: {
+        pullRequest: {
+          author: pullFixture.user,
+          reviewThreads: {
+            ...threads,
+            ...(pageInfo === undefined ? {} : { pageInfo }),
+            nodes: A.map(threads.nodes, (thread) => ({ ...thread, latest: thread.comments })),
+          },
+        },
+      },
+    },
+  };
+};
+
+const isFirstThreadPage = (call: GithubCall): boolean => !Str.includes('"after"')(JSON.stringify(call.body ?? {}));
+
+// What the old `gh` call printed, as GitHub's own answer, with the recorded
+// payloads completed the way GitHub sends them.
+const recordedOutput = (script: GhScript, call: GithubCall, output: string): string =>
+  O.isSome(call.graphql)
+    ? JSON.stringify(
+        withLatest(JSON.parse(output) as RecordedThreads, isFirstThreadPage(call) ? script.threadsPageInfo : undefined)
+      )
+    : call.path === `{repo}/pulls/${pullFixture.number}`
+      ? JSON.stringify(restPull(JSON.parse(output)))
+      : output;
+
+const githubAnswer = (script: GhScript, call: GithubCall, line: string): GithubAnswer => {
+  if (script.spawnFails === true) return { unreachable: "getaddrinfo ENOTFOUND api.github.com" };
+  const answer = answerFor(script, "gh", line);
+  return legacyGhAnswer({
+    call,
+    exitCode: answer.exitCode,
+    output: answer.exitCode === 0 ? recordedOutput(script, call, answer.output) : answer.output,
+  });
+};
+
 // The reviewer gate's REST calls arrive through `fetch`; each is recorded and answered as the
 // `gh api <path>` line it replaced, so one answer table serves both transports.
 const decodeAnswer = S.decodeUnknownResult(S.fromJsonString(S.Unknown));
@@ -1093,7 +1172,8 @@ const scriptedGithub = (script: GhScript, calls: Ref.Ref<ReadonlyArray<string>>)
       : reply(404)({ message: scripted.output });
   });
 
-// Every scripted run records the argv it was asked for, so a test can prove the merge was or was not sent.
+// Every scripted run records the argv it was asked for (and each GitHub call in
+// that form), so a test can prove the merge was or was not sent.
 const withScriptedGh = <A, E, R>(
   script: GhScript,
   use: (calls: Ref.Ref<ReadonlyArray<string>>) => Effect.Effect<A, E, R>
@@ -1103,13 +1183,19 @@ const withScriptedGh = <A, E, R>(
     DateTime.toEpochMillis,
     TestClock.setTime,
     Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
-    Effect.flatMap((calls) =>
-      use(calls).pipe(
+    Effect.flatMap((calls) => {
+      const github = recordedGithub((call) => {
+        const line = A.join(["gh", ...legacyGhArgs(call)], " ");
+        MutableRef.update(calls.ref, A.append(line));
+        return githubAnswer(script, call, line);
+      });
+      return use(calls).pipe(
+        github.provide,
         Effect.provideService(GithubTransportFetch, O.some(scriptedGithub(script, calls).fetch)),
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls))
-      )
-    )
+      );
+    })
   );
 
 const mergeWasSent = (calls: Ref.Ref<ReadonlyArray<string>>) =>
@@ -1308,16 +1394,31 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       })
     );
 
-    it.effect("more threads than one page is an unknown count, never a lower bound", () =>
+    it.effect("a page that claims a successor without a cursor is an unknown count, never a lower bound", () =>
       withScriptedGh(
         {
           ...defaultScript,
-          threads: {
-            data: { repository: { pullRequest: { reviewThreads: { totalCount: 101, nodes: [] } } } },
-          },
+          threadsPageInfo: { hasNextPage: true, endCursor: null },
         },
         () =>
           readMergeGate(context, pullFixture.number).pipe(Effect.map((result) => assertNone(result.unresolvedThreads)))
+      )
+    );
+
+    it.effect("more threads than one page are read to the end and all counted", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          threads: openThreadsFixture,
+          threadsPageInfo: { hasNextPage: true, endCursor: "page-2" },
+        },
+        (calls) =>
+          Effect.gen(function* () {
+            const result = yield* readMergeGate(context, pullFixture.number);
+            // Four open threads on the first page and four more on the second.
+            assertSome(result.unresolvedThreads, 8);
+            expect(A.filter(yield* Ref.get(calls), Str.includes("graphql"))).toHaveLength(2);
+          })
       )
     );
 
@@ -1333,7 +1434,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       withScriptedGh({ ...defaultScript, spawnFails: true }, () =>
         Effect.gen(function* () {
           const failure = yield* readMergeGate(context, pullFixture.number).pipe(Effect.flip);
-          expect(failure.message).toContain(`gh api pulls/${pullFixture.number} failed (spawn)`);
+          expect(failure.message).toContain(`gh api pulls/${pullFixture.number} failed (`);
         })
       )
     );
@@ -1418,34 +1519,38 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       )
     );
 
-    it.effect("a decline without a message, and a merge without a sha, are still reported", () =>
+    it.effect("a decline with an empty message, and a merge with an empty one, are still reported", () =>
       Effect.gen(function* () {
-        const declined = yield* withScriptedGh({ ...defaultScript, mergeResponse: '{"merged":false}' }, () =>
-          runMergeGate(
-            context,
-            MergeGateRunOptions.make({
-              prNumber: pullFixture.number,
-              wantSha: headSha,
-              tolerate: [],
-              forceWindow: false,
-              relaxed: false,
-              dryRun: false,
-            })
-          ).pipe(Effect.flip)
+        const declined = yield* withScriptedGh(
+          { ...defaultScript, mergeResponse: '{"merged":false,"sha":"","message":""}' },
+          () =>
+            runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: false,
+                relaxed: false,
+                dryRun: false,
+              })
+            ).pipe(Effect.flip)
         );
         expect(declined.message).toContain("no message");
-        const decision = yield* withScriptedGh({ ...defaultScript, mergeResponse: '{"merged":true}' }, () =>
-          runMergeGate(
-            context,
-            MergeGateRunOptions.make({
-              prNumber: pullFixture.number,
-              wantSha: headSha,
-              tolerate: [],
-              forceWindow: true,
-              relaxed: false,
-              dryRun: false,
-            })
-          )
+        const decision = yield* withScriptedGh(
+          { ...defaultScript, mergeResponse: '{"merged":true,"sha":"feedface","message":""}' },
+          () =>
+            runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: true,
+                relaxed: false,
+                dryRun: false,
+              })
+            )
         );
         expect(decision._tag).toBe("merge");
       })
@@ -1536,7 +1641,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
 
     it.effect("GitHub declining the merge is a failure, never a silent pass", () =>
       withScriptedGh(
-        { ...defaultScript, mergeResponse: encodeJson({ merged: false, message: "Head branch was modified" }) },
+        {
+          ...defaultScript,
+          mergeResponse: encodeJson({ merged: false, sha: "", message: "Head branch was modified" }),
+        },
         () =>
           Effect.gen(function* () {
             const failure = yield* runMergeGate(
@@ -1614,12 +1722,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             `reds at merge: Lint [inherited: run ${lintRunId} failure on merge-base 2c1cb448ba]`
           );
           expect(comment).toContain('Merged under operator ruling S11 (AGENTS.md "Mergeable")');
-          expect(indexOf(lines, `head_sha=${headSha}&per_page=100`)).toBeGreaterThan(mergeAt);
+          expect(indexOf(lines, `head_sha=${headSha}`)).toBeGreaterThan(mergeAt);
           // A duplicate run in the listing is cancelled once.
           expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
             A.map([11, 12, 13], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
           );
           expect(comment).toContain("review window elapsed");
+          expect(A.join(A.map(yield* TestConsole.logLines, String), "\n")).toContain(
+            `recorded the S11 merge in a comment on #${pullFixture.number}`
+          );
           const printed = A.join(A.map(yield* TestConsole.logLines, String), "\n");
           expect(printed).toContain("GATE-MET (S11)");
           expect(printed).toContain("cancelled 3 of 3 active workflow run(s) on 212fe39b4f");
@@ -1670,7 +1781,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           const listings = A.filter(lines, Str.includes("/actions/runs?"));
           expect(listings).toHaveLength(1);
           expect(listings[0]).toContain("per_page=100");
-          expect(A.every(listings, Str.includes("--paginate --slurp"))).toBe(true);
           expect(A.filter(lines, Str.includes("/cancel"))).toEqual(
             A.map([11, 12, 13, 15, 16, 17, 18], (id) => `gh api -X POST repos/{owner}/{repo}/actions/runs/${id}/cancel`)
           );

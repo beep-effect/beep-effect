@@ -28,24 +28,6 @@ import * as Str from "effect/String";
 export const CLOSEOUT_REPLY_BODY_MAX_CHARS = 16 * 1024;
 
 /**
- * GraphQL mutation used to reply to a pull request review thread.
- *
- * **Example** (Verify reply mutation string)
- *
- * ```ts
- * import { strictEqual } from "node:assert"
- * import { REPLY_THREAD_MUTATION } from "@beep/repo-cli/test/Yeet"
- *
- * strictEqual(REPLY_THREAD_MUTATION.includes("addPullRequestReviewThreadReply"), true)
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const REPLY_THREAD_MUTATION =
-  "mutation($threadId: ID!, $body: String!) { addPullRequestReviewThreadReply(input: {pullRequestReviewThreadId: $threadId, body: $body}) { comment { id url } } }";
-
-/**
  * GraphQL mutation used to resolve a pull request review thread.
  *
  * **Example** (Verify resolve mutation string)
