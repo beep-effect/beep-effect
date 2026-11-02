@@ -20,9 +20,12 @@ upstream prerequisites and major topology changes. Known owners excluded:
   runbook and smoke). Several packet READMEs still name already-merged PRs
   as current (#2324, #2357, #2411, #2416, #2453, #2476), so every packet
   status line was checked against GitHub before use.
-- Fan-out cap: repair decision 3 caps open PRs repo-wide at six
-  (`goals/repository-simplification-residue/PLAN.md`, "Admission and wave
-  order"). With two open, at most four new cloud PRs fit concurrently.
+- Fan-out cap: the six-open-PR admission count is scoped to its owning plan,
+  `goals/repository-simplification-residue/PLAN.md` ("Admission and wave
+  order"). `docs/ROADMAP.md` describes repair decision 3 as an agent-side
+  six-branch fan-out governor, but `AGENTS.md` states no repo-wide PR cap,
+  so this review does not treat it as a global limit. Launch concurrency is
+  the orchestrator's call.
 - The VM is 4 vCPU / about 15 GiB; `BEEP_AGENT_HOST=cloud` and
   `CLAUDE_CODE_REMOTE=true` are set.
 
@@ -77,9 +80,12 @@ assigned branch, open a draft PR through the GitHub integration with
   `explorations/` become `packet`, `standards/*` baselines a baseline kind,
   `scratchpad/**` its own kind. No footprint claim; it shrinks the 33.55%
   `unknown` share.
-- Prerequisites: met. Slice 1 merged in #2414 and #2449. The current rule
-  requires markdown for `packet`
-  (`packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts`).
+- Prerequisites: code prerequisites met (slice 1 merged in #2414 and #2449;
+  the current rule requires markdown for `packet` in
+  `packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts`). Owner
+  confirmation is pending: the slice-1 lane merged on 2026-11-01 and nobody
+  has yet confirmed that slice 2 is unclaimed. Not admitted for launch until
+  that is confirmed.
 - Owns: `packages/tooling/tool/cli/src/commands/Ci/{RouteClassify,Route.schemas,RouteFootprints}.ts`,
   `packages/tooling/tool/cli/test/ci-route-*.test.ts`,
   `packages/tooling/tool/cli/test/fixtures/ci-route/**`, the packet.
@@ -173,35 +179,36 @@ assigned branch, open a draft PR through the GitHub integration with
   justify keeping it.
 - Owns: `packages/tooling/tool/cli/src/internal/package-scripts/**` and its
   tests, the migrated manifest `scripts` blocks, the packet.
-- Gotcha: `bun run beep lint package-scripts --write` alone does not update
-  existing manifests. `seedImplementation` in `PackageScriptsPolicy.ts` keeps
-  an existing implementation entry, and `diffBlock` reports only missing
-  implementations, so changed defaults never reach a manifest that already
-  has the flag. The task needs an explicit migration step: either a narrowly
-  scoped writer change that rewrites the flag where test files exist, plus a
-  drift check that compares implementation text for it, or a one-time
-  migration recorded in the PR.
-- Checks: `bun run beep lint package-scripts`; package-scripts tests;
-  `package-verify @beep/repo-cli --quick`; the canary.
-- Effort 3–5 h. Conflict risk medium–high (about 140 manifests; regenerate on
-  every rebase). Risk: hosted red where a package's unit run finds nothing
-  (for example only integration tests); identify those first.
+- Checks: `bun run beep lint package-scripts --write` alone does not update
+  existing manifests, because `seedImplementation` in
+  `PackageScriptsPolicy.ts` keeps an existing implementation entry and
+  `diffBlock` reports only missing implementations; the task therefore needs
+  an explicit, tested migration (a scoped writer change plus a drift check
+  that compares the flag, or a one-time rewrite recorded in the PR). Then
+  `bun run beep lint package-scripts`; package-scripts tests;
+  `package-verify @beep/repo-cli --quick`; the deleted-suite canary. Before
+  publishing, list packages whose unit run would find no tests (for example
+  integration-only suites) and decide exception or fix for each, so hosted
+  Test Unit does not turn red unexpectedly.
+- Effort 3–5 h. Conflict risk medium–high (about 140 manifests; redo the
+  migration on every rebase).
 - Brief: "Implement only the passWithNoTests box of
   goals/agent-rating-critique-fixes P2. Change the generator to emit the flag
-  only when the package has no matching test files, per run variant. Because
-  `lint package-scripts --write` preserves existing implementation entries,
-  add an explicit, tested migration (scoped writer change plus drift check, or
-  a recorded one-time rewrite) for existing manifests; enumerate the remaining
-  packages with reasons; add a
-  deleted-suite canary test. No coverage-floor or lint-promotion work. End
-  per D4."
+  only when the package has no matching test files, per run variant, and add
+  an explicit, tested migration for existing manifests (lint package-scripts
+  --write preserves existing implementation entries). Enumerate the remaining
+  packages with reasons and add a deleted-suite canary test. No coverage-floor
+  or lint-promotion work. End per D4."
 
 ### T6 — wake-service P0 + acceptance row 1 (pure core only)
 
 - Acceptance: `goals/wake-service/SPEC.md` Acceptance Criteria, first box:
   `Condition` and `Watch` schemas plus engine tests for check
   classification, the creation check, one wake and the limits.
-- Prerequisites: the first producer, hold-ledger, merged (#2404, #2450,
+- Not admitted. Per the operator, the workstation fleet ledger records
+  wake-service as waiting on operator review (not visible from this cloud
+  VM). T6 stays out until that review clears.
+- Code prerequisites: the first producer, hold-ledger, merged (#2404, #2450,
   #2453); `agent-message-router` is completed. Not verified: whether
   upstream `kitlangton/skulk` (MIT) is reachable from the VM.
 - Owns: one new library under `packages/tooling/library/` via create-package,
@@ -276,13 +283,14 @@ assigned branch, open a draft PR through the GitHub integration with
    schemas-only plus one producer, full package proof fits the VM, low
    conflict.
 2. T2 verification-route refinement 1 — small, census-ranked, files owned
-   only by this goal, directly unblocks slice 2.
+   only by this goal, directly unblocks slice 2. Conditional: owner
+   confirmation pending (see T2).
 3. T3 ontology-sidecar PR 1 — startable per the roadmap queue and its
    precondition met since 2026-09-22; largest of the three, hosted exit
    proof.
 
-The operator selected T1–T3 for launch. None was launched by this review
-session.
+This ranking is a recommendation. No candidate has been selected for launch,
+and none was launched by this review session.
 
 ## cloud-agent-readiness P2–P6 status
 
@@ -301,15 +309,28 @@ is not complete.
 
 ## Open coordination questions
 
-- Confirm that nobody already holds verification-route slice 2; the slice-1
-  lane merged on 2026-11-01.
+- T2 owner confirmation (recorded under T2).
 - Whether the agent-observability owner covers `.claude/hooks/hook-pulse.sh`
   (decides T8).
 - Whether #2476 counts as effected-promotion closing for beep-cli-composition
-  W1, and where composition wants new tooling libraries to live (T6).
-- T5 may produce hosted reds in packages whose suites are excluded from unit
-  runs: decide exception or fix.
+  W1, and, once T6's operator review clears, where composition wants new
+  tooling libraries to live.
 - T3 and T4 should correct the stale packet lines (ontology "blocked", party
   "Next: PartyId kit PR") in the same PR.
 - `goals/INDEX.md` is an ignored local projection; its counts may lag the
   tracked manifests.
+
+## Update — 2026-11-02 (after the review snapshot)
+
+Everything above is the as-of snapshot at `cfdddd1d`. Since then:
+
+- #2486 merged at 2026-11-02T02:59:30Z as `43d0a511`. Its
+  `history/2026-11-01-claude-cloud-smoke.md` records a Claude cloud run of
+  setup, `package-verify @beep/types --quick`, push and a draft PR through the
+  integration. That is evidence toward acceptance row 6 (P3); this note does
+  not flip P3 or any other phase, and the operator-side Yeet closeout under D4
+  still applies.
+- #2485 (instrumentation catalog) merged as `ba171c64`, which removes the
+  catalog-overlap conflict noted under T3.
+- T2 is held on owner confirmation and T6 on operator review, as recorded
+  above. No candidate has been selected or launched.
