@@ -287,7 +287,7 @@ from a sudo-capable job, so E1 closes through server-side rejection); the
 verifier's roster reads now use the organization list so item 3's
 deregistration check observes the runner; and run `41409672251` re-proved
 Gates A through J and L, `AMI_PIN`, `METADATA_DISABLED`, deregistration and
-teardown on `main`. Item 2 waits for an operator-granted replay window.
+teardown on `main`. The operator granted the replay window the same day. Probe N in `fleet-shadow-check.yml` and [`ops/post-release-replay.sh`](./ops/post-release-replay.sh) implement item 2; the step must merge to `main` before it can run, because group 4 admits the workflow only at `refs/heads/main`.
 
 ## Verification commands
 
