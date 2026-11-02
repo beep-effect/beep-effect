@@ -603,3 +603,42 @@ is proof-side producer association, not a new real-harness capability or populat
 claim. Both stages retain raw proof evidence and private queues while removing only
 owned temporary units/containers. Reversal is the tested pause/stop/removal path;
 historical forwarders, archives and production collector configuration remain held.
+
+
+### Verification provenance and failure-cleanup decision (2026-11-02)
+
+Identify the coverage artifact version as the CLI's directly imported processing
+library, independently check installed package metadata, and keep the supported
+version strict. The earlier `1.0.2` label cannot stand in for the actual `2.1.0`
+processor. Historical artifacts remain unchanged; current strict readers refuse
+the stale label. Coverage arithmetic and floors are not relaxed.
+
+Use an owned test clock to separate protocol validation from deadline behavior.
+Retain real sockets and database commits, explicitly test the timeout boundary,
+and release held replies before client/server teardown under LIFO finalization.
+The enclosing-scope regression preserves the original failure through cleanup.
+These fixture changes do not change production deadlines. Reversal is a normal
+source PR; retain original negative and positive receipts rather than rewriting
+history or rerunning unqualified production collection.
+
+Retained synthetic-source applicability and current exact-source root admission
+are separate claims. Incoming legacy Git snapshot changes are outside the
+retained synthetic execution path, as documented in the post-repair comparison.
+Keep the exact-byte admission guard intact and require new qualification for any
+new current-source admission. This preserves the recovery hold and all seven
+real-harness populations as Unknown while scoped source/hosted verification and
+strict delivery proceed.
+
+
+### Routine blocker autonomy decision (2026-11-02)
+
+Treat CI waiting, attributed failures, local admission refusal and publish/verify
+sequencing as repair or routing work. Reuse the authoritative observer and publish
+reviewable work with explicit local proof limits. A repeated routine blocker is
+not, by itself, a reason to pause the packet or request the operator to continue.
+Keep dependent mutation held when identity, integrity, privacy, resources or
+authority are unproven, and continue safe independent work. Escalate concrete
+required input after authorized alternatives are exhausted. This does not release
+the recovery hold, weaken authentication retry limits, authorize spend, or bypass
+the strict final readiness and merge gate. Reversal is restoring the previous
+packet guidance through a normal reviewed source change.

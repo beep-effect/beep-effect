@@ -49,6 +49,14 @@
         "role": "supporting"
       },
       {
+        "number": 2620,
+        "role": "supporting"
+      },
+      {
+        "number": 2621,
+        "role": "supporting"
+      },
+      {
         "number": 2612,
         "role": "final"
       }
@@ -122,11 +130,11 @@
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
-    "Required source files are missing or materially contradictory.",
+    "Hold dependent mutation when source identity, integrity, privacy or resource bounds are unproven; continue safe independent work.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
-    "The same blocker repeats after reasonable investigation."
+    "Routine CI queues, failing checks, local admission refusals and publish/verify sequencing are autonomous repair or routing work. Keep the authoritative observer; do not pause merely because a blocker repeats. Escalate concrete missing authority or required operator input after authorized paths are exhausted."
   ],
-  "statusNote": "Lifecycle active. PR2364 and PR2508 retain unsatisfied historical results; PR2578 retains canonical unknown after external merge without positive pre-merge readiness. PR2595 has post-merge source qualification (37 passed/1 skipped), not pre-merge readiness. Operator-reserved final PR2612 is ready for review and remains the sole final; merge readiness is unproven. Original870/40/73/44 executions retain scope; all51 HarnessLedger tests passed at7f91b189 and again at recorded hosted heade2213fed, with the later receipt distinguishing skipped unaffected package partitions. Current selected-input comparison remains244/249 plus four script-only manifests and appended tests; root84/84 and stages88/90,87/89 retain the reviewed two-helper bridge. Terminal current-head readiness, positive canonical verdict before strict merge, all non-Vercel hosted checks, review/window and canonical completion remain required. Recovery hold intact.",
+  "statusNote": "Base lifecycle active with conditional completed-retained proposal. Final PR2612 remains the sole final and is reserved exclusively to this chat; final-head readiness and canonical completion are unproven until observed. Accepted repairs2620/2621 retained positive exact-head verdicts before normal merges. At recorded support heada9651afb, actual hostedAI871 and HarnessLedger51 executions passed, and coverage compared187packages against the byte-identical original baseline. Post-repair selected source comparison is234/249; preparation82/84 and stages86/90,85/89 preserve historical receipts with a reviewed legacy-Git path applicability argument, not current exact-source root admission. New AI Git dependency and root catalog/trust/lock changes are explicit, not four script-only deltas. All non-Vercel final-head checks, resolved threads, normal review window, archived positive pre-merge verdict and actual VERIFIED canonical completion remain required. Historical2364/2508/2578 results stay unchanged. Recovery hold intact; all7real harness populations Unknown.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

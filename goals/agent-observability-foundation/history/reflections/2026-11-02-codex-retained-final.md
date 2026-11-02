@@ -48,7 +48,7 @@ canonical completion result.
 - **Wished existed:** One enforceable merge-ownership boundary shared by the
   publisher, observer, coordinator and manual merge surfaces.
 
-The current foundation delivery merged externally before its owner retained a
+The earlier proposed final PR2578 merged externally before its owner retained a
 positive readiness verdict. Fifteen green required contexts do not establish
 that missing fact. The canonical result is unknown, and the original merge,
 observer and receipt are preserved. No completion policy was silently changed.
@@ -93,3 +93,24 @@ production deployment, human alert delivery or universal agent coverage.
   ownership, and retain the ordinary ready transition and review window.
 - **MEDIUM — Best practice:** Reuse scoped historical proof only after exact
   input membership, bytes and the reviewed deltas have been checked again.
+
+
+## Later accepted repair round
+
+Coverage provenance needed an independent installed-library comparison: agreement
+between two hardcoded values did not establish which implementation processed the
+reports. PR2621 corrects that contract and preserves historical artifacts.
+
+A strict protocol test raced a short live deadline under CI load. PR2620 separates
+its clock from real socket/database work. A controlled failure probe then exposed
+finalizer ordering that delayed cleanup; PR2621 releases the held response before
+graceful shutdown and adds the enclosing-scope regression. The original failure
+and positive corrected probe remain distinct evidence.
+
+Both supporting repairs retained positive exact-head readiness before merging.
+Actual hosted AI871 and HarnessLedger51 results supersede only their recorded
+component inputs. The 234/249 selected comparison and changed legacy Git
+requirements require explicit scope, not reuse of the former script-only claim.
+Historical root/stage applicability does not establish current exact-root admission.
+The final PR still requires its own terminal readiness, archived positive verdict,
+qualified merge and VERIFIED canonical receipt before completion is projected.
