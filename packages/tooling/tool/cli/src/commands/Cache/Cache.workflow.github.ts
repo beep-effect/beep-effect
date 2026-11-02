@@ -172,6 +172,15 @@ const id = CacheHostedProducerReference.fields.runId;
 const repository = S.Struct({ id, full_name: S.NonEmptyString, fork: S.Boolean }).pipe(
   $I.annoteSchema("Repository", { description: "GitHub repository database identity and fork status." })
 );
+const ResolvedReusableWorkflow = S.Struct({
+  path: S.NonEmptyString.check(S.isMaxLength(512)),
+  ref: S.tag("refs/heads/main"),
+  sha: GitObjectId,
+}).pipe(
+  $I.annoteSchema("ResolvedReusableWorkflow", {
+    description: "GitHub-authenticated reusable workflow path, protected main ref and resolved commit.",
+  })
+);
 const Run = S.Struct({
   id,
   run_attempt: id,
@@ -183,11 +192,9 @@ const Run = S.Struct({
   path: CacheHostedProducerApproval.fields.workflowPath,
   repository,
   head_repository: repository,
-  // A reusable workflow needs its own approved resolved identity. This first
-  // route refuses it instead of trusting only the caller workflow's bytes.
-  referenced_workflows: S.Array(S.Unknown)
-    .check(S.isMaxLength(0))
-    .pipe(S.withDecodingDefaultKey(Effect.succeed(A.empty<unknown>()))),
+  referenced_workflows: S.Array(ResolvedReusableWorkflow)
+    .check(S.isMaxLength(1))
+    .pipe(S.withDecodingDefaultKey(Effect.succeed([]))),
 }).pipe(
   $I.annoteSchema("Run", { description: "Completed successful main workflow metadata authenticated by GitHub." })
 );
@@ -221,6 +228,7 @@ const encodeObservation = S.encodeEffect(S.fromJsonString(CacheProducerObservati
 const decodeObservation = S.decodeUnknownEffect(S.fromJsonString(CacheProducerObservation));
 const sameBinding = S.toEquivalence(CacheProducerBinding);
 const sameRun = S.toEquivalence(Run);
+const sameReusableWorkflows = S.toEquivalence(S.Array(ResolvedReusableWorkflow));
 const sameArtifact = S.toEquivalence(Artifact);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "producer report exceeded its bound" });
 const AsciiWorkflow = S.String.check(S.isMaxLength(64 * 1024), S.isPattern(/^[\x09\x0a\x0d\x20-\x7e]*$/)).pipe(
@@ -324,6 +332,19 @@ const inspectHostedMetadata = Effect.fn("CacheWorkflow.inspectHostedMetadata")(f
   )
     return yield* CacheCommandError.new("Producer run differs from independent approval.");
   if (
+    !sameReusableWorkflows(
+      run.referenced_workflows,
+      A.map(approval.reusableWorkflows, (workflow) =>
+        ResolvedReusableWorkflow.make({
+          path: `${approval.repository.slug}/${workflow.workflowPath}@main`,
+          ref: "refs/heads/main",
+          sha: workflow.revision,
+        })
+      )
+    )
+  )
+    return yield* CacheCommandError.new("Producer reusable workflow differs from independent approval.");
+  if (
     !sameArtifact(artifact, {
       ...artifact,
       id: selected.artifactId,
@@ -370,7 +391,9 @@ const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(functio
  * Approval must cover the workflow's complete reviewed execution boundary,
  * including pinned actions and protected credentials. These API checks do not
  * establish deployed environment rules, honest task inputs or HMAC validity.
- * Reusable workflows are refused until their resolved approvals are supported.
+ * Reusable execution requires separate approval of the same-repository main
+ * Heavy leaf, its resolved commit and its exact file bytes. Other callees and
+ * nested reusable workflows are refused. An absent approval permits no callee.
  *
  * **Example** (Reference immutable producer verification)
  * ```ts
@@ -401,12 +424,24 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
     const artifactSha256 = yield* hashBytes(archive);
     if (archive.byteLength !== artifact.size_in_bytes || `sha256:${artifactSha256}` !== artifact.digest)
       return yield* CacheCommandError.new("Transported producer archive differs from GitHub's immutable digest.");
-    const workflow = yield* content
-      .getFile(approval.workflowPath, { ref: run.head_sha })
-      .pipe(Repo.provide(approval.repository));
-    const workflowBytes = new TextEncoder().encode(workflow);
-    if (!isAsciiWorkflow(workflow) || (yield* hashBytes(workflowBytes)) !== approval.workflowSha256)
-      return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    let inspectedWorkflowBytes = 0;
+    for (const approvedWorkflow of [
+      { workflowPath: approval.workflowPath, revision: run.head_sha, workflowSha256: approval.workflowSha256 },
+      ...approval.reusableWorkflows,
+    ]) {
+      const workflow = yield* content
+        .getFile(approvedWorkflow.workflowPath, { ref: approvedWorkflow.revision })
+        .pipe(Repo.provide(approval.repository));
+      if (!isAsciiWorkflow(workflow))
+        return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+      const workflowBytes = new TextEncoder().encode(workflow);
+      if (
+        workflowBytes.byteLength > 64 * 1024 - inspectedWorkflowBytes ||
+        (yield* hashBytes(workflowBytes)) !== approvedWorkflow.workflowSha256
+      )
+        return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+      inspectedWorkflowBytes += workflowBytes.byteLength;
+    }
     const decoded = yield* readReport(archive);
     yield* assertHostedReport(decoded.report, approval, selected);
     if (!sameRun(run, yield* readRun) || !sameArtifact(artifact, yield* readArtifact))
