@@ -19,6 +19,7 @@ import { isCi } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
 import { qualityStepOutputBound, runCaptured } from "../../internal/process/StepExec.ts";
+import { provideQualityConcurrency, qualityConcurrencyPlan } from "../Quality/Quality.plan.ts";
 import { readLintPolicySweeps, runRootDeprecatedApisTask } from "../Quality/Tasks.ts";
 import {
   lintBaseFlag,
@@ -79,11 +80,14 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
 ) {
   if (A.isReadonlyArrayEmpty(targets)) return;
   const path = yield* Path.Path;
+  // Type-aware oxlint takes its worker count from the concurrency plan: four on
+  // the hosted profile, the profile's thread budget locally.
+  const plan = yield* qualityConcurrencyPlan;
   const args = [
     "--config",
     path.join(root, OXLINT_DEPRECATED_APIS_CONFIG),
     "--disable-nested-config",
-    "--threads=4",
+    `--threads=${plan.oxlintThreads}`,
     ...(A.every(targets, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
     ...targets,
   ];
@@ -108,6 +112,24 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
 });
 
+const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (options: {
+  readonly package: O.Option<string>;
+  readonly full: boolean;
+  readonly base: string;
+}) {
+  const { package: directory, full, base } = options;
+  if (O.isNone(directory)) {
+    const ci = yield* isCi;
+    const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
+    if (!full && !ci) return yield* runRootDeprecatedApisTask(base);
+    return yield* sweeps.deprecatedApis === "oxlint"
+      ? runDeprecatedApiLint(yield* findRepoRoot(), ["apps", "packages", "infra"])
+      : runRootDeprecatedApisTask();
+  }
+  const root = yield* findRepoRoot();
+  yield* runDeprecatedApiLint(root, [yield* resolveLintPackage(root, directory.value)]);
+});
+
 /**
  * Lint command for deprecated vendor API usage.
  *
@@ -123,16 +145,5 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
 export const lintDeprecatedApisCommand = Command.make(
   "deprecated-apis",
   { package: lintPackageFlag, full: lintFullFlag, base: lintBaseFlag },
-  Effect.fn("Lint.deprecatedApis")(function* ({ package: directory, full, base }) {
-    if (O.isNone(directory)) {
-      const ci = yield* isCi;
-      const sweeps = yield* readLintPolicySweeps(yield* findRepoRoot());
-      if (!full && !ci) return yield* runRootDeprecatedApisTask(base);
-      return yield* sweeps.deprecatedApis === "oxlint"
-        ? runDeprecatedApiLint(yield* findRepoRoot(), ["apps", "packages", "infra"])
-        : runRootDeprecatedApisTask();
-    }
-    const root = yield* findRepoRoot();
-    yield* runDeprecatedApiLint(root, [yield* resolveLintPackage(root, directory.value)]);
-  })
+  (options) => provideQualityConcurrency(runLintDeprecatedApis(options))
 ).pipe(Command.withDescription("Check TypeScript sources for deprecated third-party API usage"));

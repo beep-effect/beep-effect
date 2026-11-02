@@ -3623,6 +3623,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
             "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -3642,6 +3643,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -4239,6 +4241,7 @@
             "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
             "packages/tooling/tool/cli/src/commands/Models/Models.spans.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4292,6 +4295,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -4947,6 +4951,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4978,6 +4983,8 @@
             "packages/tooling/tool/cli/src/internal/ratchet/index.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts"
           ],
           "env": [],
@@ -6145,6 +6152,7 @@
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+            "packages/tooling/tool/cli/src/internal/cli/ShardScope.ts",
             "packages/tooling/tool/cli/src/internal/cli/Timing.ts",
             "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
             "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
@@ -122145,7 +122153,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "aae09a6defa6e7609ba66d0cf3fcd6e85fa367b7d8d060ccd0cadebbaa2e224a"
+        "sha256": "ba0364af9e5dbadbf5e29e657720981148db9e7b77246291fe0178dfa81f80f9"
       }
     ]
   }

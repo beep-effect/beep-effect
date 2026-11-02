@@ -8,8 +8,8 @@ refreshed **only in dedicated chore PRs**, never on feature branches.
 
 | Artifact | Regenerator | Character |
 | --- | --- | --- |
-| `standards/schema-catalog/<package>.generated.jsonc` | `bun run beep lint schema-catalog --write` | one shard per owning package; gated by hosted Repo Sanity, so a PR refreshes the shards it changes |
-| `standards/instrumentation-catalog/<package>.generated.jsonc` | `bun run beep observability catalog --write` | one shard per owning package; gated by the `observability:catalog-check` cheap gate |
+| `standards/schema-catalog/<package>.generated.jsonc` | `bun run beep lint schema-catalog --write`; the `schema-catalog` pre-commit hook runs it scoped to the staged sources' packages and stages the shards | one shard per owning package; gated by the `lint:schema-catalog` cheap gate and hosted Repo Sanity, so a PR refreshes the shards it changes |
+| `standards/instrumentation-catalog/<package>.generated.jsonc` | `bun run beep observability catalog --write`; the `instrumentation-catalog` pre-commit hook runs it scoped the same way | one shard per owning package; gated by the `observability:catalog-check` cheap gate and hosted Repo Sanity |
 | `standards/jsdoc-documentation.inventory.jsonc` | `bun run beep quality jsdoc-inventory` | whole-repo snapshot; regen absorbs every package's drift |
 | `standards/jsdoc-documentation.inventory.md` | same lane | small totals file; updating it in a feature PR is fine |
 
@@ -19,8 +19,16 @@ scope — they are edited, not regenerated.
 ## The rule
 
 - The two sharded catalogs are the exception: their gates fail on drift, so a
-  feature branch runs their writers and commits the shards its own change
-  touched (see "Per-package shards" below).
+  feature branch commits the shards its own change touched (see "Per-package
+  shards" below). The pre-commit hooks in `lefthook.yml` do this for every
+  commit that stages a source file: each writer accepts the staged paths and
+  `--stage`, regenerates only the owning packages' shards (seconds, not the
+  full scan) and adds them to the index. Shard text never mixes packages, so
+  the scoped write equals the full writer's output byte for byte, and two
+  branches that regenerate independently stay identical. Three main reds on
+  2026-11-02 (#2522, #2526, #2540, each fixed by a separate regeneration PR)
+  came from PRs pushed with package-scoped checks only, which the hosted gate
+  caught after the S11 merge had carried the stale shard to `main`.
 - A feature branch must carry **only its own delta**. If `bun run beep yeet
   verify` and CI pass without regenerating a snapshot artifact, do not
   regenerate it — the gates on these artifacts are delta/ratchet-based, and
