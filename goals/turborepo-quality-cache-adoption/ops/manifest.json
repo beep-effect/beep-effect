@@ -108,7 +108,11 @@
     "research/signature-key-feature-observation.json",
     "research/native-global-configuration-controls.py",
     "research/native-global-configuration-controls.json",
-    "research/global-configuration-feature-review.json"
+    "research/global-configuration-feature-review.json",
+    "research/native-filter-composition-controls.py",
+    "research/native-filter-composition-controls.json",
+    "research/filter-composition-driver-controls.json",
+    "research/filter-composition-source-review.json"
   ],
   "agentLaunchers": [
     {

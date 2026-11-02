@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "2792ea0002905d744a1d2037498a8e715e25e9cb96b514577d348d0b0862c3ff",
+  "specSha256": "3da1a83e8dd41f336942429035e30fa2f68d30a9d5b5ccfbae19046a905233a8",
   "acceptance": [
     {
       "id": "AC-01",
@@ -348,5 +348,7 @@
     "path": "research/global-configuration-feature-review.json",
     "sha256": "d133ee5c02542f2ad110519ae8ed52232dc16a60a350f116bebada40fc2ea4b7",
     "scope": "No runtime change. Exact source review plus 72 synthetic task observations, six configuration refusals, three driver refusals and one intended guard-removal failure. No whole-goal criterion is complete."
-  }
+  },
+  "priorSpecSha256AtFilterCompositionReview": "2792ea0002905d744a1d2037498a8e715e25e9cb96b514577d348d0b0862c3ff",
+  "filterCompositionSourceReview": "research/filter-composition-source-review.json"
 }

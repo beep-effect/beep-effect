@@ -575,3 +575,19 @@ the newer evidence and change no runtime cache policy or qualification record.
   Any real input removal or client/layout change needs renewed evidence.
 - Reverse by reverting this research decision and registration, preserving the
   original failed and passing receipts. Runtime configuration is unchanged.
+
+
+### Explicit lane scope and pinned filter composition, 2026-11-02
+
+- Interpret selector combinations against the configured exact clients. With
+  the current enabled task-level flags, the affected set intersects positive
+  filters; multiple positive selectors still union within that intersection.
+  Preserve executable prerequisite closure and verify negative filters and
+  `--only` separately. Do not infer behavior from an older comment.
+- The labs lane deliberately runs its full set under the existing workflow
+  path gate. Correct the false widening rationale without changing lane argv,
+  replay parity or claiming a newly narrowed hosted proof.
+- Synthetic plans and source review grant neither real computation qualification
+  nor final feature acceptance. Reopen runtime changes only with the complete
+  current caller, tuple and hosted evidence. Reverse this research/comment wave
+  through a reviewed Git revert, retaining the native reports.
