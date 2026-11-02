@@ -88,11 +88,12 @@ const QUOTED_RECORD_LIMIT = 80;
 /**
  * Quotes a record for a failure message: JSON-escaped (so NUL, tab and
  * newline bytes stay visible) and truncated so one huge token cannot bloat
- * an error. Encoding a string as JSON cannot fail; the fallback is unreachable.
+ * an error. Encoding a string as JSON cannot fail; the plain-quoted fallback
+ * is unreachable, so it is a `constant` rather than a closure of its own.
  */
 const quoteRecord = (record: string): string => {
   const shown = record.length > QUOTED_RECORD_LIMIT ? `${Str.slice(0, QUOTED_RECORD_LIMIT)(record)}…` : record;
-  return O.getOrElse(encodeJsonString(shown), () => `"${shown}"`);
+  return O.getOrElse(encodeJsonString(shown), constant(`"${shown}"`));
 };
 
 /**
