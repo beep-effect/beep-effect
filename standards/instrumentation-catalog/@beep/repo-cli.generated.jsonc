@@ -2648,6 +2648,7 @@
     {"name":"QualityTasks.runPolicySteps","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.runQualityTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.runQualityTaskIfRequested","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityTasks.runRootAuditPackagesTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.runRootCoverageTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.runRootDeprecatedApisTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.runRootLintPolicyTask","owner":"@beep/repo-cli","family":"tooling","conforms":true},
