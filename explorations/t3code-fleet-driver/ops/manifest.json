@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "t3code-fleet-driver",
+    "title": "T3 Code Fleet Driver",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/t3-native-orchestration",
+        "goals/t3code-fleet-rollout",
+        "goals/t3code-harness-mcp",
+        "goals/t3code-spill-routing"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-01",
+    "updated": "2026-11-01"
+  }
+}
