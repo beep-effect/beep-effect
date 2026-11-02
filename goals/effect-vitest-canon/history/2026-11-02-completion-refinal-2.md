@@ -12,9 +12,10 @@ recorded in its `attempts.ndjson`). The completion gate still cannot derive
 - `goals completion refresh --readiness-job` recovers readiness only from an
   until-ready monitor job that finished successfully, recorded `mergeReady` as
   ready, and was finalized before the pull request's `mergedAt`.
-- #2532 merged before either of its until-ready jobs got there. Job `36874e7a`
+- #2532 merged before either of its until-ready jobs got there. Job
+  `36874e7a-3b72-4ec4-b02b-c11ba3111ce2`
   ended on its 30-minute settle timeout with most hosted checks still queued
-  behind a two-runner fleet. Job `037f2ea8` was still waiting on GitHub GraphQL
+  behind a two-runner fleet. Job `037f2ea8-86d9-4165-b4ac-4766372c7e43` was still waiting on GitHub GraphQL
   secondary rate limits at the merge and was cancelled afterwards.
 - The hosted reds that #2532 waited out were all inherited from `main` and fixed
   there, not by the packet: the repo-cli Test Unit shard (#2535), the
@@ -34,7 +35,8 @@ recorded in its `attempts.ndjson`). The completion gate still cannot derive
   `merge-ready: yes`.** The `final <sha40> #<pr> merge-ready: yes` ledger note is
   the signal, and an earlier merge repeats the #2532 outcome.
 - After the merge, the same lane runs
-  `goals completion refresh --slug effect-vitest-canon --readiness-job <until-ready job>`
+  `goals completion refresh --slug effect-vitest-canon --readiness-job <until-ready job UUID>`
+  (the full job UUID, for example `cd6a57a3-81bd-4e8a-b229-1249b89990a0`; a short ID is rejected)
   and keeps its `.beep` state until that prints `verified`.
 - Changes no packet content. The D4 amendment, reflection, timings report and
   Decision Log rows stand as merged in #2493 and #2532.
