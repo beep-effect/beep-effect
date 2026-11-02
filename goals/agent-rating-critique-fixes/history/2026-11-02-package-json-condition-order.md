@@ -86,8 +86,13 @@ was copied aside and restored byte-identical (`cmp`).
   recursively.
   - `PublishConfig` allows any extra JSON key. `orderObjectKeys` sent every key
     outside `access, tag, registry, provenance, bin, exports` through
-    `canonicalizeUnknownValue`, so `publishConfig.imports` and
-    `publishConfig.typesVersions` (publish-time overrides) had the same defect.
+    `canonicalizeUnknownValue`, so `publishConfig.typesVersions` and
+    `publishConfig.imports` had the same defect. pnpm documents
+    `typesVersions` as a `publishConfig` override
+    (https://github.com/pnpm/pnpm/blob/main/pnpm/docs/package_json.md); it
+    does not document `imports` there. An `imports` value in `publishConfig`'s
+    open rest is still handled with the same order rules. Wording corrected
+    after delta review 6581327102 (advisory C).
   - `orderObjectKeys` now takes an optional rest canonicalizer. It defaults to
     the previous recursive sort, so `repository` is unchanged.
   - `publishConfig` passes `canonicalizePublishConfigRestValue`: `imports` goes

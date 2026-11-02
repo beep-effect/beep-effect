@@ -151,8 +151,8 @@ const orderObjectKeys = (
   return out;
 };
 
-// publishConfig may override order-semantic manifest fields at publish time (for example `imports` or
-// `typesVersions`); those keep the same order rules as their top-level counterparts.
+// pnpm documents `typesVersions` as a publishConfig override; an `imports` value in publishConfig's open rest is
+// handled with the same order rules. Both keep the order rules of their top-level counterparts.
 const canonicalizePublishConfigRestValue = (key: string, value: unknown): unknown => {
   if (key === "imports") {
     return canonicalizeImportsValue(value);
