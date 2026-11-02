@@ -4,7 +4,7 @@ Current final delivery is operator-reserved PR2612. PR2578 merged without positi
 
 Recorded on November 2 UTC (November 1 in America/Chicago). The operative lifecycle remains active.
 
-## Historical PR2508 delivery and current follow-up
+## Historical PR2508 and PR2578 deliveries
 
 PR2508 was externally merged at 2026-11-02T12:28:52Z, accepted head `4afad5c6546b0be330ab89937aadd23831511673`, merge `4644f914b39c931658ef89529b1d673b7fdb5095`. The canonical writer records all fifteen required contexts green with complete merge-time inventory, but the overall result is **unsatisfied**: its declared verdict still refers to `636fe38e…`. The observer finished after merge at 12:36:49Z with `mergeReady.ready=false`; command success after merge is not pre-merge readiness. The non-required coverage comparison also failed eleven inherited CLI floors. Its exact rows are retained privately; shared repair PR2568 subsequently landed as `3ff2d6768eb5f72032aea4bc9c1ce8d848383606` with six added tests and unchanged runtime code/floors.
 
