@@ -29,6 +29,8 @@ class CompatibilitySurveyControls(unittest.TestCase):
         self.assertEqual(features["literal-unmatched-closing-bracket"], 1)
         self.assertIsNotNone(re.fullmatch(source, "ch[.,]"))
         self.assertIsNotNone(re.fullmatch(translated, "ch[.,]"))
+        self.assertIsNotNone(re.fullmatch(source, "ch[X,]"))
+        self.assertIsNotNone(re.fullmatch(translated, "ch[X,]"))
         self.assertIsNone(re.fullmatch(source, "ch."))
         self.assertIsNone(re.fullmatch(translated, "ch."))
 

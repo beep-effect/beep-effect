@@ -248,6 +248,20 @@ rejects 10,926 instances; the lexical syntax candidate compiles all 13,610.
 These results do not qualify matching, Unicode semantics, source families or
 safety scaling. The production translator and regex worker remain open.
 
+The [tokenizer regex translator](./history/evidence/2026-11-02-regex-translator.md)
+now preserves the pinned CPython re character classes, dot/end semantics and
+ASCII ignore-case adaptations as bounded data. All 13,610 captured extractor
+instances translate within the default ceiling (maximum 3,183 UTF-16 units).
+The independent frozen facts include every code point and controlled captures;
+46 focused tests pass. Hosted qualification now requires native compilation of
+every instance, 4,456,448 class checks, exact controlled captures and one confirmed
+child exit. Native qualification, actual regex-worker/protocol integration,
+astral spans, iteration/routing and all-family safety proof remain pending.
+The worker must preserve native Python Unicode storage: the source distinguishes
+two literal surrogate points from one astral digit even when their projected
+UTF-16 bytes coincide. Input preparation and boundary mapping must retain that
+distinction; scalar character-class qualification does not close it.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

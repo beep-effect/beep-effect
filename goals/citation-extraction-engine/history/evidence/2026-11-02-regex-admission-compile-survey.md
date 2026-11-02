@@ -44,8 +44,12 @@ Both runtimes produce the same counts:
 The last two syntax failures before handling literal unmatched brackets are
 instances 5087 and 5088 of artifact
 `271d15c99e8dfb1c974a648393ce8d1fde8029c05813ac97c6e5e696f6aeb435`.
-The source contains `ch\[.,]`, which matches literal `ch[.,]`. The survey
-preserves that unusual behavior; it does not correct the source into `ch.`.
+The source contains `ch\[.,]`: the brackets and comma are literals, while the
+dot remains a wildcard outside a character class. It matches `ch[.,]` and
+`ch[X,]`, for example. The survey preserves that unusual behavior; it does not
+correct the source into `ch.`. This corrects the earlier description of the
+whole example as literal text. The retained candidate already preserves the dot
+as a wildcard; the controls now explicitly check both examples.
 Six controls pass for class/group/quantifier/escape handling, this literal
 behavior, complete authenticated source coverage and retained report/vector
 bindings.
