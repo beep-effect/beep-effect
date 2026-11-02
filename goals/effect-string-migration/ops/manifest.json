@@ -6,7 +6,7 @@
     "title": "effect/String migration",
     "status": "active",
     "created": "2026-10-21",
-    "updated": "2026-10-28",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-string-migration",
@@ -68,7 +68,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
