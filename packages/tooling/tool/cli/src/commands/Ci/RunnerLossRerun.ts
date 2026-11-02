@@ -768,44 +768,6 @@ export const decideRunnerLossRerun = (input: RunnerLossRerunInput): RunnerLossRe
   return decision(reasonForHead(input.head.status), O.some(input.head));
 };
 
-/**
- * The `gh` arguments that request a decided rerun.
- *
- * **Details**
- *
- * Always `gh run rerun --job <id>` for the one lost job chosen. `--failed`
- * is never used: it would also re-run jobs that failed for a real reason and
- * hide their red.
- *
- * **Example** (One lost job)
- *
- * ```ts
- * import { RunnerLossFailedJob, RunnerLossRerunDecision, runnerLossRerunArgs } from "@beep/repo-cli/commands/Ci"
- * import * as O from "effect/Option"
- *
- * const lost = RunnerLossFailedJob.make({ id: 9, name: "Heavy / Check", runnerName: null, runnerLoss: true })
- * const decision = RunnerLossRerunDecision.make({
- *   rerun: true,
- *   reason: "runner-loss",
- *   runId: 7,
- *   attempt: 1,
- *   maxAttempt: 8,
- *   maxJobReruns: 3,
- *   rerunJob: O.some(lost),
- *   lostJobs: [lost],
- *   otherFailedJobs: [],
- * })
- * console.log(runnerLossRerunArgs(decision)) // Some(["run", "rerun", "--job", "9"])
- * ```
- *
- * @param decision - A decision from {@link decideRunnerLossRerun}.
- * @returns The `gh` arguments, or `None` when the decision does not rerun.
- * @category formatting
- * @since 0.0.0
- */
-export const runnerLossRerunArgs = (decision: RunnerLossRerunDecision): O.Option<ReadonlyArray<string>> =>
-  O.map(decision.rerunJob, (job) => ["run", "rerun", "--job", `${job.id}`]);
-
 const reasonSentence = (decision: RunnerLossRerunDecision): string =>
   RunnerLossRerunReason.match(decision.reason, {
     "runner-loss": () => "a job lost its runner, is under its rerun bound, and the head is current",

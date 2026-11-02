@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (skill-contract-gate-certificates, claude/skill-contract-gate-certs-oodgzh)",
-      "reason": "Re-record the root subject on main's baseline after the seventh origin/main merge into #2490 (930758e0): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
+      "reason": "Re-record the root subject on main's baseline after the eighth origin/main merge into #2490 (c73737de): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
       "basis": {
-        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-7.md",
-        "sha256": "d024b944050c1d35caa40cd71b35c328c37b764079fe8e0621affa4af7e2f05e"
+        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-8.md",
+        "sha256": "e560495319c07ef5a218a6814fd81b4052e6745681ad4e25f9f679682db47727"
       }
     },
     "@beep/acp": {
@@ -1138,11 +1138,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (perf-turbo-glob-exclusions, claude/perf-turbo-glob-exclusions-fb5814)",
-      "reason": "Re-record the input lists of root tasks and @beep/identity#lint after excluding .claude/worktrees, nested node_modules and src-tauri/target from globs their commands never read (quality audit M8). Commands, outputs, cache flags and dependency edges are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 sites, feat/gh-git-w3-sites)",
+      "reason": "Record the W3 sites drift: repo-cli adds @beep/commands as a dependency (manifest byte change for six @beep/repo-cli tasks), and GithubIdentity.ts imports Run, so the commands driver's Run.ts closure joins the goals-doctor, knowledge and quality root seals; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-glob-exclusions-cache-review-2026-11-02.md",
-        "sha256": "88ad649751315d49204b27d594d6a604defe999afcdd7cc771c2dc4542aff02e"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-sites.md",
+        "sha256": "9f015c487185677458af286a766541dcbafc123de172f4c368040c78f74605aa"
       }
     },
     "@beep/repo-configs": {
@@ -3104,6 +3104,7 @@
             "packages/drivers/box-provisioning/package.json",
             "packages/drivers/box/package.json",
             "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/**",
             "packages/drivers/cosmos/package.json",
             "packages/drivers/discord/package.json",
             "packages/drivers/doc-text/package.json",
@@ -3355,6 +3356,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -3909,6 +3914,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -6378,6 +6387,10 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            "packages/drivers/commands/package.json",
+            "packages/drivers/commands/src/Redaction.ts",
+            "packages/drivers/commands/src/Run.ts",
+            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -93368,6 +93381,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93476,6 +93490,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93571,6 +93586,7 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
+          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93718,6 +93734,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -93859,6 +93876,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94119,6 +94137,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94220,6 +94239,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94344,6 +94364,7 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
+          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -122149,7 +122170,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "a0016c14a30862d5bf589b6c3acbd016bec7ff848ccd50564e352f3e65678805"
+        "sha256": "7c7fe1c2f25ec7cbbbdd2eee97559be0650e742ec065dfea15a31157549fec33"
       }
     ]
   }
