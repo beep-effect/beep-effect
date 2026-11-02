@@ -1660,3 +1660,16 @@ regression proving the inspection leaf lives in an admitted reusable workflow.
 The queued run was cancelled without executing inspection; this is neither a
 passed inspection nor a signed-cache result. No runner-group permission or
 capacity was changed.
+
+
+### Preserve private supervisor output while diagnosing qualification failures, 2026-11-02
+
+An ordinary stable signed pilot ended after 967 seconds with only
+“Signed pilot supervisor exited with exit code 1.” The failed receipt is retained;
+a separate instrumented success cannot qualify that ordinary execution or
+identify its failing phase. Repeating the expensive matrix without a useful
+bounded diagnostic is poor feedback. Extend the existing supervisor guard to
+recognize a finite source-owned hint vocabulary and quote only its fixed member,
+never a captured substring or raw cause. Hints remain untrusted observations;
+exit status and truncation still decide failure, and no qualification gate is
+relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
