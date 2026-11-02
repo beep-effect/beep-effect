@@ -53,6 +53,17 @@ helpers changed. Original backend executions, independently expected event and
 attempt sets, visibility receipts, privacy and rollback evidence remain retained.
 No new backend run or broader coverage claim is made.
 
+The later [accepted-main comparison](../ops/history/accepted-main-source-applicability-20261102.json)
+at `12aea7d2a40901b2156ba609723967c4d44e274a` repeats these selected-input
+checks after merging accepted main `105975ac27b8c463fb7d6e0e9dbe503cbdf84829`.
+It includes the accepted PR2610 lint repair and PR2616 tests-only coverage repair.
+The same 244/249, 84/84, 88/90 and 87/89 comparisons hold, and all 25 recorded
+Dankserver source hashes match. The earlier comparison remains preserved.
+Incoming shared Turbo/cache-input and Biome configuration changes require fresh
+hosted quality proof on the final commit. The original direct Node package
+executions do not invoke Turbo or the changed lint script keys; this comparison
+does not transfer cache-quality proof or assert a complete dependency closure.
+
 [PR #2595](https://github.com/beep-effect/beep-effect/pull/2595) supplies the separate
 finite-code adapter follow-up. Its [post-merge qualification](../ops/history/pr2595-postmerge-source-qualification-20261102.json)
 records 37 passed hosted jobs and one skipped job, including coverage. Its
