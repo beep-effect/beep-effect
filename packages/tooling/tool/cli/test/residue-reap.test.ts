@@ -2103,6 +2103,49 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
     )
   );
 
+  it.effect("searches citations past the bounded tracked listing and matches ancestor tokens only", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        retentionFixture(root).pipe(
+          Effect.flatMap((fixture) =>
+            Effect.gen(function* () {
+              const fs = yield* FileSystem.FileSystem;
+              const path = yield* Path.Path;
+              const corpus = path.join(fixture.repoRoot, "docs");
+              yield* fs.makeDirectory(corpus, { recursive: true });
+              // Enough tracked documents that the evidence roots' `git ls-files -s -z`
+              // listing passes the 512 KiB repo-run capture bound.
+              yield* Effect.forEach(
+                A.range(0, 7999),
+                (index) => fs.writeFileString(path.join(corpus, `note-${index}.md`), "unrelated note\n"),
+                { concurrency: 16, discard: true }
+              );
+              const receipt = path.join(fixture.repoRoot, "standards", "receipt.md");
+              const cite = Effect.fnUntraced(function* (text: string) {
+                yield* fs.writeFileString(receipt, text);
+                yield* runFixtureCommand(fixture.repoRoot, "git", ["add", "."]);
+                yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "cite"]);
+                return candidateByPath(yield* runResidueReap(fixture), fixture.target);
+              });
+              const first = yield* cite("Sibling outputs such as .beep/ci-other and .beep/qa stay apart.\n");
+              const listed = yield* runFixtureCommand(fixture.repoRoot, "sh", [
+                "-c",
+                "git ls-files -s -z -- goals explorations research harness-ledger standards docs .patterns AGENTS.md | wc -c",
+              ]);
+              expect(O.getOrElse(N.parse(Str.trim(listed)), () => 0)).toBeGreaterThan(512 * 1024);
+              expect(first.action).toBe("archive-move");
+              expect((yield* cite("The container (.beep/ci/) holds the scanner outputs.\n")).skipReason).toBe(
+                "evidence-referenced"
+              );
+              expect((yield* cite("Keep .beep/ci/obsolete, see `.beep/ci`.\n")).skipReason).toBe("evidence-referenced");
+            })
+          )
+        ),
+      removeTempDirectory
+    )
+  );
+
   it.effect("retains live cwd, recent writes, live pids and nested protected state", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
