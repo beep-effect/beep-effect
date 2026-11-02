@@ -291,10 +291,8 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
       for (const kind of ["library", "ecosystem"] as const) {
         expect(CreatePackageScripts.package(kind, false)).toEqual(ExpectedGeneratedQualityScripts);
       }
-      // A tool has no `test:integration` task, and since #2526 removed `beep:audit` (the only script that
-      // called `bun run beep:test:integration`) nothing pulls that implementation into the block either.
       expect(CreatePackageScripts.package("tool", false)).toEqual(
-        R.remove(R.remove(ExpectedGeneratedQualityScripts, "test:integration"), "beep:test:integration")
+        pipe(ExpectedGeneratedQualityScripts, R.remove("test:integration"), R.remove("beep:test:integration"))
       );
       expect(CreatePackageScripts.package("library", true)).toEqual(ExpectedGeneratedStoriesQualityScripts);
     });
@@ -1579,21 +1577,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
             // Lint and Test Unit partition proofs: each new package lands in exactly one shard.
             for (const [laneId, partitions] of [
               ["lint", ["lint-a", "lint-b"]],
-              [
-                "test-unit",
-                [
-                  "repo-cli-1",
-                  "repo-cli-2",
-                  "repo-cli-3",
-                  "repo-cli-4",
-                  "repo-cli-5",
-                  "repo-cli-6",
-                  "unit-a",
-                  "unit-b",
-                  "unit-c",
-                  "unit-d",
-                ],
-              ],
+              ["test-unit", ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "unit-a", "unit-b"]],
             ] as const) {
               const taskPackages = pipe(
                 CI_LANE_PARTITIONS,
