@@ -68,12 +68,12 @@ nothing here can be shared or exported.
 3. **Setup script**. The dashboard setup script does not start inside the
    clone, so `cd` into it explicitly before calling the shared bootstrap; a bare
    relative `bash scripts/cloud/bootstrap.sh` exits 127 because the path does
-   not resolve. Use the vendor container path verbatim:
+   not resolve. The clone sits directly under the container home, so `$HOME` reaches it:
 
    ```bash
    #!/bin/bash
    set -euo pipefail
-   cd /home/user/beep-effect
+   cd "$HOME/beep-effect"
    BEEP_CLOUD_VENDOR=claude BEEP_CLOUD_SKIP_OP=1 bash scripts/cloud/bootstrap.sh
    ```
 
