@@ -1782,12 +1782,33 @@ const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
 
   if (shouldFailInvocation(envelope, options)) {
     return yield* QualityScriptCommandError.make({
-      message: `Fallow ${feature} failed with status ${envelope.status}.`,
+      message: failedInvocationMessage(feature, envelope),
       command: commandText("bun", args),
       exitCode: positiveExitStatus(envelope.exitStatus),
     });
   }
 });
+
+const FAILED_INVOCATION_NAMED_FINDINGS = 3;
+
+// An `ok` envelope fails only through promoted blocking findings, so the message names them instead
+// of reporting "failed with status ok"; any other status is the failure itself.
+const failedInvocationMessage = (feature: FallowFeature, envelope: FallowReportEnvelope): string =>
+  pipe(
+    decodeFallowReportOkOption(envelope),
+    O.match({
+      onNone: () => `Fallow ${feature} failed with status ${envelope.status} (exit ${envelope.exitStatus}).`,
+      onSome: (okEnvelope) => {
+        const blocking = A.filter(okEnvelope.report.findings, (finding) => finding.blocking);
+        const named = A.join(
+          A.map(A.take(blocking, FAILED_INVOCATION_NAMED_FINDINGS), (finding) => finding.id),
+          ", "
+        );
+        const more = A.length(blocking) - FAILED_INVOCATION_NAMED_FINDINGS;
+        return `Fallow ${feature} exited ${envelope.exitStatus} with ${A.length(blocking)} blocking finding(s) in an ok envelope: ${named}${more > 0 ? ` and ${more} more` : ""}.`;
+      },
+    })
+  );
 
 const readJsonDocument = Effect.fn("FallowQuality.readJsonDocument")(function* (
   filePath: string

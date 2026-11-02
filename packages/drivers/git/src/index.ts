@@ -37,7 +37,14 @@ export {
   UnknownRefError,
   WorktreeEntry,
 } from "./Git.ts";
-export { GitCommand, GitConfigScope, GitInvocation } from "./GitCommand.ts";
+export {
+  CurrentBranchMode,
+  GitCommand,
+  GitConfigScope,
+  GitInvocation,
+  StatusIgnoreSubmodules,
+  StatusUntrackedFiles,
+} from "./GitCommand.ts";
 export {
   GitConfig,
   GitConfigDiagnostic,
