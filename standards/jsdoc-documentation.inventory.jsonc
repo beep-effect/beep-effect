@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T17:49:07.979Z",
+  "generatedAt": "2026-11-02T16:47:09.117Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -359626,8 +359626,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 97,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-97-aimetricsconfigscope",
+          "line": 94,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-94-aimetricsconfigscope",
           "currentTags": [
             "@category",
             "@since"
@@ -359648,8 +359648,8 @@
           "exportKind": "type",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 110,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-110-aimetricsconfigscope",
+          "line": 107,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-107-aimetricsconfigscope",
           "currentTags": [
             "@see",
             "@category",
@@ -359671,8 +359671,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 133,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-133-aimetricsconfigsnapshotstage",
+          "line": 130,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-130-aimetricsconfigsnapshotstage",
           "currentTags": [
             "@category",
             "@since"
@@ -359693,8 +359693,8 @@
           "exportKind": "type",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 146,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-146-aimetricsconfigsnapshotstage",
+          "line": 143,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-143-aimetricsconfigsnapshotstage",
           "currentTags": [
             "@see",
             "@category",
@@ -359716,8 +359716,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 169,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-169-aimetricsconfigsnapshotstagetiming",
+          "line": 166,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-166-aimetricsconfigsnapshotstagetiming",
           "currentTags": [
             "@category",
             "@since"
@@ -359738,8 +359738,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 209,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-209-aimetricsconfigsnapshotbudget",
+          "line": 206,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-206-aimetricsconfigsnapshotbudget",
           "currentTags": [
             "@category",
             "@since"
@@ -359760,8 +359760,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 253,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-253-aimetricsconfigsnapshottruncationreason",
+          "line": 250,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-250-aimetricsconfigsnapshottruncationreason",
           "currentTags": [
             "@category",
             "@since"
@@ -359782,8 +359782,8 @@
           "exportKind": "type",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 266,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-266-aimetricsconfigsnapshottruncationreason",
+          "line": 263,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-263-aimetricsconfigsnapshottruncationreason",
           "currentTags": [
             "@see",
             "@category",
@@ -359805,8 +359805,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 301,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-301-aimetricsconfigsnapshotboundsreport",
+          "line": 298,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-298-aimetricsconfigsnapshotboundsreport",
           "currentTags": [
             "@category",
             "@since"
@@ -359827,8 +359827,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 357,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-357-aimetricsconfigsnapshotinput",
+          "line": 354,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-354-aimetricsconfigsnapshotinput",
           "currentTags": [
             "@see",
             "@category",
@@ -359850,8 +359850,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 408,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-408-aimetricsconfigsnapshotdiff",
+          "line": 405,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-405-aimetricsconfigsnapshotdiff",
           "currentTags": [
             "@category",
             "@since"
@@ -359872,8 +359872,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 461,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-461-aimetricsconfigsnapshotfile",
+          "line": 458,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-458-aimetricsconfigsnapshotfile",
           "currentTags": [
             "@see",
             "@category",
@@ -359895,8 +359895,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 528,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-528-aimetricsconfigsnapshotresult",
+          "line": 525,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-525-aimetricsconfigsnapshotresult",
           "currentTags": [
             "@see",
             "@category",
@@ -359918,8 +359918,8 @@
           "exportKind": "class",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 588,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-588-aimetricsconfigsnapshoterror",
+          "line": 585,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-585-aimetricsconfigsnapshoterror",
           "currentTags": [
             "@category",
             "@since"
@@ -359940,8 +359940,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 1258,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1258-makeaimetricsconfigsnapshot",
+          "line": 1244,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1244-makeaimetricsconfigsnapshot",
           "currentTags": [
             "@param",
             "@returns",
@@ -359964,8 +359964,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 1429,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1429-writeaimetricsconfigsnapshotartifacts",
+          "line": 1415,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1415-writeaimetricsconfigsnapshotartifacts",
           "currentTags": [
             "@effects",
             "@category",
@@ -359987,8 +359987,8 @@
           "exportKind": "const",
           "filePath": "src/config-snapshot.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
-          "line": 1528,
-          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1528-configsnapshottojson",
+          "line": 1514,
+          "anchor": "packages-tooling-library-ai-metrics-src-config-snapshot-ts-1514-configsnapshottojson",
           "currentTags": [
             "@see",
             "@category",
@@ -361954,8 +361954,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1536,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1536-runaimetricsforwarder",
+          "line": 1534,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1534-runaimetricsforwarder",
           "currentTags": [
             "@effects",
             "@see",
@@ -361978,8 +361978,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1805,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1805-forwarderrunresulttojson",
+          "line": 1803,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1803-forwarderrunresulttojson",
           "currentTags": [
             "@category",
             "@since"
@@ -362000,8 +362000,8 @@
           "exportKind": "const",
           "filePath": "src/forwarder.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/forwarder.ts",
-          "line": 1850,
-          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1850-forwardertimerplantojson",
+          "line": 1848,
+          "anchor": "packages-tooling-library-ai-metrics-src-forwarder-ts-1848-forwardertimerplantojson",
           "currentTags": [
             "@see",
             "@category",
@@ -505943,8 +505943,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.service.ts",
-          "line": 73,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-73-harnessledgerserviceshape",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-72-harnessledgerserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -505965,8 +505965,8 @@
           "exportKind": "class",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.service.ts",
-          "line": 148,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-148-harnessledgerservice",
+          "line": 147,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-147-harnessledgerservice",
           "currentTags": [
             "@category",
             "@since"
@@ -505987,8 +505987,8 @@
           "exportKind": "type",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.service.ts",
-          "line": 447,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-447-harnessledgerservicerequirements",
+          "line": 446,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-446-harnessledgerservicerequirements",
           "currentTags": [
             "@category",
             "@since"
@@ -506009,8 +506009,8 @@
           "exportKind": "const",
           "filePath": "src/commands/HarnessLedger/HarnessLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/HarnessLedger/HarnessLedger.service.ts",
-          "line": 487,
-          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-487-harnessledgerservicelive",
+          "line": 485,
+          "anchor": "packages-tooling-tool-cli-src-commands-harnessledger-harnessledger-service-ts-485-harnessledgerservicelive",
           "currentTags": [
             "@category",
             "@since"
