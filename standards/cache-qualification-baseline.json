@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (perf-turbo-cache-hygiene, claude/perf-turbo-cache-hygiene-ece673)",
-      "reason": "Re-record the legacy cache posture of // and all 188 workspace packages after the 2026-11-02 Turbo input hygiene: doctest excludes nested node_modules, lint/check/build drop package-relative .env inputs (Vite/Next apps keep .env* in overrides), and six root policy scans flip to cache: true after a purity read (goals:doctor stays uncached). No command, output or env key changed; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation W1b, feat/gh-git-w1b-yeet)",
+      "reason": "Record the W1b root re-seal: Yeet/internal/GitExec.ts enters the goals-doctor and knowledge policy closures after the leaf Git.make provisions in GitWorktree.ts and TmpfsReap.ts are dropped; no manifest or dependency changes; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-cache-hygiene-cache-review-2026-11-02.md",
-        "sha256": "0dea5f72a6c9b4a9d9df8247786529bade90284c1fa38439c7f777e6a40d20a4"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w1b.md",
+        "sha256": "23edadefc89d8f745b91a13deedf85bd65c6acbae19bd0f41b6a00cfac328764"
       }
     },
     "@beep/acp": {
@@ -3612,6 +3612,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -4262,6 +4263,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -121544,7 +121546,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "a1af1793e529a677da847bed131530da35919f4a82d6da110a711a2e6e5f0801"
+        "sha256": "9558f4c7e7d6b2835d737f9cf46e4220216765087868f2b79ed87146d9414881"
       }
     ]
   }
