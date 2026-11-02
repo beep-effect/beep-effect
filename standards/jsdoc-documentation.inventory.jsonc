@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T16:47:09.117Z",
+  "generatedAt": "2026-11-02T18:59:13.161Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3574,
-    "publicExports": 25425,
+    "publicExports": 25431,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -448392,7 +448392,7 @@
         "srcDir": "src",
         "sourceFileCount": 501,
         "publicModuleCount": 498,
-        "publicExportCount": 4681
+        "publicExportCount": 4687
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -450747,7 +450747,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 48,
+          "exportCount": 51,
           "remediationStatus": "resolved"
         },
         {
@@ -450915,7 +450915,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 20,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -457684,7 +457684,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 4,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -457750,7 +457750,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -457772,7 +457772,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -474694,8 +474694,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 111,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-111-settingsenvironment",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-115-settingsenvironment",
           "currentTags": [
             "@category",
             "@since"
@@ -474716,8 +474716,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 136,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-136-heldrun",
+          "line": 140,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-140-heldrun",
           "currentTags": [
             "@category",
             "@since"
@@ -474738,8 +474738,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-186-githubapireply",
+          "line": 190,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-190-githubapireply",
           "currentTags": [
             "@category",
             "@since"
@@ -474760,8 +474760,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-233-githubpolicyclient",
+          "line": 240,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-240-githubpolicyclient",
           "currentTags": [
             "@category",
             "@since"
@@ -474782,8 +474782,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 278,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-278-githubpolicyclientlive",
+          "line": 297,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-297-githubpolicyclientlive",
           "currentTags": [
             "@category",
             "@since"
@@ -474804,8 +474804,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 353,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-353-workflowpolicydiagnostics",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-372-workflowpolicydiagnostics",
           "currentTags": [
             "@category",
             "@since"
@@ -474826,8 +474826,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 388,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-388-setupcachewritedisabled",
+          "line": 407,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-407-setupcachewritedisabled",
           "currentTags": [
             "@category",
             "@since"
@@ -474848,8 +474848,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 414,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-414-workflowjobcontexts",
+          "line": 433,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-433-workflowjobcontexts",
           "currentTags": [
             "@category",
             "@since"
@@ -474870,8 +474870,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 456,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-456-prsizelabeldiff",
+          "line": 475,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-475-prsizelabeldiff",
           "currentTags": [
             "@param",
             "@returns",
@@ -474894,8 +474894,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 484,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-484-heldgrouprunids",
+          "line": 503,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-503-heldgrouprunids",
           "currentTags": [
             "@param",
             "@returns",
@@ -474918,8 +474918,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 527,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-527-desktopenvironmentapproved",
+          "line": 546,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-546-desktopenvironmentapproved",
           "currentTags": [
             "@param",
             "@returns",
@@ -474942,8 +474942,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 568,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-568-reviewerappintegrationmatches",
+          "line": 587,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-587-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -474966,8 +474966,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 766,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-766-cigovernancecommands",
+          "line": 783,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-783-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -476208,8 +476208,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiRerunRunnerLoss.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiRerunRunnerLoss.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-101-cirerunrunnerlossinput",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-92-cirerunrunnerlossinput",
           "currentTags": [
             "@category",
             "@since"
@@ -476230,8 +476230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiRerunRunnerLoss.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiRerunRunnerLoss.ts",
-          "line": 384,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-384-runcirerunrunnerloss",
+          "line": 401,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-401-runcirerunrunnerloss",
           "currentTags": [
             "@param",
             "@returns",
@@ -476254,8 +476254,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiRerunRunnerLoss.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiRerunRunnerLoss.ts",
-          "line": 461,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-461-cirerunrunnerlosscommand",
+          "line": 477,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cirerunrunnerloss-ts-477-cirerunrunnerlosscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -477754,8 +477754,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 94,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-94-cirunnerclass",
+          "line": 104,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-104-cirunnerclass",
           "currentTags": [
             "@category",
             "@since"
@@ -477776,8 +477776,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 107,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-107-cirunnerclass",
+          "line": 117,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-117-cirunnerclass",
           "currentTags": [
             "@category",
             "@since"
@@ -477798,8 +477798,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-141-ciworkflowjob",
+          "line": 151,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-151-ciworkflowjob",
           "currentTags": [
             "@category",
             "@since"
@@ -477820,8 +477820,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-210-ciworkflowjobspage",
+          "line": 220,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-220-ciworkflowjobspage",
           "currentTags": [
             "@category",
             "@since"
@@ -477842,8 +477842,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 255,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-255-cilanetimingrow",
+          "line": 265,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-265-cilanetimingrow",
           "currentTags": [
             "@category",
             "@since"
@@ -477864,8 +477864,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-298-cilanetimingsreport",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-308-cilanetimingsreport",
           "currentTags": [
             "@category",
             "@since"
@@ -477886,8 +477886,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 346,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-346-citimestampspanseconds",
+          "line": 356,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-356-citimestampspanseconds",
           "currentTags": [
             "@param",
             "@returns",
@@ -477910,8 +477910,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 396,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-396-attemptonepickupseconds",
+          "line": 406,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-406-attemptonepickupseconds",
           "currentTags": [
             "@param",
             "@returns",
@@ -477934,8 +477934,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 431,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-431-cirunnerclassforlabels",
+          "line": 441,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-441-cirunnerclassforlabels",
           "currentTags": [
             "@param",
             "@returns",
@@ -477958,8 +477958,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 468,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-468-ciworkflowjobshaperecord",
+          "line": 478,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-478-ciworkflowjobshaperecord",
           "currentTags": [
             "@param",
             "@returns",
@@ -477982,8 +477982,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 512,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-512-cilanetimingrow",
+          "line": 522,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-522-cilanetimingrow",
           "currentTags": [
             "@param",
             "@returns",
@@ -478006,8 +478006,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 563,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-563-withcilanepeakrss",
+          "line": 573,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-573-withcilanepeakrss",
           "currentTags": [
             "@param",
             "@returns",
@@ -478030,8 +478030,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 623,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-623-cilanetimingsreport",
+          "line": 633,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-633-cilanetimingsreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -478054,8 +478054,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 688,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-688-rendercilanetimingstsv",
+          "line": 698,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-698-rendercilanetimingstsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -478078,8 +478078,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 731,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-731-rendercilanetimingssummary",
+          "line": 741,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-741-rendercilanetimingssummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -478102,9 +478102,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 764,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-764-decodeciworkflowjobspage",
+          "line": 774,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-774-decodeciworkflowjobspage",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "githubStatusSuffix",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/LaneTimings.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "line": 881,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-881-githubstatussuffix",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -478124,8 +478148,56 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 931,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-931-ghapijson",
+          "line": 964,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-964-ghapijson",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "layerCiGithub",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/LaneTimings.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "line": 1007,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1007-layercigithub",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withCiGithub",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/LaneTimings.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "line": 1043,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1043-withcigithub",
           "currentTags": [
             "@param",
             "@returns",
@@ -478148,8 +478220,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1037,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1037-collectcilanetimings",
+          "line": 1127,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1127-collectcilanetimings",
           "currentTags": [
             "@param",
             "@returns",
@@ -478172,8 +478244,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1079,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1079-cilanetimingwindowevent",
+          "line": 1160,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1160-cilanetimingwindowevent",
           "currentTags": [
             "@category",
             "@since"
@@ -478194,8 +478266,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1100,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1100-cilanetimingwindowevent",
+          "line": 1181,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1181-cilanetimingwindowevent",
           "currentTags": [
             "@category",
             "@since"
@@ -478216,8 +478288,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1144,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1144-cilanetimingwindowoptions",
+          "line": 1225,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1225-cilanetimingwindowoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -478238,8 +478310,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1184,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1184-cirulesethistoryversion",
+          "line": 1265,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1265-cirulesethistoryversion",
           "currentTags": [
             "@category",
             "@since"
@@ -478260,8 +478332,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1236,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1236-cirulesetpopulationchange",
+          "line": 1317,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1317-cirulesetpopulationchange",
           "currentTags": [
             "@category",
             "@since"
@@ -478282,8 +478354,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1276,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1276-cilanetimingwindowguardreason",
+          "line": 1357,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1357-cilanetimingwindowguardreason",
           "currentTags": [
             "@category",
             "@since"
@@ -478304,8 +478376,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1304,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1304-cilanetimingwindowguardreason",
+          "line": 1385,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1385-cilanetimingwindowguardreason",
           "currentTags": [
             "@category",
             "@since"
@@ -478326,8 +478398,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1337,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1337-cilanetimingwindowguardverdict",
+          "line": 1418,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1418-cilanetimingwindowguardverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -478348,8 +478420,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1378,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1378-ciworkflowwindowrun",
+          "line": 1459,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1459-ciworkflowwindowrun",
           "currentTags": [
             "@category",
             "@since"
@@ -478370,8 +478442,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1418,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1418-ciworkflowwindowrunjobs",
+          "line": 1499,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1499-ciworkflowwindowrunjobs",
           "currentTags": [
             "@category",
             "@since"
@@ -478392,8 +478464,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1532,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1532-cilanetimingwindowstat",
+          "line": 1613,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1613-cilanetimingwindowstat",
           "currentTags": [
             "@category",
             "@since"
@@ -478414,8 +478486,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1574,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1574-cilanetimingattributionstat",
+          "line": 1655,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1655-cilanetimingattributionstat",
           "currentTags": [
             "@category",
             "@since"
@@ -478436,8 +478508,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1618,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1618-cilanetimingpickupstat",
+          "line": 1699,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1699-cilanetimingpickupstat",
           "currentTags": [
             "@category",
             "@since"
@@ -478458,8 +478530,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1660,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1660-cilanetimingdaypeak",
+          "line": 1741,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1741-cilanetimingdaypeak",
           "currentTags": [
             "@category",
             "@since"
@@ -478480,8 +478552,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1699,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1699-cilanetimingwindowreport",
+          "line": 1780,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1780-cilanetimingwindowreport",
           "currentTags": [
             "@category",
             "@since"
@@ -478502,8 +478574,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1763,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1763-cilanetimingratifiedpopulation",
+          "line": 1844,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1844-cilanetimingratifiedpopulation",
           "currentTags": [
             "@category",
             "@since"
@@ -478524,8 +478596,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1957,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1957-cilanetiminggithubclientshape",
+          "line": 2039,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2039-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -478546,8 +478618,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1980,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1980-cilanetiminggithubclient",
+          "line": 2058,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2058-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -478568,8 +478640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2160,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2160-collectrequiredcontexts",
+          "line": 2229,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2229-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -478592,8 +478664,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2743,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2743-buildcilanetimingwindowreport",
+          "line": 2805,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2805-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -478616,8 +478688,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2835,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2835-collectcilanetimingwindow",
+          "line": 2895,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2895-collectcilanetimingwindow",
           "currentTags": [
             "@param",
             "@returns",
@@ -478640,8 +478712,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3115,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3115-cilanetimingdaypeaks",
+          "line": 3174,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3174-cilanetimingdaypeaks",
           "currentTags": [
             "@param",
             "@returns",
@@ -478664,8 +478736,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3224,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3224-rendercilanetimingwindowmarkdown",
+          "line": 3283,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3283-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -478688,8 +478760,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3261,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3261-rendercilanetimingwindowsummary",
+          "line": 3320,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3320-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -478712,8 +478784,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3374,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3374-rendercilanetimingwindowtsv",
+          "line": 3433,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3433-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -478736,8 +478808,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3476,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3476-assesscilanetimingwindowbounds",
+          "line": 3535,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3535-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478760,8 +478832,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3524,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3524-assesscilanetimingwindowpopulation",
+          "line": 3583,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3583-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -478784,8 +478856,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3562,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3562-rendercilanetimingwindowpreviewbanner",
+          "line": 3621,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3621-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -478808,8 +478880,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3597,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3597-guardcilanetimingwindowbounds",
+          "line": 3656,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3656-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478832,8 +478904,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3747,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3747-cilanetimingscommand",
+          "line": 3806,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3806-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -481144,36 +481216,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "runnerLossRerunArgs",
-          "exportKind": "const",
-          "filePath": "src/commands/Ci/RunnerLossRerun.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RunnerLossRerun.ts",
-          "line": 806,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-runnerlossrerun-ts-806-runnerlossrerunargs",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "renderRunnerLossRerunSummary",
           "exportKind": "const",
           "filePath": "src/commands/Ci/RunnerLossRerun.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/RunnerLossRerun.ts",
-          "line": 897,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-runnerlossrerun-ts-897-renderrunnerlossrerunsummary",
+          "line": 859,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-runnerlossrerun-ts-859-renderrunnerlossrerunsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -546481,12 +546529,80 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "REVIEWER_TOKEN_PERMISSIONS",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
+          "line": 57,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-57-reviewer-token-permissions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "REVIEWER_TOKEN_REFRESH_SKEW",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-78-reviewer-token-refresh-skew",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "reviewerTokenRequest",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
+          "line": 104,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-104-reviewertokenrequest",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "loadReviewerCredentials",
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 97,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-97-loadreviewercredentials",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-163-loadreviewercredentials",
           "currentTags": [
             "@category",
             "@since"
@@ -546507,9 +546623,33 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-141-githubappauth",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-216-githubappauth",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "mintReviewerToken",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-254-mintreviewertoken",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -546529,8 +546669,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 157,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-157-makegithubappauth",
+          "line": 287,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-287-makegithubappauth",
           "currentTags": [
             "@param",
             "@returns",
@@ -546553,8 +546693,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 258,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-258-githubappauthlive",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-333-githubappauthlive",
           "currentTags": [
             "@category",
             "@since"
@@ -546575,8 +546715,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerCommand.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerCommand.ts",
-          "line": 205,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-205-reviewercommand",
+          "line": 213,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewercommand-ts-213-reviewercommand",
           "currentTags": [
             "@category",
             "@since"
@@ -546637,34 +546777,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ReviewerInstallationToken",
-          "exportKind": "class",
-          "filePath": "src/commands/Reviewer/ReviewerModels.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 48,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-48-reviewerinstallationtoken",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "ReviewerAnnotation",
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-71-reviewerannotation",
+          "line": 49,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-49-reviewerannotation",
           "currentTags": [
             "@category",
             "@since"
@@ -546685,8 +546803,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 97,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-97-reviewerinlinecomment",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-75-reviewerinlinecomment",
           "currentTags": [
             "@category",
             "@since"
@@ -546707,8 +546825,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-123-reviewerreview",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-101-reviewerreview",
           "currentTags": [
             "@category",
             "@since"
@@ -546729,8 +546847,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 144,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-144-reviewerchangedfile",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-122-reviewerchangedfile",
           "currentTags": [
             "@category",
             "@since"
@@ -546751,8 +546869,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 164,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-164-reviewerresult",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-142-reviewerresult",
           "currentTags": [
             "@category",
             "@since"
@@ -546773,8 +546891,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerModels.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-          "line": 191,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-191-reviewerwire",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewermodels-ts-169-reviewerwire",
           "currentTags": [
             "@category",
             "@since"
@@ -546795,8 +546913,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-89-reviewercheckexternalid",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-88-reviewercheckexternalid",
           "currentTags": [
             "@category",
             "@since"
@@ -546817,8 +546935,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-114-reviewercheckexternalid",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-113-reviewercheckexternalid",
           "currentTags": [
             "@category",
             "@since"
@@ -546835,13 +546953,39 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "reviewerGh",
+          "symbolName": "reviewerOperatorClient",
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-141-reviewergh",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-152-revieweroperatorclient",
           "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "withReviewerOperatorClient",
+          "exportKind": "const",
+          "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-189-withrevieweroperatorclient",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -546861,8 +547005,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 212,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-212-requirereviewerinruleset",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-246-requirereviewerinruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -546883,8 +547027,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 234,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-234-releasereviewerinruleset",
+          "line": 268,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-268-releasereviewerinruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -546905,8 +547049,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 310,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-310-requirereviewerruleset",
+          "line": 353,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-353-requirereviewerruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -546927,8 +547071,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 336,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-336-releasereviewerruleset",
+          "line": 379,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-379-releasereviewerruleset",
           "currentTags": [
             "@category",
             "@since"
@@ -546949,8 +547093,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 355,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-355-reviewerchecksatisfied",
+          "line": 398,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-398-reviewerchecksatisfied",
           "currentTags": [
             "@category",
             "@since"
@@ -546971,8 +547115,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 392,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-392-reviewerdocsonly",
+          "line": 435,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-435-reviewerdocsonly",
           "currentTags": [
             "@param",
             "@returns",
@@ -546995,8 +547139,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerRuleset.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-          "line": 450,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-450-enforcereviewergate",
+          "line": 492,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerruleset-ts-492-enforcereviewergate",
           "currentTags": [
             "@category",
             "@since"
@@ -547017,8 +547161,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerService.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-101-reviewerconclusion",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-88-reviewerconclusion",
           "currentTags": [
             "@param",
             "@returns",
@@ -547041,8 +547185,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerService.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-117-isreviewersummary",
+          "line": 104,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-104-isreviewersummary",
           "currentTags": [
             "@category",
             "@since"
@@ -547063,8 +547207,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/ReviewerService.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-          "line": 154,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-154-reviewer",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-141-reviewer",
           "currentTags": [
             "@category",
             "@since"
@@ -547085,8 +547229,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/ReviewerService.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-169-reviewerlive",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-reviewerservice-ts-165-reviewerlive",
           "currentTags": [
             "@category",
             "@since"
@@ -547163,12 +547307,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  ReviewerAnnotation,\n  ReviewerChangedFile,\n  ReviewerCredentials,\n  ReviewerInlineComment,\n  ReviewerInstallationToken,\n  ReviewerResult,\n  ReviewerReview,\n  reviewerWire,\n} from \"./ReviewerModels.ts\";",
+          "symbolName": "export {\n  ReviewerAnnotation,\n  ReviewerChangedFile,\n  ReviewerCredentials,\n  ReviewerInlineComment,\n  ReviewerResult,\n  ReviewerReview,\n  reviewerWire,\n} from \"./ReviewerModels.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Reviewer/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/index.ts",
           "line": 10,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-10-export-reviewerannotation-reviewerchangedfile-reviewercredentials-reviewerinlinecomment-reviewerinstallationtoken-reviewerresult-reviewerreview-reviewerwire-from-reviewermodels-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-10-export-reviewerannotation-reviewerchangedfile-reviewercredentials-reviewerinlinecomment-reviewerresult-reviewerreview-reviewerwire-from-reviewermodels-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -547186,8 +547330,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Reviewer/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/index.ts",
-          "line": 20,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-20-export-from-reviewerruleset-ts",
+          "line": 19,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-19-export-from-reviewerruleset-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -547205,8 +547349,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Reviewer/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/index.ts",
-          "line": 21,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-21-export-from-reviewerservice-ts",
+          "line": 20,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-index-ts-20-export-from-reviewerservice-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
