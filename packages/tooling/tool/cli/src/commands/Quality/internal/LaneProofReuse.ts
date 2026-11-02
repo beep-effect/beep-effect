@@ -20,8 +20,8 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { turboEnvExtendsAmbient } from "../../../internal/cli/EnvConfig.ts";
+import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import type { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 
@@ -155,27 +155,23 @@ const environmentProfileHash = Effect.fnUntraced(function* (lane: GithubCheckLan
   );
 });
 
-const runGit = (
+// Git runs as an async child so the virtual-tree hash of one battery never
+// blocks the event loop that the battery's running lanes share.
+const runGit = Effect.fnUntraced(function* (
   cwd: string,
   args: ReadonlyArray<string>,
   env?: Readonly<Record<string, string | undefined>>
-): Effect.Effect<string, LaneProofGitError> =>
-  Effect.try({
-    try: () =>
-      Bun.spawnSync(["git", ...args], {
-        cwd,
-        env: { ...Bun.env, ...env },
-        stderr: "pipe",
-        stdout: "pipe",
-      }),
-    catch: () => LaneProofGitError.make({ message: `Unable to run git ${A.join(args, " ")}.` }),
-  }).pipe(
-    Effect.flatMap((result) =>
-      result.exitCode === 0
-        ? Effect.succeed(Str.trim(result.stdout.toString()))
-        : Effect.fail(LaneProofGitError.make({ message: Str.trim(result.stderr.toString()) }))
-    )
-  );
+) {
+  const result = yield* runCapturedStreams({
+    command: "git",
+    args,
+    cwd,
+    ...(env === undefined ? {} : { env: { ...env } }),
+    extendEnv: true,
+    trim: true,
+  }).pipe(Effect.mapError(() => LaneProofGitError.make({ message: `Unable to run git ${A.join(args, " ")}.` })));
+  return result.exitCode === 0 ? result.stdout : yield* LaneProofGitError.make({ message: result.stderr });
+});
 
 const virtualTreeSha = Effect.fn("LaneProofReuse.virtualTreeSha")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -222,8 +218,10 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   modeOverride?: LaneProofSession["mode"]
 ) {
   const mode = modeOverride ?? laneProofMode();
-  const first = A.head(lanes);
-  if (mode === "off" || O.isNone(first) || A.some(lanes, (lane) => lane.step.cwd !== first.value.step.cwd)) {
+  // Lanes that can never be reused never pay for the virtual-tree hash.
+  const reusableLanes = A.filter(lanes, (lane) => !isNonReusableLaneProofId(lane.id));
+  const first = A.head(reusableLanes);
+  if (mode === "off" || O.isNone(first) || A.some(reusableLanes, (lane) => lane.step.cwd !== first.value.step.cwd)) {
     return O.none<LaneProofSession>();
   }
 
@@ -233,25 +231,28 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
   const storePath = path.join(repoRoot, ".beep", "yeet", "lane-proofs.json");
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: Declared in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
   const proofBase = Bun.env.BEEP_YEET_PROOF_BASE ?? "origin/main";
-  const prepared = yield* Effect.all({
-    baseSha: runGit(repoRoot, ["rev-parse", proofBase]),
-    headSha: runGit(repoRoot, ["rev-parse", "HEAD"]),
-  }).pipe(Effect.option);
+  const prepared = yield* Effect.all(
+    {
+      baseSha: runGit(repoRoot, ["rev-parse", proofBase]),
+      headSha: runGit(repoRoot, ["rev-parse", "HEAD"]),
+      tree: virtualTreeSha(repoRoot),
+    },
+    { concurrency: "unbounded" }
+  ).pipe(Effect.option);
   if (O.isNone(prepared)) return O.none<LaneProofSession>();
 
-  const tree = yield* virtualTreeSha(repoRoot).pipe(Effect.option);
-  if (O.isNone(tree)) return O.none<LaneProofSession>();
+  const { baseSha, headSha, tree } = prepared.value;
   const store = yield* loadStore(storePath);
   const identities = yield* Effect.forEach(
-    A.filter(lanes, (lane) => !isNonReusableLaneProofId(lane.id)),
+    reusableLanes,
     Effect.fnUntraced(function* (lane) {
       return LaneProofIdentity.make({
         laneId: lane.id,
         commandHash: yield* laneCommandHash(lane),
-        inputHash: yield* hashText(`${lane.id}\0${tree.value}`),
-        mergedTreeSha: tree.value,
-        headSha: prepared.value.headSha,
-        baseSha: prepared.value.baseSha,
+        inputHash: yield* hashText(`${lane.id}\0${tree}`),
+        mergedTreeSha: tree,
+        headSha,
+        baseSha,
         envProfileHash: yield* environmentProfileHash(lane),
       });
     }),
@@ -307,19 +308,32 @@ export const hasReusableLaneProof: {
 /**
  * Atomically merge successful lane results into the durable proof store.
  *
+ * **Details**
+ *
+ * A proof is written only when the lane's identity at the start of the run
+ * still matches `refreshed`, the session prepared after the run. That is the
+ * moved-tree fence: a lane battery that changed a non-ignored file persists
+ * nothing. A caller that already holds the post-run session passes it as
+ * `refreshed` so one virtual-tree hash serves the fence and the next battery;
+ * without it this function prepares one for the successful lanes.
+ *
  * @category persistence
  */
 export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
   session: LaneProofSession,
-  successes: ReadonlyArray<readonly [lane: GithubCheckLaneSpec, durationMs: number]>
+  successes: ReadonlyArray<readonly [lane: GithubCheckLaneSpec, durationMs: number]>,
+  refreshed?: LaneProofSession
 ) {
   if (A.isReadonlyArrayEmpty(successes)) return;
-  const refreshed = yield* prepareLaneProofSession(
-    A.map(successes, ([lane]) => lane),
-    session.mode
-  );
-  if (O.isNone(refreshed)) return;
-  const refreshedSession = refreshed.value;
+  const current =
+    refreshed === undefined
+      ? yield* prepareLaneProofSession(
+          A.map(successes, ([lane]) => lane),
+          session.mode
+        )
+      : O.some(refreshed);
+  if (O.isNone(current)) return;
+  const refreshedSession = current.value;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const verifiedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
