@@ -52,6 +52,7 @@ import { openSessionRows } from "../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger, sessionCheckoutFacts } from "../Session/SessionLedger.service.ts";
 import { loadYeetInboxView } from "../Yeet/internal/InboxView.ts";
 import { ProofJobLauncher } from "../Yeet/internal/ProofJobLauncher.ts";
+import type { Git } from "@beep/git/Git";
 import type { ParcelId, SessionKey } from "@beep/palantiri";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -527,7 +528,7 @@ export const proofJobInput = (record: ProofJobRecord): O.Option<ProofJobInput> =
 export type CheckoutFactsProbe = Effect.Effect<
   SessionCheckoutFacts,
   SessionLedgerError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Path.Path | Digest.Digest
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Path.Path | Digest.Digest | Git
 >;
 
 const laneRedsFailed = failedFor("lane-reds");
@@ -565,6 +566,7 @@ export const makeLaneRedsSource = Effect.fnUntraced(function* (facts: CheckoutFa
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
     | SessionLedger
   >();
   const fs = yield* FileSystem.FileSystem;
@@ -805,6 +807,7 @@ export const makeSinceLastCheckSource = Effect.fnUntraced(function* (facts: Chec
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >();
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

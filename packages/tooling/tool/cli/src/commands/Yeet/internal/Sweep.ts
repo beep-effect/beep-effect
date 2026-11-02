@@ -92,6 +92,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
@@ -101,7 +102,7 @@ import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { constFalse, dual, flow, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -889,7 +890,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
 ): Effect.fn.Return<
   SweepGitState,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const branch = yield* refuseUnsafeName(context.branch, "branch");
   const mainBranch = yield* refuseUnsafeName(mainBranchFromContext(context), "base branch");
@@ -913,12 +914,11 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
           return { tip, absent: !probeUnreliable(probe) && O.isNone(tip) };
         })
       );
-  const ancestry = yield* captureGit(repoRoot, [
-    "merge-base",
-    "--is-ancestor",
-    `refs/heads/${branch}`,
-    `refs/remotes/origin/${mainBranch}`,
-  ]);
+  // `Git.isAncestor` is `false` for a non-ancestor; a missing ref, a non-repository or a spawn
+  // failure also reads as "not merged", the conservative answer the exit-code probe gave.
+  const merged = yield* Effect.flatMap(Git, (git) =>
+    git.isAncestor(repoRoot, `refs/heads/${branch}`, `refs/remotes/origin/${mainBranch}`)
+  ).pipe(Effect.orElseSucceed(constFalse));
   const lockfile = yield* captureGit(repoRoot, [
     "diff",
     "--name-only",
@@ -940,7 +940,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
     mainCheckedOutElsewhere:
       probeUnreliable(worktreeList) || heldByOtherWorktree(worktrees, mainBranch, toplevel.output),
     branchCheckedOutElsewhere: probeUnreliable(worktreeList) || heldByOtherWorktree(worktrees, branch, toplevel.output),
-    branchMergedIntoBase: ancestry.exitCode === 0 && O.isSome(localTip),
+    branchMergedIntoBase: merged && O.isSome(localTip),
     lockfileMovedOnMainUpdate: lockfile.exitCode === 0 && Str.isNonEmpty(lockfile.output),
     statusProbeUnreliable: probeUnreliable(status),
     worktreeProbeUnreliable: probeUnreliable(worktreeList),
@@ -987,7 +987,11 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
  */
 export const planSweep = Effect.fn("Yeet.planSweep")(function* (
   context: RepoRunContext
-): Effect.fn.Return<SweepPlan, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+): Effect.fn.Return<
+  SweepPlan,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
   const createdAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   return buildSweepPlan(yield* observeSweepGitState(context), createdAt);
 });
@@ -1379,7 +1383,7 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
 ): Effect.fn.Return<
   SweepStepOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const probe = yield* captureGit(cwd, ["worktree", "list", "--porcelain"]);
   if (probeUnreliable(probe)) {
@@ -1426,7 +1430,7 @@ const performSweepStep = (
 ): Effect.Effect<
   SweepStepOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > =>
   SweepStepId.match(planStep.id, {
     "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
@@ -1472,7 +1476,7 @@ const runSweepStep = Effect.fn("Yeet.runSweepStep")(function* (
 ): Effect.fn.Return<
   SweepReportStep,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const startedAt = yield* Clock.currentTimeMillis;
   const blocked = sweepStepBlockers(planStep);
@@ -1554,7 +1558,7 @@ export const executeSweep = Effect.fn("Yeet.executeSweep")(function* (
 ): Effect.fn.Return<
   SweepReport,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const state = yield* observeSweepGitState(context);

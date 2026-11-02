@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (perf-lane-dedupe)",
-      "reason": "Re-record the legacy cache posture of the root subject after turbo.json gained the cached //#lint:schema-catalog task and its generated fingerprint seal, and the root manifest gained the two matching scripts; every other root task drifts only through the root scripts digest. No command, input, output, cache flag or env key of existing tasks changed; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 kit, feat/gh-git-w3-github-kit)",
+      "reason": "Record the W3 kit root re-seal: GitHubApp.ts imports TokenPermissions.ts for assertPermissions, so that module enters the goals-doctor, knowledge and quality policy closures; no manifest or dependency changes; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-lane-dedupe-cache-review-2026-11-02.md",
-        "sha256": "be9bd6c8888db9cf747d256994631246a769558e3a7613bc4db0fa8b03f5428f"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-kit.md",
+        "sha256": "58cc1d9ee7a6c287e1129676ed3af4ad9b70a6825554d766b77c8b6656e0d737"
       }
     },
     "@beep/acp": {
@@ -3340,6 +3340,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -3593,6 +3594,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
             "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -3612,6 +3614,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -3891,6 +3894,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -4209,6 +4213,7 @@
             "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
             "packages/tooling/tool/cli/src/commands/Models/Models.spans.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4262,6 +4267,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/CheckOutcome.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
@@ -4917,6 +4923,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4948,6 +4955,8 @@
             "packages/tooling/tool/cli/src/internal/ratchet/index.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts"
           ],
           "env": [],
@@ -6115,6 +6124,7 @@
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+            "packages/tooling/tool/cli/src/internal/cli/ShardScope.ts",
             "packages/tooling/tool/cli/src/internal/cli/Timing.ts",
             "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
             "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
@@ -6354,6 +6364,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -121732,7 +121743,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "203034f32fd82d2b9097cd675c4585dcc81f41725dd5fbf2029b8830a45846f1"
+        "sha256": "6752d1b732291201c5669d9879cdcb71a8347fed85a9f1e44638fa1c75b13fab"
       }
     ]
   }
