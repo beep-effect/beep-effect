@@ -1,0 +1,2576 @@
+{
+  "schemaVersion": "repo-cli-gh-git-consolidation/review-thread-differential-w4/v1",
+  "base": "930758e06b",
+  "frozen": "ops/frozen-w4/",
+  "counts": {
+    "scenarios": 40,
+    "same": 29,
+    "classified": 11,
+    "unclassified": 0
+  },
+  "rows": [
+    {
+      "site": "GhOps.readOutstandingThreads",
+      "scenario": "empty",
+      "old": {
+        "ok": 0
+      },
+      "new": {
+        "ok": 0
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhOps.readOutstandingThreads",
+      "scenario": "mixed",
+      "old": {
+        "ok": 3
+      },
+      "new": {
+        "ok": 3
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhOps.readOutstandingThreads",
+      "scenario": "twoPages",
+      "old": {
+        "ok": 103
+      },
+      "new": {
+        "ok": 103
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhOps.readOutstandingThreads",
+      "scenario": "missingCursor",
+      "old": {
+        "fail": "pullRequestReviewThreads failed: another page was reported without an end cursor"
+      },
+      "new": {
+        "fail": "pullRequestReviewThreads failed: another page was reported without an end cursor"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhOps.readOutstandingThreads",
+      "scenario": "repeatedCursor",
+      "old": {
+        "fail": "pullRequestReviewThreads failed: more than 20 pages of review threads"
+      },
+      "new": {
+        "fail": "pullRequestReviewThreads failed: the same end cursor was reported twice"
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "empty",
+      "old": {
+        "ok": {
+          "available": true,
+          "unresolved": 0,
+          "unresolvedThreads": [],
+          "followUp": 0,
+          "acknowledged": 0
+        }
+      },
+      "new": {
+        "ok": {
+          "available": true,
+          "unresolved": 0,
+          "unresolvedThreads": [],
+          "followUp": 0,
+          "acknowledged": 0
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "mixed",
+      "old": {
+        "ok": {
+          "available": true,
+          "unresolved": 2,
+          "unresolvedThreads": [
+            "PRRT_open (src/a.ts)",
+            "PRRT_outdated (src/a.ts)"
+          ],
+          "followUp": 1,
+          "acknowledged": 1
+        }
+      },
+      "new": {
+        "ok": {
+          "available": true,
+          "unresolved": 2,
+          "unresolvedThreads": [
+            "PRRT_open (src/a.ts)",
+            "PRRT_outdated (src/a.ts)"
+          ],
+          "followUp": 1,
+          "acknowledged": 1
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "twoPages",
+      "old": {
+        "ok": {
+          "available": true,
+          "unresolved": 102,
+          "unresolvedThreads": [
+            "PRRT_a0 (src/a.ts)",
+            "PRRT_a1 (src/a.ts)",
+            "PRRT_a2 (src/a.ts)",
+            "PRRT_a3 (src/a.ts)",
+            "PRRT_a4 (src/a.ts)",
+            "PRRT_a5 (src/a.ts)",
+            "PRRT_a6 (src/a.ts)",
+            "PRRT_a7 (src/a.ts)",
+            "PRRT_a8 (src/a.ts)",
+            "PRRT_a9 (src/a.ts)",
+            "PRRT_a10 (src/a.ts)",
+            "PRRT_a11 (src/a.ts)",
+            "PRRT_a12 (src/a.ts)",
+            "PRRT_a13 (src/a.ts)",
+            "PRRT_a14 (src/a.ts)",
+            "PRRT_a15 (src/a.ts)",
+            "PRRT_a16 (src/a.ts)",
+            "PRRT_a17 (src/a.ts)",
+            "PRRT_a18 (src/a.ts)",
+            "PRRT_a19 (src/a.ts)",
+            "PRRT_a20 (src/a.ts)",
+            "PRRT_a21 (src/a.ts)",
+            "PRRT_a22 (src/a.ts)",
+            "PRRT_a23 (src/a.ts)",
+            "PRRT_a24 (src/a.ts)",
+            "PRRT_a25 (src/a.ts)",
+            "PRRT_a26 (src/a.ts)",
+            "PRRT_a27 (src/a.ts)",
+            "PRRT_a28 (src/a.ts)",
+            "PRRT_a29 (src/a.ts)",
+            "PRRT_a30 (src/a.ts)",
+            "PRRT_a31 (src/a.ts)",
+            "PRRT_a32 (src/a.ts)",
+            "PRRT_a33 (src/a.ts)",
+            "PRRT_a34 (src/a.ts)",
+            "PRRT_a35 (src/a.ts)",
+            "PRRT_a36 (src/a.ts)",
+            "PRRT_a37 (src/a.ts)",
+            "PRRT_a38 (src/a.ts)",
+            "PRRT_a39 (src/a.ts)",
+            "PRRT_a40 (src/a.ts)",
+            "PRRT_a41 (src/a.ts)",
+            "PRRT_a42 (src/a.ts)",
+            "PRRT_a43 (src/a.ts)",
+            "PRRT_a44 (src/a.ts)",
+            "PRRT_a45 (src/a.ts)",
+            "PRRT_a46 (src/a.ts)",
+            "PRRT_a47 (src/a.ts)",
+            "PRRT_a48 (src/a.ts)",
+            "PRRT_a49 (src/a.ts)",
+            "PRRT_a50 (src/a.ts)",
+            "PRRT_a51 (src/a.ts)",
+            "PRRT_a52 (src/a.ts)",
+            "PRRT_a53 (src/a.ts)",
+            "PRRT_a54 (src/a.ts)",
+            "PRRT_a55 (src/a.ts)",
+            "PRRT_a56 (src/a.ts)",
+            "PRRT_a57 (src/a.ts)",
+            "PRRT_a58 (src/a.ts)",
+            "PRRT_a59 (src/a.ts)",
+            "PRRT_a60 (src/a.ts)",
+            "PRRT_a61 (src/a.ts)",
+            "PRRT_a62 (src/a.ts)",
+            "PRRT_a63 (src/a.ts)",
+            "PRRT_a64 (src/a.ts)",
+            "PRRT_a65 (src/a.ts)",
+            "PRRT_a66 (src/a.ts)",
+            "PRRT_a67 (src/a.ts)",
+            "PRRT_a68 (src/a.ts)",
+            "PRRT_a69 (src/a.ts)",
+            "PRRT_a70 (src/a.ts)",
+            "PRRT_a71 (src/a.ts)",
+            "PRRT_a72 (src/a.ts)",
+            "PRRT_a73 (src/a.ts)",
+            "PRRT_a74 (src/a.ts)",
+            "PRRT_a75 (src/a.ts)",
+            "PRRT_a76 (src/a.ts)",
+            "PRRT_a77 (src/a.ts)",
+            "PRRT_a78 (src/a.ts)",
+            "PRRT_a79 (src/a.ts)",
+            "PRRT_a80 (src/a.ts)",
+            "PRRT_a81 (src/a.ts)",
+            "PRRT_a82 (src/a.ts)",
+            "PRRT_a83 (src/a.ts)",
+            "PRRT_a84 (src/a.ts)",
+            "PRRT_a85 (src/a.ts)",
+            "PRRT_a86 (src/a.ts)",
+            "PRRT_a87 (src/a.ts)",
+            "PRRT_a88 (src/a.ts)",
+            "PRRT_a89 (src/a.ts)",
+            "PRRT_a90 (src/a.ts)",
+            "PRRT_a91 (src/a.ts)",
+            "PRRT_a92 (src/a.ts)",
+            "PRRT_a93 (src/a.ts)",
+            "PRRT_a94 (src/a.ts)",
+            "PRRT_a95 (src/a.ts)",
+            "PRRT_a96 (src/a.ts)",
+            "PRRT_a97 (src/a.ts)",
+            "PRRT_a98 (src/a.ts)",
+            "PRRT_a99 (src/a.ts)",
+            "PRRT_open (src/a.ts)",
+            "PRRT_outdated (src/a.ts)"
+          ],
+          "followUp": 1,
+          "acknowledged": 1
+        }
+      },
+      "new": {
+        "ok": {
+          "available": true,
+          "unresolved": 102,
+          "unresolvedThreads": [
+            "PRRT_a0 (src/a.ts)",
+            "PRRT_a1 (src/a.ts)",
+            "PRRT_a2 (src/a.ts)",
+            "PRRT_a3 (src/a.ts)",
+            "PRRT_a4 (src/a.ts)",
+            "PRRT_a5 (src/a.ts)",
+            "PRRT_a6 (src/a.ts)",
+            "PRRT_a7 (src/a.ts)",
+            "PRRT_a8 (src/a.ts)",
+            "PRRT_a9 (src/a.ts)",
+            "PRRT_a10 (src/a.ts)",
+            "PRRT_a11 (src/a.ts)",
+            "PRRT_a12 (src/a.ts)",
+            "PRRT_a13 (src/a.ts)",
+            "PRRT_a14 (src/a.ts)",
+            "PRRT_a15 (src/a.ts)",
+            "PRRT_a16 (src/a.ts)",
+            "PRRT_a17 (src/a.ts)",
+            "PRRT_a18 (src/a.ts)",
+            "PRRT_a19 (src/a.ts)",
+            "PRRT_a20 (src/a.ts)",
+            "PRRT_a21 (src/a.ts)",
+            "PRRT_a22 (src/a.ts)",
+            "PRRT_a23 (src/a.ts)",
+            "PRRT_a24 (src/a.ts)",
+            "PRRT_a25 (src/a.ts)",
+            "PRRT_a26 (src/a.ts)",
+            "PRRT_a27 (src/a.ts)",
+            "PRRT_a28 (src/a.ts)",
+            "PRRT_a29 (src/a.ts)",
+            "PRRT_a30 (src/a.ts)",
+            "PRRT_a31 (src/a.ts)",
+            "PRRT_a32 (src/a.ts)",
+            "PRRT_a33 (src/a.ts)",
+            "PRRT_a34 (src/a.ts)",
+            "PRRT_a35 (src/a.ts)",
+            "PRRT_a36 (src/a.ts)",
+            "PRRT_a37 (src/a.ts)",
+            "PRRT_a38 (src/a.ts)",
+            "PRRT_a39 (src/a.ts)",
+            "PRRT_a40 (src/a.ts)",
+            "PRRT_a41 (src/a.ts)",
+            "PRRT_a42 (src/a.ts)",
+            "PRRT_a43 (src/a.ts)",
+            "PRRT_a44 (src/a.ts)",
+            "PRRT_a45 (src/a.ts)",
+            "PRRT_a46 (src/a.ts)",
+            "PRRT_a47 (src/a.ts)",
+            "PRRT_a48 (src/a.ts)",
+            "PRRT_a49 (src/a.ts)",
+            "PRRT_a50 (src/a.ts)",
+            "PRRT_a51 (src/a.ts)",
+            "PRRT_a52 (src/a.ts)",
+            "PRRT_a53 (src/a.ts)",
+            "PRRT_a54 (src/a.ts)",
+            "PRRT_a55 (src/a.ts)",
+            "PRRT_a56 (src/a.ts)",
+            "PRRT_a57 (src/a.ts)",
+            "PRRT_a58 (src/a.ts)",
+            "PRRT_a59 (src/a.ts)",
+            "PRRT_a60 (src/a.ts)",
+            "PRRT_a61 (src/a.ts)",
+            "PRRT_a62 (src/a.ts)",
+            "PRRT_a63 (src/a.ts)",
+            "PRRT_a64 (src/a.ts)",
+            "PRRT_a65 (src/a.ts)",
+            "PRRT_a66 (src/a.ts)",
+            "PRRT_a67 (src/a.ts)",
+            "PRRT_a68 (src/a.ts)",
+            "PRRT_a69 (src/a.ts)",
+            "PRRT_a70 (src/a.ts)",
+            "PRRT_a71 (src/a.ts)",
+            "PRRT_a72 (src/a.ts)",
+            "PRRT_a73 (src/a.ts)",
+            "PRRT_a74 (src/a.ts)",
+            "PRRT_a75 (src/a.ts)",
+            "PRRT_a76 (src/a.ts)",
+            "PRRT_a77 (src/a.ts)",
+            "PRRT_a78 (src/a.ts)",
+            "PRRT_a79 (src/a.ts)",
+            "PRRT_a80 (src/a.ts)",
+            "PRRT_a81 (src/a.ts)",
+            "PRRT_a82 (src/a.ts)",
+            "PRRT_a83 (src/a.ts)",
+            "PRRT_a84 (src/a.ts)",
+            "PRRT_a85 (src/a.ts)",
+            "PRRT_a86 (src/a.ts)",
+            "PRRT_a87 (src/a.ts)",
+            "PRRT_a88 (src/a.ts)",
+            "PRRT_a89 (src/a.ts)",
+            "PRRT_a90 (src/a.ts)",
+            "PRRT_a91 (src/a.ts)",
+            "PRRT_a92 (src/a.ts)",
+            "PRRT_a93 (src/a.ts)",
+            "PRRT_a94 (src/a.ts)",
+            "PRRT_a95 (src/a.ts)",
+            "PRRT_a96 (src/a.ts)",
+            "PRRT_a97 (src/a.ts)",
+            "PRRT_a98 (src/a.ts)",
+            "PRRT_a99 (src/a.ts)",
+            "PRRT_open (src/a.ts)",
+            "PRRT_outdated (src/a.ts)"
+          ],
+          "followUp": 1,
+          "acknowledged": 1
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "missingCursor",
+      "old": {
+        "fail": "PR review threads reported another GraphQL page without an end cursor."
+      },
+      "new": {
+        "fail": "Failed to decode PR review threads for yeet status: another page was reported without an end cursor."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "emptyCursor",
+      "old": {
+        "fail": "PR review threads reported another GraphQL page without an end cursor."
+      },
+      "new": {
+        "fail": "Failed to decode PR review threads for yeet status: another page was reported without an end cursor."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "repeatedCursor",
+      "old": {
+        "fail": "PR review threads repeated the same GraphQL end cursor; refusing to re-read the same page."
+      },
+      "new": {
+        "fail": "Failed to decode PR review threads for yeet status: the same end cursor was reported twice."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "threadsDown",
+      "old": {
+        "ok": {
+          "available": true,
+          "unresolved": 0,
+          "unresolvedThreads": [],
+          "followUp": 0,
+          "acknowledged": 0
+        }
+      },
+      "new": {
+        "ok": {
+          "available": true,
+          "unresolved": 0,
+          "unresolvedThreads": [],
+          "followUp": 0,
+          "acknowledged": 0
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "threadsDownWithComments",
+      "old": {
+        "fail": "Failed to collect the paginated PR review-thread closeout gate.; REST fallback: review comments exist; thread resolution is unknown"
+      },
+      "new": {
+        "fail": "Failed to collect the paginated PR review-thread closeout gate.; REST fallback: review comments exist; thread resolution is unknown"
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Status.collectRemoteReviewThreads",
+      "scenario": "threadsAndRestDown",
+      "old": {
+        "fail": "Failed to collect the paginated PR review-thread closeout gate.; REST fallback: Could not read REST review comments."
+      },
+      "new": {
+        "fail": "Failed to collect the paginated PR review-thread closeout gate.; REST fallback: Could not read REST review comments."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "empty",
+      "old": {
+        "ok": {
+          "threads": [],
+          "threadsResolved": true
+        }
+      },
+      "new": {
+        "ok": {
+          "threads": [],
+          "threadsResolved": true
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "mixed",
+      "old": {
+        "ok": {
+          "threads": [
+            "PRRT_open:unresolved",
+            "PRRT_answered:resolved-answered",
+            "PRRT_followup:resolved-follow-up",
+            "PRRT_ack:resolved-acknowledged",
+            "PRRT_reviewer:resolved-answered",
+            "PRRT_ghost:resolved-answered",
+            "PRRT_outdated:unresolved"
+          ],
+          "threadsResolved": false
+        }
+      },
+      "new": {
+        "ok": {
+          "threads": [
+            "PRRT_open:unresolved",
+            "PRRT_answered:resolved-answered",
+            "PRRT_followup:resolved-follow-up",
+            "PRRT_ack:resolved-acknowledged",
+            "PRRT_reviewer:resolved-answered",
+            "PRRT_ghost:resolved-answered",
+            "PRRT_outdated:unresolved"
+          ],
+          "threadsResolved": false
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "twoPages",
+      "old": {
+        "ok": {
+          "threads": [
+            "PRRT_a0:unresolved",
+            "PRRT_a1:unresolved",
+            "PRRT_a2:unresolved",
+            "PRRT_a3:unresolved",
+            "PRRT_a4:unresolved",
+            "PRRT_a5:unresolved",
+            "PRRT_a6:unresolved",
+            "PRRT_a7:unresolved",
+            "PRRT_a8:unresolved",
+            "PRRT_a9:unresolved",
+            "PRRT_a10:unresolved",
+            "PRRT_a11:unresolved",
+            "PRRT_a12:unresolved",
+            "PRRT_a13:unresolved",
+            "PRRT_a14:unresolved",
+            "PRRT_a15:unresolved",
+            "PRRT_a16:unresolved",
+            "PRRT_a17:unresolved",
+            "PRRT_a18:unresolved",
+            "PRRT_a19:unresolved",
+            "PRRT_a20:unresolved",
+            "PRRT_a21:unresolved",
+            "PRRT_a22:unresolved",
+            "PRRT_a23:unresolved",
+            "PRRT_a24:unresolved",
+            "PRRT_a25:unresolved",
+            "PRRT_a26:unresolved",
+            "PRRT_a27:unresolved",
+            "PRRT_a28:unresolved",
+            "PRRT_a29:unresolved",
+            "PRRT_a30:unresolved",
+            "PRRT_a31:unresolved",
+            "PRRT_a32:unresolved",
+            "PRRT_a33:unresolved",
+            "PRRT_a34:unresolved",
+            "PRRT_a35:unresolved",
+            "PRRT_a36:unresolved",
+            "PRRT_a37:unresolved",
+            "PRRT_a38:unresolved",
+            "PRRT_a39:unresolved",
+            "PRRT_a40:unresolved",
+            "PRRT_a41:unresolved",
+            "PRRT_a42:unresolved",
+            "PRRT_a43:unresolved",
+            "PRRT_a44:unresolved",
+            "PRRT_a45:unresolved",
+            "PRRT_a46:unresolved",
+            "PRRT_a47:unresolved",
+            "PRRT_a48:unresolved",
+            "PRRT_a49:unresolved",
+            "PRRT_a50:unresolved",
+            "PRRT_a51:unresolved",
+            "PRRT_a52:unresolved",
+            "PRRT_a53:unresolved",
+            "PRRT_a54:unresolved",
+            "PRRT_a55:unresolved",
+            "PRRT_a56:unresolved",
+            "PRRT_a57:unresolved",
+            "PRRT_a58:unresolved",
+            "PRRT_a59:unresolved",
+            "PRRT_a60:unresolved",
+            "PRRT_a61:unresolved",
+            "PRRT_a62:unresolved",
+            "PRRT_a63:unresolved",
+            "PRRT_a64:unresolved",
+            "PRRT_a65:unresolved",
+            "PRRT_a66:unresolved",
+            "PRRT_a67:unresolved",
+            "PRRT_a68:unresolved",
+            "PRRT_a69:unresolved",
+            "PRRT_a70:unresolved",
+            "PRRT_a71:unresolved",
+            "PRRT_a72:unresolved",
+            "PRRT_a73:unresolved",
+            "PRRT_a74:unresolved",
+            "PRRT_a75:unresolved",
+            "PRRT_a76:unresolved",
+            "PRRT_a77:unresolved",
+            "PRRT_a78:unresolved",
+            "PRRT_a79:unresolved",
+            "PRRT_a80:unresolved",
+            "PRRT_a81:unresolved",
+            "PRRT_a82:unresolved",
+            "PRRT_a83:unresolved",
+            "PRRT_a84:unresolved",
+            "PRRT_a85:unresolved",
+            "PRRT_a86:unresolved",
+            "PRRT_a87:unresolved",
+            "PRRT_a88:unresolved",
+            "PRRT_a89:unresolved",
+            "PRRT_a90:unresolved",
+            "PRRT_a91:unresolved",
+            "PRRT_a92:unresolved",
+            "PRRT_a93:unresolved",
+            "PRRT_a94:unresolved",
+            "PRRT_a95:unresolved",
+            "PRRT_a96:unresolved",
+            "PRRT_a97:unresolved",
+            "PRRT_a98:unresolved",
+            "PRRT_a99:unresolved",
+            "PRRT_open:unresolved",
+            "PRRT_answered:resolved-answered",
+            "PRRT_followup:resolved-follow-up",
+            "PRRT_ack:resolved-acknowledged",
+            "PRRT_reviewer:resolved-answered",
+            "PRRT_ghost:resolved-answered",
+            "PRRT_outdated:unresolved"
+          ],
+          "threadsResolved": false
+        }
+      },
+      "new": {
+        "ok": {
+          "threads": [
+            "PRRT_a0:unresolved",
+            "PRRT_a1:unresolved",
+            "PRRT_a2:unresolved",
+            "PRRT_a3:unresolved",
+            "PRRT_a4:unresolved",
+            "PRRT_a5:unresolved",
+            "PRRT_a6:unresolved",
+            "PRRT_a7:unresolved",
+            "PRRT_a8:unresolved",
+            "PRRT_a9:unresolved",
+            "PRRT_a10:unresolved",
+            "PRRT_a11:unresolved",
+            "PRRT_a12:unresolved",
+            "PRRT_a13:unresolved",
+            "PRRT_a14:unresolved",
+            "PRRT_a15:unresolved",
+            "PRRT_a16:unresolved",
+            "PRRT_a17:unresolved",
+            "PRRT_a18:unresolved",
+            "PRRT_a19:unresolved",
+            "PRRT_a20:unresolved",
+            "PRRT_a21:unresolved",
+            "PRRT_a22:unresolved",
+            "PRRT_a23:unresolved",
+            "PRRT_a24:unresolved",
+            "PRRT_a25:unresolved",
+            "PRRT_a26:unresolved",
+            "PRRT_a27:unresolved",
+            "PRRT_a28:unresolved",
+            "PRRT_a29:unresolved",
+            "PRRT_a30:unresolved",
+            "PRRT_a31:unresolved",
+            "PRRT_a32:unresolved",
+            "PRRT_a33:unresolved",
+            "PRRT_a34:unresolved",
+            "PRRT_a35:unresolved",
+            "PRRT_a36:unresolved",
+            "PRRT_a37:unresolved",
+            "PRRT_a38:unresolved",
+            "PRRT_a39:unresolved",
+            "PRRT_a40:unresolved",
+            "PRRT_a41:unresolved",
+            "PRRT_a42:unresolved",
+            "PRRT_a43:unresolved",
+            "PRRT_a44:unresolved",
+            "PRRT_a45:unresolved",
+            "PRRT_a46:unresolved",
+            "PRRT_a47:unresolved",
+            "PRRT_a48:unresolved",
+            "PRRT_a49:unresolved",
+            "PRRT_a50:unresolved",
+            "PRRT_a51:unresolved",
+            "PRRT_a52:unresolved",
+            "PRRT_a53:unresolved",
+            "PRRT_a54:unresolved",
+            "PRRT_a55:unresolved",
+            "PRRT_a56:unresolved",
+            "PRRT_a57:unresolved",
+            "PRRT_a58:unresolved",
+            "PRRT_a59:unresolved",
+            "PRRT_a60:unresolved",
+            "PRRT_a61:unresolved",
+            "PRRT_a62:unresolved",
+            "PRRT_a63:unresolved",
+            "PRRT_a64:unresolved",
+            "PRRT_a65:unresolved",
+            "PRRT_a66:unresolved",
+            "PRRT_a67:unresolved",
+            "PRRT_a68:unresolved",
+            "PRRT_a69:unresolved",
+            "PRRT_a70:unresolved",
+            "PRRT_a71:unresolved",
+            "PRRT_a72:unresolved",
+            "PRRT_a73:unresolved",
+            "PRRT_a74:unresolved",
+            "PRRT_a75:unresolved",
+            "PRRT_a76:unresolved",
+            "PRRT_a77:unresolved",
+            "PRRT_a78:unresolved",
+            "PRRT_a79:unresolved",
+            "PRRT_a80:unresolved",
+            "PRRT_a81:unresolved",
+            "PRRT_a82:unresolved",
+            "PRRT_a83:unresolved",
+            "PRRT_a84:unresolved",
+            "PRRT_a85:unresolved",
+            "PRRT_a86:unresolved",
+            "PRRT_a87:unresolved",
+            "PRRT_a88:unresolved",
+            "PRRT_a89:unresolved",
+            "PRRT_a90:unresolved",
+            "PRRT_a91:unresolved",
+            "PRRT_a92:unresolved",
+            "PRRT_a93:unresolved",
+            "PRRT_a94:unresolved",
+            "PRRT_a95:unresolved",
+            "PRRT_a96:unresolved",
+            "PRRT_a97:unresolved",
+            "PRRT_a98:unresolved",
+            "PRRT_a99:unresolved",
+            "PRRT_open:unresolved",
+            "PRRT_answered:resolved-answered",
+            "PRRT_followup:resolved-follow-up",
+            "PRRT_ack:resolved-acknowledged",
+            "PRRT_reviewer:resolved-answered",
+            "PRRT_ghost:resolved-answered",
+            "PRRT_outdated:unresolved"
+          ],
+          "threadsResolved": false
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "missingCursor",
+      "old": {
+        "fail": "PR review threads reported another GraphQL page without an end cursor."
+      },
+      "new": {
+        "fail": "Failed to decode PR review threads JSON for yeet watch: another page was reported without an end cursor."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "emptyCursor",
+      "old": {
+        "fail": "PR review threads reported another GraphQL page without an end cursor."
+      },
+      "new": {
+        "fail": "Failed to decode PR review threads JSON for yeet watch: another page was reported without an end cursor."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (a): a malformed thread page (no cursor, an empty cursor, a repeated cursor) is the kit's typed decode failure; the message names the kit's reason after the site's own decode prefix"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "threadsDown",
+      "old": {
+        "fail": "yeet watch could not read PR review threads: gh: Bad Gateway (HTTP 502)"
+      },
+      "new": {
+        "fail": "yeet watch could not read PR review threads: pullRequestReviewThreadsByNodeId failed: Bad Gateway"
+      },
+      "verdict": "classified",
+      "classification": "D-13 (d): a GitHub failure names the kit's operation, HTTP status and reason after the call's label, where the capture named gh's exit and stderr"
+    },
+    {
+      "site": "WatchMode.reviewThreadsRead",
+      "scenario": "nodeMissing",
+      "old": {
+        "ok": {
+          "threads": [],
+          "threadsResolved": true
+        }
+      },
+      "new": {
+        "ok": {
+          "threads": [],
+          "threadsResolved": true
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "empty",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 0,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 0,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "mixed",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "more than 100 threads",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": null,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 103,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "classified",
+      "classification": "D-13 (c): the merge gate walks every thread page, so more than 100 threads is a real count where the single first:100 read was unknown"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "thread read fails",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": null,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": null,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "compare fails",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": null,
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": [],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": null,
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "pull request missing",
+      "old": {
+        "fail": "gh api pulls/7 failed (nonzero-exit 1: gh: Not Found (HTTP 404))."
+      },
+      "new": {
+        "fail": "gh api pulls/7 failed (GET /repos/{owner}/{repo}/pulls/{pull_number} failed (404): Not Found)."
+      },
+      "verdict": "classified",
+      "classification": "D-13 (d): a GitHub failure names the kit's operation, HTTP status and reason after the call's label, where the capture named gh's exit and stderr"
+    },
+    {
+      "site": "MergeGate.readMergeGate",
+      "scenario": "a body with an inherited-reds record",
+      "old": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": ["Lint"],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "new": {
+        "ok": {
+          "headSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "draft": false,
+          "mergeableState": "clean",
+          "labels": ["ready-for-heavy"],
+          "attributedChecks": ["Lint"],
+          "checkRuns": 2,
+          "unresolvedThreads": 3,
+          "mergeBase": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb:2",
+          "squash": {
+            "header": "feat(yeet): move the thread reads onto the kit (#7)",
+            "body": ""
+          }
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.executeMergeGate",
+      "scenario": "merged",
+      "old": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "new": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.executeMergeGate",
+      "scenario": "declined",
+      "old": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "new": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "MergeGate.executeMergeGate",
+      "scenario": "refused with 409",
+      "old": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "new": {
+        "fail": "beep-reviewer gate held on the current head."
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "SquashCommitlint.readSquashCommitlintForPullRequest",
+      "scenario": "one commit",
+      "old": {
+        "ok": {
+          "header": "feat(yeet): move the thread reads onto the kit (#7)",
+          "body": ""
+        }
+      },
+      "new": {
+        "ok": {
+          "header": "feat(yeet): move the thread reads onto the kit (#7)",
+          "body": ""
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "SquashCommitlint.readSquashCommitlintForPullRequest",
+      "scenario": "two commits",
+      "old": {
+        "ok": {
+          "header": "feat(yeet): move the thread reads onto the kit (#7)",
+          "body": "* feat(a): one\n\n* fix(b): two\n\nBody.\n\n---------"
+        }
+      },
+      "new": {
+        "ok": {
+          "header": "feat(yeet): move the thread reads onto the kit (#7)",
+          "body": "* feat(a): one\n\n* fix(b): two\n\nBody.\n\n---------"
+        }
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Reply.runYeetReply",
+      "scenario": "open and answered threads",
+      "old": {
+        "ok": [
+          "PRRT_open:resolved",
+          "PRRT_answered:stale",
+          "PRRT_followup:posted"
+        ]
+      },
+      "new": {
+        "ok": [
+          "PRRT_open:resolved",
+          "PRRT_answered:stale",
+          "PRRT_followup:posted"
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Reply.runYeetReply",
+      "scenario": "a refused reply",
+      "old": {
+        "ok": ["PRRT_open:failed"]
+      },
+      "new": {
+        "ok": ["PRRT_open:failed"]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "Reply.runYeetReply",
+      "scenario": "thread page down",
+      "old": {
+        "fail": "yeet reply preflight failed before any draft could be posted; every draft is settled as failed in <scratch>/checkout/.beep/yeet/reply-report.json. gh api graphql reply review threads failed with exit code 1: gh: Bad Gateway (HTTP 502)"
+      },
+      "new": {
+        "fail": "yeet reply preflight failed before any draft could be posted; every draft is settled as failed in <scratch>/checkout/.beep/yeet/reply-report.json. gh api graphql reply review threads failed: pullRequestReviewThreads failed: Bad Gateway"
+      },
+      "verdict": "classified",
+      "classification": "D-13 (d): a GitHub failure names the kit's operation, HTTP status and reason after the call's label, where the capture named gh's exit and stderr"
+    },
+    {
+      "site": "GhCollect.collectPrCloseoutPayload",
+      "scenario": "mixed",
+      "old": {
+        "ok": [
+          {
+            "id": "PRRT_open",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_open_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_answered",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_answered_0:reviewer",
+              "PRRC_PRRT_answered_1:kriegcloud"
+            ],
+            "latest": ["kriegcloud:user"]
+          },
+          {
+            "id": "PRRT_followup",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_followup_0:kriegcloud",
+              "PRRC_PRRT_followup_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ack",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_ack_0:kriegcloud",
+              "PRRC_PRRT_ack_1:coderabbitai"
+            ],
+            "latest": ["coderabbitai:bot"]
+          },
+          {
+            "id": "PRRT_reviewer",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_reviewer_0:kriegcloud",
+              "PRRC_PRRT_reviewer_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ghost",
+            "isResolved": true,
+            "comments": ["PRRC_PRRT_ghost_0:kriegcloud", "PRRC_PRRT_ghost_1:-"],
+            "latest": ["-:user"]
+          },
+          {
+            "id": "PRRT_outdated",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_outdated_0:greptile-apps"],
+            "latest": ["greptile-apps:bot"]
+          }
+        ]
+      },
+      "new": {
+        "ok": [
+          {
+            "id": "PRRT_open",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_open_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_answered",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_answered_0:reviewer",
+              "PRRC_PRRT_answered_1:kriegcloud"
+            ],
+            "latest": ["kriegcloud:user"]
+          },
+          {
+            "id": "PRRT_followup",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_followup_0:kriegcloud",
+              "PRRC_PRRT_followup_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ack",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_ack_0:kriegcloud",
+              "PRRC_PRRT_ack_1:coderabbitai"
+            ],
+            "latest": ["coderabbitai:bot"]
+          },
+          {
+            "id": "PRRT_reviewer",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_reviewer_0:kriegcloud",
+              "PRRC_PRRT_reviewer_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ghost",
+            "isResolved": true,
+            "comments": ["PRRC_PRRT_ghost_0:kriegcloud", "PRRC_PRRT_ghost_1:-"],
+            "latest": ["-:user"]
+          },
+          {
+            "id": "PRRT_outdated",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_outdated_0:greptile-apps"],
+            "latest": ["greptile-apps:bot"]
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhCollect.collectPrCloseoutPayload",
+      "scenario": "two pages",
+      "old": {
+        "ok": [
+          {
+            "id": "PRRT_a0",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a0_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a1",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a1_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a2",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a2_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a3",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a3_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a4",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a4_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a5",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a5_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a6",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a6_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a7",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a7_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a8",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a8_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a9",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a9_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a10",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a10_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a11",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a11_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a12",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a12_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a13",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a13_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a14",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a14_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a15",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a15_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a16",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a16_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a17",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a17_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a18",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a18_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a19",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a19_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a20",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a20_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a21",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a21_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a22",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a22_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a23",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a23_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a24",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a24_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a25",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a25_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a26",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a26_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a27",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a27_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a28",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a28_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a29",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a29_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a30",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a30_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a31",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a31_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a32",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a32_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a33",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a33_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a34",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a34_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a35",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a35_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a36",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a36_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a37",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a37_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a38",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a38_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a39",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a39_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a40",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a40_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a41",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a41_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a42",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a42_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a43",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a43_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a44",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a44_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a45",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a45_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a46",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a46_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a47",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a47_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a48",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a48_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a49",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a49_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a50",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a50_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a51",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a51_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a52",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a52_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a53",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a53_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a54",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a54_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a55",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a55_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a56",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a56_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a57",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a57_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a58",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a58_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a59",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a59_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a60",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a60_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a61",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a61_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a62",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a62_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a63",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a63_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a64",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a64_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a65",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a65_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a66",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a66_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a67",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a67_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a68",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a68_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a69",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a69_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a70",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a70_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a71",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a71_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a72",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a72_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a73",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a73_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a74",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a74_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a75",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a75_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a76",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a76_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a77",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a77_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a78",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a78_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a79",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a79_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a80",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a80_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a81",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a81_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a82",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a82_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a83",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a83_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a84",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a84_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a85",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a85_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a86",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a86_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a87",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a87_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a88",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a88_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a89",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a89_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a90",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a90_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a91",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a91_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a92",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a92_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a93",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a93_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a94",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a94_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a95",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a95_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a96",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a96_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a97",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a97_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a98",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a98_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a99",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a99_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_open",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_open_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_answered",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_answered_0:reviewer",
+              "PRRC_PRRT_answered_1:kriegcloud"
+            ],
+            "latest": ["kriegcloud:user"]
+          },
+          {
+            "id": "PRRT_followup",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_followup_0:kriegcloud",
+              "PRRC_PRRT_followup_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ack",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_ack_0:kriegcloud",
+              "PRRC_PRRT_ack_1:coderabbitai"
+            ],
+            "latest": ["coderabbitai:bot"]
+          },
+          {
+            "id": "PRRT_reviewer",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_reviewer_0:kriegcloud",
+              "PRRC_PRRT_reviewer_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ghost",
+            "isResolved": true,
+            "comments": ["PRRC_PRRT_ghost_0:kriegcloud", "PRRC_PRRT_ghost_1:-"],
+            "latest": ["-:user"]
+          },
+          {
+            "id": "PRRT_outdated",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_outdated_0:greptile-apps"],
+            "latest": ["greptile-apps:bot"]
+          }
+        ]
+      },
+      "new": {
+        "ok": [
+          {
+            "id": "PRRT_a0",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a0_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a1",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a1_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a2",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a2_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a3",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a3_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a4",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a4_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a5",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a5_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a6",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a6_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a7",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a7_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a8",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a8_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a9",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a9_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a10",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a10_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a11",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a11_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a12",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a12_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a13",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a13_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a14",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a14_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a15",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a15_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a16",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a16_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a17",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a17_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a18",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a18_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a19",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a19_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a20",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a20_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a21",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a21_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a22",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a22_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a23",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a23_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a24",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a24_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a25",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a25_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a26",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a26_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a27",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a27_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a28",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a28_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a29",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a29_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a30",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a30_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a31",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a31_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a32",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a32_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a33",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a33_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a34",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a34_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a35",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a35_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a36",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a36_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a37",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a37_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a38",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a38_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a39",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a39_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a40",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a40_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a41",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a41_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a42",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a42_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a43",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a43_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a44",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a44_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a45",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a45_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a46",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a46_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a47",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a47_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a48",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a48_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a49",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a49_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a50",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a50_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a51",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a51_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a52",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a52_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a53",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a53_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a54",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a54_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a55",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a55_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a56",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a56_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a57",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a57_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a58",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a58_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a59",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a59_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a60",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a60_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a61",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a61_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a62",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a62_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a63",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a63_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a64",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a64_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a65",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a65_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a66",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a66_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a67",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a67_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a68",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a68_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a69",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a69_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a70",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a70_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a71",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a71_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a72",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a72_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a73",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a73_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a74",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a74_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a75",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a75_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a76",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a76_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a77",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a77_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a78",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a78_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a79",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a79_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a80",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a80_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a81",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a81_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a82",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a82_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a83",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a83_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a84",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a84_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a85",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a85_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a86",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a86_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a87",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a87_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a88",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a88_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a89",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a89_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a90",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a90_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a91",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a91_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a92",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a92_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a93",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a93_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a94",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a94_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a95",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a95_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a96",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a96_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a97",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a97_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a98",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a98_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_a99",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_a99_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_open",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_open_0:reviewer"],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_answered",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_answered_0:reviewer",
+              "PRRC_PRRT_answered_1:kriegcloud"
+            ],
+            "latest": ["kriegcloud:user"]
+          },
+          {
+            "id": "PRRT_followup",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_followup_0:kriegcloud",
+              "PRRC_PRRT_followup_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ack",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_ack_0:kriegcloud",
+              "PRRC_PRRT_ack_1:coderabbitai"
+            ],
+            "latest": ["coderabbitai:bot"]
+          },
+          {
+            "id": "PRRT_reviewer",
+            "isResolved": true,
+            "comments": [
+              "PRRC_PRRT_reviewer_0:kriegcloud",
+              "PRRC_PRRT_reviewer_1:reviewer"
+            ],
+            "latest": ["reviewer:user"]
+          },
+          {
+            "id": "PRRT_ghost",
+            "isResolved": true,
+            "comments": ["PRRC_PRRT_ghost_0:kriegcloud", "PRRC_PRRT_ghost_1:-"],
+            "latest": ["-:user"]
+          },
+          {
+            "id": "PRRT_outdated",
+            "isResolved": false,
+            "comments": ["PRRC_PRRT_outdated_0:greptile-apps"],
+            "latest": ["greptile-apps:bot"]
+          }
+        ]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhCollect.performCloseoutWriteActions",
+      "scenario": "reply and resolve",
+      "old": {
+        "ok": ["reply:true", "resolve:true"]
+      },
+      "new": {
+        "ok": ["reply:true", "resolve:true"]
+      },
+      "verdict": "same"
+    },
+    {
+      "site": "GhCollect.performCloseoutWriteActions",
+      "scenario": "refused",
+      "old": {
+        "fail": "gh api graphql (reply) failed with exit code 1.\ngh: Resource not accessible by integration (HTTP 403)"
+      },
+      "new": {
+        "fail": "gh api graphql (reply) failed.\naddPullRequestReviewThreadReply failed: Resource not accessible by integration"
+      },
+      "verdict": "classified",
+      "classification": "D-13 (d): a GitHub failure names the kit's operation, HTTP status and reason after the call's label, where the capture named gh's exit and stderr"
+    }
+  ]
+}
