@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { HttpsUrl, URLStr } from "@beep/schema/URL";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -7,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const decodeUnknownHttpsUrl = S.decodeUnknownEffect(HttpsUrl);
 
@@ -54,4 +56,38 @@ describe("URL", () => {
       expect(malformedError.message).toContain("URL must use the https protocol");
     })
   );
+
+  it.effect(
+    "rejects inputs the WHATWG parser would silently repair into an https URL",
+    Effect.fnUntraced(function* () {
+      const repaired = [
+        " https://example.com",
+        "https://example.com\n",
+        "\thttps://example.com",
+        "HTTPS://example.com",
+        "https:example.com",
+        "https:/example.com",
+        "https:\\\\example.com",
+        "https://exa\tmple.com",
+        "https://example.com/a b",
+      ];
+      for (const [index, input] of repaired.entries()) {
+        const exit = yield* Effect.exit(decodeUnknownHttpsUrl(input));
+        expect(exit._tag, `repaired input ${index}`).toBe("Failure");
+      }
+    })
+  );
 });
+
+const runs = { arbitrary: fcRuns(100) };
+it.effect.prop(
+  "HttpsUrl round-trips every schema-derived https URL string unchanged",
+  [Arbitrary.schema(HttpsUrl)],
+  ([value]) =>
+    Effect.gen(function* () {
+      assertTrue(Str.startsWith("https://")(value), value);
+      const decoded = yield* decodeUnknownHttpsUrl(yield* S.encodeEffect(HttpsUrl)(value));
+      expect(decoded).toBe(value);
+    }),
+  runs
+);

@@ -7,6 +7,7 @@
 import { $SchemaId } from "@beep/identity";
 import { O } from "@beep/utils";
 import * as Brand from "effect/Brand";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
@@ -78,8 +79,15 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
  */
 export type URLStr = Brand.Branded<NonEmptyTrimmedStr, "URLStr">;
 
+// biome-ignore lint/suspicious/noControlCharactersInRegex: rejecting C0 controls is the point.
+const literalHttpsUrlPattern = /^https:\/\/[^\u0000-\u0020\u007f]+$/;
+
 const filterHttpsUrl = S.makeFilter(
   (input: unknown): input is `https://${string}` => {
+    // The WHATWG parser silently repairs padding, embedded tabs/newlines, scheme case and
+    // missing slashes, so the raw input itself must already be a literal https URL string.
+    if (!P.isString(input) || !literalHttpsUrlPattern.test(input)) return false;
+
     const urlOpt = decodeUnknownURLFromStringOption(input);
 
     if (O.isNone(urlOpt)) return false;
