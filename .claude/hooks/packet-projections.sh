@@ -4,6 +4,10 @@ set -u
 repo_root="${CLAUDE_PROJECT_DIR:-${CODEX_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}}"
 cd "$repo_root" || exit 0
 
+# Without installed dependencies both commands fail on module resolution;
+# skip them instead of spending the SessionStart timeout on a known failure.
+[ -d node_modules/effect ] || exit 0
+
 # These files are ignored navigation aids. Failure stays non-blocking at
 # session bootstrap; the canonical cheap gate reports projection failures.
 bun run beep goals index --write >/dev/null 2>&1 || true

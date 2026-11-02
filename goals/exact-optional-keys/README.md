@@ -31,13 +31,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3: implementation PRs #2145 and #2316 are merged. PR #2316 has 15 green
-required checks at its accepted head and zero outstanding review threads. The
-readiness monitor stopped before recording a positive local verdict, so a final
-documentation closeout PR #2326 must retain that verdict before merging. Lifecycle stays active.
+Complete. Implementation PRs #2145 and #2316 merged the migration, the EF-40
+law and the GritQL recall and precision repairs. Closeout PR #2326 merged as
+`89a8d5a399` from head `ecfab28c05` with every required context green and a
+retained `until-ready` verdict, and `bun run beep goals completion refresh
+--slug exact-optional-keys` verified the `completed-retained` proposal on
+2026-10-28 (`history/completion-verified-2026-11-02.md`). `initiative.status`
+reads `active` because completion is derived from clone-scoped receipts rather
+than written into the manifest.
 
 ## Latest Evidence
 
+- Completion verified: [`history/completion-verified-2026-11-02.md`](./history/completion-verified-2026-11-02.md), the verified receipt for #2326 (hosted required checks and the exact-head Yeet verdict) and where it lives.
+- Closeout-verification reflection: [`history/reflections/2026-11-02-claude.md`](./history/reflections/2026-11-02-claude.md).
 - Detection reconciliation: [`research/detection-reconciliation-2026-10-28.jsonc`](./research/detection-reconciliation-2026-10-28.jsonc).
 - Package verification: [`research/package-verification-2026-10-28.md`](./research/package-verification-2026-10-28.md).
 - Completion audit: [`research/completion-audit-2026-10-28.md`](./research/completion-audit-2026-10-28.md).

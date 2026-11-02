@@ -117,3 +117,22 @@ They are redacted: no secrets, no absolute home paths, no session ids.
 - **Prevention:** compare the numbered examiner phrases and actual original
   version to native source. Full inventory chronology is necessary but does
   not establish adoption of an amendment or lossless native representation.
+
+## 2026-11-01 — Handover and formatting broke evidence continuity
+
+- **Doing:** resuming post-merge measurement and packet closeout after the
+  designated takeover retired the implementation worktree.
+- **Evidence:** PR #2411 merged parser repairs after the last v23 freeze while
+  its packet still reported P4/P5 pending. Later PR #2438 reformatted the v11
+  result: JSON values matched, but its protected byte hash did not. The current
+  canonical completion projection also requires exact-head readiness and
+  merge-time rule-suite evidence; the S11 merge receipt is not a green proof.
+- **Resolution:** archive all 21 v24 source files before replay, measure both
+  unchanged cohorts, retain all 37 passes, restore the exact original v11 bytes,
+  protect frozen result formatting, and publish prospective closeout in final
+  PR #2502. All 631 reference/history pins match. Operative lifecycle remains
+  active until canonical completion receipts verify the final PR.
+- **Prevention:** hand over source, measurement, review authority, lifecycle and
+  retained process ownership as separate current-head facts. Check immutable
+  evidence hashes after broad formatter changes; never infer completion from
+  a merge or an aggregate job whose prerequisites were cancelled.
