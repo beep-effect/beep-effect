@@ -916,8 +916,8 @@ describe("Git", () => {
         assert.deepStrictEqual(result, [
           NameStatusEntry.make({ status: "modified", path: "a.txt" }),
           NameStatusEntry.make({ status: "deleted", path: "b.txt" }),
-          NameStatusEntry.make({ status: "renamed", path: "new\nname.txt", oldPath: "old name.txt" }),
-          NameStatusEntry.make({ status: "copied", path: "copy.txt", oldPath: "src.txt" }),
+          NameStatusEntry.make({ status: "renamed", path: "new\nname.txt", oldPath: "old name.txt", score: 100 }),
+          NameStatusEntry.make({ status: "copied", path: "copy.txt", oldPath: "src.txt", score: 75 }),
           NameStatusEntry.make({ status: "added", path: "staged.txt" }),
         ]);
       })
@@ -1013,7 +1013,8 @@ describe("Git", () => {
           return { stdout: "R050\0src/a.ts\0src/b.ts\0", exit: 0 };
         });
         assert.deepStrictEqual(result, [
-          NameStatusEntry.make({ status: "renamed", oldPath: "src/a.ts", path: "src/b.ts" }),
+          // `R050` decodes to 50: leading zeros are git's padding, not part of the score.
+          NameStatusEntry.make({ status: "renamed", oldPath: "src/a.ts", path: "src/b.ts", score: 50 }),
         ]);
       })
     );

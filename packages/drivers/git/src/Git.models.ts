@@ -77,18 +77,18 @@ const NameStatusCode = LiteralKit([
  * `"typechange"` word. A consumer mapping these values onto an existing
  * enum that follows porcelain's spelling must translate.
  *
- * A rename or copy code carries a similarity score (`R100`, `C75`); only
- * the letter is decoded and the digits are dropped. `Git.nameStatus`'s
- * `findRenames` option sets the detection threshold git applies, which is
- * the one score a caller can act on without the per-entry number.
+ * A rename or copy code carries a similarity score (`R100`, `C075`); the
+ * digits decode to `score` (100, 75), present only on renamed/copied
+ * entries. `Git.nameStatus`'s `findRenames` option sets the threshold git
+ * detects at; `score` is what git measured for each pair.
  *
  * **Example** (Represent a renamed path)
  *
  * ```ts import.meta.vitest name="Represent a renamed path"
  * import { NameStatusEntry } from "@beep/git/Git";
  *
- * const entry = NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts" });
- * [entry.status, entry.oldPath, entry.path] // => ["renamed", "old.ts", "new.ts"]
+ * const entry = NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts", score: 100 });
+ * [entry.status, entry.oldPath, entry.path, entry.score] // => ["renamed", "old.ts", "new.ts", 100]
  * ```
  *
  * @public
@@ -116,6 +116,12 @@ export class NameStatusEntry extends S.Opaque<NameStatusEntry, { readonly brand:
     oldPath: S.optionalKey(S.String).pipe(
       $I.annoteKey("NameStatusEntry.oldPath", {
         description: "The pre-rename/pre-copy path; present only for renamed/copied entries.",
+      })
+    ),
+    /** git's similarity percent for the pair (`R100` → 100); present only for renamed/copied entries. */
+    score: S.optionalKey(S.Natural).pipe(
+      $I.annoteKey("NameStatusEntry.score", {
+        description: "git's similarity percent for the pair (`R100` → 100); present only for renamed/copied entries.",
       })
     ),
   }).pipe($I.annoteSchema("NameStatusEntry", { description: "One entry of a `git diff --name-status` listing." }))

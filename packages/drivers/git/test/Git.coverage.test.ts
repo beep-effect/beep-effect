@@ -236,6 +236,10 @@ describe("Git parser edge contracts", () => {
       assert.deepStrictEqual(yield* run(git, { stdout: "M\0file\0" }), [
         GitModule.NameStatusEntry.make({ status: "modified", path: "file" }),
       ]);
+      // A rename code without digits is still a rename, with no score to report.
+      assert.deepStrictEqual(yield* run(git, { stdout: "R\0old\0new\0" }), [
+        GitModule.NameStatusEntry.make({ status: "renamed", oldPath: "old", path: "new" }),
+      ]);
       const status = Effect.flatMap(Git, (git) => git.status(cwd));
       assertUnparseable(yield* run(status, { stdout: "R  new" }).pipe(Effect.result), "status", /NUL terminator/);
       assertUnparseable(yield* run(status, { stdout: "R  new\0" }).pipe(Effect.result), "status", /no original path/);

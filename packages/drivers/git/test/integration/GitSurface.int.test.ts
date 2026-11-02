@@ -163,6 +163,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
         assert.isDefined(renamed);
         assert.strictEqual(renamed?.status, "renamed");
         assert.strictEqual(renamed?.oldPath, "sub/c.txt");
+        // `git mv` with unchanged content is an exact rename: git prints R100.
+        assert.strictEqual(renamed?.score, 100);
 
         const added = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "staged.txt"));
         assert.isDefined(added);
@@ -245,8 +247,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
           pathspec: ["renamed.txt", "sub"],
         });
         assert.deepStrictEqual(
-          A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path]),
-          [["renamed", "sub/c.txt", "renamed.txt"]]
+          A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path, entry.score]),
+          [["renamed", "sub/c.txt", "renamed.txt", 100]]
         );
         // Lower case excludes: everything BUT renames, scoped to a.txt.
         const notRenames = yield* git.nameStatus(dirA, { base: "HEAD", diffFilter: "r", pathspec: ["a.txt"] });

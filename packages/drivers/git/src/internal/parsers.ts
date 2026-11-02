@@ -183,14 +183,23 @@ const NAME_STATUS_CODES: Record<string, NameStatusCode | undefined> = {
 };
 
 /** A status code token: one letter git emits, optionally followed by a similarity score. */
-const NAME_STATUS_CODE_TOKEN = /^([ABCDMRTUX])\d*$/;
+const NAME_STATUS_CODE_TOKEN = /^([ABCDMRTUX])(\d*)$/;
 
-/** The decoded status of a code token, or none when it is not one git emits. */
-const nameStatusOf = (code: string): O.Option<NameStatusCode> =>
+/** The similarity digits a rename/copy code carries, as git prints them (`075` → 75). */
+const similarityScore = S.decodeUnknownOption(S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)));
+
+/** The decoded status and score of a code token, or none when it is not one git emits. */
+const nameStatusOf = (code: string): O.Option<{ readonly status: NameStatusCode; readonly score: O.Option<number> }> =>
   pipe(
     Str.match(NAME_STATUS_CODE_TOKEN)(code),
     O.flatMap((matched) => O.fromUndefinedOr(matched[1])),
-    O.flatMap((letter) => O.fromUndefinedOr(NAME_STATUS_CODES[letter]))
+    O.flatMap((letter) => O.fromUndefinedOr(NAME_STATUS_CODES[letter])),
+    O.flatMap((status) => {
+      const digits = Str.slice(1)(code);
+      // Only a rename/copy carries a score; a code with no digits has none.
+      if ((status !== "renamed" && status !== "copied") || digits === "") return O.some({ status, score: O.none() });
+      return O.map(similarityScore(digits), (score) => ({ status, score: O.some(score) }));
+    })
   );
 
 /**
@@ -203,11 +212,12 @@ const parseNameStatusEntryAt = (
   index: number
 ): Result.Result<{ readonly entry: NameStatusEntry; readonly next: number }, string> => {
   const code = A.getUnsafe(tokens, index);
-  const status = nameStatusOf(code);
-  if (O.isNone(status)) {
+  const decoded = nameStatusOf(code);
+  if (O.isNone(decoded)) {
     return Result.fail(`a name-status record opened with a code git does not emit: ${quoteRecord(code)}`);
   }
-  const pathTokens = status.value === "renamed" || status.value === "copied" ? 2 : 1;
+  const { score, status } = decoded.value;
+  const pathTokens = status === "renamed" || status === "copied" ? 2 : 1;
   const paths = pipe(
     tokens,
     A.drop(index + 1),
@@ -221,16 +231,21 @@ const parseNameStatusEntryAt = (
   }
   const entry =
     pathTokens === 2
-      ? NameStatusEntry.make({ status: status.value, oldPath: A.getUnsafe(paths, 0), path: A.getUnsafe(paths, 1) })
-      : NameStatusEntry.make({ status: status.value, path: A.getUnsafe(paths, 0) });
+      ? NameStatusEntry.make({
+          status,
+          oldPath: A.getUnsafe(paths, 0),
+          path: A.getUnsafe(paths, 1),
+          ...O.getSomesStruct({ score }),
+        })
+      : NameStatusEntry.make({ status, path: A.getUnsafe(paths, 0) });
   return Result.succeed({ entry, next: index + 1 + pathTokens });
 };
 
 /**
  * Parses `git diff --name-status -z` output. A plain entry is two NUL tokens
  * (`<code>`, `<path>`); a rename/copy entry is three (`<R|C><score>`,
- * `<oldPath>`, `<newPath>`), and only the code's first character carries the
- * status — the similarity score digits are dropped. A code git does not
+ * `<oldPath>`, `<newPath>`); the code's first character carries the status
+ * and a rename/copy's digits decode to `score`. A code git does not
  * emit, a record short of its path tokens, or output without its trailing
  * NUL fails the whole parse rather than inventing an entry.
  *

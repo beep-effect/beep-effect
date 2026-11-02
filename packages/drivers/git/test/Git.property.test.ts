@@ -202,7 +202,7 @@ describe("Git parser and formatter property floor", () => {
             nonEmpty(entry.path) &&
             (entry.status === "renamed" || entry.status === "copied"
               ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
-              : entry.oldPath === undefined)
+              : entry.oldPath === undefined && entry.score === undefined)
         )
       )
     ),
@@ -210,7 +210,8 @@ describe("Git parser and formatter property floor", () => {
       A.join(
         A.map(
           entries,
-          (entry) => `${codes[entry.status]}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`
+          (entry) =>
+            `${codes[entry.status]}${entry.score ?? ""}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`
         ),
         ""
       ),

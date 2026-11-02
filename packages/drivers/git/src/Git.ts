@@ -2791,9 +2791,9 @@ export interface GitShape {
    * percent 1..100; `diffFilter` keeps only the named status letters
    * (`[ACDMRTUXB*]`, lower case excludes them); `pathspec` scopes the diff.
    * Either option outside its domain, or a pathspec entry git would read as
-   * an option, is refused typed before any spawn. The per-entry similarity
-   * score git prints is not surfaced (see {@link NameStatusEntry}). Output
-   * the parser cannot read fails as `GitCommandError` with an
+   * an option, is refused typed before any spawn. Each rename or copy entry
+   * carries git's similarity percent as {@link NameStatusEntry}'s `score`.
+   * Output the parser cannot read fails as `GitCommandError` with an
    * `unparseable name-status output` detail — never as an invented entry.
    */
   readonly nameStatus: {
