@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   CiLaneRunOptions,
@@ -221,9 +222,9 @@ const decodeTurboLaneLedgerRow = S.decodeUnknownEffect(S.fromJsonString(TurboLan
 const encodeTurboRunSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
-const PlatformLayer = Layer.mergeAll(
-  FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(FileSystemLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = Jsonc.bind(GithubChecksFallowFeatureMatrix).decode;

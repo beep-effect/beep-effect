@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { appendTurboSummary, CiRunnerOutputsLive, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { FsUtilsLive } from "@beep/repo-utils";
@@ -18,11 +19,17 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const TestLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TestConsole.layer
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
+const TestLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TestConsole.layer
+  )
 );
 const ciTest = it.layer(TestLayer, { timeout: "30 seconds" });
 const runCiLaneCommand = Command.runWith(ciLaneCommand, { version: "0.0.0" });
