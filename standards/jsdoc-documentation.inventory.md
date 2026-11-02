@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-02T21:58:28.005Z
+Generated: 2026-11-02T22:39:32.652Z
 
 ## Scope
 

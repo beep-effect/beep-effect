@@ -1144,3 +1144,19 @@ and accepted-main integration remain required; this is no rollout or qualificati
 ### Accepted-main a88d baseline conflict resolution, 2026-11-02
 
 The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.
+
+
+### Contained source directory aliases, 2026-11-02
+
+Protected inspection run `41413340460`, job `125171205116`, reached its admitted
+runner and failed in source collection. The declared YAML fixture alias
+`tags/alias/V55R` resolves to a directory, and other declared fixture aliases
+cover nested trees. Bind those complete contained trees with a bounded,
+domain-separated structure/mode manifest while keeping every leaf in the
+independent declared inventory. Keep absolute/outside aliases, ignored entries,
+unsupported filesystem objects and changed inventories refused.
+
+The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02.json)
+records focused controls and real-tree replay separately from actual protected
+inspection. A new main inspection and independent approval remain required; no
+whole-goal criterion or production configuration is changed.

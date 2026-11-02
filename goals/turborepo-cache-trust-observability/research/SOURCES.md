@@ -610,3 +610,17 @@ inventory output. Failure messages contain only fixed public literals. Raw
 streams and causes remain private, and a hint is not a trusted classification.
 The ordinary 967-second failure remains unclassified; the separately instrumented
 success is not reused as ordinary qualification. All full-goal gates remain.
+
+
+### 2026-11-02 — actual inspection and contained directory-alias repair
+
+- Actual resolved workflow/source `8a17f413bb815a0a25896378e8ff56a788029a63`,
+  inspection run `41413340460`, completed failed job `125171205116`: runner and
+  prerequisite setup succeeded; source collection tried to read YAML fixture
+  directory `V55R` as a regular file. No credentials or cache capability loaded.
+- Current collector implementation, workflow schema and workflow tests bind
+  contained recursive directory structure and complete POSIX entry modes, with
+  independent inventory coverage for leaves. The checkpoint separates focused
+  controls, real-tree replay and remaining protected approval.
+- Effect `FileSystem.lstat` was verified in the installed 4.1.1 public source and
+  canonical Effect reference. It inspects child type without following aliases.
