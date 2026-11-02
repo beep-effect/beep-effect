@@ -9,6 +9,7 @@ import {
   NativeAccountIdInput,
   nativeAccountId,
   normalizeEmail,
+  normalizePhone,
   PhoneNumber,
   PhoneNumberInput,
   phoneNumber,
@@ -410,9 +411,16 @@ describe("review findings (PR 2588)", () => {
       expect(
         yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") })))
       ).toBe("unsupported-country");
-      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.none() })))).toBe(
-        "ambiguous-phone"
+      const unsupported = yield* Effect.flip(
+        normalizePhone(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") }))
       );
+      expect(unsupported.field).toBe("country");
+      expect(unsupported.input).toBe("AQ");
+      const ambiguous = yield* Effect.flip(
+        normalizePhone(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.none() }))
+      );
+      expect(ambiguous.reason).toBe("ambiguous-phone");
+      expect(ambiguous.field).toBe("value");
     })
   );
 

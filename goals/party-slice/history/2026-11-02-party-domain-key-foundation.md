@@ -230,6 +230,8 @@ writer and is not edited here. The other six are fixed:
    - The source-record fallback reports which part failed.
    - A new `unsupported-country` reason separates a non-supported country from
      missing context (`ambiguous-phone`).
+     Follow-up from the independent delta review: an `unsupported-country`
+     issue reports `field: "country"` with the country code as `input`.
    - The JSDoc and the package `AGENTS.md` state that `input` can hold raw
      identifier text and must not be logged verbatim.
 7. **Package docs.**

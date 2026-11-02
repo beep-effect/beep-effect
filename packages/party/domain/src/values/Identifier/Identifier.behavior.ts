@@ -9,6 +9,7 @@
  * @since 0.0.0
  */
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import {
@@ -116,7 +117,7 @@ export const normalizeUsernameHandle = Effect.fn("PartyIdentifier.normalizeUsern
  * Graduated phone normalizer returning E.164. A number without a leading `+`
  * needs explicit, supported country context: without it the number is
  * `ambiguous-phone`, and with an unsupported country it is
- * `unsupported-country`. Numbers that the pinned phone metadata does not
+ * `unsupported-country` with `field: "country"` and the country code as `input`. Numbers that the pinned phone metadata does not
  * validate are `invalid-phone` and are never repaired.
  *
  * **Example** (Equivalent spellings share one E.164 value)
@@ -135,7 +136,11 @@ export const normalizeUsernameHandle = Effect.fn("PartyIdentifier.normalizeUsern
  * @since 0.0.0
  */
 export const normalizePhone = Effect.fn("PartyIdentifier.normalizePhone")(function* (input: PhoneNumberInput) {
-  return yield* liftCore(input.raw, "value", graduatePhone(input));
+  return yield* Effect.mapError(liftCore(input.raw, "value", graduatePhone(input)), (issue) =>
+    issue.reason === "unsupported-country"
+      ? IdentifierIssue.make({ reason: issue.reason, input: O.getOrElse(input.country, () => ""), field: "country" })
+      : issue
+  );
 });
 
 const decodeCase =
