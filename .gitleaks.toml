@@ -420,3 +420,13 @@ regexes = [
   '''^\n?[\t ]*"packages/tooling/tool/cli/test/accounts\-secrets\-layout\.test\.ts": "1c95d8f07769861c190f335dbad9a11adbf9e57ec2b13e64fed85e5c38140581",$''',
   '''^\n?[\t ]*"packages/tooling/tool/cli/test/schema\-parity\-codemod\-exact\-optional\-keys\.test\.ts": "dc5aeae919a93a0da3ab43cb4dce147b6a2d985175911fbcd69c03e33fee2469",$''',
 ]
+
+[[allowlists]]
+description = "Verified integrated observation proof source SHA-256; exact immutable receipt, source key, digest and detector only."
+targetRules = ["generic-api-key"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?goals/agent\-observability\-foundation/ops/history/integrated\-package\-proof\-20261102\.json$''']
+regexes = [
+  '''^\n?[\t ]*"packages/tooling/library/ai\-metrics/test/CredentialBank\.test\.ts": "ca09bb72ba118d3a521f469c5e4c4898f0904421a180b9d83fdea1ab93ce0793",$''',
+]

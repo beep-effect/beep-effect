@@ -1114,3 +1114,55 @@ evidence, what would have prevented it). Redact for the public repo.
   ratchet's per-PR baseline attribution. Per repair decision 3 ruling 6,
   start any change only after window 4 is censused, so the governor's
   attribution stays clean.
+
+## 2026-11-02 — a serial producer loop and 44 hash-placed packages hid behind the Test Unit p95
+
+- **Doing:** attributing the window-4 preview's `Test Unit` 44m27s p95.
+- **Evidence:** job 124673581997 (unit-a) ran 86 `ci:test:<package>` steps
+  whose busy-sum equals the 26.4-minute span at a maximum concurrency of 1;
+  `runCompoundCoverageSteps` passed no `concurrency` to `Effect.forEach`
+  while the lane's own turbo shape says `--concurrency=2`. The same log's
+  `test-unit default placements` line listed 44 packages the curated table
+  never named, including the three heaviest (`@beep/markdown` 168 s,
+  `@beep/repo-workspaces` 111 s, `@beep/repo-ai-metrics` 92 s), so the
+  1,214 s weights described bins that had grown to 1,587 s and 1,355 s.
+- **Would have prevented it:** a census column for the default-placement
+  count (the lane already prints the line) and a per-package duration
+  artifact the re-bin can read instead of scraping job logs.
+
+## 2026-11-02 — the Lint breach was already fixed elsewhere the same morning
+
+- **Doing:** timing a cold `biome check .` per package to size a lint
+  re-shard.
+- **Evidence:** 31 s for 51 files on a hosted runner, 74 CPU-seconds
+  locally; the cause was the project-domain rule `noDeprecatedImports`
+  forcing a whole-repository scan per invocation. #2526 (`3ceb6833db`)
+  had removed it hours earlier under a different packet (quality speed
+  audit); the first cold `main` lint shard after it took 31 s for 92 tasks.
+  A local worktree nested under `.claude/worktrees` reproduces a separate
+  60 CPU-second crawl of the primary clone (biome resolves the VCS root
+  above the worktree's `.git` file), which misled the first hour of
+  attribution.
+- **Would have prevented it:** reading the day's merged `main` commits
+  before measuring, and a biome `files.includes` force-ignore for
+  `.claude/worktrees` that holds in nested worktrees (the primary clone's
+  negation does not apply when the worktree is the project root).
+## 2026-11-02 — eight unratified ruleset versions and a 1000-run listing cap
+
+- **Doing:** restarting P3 after a month idle: re-measuring the newest
+  seven-day window with the canonical `beep ci lane-timings --window` command.
+- **Evidence:** `gh api repos/beep-effect/beep-effect/rulesets/10240248/history`
+  lists eight versions after the ratified `50918272`, four of which changed
+  the required population (`Knip` out 10-14, `beep-reviewer` in 10-14 and out
+  10-27, `Heavy / Effect Diagnostics` in 10-15 and out 10-27). None has a
+  packet, ledger or PR entry; the census would have failed closed by name on
+  the first run, as it did on 2026-10-01. Separately, `gh api --paginate
+  .../actions/workflows/check.yml/runs?created=2026-10-27T10:00:00Z..2026-11-03T10:00:00Z`
+  returned 1,000 of a reported 1,202 runs: the Actions listing stops at 1,000
+  regardless of paging, and the census pager would have ended with
+  `pagination ended after 1000 of N runs`.
+- **Would have prevented it:** the ruleset-change hook asked for on
+  2026-10-01 (still absent); the census now halves any span whose listing
+  exceeds 1,000 runs (same PR as the 15-context ratification), so the cap
+  cannot stop a busy week again.
+

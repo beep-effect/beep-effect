@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   byRepoPlanStepAscending,
@@ -73,6 +74,9 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { commandArgs } from "./support/commandArgs.ts";
 import type { YeetRunOptions } from "@beep/repo-cli/test/Yeet";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -184,7 +188,10 @@ const scriptedSpawner = (replies: ReadonlyArray<Reply>, commands: Ref.Ref<Readon
 const withProcesses =
   (replies: ReadonlyArray<Reply>, commands: Ref.Ref<ReadonlyArray<string>>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    effect.pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(replies, commands)));
+    effect.pipe(
+      Effect.provideServiceEffect(Git, Git.make),
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(replies, commands))
+    );
 
 const makeCommands = Ref.make<ReadonlyArray<string>>([]);
 const makeRecorder = Ref.make<ReadonlyArray<YeetExecutedStep>>([]);
@@ -192,7 +199,10 @@ const failClosedSpawnerLayer = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   makeCommands.pipe(Effect.map((commands) => scriptedSpawner([], commands)))
 );
-const testLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer, failClosedSpawnerLayer);
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(MemoryFileSystem.layer, Path.layer, NodeCrypto.layer, failClosedSpawnerLayer)
+);
 
 // A create lane carries no explicit status (the verdict derives it from the exit
 // code); stamp and label lanes record theirs.
@@ -1464,7 +1474,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
 // runYeetReady locates the checked-out repository from process.cwd(), so this
 // single integration case needs the host filesystem; the scripted gh process
 // still prevents any real GitHub command.
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "yeet ready native repo root",
   (it) => {
     it.effect("runs the gate for the checked-out branch and refuses when it has no pull request", () =>
