@@ -156,3 +156,14 @@ conflict-free, and the merged file equals main's file plus exactly those two edi
 | Fable N6: no test for an interruption before the rename | **Test added.** The `mv` stub sends TERM to its parent bootstrap shell at the rename. Bash runs the EXIT trap and then re-raises TERM (observed: status 143 through an `sh -c` status wrapper). The test asserts 143, no rename-failure warning (so the trap did the cleanup), no staged leftover, the old bytes intact and the run directory removed. Mutation check: removing the in-progress staged file from the trap's cleanup list fails only this test (28/29). Test-only change; no host process or privilege change. |
 | Fable N7: stubs exec `/usr/bin/{install,mv,rm,tar,timeout}` | **Kept as is, from the source.** `bootstrap.sh` refuses anything but Linux x86_64. The vendor VMs are Ubuntu, where `/bin` is merged into `/usr/bin`, so those paths hold there. The fixture is a hermetic Linux harness for that contract, not a portable one. A non-merged-usr host would fail the fixture loudly, not pass it silently. |
 | A3 | The live-qualification limit stays as accepted. |
+
+Results as of 2026-11-02, head `47739481` (appended; the 28-test tables above are historical):
+
+| Run | Result |
+| --- | --- |
+| author, root runner | 29/29, exit 0, three consecutive runs |
+| parent, non-root | 29/29, 0 skipped |
+| parent, whole-PR gitleaks + typos | exit 0 |
+| parent, `yeet final-check` | complete, aggregate pass, with four explicit parked skips (cheap-gates, lint-policy, Docgen, Coverage): skipped, not passed |
+
+The N6 sentence above, that bash runs the EXIT trap and then re-raises TERM, stands. A request to restate it through `cancel_downloads 143` was withdrawn, because `bootstrap.sh:276` restores the default TERM disposition before installation.
