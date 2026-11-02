@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   AgentEffectivenessAnnotationCheckReport,
@@ -55,7 +56,10 @@ const CommandTestLayer = Layer.effectDiscard(
       yield* fs.writeFileString(target, yield* encodeFixture(receipt));
     }
   })
-).pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer)));
+).pipe(
+  Layer.provideMerge(Git.layer),
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer))
+);
 const decodeDoctorReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 const decodeAnnotationCheckReport = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
 const decodeDatasetBundle = S.decodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));

@@ -112,6 +112,7 @@ import {
   yeetWatchCommentEvent,
   yeetWatchEndReason,
 } from "./WatchStream.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
@@ -841,7 +842,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   ) => Effect.Effect<
     YeetWatchSnapshot,
     never,
-    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
@@ -1006,6 +1007,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   | FileSystem.FileSystem
   | Path.Path
   | Digest.Digest
+  | Git
 > {
   const untilEvent = config.untilEvent === true;
   let head = O.none<WatchSettleState>();

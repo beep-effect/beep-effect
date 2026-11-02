@@ -31,19 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W2 in review (this PR). The G7 dirty-axis readers run through `Git`: `internal/repo-run/ChangedFiles.ts`
-(`unstagedChanges` / `stagedChanges` / `untrackedFiles` with `diffFilter`, `noRenames` and pathspecs; `changedFiles`
-for the base range, through the new `collectBaseRangeChangedFiles`), Yeet's `lockfileChangedSinceBase`, the `status`
-probes of `ResidueReap`, `TmpfsReap` and the fleet mirror, the Worktree listing (`Git.worktreeList` mapped by
-`worktreeListEntriesFromGit`; `parseWorktreePorcelain` and `parseStatusPorcelainZ` retired), Fleet's origin and
-common-dir probes, and the one-liners of `Codex/Security`, `Session/SessionLedger`, `Runners`, `Ci/CiLane`,
-`Quality/ChangesetStatus`, `PackageVerify`, `CoverageRegression` and `CoverageArtifacts` (SPEC D-10). The Knowledge
-path-removal log (#110) stays: `Git.log` has no starting ref. W2b carries the Yeet `Settle`/`ProofShadow` and
-probe-seam git halves, `Library.inventory.ts` and ai-metrics #107. W0 merged (#2514); the W1 kit merged (#2522);
-W1a (#2539) and W1b (#2546) in review. Next: W2b, then W3.
+P1 Implement. W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, SPEC D-10), the W3 kit
+(#2556), W3 sites (#2614, SPEC D-12) and the W4 kit (#2600) merged. W2b (this PR, SPEC D-11): the remaining Yeet
+git halves, the Library inventory read and ai-metrics' `ls-files` run through `Git`, with Sweep's probes behind the
+`sweepProbeFromGit` CommandProbe adapter. Next: W4 sites, then W5.
 
 ## Latest Evidence
 
+- 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
+  unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
+- 2026-11-02 W3 sites: `research/reviewer-ci-github-differential-w3.json` (45 scenarios, 37 same, 8 classified,
+  0 unclassified); repo-cli typecheck and lint clean, the reviewer, ci and yeet merge-gate suites green.
 - 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
   repo-cli typecheck clean, the worktree, fleet, residue-reap, tmpfs-reap, quality-tasks, docgen, session-ledger,
   codex-security, package-verify, ci-lane, changeset-status, runners-bake, coverage-artifacts and step-git-exec

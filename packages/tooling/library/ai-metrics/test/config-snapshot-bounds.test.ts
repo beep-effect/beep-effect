@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   AiMetricsConfigScope,
   AiMetricsConfigSnapshotBoundsReport,
@@ -19,10 +20,14 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+
+// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
+const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
 
 const isAiMetricsConfigSnapshotTruncationReason = S.is(AiMetricsConfigSnapshotTruncationReason);
 
@@ -112,7 +117,7 @@ const snapshotPaths = (files: ReadonlyArray<{ readonly relativePath: string }>):
   A.map(files, (file) => file.relativePath);
 
 describe("@beep/repo-ai-metrics bounded config snapshots", () => {
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("walks successfully beneath an empty parent .git directory", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -297,7 +302,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     { arbitrary: fcRuns(25) }
   );
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("stops at every nested git root and records it instead of walking into it", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -323,7 +328,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("includes exactly the legitimate agent-configuration surface", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -344,7 +349,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("tags the session-effective files and leaves everything else baseline", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -369,7 +374,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("moves the session hash only for session files and the baseline hash only for baseline files", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -393,7 +398,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("produces a stable config hash across two runs on an unchanged tree", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -411,7 +416,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("truncates deterministically at the file-count budget", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -438,7 +443,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
   // A bulky non-git directory under a config root must not be able to spend the whole file budget
   // before the repo-root agent docs are reached. Losing `AGENTS.md`/`CLAUDE.md` is not ordinary
   // truncation: they are session-scope, so their absence silently moves `sessionHash`.
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("never starves the root agent docs when a config root exhausts the file budget", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -470,7 +475,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("reports the byte and depth budgets with their own reasons", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -501,7 +506,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("skips and counts a file above the per-file byte budget", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -525,7 +530,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("emits one timing per measured pipeline stage and none for the write it does not perform", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -558,7 +563,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("decodes a pre-bounding latest.json and diffs against it", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -652,7 +657,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
     })
   );
 
-  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
+  it.layer(GitNodeServices, { timeout: "30 seconds" })((it) => {
     it.effect("never stats the contents of a nested worktree", () =>
       withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {

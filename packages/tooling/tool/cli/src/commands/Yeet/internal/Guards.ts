@@ -14,6 +14,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
 import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
 import { validateOpenPullRequest } from "./PullRequest.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -197,7 +198,7 @@ export const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<vo
 export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(function* (
   context: RepoRunContext,
   options: YeetRunOptions
-): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git> {
   yield* validateOptionGuards(options);
 
   if (!shouldMonitorChecks(options)) {

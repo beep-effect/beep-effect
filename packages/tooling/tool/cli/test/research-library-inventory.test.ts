@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   classifyLibraryReference,
   extractLibraryReferences,
@@ -121,7 +122,10 @@ const resolutionFixture = Effect.fn("test.resolutionFixture")(function* () {
   };
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+// `Git` rides over the platform spawner: an input root's commit is read through the kit (W2b).
+const InventoryPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+
+it.layer(Layer.provideMerge(Git.layer, InventoryPlatform), { timeout: "30 seconds" })(
   "research library provenance",
   (it) => {
     it.effect("returns a nonzero CLI sentinel for an incomplete source library", () =>

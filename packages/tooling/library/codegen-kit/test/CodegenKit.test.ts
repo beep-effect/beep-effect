@@ -18,6 +18,7 @@ import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -25,10 +26,35 @@ import type { NamedTransform, SpecSource } from "@beep/codegen-kit";
 import type * as JsonSchema from "effect/JsonSchema";
 
 const platform = Layer.merge(NodeServices.layer, FetchHttpClient.layer);
-const CodegenKitTestLayer = Layer.mergeAll(
+const readonlyFormatterPlatform = Layer.merge(
   platform,
+  Layer.effect(
+    FileSystem.FileSystem,
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const readonlyDirectory = path.resolve(import.meta.dirname, "../src/internal");
+      return FileSystem.make({
+        ...fs,
+        makeTempFileScoped: (options) =>
+          options?.directory === readonlyDirectory
+            ? Effect.fail(
+                PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  module: "FileSystem",
+                  method: "makeTempFileScoped",
+                  pathOrDescriptor: readonlyDirectory,
+                })
+              )
+            : fs.makeTempFileScoped(options),
+      });
+    })
+  ).pipe(Layer.provide(platform))
+);
+const CodegenKitTestLayer = Layer.mergeAll(
+  readonlyFormatterPlatform,
   TestConsole.layer,
-  CodegenKit.layer().pipe(Layer.provide(platform))
+  CodegenKit.layer().pipe(Layer.provide(readonlyFormatterPlatform))
 );
 
 const config = (outputPath: string) =>
@@ -621,7 +647,7 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
     })
   );
 
-  it.effect("prints a unified diff when check mode detects drift", () =>
+  it.effect("prints a drift diff while the formatter module directory is read-only", () =>
     Effect.gen(function* () {
       const directory = yield* Effect.flatMap(FileSystem.FileSystem, (fs) =>
         fs.makeTempDirectoryScoped({ directory: import.meta.dirname, prefix: "codegen-kit-test-" })
@@ -653,6 +679,34 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       expect(printed).toContain("+++ generated");
       expect(printed).toContain("-export const stale = true;");
       expect(printed).toContain("+/**");
+    })
+  );
+
+  it.effect("reports missing generated output without writing it or the read-only formatter directory", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const kit = yield* CodegenKit;
+      const directory = yield* fs.makeTempDirectoryScoped({ prefix: "codegen-missing-output-" });
+      const specPath = path.join(directory, "openapi.json");
+      const outputPath = path.join(directory, "MissingApi.gen.ts");
+      yield* writeJson(specPath, tinyOpenApi);
+      const generateConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        name: "MissingApi",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/MissingApi.gen" },
+        source: { _tag: "file", path: specPath },
+        dialect: "openapi-3.0",
+        format: "httpapi",
+        output: { path: outputPath },
+      });
+      const failure = yield* kit.run(generateConfig, "check").pipe(Effect.flip);
+      const printed = pipe(yield* TestConsole.errorLines, A.filter(P.isString), A.join("\n"));
+      expect(failure._tag).toBe("CodegenDriftError");
+      expect(printed).toContain(`--- ${outputPath}`);
+      expect(printed).toContain("+++ generated");
+      expect(printed).toContain("+/**");
+      expect(yield* fs.exists(outputPath)).toBe(false);
     })
   );
 

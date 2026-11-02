@@ -1500,8 +1500,10 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  *   runAiMetricsForwarder,
  *   withAiMetricsDuckDb
  * } from "@beep/repo-ai-metrics"
+ * import { Git } from "@beep/git/Git"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option";
  * import * as Redacted from "effect/Redacted";
  * const dataRoot = "/home/dev/.local/state/beep/ai-metrics"
@@ -1516,7 +1518,7 @@ const processSourceFile = Effect.fn("AiMetrics.forwarder.processSourceFile")(
  * const program = withAiMetricsDuckDb(
  *   runAiMetricsForwarder(input),
  *   aiMetricsDerivedDuckDbPath(dataRoot)
- * ).pipe(Effect.provide(NodeServices.layer))
+ * ).pipe(Effect.provide(Layer.provideMerge(Git.layer, NodeServices.layer)))
  *
  * Effect.runPromise(program).then((result) => console.log(result.turnCount))
  * ```

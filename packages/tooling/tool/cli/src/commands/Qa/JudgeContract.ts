@@ -10,17 +10,25 @@ import { RoundNumber } from "@beep/qa-capture";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Sha256Hex } from "@beep/schema/Sha256";
+import { URLStr } from "@beep/schema/URL";
 import {
   AlwaysGateApplicability,
+  CertificateCheck,
+  CheckOutcome,
   EvidenceDigest,
   EvidenceLadderReceiptTypes,
   EvidencePredicateType,
   EvidenceSubject,
   FailurePredicateType,
+  GateCertificate,
+  GateCertificatePredicateType,
+  GateCertificateReceipt,
   GateDeclaration,
   GateEvidenceRequirement,
+  GateOutcome,
   GateRegistry,
   GateSummaryPredicateType,
+  GateSummaryVerifier,
   GateVerdict,
   NoRecoveryPolicy,
   ReceiptTypeBindings,
@@ -28,11 +36,13 @@ import {
   SchemaReferenceId,
   SkillContract,
   SkillContractId,
+  settleGateCertificateOutcome,
 } from "@beep/skill-contract";
 import { A } from "@beep/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CitedArtifactExistsGate, CitedArtifactExistsVerdict } from "./CitedArtifactExistsGate.ts";
@@ -848,3 +858,209 @@ export const QaJudgeContract = SkillContract.make({
   recovery: NoRecoveryPolicy.make({}),
   version: qaJudgeContractVersion,
 });
+
+/**
+ * Artifact, event, and aggregate verdicts of one round cross-check.
+ *
+ * **Example** (Inspect settlement fields)
+ *
+ * ```ts
+ * import { RoundCrossCheckSettlement } from "@beep/repo-cli/commands/Qa"
+ *
+ * console.log(RoundCrossCheckSettlement.fields.crossCheck !== undefined) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RoundCrossCheckSettlement extends S.Opaque<RoundCrossCheckSettlement, { readonly brand: unique symbol }>()(
+  S.Struct({
+    artifact: CitedArtifactExistsVerdict,
+    crossCheck: EvidenceCrossCheckCleanVerdict,
+    eventId: CitedEventIdExistsVerdict,
+  }).pipe(
+    $I.annoteSchema("RoundCrossCheckSettlement", {
+      description: "Artifact, event, and aggregate verdicts settled for one round cross-check.",
+    })
+  )
+) {}
+
+/**
+ * Leaf and aggregate verdicts of one QA judge settlement, bound to the judged inventory.
+ *
+ * **Details**
+ *
+ * Each verdict is optional because the flows stop early: a denied output
+ * decode means no later gate runs. A gate that did not run is certified as
+ * `untested`, never as passed.
+ *
+ * **Example** (Describe a settlement that stopped at decode)
+ *
+ * ```ts
+ * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
+ * import * as O from "effect/Option"
+ *
+ * const settlement = QaJudgeSettlement.make({
+ *   artifact: O.none(),
+ *   crossCheck: O.none(),
+ *   decode: O.none(),
+ *   eventId: O.none(),
+ *   inventory: EvidenceSubject.make({
+ *     digest: EvidenceDigest.make({
+ *       sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *     }),
+ *     name: "qa/round-1/inventory.json"
+ *   }),
+ *   round: O.none()
+ * })
+ * console.log(O.isNone(settlement.decode)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QaJudgeSettlement extends S.Opaque<QaJudgeSettlement, { readonly brand: unique symbol }>()(
+  S.Struct({
+    artifact: S.Option(CitedArtifactExistsVerdict),
+    crossCheck: S.Option(EvidenceCrossCheckCleanVerdict),
+    decode: S.Option(JudgeOutputInventoryDecodesVerdict),
+    eventId: S.Option(CitedEventIdExistsVerdict),
+    inventory: EvidenceSubject.annotateKey({
+      description: "Name and digest of the judged inventory bytes; the certificate envelope subject.",
+    }),
+    round: S.Option(DeclaredRoundCoherentVerdict),
+  }).pipe(
+    $I.annoteSchema("QaJudgeSettlement", {
+      description: "Optional per-gate verdicts of one QA judge settlement bound to the judged inventory digest.",
+    })
+  )
+) {}
+
+const qaJudgeCertificateVerifier = GateSummaryVerifier.make({
+  id: URLStr.make($QaId.create("verifiers/judge-settlement/v1").iri),
+  version: { [qaJudgeContractId]: qaJudgeContractVersion },
+});
+
+const certifiedOutcome = (verdict: O.Option<{ readonly verdict: GateOutcome }>): CheckOutcome =>
+  O.match(verdict, {
+    onNone: () => CheckOutcome.Enum.untested,
+    onSome: ({ verdict }) =>
+      GateOutcome.match(verdict, { allowed: () => CheckOutcome.Enum.passed, denied: () => CheckOutcome.Enum.failed }),
+  });
+
+/**
+ * Produces the gate certificate for one QA judge settlement.
+ *
+ * **Details**
+ *
+ * One check per `QaJudgeContract` declaration, in declaration order (each
+ * declaration is paired with its own verdict, so a renamed or reordered gate
+ * fails the parity suite instead of vanishing): an
+ * allowed verdict is `passed`, a denied verdict is `failed`, and a gate that
+ * did not run is `untested`. Every declared gate is listed and in reach, so
+ * reach is `complete`; the aggregate is settled by the kernel and is never
+ * `passed` while any gate is untested. The envelope subject is the judged
+ * inventory digest. The certificate is unsigned.
+ *
+ * **Example** (Certify a settlement that never ran)
+ *
+ * ```ts
+ * import { certifyQaJudgeSettlement, QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const inventory = EvidenceSubject.make({
+ *   digest: EvidenceDigest.make({
+ *     sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *   }),
+ *   name: "qa/round-1/inventory.json"
+ * })
+ * const receipt = Effect.runSync(
+ *   certifyQaJudgeSettlement(
+ *     QaJudgeSettlement.make({
+ *       artifact: O.none(),
+ *       crossCheck: O.none(),
+ *       decode: O.none(),
+ *       eventId: O.none(),
+ *       inventory,
+ *       round: O.none()
+ *     })
+ *   )
+ * )
+ * console.log(receipt.predicate.outcome) // "untested"
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const certifyQaJudgeSettlement = Effect.fn("QaJudgeContract.certifyQaJudgeSettlement")(function* (
+  settlement: QaJudgeSettlement
+): Effect.fn.Return<GateCertificateReceipt> {
+  const timeVerified = yield* auditTimestamp;
+  const certified: ReadonlyArray<readonly [GateDeclaration, CheckOutcome]> = [
+    [JudgeOutputInventoryDecodesGate, certifiedOutcome(settlement.decode)],
+    [DeclaredRoundCoherentGate, certifiedOutcome(settlement.round)],
+    [CitedArtifactExistsGate, certifiedOutcome(settlement.artifact)],
+    [CitedEventIdExistsGate, certifiedOutcome(settlement.eventId)],
+    [EvidenceCrossCheckCleanGate, certifiedOutcome(settlement.crossCheck)],
+  ];
+  const checks = A.map(certified, ([declaration, outcome]) =>
+    CertificateCheck.make({
+      checkId: declaration.id,
+      evidenceSubjects: CheckOutcome.is.untested(outcome) ? [] : [settlement.inventory],
+      evidenceType: declaration.evidence.predicateType,
+      inReach: true,
+      outcome,
+      severity: declaration.severity,
+    })
+  );
+  return GateCertificateReceipt.make({
+    predicate: GateCertificate.make({
+      checks,
+      contractSubject: QaJudgeContractSubject,
+      outcome: settleGateCertificateOutcome("complete", checks),
+      reach: "complete",
+      timeVerified,
+      verifier: qaJudgeCertificateVerifier,
+    }),
+    predicateType: GateCertificatePredicateType,
+    subject: [settlement.inventory],
+  });
+});
+
+/**
+ * A written QA judge certificate and the subject bound to its exact bytes.
+ *
+ * **Details**
+ *
+ * `subject` is the SHA-256 of the encoded `gate-certificate.json` bytes the
+ * producer wrote. Apply-by-id plans bind to it, so any change to the written
+ * certificate makes a plan stale.
+ *
+ * **Example** (Inspect the written-certificate fields)
+ *
+ * ```ts
+ * import { QaJudgeCertificate } from "@beep/repo-cli/commands/Qa"
+ *
+ * console.log(Object.keys(QaJudgeCertificate.fields).sort()) // ["receipt", "subject"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QaJudgeCertificate extends S.Opaque<QaJudgeCertificate, { readonly brand: unique symbol }>()(
+  S.Struct({
+    receipt: GateCertificateReceipt,
+    subject: EvidenceSubject.annotateKey({
+      description: "Name and SHA-256 of the exact encoded certificate bytes written by the producer.",
+    }),
+  }).pipe(
+    $I.annoteSchema("QaJudgeCertificate", {
+      description: "Written QA judge gate certificate with the subject bound to its exact encoded bytes.",
+    })
+  )
+) {}
