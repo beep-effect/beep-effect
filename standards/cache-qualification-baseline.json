@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Codex (PR #2611, accepted a88d baseline conflict review)",
-      "reason": "Preserve accepted main configuration, record the accepted party-domain expansion once, and retain only the owned storage-module seal input. No qualification or enablement.",
+      "reviewer": "Claude Opus 5.5 (Yeet proof-tier dedupe, claude/perf-yeet-tier-dedupe-9fd6b5)",
+      "reason": "Record Yeet/internal/HeadInstallReceipt.ts added to the goals-doctor, knowledge and quality seal inputs; commands, outputs and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
-        "sha256": "3ee460b6c537dbaa1f1e130dd05ff017b1108c658391539ad1c68ac7c0600f7d"
+        "path": "docs/reports/perf-yeet-tier-dedupe-cache-review-2026-11-02.md",
+        "sha256": "6ae7d5054b3935e2ed182916630c17cbe4200823f2f37a2f7a888ca360532fd6"
       }
     },
     "@beep/acp": {
@@ -3652,6 +3652,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallReceipt.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
@@ -4309,6 +4310,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallReceipt.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
@@ -6789,6 +6791,7 @@
             "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts",
+            "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallReceipt.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts",
             "packages/tooling/tool/cli/src/commands/Yeet/internal/InnerLaneReports.ts",
@@ -122730,7 +122733,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "44c446d3cac904e1bcdb16feefd1b7b4f3509223066beb2f38ec0dfafb111d2e"
+        "sha256": "d2ca263e3cf0e2ff5c959f79392f7153b85d1c039dc13aea025b8998cfcac568"
       }
     ]
   }
