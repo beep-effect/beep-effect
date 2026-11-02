@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { appendTurboSummary, CiRunnerOutputsLive, ciLaneCommand, runCiLocal } from "@beep/repo-cli/commands/Ci";
 import { FsUtilsLive } from "@beep/repo-utils";
@@ -18,16 +19,26 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const TestLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TestConsole.layer
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
+const TestLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TestConsole.layer
+  )
 );
 const ciTest = it.layer(TestLayer, { timeout: "30 seconds" });
 const runCiLaneCommand = Command.runWith(ciLaneCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isString = (value: unknown): value is string => typeof value === "string";
+
+// Hosted runners export `GITHUB_STEP_SUMMARY` to every process, test workers included; the
+// off-runner branch is a configuration under test, never the host's ambient environment.
+const offRunner = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 
 const withTempRepo = <A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) =>
   Effect.scoped(
@@ -168,7 +179,7 @@ describe("CI commands", () => {
           );
 
           const recording = ActionOutputs.recording();
-          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer));
+          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer), offRunner);
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(output).toContain("## Turbo Summary");
@@ -226,7 +237,10 @@ describe("CI commands", () => {
             )
           );
 
-          yield* appendTurboSummary(O.none(), true).pipe(provideScopedLayer(ActionOutputs.recording().layer));
+          yield* appendTurboSummary(O.none(), true).pipe(
+            provideScopedLayer(ActionOutputs.recording().layer),
+            offRunner
+          );
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(O.getOrNull(Str.match(/## Turbo Summary/gu)(output)) ?? []).toHaveLength(2);

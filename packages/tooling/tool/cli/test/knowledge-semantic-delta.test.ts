@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   decodeKnowledgeUtf8,
@@ -81,6 +82,7 @@ const NO_GIT_REFS = HashSet.empty<string>();
 const policyLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 
 const testLayer = KnowledgeServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(NodeCrypto.layer)
 );

@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import {
   CLAUDE_WORKTREES_RELATIVE_ROOT,
   restoreBeepMaterial,
@@ -61,11 +62,17 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  TestConsole.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 
 const runGit = Effect.fn("YeetRetireTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
@@ -1103,7 +1110,13 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
             WorktreeRemovalServiceLive.pipe(
               Layer.fresh,
               Layer.provide(
-                Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                Layer.provideMerge(
+                  Git.layer,
+                  Layer.provideMerge(
+                    Git.layer,
+                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                  )
+                )
               ),
               Layer.build,
               Effect.map(Context.get(WorktreeRemovalService))

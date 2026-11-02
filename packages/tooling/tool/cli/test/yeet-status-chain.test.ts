@@ -1,5 +1,6 @@
 // Historical pre-retirement GitHub snapshots retain the former Knip context.
 
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { collectYeetStatus, RepoRunContext, YeetStatusSnapshotJson } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,7 +10,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
@@ -227,35 +228,38 @@ const withFakeRunner = (
   answers = ghAnswers,
   exitCodes = HashMap.empty<string, number>()
 ) =>
-  Effect.provideService(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const args = commandArgs(command);
-      const record = Ref.update(recorder.invocations, A.append({ command: command.command, args }));
-      if (command.command !== "gh") return record.pipe(Effect.as(handle("")));
-      if (failCensus && args[0] === "api") return record.pipe(Effect.as(handle("rate limited", 1)));
-      const census = args[1] === "checks" && !A.contains(args, "--required");
-      return Effect.gen(function* () {
-        yield* record;
-        yield* Ref.update(recorder.events, A.append(`start ${A.join(A.take(args, 2), " ")}`));
-        const now = yield* Ref.updateAndGet(recorder.inFlight, Num.increment);
-        yield* Ref.update(recorder.maxInFlight, Num.max(now));
-        // The live clock: the test clock would park the read until adjusted.
-        yield* latency.pipe(Effect.sleep, TestClock.withLive);
-        yield* Ref.update(recorder.inFlight, Num.decrement);
-        yield* Ref.update(recorder.events, A.append(`end ${A.join(A.take(args, 2), " ")}`));
-        if (failCensus && census) {
-          return yield* PlatformError.systemError({
-            _tag: "NotFound",
-            module: "YeetStatusChainTest",
-            method: "spawn",
-            pathOrDescriptor: A.join(args, " "),
-          });
-        }
-        return ghAnswer(args, answers, exitCodes);
-      });
-    })
+  flow(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.provideService(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+        const args = commandArgs(command);
+        const record = Ref.update(recorder.invocations, A.append({ command: command.command, args }));
+        if (command.command !== "gh") return record.pipe(Effect.as(handle("")));
+        if (failCensus && args[0] === "api") return record.pipe(Effect.as(handle("rate limited", 1)));
+        const census = args[1] === "checks" && !A.contains(args, "--required");
+        return Effect.gen(function* () {
+          yield* record;
+          yield* Ref.update(recorder.events, A.append(`start ${A.join(A.take(args, 2), " ")}`));
+          const now = yield* Ref.updateAndGet(recorder.inFlight, Num.increment);
+          yield* Ref.update(recorder.maxInFlight, Num.max(now));
+          // The live clock: the test clock would park the read until adjusted.
+          yield* latency.pipe(Effect.sleep, TestClock.withLive);
+          yield* Ref.update(recorder.inFlight, Num.decrement);
+          yield* Ref.update(recorder.events, A.append(`end ${A.join(A.take(args, 2), " ")}`));
+          if (failCensus && census) {
+            return yield* PlatformError.systemError({
+              _tag: "NotFound",
+              module: "YeetStatusChainTest",
+              method: "spawn",
+              pathOrDescriptor: A.join(args, " "),
+            });
+          }
+          return ghAnswer(args, answers, exitCodes);
+        });
+      })
+    )
   );
 
 const FileSystemLayer = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);

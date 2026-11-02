@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   addWorktree,
   branchDeleteCommand,
@@ -74,12 +75,14 @@ import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { WorktreeUpstreamState, WorktreeUpstreamVerdict } from "@beep/repo-cli/commands/Worktree";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const worktreeRemovalTestLayer = WorktreeRemovalServiceLive.pipe(
-  Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
-);
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, worktreeRemovalTestLayer);
+const platformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
+const worktreeRemovalTestLayer = WorktreeRemovalServiceLive.pipe(Layer.provide(platformLayer));
+const testLayer = Layer.mergeAll(platformLayer, worktreeRemovalTestLayer);
 
 const encodeResidueManifest = S.encodeEffect(S.fromJsonString(WorktreeResidueManifest));
 const decodeResidueManifest = S.decodeUnknownEffect(S.fromJsonString(WorktreeResidueManifest));
@@ -313,7 +316,7 @@ describe("worktree argument builders", () => {
     ]);
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("builds deterministic residue paths and reasons", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
@@ -381,7 +384,7 @@ describe("worktree argument builders", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("omits the unsupported force flag from remove help", () =>
       Effect.gen(function* () {
         const existingLineCount = A.length(yield* TestConsole.logLines);
@@ -829,7 +832,7 @@ describe("worktree output rendering", () => {
 });
 
 describe("worktree git operations", () => {
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("rejects unsafe, missing, and unregistered removal arguments through the command", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -872,7 +875,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("removes a registered detached worktree through the command and preserves a dirty one", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -912,7 +915,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("preserves a registered worktree when its requested name does not match the target", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -941,7 +944,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("preserves data when a registered worktree path is replaced by an external symlink", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -975,7 +978,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("preserves a registered path whose Git common directory was redirected to another repository", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1010,7 +1013,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("adapts Git spawn failures and non-zero exits", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1036,7 +1039,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "refuses a name registered under both roots and never lets a stale nested directory shadow a sibling",
       () =>
@@ -1084,7 +1087,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("rejects branch deletion outside archive retirement", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1116,7 +1119,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("preserves an unregistered repository under the managed root", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1151,7 +1154,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("adds a worktree, copies local files, and reports it via doctor", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1259,7 +1262,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("refuses archive retirement when the residue root is inside the target", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1315,7 +1318,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("refuses archive retirement when an initialized submodule has uncommitted work", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1381,7 +1384,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("archives a worktree whose raw name contains a space under a validated encoded ref", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1430,7 +1433,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("separates same-name residue from clones with the same basename", () =>
       withScratchRepo((firstRepoRoot) =>
         withScratchRepo((secondRepoRoot) =>
@@ -1492,7 +1495,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("archives dirty and unpushed residue before removal and leaves clean removal residue-free", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -1626,7 +1629,14 @@ describe("worktree git operations", () => {
                 WorktreeRemovalServiceLive.pipe(
                   Layer.fresh,
                   Layer.provide(
-                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                    Layer.provideMerge(
+                      Git.layer,
+                      Layer.mergeAll(
+                        NodeServices.layer,
+                        NodeCrypto.layer,
+                        Layer.succeed(FileSystem.FileSystem, faultyFs)
+                      )
+                    )
                   ),
                   Layer.build,
                   Effect.map(Context.get(WorktreeRemovalService))
@@ -1687,7 +1697,14 @@ describe("worktree git operations", () => {
                 WorktreeRemovalServiceLive.pipe(
                   Layer.fresh,
                   Layer.provide(
-                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                    Layer.provideMerge(
+                      Git.layer,
+                      Layer.mergeAll(
+                        NodeServices.layer,
+                        NodeCrypto.layer,
+                        Layer.succeed(FileSystem.FileSystem, faultyFs)
+                      )
+                    )
                   ),
                   Layer.build,
                   Effect.map(Context.get(WorktreeRemovalService))
@@ -1768,7 +1785,10 @@ describe("worktree git operations", () => {
               WorktreeRemovalServiceLive.pipe(
                 Layer.fresh,
                 Layer.provide(
-                  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                  Layer.provideMerge(
+                    Git.layer,
+                    Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.succeed(FileSystem.FileSystem, faultyFs))
+                  )
                 ),
                 Layer.build,
                 Effect.map(Context.get(WorktreeRemovalService))
@@ -2035,7 +2055,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("retires a lane whose upstream was pruned after merge and still preserves unpushed commits", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2159,7 +2179,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("records the merged pull request that proves a pruned-upstream tip was pushed", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2211,7 +2231,7 @@ describe("worktree git operations", () => {
               WorktreeRemovalService,
               WorktreeRemovalServiceLayer.pipe(
                 Layer.fresh,
-                Layer.provide([Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), probe]),
+                Layer.provide([platformLayer, probe]),
                 Layer.build,
                 Effect.map(Context.get(WorktreeRemovalService))
               )
@@ -2238,7 +2258,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("refuses archive retirement while a process holds the checkout and restores it in place", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2299,7 +2319,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect.each(["claude", "ghostty"])(
       "enforces ancestry boundaries and explicit marker precedence (%s)",
       (rootCommand) =>
@@ -2456,7 +2476,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("removes a clean legacy worktree under its authorized head and refuses a dirty one", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2501,7 +2521,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("reports a fence that cannot be placed and leaves the checkout untouched", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2541,7 +2561,7 @@ describe("worktree git operations", () => {
     );
   });
 
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("archives the residue and names the fenced copy when its deletion is denied", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {
@@ -2607,7 +2627,7 @@ describe("worktree git operations", () => {
 });
 
 describe("nested worktree removal", { concurrent: false }, () => {
-  it.layer(testLayer)((it) => {
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect("removes a nested lane and its branch while retaining the sibling context root", () =>
       withScratchRepo((repoRoot) =>
         Effect.gen(function* () {

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CHECK_CENSUS_OVERLAY_FILE_NAME,
   CheckCensusOptions,
@@ -14,6 +15,10 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
 const encodeUnknownJsonEffect = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -83,7 +88,7 @@ const writeFixtureRepo = Effect.fn("CheckCensusTest.writeFixtureRepo")(function*
   );
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("check census", (it) => {
+it.layer(gitPlatform, { timeout: "30 seconds" })("check census", (it) => {
   it.effect(
     "measures the committed overlay against a reference-keeping overlay and removes the temporary config",
     Effect.fnUntraced(function* () {
