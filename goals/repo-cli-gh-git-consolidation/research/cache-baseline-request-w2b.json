@@ -1,5 +1,5 @@
 {
-  "previous": "693f2ba5500e0c61926d01346a93dc358677de62335f21969947a9d128011074",
+  "previous": "9e0cc562cad751f75383ea472cbb931e761d556e734fbebb8d36a3d67d9435f3",
   "review": {
     "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W2b, feat/gh-git-w2b)",
     "reason": "Record the five @beep/repo-ai-metrics computations after the package takes a @beep/git workspace dependency for its config-snapshot git reads; only the manifest input and the dependency edge change, and no qualification is granted.",
