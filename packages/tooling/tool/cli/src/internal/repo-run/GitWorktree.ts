@@ -3,7 +3,9 @@
  *
  * Both the Yeet merged-preview lifecycle and the residue janitor tear down
  * detached preview worktrees. The teardown lives here so internal code never
- * imports from a command module.
+ * imports from a command module. `Git` is taken from the requirements: the
+ * runtime edge provides `Git.layer` once (repo-cli-gh-git-consolidation D-06),
+ * and every caller carries `Git` in its union since W1b.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -52,22 +54,19 @@ const resolvedPath = Effect.fnUntraced(function* (
  * @category probes
  * @since 0.0.0
  */
-export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree")(
-  function* (
-    repoRoot: string,
-    worktreePath: string
-  ): Effect.fn.Return<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path | Git> {
-    const git = yield* Git;
-    const entries = yield* git.worktreeList(repoRoot).pipe(Effect.option);
-    if (O.isNone(entries)) {
-      return O.none();
-    }
-    const target = yield* resolvedPath(worktreePath);
-    const listed = yield* Effect.forEach(entries.value, (entry) => resolvedPath(entry.path));
-    return O.some(A.contains(listed, target));
-  },
-  Effect.provideServiceEffect(Git, Git.make)
-);
+export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree")(function* (
+  repoRoot: string,
+  worktreePath: string
+): Effect.fn.Return<O.Option<boolean>, never, FileSystem.FileSystem | Path.Path | Git> {
+  const git = yield* Git;
+  const entries = yield* git.worktreeList(repoRoot).pipe(Effect.option);
+  if (O.isNone(entries)) {
+    return O.none();
+  }
+  const target = yield* resolvedPath(worktreePath);
+  const listed = yield* Effect.forEach(entries.value, (entry) => resolvedPath(entry.path));
+  return O.some(A.contains(listed, target));
+});
 
 /**
  * Remove a linked worktree with `git worktree remove --force`, then prune.
@@ -97,12 +96,12 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
  * @category mutations
  * @since 0.0.0
  */
-export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(
-  function* (repoRoot: string, worktreePath: string): Effect.fn.Return<boolean, never, Git> {
-    const git = yield* Git;
-    const removed = yield* git.worktreeRemove(repoRoot, worktreePath, { force: true }).pipe(Effect.isSuccess);
-    yield* git.worktreePrune(repoRoot).pipe(Effect.ignore);
-    return removed;
-  },
-  Effect.provideServiceEffect(Git, Git.make)
-);
+export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(function* (
+  repoRoot: string,
+  worktreePath: string
+): Effect.fn.Return<boolean, never, Git> {
+  const git = yield* Git;
+  const removed = yield* git.worktreeRemove(repoRoot, worktreePath, { force: true }).pipe(Effect.isSuccess);
+  yield* git.worktreePrune(repoRoot).pipe(Effect.ignore);
+  return removed;
+});
