@@ -642,6 +642,44 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     ).toBe("merge");
   });
 
+  it("names an absent merge-base run when the inherited red has a run only on the base tip", () => {
+    const absentBase = MergeGateBaseRuns.make({
+      ...greenBaseRuns,
+      checkRuns: A.filter(greenBaseRuns.checkRuns, (run) => run.name !== "Repo Sanity"),
+    });
+    const evidence = MergeGateBaseEvidence.make({
+      mergeBase: absentBase,
+      baseTip: runsRedOn(MergeGateBaseRuns.make({ ...greenBaseRuns, sha: baseTipSha }), ["Repo Sanity"]),
+    });
+    const observed = read({ checkRuns: repoSanityRed, baseRuns: O.some(evidence) });
+    const decision = decideMergeGate(MergeGateInput.make({ read: observed, options: relaxed() }));
+    expect(decision._tag).toBe("merge");
+    expect(A.map(atMergeOf(decision), (entry) => entry.attribution)).toEqual([
+      `inherited: no run on merge-base 2c1cb448ba; run ${baseRunIdOf("Repo Sanity")} failure on base tip 7a7a7a7a7a`,
+    ]);
+    expect(holdReason(decideMergeGate(MergeGateInput.make({ read: observed, options: options() })))).toBe(
+      "required-red"
+    );
+  });
+
+  it("describes a completed base run without a conclusion without treating it as a strict pass", () => {
+    const unconcluded = MergeGateBaseRuns.make({
+      ...greenBaseRuns,
+      checkRuns: A.map(greenBaseRuns.checkRuns, (run) =>
+        run.name === "Repo Sanity" ? MergeGateCheckRun.make({ ...run, status: "completed", conclusion: null }) : run
+      ),
+    });
+    const observed = read({ checkRuns: repoSanityRed, baseRuns: O.some(upToDate(unconcluded)) });
+    const decision = decideMergeGate(MergeGateInput.make({ read: observed, options: relaxed() }));
+    expect(decision._tag).toBe("merge");
+    expect(A.map(atMergeOf(decision), (entry) => entry.attribution)).toEqual([
+      `inherited: run ${baseRunIdOf("Repo Sanity")} without conclusion on merge-base 2c1cb448ba`,
+    ]);
+    expect(holdReason(decideMergeGate(MergeGateInput.make({ read: observed, options: options() })))).toBe(
+      "required-red"
+    );
+  });
+
   // Hosted CI tests the head on the base tip, so a PR behind its base is judged on both commits.
   it("behind its base, a red is inherited only when the check is not green on the merge-base nor on the base tip", () => {
     const tipGreen = MergeGateBaseRuns.make({ ...greenBaseRuns, sha: baseTipSha });
