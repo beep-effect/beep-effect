@@ -1,6 +1,6 @@
 # Trustworthy agent observability foundation
 
-Current delivery: owner-held draft PR2578. Historical PR2364 and PR2508 completion receipts remain unsatisfied; the active goal requires verified pre-merge readiness and canonical closeout for the new final head. The recovery hold remains intact.
+Current delivery: owner-held final PR2578. Historical PR2364 and PR2508 completion receipts remain unsatisfied; the active goal requires verified pre-merge readiness and canonical closeout for the new final head. The recovery hold remains intact.
 
 ## Status
 
