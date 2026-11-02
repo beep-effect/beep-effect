@@ -454,11 +454,47 @@ const lockShimPort = (port: number): boolean => {
   }
 };
 
+// The lock files only exclude other shim processes. A long-lived listener outside the test run
+// (an IDE helper, a browser runtime, a dev server) can hold a port in the shim range too; the
+// async bind then fails with EADDRINUSE after `serve` returned and the caller's requests reach
+// that process instead. Linux lists every listening TCP socket in /proc/net/tcp{,6} (state 0A),
+// so those ports are skipped before a lock is taken. Elsewhere the files are absent and the
+// set stays empty.
+const shimProcNetTcpTables = ["/proc/net/tcp", "/proc/net/tcp6"] as const;
+const shimTcpListenState = "0A";
+
+const readProcNetTcpRows = (table: string): ReadonlyArray<string> => {
+  try {
+    return A.drop(Str.split("\n")(NodeFS.readFileSync(table, "utf8")), 1);
+  } catch {
+    return [];
+  }
+};
+
+// A row reads `sl local_address rem_address st ...`; local_address is HEXADDR:HEXPORT for both
+// IPv4 and IPv6 rows.
+const listeningPortOfRow = (row: string): O.Option<number> => {
+  const fields = A.filter(Str.split(/\s+/)(Str.trim(row)), Str.isNonEmpty);
+  const localAddress = fields[1];
+  if (fields[3] !== shimTcpListenState || localAddress === undefined) return O.none();
+  return Str.lastIndexOf(":")(localAddress).pipe(
+    O.map((separator) => Number.parseInt(Str.slice(separator + 1)(localAddress), 16)),
+    O.filter(Number.isInteger)
+  );
+};
+
+const listeningTcpPorts = (): MutableHashSet.MutableHashSet<number> =>
+  MutableHashSet.fromIterable(
+    A.getSomes(A.map(A.flatMap(shimProcNetTcpTables, readProcNetTcpRows), listeningPortOfRow))
+  );
+
 const claimShimPort = (): number => {
   NodeFS.mkdirSync(shimPortLockDirectory, { recursive: true });
+  const occupied = listeningTcpPorts();
   for (let attempt = 0; attempt < shimPortCount; attempt++) {
     const offset = (nextShimPortOffset + attempt) % shimPortCount;
     const port = shimPortFloor + offset;
+    if (MutableHashSet.has(occupied, port)) continue;
     if (lockShimPort(port)) {
       nextShimPortOffset = (offset + 1) % shimPortCount;
       MutableHashSet.add(ownedShimPorts, port);
