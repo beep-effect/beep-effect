@@ -8,7 +8,8 @@ work. The continuation lane is the sibling effect-vitest-canon-continuation
 worktree on codex/effect-vitest-canon-continuation. Keep its owning clone intact.
 
 Outcome: every apps/packages/infra test and named test support module satisfies
-the current pinned contract, the lint baseline is empty, every judgment is fixed
+the current pinned contract, the lint baseline has no open rows (D4 as amended
+2026-11-02: owned exceptions with exits stay), every judgment is fixed
 or reasoned, and all timing/package/hosted evidence is complete. The historical
 955-file count is a dated anchor; reconcile current scope after the authorized
 existing backlog is exhausted. D1-D14 remain locked; do not re-grill them.
@@ -54,7 +55,8 @@ closeout. Fix P0/P1 in every round; after round two track and resolve P2-or-lowe
 feedback without another push, under the current operator policy.
 
 Completion requires every SPEC requirement: complete inventory/lens ledger,
-zero new instances and empty final baseline, requested independent reviews,
+zero new instances and a final baseline with no open rows (owned exceptions
+retained; D4 as amended 2026-11-02), requested independent reviews,
 all named proofs and ratifications, following-week timing report, reflection,
 and same-PR lifecycle closeout. Audit each requirement against current evidence
 before marking complete. Keep the goal active while required work remains.
