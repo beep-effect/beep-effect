@@ -77,6 +77,7 @@ import {
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1853,7 +1854,8 @@ type KnowledgeServiceRequirements =
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const rewriteKnowledgeReferenceFile = Effect.fn("Knowledge.rewriteReferenceFile")(function* (
   root: string,

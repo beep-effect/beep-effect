@@ -2,17 +2,34 @@
 
 ## Status
 
-Status: `pending`
+Status: `active` — P0 research complete (`research/p0-site-inventory-2026-11-02.md`); P1 runs the waves below, one PR each, W0 first.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | `research/p0-site-inventory-2026-11-02.md`: every site-list row, the kit gaps G1-G10, the off-list spawns and the wave plan; decisions D-02 to D-05 in `SPEC.md`. |
+| P1 Implement | in-progress | Land the kit features with tests, then switch the sites, one owner per PR (the Waves table). | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+
+## Waves
+
+The binding sequence from P0 (`research/p0-site-inventory-2026-11-02.md`, section 5). Kit features land with tests
+before the sites that use them; one owner switch per PR; each PR records a before/after differential under `ops/`
+and `research/` (the effected-promotion R10 pattern: frozen old bodies against the kit over scratch repositories,
+zero unclassified differences). Each PR flips its own row.
+
+| Wave | Kit features | Sites | Status |
+| --- | --- | --- | --- |
+| W0 | G9 `Git.isAncestor`, G10 `Git.worktreePrune`; `Git.layer` once at the CLI runtime edge (D-06) | `Knowledge/KnowledgeDoctor.service.ts` (#111), `Quality/internal/ResidueTerminalLaneLive.ts`, `Ci/RouteCensus.ts` is-ancestor probes; `internal/repo-run/GitWorktree.ts` and `internal/repo-run/TmpfsReap.ts` worktree remove and prune | in review, this PR |
+| W1 | G4 fail-closed parsers, G5 `nameStatus` rename score and pathspec, G6 bounded output (D-04), G10 `revParse` peel | `internal/repo-run/GitExec.ts` core (#100, #251), `Yeet/internal/GitExec.ts` (#101) and the Yeet is-ancestor probes (`FinalCheckRefresh`, `Sweep`), `HeadInstallPreflight`; Yeet lifts `Git` into its requirement unions and drops the leaf `Git.make` provisions | in review, this PR (W1a: readers; W1b: Yeet layer pending) |
+| W2 | G7 dirty-axis flags and pathspec, G8 `log` name-status | `internal/repo-run/ChangedFiles.ts` (#102), `Quality/Quality.command.ts`, `Knowledge/KnowledgeDoctor.grouping.ts` (#110), the per-group one-liner wrappers (#112, #252), `Worktree/Worktree.schemas.ts` (#105) and the `Fleet.service.ts` reads (#106), ai-metrics `config-snapshot.ts` (#107, #304) | pending |
+| W3 | G2 down-scoped App token; the `gh auth token` and `op read` spawns onto `@beep/commands` `Run` (D-05) | `Reviewer/*` (#74, #75, #76, #124, #247, #303), `Ci/LaneTimings.ts` (#248), `Ci/CiGovernance.ts` and `Ci/CiRerunRunnerLoss.ts` (#249) | pending |
+| W4 | G3 `ReviewThread` resource in `@beep/github` | `internal/github/GithubGraphql.ts` (#77) folds into the kit; `Yeet/internal/{Status,WatchMode,MergeGate,Reply,closeout/GhCollect}.ts` (#78 to #82) and the Yeet REST surface (#250) onto `GithubRest` and `PullRequest`; `GhCall.ts` deleted, `GhCommand.ts` (#83) shrinks | pending |
+| W5 | none (`@beep/commands` `ScriptedSpawner` as-is) | the hand-rolled scripted spawners in repo-cli tests (#125, #279), ai-metrics tests and `tailscale.test.ts` (#300); #291 records that `@beep/test-utils` adds no second double | pending |
+| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `proposedCloseout` | pending |
 
 ## Closeout Checklist
 

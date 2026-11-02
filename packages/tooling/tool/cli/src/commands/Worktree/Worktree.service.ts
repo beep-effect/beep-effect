@@ -89,6 +89,7 @@ import {
   WorktreeUnpushedInspection,
   WorktreeUpstreamState,
 } from "./Worktree.schemas.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -578,11 +579,13 @@ type WorktreeRemovalServiceRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeMergedPullRequestProbe;
 
 type UpstreamProbeRequirements =
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeMergedPullRequestProbe;
 
 const commandErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
@@ -746,11 +749,7 @@ const resolveOriginDefaultBranch = Effect.fn("WorktreeRemovalService.resolveOrig
 const resolveHeadObjectId = Effect.fn("WorktreeRemovalService.resolveHeadObjectId")(function* (
   targetPath: string,
   step: WorktreePreservationError["step"]
-): Effect.fn.Return<
-  GitObjectId,
-  WorktreePreservationError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<GitObjectId, WorktreePreservationError, Git> {
   const headOutput = yield* resolveGitCommit(
     targetPath,
     "HEAD",
@@ -1626,7 +1625,7 @@ const inspectArchiveHead = Effect.fn("WorktreeRemovalService.inspectArchiveHead"
 ): Effect.fn.Return<
   GitObjectId,
   WorktreePreservationError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   return yield* resolveHeadObjectId(request.targetPath, "inspect-head");
 });
@@ -1760,7 +1759,7 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
 ): Effect.fn.Return<
   WorktreeRemovalReceipt,
   WorktreeCommandError | WorktreeDirtyError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (O.isSome(request.expectedHead)) {
     const head = yield* resolveGitCommit(
@@ -2440,4 +2439,5 @@ export const WorktreeRemovalServiceLive: Layer.Layer<
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > = WorktreeRemovalServiceLayer.pipe(Layer.provide(WorktreeMergedPullRequestProbeLive));

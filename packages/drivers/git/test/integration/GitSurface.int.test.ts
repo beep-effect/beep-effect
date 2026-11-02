@@ -18,7 +18,7 @@
 // set to "always" — the superproject (and any clone of it) sets that BEFORE
 // the submodule operation that would otherwise be refused.
 
-import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, NameStatusEntry, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
@@ -163,6 +163,8 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
         assert.isDefined(renamed);
         assert.strictEqual(renamed?.status, "renamed");
         assert.strictEqual(renamed?.oldPath, "sub/c.txt");
+        // `git mv` with unchanged content is an exact rename: git prints R100.
+        assert.strictEqual(renamed?.score, 100);
 
         const added = O.getOrUndefined(A.findFirst(entries, (entry) => entry.path === "staged.txt"));
         assert.isDefined(added);
@@ -234,13 +236,39 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
       })
     );
 
-    it.effect("remoteUrl is none before a remote exists and some after", () =>
+    it.effect("nameStatus honors findRenames, diffFilter and a pathspec against the real tree", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        // Only renames, detected at 50%, and only under the paths the rename touches.
+        const renames = yield* git.nameStatus(dirA, {
+          base: "HEAD",
+          findRenames: 50,
+          diffFilter: "R",
+          pathspec: ["renamed.txt", "sub"],
+        });
+        assert.deepStrictEqual(
+          A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path, entry.score]),
+          [["renamed", "sub/c.txt", "renamed.txt", 100]]
+        );
+        // Lower case excludes: everything BUT renames, scoped to a.txt.
+        const notRenames = yield* git.nameStatus(dirA, { base: "HEAD", diffFilter: "r", pathspec: ["a.txt"] });
+        assert.deepStrictEqual(
+          A.map(notRenames, (entry) => [entry.status, entry.path]),
+          [["modified", "a.txt"]]
+        );
+      })
+    );
+
+    it.effect("remoteUrl is none before a remote exists and some after; push reads the push URL", () =>
       Effect.gen(function* () {
         const git = yield* Git;
         assertNone(yield* git.remoteUrl(dirA));
+        assertNone(yield* git.remoteUrl(dirA, { push: true }));
 
         yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
+        yield* runFixtureGit(dirA, ["remote", "set-url", "--push", "origin", "git@example.com:o/r.git"]);
         assertSome(yield* git.remoteUrl(dirA), "https://example.com/o/r.git");
+        assertSome(yield* git.remoteUrl(dirA, { push: true }), "git@example.com:o/r.git");
       })
     );
 
@@ -765,6 +793,270 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const failure = yield* Effect.flip(git.commonDir(outside));
           assert.instanceOf(failure, NotARepositoryError);
         })
+      );
+
+      // Last in the block on purpose: it removes the linked worktree's
+      // directory, which the commonDir cases above still read.
+      it.effect("worktreeList reports prunable once a linked worktree's directory is gone", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const fs = yield* FileSystem.FileSystem;
+          const before = yield* git.worktreeList(main);
+          assert.deepStrictEqual(
+            A.map(before, (entry) => entry.prunable),
+            [false, false]
+          );
+          yield* fs.remove(worktree, { recursive: true });
+          const after = yield* git.worktreeList(main);
+          assert.strictEqual(after.length, 2);
+          assert.strictEqual(after[0]?.prunable, false);
+          assert.strictEqual(after[1]?.prunable, true);
+          assert.strictEqual(after[1]?.branch, "refs/heads/side");
+        })
+      );
+    });
+  }
+);
+
+it.layer(TestLayer, { timeout: "30 seconds" })(
+  "Git surface — dirty-axis options and log name-status (fixture D)",
+  (it) => {
+    let dirD = "";
+    let c1Sha = "";
+    let c2Sha = "";
+
+    /**
+     * main: c1 (src/keep.ts, src/old.ts, docs/gone.md, README.md, other.txt, "a name.txt")
+     *    -> c2 (src/old.ts renamed to src/new.ts, docs/gone.md deleted, README.md
+     *           modified, src/added.ts added)
+     * side: branched at c1, edits other.txt only — the branch that makes
+     *       `base...head` and `base head` answer differently.
+     * Working tree after c2: src/keep.ts renamed to src/kept.ts (staged),
+     * README.md modified (unstaged), loose/inner.txt inside an untracked directory.
+     */
+    const FixtureDLayer = Layer.effectDiscard(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const join = (...parts: ReadonlyArray<string>) => path.join(...parts);
+        dirD = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-dirty-d-" });
+
+        const raw = (args: ReadonlyArray<string>) => runFixtureGit(dirD, args);
+        const commit = (message: string) => raw(["-c", "commit.gpgsign=false", "commit", "-m", message]);
+
+        yield* raw(["-c", "init.defaultBranch=main", "init"]);
+        yield* raw(["config", "user.email", "dirty-integration@example.com"]);
+        yield* raw(["config", "user.name", "Dirty Integration"]);
+
+        yield* fs.makeDirectory(join(dirD, "src"), { recursive: true });
+        yield* fs.makeDirectory(join(dirD, "docs"), { recursive: true });
+        yield* fs.writeFileString(join(dirD, "src", "keep.ts"), "keep\n");
+        yield* fs.writeFileString(join(dirD, "src", "old.ts"), "one\n");
+        yield* fs.writeFileString(join(dirD, "docs", "gone.md"), "gone\n");
+        yield* fs.writeFileString(join(dirD, "README.md"), "readme\n");
+        yield* fs.writeFileString(join(dirD, "other.txt"), "other\n");
+        yield* fs.writeFileString(join(dirD, "a name.txt"), "spaced\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("c1: seed");
+        c1Sha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+
+        yield* raw(["checkout", "-q", "-b", "side"]);
+        yield* fs.writeFileString(join(dirD, "other.txt"), "side\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("side: other");
+        yield* raw(["checkout", "-q", "main"]);
+
+        yield* raw(["mv", "src/old.ts", "src/new.ts"]);
+        yield* raw(["rm", "-q", "docs/gone.md"]);
+        yield* fs.writeFileString(join(dirD, "README.md"), "readme two\n");
+        yield* fs.writeFileString(join(dirD, "src", "added.ts"), "added\n");
+        yield* raw(["add", "-A"]);
+        yield* commit("c2: rename, delete, modify, add");
+        c2Sha = Str.trim(yield* raw(["rev-parse", "HEAD"]));
+
+        yield* raw(["mv", "src/keep.ts", "src/kept.ts"]);
+        yield* fs.writeFileString(join(dirD, "README.md"), "readme three\n");
+        yield* fs.makeDirectory(join(dirD, "loose"), { recursive: true });
+        yield* fs.writeFileString(join(dirD, "loose", "inner.txt"), "loose\n");
+      })
+    );
+
+    it.layer(FixtureDLayer, { timeout: "60 seconds" })((it) => {
+      it.effect(
+        "status --untracked-files=all names the file inside an untracked directory; the default collapses it",
+        () =>
+          Effect.gen(function* () {
+            const git = yield* Git;
+            const collapsed = A.map(yield* git.status(dirD), (entry) => entry.path);
+            assert.include(collapsed, "loose/");
+            assert.notInclude(collapsed, "loose/inner.txt");
+            const expanded = A.map(yield* git.status(dirD, { untrackedFiles: "all" }), (entry) => entry.path);
+            assert.include(expanded, "loose/inner.txt");
+            assert.notInclude(expanded, "loose/");
+            const none = A.map(yield* git.status(dirD, { untrackedFiles: "no" }), (entry) => entry.path);
+            assert.notInclude(none, "loose/");
+            assert.notInclude(none, "loose/inner.txt");
+          })
+      );
+
+      it.effect("status --no-renames turns the staged rename into D + A, where the default reports one R", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const renamed = yield* git.status(dirD, { pathspec: ["src"] });
+          assert.deepStrictEqual(
+            A.map(renamed, (entry) => [entry.x, entry.path, entry.origPath]),
+            [["R", "src/kept.ts", "src/keep.ts"]]
+          );
+          const split = yield* git.status(dirD, { noRenames: true, pathspec: ["src"] });
+          assert.deepStrictEqual(
+            A.map(split, (entry) => [entry.x, entry.path]),
+            [
+              ["D", "src/keep.ts"],
+              ["A", "src/kept.ts"],
+            ]
+          );
+        })
+      );
+
+      it.effect("status accepts the global --no-optional-locks and --ignore-submodules against real git", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const plain = yield* git.status(dirD);
+          const locked = yield* git.status(dirD, { noOptionalLocks: true, ignoreSubmodules: "none" });
+          assert.deepStrictEqual(locked, plain);
+        })
+      );
+
+      it.effect("changedFiles diffFilter and noRenames select the deleted paths; pathspec scopes the range", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          // Rename detection on: the moved file is R, so only the true deletion is D.
+          const deleted = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, diffFilter: "D" });
+          assert.deepStrictEqual(deleted, ["docs/gone.md"]);
+          // Rename detection off: the moved file's OLD path is a deletion too.
+          const split = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, diffFilter: "D", noRenames: true });
+          assert.deepStrictEqual([...split].sort(), ["docs/gone.md", "src/old.ts"]);
+          const scoped = yield* git.changedFiles(dirD, { base: c1Sha, head: c2Sha, pathspec: ["src"] });
+          assert.deepStrictEqual([...scoped].sort(), ["src/added.ts", "src/new.ts"]);
+        })
+      );
+
+      it.effect(
+        "changedFiles and nameStatus twoDot compare the trees directly, where ... compares against the merge base",
+        () =>
+          Effect.gen(function* () {
+            const git = yield* Git;
+            // side...main: main's changes since the fork point — other.txt is side's own edit, so absent.
+            const mergeBase = yield* git.changedFiles(dirD, { base: "side", head: "main" });
+            assert.notInclude(mergeBase, "other.txt");
+            // side main: the two trees differ on other.txt as well.
+            const trees = yield* git.changedFiles(dirD, { base: "side", head: "main", twoDot: true });
+            assert.include(trees, "other.txt");
+            const statuses = yield* git.nameStatus(dirD, { base: "side", head: "main", twoDot: true });
+            assert.include(
+              A.map(statuses, (entry) => entry.path),
+              "other.txt"
+            );
+            assert.notInclude(
+              A.map(yield* git.nameStatus(dirD, { base: "side", head: "main" }), (entry) => entry.path),
+              "other.txt"
+            );
+          })
+      );
+
+      it.effect("the working-tree trio honors pathspec, diffFilter, noRenames and head against the real tree", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          assert.deepStrictEqual(yield* git.unstagedChanges(dirD), ["README.md"]);
+          assert.deepStrictEqual(yield* git.unstagedChanges(dirD, { pathspec: ["src"] }), []);
+          // Against c1 the working tree carries every change since, staged or not, under the pathspec.
+          const sinceC1 = yield* git.unstagedChanges(dirD, { head: c1Sha, pathspec: ["src"], noRenames: true });
+          assert.deepStrictEqual([...sinceC1].sort(), [
+            "src/added.ts",
+            "src/keep.ts",
+            "src/kept.ts",
+            "src/new.ts",
+            "src/old.ts",
+          ]);
+          assert.deepStrictEqual(yield* git.stagedChanges(dirD, { diffFilter: "A", noRenames: true }), ["src/kept.ts"]);
+          assert.deepStrictEqual(yield* git.stagedChanges(dirD, { diffFilter: "A" }), []);
+          assert.deepStrictEqual(yield* git.untrackedFiles(dirD, { pathspec: ["loose"] }), ["loose/inner.txt"]);
+          assert.deepStrictEqual(yield* git.untrackedFiles(dirD, { pathspec: ["src"] }), []);
+        })
+      );
+
+      it.effect("log --name-status types c2's rename, delete, modify and add, with the subject and derived paths", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.log(dirD, { nameStatus: true, limit: 1 });
+          const c2 = entries[0];
+          assert.strictEqual(c2?.sha, c2Sha);
+          assert.strictEqual(c2?.subject, "c2: rename, delete, modify, add");
+          const byPath = (path: string) =>
+            O.getOrUndefined(A.findFirst(c2?.changes ?? [], (change) => change.path === path));
+          assert.deepStrictEqual(
+            byPath("src/new.ts"),
+            NameStatusEntry.make({ status: "renamed", oldPath: "src/old.ts", path: "src/new.ts", score: 100 })
+          );
+          assert.strictEqual(byPath("docs/gone.md")?.status, "deleted");
+          assert.strictEqual(byPath("README.md")?.status, "modified");
+          assert.strictEqual(byPath("src/added.ts")?.status, "added");
+          assert.deepStrictEqual([...(c2?.paths ?? [])].sort(), [
+            "README.md",
+            "docs/gone.md",
+            "src/added.ts",
+            "src/new.ts",
+          ]);
+          // The same commit through --name-only: subject present, changes absent, the same paths.
+          const nameOnly = yield* git.log(dirD, { limit: 1 });
+          assert.strictEqual(nameOnly[0]?.subject, "c2: rename, delete, modify, add");
+          assert.isUndefined(nameOnly[0]?.changes);
+          assert.deepStrictEqual([...(nameOnly[0]?.paths ?? [])].sort(), [...(c2?.paths ?? [])].sort());
+        })
+      );
+
+      it.effect("log diffFilter=DR with findRenames and quotePath false keeps only the delete and the rename", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const entries = yield* git.log(dirD, {
+            nameStatus: true,
+            diffFilter: "DR",
+            findRenames: 50,
+            quotePath: false,
+          });
+          // c1 has no deletion or rename, so git drops it from the filtered walk entirely.
+          assert.deepStrictEqual(
+            A.map(entries, (entry) => entry.sha),
+            [c2Sha]
+          );
+          assert.deepStrictEqual(
+            A.map(entries[0]?.changes ?? [], (change) => [change.status, change.oldPath, change.path]),
+            [
+              ["deleted", undefined, "docs/gone.md"],
+              ["renamed", "src/old.ts", "src/new.ts"],
+            ]
+          );
+          // c1's seed, through the unfiltered walk, carries the spaced path raw.
+          const seed = yield* git.log(dirD, { nameStatus: true, paths: ["a name.txt"] });
+          assert.deepStrictEqual(seed[0]?.changes, [NameStatusEntry.make({ status: "added", path: "a name.txt" })]);
+        })
+      );
+
+      it.effect(
+        "lsTree fullTree lists the whole tree from a subdirectory cwd; currentBranch show-current agrees with abbrev-ref",
+        () =>
+          Effect.gen(function* () {
+            const git = yield* Git;
+            const path = yield* Path.Path;
+            const sub = path.join(dirD, "src");
+            const scoped = A.map(yield* git.lsTree(sub, c2Sha), (entry) => entry.path);
+            assert.notInclude(scoped, "README.md");
+            const whole = A.map(yield* git.lsTree(sub, c2Sha, { fullTree: true }), (entry) => entry.path);
+            assert.include(whole, "README.md");
+            assert.include(whole, "src/new.ts");
+            assertSome(yield* git.currentBranch(dirD, { mode: "show-current" }), "main");
+            assertSome(yield* git.currentBranch(dirD), "main");
+          })
       );
     });
   }

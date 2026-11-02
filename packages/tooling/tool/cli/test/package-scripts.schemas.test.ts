@@ -1,4 +1,5 @@
 import {
+  applyScaffoldRuleForTesting,
   CheckerEngineExemption,
   CheckerScriptName,
   checkerEngineExemptions,
@@ -8,8 +9,11 @@ import {
   PackageScriptsReportFromWire,
   ScriptsBlock,
   ScriptsRecord,
+  scaffoldPackageScripts,
   scriptsBlockFromRecord,
+  TaskScriptBinding,
   TaskScriptName,
+  TaskScriptPresence,
   TaskScriptRule,
   taskScriptRules,
 } from "@beep/repo-cli/test/PackageScripts";
@@ -48,7 +52,6 @@ const presenceRows: ReadonlyArray<readonly [string, string]> = [
   ["test:integration:parallel", "optional absent optional optional absent absent optional"],
   ["coverage", "required required required optional required required optional"],
   ["docgen", "required required required optional absent required optional"],
-  ["audit", "required required required required required required optional"],
   ["package-test-typecheck", "required required required required required required optional"],
   ["codegen", "derived derived derived derived derived derived optional"],
   ["lint:deprecated-apis", "required required required required required required absent"],
@@ -58,6 +61,43 @@ const presenceRows: ReadonlyArray<readonly [string, string]> = [
 ];
 
 describe("canonical package scripts schemas", () => {
+  it("preserves optional implementation calls and their declared defaults", () => {
+    const rule = TaskScriptRule.make({
+      kind: "library",
+      name: "build",
+      presence: TaskScriptPresence.cases.optional.make({}),
+      binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }),
+    });
+    const scripts = applyScaffoldRuleForTesting(HashMap.empty(), rule);
+    assertSome(HashMap.get(scripts, "build"), "bun run --if-present beep:build");
+    assertSome(HashMap.get(scripts, "beep:build"), "tsrs -p tsconfig.json && bun run babel");
+  });
+  it("keeps caller scripts and indirections when a kind has no implementation default", () => {
+    const rule = TaskScriptRule.make({
+      kind: "exempt",
+      name: "build",
+      presence: TaskScriptPresence.cases.optional.make({}),
+      binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: false }),
+    });
+    const scripts = applyScaffoldRuleForTesting(HashMap.make(["dev", "vite"]), rule);
+    assertSome(HashMap.get(scripts, "dev"), "vite");
+    assertSome(HashMap.get(scripts, "build"), "bun run beep:build");
+    expect(HashMap.has(scripts, "beep:build")).toBe(false);
+    expect(HashMap.size(scripts)).toBe(2);
+  });
+  it("does not restore removed audit aliases or unused tool implementations", () => {
+    const tool = scaffoldPackageScripts("tool", ["test:integration"]);
+    expect(tool).not.toHaveProperty("audit");
+    expect(tool).not.toHaveProperty("beep:audit");
+    expect(tool).not.toHaveProperty("test:integration");
+    expect(tool).not.toHaveProperty("beep:test:integration");
+    const library = scaffoldPackageScripts("library", ["test:integration"]);
+    expect(library["test:integration"]).toBe("bun run beep:test:integration");
+    expect(library["beep:test:integration"]).toBe("bunx --bun vitest run test/integration --passWithNoTests");
+  });
+  it("leaves exempt task ownership with the caller even when every task is selected", () => {
+    expect(scaffoldPackageScripts("exempt", TaskScriptName.literals)).toEqual({});
+  });
   it.prop(
     "round trips schema-derived script records",
     { input: scriptsArbitrary },
@@ -95,7 +135,7 @@ describe("canonical package scripts schemas", () => {
   it.effect(
     "decodes every rule row and matches the ratified presence matrix literally",
     Effect.fnUntraced(function* () {
-      expect(taskScriptRules).toHaveLength(119);
+      expect(taskScriptRules).toHaveLength(112);
       yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule));
       for (const [name, expected] of presenceRows) {
         const actual = A.map(PackageKind.literals, (kind) =>
@@ -108,8 +148,8 @@ describe("canonical package scripts schemas", () => {
           )
         ).toBe(expected);
       }
-      expect(TaskScriptName.literals).toHaveLength(17);
-      expect(implScriptDefaults).toHaveLength(56);
+      expect(TaskScriptName.literals).toHaveLength(16);
+      expect(implScriptDefaults).toHaveLength(50);
     })
   );
   it.effect(

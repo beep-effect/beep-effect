@@ -19,7 +19,8 @@ import {
   HookPulseRefusalReason,
   HookPulseV1,
   hashPrivateIdentifier,
-  hookPulseHashSalt,
+  hookPulseNamespace,
+  hookPulseNamespaceSalts,
 } from "@beep/repo-ai-metrics";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O, pipe, Str } from "@beep/utils";
@@ -40,12 +41,13 @@ import * as S from "effect/Schema";
 import { HarnessLedgerIoError } from "../HarnessLedger.errors.ts";
 import {
   HarnessTelemetryReconciliation,
+  HookedToolEventsByRegime,
   ObservedSessionWindow,
   PrunableSurfaceKind,
   PruneSurfaceCandidate,
 } from "../HarnessLedger.schemas.ts";
 import { listDirectorySorted } from "./Fs.ts";
-import type { HarnessHash } from "@beep/repo-ai-metrics";
+import type { HarnessHash, HookPulseNamespaceSalt } from "@beep/repo-ai-metrics";
 
 const $I = $RepoCliId.create("commands/HarnessLedger/internal/PruneWindow");
 
@@ -275,9 +277,14 @@ const windowReport = (
   visited: ShardScan["tallies"],
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind
+  agentKind: HookPulseAgentKind,
+  namespaceCutover: O.Option<number>
 ): ObservedSessionWindow => {
   const ranked = pipe(A.fromIterable(MutableHashMap.values(visited)), A.sort(byNewestFirst));
+  // A session that began before the dated namespace cutover was pseudonymized
+  // under the previous regime. It stays readable and counted, but never fills
+  // the current window: old observations are not folded into a zero-use claim.
+  const preCutover = (tally: SessionTally) => O.exists(namespaceCutover, (cutover) => tally.minTs < cutover);
   const overlapsDisarm = (tally: SessionTally) =>
     (scan.openDisarm &&
       O.match(scan.openDisarmSince, { onNone: () => true, onSome: (start) => tally.maxTs >= start })) ||
@@ -349,6 +356,7 @@ const windowReport = (
       (tally) =>
         scan.undecodableLines === 0 &&
         parentRegime(tally) === "in-regime" &&
+        !preCutover(parentSummary(tally)) &&
         !parentSummary(tally).unknownStart &&
         active(tally) &&
         !overlapsDisarm(parentSummary(tally)) &&
@@ -400,6 +408,8 @@ const windowReport = (
     sessionsSkippedRole: A.length(A.filter(selectedGrouped, (tally) => !tally.primary || tally.child)),
     sessionsSkippedOutOfRegime: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum["out-of-regime"]),
     sessionsSkippedUnstamped: countSkipped(selectedGrouped, oldest, harnessHash, SessionRegime.Enum.unstamped),
+    sessionsSkippedPreCutover: A.length(A.filter(selectedGrouped, preCutover)),
+    namespaceCutover: O.map(namespaceCutover, (cutover) => DateTime.makeUnsafe(cutover)),
     windowEnd: pipe(
       A.head(inRegime),
       O.map((tally) => DateTime.makeUnsafe(tally.maxTs))
@@ -449,6 +459,9 @@ const readRefusals = Effect.fn("HarnessLedger.readRefusals")(function* (root: st
  * cannot be hidden by a date-bound shortcut. Windows are per client. A root
  * needs a user turn and a tool event; children add touches without adding
  * sessions. Invalid lines are counted. A missing state directory observes zero.
+ * Sessions that began before `namespaceCutover` (epoch milliseconds of the
+ * applied hook-pulse namespace projection) are excluded from the window and
+ * counted in `sessionsSkippedPreCutover`.
  *
  * @internal
  * @category use-cases
@@ -458,7 +471,8 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
   stateDir: string,
   window: number,
   harnessHash: HarnessHash,
-  agentKind: HookPulseAgentKind = "claude-code"
+  agentKind: HookPulseAgentKind = "claude-code",
+  namespaceCutover: O.Option<number> = O.none()
 ) {
   const names = A.filter(yield* listDirectorySorted(stateDir), (name) => ANY_SHARD.test(name));
   const fs = yield* FileSystem.FileSystem;
@@ -518,7 +532,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     refusalUndecodableLines,
   };
   yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
-  return windowReport(scan, scan.tallies, window, harnessHash, agentKind);
+  return windowReport(scan, scan.tallies, window, harnessHash, agentKind, namespaceCutover);
 });
 
 // Only structural metadata is decoded. Content strings never leave this reader.
@@ -691,6 +705,7 @@ class ReconciliationTranscriptFile extends S.Opaque<ReconciliationTranscriptFile
     file: S.String,
     identity: S.String,
     hookKeys: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    aliasPaths: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
     canonical: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ReconciliationTranscriptFile", {
@@ -774,8 +789,16 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
         A.empty<string>
       ),
     ]);
+    const aliasPaths = A.dedupe([
+      file,
+      canonical.value,
+      ...O.getOrElse(
+        O.map(prior, (old) => old.candidate.aliasPaths),
+        A.empty<string>
+      ),
+    ]);
     MutableHashMap.set(selected, canonical.value, {
-      candidate: ReconciliationTranscriptFile.make({ ...chosen, canonical, hookKeys }),
+      candidate: ReconciliationTranscriptFile.make({ ...chosen, canonical, hookKeys, aliasPaths }),
       priority: Math.max(
         priority,
         O.getOrElse(
@@ -790,11 +813,18 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
 
 const ParentSessionSegment = S.String.check(S.isPattern(/^[0-9a-f-]{36}$/));
 const isParentSessionSegment = S.is(ParentSessionSegment);
-const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(function* (
+// The transcript read, done once per file: structural tallies and the raw
+// (unhashed) identities a salt pass hashes. Content strings never leave here.
+type TranscriptIdentities = {
+  readonly file: string;
+  readonly tally: TranscriptTally;
+  readonly session: O.Option<string>;
+};
+
+const readTranscriptIdentities = Effect.fn("HarnessLedger.readTranscriptIdentities")(function* (
   candidate: ReconciliationTranscriptFile,
   transcriptDir: string,
   agentKind: HookPulseAgentKind,
-  hashSalt: O.Option<string>,
   failures: Ref.Ref<HashSet.HashSet<string>>
 ) {
   const file = candidate.file;
@@ -822,6 +852,16 @@ const readTranscriptCounts = Effect.fn("HarnessLedger.readTranscriptCounts")(fun
         )
       : O.none<string>();
   const session = tally.identityConflict ? O.none<string>() : O.orElse(parent, () => tally.session);
+  return { file, tally, session } satisfies TranscriptIdentities;
+});
+
+// Hash one transcript's identities under one salt. Called once per regime so
+// pre-cutover hook rows still join under the namespace they were written in.
+const hashTranscriptCounts = Effect.fn("HarnessLedger.hashTranscriptCounts")(function* (
+  identities: TranscriptIdentities,
+  hashSalt: O.Option<string>
+) {
+  const { file, tally, session } = identities;
   const sessionHash = yield* hashPrivateIdentifier(
     O.getOrElse(session, () => file),
     hashSalt
@@ -868,6 +908,74 @@ const matchingTranscriptHooks = (
           )
       );
 
+// Hook rows written before the namespace cutover carry digests from the
+// previous regime's salt, so the same transcript is re-keyed under each
+// previous salt and matched again. The regimes are reported apart; the sum is
+// only the coverage ratio's numerator.
+const previousRegimeHooks = Effect.fnUntraced(function* (
+  identities: TranscriptIdentities,
+  file: ReconciliationTranscriptFile,
+  previousSalts: ReadonlyArray<HookPulseNamespaceSalt>,
+  bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>
+) {
+  let matched = 0;
+  for (const salt of previousSalts) {
+    const counts = yield* hashTranscriptCounts(identities, salt.hashSalt);
+    const hookKeys = A.dedupe(
+      yield* Effect.forEach(file.aliasPaths, (alias) =>
+        hashPrivateIdentifier(alias, salt.hashSalt).pipe(
+          Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
+        )
+      )
+    );
+    matched += matchingTranscriptHooks(counts, hookKeys, bindings);
+  }
+  return matched;
+});
+
+// The running tallies one reconciliation threads through its transcript loop.
+type ReconciliationTotals = {
+  readonly sessions: MutableHashMap.MutableHashMap<string, number>;
+  readonly selectedSessionHooks: MutableHashMap.MutableHashMap<string, number>;
+  readonly selectedPathHooks: MutableHashMap.MutableHashMap<string, number>;
+  readonly transcriptPaths: MutableHashMap.MutableHashMap<string, number>;
+  readonly hookedByRegime: { current: number; previous: number };
+  undecodableLines: number;
+};
+
+const addCount = (map: MutableHashMap.MutableHashMap<string, number>, key: string, count: number): void => {
+  MutableHashMap.set(map, key, O.getOrElse(MutableHashMap.get(map, key), () => 0) + count);
+};
+
+// Read one transcript once, hash it under the current salt for its counts and
+// under every previous salt for its hook matches, and fold both into `totals`.
+const accumulateTranscript = Effect.fnUntraced(function* (
+  totals: ReconciliationTotals,
+  file: ReconciliationTranscriptFile,
+  physicalRoot: string,
+  agentKind: HookPulseAgentKind,
+  failures: Ref.Ref<HashSet.HashSet<string>>,
+  hashSalt: O.Option<string>,
+  previousSalts: ReadonlyArray<HookPulseNamespaceSalt>,
+  bindings: MutableHashMap.MutableHashMap<string, ReconciliationHookBinding>
+) {
+  const identities = yield* readTranscriptIdentities(file, physicalRoot, agentKind, failures);
+  const counts = yield* hashTranscriptCounts(identities, hashSalt);
+  totals.undecodableLines += counts.undecodableLines;
+  if (counts.calls === 0) return;
+  addCount(totals.sessions, counts.sessionHash, counts.calls);
+  MutableHashMap.set(totals.transcriptPaths, counts.pathHash, counts.calls);
+  const currentHooks = matchingTranscriptHooks(counts, file.hookKeys, bindings);
+  const previousHooks = yield* previousRegimeHooks(identities, file, previousSalts, bindings);
+  totals.hookedByRegime.current += currentHooks;
+  totals.hookedByRegime.previous += previousHooks;
+  const hookCount = currentHooks + previousHooks;
+  if (hookCount > 0) {
+    MutableHashMap.set(totals.selectedPathHooks, counts.pathHash, hookCount);
+    addCount(totals.selectedSessionHooks, counts.sessionHash, hookCount);
+  }
+});
+
 const reconciliationBasis = HookPulseAgentKind.match({
   "codex-cli": F.constant(
     "failed-or-interrupted: exec wrappers are not one-to-one with inner hook calls; non-use unqualified"
@@ -891,9 +999,11 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
   transcriptDir: string,
   agentKind: HookPulseAgentKind
 ) {
-  const hashSalt = yield* hookPulseHashSalt.pipe(
+  const namespace = yield* hookPulseNamespace.pipe(
     Effect.mapError(HarnessLedgerIoError.wrap("Cannot resolve reconciliation hash namespace."))
   );
+  const [currentSalt, ...previousSalts] = hookPulseNamespaceSalts(namespace);
+  const hashSalt = currentSalt.hashSalt;
   const hooks = MutableHashMap.empty<string, number>();
   const bindings = MutableHashMap.empty<string, ReconciliationHookBinding>();
   let undecodableLines = yield* readReconciliationHooks(stateDir, agentKind, bindings, hooks);
@@ -910,33 +1020,21 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     hashSalt,
     failures
   );
-  const sessions = MutableHashMap.empty<string, number>();
-  const selectedSessionHooks = MutableHashMap.empty<string, number>();
-  const selectedPathHooks = MutableHashMap.empty<string, number>();
-  const transcriptPaths = MutableHashMap.empty<string, number>();
+  const totals: ReconciliationTotals = {
+    sessions: MutableHashMap.empty(),
+    selectedSessionHooks: MutableHashMap.empty(),
+    selectedPathHooks: MutableHashMap.empty(),
+    transcriptPaths: MutableHashMap.empty(),
+    hookedByRegime: { current: 0, previous: 0 },
+    undecodableLines,
+  };
   for (const file of files) {
-    const counts = yield* readTranscriptCounts(file, physicalRoot, agentKind, hashSalt, failures);
-    undecodableLines += counts.undecodableLines;
-    if (counts.calls === 0) continue;
-    MutableHashMap.set(
-      sessions,
-      counts.sessionHash,
-      O.getOrElse(MutableHashMap.get(sessions, counts.sessionHash), () => 0) + counts.calls
-    );
-    MutableHashMap.set(transcriptPaths, counts.pathHash, counts.calls);
-    const hookCount = matchingTranscriptHooks(counts, file.hookKeys, bindings);
-    if (hookCount > 0) {
-      MutableHashMap.set(selectedPathHooks, counts.pathHash, hookCount);
-      MutableHashMap.set(
-        selectedSessionHooks,
-        counts.sessionHash,
-        O.getOrElse(MutableHashMap.get(selectedSessionHooks, counts.sessionHash), () => 0) + hookCount
-      );
-    }
+    yield* accumulateTranscript(totals, file, physicalRoot, agentKind, failures, hashSalt, previousSalts, bindings);
   }
-  undecodableLines += HashSet.size(yield* Ref.get(failures));
-  const counts = agentKind === "claude-code" ? sessions : transcriptPaths;
-  const matchedHooks = agentKind === "claude-code" ? selectedSessionHooks : selectedPathHooks;
+  undecodableLines = totals.undecodableLines + HashSet.size(yield* Ref.get(failures));
+  const hookedByRegime = totals.hookedByRegime;
+  const counts = agentKind === "claude-code" ? totals.sessions : totals.transcriptPaths;
+  const matchedHooks = agentKind === "claude-code" ? totals.selectedSessionHooks : totals.selectedPathHooks;
   const transcriptToolEvents = A.reduce(A.fromIterable(MutableHashMap.values(counts)), 0, (sum, count) => sum + count);
   const hookedToolEvents = A.reduce(
     A.fromIterable(counts),
@@ -956,5 +1054,8 @@ export const reconcileTranscripts = Effect.fn("HarnessLedger.reconcileTranscript
     ratio: transcriptToolEvents > 0 ? O.some(hookedToolEvents / transcriptToolEvents) : O.none<number>(),
     qualifiedForNonUse: false,
     basis: reconciliationBasis(agentKind),
+    namespaceProjection: O.isSome(namespace.projection) ? "present" : "absent",
+    namespaceCutover: O.map(namespace.projection, (projection) => projection.cutoverUtc),
+    hookedToolEventsByRegime: HookedToolEventsByRegime.make(hookedByRegime),
   });
 });

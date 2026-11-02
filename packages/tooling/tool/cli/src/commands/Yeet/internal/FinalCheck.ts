@@ -52,6 +52,7 @@ import {
   FinalCheckStepResult,
 } from "./FinalCheck.schemas.ts";
 import { runGitOutput, runGitPathList } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
@@ -612,7 +613,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
 ): Effect.fn.Return<
   O.Option<FinalCheckReceipt>,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);

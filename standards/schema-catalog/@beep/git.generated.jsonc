@@ -15,6 +15,7 @@
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"CommitInfo","kind":"struct-const","owner":"@beep/git","identity":"CommitInfo","description":"The metadata of a single commit, read via `git log -1` with NUL-separated `%H` / `%G?` / `%B` placeholders."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"CommitLogEntry","kind":"struct-const","owner":"@beep/git","identity":"CommitLogEntry","description":"One commit of a `git log` listing, with the paths that commit touched."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"ConfigListEntry","kind":"struct-const","owner":"@beep/git","identity":"ConfigListEntry","description":"One configuration entry, from `git config --list`."},
+    {"file":"packages/drivers/git/src/Git.models.ts","symbol":"GitOptions","kind":"struct-const","owner":"@beep/git","identity":"GitOptions","description":"The per-run output ceiling and timeout a Git service instance applies to every spawn."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsFilesEntry","kind":"struct-const","owner":"@beep/git","identity":"LsFilesEntry","description":"One index (staging area) entry, from `git ls-files --stage`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsRemoteEntry","kind":"struct-const","owner":"@beep/git","identity":"LsRemoteEntry","description":"One ref a remote advertises, from `git ls-remote`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsTreeEntry","kind":"struct-const","owner":"@beep/git","identity":"LsTreeEntry","description":"One entry of a `git ls-tree` listing."},
@@ -25,8 +26,11 @@
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"StatusRenderOptions","kind":"struct-const","owner":"@beep/git","identity":"StatusRenderOptions","description":"How a rename/copy status entry's path field renders."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"SubmoduleStatusEntry","kind":"struct-const","owner":"@beep/git","identity":"SubmoduleStatusEntry","description":"One line of a `git submodule status` listing."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"WorktreeEntry","kind":"struct-const","owner":"@beep/git","identity":"WorktreeEntry","description":"One working tree, from `git worktree list --porcelain`."},
+    {"file":"packages/drivers/git/src/GitCommand.ts","symbol":"CurrentBranchMode","kind":"literal-kit","owner":"@beep/git","identity":"CurrentBranchMode","description":"Which git question answers the current branch name."},
     {"file":"packages/drivers/git/src/GitCommand.ts","symbol":"GitConfigScope","kind":"literal-kit","owner":"@beep/git","identity":"GitConfigScope","description":"Which Git configuration file a read is scoped to."},
     {"file":"packages/drivers/git/src/GitCommand.ts","symbol":"GitInvocation","kind":"struct-const","owner":"@beep/git","identity":"GitInvocation","description":"A pure `git` invocation: the spawnable command plus the diagnostic argv it may persist."},
+    {"file":"packages/drivers/git/src/GitCommand.ts","symbol":"StatusIgnoreSubmodules","kind":"literal-kit","owner":"@beep/git","identity":"StatusIgnoreSubmodules","description":"Which submodule changes `git status` ignores."},
+    {"file":"packages/drivers/git/src/GitCommand.ts","symbol":"StatusUntrackedFiles","kind":"literal-kit","owner":"@beep/git","identity":"StatusUntrackedFiles","description":"How `git status` reports untracked paths."},
     {"file":"packages/drivers/git/src/GitConfig.ts","symbol":"GitConfig","kind":"schema-class","owner":"@beep/git","identity":"GitConfig","description":"A lossless git-config document: the source text plus the structural index scanned from it."},
     {"file":"packages/drivers/git/src/GitConfig.ts","symbol":"GitConfigDiagnostic","kind":"struct-const","owner":"@beep/git","identity":"GitConfigDiagnostic","description":"One structural problem found while parsing git-config text."},
     {"file":"packages/drivers/git/src/GitConfig.ts","symbol":"GitConfigEditError","kind":"tagged-error","owner":"@beep/git","identity":"GitConfigEditError"},
@@ -43,6 +47,7 @@
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"RawParse","kind":"struct-const","owner":"@beep/git","identity":"RawParse","description":"The scanner's result: sections in order plus every diagnostic found."},
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"RawSection","kind":"struct-const","owner":"@beep/git","identity":"RawSection","description":"One raw section: header spans plus the entries scanned under it."},
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"Splice","kind":"struct-const","owner":"@beep/git","identity":"Splice","description":"One text splice: replace `length` characters at `offset` with `content`."},
-    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"Collected","kind":"struct-const","owner":"@beep/git","identity":"Collected","description":"The stdout, stderr, and exit code of one completed run, collected separately."}
+    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"Collected","kind":"struct-const","owner":"@beep/git","identity":"Collected","description":"The stdout, stderr, and exit code of one completed run, collected separately."},
+    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"OutputTooLarge","kind":"tagged-error","owner":"@beep/git","identity":"OutputTooLarge"}
   ]
 }

@@ -1303,7 +1303,48 @@ export class GoalProposedCloseout extends S.Opaque<GoalProposedCloseout, { reado
 ) {}
 
 /**
+ * Whether this clone holds a verified completion receipt for a proposed closeout.
+ *
+ * **Details**
+ *
+ * `verified` means the clone-scoped receipt for the proposed final PR passed the
+ * strict projection (merge facts, exact-head hosted evidence, readiness
+ * verdict), so the proposal is the operative lifecycle here. `unverified` means
+ * no such receipt is present in this clone: the manifest field stays operative.
+ *
+ * **Example** (Guard a verification token)
+ *
+ * ```ts
+ * import { GoalCloseoutVerification } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * console.log(GoalCloseoutVerification.is.verified("verified")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GoalCloseoutVerification = LiteralKit(["verified", "unverified"]).pipe(
+  $I.annoteSchema("GoalCloseoutVerification", {
+    description: "Whether a proposed closeout is backed by a verified clone-scoped completion receipt.",
+  })
+);
+
+/**
+ * Verification token of a proposed closeout in one clone.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalCloseoutVerification = typeof GoalCloseoutVerification.Type;
+
+/**
  * Shows operative and proposed closeout separately in local session reports.
+ *
+ * **Details**
+ *
+ * `operativeStatus` is the projected lifecycle for this clone: the proposal's
+ * status when a verified receipt exists, the manifest field otherwise.
+ * `verification` names which of the two it is, so renderers never have to
+ * compare the fields themselves.
  *
  * **Example** (Read the session projection fields)
  *
@@ -1320,12 +1361,104 @@ export class GoalCloseoutView extends S.Opaque<GoalCloseoutView, { readonly bran
     packet: S.NonEmptyString,
     operativeStatus: GoalStatus,
     proposedCloseout: GoalProposedCloseout,
+    verification: GoalCloseoutVerification,
   }).pipe(
     $I.annoteSchema("GoalCloseoutView", {
       description: "Local goal session view separating operative lifecycle from a prospective closeout.",
     })
   )
 ) {}
+
+/**
+ * Classifies a projected lifecycle against its proposal.
+ *
+ * **Example** (Classify a projected status)
+ *
+ * ```ts
+ * import { GoalProposedCloseout, goalCloseoutVerification } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
+ * console.log(goalCloseoutVerification(proposal, "completed-retained")) // "verified"
+ * console.log(goalCloseoutVerification(proposal, "active")) // "unverified"
+ * ```
+ *
+ * @param proposal - The manifest's proposed closeout.
+ * @param operativeStatus - The lifecycle projected for this clone.
+ * @returns `verified` when the projection adopted the proposal, `unverified` otherwise.
+ * @category read-models
+ * @since 0.0.0
+ */
+export const goalCloseoutVerification: {
+  (operativeStatus: GoalStatus): (proposal: GoalProposedCloseout) => GoalCloseoutVerification;
+  (proposal: GoalProposedCloseout, operativeStatus: GoalStatus): GoalCloseoutVerification;
+} = dual(
+  2,
+  (proposal: GoalProposedCloseout, operativeStatus: GoalStatus): GoalCloseoutVerification =>
+    operativeStatus === proposal.status ? "verified" : "unverified"
+);
+
+/**
+ * Renders the derived operative status of a proposed closeout for operator surfaces.
+ *
+ * **Details**
+ *
+ * Every operator-facing surface that has the clone-scoped receipt at hand
+ * (`session open`, `goals doctor`, `goals explain`) prints this one form, so a
+ * verified packet reads as `completed-retained (verified via #N)` everywhere
+ * and an unverified one never hides that the field is still derived.
+ *
+ * **Example** (Render both verification states)
+ *
+ * ```ts
+ * import { GoalCloseoutView, GoalProposedCloseout, renderGoalCloseoutView } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const proposedCloseout = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
+ * const verified = GoalCloseoutView.make({
+ *   packet: "demo",
+ *   operativeStatus: "completed-retained",
+ *   proposedCloseout,
+ *   verification: "verified",
+ * })
+ * console.log(renderGoalCloseoutView(verified)) // "completed-retained (verified via #7)"
+ * console.log(renderGoalCloseoutView(GoalCloseoutView.make({ ...verified, operativeStatus: "active", verification: "unverified" })))
+ * // "completed-retained (proposed via #7, unverified)"
+ * ```
+ *
+ * @param view - The clone-scoped closeout view.
+ * @returns One line naming the derived status, its final PR and its verification.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderGoalCloseoutView = (view: GoalCloseoutView): string =>
+  GoalCloseoutVerification.is.verified(view.verification)
+    ? `${view.proposedCloseout.status} (verified via #${view.proposedCloseout.finalPullRequest})`
+    : `${view.proposedCloseout.status} (proposed via #${view.proposedCloseout.finalPullRequest}, unverified)`;
+
+/**
+ * Renders a proposed closeout from the committed manifest alone.
+ *
+ * **Details**
+ *
+ * The generated `goals/INDEX.md` must stay byte-identical across clones, and the
+ * completion receipt is clone-scoped, so the index never consults it: this form
+ * states only what the manifest commits to.
+ *
+ * **Example** (Render the committed proposal)
+ *
+ * ```ts
+ * import { GoalProposedCloseout, renderGoalProposedCloseout } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const proposal = GoalProposedCloseout.make({ status: "completed-retained", finalPullRequest: 7 })
+ * console.log(renderGoalProposedCloseout(proposal)) // "proposed completed-retained via #7"
+ * ```
+ *
+ * @param proposal - The manifest's proposed closeout.
+ * @returns The receipt-free rendering of the proposal.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderGoalProposedCloseout = (proposal: GoalProposedCloseout): string =>
+  `proposed ${proposal.status} via #${proposal.finalPullRequest}`;
 
 const GoalProposedCloseoutCheck = S.makeFilter(
   (manifest: {

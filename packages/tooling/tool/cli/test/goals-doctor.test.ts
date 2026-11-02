@@ -21,6 +21,7 @@ import {
   GraphPacketRow,
   goalCompletionDeclarationDigest,
   goalsCommand,
+  layerGoalCompletionReceiptStoreMemory,
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
@@ -56,6 +57,7 @@ const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Resu
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
+  layerGoalCompletionReceiptStoreMemory,
   NodeCrypto.layer,
   PacketEventStoreLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
@@ -237,6 +239,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       }
       expect(output).toContain("Final PR #7: unknown. No matching clone receipt.");
       expect(output).not.toContain("Legacy completion declaration has no PR reference");
+      // The derived status line names the proposal and that this clone has not verified it.
+      expect(output).toContain("[goals:doctor] note: proposal-cited: completed-retained (proposed via #7, unverified)");
     })
   );
   it.effect("doctor prints the missing fact for unknown completion and nothing for verified", () =>

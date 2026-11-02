@@ -12,6 +12,8 @@
 import { $GitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -75,13 +77,18 @@ const NameStatusCode = LiteralKit([
  * `"typechange"` word. A consumer mapping these values onto an existing
  * enum that follows porcelain's spelling must translate.
  *
+ * A rename or copy code carries a similarity score (`R100`, `C075`); the
+ * digits decode to `score` (100, 75), present only on renamed/copied
+ * entries. `Git.nameStatus`'s `findRenames` option sets the threshold git
+ * detects at; `score` is what git measured for each pair.
+ *
  * **Example** (Represent a renamed path)
  *
  * ```ts import.meta.vitest name="Represent a renamed path"
  * import { NameStatusEntry } from "@beep/git/Git";
  *
- * const entry = NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts" });
- * [entry.status, entry.oldPath, entry.path] // => ["renamed", "old.ts", "new.ts"]
+ * const entry = NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts", score: 100 });
+ * [entry.status, entry.oldPath, entry.path, entry.score] // => ["renamed", "old.ts", "new.ts", 100]
  * ```
  *
  * @public
@@ -109,6 +116,12 @@ export class NameStatusEntry extends S.Opaque<NameStatusEntry, { readonly brand:
     oldPath: S.optionalKey(S.String).pipe(
       $I.annoteKey("NameStatusEntry.oldPath", {
         description: "The pre-rename/pre-copy path; present only for renamed/copied entries.",
+      })
+    ),
+    /** git's similarity percent for the pair (`R100` → 100); present only for renamed/copied entries. */
+    score: S.optionalKey(S.Natural).pipe(
+      $I.annoteKey("NameStatusEntry.score", {
+        description: "git's similarity percent for the pair (`R100` → 100); present only for renamed/copied entries.",
       })
     ),
   }).pipe($I.annoteSchema("NameStatusEntry", { description: "One entry of a `git diff --name-status` listing." }))
@@ -158,7 +171,8 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
 ) {}
 
 /**
- * One commit of a `git log` listing, with the paths that commit touched.
+ * One commit of a `git log` listing, with its subject and the paths that
+ * commit touched.
  *
  * **Gotchas**
  *
@@ -177,6 +191,14 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
  * requested pathspec — most commonly a merge commit, whose diff git omits by
  * default (see `Git.log`'s `firstParentDiffMerges`).
  *
+ * `changes` is present only when the listing was read with `Git.log`'s
+ * `nameStatus: true`: each path's `--name-status` record as a
+ * {@link NameStatusEntry}, with the rename pair and similarity score a
+ * `--name-only` listing cannot carry. In that mode `paths` is derived from
+ * `changes` — the NEW path of every entry — so a consumer reading `paths`
+ * alone sees what `--name-only` would have printed. Absent `changes` means
+ * the status mode was not requested, not that the commit changed nothing.
+ *
  * **Example** (Decode a commit timestamp)
  *
  * ```ts import.meta.vitest name="Decode a commit timestamp"
@@ -187,9 +209,24 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
  *
  * const entry = await Effect.runPromise(S.decodeEffect(CommitLogEntry)({
  *   sha: "abc", authoredAt: "2026-01-01T01:00:00+01:00", committedAt: "2026-01-01T00:00:00Z",
- *   authorName: "Ada", authorEmail: "ada@example.com", paths: ["src/index.ts"],
+ *   authorName: "Ada", authorEmail: "ada@example.com", subject: "feat: index", paths: ["src/index.ts"],
  * }));
  * DateTime.formatIso(entry.authoredAt) // => "2026-01-01T00:00:00.000Z"
+ * ```
+ *
+ * **Example** (Carry name-status changes alongside the derived paths)
+ *
+ * ```ts import.meta.vitest name="Carry name-status changes alongside the derived paths"
+ * import { CommitLogEntry, NameStatusEntry } from "@beep/git/Git";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const at = DateTime.makeUnsafe("2026-01-01T00:00:00Z");
+ * const entry = CommitLogEntry.make({
+ *   sha: "abc", authoredAt: at, committedAt: at, authorName: "Ada", authorEmail: "ada@example.com",
+ *   subject: "move it", paths: ["new.ts"],
+ *   changes: [NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts", score: 100 })],
+ * });
+ * entry.changes?.[0]?.oldPath // => "old.ts"
  * ```
  *
  * @public
@@ -218,10 +255,25 @@ export class CommitLogEntry extends S.Opaque<CommitLogEntry, { readonly brand: u
     authorEmail: S.String.pipe(
       $I.annoteKey("CommitLogEntry.authorEmail", { description: "The author's email address (`%ae`)." })
     ),
+    /** The commit subject (`%s`): the message's first paragraph folded onto one line. */
+    subject: S.String.pipe(
+      $I.annoteKey("CommitLogEntry.subject", {
+        description: "The commit subject (`%s`): the message's first paragraph folded onto one line.",
+      })
+    ),
     /** The paths this commit touched, root-relative and raw; empty when it touched none. */
     paths: S.Array(S.String).pipe(
       $I.annoteKey("CommitLogEntry.paths", {
         description: "The paths this commit touched, root-relative and raw; empty when it touched none.",
+      })
+    ),
+    /** The `--name-status` record of every touched path; present only when the listing was read with `nameStatus: true`. */
+    changes: NameStatusEntry.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("CommitLogEntry.changes", {
+        description:
+          "The `--name-status` record of every touched path; present only when the listing was read with `nameStatus: true`.",
       })
     ),
   }).pipe(
@@ -718,7 +770,7 @@ export class ConfigListEntry extends S.Opaque<ConfigListEntry, { readonly brand:
  * ```ts import.meta.vitest name="Represent a detached worktree"
  * import { WorktreeEntry } from "@beep/git/Git";
  *
- * const entry = WorktreeEntry.make({ path: "/repo", head: "abc", detached: true, bare: false });
+ * const entry = WorktreeEntry.make({ path: "/repo", head: "abc", detached: true, bare: false, prunable: false });
  * entry.detached // => true
  * ```
  *
@@ -756,10 +808,14 @@ export class WorktreeEntry extends S.Opaque<WorktreeEntry, { readonly brand: uni
         description: "Present when the worktree is locked; holds the lock reason (possibly empty).",
       })
     ),
-    /** Present when the worktree is prunable; holds the reason (possibly empty). */
-    prunable: S.optionalKey(S.String).pipe(
+    /**
+     * Whether `git worktree prune` would remove this entry (porcelain's
+     * `prunable [<reason>]` line). The reason git gives is not kept: it is
+     * prose for humans, and `prunable` the fact is what a caller branches on.
+     */
+    prunable: S.Boolean.pipe(
       $I.annoteKey("WorktreeEntry.prunable", {
-        description: "Present when the worktree is prunable; holds the reason (possibly empty).",
+        description: "Whether `git worktree prune` would remove this entry; porcelain's reason text is not kept.",
       })
     ),
   }).pipe($I.annoteSchema("WorktreeEntry", { description: "One working tree, from `git worktree list --porcelain`." }))
@@ -811,5 +867,77 @@ export class LsFilesEntry extends S.Opaque<LsFilesEntry, { readonly brand: uniqu
     ),
   }).pipe(
     $I.annoteSchema("LsFilesEntry", { description: "One index (staging area) entry, from `git ls-files --stage`." })
+  )
+) {}
+
+/** 16 MiB, the same per-stream ceiling `@beep/commands` applies to a collected run. */
+const DEFAULT_MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
+
+/** git's own ceiling: a run that has not answered in 30 s is not going to. */
+const DEFAULT_TIMEOUT = Duration.seconds(30);
+
+/**
+ * The per-run limits a `Git` service instance applies to every spawn: a
+ * per-stream byte ceiling on collected output and a wall-clock timeout.
+ *
+ * **Details**
+ *
+ * Both fields carry constructor defaults, so `GitOptions.make({})` is the
+ * configuration `Git.make` and `Git.layer` run with: 16 MiB per stream (the
+ * figure `@beep/commands` uses) and a 30 s timeout. A stream that outgrows
+ * `maxOutputBytes` kills the child and fails the member as a
+ * `GitCommandError` of kind `"truncated"`; a run that outlives `timeout`
+ * fails as kind `"failed"` with a `timed out after …` detail. The ceiling is
+ * a positive integer and is enforced on raw bytes before decoding, because
+ * bytes are what the child produced and what the memory bound protects.
+ *
+ * **Gotchas**
+ *
+ * The timeout is per spawn, not per member call: members that reach a remote
+ * first probe up to two config keys, each under its own ceiling, and
+ * `fetchAny` runs `fetch` twice.
+ *
+ * **Example** (Tighten the ceilings for a scanner)
+ *
+ * ```ts import.meta.vitest name="Tighten the ceilings for a scanner"
+ * import { GitOptions } from "@beep/git/Git";
+ * import * as Duration from "effect/Duration";
+ *
+ * const options = GitOptions.make({ maxOutputBytes: 64 * 1024, timeout: Duration.seconds(5) });
+ * [options.maxOutputBytes, Duration.toSeconds(options.timeout)] // => [65536, 5]
+ * ```
+ *
+ * **Example** (Read the defaults)
+ *
+ * ```ts import.meta.vitest name="Read the defaults"
+ * import { GitOptions } from "@beep/git/Git";
+ * import * as Duration from "effect/Duration";
+ *
+ * const options = GitOptions.make({});
+ * [options.maxOutputBytes, Duration.toSeconds(options.timeout)] // => [16777216, 30]
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class GitOptions extends S.Opaque<GitOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** Per-stream ceiling, in bytes, on collected stdout and stderr. Default 16 MiB. */
+    maxOutputBytes: S.Finite.check(S.isInt(), S.isGreaterThan(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_MAX_OUTPUT_BYTES)),
+      $I.annoteKey("GitOptions.maxOutputBytes", {
+        description: "Per-stream ceiling, in bytes, on collected stdout and stderr. Default 16 MiB.",
+      })
+    ),
+    /** Wall-clock ceiling for one spawned run. Default 30 seconds. */
+    timeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)),
+      $I.annoteKey("GitOptions.timeout", { description: "Wall-clock ceiling for one spawned run. Default 30 seconds." })
+    ),
+  }).pipe(
+    $I.annoteSchema("GitOptions", {
+      description: "The per-run output ceiling and timeout a Git service instance applies to every spawn.",
+    })
   )
 ) {}

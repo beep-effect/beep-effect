@@ -34,6 +34,7 @@ import {
   coverageProducerEnvironment,
   QualityTaskStep,
   resolveCiCoverageArtifactPlan,
+  runQualityTaskBufferedStepGroup,
   runQualityTaskStreamingStepGroup,
 } from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
@@ -489,6 +490,10 @@ const runOrdinaryCoverageStep = Effect.fn("CiCoverage.runOrdinaryStep")(function
   ]);
 });
 
+// Hosted ubuntu runners expose 4 vCPUs; with `--maxWorkers=1` per producer, two producers fit beside the
+// step runner without exceeding the 16 GB the one-worker pin was sized for.
+const CI_COVERAGE_COMPOUND_STEP_CONCURRENCY = 2;
+
 const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(function* (
   repoRoot: string,
   packages: ReadonlyArray<CoverageProducerPackage>,
@@ -531,11 +536,13 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
       },
     })
   );
+  // Two packages at a time: each vitest process is pinned to one worker, so a 4-vCPU hosted runner has
+  // headroom for a second producer; the steps are buffered so the two logs do not interleave.
   yield* Effect.forEach(
     A.zip(steps, packages),
     Effect.fnUntraced(function* ([step, entry]) {
       for (const command of entry.preparationCommands)
-        yield* runQualityTaskStreamingStepGroup(`${step.label}:prepare`, [
+        yield* runQualityTaskBufferedStepGroup(`${step.label}:prepare`, [
           QualityTaskStep.make({
             ...step,
             command: command[0],
@@ -543,9 +550,9 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
             env: { ...step.env, BEEP_COVERAGE_INVOCATION_ID: undefined, BEEP_COVERAGE_RUNTIME_RECEIPT: undefined },
           }),
         ]);
-      yield* runQualityTaskStreamingStepGroup(step.label, [step]);
+      yield* runQualityTaskBufferedStepGroup(step.label, [step]);
       for (const script of entry.continuationScripts)
-        yield* runQualityTaskStreamingStepGroup(`${step.label}:${script}`, [
+        yield* runQualityTaskBufferedStepGroup(`${step.label}:${script}`, [
           QualityTaskStep.make({
             ...step,
             command: "bun",
@@ -554,7 +561,7 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
           }),
         ]);
     }),
-    { discard: true }
+    { concurrency: CI_COVERAGE_COMPOUND_STEP_CONCURRENCY, discard: true }
   );
 });
 

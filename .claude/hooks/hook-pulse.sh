@@ -174,11 +174,70 @@ fi
 # `privateReference` through untouched, so nothing is ever double-hashed.
 # Rows written before the operator cutover are a separate namespace and are
 # never re-migrated.
-hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}"
-case "${hash_salt}" in
-  *[![:space:]]*) ;;
-  *) hash_salt="beep-ai-metrics-local-smoke-insecure-salt" ;;
-esac
+#
+# The global projection (issue #1865, operator ruling 2026-11-02) is the second
+# rung, between the instrument override and the repo-wide variable:
+# `${BEEP_HOOK_PULSE_NAMESPACE_PROJECTION:-${XDG_CACHE_HOME:-$HOME/.cache}/beep/telemetry/namespace-projection.json}`
+# is an owned JSON file `{version:1, cutoverUtc, hashSalt, previousRegime}` that
+# every harness child reads regardless of what its launcher exported, so a
+# desktop-launched session and a shell-launched one land in one namespace. It
+# outranks `BEEP_AI_METRICS_HASH_SALT` on purpose: it IS this instrument's
+# projection, and only the explicit per-instrument override displaces it. A
+# projection that exists but is a symlink, unreadable, not `version` 1, or has
+# a blank `hashSalt` fails closed: the writer refuses the row with
+# `namespace-projection-invalid` rather than silently splitting the namespace
+# again. `hookPulseNamespace` in `hook-pulse-namespace.ts` walks the same four
+# rungs and fails on the same inputs; the writer parity test runs this script
+# against a fixture projection and recomputes its digests in TypeScript.
+# Check before command substitution: Bash strips trailing LF and cannot hold NUL.
+# Projection validation happens in jq before extracting its salt. Environment
+# values cannot contain NUL, but every other C0/C1 control is refused too.
+valid_salt_controls() {
+  printf '%s' "$1" | jq -Rse 'explode | all(. >= 32 and (. < 127 or . > 159))' >/dev/null 2>&1
+}
+salt_non_blank() {
+  printf '%s' "$1" | jq -Rse 'test("[^ \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]")' >/dev/null 2>&1
+}
+hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-}"
+valid_salt_controls "${hash_salt}" || { refuse namespace-projection-invalid; exit 0; }
+if ! salt_non_blank "${hash_salt}"; then
+  hash_salt=""
+  namespace_projection="${BEEP_HOOK_PULSE_NAMESPACE_PROJECTION:-${XDG_CACHE_HOME:-${HOME:-/nonexistent}/.cache}/beep/telemetry/namespace-projection.json}"
+  if [ -e "${namespace_projection}" ] || [ -L "${namespace_projection}" ]; then
+    if [ -L "${namespace_projection}" ] || [ ! -f "${namespace_projection}" ]; then
+      refuse namespace-projection-invalid; exit 0
+    fi
+    hash_salt="$(jq -ers '
+      def valid_cutover:
+        if type != "string" then false
+        elif length != 20 and length != 24 then false
+        elif (test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]{3})?Z$") | not) then false
+        else
+          (.[0:4] | tonumber) as $year |
+          (.[5:7] | tonumber) as $month |
+          (.[8:10] | tonumber) as $day |
+          (if ($year % 4 == 0 and ($year % 100 != 0 or $year % 400 == 0)) then 29 else 28 end) as $feb |
+          [31,$feb,31,30,31,30,31,31,30,31,30,31] as $days |
+          $month >= 1 and $month <= 12 and $day >= 1 and $day <= $days[$month - 1] and
+          (.[11:13] | tonumber) < 24 and (.[14:16] | tonumber) < 60 and (.[17:19] | tonumber) < 60
+        end;
+      if length != 1 then error("invalid projection") else .[0] end |
+      if type != "object" then error("invalid projection")
+      elif .version != 1 or (.cutoverUtc | valid_cutover | not) or .previousRegime != "library-default" then error("invalid projection")
+      elif (.hashSalt | type) != "string" then error("invalid projection")
+      elif (.hashSalt | test("[^ \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]") | not) or (.hashSalt | explode | all(. >= 32 and (. < 127 or . > 159)) | not) then error("invalid projection")
+      else .hashSalt end
+    ' "${namespace_projection}" 2>/dev/null)" || { refuse namespace-projection-invalid; exit 0; }
+
+  fi
+fi
+if ! salt_non_blank "${hash_salt}"; then
+  hash_salt="${BEEP_AI_METRICS_HASH_SALT:-}"
+  valid_salt_controls "${hash_salt}" || { refuse namespace-projection-invalid; exit 0; }
+fi
+if ! salt_non_blank "${hash_salt}"; then
+  hash_salt="beep-ai-metrics-local-smoke-insecure-salt"
+fi
 
 # THE NUL TRAP. Bash cannot carry a NUL in a variable and strips it from a
 # heredoc, so building `${hash_salt}<NUL>${value}` as a shell value first hashes

@@ -27,11 +27,18 @@ describe("Git.makeTest", () => {
 
   it.effect("a stub answers the data-last form too, with cwd as the piped subject", () =>
     Effect.gen(function* () {
+      const statusCalls: Array<string> = [];
       const double = Git.makeTest({
         revParse: (stubCwd, ref) => Effect.succeed(`${stubCwd}@${ref}`),
         reset: (stubCwd, options) =>
           Effect.sync(() => assert.strictEqual(`${stubCwd}:${options?.mode ?? "mixed"}`, "/repo:hard")),
         workingChanges: (stubCwd) => Effect.succeed([stubCwd]),
+        status: (stubCwd, options) =>
+          Effect.as(
+            Effect.sync(() => statusCalls.push(`${stubCwd}:${options?.untrackedFiles ?? "-"}`)),
+            []
+          ),
+        currentBranch: (_stubCwd, options) => Effect.succeedSome(options?.mode ?? "abbrev-ref"),
       });
       // Fixed arity: dispatch on argument count.
       assert.strictEqual(yield* pipe(cwd, double.revParse("HEAD")), "/repo@HEAD");
@@ -40,6 +47,12 @@ describe("Git.makeTest", () => {
       yield* pipe(cwd, double.reset({ mode: "hard" }));
       assert.deepStrictEqual(yield* double.workingChanges(cwd), ["/repo"]);
       assert.deepStrictEqual(yield* pipe(cwd, double.workingChanges()), ["/repo"]);
+      // `status` and `currentBranch` grew options in W2 and dispatch on the string subject too.
+      yield* double.status(cwd);
+      yield* pipe(cwd, double.status({ untrackedFiles: "all" }));
+      assert.deepStrictEqual(statusCalls, ["/repo:-", "/repo:all"]);
+      assertSome(yield* pipe(cwd, double.currentBranch({ mode: "show-current" })), "show-current");
+      assertSome(yield* double.currentBranch(cwd), "abbrev-ref");
     })
   );
 
@@ -114,6 +127,7 @@ describe("Git.makeTest", () => {
         refExists: () => double.refExists(cwd, "HEAD"),
         mergeBase: () => double.mergeBase(cwd, "HEAD", "main"),
         mergeBaseOption: () => double.mergeBaseOption(cwd, "HEAD", "main"),
+        isAncestor: () => double.isAncestor(cwd, "HEAD", "main"),
         changedFiles: () => double.changedFiles(cwd, { base: "main", head: "HEAD" }),
         workingChanges: () => double.workingChanges(cwd),
         revParse: () => double.revParse(cwd, "HEAD"),
@@ -182,6 +196,7 @@ describe("Git.makeTest", () => {
         worktreeAdd: () => double.worktreeAdd(cwd, "../worktree"),
         worktreeList: () => double.worktreeList(cwd),
         worktreeRemove: () => double.worktreeRemove(cwd, "../worktree"),
+        worktreePrune: () => double.worktreePrune(cwd),
         lsFiles: () => double.lsFiles(cwd),
       };
       for (const method of R.keys(double)) {

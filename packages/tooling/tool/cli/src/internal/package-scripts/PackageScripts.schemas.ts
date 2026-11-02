@@ -15,7 +15,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/package-scripts/PackageScripts.schemas");
 /**
@@ -85,7 +84,6 @@ export const TaskScriptName = LiteralKit([
   "test:integration:parallel",
   "coverage",
   "docgen",
-  "audit",
   "package-test-typecheck",
   "codegen",
   "lint:deprecated-apis",
@@ -119,7 +117,6 @@ export const ImplScriptName = LiteralKit([
   "beep:test:integration",
   "beep:coverage",
   "beep:docgen",
-  "beep:audit",
   "beep:doctest",
 ]).pipe(
   $I.annoteSchema("ImplScriptName", { description: "Package-owned implementation keys whose values remain free." })
@@ -1058,43 +1055,6 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
   TaskScriptRule.make({ kind: "exempt", name: "docgen", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
   TaskScriptRule.make({
     kind: "library",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "tool",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "ecosystem",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "app",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "lab",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({
-    kind: "infra",
-    name: "audit",
-    presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:audit", ifPresent: true },
-  }),
-  TaskScriptRule.make({ kind: "exempt", name: "audit", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
-  TaskScriptRule.make({
-    kind: "library",
     name: "package-test-typecheck",
     presence: { _tag: "required" },
     binding: { _tag: "cli", command: "beep-cli quality test-tsgo-package" },
@@ -1361,12 +1321,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "library", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({
     kind: "library",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
-  ImplScriptDefault.make({
-    kind: "library",
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
@@ -1389,12 +1343,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "tool",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
@@ -1417,12 +1365,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "ecosystem", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({
     kind: "ecosystem",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
-  ImplScriptDefault.make({
-    kind: "ecosystem",
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
@@ -1441,11 +1383,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "app", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "app",
-    name: "beep:audit",
-    value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "app", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:build", value: "tsrs -p tsconfig.check.json" }),
   ImplScriptDefault.make({
@@ -1467,11 +1404,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     value: "bunx --bun vitest run test/integration --passWithNoTests",
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "lab",
-    name: "beep:audit",
-    value: "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
   ImplScriptDefault.make({
@@ -1498,12 +1430,6 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
       "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",
   }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
-  ImplScriptDefault.make({
-    kind: "infra",
-    name: "beep:audit",
-    value:
-      "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
-  }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
 
@@ -1515,6 +1441,29 @@ const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScript
   const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === rule.kind && row.name === binding.impl);
   return O.isSome(implementation) ? HashMap.set(tasks, binding.impl, implementation.value.value) : tasks;
 };
+
+/**
+ * Exercise one decoded scaffold binding with caller-owned seed scripts in tests.
+ *
+ * **Example** (Keep an optional implementation call)
+ *
+ * ```ts
+ * import { applyScaffoldRuleForTesting, TaskScriptBinding, TaskScriptPresence, TaskScriptRule } from "@beep/repo-cli/test/PackageScripts"
+ * import * as HashMap from "effect/HashMap"
+ * const rule = TaskScriptRule.make({
+ *   kind: "library",
+ *   name: "build",
+ *   presence: TaskScriptPresence.cases.optional.make({}),
+ *   binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }),
+ * })
+ * console.log(HashMap.size(applyScaffoldRuleForTesting(HashMap.empty(), rule))) // 2
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const applyScaffoldRuleForTesting = scaffoldRule;
+
 const scaffoldRuleEnabled =
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
     rule.kind === kind &&
@@ -1524,7 +1473,7 @@ const scaffoldRuleEnabled =
  * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
  *
  * **Details**
- * Includes defaults behind enabled indirections, including the optional audit implementation.
+ * Includes defaults behind enabled indirections.
  * Package-owned tasks and extra scripts remain the caller's responsibility. Derived tasks
  * require filesystem evidence and are left to the policy writer.
  *
@@ -1543,23 +1492,10 @@ export const scaffoldPackageScripts: {
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord;
   (optionalTasks: ReadonlyArray<TaskScriptName>): (kind: PackageKind) => ScriptsRecord;
 } = dual(2, (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord => {
-  let scripts = A.reduce(
+  const scripts = A.reduce(
     A.filter(taskScriptRules, scaffoldRuleEnabled(kind, optionalTasks)),
     HashMap.empty<string, string>(),
     scaffoldRule
   );
-  // An audit may call an implementation even when its public task is absent (tool integration tests).
-  for (const implementation of implScriptDefaults) {
-    if (implementation.kind !== kind || HashMap.has(scripts, implementation.name)) continue;
-    if (
-      scripts.pipe(
-        HashMap.values,
-        A.fromIterable,
-        A.some((value) => A.contains(Str.split(value, " && "), `bun run ${implementation.name}`))
-      )
-    ) {
-      scripts = HashMap.set(scripts, implementation.name, implementation.value);
-    }
-  }
   return R.fromEntries(A.sortWith(HashMap.toEntries(scripts), ([key]) => key, Order.String));
 });

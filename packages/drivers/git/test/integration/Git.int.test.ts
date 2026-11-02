@@ -23,7 +23,7 @@
 // surface) and the real Git service itself for checkout, which IS part of
 // the surface this package owns.
 
-import { Git, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, GitOptions, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
@@ -310,6 +310,38 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
       })
     );
 
+    it.effect("isAncestor reads reachability from the exit code: fork point yes, branch tip into main no", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, fixture.branchCommit));
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit1, "main"));
+        // A commit is its own ancestor.
+        assert.isTrue(yield* git.isAncestor(fixture.dir, fixture.commit2, fixture.commit2));
+        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.branchCommit, "main"));
+        assert.isFalse(yield* git.isAncestor(fixture.dir, fixture.commit2, "feature/git"));
+        const unknown = yield* Effect.flip(git.isAncestor(fixture.dir, Str.repeat(40)("0"), "main"));
+        assert.instanceOf(unknown, UnknownRefError);
+      })
+    );
+
+    it.effect("worktreePrune drops the registration of a linked worktree whose directory was removed", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const parent = yield* fs.makeTempDirectoryScoped({ prefix: "effected-git-prune-" });
+        const linked = path.join(parent, "linked");
+        yield* git.worktreeAdd(fixture.dir, linked, { ref: fixture.commit1, detach: true });
+        const realLinked = yield* fs.realPath(linked);
+        const before = yield* git.worktreeList(fixture.dir);
+        assert.isTrue(A.some(before, (entry) => entry.path === realLinked));
+        yield* fs.remove(linked, { recursive: true });
+        yield* git.worktreePrune(fixture.dir);
+        const after = yield* git.worktreeList(fixture.dir);
+        assert.isFalse(A.some(after, (entry) => entry.path === realLinked));
+      })
+    );
+
     it.effect("changedFiles across the two commits names exactly the changed and deleted files", () =>
       Effect.gen(function* () {
         const git = yield* Git;
@@ -349,6 +381,44 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           assert.strictEqual(content, fixture.bigContent);
         }),
       10_000
+    );
+
+    // G6: the per-stream ceiling against a REAL pipe. big.txt (~1.5 MiB) lands
+    // on stdout; under a 64 KiB ceiling the collector must kill the child and
+    // fail typed instead of deadlocking on the half-drained pipe, and under
+    // the default ceiling the same read succeeds whole.
+    it.effect(
+      "show of big.txt under a 64 KiB maxOutputBytes fails kind truncated without deadlocking; the default succeeds",
+      () =>
+        Effect.gen(function* () {
+          const bounded = yield* Git.makeWith(GitOptions.make({ maxOutputBytes: 64 * 1024 }));
+          const failure = yield* Effect.flip(bounded.show(fixture.dir, fixture.commit3, "big.txt"));
+          assert.instanceOf(failure, GitCommandError);
+          if (S.is(GitCommandError)(failure)) {
+            assert.strictEqual(failure.kind, "truncated");
+            assert.include(failure.detail, "stdout");
+            assert.include(failure.detail, `${64 * 1024} byte`);
+          }
+          const git = yield* Git;
+          assertSome(yield* git.show(fixture.dir, fixture.commit3, "big.txt"), fixture.bigContent);
+        }),
+      10_000
+    );
+
+    it.effect("revParse: quiet and plain forms both classify a real nonexistent ref as UnknownRefError", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const quiet = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist", { quiet: true }));
+        assert.instanceOf(quiet, UnknownRefError);
+        if (S.is(UnknownRefError)(quiet)) assert.strictEqual(quiet.ref, "refs/heads/does-not-exist");
+        const loud = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist"));
+        assert.instanceOf(loud, UnknownRefError);
+        // peel: "commit" through the tag resolves to the commit it points at.
+        assert.strictEqual(
+          yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true }),
+          fixture.commit2
+        );
+      })
     );
 
     // THE backpressure guard. Discriminates runCollected's

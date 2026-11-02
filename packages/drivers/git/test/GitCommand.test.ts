@@ -53,6 +53,16 @@ describe("GitCommand", () => {
     assertGitCommand(GitCommand.mergeBase("main", "feat/git"), ["merge-base", "main", "feat/git"]);
   });
 
+  it("isAncestor builds `git merge-base --is-ancestor <ancestor> <descendant>`", () => {
+    assertGitCommand(GitCommand.isAncestor("main", "feat/git"), ["merge-base", "--is-ancestor", "main", "feat/git"]);
+    assert.deepStrictEqual(pipe("main", GitCommand.isAncestor("feat/git")).command.args, [
+      "merge-base",
+      "--is-ancestor",
+      "main",
+      "feat/git",
+    ]);
+  });
+
   it("changedFiles builds `git diff --name-only -z --no-relative <base>...<head>`", () => {
     // --no-relative is explicit on the default branch so an inherited
     // diff.relative=true config cannot silently make the output cwd-relative.
@@ -96,6 +106,36 @@ describe("GitCommand", () => {
     assertGitCommand(GitCommand.revParse("HEAD"), ["rev-parse", "--verify", "HEAD"]);
   });
 
+  it("revParse with any option adds --end-of-options, and renders --quiet and the ^{commit} peel", () => {
+    assertGitCommand(GitCommand.revParse("v1", { quiet: true }), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1",
+    ]);
+    assertGitCommand(GitCommand.revParse("v1", { peel: "commit" }), [
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "v1^{commit}",
+    ]);
+    assertGitCommand(GitCommand.revParse("v1", { peel: "commit", quiet: true }), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1^{commit}",
+    ]);
+    assertGitCommand(pipe("v1", GitCommand.revParse({ quiet: true })), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1",
+    ]);
+  });
+
   it("checkout without options is unchanged", () => {
     assertGitCommand(GitCommand.checkout("main"), ["checkout", "main"]);
   });
@@ -113,6 +153,24 @@ describe("GitCommand", () => {
       "origin",
       "tag",
       "v1.0.0",
+    ]);
+  });
+
+  it("fetch places --prune after --depth/--unshallow and before the remote", () => {
+    assertGitCommand(GitCommand.fetch("origin", "main", undefined, false, false, true), [
+      "fetch",
+      "--prune",
+      "origin",
+      "main",
+    ]);
+    assertGitCommand(GitCommand.fetch("origin", "v1", 1, true, false, true), [
+      "fetch",
+      "--depth",
+      "1",
+      "--prune",
+      "origin",
+      "tag",
+      "v1",
     ]);
   });
 
@@ -258,6 +316,39 @@ describe("GitCommand", () => {
     ]);
   });
 
+  it("nameStatus renders --find-renames=<n>% and --diff-filter before the range and the pathspec after --", () => {
+    assertGitCommand(
+      GitCommand.nameStatus("main", "HEAD", false, { findRenames: 50, diffFilter: "ACMR", pathspec: ["src"] }),
+      [
+        "diff",
+        "--name-status",
+        "-z",
+        "--no-relative",
+        "--find-renames=50%",
+        "--diff-filter=ACMR",
+        "main...HEAD",
+        "--",
+        "src",
+      ]
+    );
+    // An empty pathspec adds no `--`; each option is independent.
+    assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { pathspec: [] }), [
+      "diff",
+      "--name-status",
+      "-z",
+      "--no-relative",
+      "HEAD",
+    ]);
+    assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { diffFilter: "d" }), [
+      "diff",
+      "--name-status",
+      "-z",
+      "--no-relative",
+      "--diff-filter=d",
+      "HEAD",
+    ]);
+  });
+
   it("lsTree without a pathspec is unchanged", () => {
     assertGitCommand(GitCommand.lsTree("HEAD"), ["ls-tree", "-r", "-z", "HEAD"]);
   });
@@ -312,7 +403,7 @@ describe("GitCommand", () => {
       "log",
       "--no-show-signature",
       "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
+      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
       "--name-only",
     ]);
   });
@@ -322,7 +413,7 @@ describe("GitCommand", () => {
       "log",
       "--no-show-signature",
       "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
+      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
       "--name-only",
       "--",
       "left\x1eright.txt",
@@ -336,7 +427,7 @@ describe("GitCommand", () => {
       "log",
       "--no-show-signature",
       "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
+      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
       "--name-only",
       "--follow",
       "--diff-merges=first-parent",
@@ -353,7 +444,7 @@ describe("GitCommand", () => {
       "log",
       "--no-show-signature",
       "-z",
-      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae",
+      "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
       "--name-only",
       "--max-count=0",
     ]);
@@ -363,12 +454,200 @@ describe("GitCommand", () => {
     assertGitCommand(GitCommand.configGet("user.signingkey"), ["config", "--get", "user.signingkey"]);
   });
 
+  it("remoteUrl --push rides between the subcommand and the remote", () => {
+    assertGitCommand(GitCommand.remoteUrl("upstream", true), ["remote", "get-url", "--push", "upstream"]);
+    assertGitCommand(GitCommand.remoteUrl("origin", false), ["remote", "get-url", "origin"]);
+  });
+
   it("remoteUrl builds `git remote get-url <remote>`", () => {
     assertGitCommand(GitCommand.remoteUrl(), ["remote", "get-url", "origin"]);
   });
 
   it("status builds `git status --porcelain -z`", () => {
     assertGitCommand(GitCommand.status(), ["status", "--porcelain", "-z"]);
+  });
+
+  describe("dirty-axis options (G7)", () => {
+    it("changedFiles renders --no-renames and --diff-filter before the range and the pathspec after --", () => {
+      assertGitCommand(
+        GitCommand.changedFiles("main", "HEAD", false, { noRenames: true, diffFilter: "ACMR", pathspec: ["src"] }),
+        ["diff", "--name-only", "-z", "--no-relative", "--no-renames", "--diff-filter=ACMR", "main...HEAD", "--", "src"]
+      );
+    });
+
+    it("changedFiles twoDot emits the plain `<base> <head>` pair as two argv entries", () => {
+      assertGitCommand(GitCommand.changedFiles("main", "HEAD", true, { twoDot: true }), [
+        "diff",
+        "--name-only",
+        "-z",
+        "--relative",
+        "main",
+        "HEAD",
+      ]);
+    });
+
+    it("changedFiles with an empty options object is the unchanged range form", () => {
+      assertGitCommand(GitCommand.changedFiles("main", "HEAD", false, {}), [
+        "diff",
+        "--name-only",
+        "-z",
+        "--no-relative",
+        "main...HEAD",
+      ]);
+    });
+
+    it("unstagedChanges places the flags, then the optional head, then the pathspec", () => {
+      assertGitCommand(
+        GitCommand.unstagedChanges(false, { diffFilter: "ACMR", noRenames: true, head: "HEAD", pathspec: ["a", "b"] }),
+        ["diff", "--name-only", "-z", "--no-relative", "--no-renames", "--diff-filter=ACMR", "HEAD", "--", "a", "b"]
+      );
+      assertGitCommand(GitCommand.unstagedChanges(true, { pathspec: [] }), ["diff", "--name-only", "-z", "--relative"]);
+    });
+
+    it("stagedChanges keeps --cached in place and appends the new flags after it", () => {
+      assertGitCommand(GitCommand.stagedChanges(false, { noRenames: true, diffFilter: "A", head: "main" }), [
+        "diff",
+        "--name-only",
+        "-z",
+        "--no-relative",
+        "--cached",
+        "--no-renames",
+        "--diff-filter=A",
+        "main",
+      ]);
+    });
+
+    it("untrackedFiles appends the pathspec behind -- after --full-name", () => {
+      assertGitCommand(GitCommand.untrackedFiles(false, ["packages", "docs"]), [
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "-z",
+        "--full-name",
+        "--",
+        "packages",
+        "docs",
+      ]);
+      assertGitCommand(GitCommand.untrackedFiles(true, ["pkg"]), [
+        "ls-files",
+        "--others",
+        "--exclude-standard",
+        "-z",
+        "--",
+        "pkg",
+      ]);
+    });
+
+    it("status renders --no-optional-locks BEFORE the subcommand and the rest after --porcelain -z", () => {
+      assertGitCommand(
+        GitCommand.status({
+          noOptionalLocks: true,
+          untrackedFiles: "all",
+          ignoreSubmodules: "none",
+          noRenames: true,
+          pathspec: ["packages"],
+        }),
+        [
+          "--no-optional-locks",
+          "status",
+          "--porcelain",
+          "-z",
+          "--untracked-files=all",
+          "--ignore-submodules=none",
+          "--no-renames",
+          "--",
+          "packages",
+        ]
+      );
+      assertGitCommand(GitCommand.status({ untrackedFiles: "no" }), [
+        "status",
+        "--porcelain",
+        "-z",
+        "--untracked-files=no",
+      ]);
+      assertGitCommand(GitCommand.status({}), ["status", "--porcelain", "-z"]);
+    });
+
+    it("nameStatus twoDot emits `<base> <head>` and leaves the working-tree form alone", () => {
+      assertGitCommand(GitCommand.nameStatus("main", "HEAD", false, { twoDot: true, pathspec: ["src"] }), [
+        "diff",
+        "--name-status",
+        "-z",
+        "--no-relative",
+        "main",
+        "HEAD",
+        "--",
+        "src",
+      ]);
+      assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { twoDot: true }), [
+        "diff",
+        "--name-status",
+        "-z",
+        "--no-relative",
+        "HEAD",
+      ]);
+    });
+  });
+
+  describe("log name-status (G8)", () => {
+    it("swaps --name-only for --name-status and renders the diff options after it", () => {
+      assertGitCommand(
+        GitCommand.log([], false, undefined, false, { nameStatus: true, diffFilter: "DR", findRenames: 50 }),
+        [
+          "log",
+          "--no-show-signature",
+          "-z",
+          "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+          "--name-status",
+          "--diff-filter=DR",
+          "--find-renames=50%",
+        ]
+      );
+    });
+
+    it("quotePath false prepends the GLOBAL -c core.quotePath=false before the subcommand", () => {
+      assertGitCommand(GitCommand.log(["docs"], false, 2, false, { quotePath: false, nameStatus: true }), [
+        "-c",
+        "core.quotePath=false",
+        "log",
+        "--no-show-signature",
+        "-z",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+        "--name-status",
+        "--max-count=2",
+        "--",
+        "docs",
+      ]);
+    });
+
+    it("diffFilter and findRenames apply to the --name-only body too", () => {
+      assertGitCommand(GitCommand.log([], false, undefined, false, { diffFilter: "A" }), [
+        "log",
+        "--no-show-signature",
+        "-z",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+        "--name-only",
+        "--diff-filter=A",
+      ]);
+    });
+  });
+
+  it("lsTree fullTree places --full-tree before the ref", () => {
+    assertGitCommand(GitCommand.lsTree("HEAD", ["src"], true), [
+      "ls-tree",
+      "-r",
+      "-z",
+      "--full-tree",
+      "HEAD",
+      "--",
+      "src",
+    ]);
+    assertGitCommand(GitCommand.lsTree("HEAD", [], false), ["ls-tree", "-r", "-z", "HEAD"]);
+  });
+
+  it("currentBranch show-current builds `git branch --show-current`", () => {
+    assertGitCommand(GitCommand.currentBranch("show-current"), ["branch", "--show-current"]);
+    assertGitCommand(GitCommand.currentBranch("abbrev-ref"), ["rev-parse", "--abbrev-ref", "HEAD"]);
   });
 
   describe("working-tree restore tier", () => {
@@ -653,6 +932,26 @@ describe("GitCommand", () => {
   });
 
   describe("history tier", () => {
+    it("commit renders --only and --no-verify after --amend and before --author", () => {
+      assertGitCommand(GitCommand.commit("msg", false, false, false, undefined, true, true), [
+        "commit",
+        "--only",
+        "--no-verify",
+        "-m",
+        "msg",
+      ]);
+      assertGitCommand(GitCommand.commit("msg", false, true, true, "A <a@b.c>", true, true), [
+        "commit",
+        "--allow-empty",
+        "--amend",
+        "--only",
+        "--no-verify",
+        "--author=A <a@b.c>",
+        "-m",
+        "msg",
+      ]);
+    });
+
     it("commit rides the message behind -m, flags and --author= before it", () => {
       assertGitCommand(GitCommand.commit("one line"), ["commit", "-m", "one line"]);
       assertGitCommand(GitCommand.commit("msg", true, true, true, "A <a@b.c>"), [
@@ -834,6 +1133,7 @@ describe("GitCommand", () => {
       assertGitCommand(GitCommand.worktreeList(), ["worktree", "list", "--porcelain", "-z"]);
       assertGitCommand(GitCommand.worktreeRemove("../wt"), ["worktree", "remove", "../wt"]);
       assertGitCommand(GitCommand.worktreeRemove("../wt", true), ["worktree", "remove", "--force", "../wt"]);
+      assertGitCommand(GitCommand.worktreePrune(), ["worktree", "prune"]);
     });
 
     it("lsFiles pins --stage -z and scopes to a -- pathspec when given", () => {

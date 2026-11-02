@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
@@ -22,8 +23,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { GoalSlug } from "./Bootstrap.schemas.ts";
-import { readGoalLifecycle } from "./Completion.ts";
+import { readGoalCloseoutView, readGoalLifecycle } from "./Completion.ts";
 import { GoalGraphInputError, GoalGraphOperationalError } from "./Goals.errors.ts";
 import { decodeGoalManifest } from "./Goals.schemas.ts";
 import {
@@ -88,6 +90,12 @@ const decodePacketManifest = Effect.fn("Goals.decodePacketManifest")(function* (
  * @since 0.0.0
  */
 export const loadCapabilityProjection = Effect.fn("Goals.loadCapabilityProjection")(function* (repoRoot = ".") {
+  return (yield* loadCapabilityCensus(repoRoot)).projection;
+});
+
+// The decoded census and its projection together: `explain` needs the manifest
+// behind one packet to read its clone-scoped closeout view, so the scan runs once.
+const loadCapabilityCensus = Effect.fn("Goals.loadCapabilityCensus")(function* (repoRoot: string) {
   const records = yield* listGoalPacketsStrict(repoRoot).pipe(
     Effect.mapError(GoalGraphOperationalError.new("Failed to scan goals/ for the capability graph."))
   );
@@ -100,7 +108,7 @@ export const loadCapabilityProjection = Effect.fn("Goals.loadCapabilityProjectio
       ),
     { concurrency: 1 }
   );
-  return compileCapabilityProjection(manifests, R.fromEntries(statuses));
+  return { manifests, projection: compileCapabilityProjection(manifests, R.fromEntries(statuses)) } as const;
 });
 
 const renderJson = <A, I>(schema: S.ConstraintCodec<A, I>, report: A) =>
@@ -126,9 +134,9 @@ const printReport = Effect.fn("Goals.printGraphReport")(function* <A, I>(
 });
 
 const loadGraph = Effect.fn("Goals.loadCapabilityGraph")(function* () {
-  const projection = yield* loadCapabilityProjection();
+  const { manifests, projection } = yield* loadCapabilityCensus(".");
   const answers = yield* runCapabilityGraph(projection);
-  return { projection, answers } as const;
+  return { manifests, projection, answers } as const;
 });
 
 const reportFailures =
@@ -209,7 +217,7 @@ export const goalsExplainCommand = Command.make(
       const slug = yield* decodeGoalSlug(options.slug).pipe(
         Effect.mapError((issue) => GoalGraphInputError.new(`slug "${options.slug}" is invalid: ${issue.message}`))
       );
-      const { projection, answers } = yield* loadGraph();
+      const { manifests, projection, answers } = yield* loadGraph();
       const report = yield* buildExplainReport(projection, answers, slug).pipe(
         Effect.fromOption,
         Effect.mapError(() =>
@@ -218,7 +226,19 @@ export const goalsExplainCommand = Command.make(
           )
         )
       );
-      yield* printReport(GoalExplainReport, report, options.json, renderExplainHuman);
+      // The projection already carries the derived lifecycle; the view adds the
+      // proposal and whether this clone's receipt verified it. A report exists only
+      // for a slug the manifests carry, so the manifest is always found here.
+      const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
+      const closeout = O.flatten(
+        yield* Effect.transposeOption(O.map(manifest, (found) => readGoalCloseoutView(".", slug, found)))
+      );
+      yield* printReport(
+        GoalExplainReport,
+        GoalExplainReport.make({ ...report, ...optionalProp("closeout", closeout) }),
+        options.json,
+        renderExplainHuman
+      );
     }).pipe(reportFailures("explain"));
   })
 ).pipe(

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "t3code-fleet-rollout",
+    "packetId": "goal-packet/v1:7b932a2f77c9b572d615b630ff07f25b6cdb18339a75497a0984496d07dde1b2",
+    "title": "T3 Code Fleet Rollout",
+    "status": "active",
+    "created": "2026-11-01",
+    "updated": "2026-11-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/t3code-fleet-rollout",
+  "lifecycle": "active",
+  "mission": "Run the fork build of T3 Code as a tailnet-only systemd service on every live worker host, distributed by a DankStation publish and a hash-verified host pull, linked hub-and-spoke to DankStation.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/t3code-fleet-driver",
+    "graduated": "2026-11-01"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/t3code-fleet-rollout/README.md",
+    "goals/t3code-fleet-rollout/SPEC.md",
+    "goals/t3code-fleet-rollout/PLAN.md",
+    "goals/t3code-fleet-rollout/GOAL.md",
+    "goals/t3code-fleet-rollout/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/t3code-fleet-rollout/GOAL.md"
+    }
+  ],
+  "provides": ["fleet/t3-environments"],
+  "requires": ["orchestration/t3-native"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/t3code-fleet-rollout/GOAL.md)\" -le 4000",
+    "jq . goals/t3code-fleet-rollout/ops/manifest.json",
+    "rg -n \"t3code-fleet-rollout|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/t3code-fleet-rollout",
+    "git diff --check -- goals/t3code-fleet-rollout",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

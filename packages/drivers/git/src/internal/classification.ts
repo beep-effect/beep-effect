@@ -16,14 +16,13 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GitCommandError } from "../Git.errors.ts";
-import { runCollected } from "./run.ts";
+import { OutputTooLarge, runCollected } from "./run.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitOptions } from "../Git.models.ts";
 import type { GitInvocation } from "../GitCommand.ts";
 import type { Collected } from "./run.ts";
 
 const $I = $GitId.create("Git");
-/** git's own ceiling: a run that has not answered in 30s is not going to. */
-const GIT_TIMEOUT = Duration.seconds(30);
 
 /**
  * The outcome of classifying one completed run (or spawn failure) against
@@ -56,11 +55,21 @@ type Classified = typeof Classified.Type;
  * degrade, `"noSuchRemote"` enables the no-such-remote degrade, `"push"`
  * enables the rejected-non-fast-forward row, `"merge"` enables the
  * dirty-worktree and merge-conflict rows, `"log"` enables the unborn-HEAD
- * degrade, `"generic"` enables none of them.
+ * degrade, `"revParse"` enables `rev-parse --verify`'s two unknown-ref
+ * shapes (`Needed a single revision`, and `--quiet`'s silent exit 1),
+ * `"generic"` enables none of them.
  */
-const ClassifyKind = LiteralKit(["show", "refExists", "quiet", "noSuchRemote", "push", "merge", "log", "generic"]).pipe(
-  $I.annoteSchema("ClassifyKind", { description: "The method-specific Git classification taxonomy." })
-);
+const ClassifyKind = LiteralKit([
+  "show",
+  "refExists",
+  "quiet",
+  "noSuchRemote",
+  "push",
+  "merge",
+  "log",
+  "revParse",
+  "generic",
+]).pipe($I.annoteSchema("ClassifyKind", { description: "The method-specific Git classification taxonomy." }));
 type ClassifyKind = typeof ClassifyKind.Type;
 
 /** Outcomes available to each classification mode. */
@@ -94,6 +103,8 @@ const UNKNOWN_REF_PATTERNS = [
   "unknown revision",
   "bad revision",
   "Not a valid object name",
+  // `merge-base --is-ancestor` names the missing object a commit, not an object.
+  "Not a valid commit name",
   "invalid object name",
   // fetch's missing-remote-ref shape — the typed signal a tag-then-branch
   // fetch fallback (Effect.orElse) branches on.
@@ -122,6 +133,10 @@ const DIRTY_WORKTREE_PATTERN = "would be overwritten by";
 // failing — scoped to the `"log"` kind, because for every other member an
 // unborn HEAD is a genuine failure to report.
 const UNBORN_HEAD_PATTERN = "does not have any commits yet";
+// `rev-parse --verify` names an unresolvable ref with this one fixed phrase
+// (probed against git 2.54 under LC_ALL=C), not with any UNKNOWN_REF_PATTERNS
+// wording; `--quiet` suppresses even that and signals with a silent exit 1.
+const REV_PARSE_VERIFY_UNKNOWN_PATTERN = "Needed a single revision";
 
 const matchesAny: {
   (stderr: string, patterns: ReadonlyArray<string>): boolean;
@@ -146,6 +161,18 @@ const spawnFailure = (outcome: PlatformError.PlatformError, cwd: string, args: R
       outcome.reason._tag === "NotFound"
         ? "git is not installed (or the working directory does not exist)"
         : `spawn failed: ${outcome.reason._tag}: ${outcome.message}`,
+  }),
+});
+
+/** One collected stream outgrew the per-stream ceiling; the child was killed before any parse. */
+const truncatedFailure = (outcome: OutputTooLarge, cwd: string, args: ReadonlyArray<string>): Classified => ({
+  _tag: "failure",
+  error: GitCommandError.make({
+    kind: "truncated",
+    args,
+    cwd,
+    stderr: "",
+    detail: `${outcome.stream} exceeded the ${outcome.limit} byte output limit (maxOutputBytes)`,
   }),
 });
 
@@ -200,6 +227,10 @@ const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classif
       : undefined,
   merge: classifyMerge,
   log: ({ stderr }) => (Str.includes(UNBORN_HEAD_PATTERN)(stderr) ? { _tag: "absent" } : undefined),
+  revParse: ({ exitCode, stderr }) =>
+    (exitCode === 1 && stderr === "") || Str.includes(REV_PARSE_VERIFY_UNKNOWN_PATTERN)(stderr)
+      ? { _tag: "unknownRef" }
+      : undefined,
   generic: () => undefined,
 };
 
@@ -215,7 +246,7 @@ const KIND_ROWS: { readonly [K in ClassifyKind]: (outcome: Collected) => Classif
  */
 const classify: {
   (
-    outcome: Collected | PlatformError.PlatformError,
+    outcome: Collected | PlatformError.PlatformError | OutputTooLarge,
     cwd: string,
     args: ReadonlyArray<string>,
     kind: ClassifyKind
@@ -224,16 +255,17 @@ const classify: {
     cwd: string,
     args: ReadonlyArray<string>,
     kind: ClassifyKind
-  ): (outcome: Collected | PlatformError.PlatformError) => Classified;
+  ): (outcome: Collected | PlatformError.PlatformError | OutputTooLarge) => Classified;
 } = dual(
   4,
   (
-    outcome: Collected | PlatformError.PlatformError,
+    outcome: Collected | PlatformError.PlatformError | OutputTooLarge,
     cwd: string,
     args: ReadonlyArray<string>,
     kind: ClassifyKind
   ): Classified => {
     if (outcome instanceof PlatformError.PlatformError) return spawnFailure(outcome, cwd, args);
+    if (S.is(OutputTooLarge)(outcome)) return truncatedFailure(outcome, cwd, args);
     if (outcome.exitCode === 0) return { _tag: "success", output: outcome.stdout };
     const specific = KIND_ROWS[kind](outcome);
     // Only the framed path diagnostic can precede shared errors: an invalid
@@ -245,9 +277,9 @@ const classify: {
 
 /**
  * Runs an invocation's command in `cwd`, classifies the outcome, and never
- * fails: a spawn-level `PlatformError` and a per-run timeout are both
- * absorbed into the `"failure"` classification rather than escaping the
- * effect's error channel.
+ * fails: a spawn-level `PlatformError`, an over-limit output stream and a
+ * per-run timeout are all absorbed into the `"failure"` classification
+ * rather than escaping the effect's error channel.
  *
  * **Details**
  *
@@ -259,16 +291,19 @@ const classify: {
  * The supplied `env` is applied here alongside `cwd`. The execution module
  * uses fixed base pins for local commands. Network commands combine those
  * pins with ambient SSH settings captured at service construction and
- * repository configuration resolved for each call.
+ * repository configuration resolved for each call. `options` carries the
+ * per-stream byte ceiling handed to the collector and the wall-clock
+ * timeout applied around the whole run.
  *
  * **Example** (Construct a classified repository query)
  *
  * ```ts import.meta.vitest name="Construct a classified repository query"
+ * import { GitOptions } from "@beep/git/Git"
  * import { GitCommand } from "@beep/git/GitCommand"
  * import { runClassified } from "@beep/git/internal/classification"
  * import * as Effect from "effect/Effect"
  *
- * const program = runClassified(GitCommand.revParse("HEAD"), "/repo", "generic", {})
+ * const program = runClassified(GitCommand.revParse("HEAD"), "/repo", "generic", {}, GitOptions.make({}))
  * Effect.isEffect(program) // => true
  * ```
  *
@@ -280,28 +315,31 @@ export const runClassified: {
     invocation: GitInvocation,
     cwd: string,
     kind: K,
-    env: Record<string, string>
+    env: Record<string, string>,
+    options: GitOptions
   ): Effect.Effect<ClassifiedFor<K>, never, ChildProcessSpawner.ChildProcessSpawner>;
   <K extends ClassifyKind>(
     cwd: string,
     kind: K,
-    env: Record<string, string>
+    env: Record<string, string>,
+    options: GitOptions
   ): (invocation: GitInvocation) => Effect.Effect<ClassifiedFor<K>, never, ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(
-  4,
+  5,
   (
     invocation: GitInvocation,
     cwd: string,
     kind: ClassifyKind,
-    env: Record<string, string>
+    env: Record<string, string>,
+    options: GitOptions
   ): Effect.Effect<Classified, never, ChildProcessSpawner.ChildProcessSpawner> => {
     const args = invocation.redactedArgs;
     const command = ChildProcess.setEnv(ChildProcess.setCwd(invocation.command, cwd), env);
-    return runCollected(command).pipe(
+    return runCollected(command, options.maxOutputBytes).pipe(
       Effect.map(classify(cwd, args, kind)),
-      Effect.catch((platformError) => Effect.succeed(classify(platformError, cwd, args, kind))),
+      Effect.catch((failure) => Effect.succeed(classify(failure, cwd, args, kind))),
       Effect.timeoutOrElse({
-        duration: GIT_TIMEOUT,
+        duration: options.timeout,
         orElse: () =>
           Effect.succeed<Classified>({
             _tag: "failure",
@@ -310,7 +348,7 @@ export const runClassified: {
               args,
               cwd,
               stderr: "",
-              detail: "timed out after 30s",
+              detail: `timed out after ${Duration.format(options.timeout)}`,
             }),
           }),
       })

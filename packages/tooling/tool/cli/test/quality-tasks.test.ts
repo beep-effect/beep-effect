@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   CiLaneRunOptions,
@@ -28,6 +29,7 @@ import {
   readLintPolicySweeps,
   resolveCiCoverageArtifactPlan,
   resolveCoverageSelector,
+  runQualityTaskBufferedStepGroup,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -221,9 +223,9 @@ const decodeTurboLaneLedgerRow = S.decodeUnknownEffect(S.fromJsonString(TurboLan
 const encodeTurboRunSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
-const PlatformLayer = Layer.mergeAll(
-  FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(FileSystemLayer, NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = Jsonc.bind(GithubChecksFallowFeatureMatrix).decode;
@@ -1090,67 +1092,64 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       });
     });
 
-    it("builds package-only audit steps by default and keeps turbo filters", () =>
+    it("composes the package audit from the cached build, check and lint graphs", () =>
       withoutCi(() => {
         const steps = rootQualityStepsForTesting(
           "/repo",
           getInvocation(["audit", "--filter=@beep/schema", "--summarize"])
         );
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]).toMatchObject({
-          label: "audit:packages",
-          command: "bunx",
-          args: expectedRootTurboArgs("audit", ["--filter=@beep/schema", "--summarize"]),
-          cwd: "/repo",
-        });
+        expect(A.map(steps, (step) => step.label)).toEqual(["build", "check", "lint"]);
+        for (const [index, task] of ["build", "check", "lint"].entries()) {
+          expect(steps[index]).toMatchObject({
+            label: task,
+            command: "bunx",
+            args: expectedRootTurboArgs(task, ["--filter=@beep/schema", "--summarize"]),
+            cwd: "/repo",
+          });
+        }
       }));
 
-    it.each(["op://vault/item/field", "postgres://user:op://vault/item/password@host/db"])(
-      "clears unresolved SQL test references for package audit: %s",
-      (value) =>
-        withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
-          const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+    it("adds the repo-wide check and lint policy steps to an unscoped package audit", () =>
+      withoutCi(() => {
+        const labels = A.map(
+          rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"])),
+          (step) => step.label
+        );
 
-          expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBe("");
-        })
-    );
-
-    it.each([undefined, "", "postgres://localhost/beep_test", "postgresql://localhost/beep_test"])(
-      "preserves ordinary SQL test configuration for package audit: %s",
-      (value) =>
-        withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
-          const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
-
-          expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBeUndefined();
-        })
-    );
+        expect(A.take(labels, 2)).toEqual(["build", "check"]);
+        expect(labels).toContain("quality:test-tsgo");
+        expect(labels).toContain("lint");
+        expect(labels).toContain("lint:policy:cheap");
+      }));
 
     it("keeps package audit cacheable by default for local runs", () =>
       withoutCi(() => {
         const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]));
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]?.args).toEqual(expectedRootTurboArgs("audit", ["--filter=@beep/schema"]));
+        expect(steps).toHaveLength(3);
+        expect(steps[0]?.args).toEqual(expectedRootTurboArgs("build", ["--filter=@beep/schema"]));
       }));
 
-    it("forces package audit execution in CI unless cache behavior is explicit", () =>
+    it("forces every package audit graph in CI unless cache behavior is explicit", () =>
       withEnvVar("CI", "true", () => {
         const steps = rootQualityStepsForTesting(
           "/repo",
           getInvocation(["audit", "--filter=@beep/schema", "--dry=json"])
         );
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]?.args).toEqual([
-          "turbo",
-          "run",
-          "audit",
-          "--concurrency=4",
-          "--force",
-          "--filter=@beep/schema",
-          "--dry=json",
-        ]);
+        expect(steps).toHaveLength(3);
+        for (const [index, task] of ["build", "check", "lint"].entries()) {
+          expect(steps[index]?.args).toEqual([
+            "turbo",
+            "run",
+            task,
+            "--concurrency=4",
+            "--force",
+            "--filter=@beep/schema",
+            "--dry=json",
+          ]);
+        }
       }));
 
     it("honors explicit audit cache-control args in CI", () =>
@@ -1160,11 +1159,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           getInvocation(["audit", "--cache=local:rw", "--filter=@beep/schema"])
         );
 
-        expect(steps).toHaveLength(1);
+        expect(steps).toHaveLength(3);
         expect(steps[0]?.args).toEqual([
           "turbo",
           "run",
-          "audit",
+          "build",
           "--concurrency=4",
           "--cache=local:rw",
           "--filter=@beep/schema",
@@ -4037,6 +4036,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg));
       expect(taskNames(O.getOrThrow(A.get(local, 0)))).toEqual([
         "lint:package-scripts",
+        "lint:deprecated-imports",
         "lint:policy-fingerprint",
         "lint:tsgo-rules",
         "lint:ecosystem-polarity",
@@ -4200,6 +4200,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         // Residual tasks expand the existing laws/JSDoc checks; the other three
         // checks are the new aggregate contract, not hidden losses or aliases.
         const additions = [
+          "lint:deprecated-imports",
           "lint:native-runtime:roots",
           "lint:jsdoc:root",
           "jsdoc:inventory:check",
@@ -8351,6 +8352,44 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         TestClock.withLive
       )
+    );
+
+    it.effect("buffers a step's output and replays it whole after the step ends", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(
+            runQualityTaskBufferedStepGroup("test:buffered", [
+              bunScriptStep("test:quiet", "process.exit(0)"),
+              bunScriptStep("test:loud", "console.log('buffered line one'); console.error('buffered line two')"),
+              bunScriptStep("test:broken", "console.log('buffered failure'); process.exit(5)"),
+            ])
+          );
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          // Captured stdout and stderr are replayed together, after the command line and before the outcome line.
+          const commandAt = O.getOrThrow(Str.indexOf("[beep-cli] test:loud: bun -e")(logText));
+          const outputAt = O.getOrThrow(Str.indexOf("buffered line one")(logText));
+          const outcomeAt = O.getOrThrow(Str.indexOf("[beep-cli] test:loud: ok in")(logText));
+          expect(outputAt).toBeGreaterThan(commandAt);
+          expect(outcomeAt).toBeGreaterThan(outputAt);
+          expect(logText).toContain("buffered line two");
+          // A step with no output replays nothing but still reports its outcome.
+          expect(logText).toContain("[beep-cli] test:quiet: ok in");
+          expect(logText).toContain("buffered failure");
+          expect(logText).toContain("[beep-cli] test:broken: failed in");
+
+          assertTrue(exit._tag === "Failure");
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.squash(exit.cause);
+            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+            if (isQualityTaskGroupFailed(failure)) {
+              expect(failure.exitCode).toBe(5);
+              expect(A.map(failure.failures, (step) => step.label)).toEqual(["test:broken"]);
+            }
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("streams grouped quality step failures and keeps running sibling steps", () =>

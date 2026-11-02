@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,14 +31,26 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started (paused).
+P1 Implement, W1a in review: the typed readers of `internal/repo-run/GitExec.ts` run through `Git`
+(`revParse`, `mergeBase`, `repoRoot` + `lsTree`, `nameStatus` with the rename score, the three dirty-path
+collectors, `currentBranch`, `isShallow` + `fetchUnshallow` + `fetch`) behind one adapter fold, with `Git`
+widened into the Knowledge, Quality, Ci, Worktree and Yeet requirement unions that reach them (SPEC D-08).
+W0 merged (#2514); the W1 kit merged (#2522). Next: W1b (Yeet's own git spawns onto the kit, the leaf
+`Git.make` provisions dropped), then W2.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-02 W1a: `research/git-readers-differential-w1a.json` (45 scenarios, 28 same, 17 classified, 0
+  unclassified); repo-cli typecheck clean, `step-git-exec` (fold unit tests and a real-repository reader test),
+  knowledge, quality, ci-route, worktree, coverage and yeet final-check suites green.
+
+- 2026-11-02 P0: 36 site-list rows censused with the kit gaps G1-G10 and a six-wave plan (PLAN "Waves").
+- 2026-11-02 W0: `research/is-ancestor-prune-differential-w0.json` (21 scenarios, 18 same, 3 classified, 0
+  unclassified); `@beep/git` unit, coverage, test-double and real-repository suites green; repo-cli typecheck and
+  the knowledge-doctor, residue-reap, tmpfs-reap, route-census and quality dispatch suites green.
 
 ## Notes
 
-Created paused by effected-promotion closeout PR C from its W4-l decision. Resume when someone picks up
-the gh/git kit features. Start with the `Git.isAncestor` and fail-closed-parser gaps, which unblock the most
-git-wrapper rows. The site list is [`research/site-list.md`](./research/site-list.md).
+Created paused by effected-promotion closeout PR C from its W4-l decision; unpaused 2026-11-02 (SPEC D-02).
+The inherited site list is [`research/site-list.md`](./research/site-list.md); the working census is
+[`research/p0-site-inventory-2026-11-02.md`](./research/p0-site-inventory-2026-11-02.md).

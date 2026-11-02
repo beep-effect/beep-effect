@@ -84,6 +84,8 @@ const lineField = (text: string): boolean =>
   noNul(text) && Str.includes("\n")(text) === false && Str.includes("\r")(text) === false;
 const atom = (text: string): boolean =>
   lineField(text) && Str.includes(" ")(text) === false && Str.includes("\t")(text) === false;
+const nonEmpty = (text: string): boolean => noNul(text) && text.length > 0;
+const nonEmptyAtom = (text: string): boolean => atom(text) && text.length > 0;
 const nulStrings = S.String.pipe(
   S.Array,
   Arbitrary.schema,
@@ -117,6 +119,7 @@ describe("Git exported schema property floor", () => {
   roundTrips("ConfigListEntry", G.ConfigListEntry);
   roundTrips("WorktreeEntry", G.WorktreeEntry);
   roundTrips("LsFilesEntry", G.LsFilesEntry);
+  roundTrips("GitOptions", G.GitOptions);
   roundTrips("NotStubbedError", G.NotStubbedError);
 });
 
@@ -142,8 +145,10 @@ describe("Git parser and formatter property floor", () => {
     "lsTree preserves raw path bytes",
     trees,
     Arbitrary.schema(trees).pipe(
+      // Fail-closed parsers (G4) reject empty header fields and empty paths,
+      // which git never emits, so the wire-format arbitrary excludes them.
       Arbitrary.filter((entries) =>
-        A.every(entries, (entry) => atom(entry.mode) && atom(entry.oid) && noNul(entry.path))
+        A.every(entries, (entry) => nonEmptyAtom(entry.mode) && nonEmptyAtom(entry.oid) && nonEmpty(entry.path))
       )
     ),
     (entries) => nulJoin(A.map(entries, (entry) => `${entry.mode} ${entry.type} ${entry.oid}\t${entry.path}`)),
@@ -158,7 +163,15 @@ describe("Git parser and formatter property floor", () => {
       Arbitrary.filter((entries) =>
         A.every(
           entries,
-          (entry) => atom(entry.mode) && atom(entry.oid) && noNul(entry.path) && Object.is(entry.stage, -0) === false
+          (entry) =>
+            nonEmptyAtom(entry.mode) &&
+            nonEmptyAtom(entry.oid) &&
+            nonEmpty(entry.path) &&
+            // git prints an index stage as one of 0..3; the parser refuses anything else.
+            Number.isInteger(entry.stage) &&
+            entry.stage >= 0 &&
+            entry.stage <= 3 &&
+            Object.is(entry.stage, -0) === false
         )
       )
     ),
@@ -178,29 +191,20 @@ describe("Git parser and formatter property floor", () => {
     unmerged: "U",
     unknown: "X",
   };
+  /** Whether a name-status entry is one git's `-z` listing can carry: a rename/copy with its old path, anything else without. */
+  const wireNameStatus = (entry: G.NameStatusEntry): boolean =>
+    nonEmpty(entry.path) &&
+    (entry.status === "renamed" || entry.status === "copied"
+      ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
+      : entry.oldPath === undefined && entry.score === undefined);
+  /** One entry's `-z` tokens: `<code><score>\0[<oldPath>\0]<path>\0`. */
+  const nameStatusRecord = (entry: G.NameStatusEntry): string =>
+    `${codes[entry.status]}${entry.score ?? ""}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`;
   parserLaw(
     "nameStatus preserves rename/copy ordering and path bytes",
     names,
-    Arbitrary.schema(names).pipe(
-      Arbitrary.filter((entries) =>
-        A.every(
-          entries,
-          (entry) =>
-            noNul(entry.path) &&
-            (entry.status === "renamed" || entry.status === "copied"
-              ? entry.oldPath !== undefined && noNul(entry.oldPath)
-              : entry.oldPath === undefined)
-        )
-      )
-    ),
-    (entries) =>
-      A.join(
-        A.map(
-          entries,
-          (entry) => `${codes[entry.status]}\0${entry.oldPath === undefined ? "" : `${entry.oldPath}\0`}${entry.path}\0`
-        ),
-        ""
-      ),
+    Arbitrary.schema(names).pipe(Arbitrary.filter((entries) => A.every(entries, wireNameStatus))),
+    (entries) => A.join(A.map(entries, nameStatusRecord), ""),
     (git) => git.nameStatus(cwd, { base: "HEAD" })
   );
 
@@ -215,8 +219,8 @@ describe("Git parser and formatter property floor", () => {
         A.every(
           entries,
           (entry) =>
-            noNul(entry.path) &&
-            (rename(entry) ? entry.origPath !== undefined && noNul(entry.origPath) : entry.origPath === undefined)
+            nonEmpty(entry.path) &&
+            (rename(entry) ? entry.origPath !== undefined && nonEmpty(entry.origPath) : entry.origPath === undefined)
         )
       )
     ),
@@ -240,17 +244,22 @@ describe("Git parser and formatter property floor", () => {
   );
 
   const log = S.Array(G.CommitLogEntry);
+  /** The six NUL-terminated header fields every log record opens with, in `GitCommand.log`'s format order. */
+  const logHeader = (entry: G.CommitLogEntry): string =>
+    `\0${entry.sha}\0${DateTime.formatIso(entry.authoredAt)}\0${DateTime.formatIso(entry.committedAt)}\0${entry.authorName}\0${entry.authorEmail}\0${entry.subject}\0`;
+  const wireLogHeader = (entry: G.CommitLogEntry): boolean =>
+    noNul(entry.sha) && noNul(entry.authorName) && noNul(entry.authorEmail) && noNul(entry.subject);
   parserLaw(
-    "log preserves empty authors, timestamp instants, and raw path bytes",
+    "log preserves empty authors, an empty subject, timestamp instants, and raw path bytes",
     log,
     Arbitrary.schema(log).pipe(
       Arbitrary.filter((entries) =>
         A.every(
           entries,
           (entry) =>
-            noNul(entry.sha) &&
-            noNul(entry.authorName) &&
-            noNul(entry.authorEmail) &&
+            wireLogHeader(entry) &&
+            // A --name-only read never answers `changes`.
+            entry.changes === undefined &&
             A.every(entry.paths, (path) => noNul(path) && path.length > 0)
         )
       )
@@ -259,12 +268,39 @@ describe("Git parser and formatter property floor", () => {
       A.join(
         A.map(
           entries,
-          (entry) =>
-            `\0${entry.sha}\0${DateTime.formatIso(entry.authoredAt)}\0${DateTime.formatIso(entry.committedAt)}\0${entry.authorName}\0${entry.authorEmail}\0${entry.paths.length === 0 ? "" : `\n${A.join(entry.paths, "\0")}\0`}`
+          (entry) => `${logHeader(entry)}${entry.paths.length === 0 ? "" : `\n${A.join(entry.paths, "\0")}\0`}`
         ),
         ""
       ),
     (git) => git.log(cwd)
+  );
+
+  parserLaw(
+    "log --name-status preserves every change record and derives paths from the new paths",
+    log,
+    Arbitrary.schema(log).pipe(
+      Arbitrary.filter((entries) =>
+        A.every(
+          entries,
+          (entry) => wireLogHeader(entry) && entry.changes !== undefined && A.every(entry.changes, wireNameStatus)
+        )
+      ),
+      // In name-status mode `paths` is DERIVED: the new path of every change.
+      Arbitrary.map((entries) =>
+        A.map(entries, (entry) =>
+          G.CommitLogEntry.make({ ...entry, paths: A.map(entry.changes ?? [], (change) => change.path) })
+        )
+      )
+    ),
+    (entries) =>
+      A.join(
+        A.map(entries, (entry) => {
+          const body = A.join(A.map(entry.changes ?? [], nameStatusRecord), "");
+          return `${logHeader(entry)}${body === "" ? "" : `\n${body}`}`;
+        }),
+        ""
+      ),
+    (git) => git.log(cwd, { nameStatus: true })
   );
 
   const remote = S.Array(G.LsRemoteEntry);
@@ -343,11 +379,11 @@ describe("Git parser and formatter property floor", () => {
     worktrees,
     Arbitrary.schema(worktrees).pipe(
       Arbitrary.filter((entries) =>
-        A.every(entries, (entry) =>
-          A.every(
-            [entry.path, entry.head, entry.branch, entry.locked, entry.prunable],
-            (value) => value === undefined || noNul(value)
-          )
+        A.every(
+          entries,
+          (entry) =>
+            nonEmpty(entry.path) &&
+            A.every([entry.head, entry.branch, entry.locked], (value) => value === undefined || noNul(value))
         )
       )
     ),
@@ -362,7 +398,7 @@ describe("Git parser and formatter property floor", () => {
               ...(entry.detached ? ["detached"] : []),
               ...(entry.bare ? ["bare"] : []),
               ...(entry.locked === undefined ? [] : [`locked ${entry.locked}`]),
-              ...(entry.prunable === undefined ? [] : [`prunable ${entry.prunable}`]),
+              ...(entry.prunable ? ["prunable gitdir file points to non-existent location"] : []),
               "",
               "",
             ],
@@ -437,14 +473,22 @@ describe("Git parser and formatter property floor", () => {
         S.Array,
         Arbitrary.schema,
         Arbitrary.filter((entries) =>
-          A.every(entries, (entry) => rename(entry) === false && entry.origPath === undefined && lineField(entry.path))
+          A.every(
+            entries,
+            (entry) =>
+              rename(entry) === false && entry.origPath === undefined && lineField(entry.path) && nonEmpty(entry.path)
+          )
         )
       ),
     ],
     ([entries]) =>
       Effect.gen(function* () {
         const rendered = G.StatusEntry.format(entries);
-        const parsed = yield* parseWith((git) => git.status(cwd), A.join(Str.split("\n")(rendered), "\0"));
+        // A clean tree renders as "" and is the empty -z stream, not one empty record.
+        const parsed = yield* parseWith(
+          (git) => git.status(cwd),
+          rendered === "" ? "" : nulJoin(Str.split("\n")(rendered))
+        );
         assert.strictEqual(G.StatusEntry.format(parsed), rendered);
         assert.strictEqual(S.toEquivalence(status)(parsed, entries), true);
       }),

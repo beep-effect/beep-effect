@@ -5,7 +5,7 @@
     "title": "Turborepo quality cache adoption",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-28",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
@@ -37,7 +37,11 @@
     "explorations/turborepo-quality-cache/MAP.md",
     "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.py",
     "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.json",
-    "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json"
+    "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json",
+    "goals/turborepo-quality-cache-adoption/research/refresh-current-population.py",
+    "goals/turborepo-quality-cache-adoption/research/population-refresh-checkpoint-2026-11-02.json",
+    "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json",
+    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -88,7 +92,13 @@
     "research/native-log-controls-before-pin-default-fix.json",
     "research/native-base-ref-controls.py",
     "research/native-base-ref-controls.json",
-    "research/base-ref-feature-review.json"
+    "research/base-ref-feature-review.json",
+    "research/population-preservation-controls-2026-11-02.json",
+    "research/population-refresh-checkpoint-2026-11-02.json",
+    "research/current-fresh-disposition-review-2026-11-02.json",
+    "research/population-before-refresh-2026-11-02.json",
+    "research/native-setup-controls.json",
+    "research/setup-feature-review.json"
   ],
   "agentLaunchers": [
     {
@@ -150,5 +160,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. Source review gives 199 keep-fresh whole-command dispositions: 186 lint fixers, 12 persistent services and one current external advisory verdict. Nine generator write boundaries have source-reviewed pure decomposition leads, not final exclusions. The other 2372 final dispositions, all qualification/adoption/observation and all whole-goal acceptance remain unfinished."
+  "statusNote": "Active. The census at accepted source68834a997e contains 2,621 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The changed external advisory and 2,422 other current dispositions remain pending. Six of 35 feature decisions are accepted; 29 remain pending. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
 }

@@ -172,6 +172,7 @@ import {
 } from "./Verdict.ts";
 import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import { escalateYeetPrWave } from "./WaveNotifier.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -2511,6 +2512,7 @@ export const runYeetMonitorUntilMerged: {
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
     | Digest.Digest
+    | Git
   > {
     const interval = O.getOrElse(O.fromNullishOr(options.pollInterval), () => mergeLoopPollInterval);
     let budget = emptyYeetMonitorRerunBudget;
