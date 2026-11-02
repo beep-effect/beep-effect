@@ -2,7 +2,8 @@
 
 Scope: the P2 bullet for `.claude/hooks/packet-projections.sh` only. P2 and
 the packet lifecycle stay open. The other P2 items (graft hook guard,
-per-host MCP scoping research) are not covered here.
+per-host MCP scoping research) are not covered here. (The graft item is
+wrong; see Correction below.)
 
 ## Defect
 
@@ -70,3 +71,28 @@ both calls. The other two pass: 1 failed, 2 passed. With the fix, all 3 pass.
   the commands, and they fail open as before.
 - No live SessionStart timing was measured. The evidence is the invocation
   count, not wall-clock savings.
+
+## Correction (2026-11-02, same PR)
+
+The original text above is kept as written. Two statements in it were wrong:
+
+- **Scope paragraph.** It listed a "graft hook guard" as remaining P2 work.
+  That is wrong. The graft code graph was retired on 2026-10-28
+  (`AGENTS.md` Agent Memory; `standards/memory-architecture/04-decision-log.md`),
+  and SPEC already marks the graft hook helper as retired. Neither `graft/` nor
+  `.claude/helpers/graft-hooks.cjs` exists on current `main`, and this packet
+  does not reintroduce them (D42 carries only current names forward). The PLAN
+  P2 graft bullet and the `graft` clause of the hook-guard acceptance item have
+  no live target, so there is nothing to build. What keeps P2 open is:
+  - the current-state answer to whether `.claude/settings.json` can scope
+    `.mcp.json` servers per host (otherwise D7's runbook table stands);
+  - recorded SessionStart and Stop transcript evidence from a cloud session
+    (no error lines under `BEEP_AGENT_HOST=cloud`) for the hooks that exist
+    today.
+- **"Test-only" wording.** The verification receipt explained the
+  `--quick` package proof by saying "the change is test-only". Only the
+  `@beep/repo-cli` workspace change is test-only (one new test file, no
+  exported surface), which is why `--quick` fits that package. The PR as a
+  whole is not test-only: it changes runtime hook behavior in
+  `.claude/hooks/packet-projections.sh`. ShellCheck, the stub-bun repro and
+  the three hermetic cases are the evidence for that change.
