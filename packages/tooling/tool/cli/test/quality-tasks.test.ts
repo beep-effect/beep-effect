@@ -3761,7 +3761,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("stops fail-fast scheduling at the next chunk boundary when lanes run abreast", () =>
+    // The lane beside the red sleeps so the red always lands while it still holds
+    // its slot: every later lane then reads the stop before it can start.
+    it.effect("stops fail-fast scheduling at the next pool slot when lanes run abreast", () =>
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
         [
@@ -3769,7 +3771,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             wave: "preflight",
             lanes: [
               githubCheckTestLane("quality:secrets", "preflight", "process.exit(1)"),
-              githubCheckTestLane("quality:security", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:security", "preflight", "await Bun.sleep(1500)"),
               githubCheckTestLane("quality:sast", "preflight", "process.exit(0)"),
               githubCheckTestLane("quality:nix", "preflight", "process.exit(0)"),
               githubCheckTestLane("quality:commitlint", "preflight", "process.exit(0)"),
