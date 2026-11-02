@@ -4448,6 +4448,7 @@
         "server/**",
         "src/**",
         "src-tauri/**",
+        "!**/src-tauri/target/**",
         "test/**",
         "tsconfig*.json",
         "$TURBO_ROOT$/tsconfig.base.json",
@@ -4527,6 +4528,7 @@
         "server/**",
         "src/**",
         "src-tauri/**",
+        "!**/src-tauri/target/**",
         "test/**",
         "tsconfig*.json",
         "vitest.config.ts",
@@ -4807,7 +4809,8 @@
         "vitest.aliases.generated.json",
         "!**/node_modules/**",
         "!**/dist/**",
-        "!**/coverage/**"
+        "!**/coverage/**",
+        "!.claude/worktrees/**"
       ]
     },
     "//#lint:oxlint": {
@@ -4938,6 +4941,7 @@
         "!*.snap",
         "!.repos/**",
         "!node_modules/**",
+        "!**/node_modules/**",
         "!build/**",
         "!tmp/**",
         "!dist/**",
@@ -4982,7 +4986,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:health:check": {
@@ -5004,7 +5011,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:health:advisory": {
@@ -5026,7 +5036,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:boundaries:advisory": {
@@ -5048,7 +5061,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:flags:advisory": {
@@ -5070,7 +5086,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:security:advisory": {
@@ -5092,7 +5111,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#fallow:fix-preview:advisory": {
@@ -5114,7 +5136,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#jsdoc:inventory:check": {
@@ -5274,7 +5299,8 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!.claude/worktrees/**"
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:retired-iri-authorities": {
@@ -5292,7 +5318,9 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:markdown-fences": {
@@ -5312,7 +5340,9 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:schema-tag-idioms": {
@@ -5330,7 +5360,9 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!**/_generated/**"
+        "!**/_generated/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#lint:holds": {
@@ -5345,6 +5377,7 @@
         "**/package.json",
         "!.git/**",
         "!.repos/**",
+        "!.claude/worktrees/**",
         "!**/node_modules/**",
         "!**/.beep/**",
         "!**/.turbo/**",
@@ -5399,7 +5432,10 @@
         ".claude/skills/**",
         ".fallow/plugins/**",
         "standards/fallow.pilot.inventory.jsonc",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#config-sync:check": {
@@ -5547,7 +5583,10 @@
         "apps/**",
         "packages/**",
         "infra/**",
-        "!.claude/worktrees/**"
+        "bun.lock",
+        "!.claude/worktrees/**",
+        "!**/node_modules/**",
+        "!**/src-tauri/target/**"
       ]
     },
     "//#topo-sort": {
