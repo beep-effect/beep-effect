@@ -1134,3 +1134,10 @@ read-only Git query plus deliberate private refusal afterward; all 33 supervisor
 tests pass. The parent still exposes no raw private failure cause. Repeat the
 full ordinary stable/canary matrices with the same limits and acceptance guards;
 this startup control grants no qualification, deployment or whole-goal acceptance.
+
+
+The hosted-working-directory follow-up is recorded in the startup checkpoint.
+All 33 supervisor tests pass from the CLI workspace after canonical root discovery.
+The current-source ordinary retry stops at the existing signed mutation seed
+verdict guard; its complete matrix is still unproven. Retain that failure and the
+separate source-literal-only diagnostic without weakening the assertion.

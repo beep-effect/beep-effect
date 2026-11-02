@@ -55,7 +55,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
-import { bearers, secrets, targetFor } from "./cache-conformance-server.ts";
+import { bearers, repoRoot, secrets, targetFor } from "./cache-conformance-server.ts";
 import { makeOwnedUploadFixture } from "./helpers/cache-producer-upload-fixture.ts";
 import { executionInput } from "./helpers/cache-protocol-fixture.ts";
 import { signedPilotInput } from "./helpers/cache-signed-pilot-fixture.ts";
@@ -70,6 +70,7 @@ const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMateri
 const decodeReport = S.decodeUnknownEffect(CacheSignedPilotReceipt);
 const encodeReport = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
 const encodePilotRun = S.encodeEffect(S.fromJsonString(CacheSignedPilotRun));
+const encodeText = S.encodeEffect(S.fromJsonString(S.String));
 const nativeFoldedStdout = CacheRuntimeProcess.runFoldedStdout;
 afterEach(() => {
   vi.restoreAllMocks();
@@ -496,11 +497,10 @@ it.layer(
         const f = yield* fixture("none");
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.realPath(process.cwd());
+        const root = yield* repoRoot.pipe(Effect.flatMap(fs.realPath));
         const searchPath = yield* Config.String("PATH");
         const cache = path.join(root, "packages/tooling/tool/cli/src/commands/Cache");
         const fixtureCache = path.join(f.root, "packages/tooling/tool/cli/src/commands/Cache");
-        const encodeText = S.encodeEffect(S.fromJsonString(S.String));
         const module = yield* encodeText(path.join(cache, "index.ts"));
         const service = yield* encodeText(path.join(cache, "Cache.service.ts"));
         const expectedRoot = yield* encodeText(root);

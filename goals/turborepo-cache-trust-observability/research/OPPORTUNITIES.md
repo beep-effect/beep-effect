@@ -1749,3 +1749,15 @@ with the missing-service error before the repair. This would have caught the
 string-generated entrypoint dependency drift before a full qualification run.
 Retain the failed ordinary receipt and repeat the original full matrix without
 changing its limits, workload, isolation or acceptance conditions.
+
+
+### 2026-11-02 — generated-worker regression depended on the working directory
+
+The hosted Unit shard runs from the CLI workspace, exposing the new startup
+control's assumption that `process.cwd()` was the repository root. Reuse the
+existing source-relative `repoRoot` effect and resolve it canonically. The full
+33-test supervisor replay passes from the hosted working directory. Hoist the
+string encoder as required by the root policy scanner. The ordinary current-source
+comparison now passes startup but still fails its existing signed mutation seed
+verdict guard. A bounded diagnostic retains only matched source literals; it is
+not ordinary comparison or qualification proof. Keep that guard and failed receipts.

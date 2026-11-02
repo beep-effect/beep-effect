@@ -40,7 +40,7 @@
   },
   "sourceBindings": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.pilot.runner.ts": "f73c000c2656e038ce4b46708d4b864830b1d7b25f0dc49ed3ccff6220180ab2",
-    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "d24fea8c3356852d04bab43195ac82a0f5cb67c5b23b9765d010fe02d7412c78"
+    "packages/tooling/tool/cli/test/cache-signed-runner.test.ts": "c6a3b24490127f825db3061b7b463bd4fcc7f6d73d4f09a8f267bd7593dc1b24"
   },
   "limitsAndAuthority": {
     "comparisonMinutes": 20,
@@ -51,5 +51,28 @@
     "qualificationLedgerChanged": false,
     "productionChanged": false,
     "wholeGoalAcceptanceChanged": false
+  },
+  "followup": {
+    "recordedAt": "2026-11-02T20:47:37.562503+00:00",
+    "hostedUnitFailure": {
+      "run": 41519344241,
+      "job": 125531049312,
+      "reason": "Regression assumed repository-root cwd; hosted Unit runs from the CLI workspace, causing the generated fixture module lookup to fail."
+    },
+    "repair": "Reuse the existing source-relative repoRoot effect and canonicalize it with FileSystem.realPath; hoist the string encoder to module scope.",
+    "hostedWorkingDirectoryReplayPassed": 33,
+    "newOrdinaryComparison": {
+      "exit": 1,
+      "elapsedSeconds": 70.092,
+      "completeObservationProduced": false
+    },
+    "diagnosticOnlyObservation": {
+      "exit": 1,
+      "elapsedSeconds": 69.703,
+      "launchOptionsChanged": false,
+      "recognizedSourceError": "Signed mutation seed disagrees with its case-derived fresh verdict.",
+      "qualificationAuthority": false
+    },
+    "nativeGuardRelaxed": false
   }
 }
