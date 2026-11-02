@@ -917,15 +917,17 @@ describe("CI lane partitions", () => {
     );
   });
 
+  // `!cancelled()` (not `always()`): a superseded run must not start aggregators
+  // that can only fail; a failed shard still fails its aggregator.
   it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise(() => Bun.file(checkWorkflowUrl).text());
       const workflow = parseWorkflowYaml(workflowText);
       expect(workflowText).not.toMatch(/ci lane (?:lint|test-unit)[^\n]*--force/u);
       expect(yamlAt(workflow, ["jobs", "lint", "name"])).toBe("Lint");
-      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "lint", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "test-unit", "name"])).toBe("Test Unit");
-      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ always() }}");
+      expect(yamlAt(workflow, ["jobs", "test-unit", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
@@ -1658,7 +1660,7 @@ describe("ciLaneStepsForTesting", () => {
     }
   });
 
-  // The workflow gates only on goals_only and hands the affected decision to
+  // The workflow gates only on docs_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
   it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
@@ -1672,7 +1674,7 @@ describe("ciLaneStepsForTesting", () => {
         expect(script).not.toContain("storybook_pattern");
         expect(workflow).not.toContain("storybook_relevant");
         expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
-        expect(workflow).toContain('if [[ "$goals_only" == "true" ]]; then');
+        expect(workflow).toContain('if [[ "$docs_only" == "true" ]]; then');
         expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
         expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
       })

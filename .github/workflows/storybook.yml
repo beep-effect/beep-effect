@@ -18,7 +18,7 @@ jobs:
     # Quality-lane audit D13: the lane body lives in the beep CLI
     # (`beep ci lane storybook`) so it replays locally and decides for itself
     # whether @beep/storybook is in Turbo's affected set; this workflow carries
-    # the goals_only gate, the Playwright browser cache, and the artifact
+    # the docs_only gate, the Playwright browser cache, and the artifact
     # upload. Non-required: never add "Storybook" to ruleset 10240248 without
     # a stable green history.
     name: Storybook
@@ -47,12 +47,13 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
-          # Only goals_only (scripts/ci-change-profile.sh) gates here. Whether
-          # @beep/storybook is affected is the lane's own decision: under
-          # --affected it probes Turbo's dependency-aware plan and skips
-          # itself when nothing in Storybook's closure changed. Pushes run.
+          # Only docs_only (scripts/ci-change-profile.sh) gates here, before
+          # the install the affected probe needs. Whether @beep/storybook is
+          # affected is the lane's own decision: under --affected it probes
+          # Turbo's dependency-aware plan and skips itself when nothing in
+          # Storybook's closure changed. Pushes run.
           eval "$(scripts/ci-change-profile.sh "origin/${GITHUB_BASE_REF:-main}")"
-          if [[ "$goals_only" == "true" ]]; then
+          if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
@@ -64,8 +65,6 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          cache-turbo: "true"
-          cache-write: "false"
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
@@ -79,6 +78,20 @@ jobs:
           r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
           r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
 
+      # The browser build is a function of the resolved Playwright version, not
+      # of the whole lockfile: keying on bun.lock stored a new ~290 MB Chromium
+      # on every lockfile change. No prefix fallback either, so a version bump
+      # starts a clean entry instead of carrying the previous browser forward.
+      - name: Resolve Playwright version
+        if: steps.lane-gate.outputs.should_run == 'true'
+        id: playwright-version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(bunx playwright --version | awk '{ print $2 }')"
+          [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
       # Every event restores the browser cache; only trusted pushes save it, so
       # a pull request cannot seed the entry main restores. The install step is
       # a no-op download on a hit and still provisions the OS dependencies.
@@ -89,9 +102,7 @@ jobs:
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-          restore-keys: |
-            playwright-chromium-${{ runner.os }}-
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright Chromium
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -111,7 +122,7 @@ jobs:
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-chromium-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Run Storybook lane
         if: steps.lane-gate.outputs.should_run == 'true'
