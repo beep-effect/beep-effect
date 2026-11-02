@@ -150,10 +150,13 @@ OP_PINNED_VERSION="2.39.0"
 TYPOS_PINNED_VERSION="1.50.3"
 GITLEAKS_PINNED_VERSION="8.30.1"
 # Last whitespace-separated token of a tool's first version line, without a
-# leading "v". A tool that is absent, hangs or prints nothing yields "".
+# leading "v". A probe that is absent, hangs, prints nothing or exits non-zero
+# yields "": a failing command is never read as a version, whatever it printed.
 tool_version() {
-  local out
-  out="$({ timeout --kill-after=1s 5s "$@" 2>/dev/null || true; } | head -n 1)"
+  local out status=0
+  out="$(timeout --kill-after=1s 5s "$@" 2>/dev/null)" || status=$?
+  [ "${status}" -eq 0 ] || return 0
+  out="${out%%$'\n'*}"
   out="${out##* }"
   printf '%s' "${out#v}"
 }
@@ -329,14 +332,16 @@ if [ "${op_ok}" = "1" ] && [ -f "${run_dir}/op.verified" ]; then
 fi
 
 # Publication hook tools land beside bun (already on the persisted PATH).
-for tool in typos gitleaks; do
-  tool_ok_var="${tool}_ok"; need_var="need_${tool}"
-  if [ "${!need_var}" = "1" ] && [ "${!tool_ok_var}" = "1" ] && [ -f "${run_dir}/${tool}/${tool}" ]; then
+install_publish_tool() {
+  local tool="$1" needed="$2" fetched_ok="$3"
+  if [ "${needed}" = "1" ] && [ "${fetched_ok}" = "1" ] && [ -f "${run_dir}/${tool}/${tool}" ]; then
     install -d -m 0755 "${BUN_INSTALL}/bin"
     install -m 0755 "${run_dir}/${tool}/${tool}" "${BUN_INSTALL}/bin/${tool}"
     link_global "${BUN_INSTALL}/bin/${tool}" "${tool}"
   fi
-done
+}
+install_publish_tool typos "${need_typos}" "${typos_ok}"
+install_publish_tool gitleaks "${need_gitleaks}" "${gitleaks_ok}"
 
 # portless: dev servers run only through portless-wrapped package scripts and it
 # is not a workspace dependency, so it has to be on PATH.

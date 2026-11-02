@@ -48,28 +48,49 @@ last token (for example `typos-cli 1.50.3`) and that `gitleaks version` prints
 run. If it is wrong, the bootstrap re-fetches on every run and still reports
 `NOT ready`; it never reports ready falsely.
 
+## Correction wave (review 6577949011 on `60c7e5ca`)
+
+- **Defect, introduced at `60c7`:** `tool_version` masked a failed probe with `|| true`
+  and read whatever it printed as the version, so a tool printing the pin but exiting
+  non-zero counted as ready. It now keeps the probe's exit status and yields `""` for any
+  non-zero exit, including a timeout, so that tool is re-fetched and reported `NOT ready`.
+- **SC2034 (parent ShellCheck 0.11.0, introduced):** `typos_ok` and `gitleaks_ok` were read
+  only through `${!var}`. That loop is replaced by an explicit
+  `install_publish_tool <tool> <needed> <fetched_ok>` helper that reads the flags directly.
+  This is a rewrite, not a suppression. The SC1091 on the nvm `source` exists on the base
+  too (inherited). ShellCheck was **not re-run** here because it is not installed in this
+  container; the parent's run is the authority.
+- **Tests:**
+  - Expected pins are now test constants instead of being parsed from the script under
+    test, so the fixture runs against any script version.
+  - The original 14 tests are unchanged.
+  - The "ready" assertion moved out of the original no-op test into a new test.
+  - New regression: a tool prints the pinned version but exits 3 (fetch then 404s), and
+    the run must report `NOT ready (missing typos 1.50.3)`.
+
 ## Verification
 
-- Hermetic tests (`bunx vitest run test/cloud-bootstrap-denied-host.test.ts` in
-  `packages/tooling/tool/cli`): 18 passed, the 14 existing tests plus 4 new ones. In
-  every test the downloads, archives, `typos`, `gitleaks`, `timeout`, `ln` and `sudo`
-  are stubs under a temp HOME, and no request leaves the host.
-  - The existing no-op test now also asserts `publication tools: ready`. Pinned tools
-    on PATH trigger no fetch.
-  - Stale tools are fetched from the exact pinned URLs and installed under
-    `HOME/.bun/bin`; the re-run makes no fetch.
-  - The real pins against fixture archives give two checksum refusals, nothing is
-    installed, and the run reports `NOT ready`.
-  - A denied `github.com` for a tool gives a named warning, not exit 78.
-  - A 404 (exit 22) and a deadline expiry (exit 124, from a stubbed `timeout`) are
-    attributed separately.
-- The fixture substitutes digests only in its **copied** `fetch.sh`. There is no
-  runtime override variable.
-- Against the `origin/main` scripts all 18 fail, because the fixture reads the new pin
-  variables. That shows the tests depend on the change, not one failure per behavior.
-- `bash -n` passes on both scripts. **ShellCheck was not run**: it is not installed here
-  and no workflow runs it.
-- **Not live qualification:** no vendor VM has run the new bootstrap. The first cloud
-  start on this branch is the real qualification and must record the ready line.
+Same test file run against three versions of the scripts:
 
-CLI quick and default package-verify results are recorded per head on the PR.
+| Scripts | Result |
+| --- | --- |
+| this head | 20 passed |
+| `60c7e5ca` (pre-correction) | 19 passed, **1 failed**: the pinned-output/non-zero-exit regression |
+| `origin/main` (no provisioning) | **14 passed** (the original tests), **6 failed**: every new case, each on a test-body assertion (no fetch event, no readiness line, or no warning), none at fixture setup |
+
+- The hermetic setup is unchanged. Downloads, archives, `typos`, `gitleaks`, `timeout`,
+  `ln` and `sudo` are stubs under a temp HOME, and no request leaves the host. Fixture
+  digests are substituted only in the copied `fetch.sh`.
+- `bash -n` passes on both scripts. ShellCheck was not run locally (see above).
+- **Observed, not my command:** this session's resume ran the branch's bootstrap through
+  the vendor SessionStart hook. That fetched both pinned archives, installed them and
+  probed them, ending with `publication tools: ready (typos 1.50.3, gitleaks 8.30.1)`.
+  It is evidence that the real `typos --version` and `gitleaks version` outputs reduce to
+  those tokens under the `60c7` parser, on one VM start. It is not a full vendor
+  qualification: there was one start, no receipt beyond that output, and it ran the
+  pre-correction parser.
+- `package-verify @beep/repo-cli --quick` on `60c7`: the first run **failed** on lint (a
+  format error I introduced) and the second passed. Results for the correction head are
+  recorded on the PR.
+- The `60c7` commit used `LEFTHOOK_EXCLUDE=typos,gitleaks`. That is a recorded deviation,
+  not a passing scan. The parent's own security scan is still required.
