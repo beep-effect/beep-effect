@@ -30,9 +30,11 @@ account's automatic cloud-session bonus credit. Branch
 
 - Credit doctrine: the public article
   [Cloud sessions bonus credit promotion](https://support.claude.com/en/articles/17152539-cloud-sessions-bonus-credit-promotion),
-  read 2026-11-02 (page shows no exact update date). Key lines: credit applies
-  automatically once a cloud session starts; while it remains, cloud usage
-  does not count toward plan limits; usage credits are not needed; Projects,
+  read 2026-11-02 (page shows no exact update date). Key lines: the credit
+  had to be claimed by October 7 at 11:59 PM PT unless the account was
+  auto-granted it; once held, it applies automatically when a cloud session
+  starts; while credit remains, cloud usage is paid for by the credit and does
+  not count toward plan limits; usage credits are not needed; Projects,
   Routines, Remote Control, chat and Cowork are excluded; expires November 4
   at 11:59 PM PT. Daylight time ended 2026-11-01, so that is PST (UTC−8):
   `2026-11-05T07:59Z`. No account balance, email or session id is recorded.
@@ -58,7 +60,9 @@ account's automatic cloud-session bonus credit. Branch
 
 | Decision | Reason | Reversal |
 | --- | --- | --- |
-| A weekly-limit banner alone is not a cloud admission blocker; only a concrete quota refusal is, and it steps down the Claude chain. | The article says the bonus is separate from weekly-limit changes and spends first. | Revert the "Weekly-limit banner" row. |
+| A weekly-limit banner alone does not hold a cloud lane for quota; only an actual, attributed quota or rate-limit refusal does, and it steps down the Claude chain. A refusal does not prove the bonus is spent. Ownership, setup, secret and data boundaries and required capabilities still gate admission. | Grounded on the article's line that while credit remains, cloud usage is paid for by the credit and does not count toward plan limits. The first draft cited the article's unrelated "separate from weekly-limit changes" sentence and said a lane was blocked *only* by quota; both were corrected after review on PR #2536. | Revert the "Weekly-limit banner" row and the Admission paragraph. |
+| Eligibility requires a claim by 2026-10-07 23:59 PT or an automatic grant; the credit is spent automatically only once held. | The first draft omitted the claim step (independent review on PR #2536). | Revert the "Eligible accounts" and "Order of spend" rows. |
+| The `nlp` and `fallow` rows say "expected to connect", with a connection-only limit, not "qualified". | Start reports show connection, not tool execution; D42 reserves "qualification" for receipt-backed verdicts. The first draft said "qualified" (review on PR #2536). | Edit the two rows and the scope paragraph. |
 | The meter carries the article's rules, not per-account balances. | Public repo; balances are account state. | Revert the section. |
 | `webstorm` and `phoenix` rows describe the endpoint kind (loopback IDE, private tailnet) without repeating the tailnet hostname. | Keep host detail out of new prose; `.mcp.json` remains the source. | Edit the rows. |
 | The table states its scope and evidence date instead of claiming general availability. | Two sessions, three starts; timeouts have no established cause. | Edit the scope paragraph. |
@@ -73,8 +77,18 @@ account's automatic cloud-session bonus credit. Branch
 - The older 2026-11-01 admission capture under this packet is retained
   unchanged as history.
 
+- The first `yeet final-check`, run at the first head (`2d42a18b`), wrote no
+  receipt. Its `cheap-gates` went red on `observability:catalog-check`
+  (`standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc: stale`)
+  and was then stopped by a 25-minute session ceiling (exit 124). The PR
+  touches no source or catalog file, and hosted `Repo Sanity` and
+  `Codegen Drift` passed on that head, so the red is attributed to the VM's
+  local state, not to this PR. Kept on record in a PR comment; that run says
+  nothing about later heads.
+
 ## Verification
 
-Recorded in the PR body: markdown and cross-link checks, `git diff --check`,
-and `yeet final-check` at the pushed head, with any skipped gate named and
-reasoned there. Skipped is not passing.
+Results live on the PR, per head, not in this note: markdown and cross-link
+checks, `git diff --check`, and `yeet final-check` at the content-final head.
+Any skipped gate is named and reasoned there. Skipped is not passing, and a
+receipt for an earlier head does not cover a later one.

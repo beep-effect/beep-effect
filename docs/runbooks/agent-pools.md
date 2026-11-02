@@ -163,11 +163,11 @@ below; the article wins on conflict.
 
 | Item | Rule |
 | --- | --- |
-| Eligible accounts | Individual Pro and Max subscriptions active when the promotion started, signed in with a claude.ai account. Team, Enterprise, trial, past-due, Bedrock, Vertex AI and API-key authentication are excluded. |
+| Eligible accounts | Individual Pro and Max subscriptions active when the promotion started, signed in with a claude.ai account, **and** holding the credit: either claimed by October 7, 2026, 11:59 PM PT (banner, `/claim-credit` or the claim page) or granted automatically. An eligible account that neither claimed in time nor was auto-granted has no credit. Team, Enterprise, trial, past-due, Bedrock, Vertex AI and API-key authentication are excluded. |
 | Eligible work | Cloud sessions only, started from web, desktop, CLI or mobile. |
 | Excluded work | Projects, Routines, Remote Control sessions (they run locally), chat, Cowork, and any Claude use outside a cloud session. Do not count those against the credit. |
-| Order of spend | The bonus applies automatically once a cloud session starts and is spent first. While it lasts, cloud usage does not count toward the plan's usage limits; after it runs out, cloud sessions count against those limits like local sessions. |
-| Weekly-limit banner | Not an admission blocker on its own. The article states the bonus is separate from weekly usage-limit changes, so a weekly banner does not prove the credit is spent. A cloud lane is blocked only by a concrete refusal from the session itself (a quota or rate-limit error), and then it steps down the Claude chain like any other quota failure. |
+| Order of spend | Once claimed or granted, the bonus applies automatically when a cloud session starts and is spent first. While it lasts, cloud usage does not count toward the plan's usage limits; after it runs out, cloud sessions count against those limits like local sessions. |
+| Weekly-limit banner | A weekly-limit banner **alone** is not enough to hold a cloud lane for quota. Grounding: the article says that while credit remains, cloud session usage is paid for by the credit and does not count toward the plan's usage limits, so a plan-limit banner does not show the credit is spent. Treat a lane as quota-blocked only on an actual quota or rate-limit refusal from the session, attributed as such; it then steps down the Claude chain like any other quota failure. A refusal does not prove the bonus is exhausted, and this row waives no other admission gate (see Admission). |
 | Usage credits (paid) | Not needed for the bonus. Keep paid usage credits off, keep auto-reload off, and make no purchase, reload, plan change or billing change to extend cloud work: those are operator money decisions (`AGENTS.md` Autonomy). On Pro, selecting Fable requires usage credits, so a Pro-account cloud lane runs `claude-opus-5-5`. |
 | Expiry | November 4, 2026, 11:59 PM PT, which is `2026-11-05T07:59Z` (PST, after daylight time ended November 1). Unused credit is not stated to carry over; plan for none. |
 
@@ -177,10 +177,13 @@ cloud-credit balance with its expiry on the Claude detail line when the proxy lo
 Never record per-account balances, account emails, session ids or private handoff contents in
 this public repo; packet notes cite this runbook and the public article instead.
 
-**Admission.** Until expiry, prefer a cloud session for a bounded Claude lane that needs no
-workstation-only capability (secrets, systemd user bus, recorded QA, private corpora, the
-workstation-only MCP servers in the cloud runbook's MCP table). After expiry, or once a session
-refuses for quota, cloud work is ordinary plan usage and the Opus meter above governs.
+**Admission.** The credit is a reason to prefer the cloud surface, never a reason to admit a
+lane. Every other gate still applies: lane ownership and task boundaries, a working environment
+setup (a failed setup script is fixed first), the data and secret boundaries (no secrets or
+private corpora in the VM), and required capabilities the VM lacks (systemd user bus, recorded
+QA, the workstation-only MCP servers in the cloud runbook's MCP table). Until expiry, a bounded
+Claude lane that clears those gates should run as a cloud session. After expiry, or once credit
+is confirmed spent, cloud work is ordinary plan usage and the Opus meter above governs.
 
 ## Seat map
 

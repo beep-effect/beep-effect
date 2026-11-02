@@ -180,12 +180,14 @@ outside a project thread, reading the committed `.mcp.json` and
 at `main` `14a4596d`. A project thread applies none of the repo settings, so
 the approval column does not hold there. Observations are vendor session
 start reports (three starts in two sessions on 2026-11-02); they are evidence
-for those starts, not a guarantee. Hermetic or simulated runs are not counted.
+for those starts, not a guarantee. They record whether a server connected at
+session start only; no row is a tool-execution or workflow qualification.
+Hermetic or simulated runs are not counted.
 
 | Server | Transport | Committed approval | Observed (2026-11-02) | Cloud expectation |
 | --- | --- | --- | --- | --- |
-| `nlp` | stdio (`bun`) | — | connected in all three starts | qualified after the bootstrap installs dependencies |
-| `fallow` | stdio (`node_modules/.bin`) | — | connected in all three starts | qualified after the bootstrap; fails `ENOENT` before it (packet F11) |
+| `nlp` | stdio (`bun`) | — | connected in all three starts | expected to connect after the bootstrap installs dependencies (connection only; tool calls not exercised) |
+| `fallow` | stdio (`node_modules/.bin`) | — | connected in all three starts | expected to connect after the bootstrap (connection only; tool calls not exercised); fails `ENOENT` before it (packet F11) |
 | `shadcn` | stdio (`bunx`) | — | connected once; 30 s connect timeout twice (both starts that reinstalled dependencies) | optional, can time out; cause not established |
 | `next-devtools` | stdio (`bunx`) | — | same as `shadcn` | optional, can time out; cause not established |
 | `beep-m365-outbox` | stdio (`op`) | — | failed: `op` not found, every start | expected failure: Claude cloud lanes skip `op` (`BEEP_CLOUD_SKIP_OP=1`) and carry no secrets |
@@ -285,7 +287,7 @@ Qualification status (no account count is claimed beyond receipts):
 
 | Vendor | Status | Receipt |
 | --- | --- | --- |
-| Claude cloud | Smoke passed on two accounts with public receipts (account 1 ran the full D4 loop; account 2 ran `--help` and the package proof); two more smokes were reported privately and are not counted | [`2026-11-01-claude-cloud-smoke`](../../goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md), [`2026-11-01-fleet-cloud-setup`](../../goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md) |
+| Claude cloud | Smoke passed on two accounts with public receipts (account 1 ran the full D4 loop; account 2, workstation-reported, ran `--help` and the package proof); two more smokes were reported privately and are not counted | [`2026-11-01-claude-cloud-smoke`](../../goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md), [`2026-11-01-fleet-cloud-setup`](../../goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md) |
 | Codex cloud | Bootstrap and package proof passed; publishing the reusable environment failed twice without diagnostics, so it is **not runnable** | same fleet note |
 | Cursor Cloud Agent | Bootstrap snapshot only; **no agent package proof** | same fleet note |
 
