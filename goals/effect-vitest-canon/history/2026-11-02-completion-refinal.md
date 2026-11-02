@@ -32,7 +32,7 @@ cannot verify, so this packet needs a second, docs-only final PR.
 
 ## What this re-final does
 
-- Rebinds the manifest: the re-final PR becomes `proposedCloseout.finalPullRequest`
+- Rebinds the manifest: the re-final PR #2532 becomes `proposedCloseout.finalPullRequest`
   and the `completionGate.pullRequests` final entry; #2493 is retained as a
   `supporting` pull request; the gating `yeet-verdict` reference moves to this
   branch's run (`.beep/yeet/runs/claude_effect-vitest-canon-refinal-dbfa7a021e93/verdict.json`).
