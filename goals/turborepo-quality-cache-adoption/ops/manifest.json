@@ -98,7 +98,10 @@
     "research/current-fresh-disposition-review-2026-11-02.json",
     "research/population-before-refresh-2026-11-02.json",
     "research/native-setup-controls.json",
-    "research/setup-feature-review.json"
+    "research/setup-feature-review.json",
+    "research/population-before-source-refresh-2026-11-02.json",
+    "research/current-source-fresh-disposition-review-2026-11-02.json",
+    "research/population-current-source-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

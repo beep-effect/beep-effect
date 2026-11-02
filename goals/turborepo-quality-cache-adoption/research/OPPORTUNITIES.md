@@ -537,3 +537,21 @@ fixture lock preparation instead of invoking Turbo setup. The intended negative
 control rejected that false success. Bind every invocation to the shared
 collector's command slot, commit the correction and replay the complete matrix;
 the failed attempt is not setup evidence.
+
+### Revalidate population source before batching semantic reviews, 2026-11-02
+
+The retained census still described 2,621 executable computations, while 231 of
+its 438 bound files had changed in the later phase-runner checkout, including
+189 manifests. Accepted PR2526 had removed 188 package audit wrappers and added
+one root check. A fresh census finds 2,434 executable computations. Preserve the
+reviewed snapshot byte-identically and verify its history before refreshing;
+do not relabel historical counts or reviews as current-source evidence.
+
+An initial private prioritization grouped `commandDigest` values as if they
+represented individual commands. Source inspection shows that digest covers the
+whole workspace script map. Correct the private analysis before using it: group
+by the actual task and resolved literal operation, then review source, env,
+outputs and profile per member. All 198 retained fresh-operation rows have new
+workspace-map digests after the audit-wrapper removal, but their exact literal
+operation and disabled-cache policy still match. The new review proves only that
+whole-task freshness; all pure counterparts and 2,236 other reviews remain open.
