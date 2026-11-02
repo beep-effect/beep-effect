@@ -1744,6 +1744,7 @@
     {"name":"Goals.CompletionEvidence.ruleSource","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.CompletionEvidence.ruleSuite","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.CompletionEvidence.survivingRuleset","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Goals.adoptVerifiedCloseout","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.applyAdoptionPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.applyMigrationPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Goals.buildPortfolioIndexContent","owner":"@beep/repo-cli","family":"tooling","conforms":true},

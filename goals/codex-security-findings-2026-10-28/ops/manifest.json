@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-10-28",
     "title": "Codex Security Findings (2026-10-28)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-28",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-10-28",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Retain closure of seven Cloud findings and resolve all 29 additional GitHub security alerts discovered on 2026-10-31.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -197,10 +197,6 @@
     "A remediation requires an architecture or product decision outside packet scope.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2488
-  },
   "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
   "supplementalDependencies": {
     "catalog": "ops/dependabot.json",
@@ -212,5 +208,9 @@
     "codeScanningCount": 4,
     "secretScanningCount": 5,
     "status": "complete"
+  },
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2488
   }
 }

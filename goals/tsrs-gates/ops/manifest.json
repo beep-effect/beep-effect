@@ -4,13 +4,13 @@
     "id": "tsrs-gates",
     "packetId": "goal-packet/v1:8def0fc5ca1b445253b7b599a2ba8bed0015db34b5856707f6de96d68f81779e",
     "title": "Run the typecheck and build gates on the Effect-patched tsrs",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-27",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/tsrs-gates",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Replace tsc-rs with the Effect-patched tsrs that @effect/tsgo 0.59.0 ships, so one compiler gates TypeScript errors and every Effect rule, and the standalone Effect Diagnostics lane can fold into Check.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -88,7 +88,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2320
   }

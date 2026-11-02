@@ -51,6 +51,7 @@ import {
   GoalPhaseStatus,
   GoalStatus,
   goalPullRequestRefs,
+  renderGoalCloseoutRecordView,
   renderGoalCloseoutView,
 } from "./Goals.schemas.ts";
 import { capabilityProviderRows, compileCapabilityProjection, isStrandedProviderSet } from "./Graph.projection.ts";
@@ -618,10 +619,10 @@ const statusConsistencyFindings = (
     );
   }
 
-  // A proposed closeout keeps its declared status active or paused by design:
-  // `goals set-status` refuses to flip it and completion is derived from the
-  // clone-scoped receipts, which the completion-gate findings already report.
-  // Asking such a packet to change its status would be a contradiction.
+  // A proposed closeout keeps its declared status active or paused until its
+  // shared completion receipt verifies; `goals set-status completed-retained`
+  // then adopts it, and the completion-gate findings report it until then.
+  // Asking such a packet to change its status earlier would be a contradiction.
   const phases = goalManifestPhases(manifest);
   if (
     GoalStatus.is.active(status) &&
@@ -1230,10 +1231,16 @@ const completionEvidenceAdvisory = Effect.fn("Goals.completionEvidenceAdvisory")
   // A proposed closeout reads as its derived status here, verified or not, so
   // the operator sees the same line `session open` and `goals explain` print.
   const view = yield* goalCloseoutView(packet.record.slug, manifest, receipt);
-  const notes = O.match(view, {
-    onNone: A.empty<string>,
-    onSome: (value) => A.of(`${packet.record.slug}: ${renderGoalCloseoutView(value)}`),
-  });
+  const committed = O.map(O.fromUndefinedOr(manifest.closeout), (record) =>
+    renderGoalCloseoutRecordView(
+      record,
+      O.exists(receipt, (row) => row.outcome === "verified") ? "verified" : "unverified"
+    )
+  );
+  const notes = A.map(
+    A.getSomes([O.map(view, renderGoalCloseoutView), committed]),
+    (line) => `${packet.record.slug}: ${line}`
+  );
   return O.some({ slug: packet.record.slug, findings, notes });
 });
 
