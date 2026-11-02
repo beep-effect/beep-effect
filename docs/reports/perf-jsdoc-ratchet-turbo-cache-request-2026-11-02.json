@@ -1,11 +1,11 @@
 {
-  "previous": "007385e41aa87388e6531efbdeafba634e87276d9c331397c6f4006d68834c60",
+  "previous": "024d807a50721457517319960ccdf7c54021617c4556480971bc5b431f95b446",
   "review": {
     "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
-    "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad input glob to .tsx, matching the files its scanner reads. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
+    "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad glob to .tsx and dropped its test/fixtures exclusion, and //#jsdoc:ratchet:check dropped every directory exclusion but node_modules, so both follow the files their scanners read. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
     "basis": {
       "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
-      "sha256": "19628900389ca6beb76837926e75d9d55f390d226dc5786fae130b1d2a994912"
+      "sha256": "91f4bc09115cfc630dfb97300d2345d156e95c299604915429feba1d37b98c63"
     }
   },
   "subjects": ["//"],

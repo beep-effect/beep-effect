@@ -13,6 +13,13 @@ Branch `claude/perf-jsdoc-ratchet-turbo-9766f2`. The re-record covers the one su
   could change the inventory without changing the task hash. No tracked scratchpad `.tsx`
   file exists today, so no current verdict changes. Outputs, dependencies, cache flag and
   environment are unchanged.
+- **`turbo.json`, review round 1 (CodeRabbit).** `//#jsdoc:inventory:check` drops
+  `!**/test/fixtures/**`: fixture trees are not gitignored, so a fixture file under a
+  source root is scanned but was not hashed. `//#jsdoc:ratchet:check` drops every directory
+  exclusion except `!**/node_modules/**` (`.beep`, `.turbo`, `dist`, `build`, `coverage`,
+  `.next`, `storybook-static`): its zero-legacy listing applies no directory filter, so a
+  force-tracked file under such a directory was read but not hashed. Both changes only widen
+  inputs; no tracked file in the repository matches either removed exclusion today.
 - **Scanner file set.** The inventory scan (`JSDocDocumentationInventory.ts`) and the
   ratchet's zero-legacy scan (`JSDocRatchet.ts`) now count tracked and
   untracked-but-not-ignored files (`git ls-files --cached --others --exclude-standard`)
@@ -34,5 +41,5 @@ qualification scope, and adds no exception row.
 
 ## Reversal
 
-Return the glob to `scratchpad/**/*.ts`, return the cheap-gates lane to
+Return the glob to `scratchpad/**/*.ts`, restore the removed exclusions, return the cheap-gates lane to
 `repoCliLane(..., ["jsdoc-ratchet", "--regenerate"])`, then re-record the root subject.

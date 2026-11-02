@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
-      "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad input glob to .tsx, matching the files its scanner reads. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
+      "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad glob to .tsx and dropped its test/fixtures exclusion, and //#jsdoc:ratchet:check dropped every directory exclusion but node_modules, so both follow the files their scanners read. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
       "basis": {
         "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
-        "sha256": "19628900389ca6beb76837926e75d9d55f390d226dc5786fae130b1d2a994912"
+        "sha256": "91f4bc09115cfc630dfb97300d2345d156e95c299604915429feba1d37b98c63"
       }
     },
     "@beep/acp": {
@@ -2153,7 +2153,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "!.claude/worktrees/**",
             "!scratchpad/.jsdoc-loop/**",
             "!scratchpad/docs/**",
@@ -2195,14 +2194,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
             "!**/node_modules/**",
-            "!**/storybook-static/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -121740,7 +121732,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "5e51eaf43bae9c77493810108f81aea2fe6e5d724d74e1ce2b10b76eaae57de7"
+        "sha256": "4b61639a11cca992d55456ab1ce4ff7bfdef47c649ef348472397956cbee0189"
       }
     ]
   }

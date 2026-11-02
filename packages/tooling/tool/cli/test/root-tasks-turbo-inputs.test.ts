@@ -477,6 +477,11 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           Tuple.make("//#jsdoc:ratchet:check", "packages/tooling/fixture/test/fixtures/pkg/src/index.ts"),
           Tuple.make("//#jsdoc:inventory:check", "scratchpad/c3-probe.ts"),
           Tuple.make("//#jsdoc:inventory:check", "scratchpad/c3-probe.tsx"),
+          // Both scans admit every git-visible source file: a fixture tree under a source
+          // root is not gitignored, and the zero-legacy listing applies no directory filter.
+          Tuple.make("//#jsdoc:inventory:check", "packages/fixture/src/test/fixtures/New.ts"),
+          Tuple.make("//#jsdoc:ratchet:check", "packages/fixture/src/build/Legacy.ts"),
+          Tuple.make("//#jsdoc:ratchet:check", "packages/fixture/src/coverage/Legacy.ts"),
           Tuple.make("//#jsdoc:inventory:check", "tools/fixture/src/c3-probe.ts"),
           Tuple.make("//#lint:effect-vitest", "packages/drivers/fixture/test/fixtures/zz-probe.test.ts"),
           Tuple.make("//#lint:opaque-roundtrips", "packages/fixture/src/Nested.ts"),
