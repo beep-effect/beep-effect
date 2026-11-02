@@ -57,8 +57,10 @@ const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea8
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
 
 // `Git` is built over the scripted spawner, so the kit's `HEAD` read reaches the stub's answer (W2).
-const withGit = <ROut, E, RIn>(...layers: ReadonlyArray<Layer.Layer<ROut, E, RIn>>) =>
-  Layer.provideMerge(Git.layer, Layer.mergeAll(...layers));
+const withGit = <ROut, E, RIn>(
+  spawner: Layer.Layer<ChildProcessSpawner.ChildProcessSpawner>,
+  platform: Layer.Layer<ROut, E, RIn>
+) => Layer.provideMerge(Git.layer, Layer.merge(spawner, platform));
 const encoder = new TextEncoder();
 
 const stubHandle = (output: string, exitCode = 0) =>
@@ -283,17 +285,19 @@ describe("runner image manifest checks", () => {
             Layer.provide(
               withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-                Layer.succeed(FileSystem.FileSystem, {
-                  ...fs,
-                  readFileString: Effect.fn("RunnerBakeTest.readFileString")(
-                    (...[file, options]: Parameters<typeof fs.readFileString>) =>
-                      Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
-                        ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
-                        : fs.readFileString(file, options)
-                  ),
-                }),
-                NodePath.layer,
-                NodeCrypto.layer
+                Layer.mergeAll(
+                  Layer.succeed(FileSystem.FileSystem, {
+                    ...fs,
+                    readFileString: Effect.fn("RunnerBakeTest.readFileString")(
+                      (...[file, options]: Parameters<typeof fs.readFileString>) =>
+                        Str.endsWith("infra/ci-runners/Pulumi.production.yaml")(file)
+                          ? Effect.succeed("config:\n  ciFleetController:amiId: ami-0123456789abcdef0\n")
+                          : fs.readFileString(file, options)
+                    ),
+                  }),
+                  NodePath.layer,
+                  NodeCrypto.layer
+                )
               )
             )
           );
@@ -521,14 +525,7 @@ describe("runner bake planning and argv", () => {
         );
       });
       const testLayer = RunnersServiceLive.pipe(
-        Layer.provide(
-          withGit(
-            Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            NodeFileSystem.layer,
-            NodePath.layer,
-            NodeCrypto.layer
-          )
-        )
+        Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
       );
       const { check, currentPlan } = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
@@ -571,14 +568,7 @@ describe("runner bake planning and argv", () => {
           const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
           const spawner = makeBakeSpawner(commands, consoleOutput);
           const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(
-              withGit(
-                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-                NodeFileSystem.layer,
-                NodePath.layer,
-                NodeCrypto.layer
-              )
-            )
+            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
           );
           const reportPath = path.join(tmpDir, "bake-report.json");
           const baked = yield* Effect.gen(function* () {
@@ -700,14 +690,7 @@ describe("runner bake planning and argv", () => {
             remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
           });
           const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(
-              withGit(
-                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-                NodeFileSystem.layer,
-                NodePath.layer,
-                NodeCrypto.layer
-              )
-            )
+            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
           );
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
@@ -734,14 +717,7 @@ describe("runner bake planning and argv", () => {
           const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
           const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
           const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(
-              withGit(
-                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-                NodeFileSystem.layer,
-                NodePath.layer,
-                NodeCrypto.layer
-              )
-            )
+            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
           );
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
@@ -768,14 +744,7 @@ describe("runner bake planning and argv", () => {
           const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
           const spawner = makeBakeSpawner(commands, consoleOutput);
           const testLayer = RunnersServiceLive.pipe(
-            Layer.provide(
-              withGit(
-                Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-                NodeFileSystem.layer,
-                NodePath.layer,
-                NodeCrypto.layer
-              )
-            )
+            Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
           );
           const error = yield* Effect.gen(function* () {
             const service = yield* RunnersService;
@@ -807,14 +776,7 @@ describe("runner bake planning and argv", () => {
         return Ref.update(commands, A.append(argv)).pipe(Effect.as(stubHandle(" M bun.lock")));
       });
       const testLayer = RunnersServiceLive.pipe(
-        Layer.provide(
-          withGit(
-            Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
-            NodeFileSystem.layer,
-            NodePath.layer,
-            NodeCrypto.layer
-          )
-        )
+        Layer.provide(withGit(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer))
       );
       const error = yield* Effect.gen(function* () {
         const service = yield* RunnersService;
