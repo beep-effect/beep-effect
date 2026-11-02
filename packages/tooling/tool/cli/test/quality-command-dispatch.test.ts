@@ -60,6 +60,17 @@ const recordingSpawner = (spawned: Array<string>, handle = successfulHandle) =>
     return Effect.succeed(handle);
   });
 
+// `github-checks` scales its widths by the admission state under the runtime root. An
+// empty root keeps live leases from other sessions, and the systemd scope probes they
+// trigger, out of the recorded process list.
+const withEmptyAdmissionRoot = Effect.fn("QualityCommandDispatchTest.withEmptyAdmissionRoot")(function* <A, E, R>(
+  effect: Effect.Effect<A, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "quality-command-admission-" });
+  return yield* provideRuntimeRootForTesting(effect, RuntimeRootChoice.make({ kind: "test-override", root }));
+});
+
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
   const errors = A.filter(yield* TestConsole.errorLines, P.isString);
@@ -144,8 +155,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     const spawned: Array<string> = [];
 
     return Effect.gen(function* () {
-      yield* runQualityCommand(["github-checks", "security"]);
-      yield* runQualityCommand(["github-checks", "security", "--collect-all"]);
+      yield* runQualityCommand(["github-checks", "security"]).pipe(withEmptyAdmissionRoot);
+      yield* runQualityCommand(["github-checks", "security", "--collect-all"]).pipe(withEmptyAdmissionRoot);
 
       expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /), expect.stringMatching(/^docker run --rm /)]);
     }).pipe(
@@ -162,7 +173,7 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
     });
 
     return Effect.gen(function* () {
-      const exit = yield* Effect.exit(runQualityCommand(["github-checks", "security"]));
+      const exit = yield* runQualityCommand(["github-checks", "security"]).pipe(withEmptyAdmissionRoot, Effect.exit);
 
       exit.pipe(Exit.isFailure, assertTrue);
       expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /)]);
