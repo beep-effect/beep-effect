@@ -41,3 +41,32 @@ the TS7 exit program: an infra-local preload makes Pulumi resolve infra's
 nested `typescript` 6, which retires the root `@pulumi/pulumi` patch and its
 syncpack hold. RESEARCH.md and research/SOURCES.md stay as provenance if Alchemy
 coverage changes; reopen at research in that case.
+
+## 2026-11-02 — reopened at research
+
+**Question:** Does the 2026-10-15 kill still hold now that the TS6 isolation shipped and the
+repo runs Alchemy in production?
+
+**Answer:** Reopened. The operator asked on 2026-11-02 (via the orchestrator hand-over) for a
+dedicated investigation of "can beep-effect migrate its infrastructure off Pulumi onto Alchemy,
+and if not fully, what are the options?" The packet's own exit condition was "reopen at research
+only if Alchemy gains coverage for Vercel, the GitHub runner module and host-level resources";
+none of those three gained coverage (re-verified against the checkout at `450702936d`), so the
+reopen is on the operator's request and on two changed facts: the isolation landed
+(`infra/pulumi-typescript6.cjs`), and Alchemy is live for beep-effect.com and the R2 cache
+stacks. Status back to `active`; stage `align` with the research refreshed under
+`RESEARCH.md` "2026-11-02".
+
+**Rationale:** The 10-15 answer ("isolate it to infra") was to a narrower question (how to
+remove the root TS6 patch). The 11-02 question is direction: Pulumi or Alchemy for the whole
+estate. Research now records a resource-by-resource matrix (40 kinds covered, 9 gaps, 1
+partial), per-gap options, three candidate options with state-migration and rollback plans,
+and a recommendation: finish the isolation as "Pulumi stays, precompiled, no TS6" (option C)
+and adopt Alchemy-first-for-new as policy (option B), holding a full migration (A) behind named
+gates. Nothing here is decided; the eight frontier questions are listed at the end of the
+2026-11-02 research and in the manifest for the grill session.
+
+**Not decided (frontier for the grill, 2026-11-02):** goal statement (no TS6 vs no Pulumi);
+Alchemy-first policy and canonical state store; OIP hosting (Vercel vs Cloudflare); retiring
+the Storybook program; the runner fleet's future; host stacks (Pulumi vs Alchemy vs Effect CLI);
+appetite for the credential-free option-C spike; account singletons in or out of IaC.

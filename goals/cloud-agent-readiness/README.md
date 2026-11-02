@@ -68,8 +68,14 @@ portfolio can spend them until this lands.
 
 ## Current Phase
 
-Cloud P0/P1 remain complete for their original environment; P2–P6 still need
-cloud qualification. On beep-worker, Linux L0 inventory, L1 secure access and L3
+Cloud P0/P1 remain complete for their original environment. P3 is complete
+on #2486 (merged 2026-11-02 as `43d0a511`). P2, P4, P5 and P6 still need
+cloud qualification. On 2026-11-02 (SPEC D42) the operator expanded the cloud
+scope to Claude, Codex and Cursor setup on existing expiring credits only; per-vendor
+state, blockers and next work are in the
+[fleet cloud setup receipt](./history/2026-11-01-fleet-cloud-setup.md).
+Four-account Claude qualification, a runnable Codex configuration and Cursor
+agent package proof are not claimed. On beep-worker, Linux L0 inventory, L1 secure access and L3
 representative development proof are complete. L2 is in progress: most tools and
 agent accounts are ready, including verified Azure/Vercel/Cloudflare CLI account
 access. Backend parity and additional agent-environment qualification remain
@@ -85,6 +91,20 @@ Cursor and Muse remain quota-blocked, with exact limits recorded in the receipt.
 It admits one substantive job at a time within the installed host budget.
 
 ## Latest Evidence
+
+- [Fleet cloud setup and progress handoff](./history/2026-11-01-fleet-cloud-setup.md):
+  Claude environments saved on four accounts, with two fresh smokes passing and
+  two not yet collected. Cursor bootstrap and snapshot built without an agent
+  package proof. Codex bootstrap and `@beep/types` proof passed, but reusable
+  config publication fails. Read-only Linux worker health only. Workstation-reported
+  evidence is kept separate from this session's own observations.
+
+- [Claude cloud smoke](./history/2026-11-01-claude-cloud-smoke.md) (#2486):
+  corrected setup, `package-verify @beep/types --quick`, push and a draft PR
+  through the integration; meets acceptance row 6 (P3).
+
+- [Cloud task admission review](./history/2026-11-01-cloud-task-admission.md):
+  ranked cloud task candidates and the P2–P6 status snapshot.
 
 - [Host upgrades and YubiKey access](./history/2026-10-23-host-os-upgrades.md):
   both hosts boot Ubuntu 26.04.1 with kernel 7.0.0-38 and recovery verified.

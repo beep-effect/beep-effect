@@ -289,6 +289,7 @@ export const HookPulseRefusalReason = LiteralKit([
   "append-failed",
   "stamp-failed",
   "timeout",
+  "namespace-projection-invalid",
 ]).pipe(
   $I.annoteSchema("HookPulseRefusalReason", {
     description: "Payload-free reason why the writer could not collect evidence.",
@@ -1133,6 +1134,13 @@ const isSha256Hex = S.is(Sha256Hex);
  * turns into `AI_METRICS_LOCAL_INSECURE_HASH_SALT` — the same constant the shell
  * falls back to, so an unconfigured clone produces digests both halves
  * reproduce.
+ *
+ * The writer walks one more rung between those two: the owned global
+ * namespace projection file (`hookPulseNamespace` in
+ * `hook-pulse-namespace.ts`). This `Config` cannot open a file, so a caller
+ * decoding rows written under an applied projection pins
+ * `BEEP_HOOK_PULSE_HASH_SALT` to the projection's salt; readers that can open
+ * the file use `hookPulseNamespace` instead and join under every regime.
  *
  * Read through `Config` rather than the environment directly because
  * `ConfigProvider` is a `Context.Reference` whose default is

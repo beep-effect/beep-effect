@@ -46,6 +46,26 @@ describe("SafeRemoteHost", () => {
     })
   );
 
+  it("blocks fully-qualified trailing-dot forms of internal hosts", () => {
+    expect(isBlockedRemoteHost("localhost.")).toBe(true);
+    expect(isBlockedRemoteHost("LOCALHOST.")).toBe(true);
+    expect(isBlockedRemoteHost("app.localhost.")).toBe(true);
+    expect(isBlockedRemoteHost("example.com.")).toBe(false);
+    expect(isBlockedRemoteHost("internal.example.com.", { allowlist: ["internal.example.com"] })).toBe(false);
+  });
+
+  it.effect(
+    "rejects trailing-dot loopback URLs that keep the dot after WHATWG hostname parsing",
+    Effect.fnUntraced(function* () {
+      const bare = yield* Effect.exit(assertAllowedRemoteUrl("http://localhost./file"));
+      const subdomain = yield* Effect.exit(assertAllowedRemoteUrl("http://api.localhost.:8080/file"));
+      const publicHost = yield* Effect.exit(assertAllowedRemoteUrl("https://example.com./file"));
+      expect(bare._tag).toBe("Failure");
+      expect(subdomain._tag).toBe("Failure");
+      expect(publicHost._tag).toBe("Success");
+    })
+  );
+
   it("blocks IPv4-mapped IPv6 RFC1918/loopback/link-local forms (CSF-SSRF mapped-v6 bypass)", () => {
     // Hex form as produced by `new URL(...).hostname` normalization.
     expect(isBlockedRemoteHost("::ffff:c0a8:101")).toBe(true); // 192.168.1.1

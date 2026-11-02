@@ -11,7 +11,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 Capture, validate, remediate, and close every open Codex Cloud security finding
 for `kriegcloud/beep-effect` in the 7-finding batch captured on 2026-10-28.
 Retain merged remediation and exact finding closure. Deliver final readiness
-and completion evidence through PR #2416 with no packet-applicable finding open.
+and completion evidence through PR #2488 with no packet-applicable finding open.
 
 ## Launch
 
@@ -35,11 +35,10 @@ and completion evidence through PR #2416 with no packet-applicable finding open.
 The fixes for the seven Cloud findings merged in #2333; every exact ID is
 verified Fixed. All fifteen Cloud findings across both packets are Fixed.
 The twenty supplemental dependency fixes merged in #2389, whose 35 hosted
-check jobs ultimately passed. IDs #450–#469 remain externally open despite
-fixed versions in the dependency graph. The four code-scanning and five
+check jobs ultimately passed. IDs #450–#469 were all Fixed on 2026-11-01. The four code-scanning and five
 secret-scanning alerts are resolved, with zero open inventories.
 
-PR #2416 delivers final receipt reconciliation. Its genuine canonical readiness
+PR #2488 delivers final receipt reconciliation. Its genuine canonical readiness
 must be captured before merge; exact dependency closure and post-merge receipts
 remain required. See [accepted closeout evidence](research/2026-10-31-accepted-closeout.md).
 
@@ -69,7 +68,7 @@ This supplemental packet is part of the resumed
 Implementation and dependency fixes merged in #2389; original source fixes
 remain in merged #1930 and #2333. The
 [closeout reflection](history/reflections/2026-10-31-codex.md) retains their
-qualification and tooling lessons. #2416 is the final receipt PR for both
+qualification and tooling lessons. #2488 is the final receipt PR for both
 packets. Its head-bound readiness, merge, exact external closure and verified
 completion receipts remain required; the proposal is not a completion claim.
 
@@ -96,14 +95,19 @@ optional Vercel statuses report deployment rate limits. The merge preceded this
 lane's positive canonical readiness capture. Later green checks do not supply
 that missing historical observation.
 
-Final closeout PR [#2416](https://github.com/beep-effect/beep-effect/pull/2416)
+PR #2416 merged, but its retained verdict is closeout-mode and bound to a
+pre-merge head, so it cannot qualify completion; #2488 replaces it as the final
+PR ([rebinding evidence](research/2026-11-01-final-closeout.md)).
+
+Final closeout PR [#2488](https://github.com/beep-effect/beep-effect/pull/2488)
 retains the merged implementation and must obtain genuine final-head canonical
 `merge-ready: yes` while it is still open. Preserve that evidence before merge.
-After #2416 merges and all exact external statuses are verified, run
+After #2488 merges and all exact external statuses are verified, run
 `goals completion refresh` for both packets. Their declared lifecycle remains
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

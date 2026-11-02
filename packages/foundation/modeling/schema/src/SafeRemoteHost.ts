@@ -125,7 +125,10 @@ export class BlockedHostError extends S.TaggedError<BlockedHostError, { readonly
  * Normalize a hostname for comparison: lowercase and strip the surrounding
  * brackets that wrap IPv6 literals (e.g. `[::1]` becomes `::1`).
  */
-const normalizeHost = (hostname: string): string => pipe(Str.toLowerCase(hostname), Str.replace(/^\[|\]$/g, ""));
+// Trailing dots are stripped because WHATWG hostname parsing keeps the FQDN form
+// (`localhost.`) while DNS resolves it to the same host.
+const normalizeHost = (hostname: string): string =>
+  pipe(Str.toLowerCase(hostname), Str.replace(/^\[|\]$/g, ""), Str.replace(/\.+$/, ""));
 
 /**
  * Report whether a normalized host is present in an optional allowlist.

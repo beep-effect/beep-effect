@@ -14,12 +14,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": ">= 0.6.0, < 9.0.0",
       "firstPatched": "9.0.0",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "9.2.0",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:54Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -32,12 +38,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": ">= 1.3.0, < 9.0.0",
       "firstPatched": "9.0.0",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "9.2.0",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:53Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -50,12 +62,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.30.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:59Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -68,12 +86,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.30.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:58Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -86,12 +110,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.10.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:58Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -104,12 +134,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.20.4, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:58Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -122,12 +158,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.22.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:58Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -140,12 +182,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": "<= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:57Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -158,12 +206,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.20.4, <= 4.0.8",
       "firstPatched": "4.0.9",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:57Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -176,12 +230,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.30.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:57Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -194,12 +254,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.22.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:56Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -212,12 +278,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": "<= 9.0.4",
       "firstPatched": "9.0.5",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "9.2.0",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:53Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -230,12 +302,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": ">= 0.23.44, < 0.23.46",
       "firstPatched": "0.23.46",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "0.23.46",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:53Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -248,12 +326,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": "< 0.23.46",
       "firstPatched": "0.23.46",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "0.23.46",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:53Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -266,12 +350,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": "< 0.23.46",
       "firstPatched": "0.23.46",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "0.23.46",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:52Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -284,12 +374,18 @@
       "manifest": "apps/professional-desktop/src-tauri/Cargo.lock",
       "vulnerableRange": "< 0.23.46",
       "firstPatched": "0.23.46",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "0.23.46",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:52Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -302,12 +398,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.20.4, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:56Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -320,12 +422,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.22.0, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:56Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -338,12 +446,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 3.20.4, <= 4.2.0",
       "firstPatched": "4.2.1",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "4.2.5",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:55Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     },
     {
@@ -356,12 +470,18 @@
       "manifest": "packages/tooling/tool/cli/python/photo-face/uv.lock",
       "vulnerableRange": ">= 38.2.2, < 84.1.0",
       "firstPatched": "84.1.0",
-      "state": "open",
+      "state": "fixed",
       "disposition": "remediate",
       "remediation": {
         "status": "implemented-and-focused-proof-passed",
         "resolvedVersion": "84.2.1",
         "evidence": "research/2026-10-31-dependencies.md"
+      },
+      "closure": {
+        "state": "fixed",
+        "fixedAt": "2026-10-31T18:48:55Z",
+        "observedAt": "2026-11-01",
+        "source": "GitHub REST exact alert ID; see research/2026-11-01-final-closeout.md"
       }
     }
   ]

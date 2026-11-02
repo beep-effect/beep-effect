@@ -94,6 +94,8 @@ const UNKNOWN_REF_PATTERNS = [
   "unknown revision",
   "bad revision",
   "Not a valid object name",
+  // `merge-base --is-ancestor` names the missing object a commit, not an object.
+  "Not a valid commit name",
   "invalid object name",
   // fetch's missing-remote-ref shape — the typed signal a tag-then-branch
   // fetch fallback (Effect.orElse) branches on.

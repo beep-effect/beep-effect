@@ -481,6 +481,43 @@ export class PruneProposal extends S.Opaque<PruneProposal, { readonly brand: uni
   )
 ) {}
 
+// The skip, refusal, coverage and regime tallies shared by the observed window
+// and the prune report, so the two schemas cannot drift apart field by field.
+const SessionWindowTallyFields = {
+  sessionsSkippedOutOfRegime: S.Finite,
+  sessionsSkippedUnstamped: S.Finite,
+  sessionsSkippedMixedFingerprint: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+    S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+  ),
+  clientCoverage: S.Record(PruneTelemetryClient, S.OptionFromNullOr(HookPulseClientCoverage)).pipe(
+    S.withConstructorDefault(
+      Effect.succeed({
+        "claude-code": O.none(),
+        "codex-cli": O.none(),
+        "cursor-cli": O.none(),
+        junie: O.some(HookPulseClientCoverage.Enum.unsupported),
+        grok: O.some(HookPulseClientCoverage.Enum.unsupported),
+      })
+    )
+  ),
+  sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsSkippedRefused: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsSkippedCorrupt: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsSkippedUnknownRestart: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  writerRefusalsTotal: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
+  sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
+    S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
+  ),
+  sessionsSkippedPreCutover: S.Natural.pipe(
+    S.withConstructorDefault(Effect.succeed(0)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(0))
+  ),
+  namespaceCutover: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
+} as const;
+
 /**
  * Observed hook-pulse window: the last N distinct sessions by newest event
  * that ran under the current harness hash, positive surface use across scanned history, and
@@ -525,34 +562,7 @@ export class ObservedSessionWindow extends S.Opaque<ObservedSessionWindow, { rea
   S.Struct({
     harnessHash: HarnessHash,
     sessionsObserved: S.Finite,
-    sessionsSkippedOutOfRegime: S.Finite,
-    sessionsSkippedUnstamped: S.Finite,
-    sessionsSkippedMixedFingerprint: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
-      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
-    ),
-    clientCoverage: S.Record(PruneTelemetryClient, S.OptionFromNullOr(HookPulseClientCoverage)).pipe(
-      S.withConstructorDefault(
-        Effect.succeed({
-          "claude-code": O.none(),
-          "codex-cli": O.none(),
-          "cursor-cli": O.none(),
-          junie: O.some(HookPulseClientCoverage.Enum.unsupported),
-          grok: O.some(HookPulseClientCoverage.Enum.unsupported),
-        })
-      )
-    ),
-    sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedRefused: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedCorrupt: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedUnknownRestart: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    writerRefusalsTotal: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
-      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
-    ),
-
+    ...SessionWindowTallyFields,
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     touched: S.HashSet(S.String),
     shardsRead: S.Finite,
@@ -606,34 +616,7 @@ export class HarnessLedgerPruneReport extends S.Opaque<HarnessLedgerPruneReport,
     windowFull: S.Boolean,
     sharedHarnessWindowFull: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     nonUseQualified: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
-    sessionsSkippedOutOfRegime: S.Finite,
-    sessionsSkippedUnstamped: S.Finite,
-    sessionsSkippedMixedFingerprint: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    refusalsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
-      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
-    ),
-    clientCoverage: S.Record(PruneTelemetryClient, S.OptionFromNullOr(HookPulseClientCoverage)).pipe(
-      S.withConstructorDefault(
-        Effect.succeed({
-          "claude-code": O.none(),
-          "codex-cli": O.none(),
-          "cursor-cli": O.none(),
-          junie: O.some(HookPulseClientCoverage.Enum.unsupported),
-          grok: O.some(HookPulseClientCoverage.Enum.unsupported),
-        })
-      )
-    ),
-    sessionsSkippedDisarmed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedRefused: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedCorrupt: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedUnknownRestart: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    writerRefusalsTotal: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsSkippedRole: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsBelowActivityFloor: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0))),
-    sessionsByAgentKind: S.Record(HookPulseAgentKind, S.Natural).pipe(
-      S.withConstructorDefault(Effect.succeed({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 }))
-    ),
-
+    ...SessionWindowTallyFields,
     windowEnd: S.OptionFromOptionalKey(S.DateTimeUtcFromString),
     shardsRead: S.Finite,
     undecodableLines: S.Finite,
@@ -647,6 +630,58 @@ export class HarnessLedgerPruneReport extends S.Opaque<HarnessLedgerPruneReport,
     $I.annoteSchema("HarnessLedgerPruneReport", {
       description:
         "Current-harness session window, skip and decode tallies, the zero-touch proposals of one pruning scan, and whether they were appended.",
+    })
+  )
+) {}
+
+/**
+ * Whether an owned hook-pulse namespace projection was applied when a reconciliation ran.
+ *
+ * **Example** (The two states)
+ *
+ * ```ts
+ * import { HookPulseNamespaceProjectionState } from "@beep/repo-cli/commands/HarnessLedger"
+ * console.log(HookPulseNamespaceProjectionState.literals) // ["present", "absent"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HookPulseNamespaceProjectionState = LiteralKit(["present", "absent"]).pipe(
+  $I.annoteSchema("HookPulseNamespaceProjectionState", {
+    description: "Whether the dated hook-pulse namespace projection was present during the read.",
+  })
+);
+/**
+ * Decoded HookPulseNamespaceProjectionState value.
+ * @category models
+ * @since 0.0.0
+ */
+export type HookPulseNamespaceProjectionState = typeof HookPulseNamespaceProjectionState.Type;
+
+/**
+ * Hooked tool events split by the salt regime they joined under.
+ *
+ * **Details**
+ *
+ * `current` joined under the resolved current salt; `previous` joined under the
+ * regime the applied projection superseded. The two are reported apart so
+ * historical observations are never folded into the current window.
+ *
+ * **Example** (Describe a split join)
+ *
+ * ```ts
+ * import { HookedToolEventsByRegime } from "@beep/repo-cli/commands/HarnessLedger"
+ * console.log(HookedToolEventsByRegime.make({ current: 3, previous: 1 }).previous) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HookedToolEventsByRegime extends S.Opaque<HookedToolEventsByRegime, { readonly brand: unique symbol }>()(
+  S.Struct({ current: S.Natural, previous: S.Natural }).pipe(
+    $I.annoteSchema("HookedToolEventsByRegime", {
+      description: "Hooked tool events joined under the current salt and under the superseded regime, kept apart.",
     })
   )
 ) {}
@@ -678,6 +713,17 @@ export class HarnessTelemetryReconciliation extends S.Opaque<
     ratio: S.OptionFromOptionalKey(S.Finite),
     qualifiedForNonUse: S.Boolean,
     basis: S.NonEmptyString,
+    namespaceProjection: HookPulseNamespaceProjectionState.pipe(
+      S.withConstructorDefault(Effect.succeed(HookPulseNamespaceProjectionState.Enum.absent)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(HookPulseNamespaceProjectionState.Enum.absent))
+    ),
+    namespaceCutover: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    hookedToolEventsByRegime: HookedToolEventsByRegime.pipe(
+      S.withConstructorDefault(Effect.succeed(HookedToolEventsByRegime.make({ current: 0, previous: 0 }))),
+      S.withDecodingDefaultTypeKey(Effect.succeed(HookedToolEventsByRegime.make({ current: 0, previous: 0 })))
+    ),
   }).pipe(
     $I.annoteSchema("HarnessTelemetryReconciliation", {
       description:

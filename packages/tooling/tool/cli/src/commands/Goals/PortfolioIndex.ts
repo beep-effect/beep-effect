@@ -3,8 +3,12 @@
  *
  * `beep goals index --write` renders one deterministic Markdown index from
  * `goals/<slug>/ops/manifest.json` — grouped by canonical status, one row per
- * packet (slug, title, phases x/y, updated, one-line mission) — and
- * `--check` proves generation and rejects drift when a local copy exists.
+ * packet (slug, title, phases x/y, updated, proposed closeout, one-line
+ * mission) — and `--check` proves generation and rejects drift when a local
+ * copy exists. `--json` prints the same rows, with each packet's phases and
+ * status note, as a canonical JSON report for dashboards and other tools.
+ * Both read committed manifests only, never the clone-scoped completion
+ * receipt, so every clone renders the same bytes.
  * The ignored file is never hand-edited, staged, or linked as tracked GitHub
  * truth; packet manifests remain authoritative.
  *
@@ -25,11 +29,17 @@ import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { readGoalLifecycle } from "./Completion.ts";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import {
+  decodeGoalManifest,
+  GoalPhase,
+  GoalPhaseStatus,
+  GoalStatus,
+  renderGoalProposedCloseout,
+} from "./Goals.schemas.ts";
 import { renderCapabilityMermaidSection } from "./Graph.mermaid.ts";
 import { compileCapabilityProjection, evaluateCapabilityGraph } from "./Graph.projection.ts";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
+import { canonicalJsonTextPretty } from "./PacketCore/PacketDigest.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
@@ -87,11 +97,50 @@ export class PortfolioIndexRow extends S.Opaque<PortfolioIndexRow, { readonly br
     status: GoalStatus,
     phasesComplete: S.Finite,
     phasesTotal: S.Finite,
+    created: S.optionalKey(S.String),
     updated: S.optionalKey(S.String),
     mission: S.optionalKey(S.String),
+    statusNote: S.optionalKey(S.String),
+    phases: GoalPhase.pipe(S.Array, S.optionalKey),
+    closeout: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("PortfolioIndexRow", {
-      description: "One rendered goals-index row (slug, title, status, phase progress, updated, mission).",
+      description:
+        "One goals-index row (slug, title, committed status, phase progress, dates, mission, status note, phase entries, proposed closeout).",
+    })
+  )
+) {}
+
+/**
+ * Machine-readable goals portfolio, printed by `beep goals index --json`.
+ *
+ * **Details**
+ *
+ * Carries the same rows the Markdown index renders, plus each packet's phase entries and status
+ * note, sorted by slug. Slugs whose manifest is missing or does not decode are listed in `invalid`
+ * instead of being dropped.
+ *
+ * **Example** (Build an empty report)
+ *
+ * ```ts
+ * import { PortfolioIndexReport } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
+ *
+ * const report = PortfolioIndexReport.make({ packets: [], invalid: [] })
+ *
+ * console.log(report.packets.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PortfolioIndexReport extends S.Opaque<PortfolioIndexReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("goals-portfolio-index/v1"),
+    packets: S.Array(PortfolioIndexRow),
+    invalid: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("PortfolioIndexReport", {
+      description: "Every goal packet's index row plus the slugs whose manifest is missing or invalid.",
     })
   )
 ) {}
@@ -105,6 +154,45 @@ const sanitizeCell = flow(Str.replace(/\|/g, "\\|"), Str.replace(/\s+/g, " "), S
 const truncateCell = (text: string): string =>
   Str.length(text) <= MISSION_CELL_MAX ? text : `${pipe(text, Str.slice(0, MISSION_CELL_MAX - 1))}…`;
 
+const EMPTY_CELL = "—";
+
+const optionalCell = (value: string | undefined, render: (text: string) => string): string =>
+  value === undefined ? EMPTY_CELL : render(value);
+
+const renderIndexRow = (row: PortfolioIndexRow): string => {
+  const phases = row.phasesTotal > 0 ? `${row.phasesComplete}/${row.phasesTotal}` : EMPTY_CELL;
+  const updated = row.updated ?? EMPTY_CELL;
+  const closeout = optionalCell(row.closeout, sanitizeCell);
+  const mission = optionalCell(row.mission, flow(sanitizeCell, truncateCell));
+  return `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${closeout} | ${mission} |`;
+};
+
+const renderIndexGroup = (status: GoalStatus, groupRows: ReadonlyArray<PortfolioIndexRow>): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(groupRows)
+    ? A.empty<string>()
+    : [
+        "",
+        `## ${GROUP_TITLES[status]} (${A.length(groupRows)})`,
+        "",
+        "| Packet | Title | Phases | Updated | Closeout | Mission |",
+        "| --- | --- | --- | --- | --- | --- |",
+        ...A.map(groupRows, renderIndexRow),
+      ];
+
+const renderInvalidSection = (invalid: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(invalid)
+    ? A.empty<string>()
+    : [
+        "",
+        `## Invalid or missing manifests (${A.length(invalid)})`,
+        "",
+        ...A.map(
+          A.sort(invalid, Order.String),
+          (slug) =>
+            `- \`${slug}\` — manifest missing or does not decode as GoalManifest; see \`bun run beep goals doctor\`.`
+        ),
+      ];
+
 /**
  * Renders the goals index Markdown from prepared rows.
  *
@@ -112,7 +200,9 @@ const truncateCell = (text: string): string =>
  *
  * Pure and deterministic: groups follow the canonical status order, rows sort by slug, and no
  * timestamps are embedded, so identical inputs render byte-identical output. That byte-stability is
- * what lets the drift check compare generated and committed content directly.
+ * what lets the drift check compare generated and committed content directly. A row's `closeout`
+ * is the manifest's proposed closeout, rendered without consulting the clone-scoped completion
+ * receipt, so the same manifests render the same index in every clone.
  *
  * **Example** (Render an index with no packets)
  *
@@ -139,44 +229,104 @@ export const renderPortfolioIndex: {
     GoalStatus.literals,
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
   );
-  const lines: Array<string> = [
+  const lines: ReadonlyArray<string> = [
     "# Goals Index",
     "",
     "Generated locally by `bun run beep goals index --write` from `goals/*/ops/manifest.json`.",
     "This file is ignored and untracked; edit packet manifests, never this projection.",
     "",
     `${A.length(sortedRows) + A.length(invalid)} packets: ${A.join(counts, " · ")}.`,
+    ...A.flatMap(GoalStatus.literals, (status) =>
+      renderIndexGroup(
+        status,
+        A.filter(sortedRows, (row) => row.status === status)
+      )
+    ),
+    ...renderInvalidSection(invalid),
+    "",
   ];
+  return A.join(lines, "\n");
+});
 
-  for (const status of GoalStatus.literals) {
-    const groupRows = A.filter(sortedRows, (row) => row.status === status);
-    if (!A.isReadonlyArrayNonEmpty(groupRows)) {
+// One lenient pass over every packet feeds both the Markdown index and the JSON report. It reads
+// committed facts only: the status is the manifest field and a proposed closeout is rendered as
+// such, because the completion receipt that would verify it lives in one clone's
+// `.beep/goals/completion-receipts.ndjson` and would make the generated bytes differ between clones.
+// `session open`, `goals doctor` and `goals explain` show the verified, derived status.
+const collectPortfolioIndex = Effect.fn("Goals.collectPortfolioIndex")(function* (repoRoot: string) {
+  const records = yield* listGoalPackets(repoRoot);
+  let rows = A.empty<PortfolioIndexRow>();
+  let invalid = A.empty<string>();
+  let decoded = A.empty<readonly [string, GoalManifest]>();
+
+  for (const record of records) {
+    const parsed = record.manifestText === undefined ? O.none() : parseGoalManifestText(record.manifestText);
+    if (O.isNone(parsed)) {
+      invalid = A.append(invalid, record.slug);
       continue;
     }
-    lines.push("", `## ${GROUP_TITLES[status]} (${A.length(groupRows)})`, "");
-    lines.push("| Packet | Title | Phases | Updated | Mission |");
-    lines.push("| --- | --- | --- | --- | --- |");
-    for (const row of groupRows) {
-      const phases = row.phasesTotal > 0 ? `${row.phasesComplete}/${row.phasesTotal}` : "—";
-      const updated = row.updated ?? "—";
-      const mission = row.mission === undefined ? "—" : truncateCell(sanitizeCell(row.mission));
-      lines.push(
-        `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${mission} |`
-      );
+    const manifest = yield* decodeGoalManifest(parsed.value).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
+    if (O.isNone(manifest)) {
+      invalid = A.append(invalid, record.slug);
+      continue;
     }
+    decoded = A.append(decoded, [record.slug, manifest.value] as const);
+    const phases = goalManifestPhases(manifest.value);
+    const mission = pipe(
+      O.fromNullishOr(manifest.value.mission),
+      O.orElse(() => pipe(O.fromUndefinedOr(record.readmeText), O.flatMap(readmeMissionLine)))
+    );
+    rows = A.append(
+      rows,
+      PortfolioIndexRow.make({
+        slug: record.slug,
+        title: manifest.value.initiative.title ?? record.slug,
+        status: manifest.value.initiative.status,
+        phasesComplete: A.length(A.filter(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))),
+        phasesTotal: A.length(phases),
+        ...optionalProp("created", O.fromUndefinedOr(manifest.value.initiative.created)),
+        ...optionalProp("updated", O.fromUndefinedOr(manifest.value.initiative.updated)),
+        ...optionalProp("mission", mission),
+        ...optionalProp("statusNote", O.fromUndefinedOr(manifest.value.statusNote)),
+        phases,
+        ...optionalProp(
+          "closeout",
+          O.map(O.fromUndefinedOr(manifest.value.proposedCloseout), renderGoalProposedCloseout)
+        ),
+      })
+    );
   }
 
-  if (A.isReadonlyArrayNonEmpty(invalid)) {
-    lines.push("", `## Invalid or missing manifests (${A.length(invalid)})`, "");
-    for (const slug of A.sort(invalid, Order.String)) {
-      lines.push(
-        `- \`${slug}\` — manifest missing or does not decode as GoalManifest; see \`bun run beep goals doctor\`.`
-      );
-    }
-  }
+  return {
+    rows: A.sort(rows, rowBySlug),
+    invalid: A.sort(invalid, Order.String),
+    decoded,
+  } as const;
+});
 
-  lines.push("");
-  return A.join(lines, "\n");
+/**
+ * Builds the machine-readable goals portfolio by reading every packet manifest under a repository root.
+ *
+ * **Details**
+ *
+ * Uses the same lenient read as the Markdown index: each row's `status` is the committed manifest
+ * field, a proposed closeout appears as `closeout` (`proposed completed-retained via #N`) without
+ * consulting the clone-scoped receipt, and undecodable manifests land in `invalid`.
+ *
+ * **Example** (Build the report for the current working tree)
+ *
+ * ```ts
+ * import { buildPortfolioIndexReport } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(buildPortfolioIndexReport())) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const buildPortfolioIndexReport = Effect.fn("Goals.buildPortfolioIndexReport")(function* (repoRoot = ".") {
+  const { rows, invalid } = yield* collectPortfolioIndex(repoRoot);
+  return PortfolioIndexReport.make({ packets: rows, invalid });
 });
 
 /**
@@ -200,57 +350,21 @@ export const renderPortfolioIndex: {
  * @since 0.0.0
  */
 export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* (repoRoot = ".") {
-  const records = yield* listGoalPackets(repoRoot);
-  let rows = A.empty<PortfolioIndexRow>();
-  let invalid = A.empty<string>();
-  let decoded = A.empty<readonly [string, GoalManifest]>();
-  const operativeStatuses: Record<string, GoalStatus> = {};
-
-  for (const record of records) {
-    const parsed = record.manifestText === undefined ? O.none() : parseGoalManifestText(record.manifestText);
-    if (O.isNone(parsed)) {
-      invalid = A.append(invalid, record.slug);
-      continue;
-    }
-    const manifest = yield* decodeGoalManifest(parsed.value).pipe(Effect.asSome, Effect.orElseSucceed(O.none));
-    if (O.isNone(manifest)) {
-      invalid = A.append(invalid, record.slug);
-      continue;
-    }
-    decoded = A.append(decoded, [record.slug, manifest.value] as const);
-    const status = yield* readGoalLifecycle(repoRoot, record.slug, manifest.value);
-    operativeStatuses[record.slug] = status;
-    const phases = goalManifestPhases(manifest.value);
-    const mission = pipe(
-      O.fromNullishOr(manifest.value.mission),
-      O.orElse(() => pipe(O.fromUndefinedOr(record.readmeText), O.flatMap(readmeMissionLine)))
-    );
-    rows = A.append(
-      rows,
-      PortfolioIndexRow.make({
-        slug: record.slug,
-        title: manifest.value.initiative.title ?? record.slug,
-        status,
-        phasesComplete: A.length(A.filter(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))),
-        phasesTotal: A.length(phases),
-        ...optionalProp("updated", O.fromUndefinedOr(manifest.value.initiative.updated)),
-        ...optionalProp("mission", mission),
-      })
-    );
-  }
+  const { rows, invalid, decoded } = yield* collectPortfolioIndex(repoRoot);
 
   // The capability graph uses only manifests whose id matches their directory, so
-  // the lenient table and the fail-closed graph never disagree about identity.
+  // the lenient table and the fail-closed graph never disagree about identity. It
+  // takes the committed statuses, like the table, so the rendered graph is the
+  // same in every clone.
   const projection = compileCapabilityProjection(
     pipe(
       decoded,
       A.filter(([slug, manifest]) => manifest.initiative.id === slug),
       A.map(([, manifest]) => manifest)
-    ),
-    operativeStatuses
+    )
   );
   const graph = renderCapabilityMermaidSection(projection, evaluateCapabilityGraph(projection));
-  return `${renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String))}${graph}\n`;
+  return `${renderPortfolioIndex(rows, invalid)}${graph}\n`;
 });
 
 /**
@@ -283,6 +397,22 @@ const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDescription("Prove generation and refresh a stale git-ignored local goals/INDEX.md copy in place")
 );
 
+const jsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print every packet's row, phases and status note as canonical JSON")
+);
+
+const printPortfolioIndexJson = Effect.fn("Goals.printPortfolioIndexJson")(function* () {
+  const report = yield* buildPortfolioIndexReport();
+  // The report is built through `PortfolioIndexReport.make`, so encoding it cannot fail; a failure
+  // here is a defect, not a reportable command outcome.
+  const rendered = yield* S.encodeEffect(PortfolioIndexReport)(report).pipe(
+    Effect.orDie,
+    Effect.map(canonicalJsonTextPretty)
+  );
+  yield* Console.log(Str.trimEnd(rendered));
+});
+
 const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (content: string) {
   const fs = yield* FileSystem.FileSystem;
   const existing = yield* fs
@@ -308,10 +438,15 @@ const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (co
 const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
   readonly write: boolean;
   readonly check: boolean;
+  readonly json: boolean;
 }) {
-  if (options.write && options.check) {
-    yield* Console.error("[goals:index] --write and --check are mutually exclusive.");
-    return yield* failWithReportedExit("goals index: --write and --check are mutually exclusive.");
+  if (A.length(A.filter([options.write, options.check, options.json], Boolean)) > 1) {
+    yield* Console.error("[goals:index] --write, --check and --json are mutually exclusive.");
+    return yield* failWithReportedExit("goals index: --write, --check and --json are mutually exclusive.");
+  }
+
+  if (options.json) {
+    return yield* printPortfolioIndexJson();
   }
 
   if (options.write) {
@@ -337,7 +472,8 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
  * proves generation and compares an existing local copy: the file's absence is
  * accepted and a stale copy is rewritten from the projection, because the file
  * is git-ignored workstation state that no hosted lane carries and that may
- * never hold authored content. `--check` writes nothing tracked.
+ * never hold authored content. `--check` writes nothing tracked. `--json`
+ * prints the {@link PortfolioIndexReport} instead and writes nothing.
  *
  * **Example** (Read the subcommand identity)
  *
@@ -352,8 +488,12 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
  */
 export const goalsIndexCommand = Command.make(
   "index",
-  { write: writeFlag, check: checkFlag },
-  Effect.fn(function* ({ check, write }) {
-    yield* runGoalsIndex({ write, check });
+  { write: writeFlag, check: checkFlag, json: jsonFlag },
+  Effect.fn(function* ({ check, json, write }) {
+    yield* runGoalsIndex({ write, check, json });
   })
-).pipe(Command.withDescription("Generate the local goals/INDEX.md from packet manifests or verify a local copy"));
+).pipe(
+  Command.withDescription(
+    "Generate the local goals/INDEX.md from packet manifests, verify a local copy, or print the portfolio as JSON"
+  )
+);
