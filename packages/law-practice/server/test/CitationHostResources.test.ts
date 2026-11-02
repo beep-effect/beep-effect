@@ -12,7 +12,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -432,7 +432,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
           })),
           row.name
         ).toEqual(row.groups);
-        const crypto = yield* Crypto.Crypto;
+        const crypto = yield* Digest.Digest;
         let described = 0;
         const descriptors = CitationSessionResourceDescriptors.of({
           describe: Effect.fn("SessionProjectionTest.describe")(
@@ -447,7 +447,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
               ).pipe(Effect.mapError(bad));
               return CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
             },
-            Effect.provideService(Crypto.Crypto, crypto)
+            Effect.provideService(Digest.Digest, crypto)
           ),
         });
         const projector = yield* makeCitationSessionDocumentProjector().pipe(
@@ -524,7 +524,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                 ).pipe(Effect.mapError(bad));
                 return CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
               },
-              Effect.provideService(Crypto.Crypto, crypto)
+              Effect.provideService(Digest.Digest, crypto)
             ),
           });
           const opaqueProjector = yield* makeCitationSessionDocumentProjector().pipe(

@@ -10,7 +10,7 @@ import { FullCitation } from "@beep/law-practice-domain/values";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -66,7 +66,7 @@ const mapped = (error: { readonly reason: string }) =>
 export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.makeRegisteredSessionDescriptors")(
   function* (input: unknown) {
     const state = yield* readCapturedCitationSession(input);
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
     const editions = yield* CitationFrozenEditions;
     const host = yield* Effect.serviceOption(CitationSessionHostResourceDescriptors);
     const origins = HashMap.fromIterable(
@@ -131,7 +131,8 @@ export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.make
       "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
     ]).pipe(Effect.mapError(failed));
     const scope = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(scopeText)).pipe(
-      Effect.mapError(failed)
+      Effect.mapError(failed),
+      Effect.catchDefect(() => Effect.fail(failed()))
     );
     let cache = HashMap.empty<string, CitationResourceIdentity>();
     return CitationSessionResourceDescriptors.of({
@@ -153,13 +154,14 @@ export const makeCitationRegisteredSessionDescriptors = Effect.fn("Citation.make
             Effect.mapError(failed)
           );
           const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text)).pipe(
-            Effect.mapError(failed)
+            Effect.mapError(failed),
+            Effect.catchDefect(() => Effect.fail(failed()))
           );
           const identity = CitationResourceIdentity.cases.External.make({ scope, key });
           cache = HashMap.set(cache, id, identity);
           return identity;
         },
-        Effect.provideService(Crypto.Crypto, crypto)
+        Effect.provideService(Digest.Digest, crypto)
       ),
     });
   }

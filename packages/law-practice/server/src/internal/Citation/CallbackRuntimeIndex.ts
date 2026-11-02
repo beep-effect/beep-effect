@@ -10,7 +10,8 @@ import { CitationComponents, CitationGroupMember, FullCitation } from "@beep/law
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -141,15 +142,17 @@ export class CitationCallbackRuntimeIndexFactory extends Context.Service<
 export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeCallbackRuntimeIndexFactory")(
   function* () {
     const frozen = yield* CitationFrozenEditions;
-    const crypto = yield* Crypto.Crypto;
+    const crypto = yield* Digest.Digest;
+    const random = yield* SecureRandom.SecureRandom;
     const hostFactory = yield* Effect.serviceOption(CitationHostResourceAdapterFactory);
     const identityFactory = yield* Effect.serviceOption(CitationMissingPageIdentityFactory);
     return CitationCallbackRuntimeIndexFactory.of({
       build: Effect.fn("Citation.buildCallbackRuntimeIndex")(function* (owner) {
-        const nonce = yield* crypto.randomBytes(32).pipe(Effect.mapError(bad));
+        const nonce = yield* random.randomBytes(32).pipe(Effect.catchDefect(() => Effect.fail(bad())));
         const scope = yield* S.decodeEffect(Sha256HexFromBytes)(nonce).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
-          Effect.mapError(bad)
+          Effect.provideService(Digest.Digest, crypto),
+          Effect.mapError(bad),
+          Effect.catchDefect(() => Effect.fail(bad()))
         );
         const identities = O.isSome(identityFactory)
           ? O.some(yield* identityFactory.value.build.pipe(Effect.mapError(bad)))
@@ -197,7 +200,7 @@ export const makeCitationCallbackRuntimeIndexFactory = Effect.fn("Citation.makeC
                 reason: error.reason === "limit-exceeded" ? "limit-exceeded" : "identity-failed",
               });
         const objects = yield* makeCitationResourceObjects(owner.limits).pipe(
-          Effect.provideService(Crypto.Crypto, crypto),
+          Effect.provideService(Digest.Digest, crypto),
           Effect.provideService(CitationFrozenEditions, frozen),
           Effect.provideService(CitationResourceModels, models),
           Effect.mapError(mapped)

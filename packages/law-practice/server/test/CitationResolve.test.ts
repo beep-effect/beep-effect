@@ -5,7 +5,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
@@ -15,6 +15,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { resolveCitationMentions } from "../src/internal/Citation/Resolve.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 
@@ -104,20 +105,18 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("canonical defaul
   it.effect("snapshots semantic and adapter data before the first asynchronous identity check", () =>
     Effect.gen(function* () {
       const input = yield* prepare(A.getUnsafe((yield* cases).cases, 0));
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const document = yield* resolveCitationMentions(input).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                if (hashes === 1) Reflect.set(A.getUnsafe(input.mentions, 0).citation, "type", "unknown");
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              if (hashes === 1) Reflect.set(A.getUnsafe(input.mentions, 0).citation, "type", "unknown");
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(A.getUnsafe(document.mentions, 0).citation.type).toBe("case");

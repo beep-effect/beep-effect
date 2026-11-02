@@ -10,7 +10,7 @@ import { CitationComponents, CitationGroupMember, FullCitation } from "@beep/law
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -153,7 +153,7 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
   );
   const maximum = limits.resolutionIterations;
   const models = yield* CitationResourceModels;
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const editions = yield* CitationFrozenEditions;
   const mutex = yield* Semaphore.make(1);
   const handles = new WeakMap<object, number>();
@@ -202,7 +202,7 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
           missingPageIdentityHash: current.missingPageIdentityHash,
         })
       ).pipe(
-        Effect.provideService(Crypto.Crypto, crypto),
+        Effect.provideService(Digest.Digest, crypto),
         Effect.mapError((error) => failure(error.reason))
       );
       return result.resourceHash;
@@ -213,7 +213,7 @@ export const makeCitationResourceObjects = Effect.fn("Citation.makeResourceObjec
     const result = yield* makeCitationPublicationResourceHash(
       CitationPublicationResourceHashInput.make({ citation, editions: resolved })
     ).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.mapError((error) => failure(error.reason))
     );
     return result.resourceHash;

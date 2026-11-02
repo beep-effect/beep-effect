@@ -18,7 +18,7 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
 import { captureCitationMentionReceiptData, restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResolutionInput");
 const SourceProof: S.Codec<VerifiedSourceText> = VerifiedSourceText;
@@ -90,7 +90,7 @@ const invalid = () => CitationResolutionInputFailure.make({ reason: "invalid-inp
  */
 export const prepareCitationResolution = Effect.fn("Citation.prepareResolution")(function* (
   input: unknown
-): Effect.fn.Return<PreparedCitationResolution, CitationResolutionInputFailure, Crypto.Crypto> {
+): Effect.fn.Return<PreparedCitationResolution, CitationResolutionInputFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(Input))(input).pipe(Effect.mapError(invalid));
   const source = decoded.verifiedSource;
   const json = yield* S.encodeEffect(Json)({

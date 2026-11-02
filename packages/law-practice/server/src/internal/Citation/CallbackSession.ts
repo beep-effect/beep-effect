@@ -23,7 +23,7 @@ import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -571,7 +571,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       Effect.mapError(invalid)
     )
   ).pipe(Effect.mapError(invalid));
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const work = yield* CitationResolutionWork;
   const runtimeFactory = yield* Effect.serviceOption(CitationCallbackRuntimeIndexFactory);
   let runtime: O.Option<CitationCallbackRuntimeIndex> = O.none();
@@ -637,7 +637,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       resource._tag === "None"
         ? "none"
         : yield* makeCitationResourceAuthorityId(resource.identity).pipe(
-            Effect.provideService(Crypto.Crypto, crypto),
+            Effect.provideService(Digest.Digest, crypto),
             Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
           );
     return { key, resource };
@@ -837,8 +837,9 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
       detachedSlot,
     ]).pipe(Effect.mapError(invalid));
     const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
-      Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" }))
+      Effect.provideService(Digest.Digest, crypto),
+      Effect.mapError(() => CitationCallbackFailure.make({ reason: "identity-failed" })),
+      Effect.catchDefect(() => Effect.fail(CitationCallbackFailure.make({ reason: "identity-failed" })))
     );
     const id = CitationDetachedId.make(`cd1:${digest}`);
     detachedSlot += 1;
@@ -1249,7 +1250,7 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
  */
 export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPreparedCallbackSession")(function* (
   prepared: PreparedCitationResolution
-): Effect.fn.Return<typeof SessionState.Type, CitationCallbackFailure, Crypto.Crypto | CitationResolutionCallbacks> {
+): Effect.fn.Return<typeof SessionState.Type, CitationCallbackFailure, Digest.Digest | CitationResolutionCallbacks> {
   const callbacks = yield* CitationResolutionCallbacks;
 
   let decisions = A.empty<CitationCallbackDecision>();

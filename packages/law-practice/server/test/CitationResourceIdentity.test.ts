@@ -3,7 +3,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -14,6 +14,7 @@ import {
   CitationResourceIdentity,
   makeCitationResourceAuthorityId,
 } from "../src/internal/Citation/ResourceIdentity.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const a = Sha256Hex.make(Str.repeat(64)("a"));
 const b = Sha256Hex.make(Str.repeat(64)("b"));
@@ -45,18 +46,16 @@ it.layer(BunCrypto.layer)("trusted resource identity descriptors", (it) => {
   it.effect("snapshots descriptors before hashing instead of retaining mutable adapter data", () =>
     Effect.gen(function* () {
       const input = external();
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       const id = yield* makeCitationResourceAuthorityId(input).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                Reflect.set(input, "scope", b);
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              Reflect.set(input, "scope", b);
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(id).toBe(expected);
@@ -73,19 +72,17 @@ it.layer(BunCrypto.layer)("trusted resource identity descriptors", (it) => {
       const failed = yield* Effect.flip(
         makeCitationResourceAuthorityId(external()).pipe(
           Effect.provideService(
-            Crypto.Crypto,
-            Crypto.make({
-              randomBytes: (size) => new Uint8Array(size),
-              digest: () =>
-                Effect.fail(
-                  PlatformError.systemError({
-                    module: "Crypto",
-                    method: "digest",
-                    _tag: "Unknown",
-                    cause: "private-text",
-                  })
-                ),
-            })
+            Digest.Digest,
+            makeTestCitationDigest(() =>
+              Effect.die(
+                PlatformError.systemError({
+                  module: "Crypto",
+                  method: "digest",
+                  _tag: "Unknown",
+                  cause: "private-text",
+                })
+              )
+            )
           )
         )
       );

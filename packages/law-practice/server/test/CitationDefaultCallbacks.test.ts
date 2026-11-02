@@ -6,7 +6,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
@@ -46,6 +46,7 @@ import {
   CitationSessionResourceDescriptors,
   makeCitationSessionDocumentProjector,
 } from "../src/internal/Citation/SessionDocument.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
@@ -460,19 +461,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
   it.effect("prepares each occurrence once before constructing its default resource", () =>
     Effect.gen(function* () {
       const input = yield* prepare(yield* selected);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const result = yield* runDefaultCitationCallbackSession({ ...input, mentions: A.take(input.mentions, 1) }).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(A.length(result.groups)).toBe(1);

@@ -5,7 +5,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -14,6 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
 import { encodeCitationRuntimeEdition } from "../src/internal/Citation/PublicationResourceHash.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated frozen editions", (it) => {
@@ -103,19 +104,17 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated froze
       const failure = yield* Effect.flip(
         makeCitationFrozenEditions(bundle).pipe(
           Effect.provideService(
-            Crypto.Crypto,
-            Crypto.make({
-              randomBytes: (size) => new Uint8Array(size),
-              digest: () =>
-                Effect.fail(
-                  PlatformError.systemError({
-                    module: "Crypto",
-                    method: "digest",
-                    _tag: "Unknown",
-                    cause: "private-document-text",
-                  })
-                ),
-            })
+            Digest.Digest,
+            makeTestCitationDigest(() =>
+              Effect.die(
+                PlatformError.systemError({
+                  module: "Crypto",
+                  method: "digest",
+                  _tag: "Unknown",
+                  cause: "private-document-text",
+                })
+              )
+            )
           )
         )
       );

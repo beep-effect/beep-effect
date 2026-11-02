@@ -12,12 +12,13 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationMentionIdentityInput, makeCitationMentionId } from "../src/internal/Citation/MentionIdentity.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const sourceText = "😀 1 U.S. 1; 1 U.S. 1";
 const artifact = Sha256Hex.make("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
@@ -161,17 +162,15 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
         semanticKind: "case",
       });
       expect(other).not.toBe(baseline);
-      const crypto = yield* Crypto.Crypto;
-      const mutatingCrypto = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: (algorithm, bytes) =>
-          Effect.sync(() => {
-            input.anchor = secondAnchor;
-            input.engineArtifact = otherArtifact;
-            input.semanticKind = "id";
-          }).pipe(Effect.andThen(crypto.digest(algorithm, bytes))),
-      });
-      const inFlight = yield* makeCitationMentionId(input).pipe(Effect.provideService(Crypto.Crypto, mutatingCrypto));
+      const crypto = yield* Digest.Digest;
+      const mutatingCrypto = makeTestCitationDigest((algorithm, bytes) =>
+        Effect.sync(() => {
+          input.anchor = secondAnchor;
+          input.engineArtifact = otherArtifact;
+          input.semanticKind = "id";
+        }).pipe(Effect.andThen(crypto.digest(algorithm, bytes)))
+      );
+      const inFlight = yield* makeCitationMentionId(input).pipe(Effect.provideService(Digest.Digest, mutatingCrypto));
       expect(inFlight).toBe(baseline);
       expect(yield* makeCitationMentionId(input)).not.toBe(baseline);
     })
@@ -181,20 +180,18 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
     Effect.gen(function* () {
       const source = yield* sourceIdentity(sourceText);
       const anchor = yield* verifiedAnchor(sourceText, 3, source);
-      const failedCrypto = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "Unknown",
-              module: "CitationIdentityTest",
-              method: "digest",
-              description: "sensitive input from a failed adapter",
-            })
-          ),
-      });
+      const failedCrypto = makeTestCitationDigest(() =>
+        Effect.die(
+          PlatformError.systemError({
+            _tag: "Unknown",
+            module: "CitationIdentityTest",
+            method: "digest",
+            description: "sensitive input from a failed adapter",
+          })
+        )
+      );
       const failure = yield* makeCitationMentionId({ anchor, engineArtifact: artifact, semanticKind: "case" }).pipe(
-        Effect.provideService(Crypto.Crypto, failedCrypto),
+        Effect.provideService(Digest.Digest, failedCrypto),
         Effect.flip
       );
       expect(failure.reason).toBe("digest-failed");

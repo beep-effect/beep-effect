@@ -20,7 +20,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AuthorityIdentity");
 const encoder = new TextEncoder();
@@ -111,7 +111,7 @@ const componentOrder = Order.mapInput(Order.String, (entry: typeof Component.Typ
  */
 export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(function* (
   input: unknown
-): Effect.fn.Return<CitationAuthorityId, CitationAuthorityIdentityFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationAuthorityId, CitationAuthorityIdentityFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CitationAuthorityIdentityInput))(input).pipe(
     Effect.mapError(invalid)
   );
@@ -154,7 +154,8 @@ export const makeCitationAuthorityId = Effect.fn("Citation.makeAuthorityId")(fun
     ]).pipe(Effect.mapError(invalid));
   }
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => CitationAuthorityIdentityFailure.make({ reason: "digest-failed" }))
+    Effect.mapError(() => CitationAuthorityIdentityFailure.make({ reason: "digest-failed" })),
+    Effect.catchDefect(() => Effect.fail(CitationAuthorityIdentityFailure.make({ reason: "digest-failed" })))
   );
   return CitationAuthorityId.make(`ca1:${digest}`);
 });

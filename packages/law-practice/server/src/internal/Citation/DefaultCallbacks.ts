@@ -8,7 +8,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation, CitationComponents, CitationGroupMember, FullCitation } from "@beep/law-practice-domain/values";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -53,7 +53,7 @@ const isFull = S.is(FullCitation);
 export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDefaultCallbacks")(function* (
   prepared: PreparedCitationResolution
 ) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const work = yield* CitationResolutionWork;
   const dictionary = yield* CitationCallbackDictionary;
   if (dictionary.owner !== prepared || dictionary.work !== work) return yield* invalid();
@@ -165,7 +165,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         }
         return yield* rejectedCandidates(input.mention.id, candidates, count);
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
     supra: Effect.fn("Citation.defaultSupraCallback")(
       function* (input: CitationFullsCallbackInput) {
@@ -179,7 +179,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         );
         return yield* choose(candidates, input.mention.id);
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
     reference: Effect.fn("Citation.defaultReferenceCallback")(
       function* (input: CitationFullsCallbackInput) {
@@ -200,7 +200,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
           }
         return yield* choose(candidates, input.mention.id);
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
     id: Effect.fn("Citation.defaultIdCallback")(
       function* (input: CitationIdCallbackInput) {
@@ -216,7 +216,7 @@ export const makeDefaultCitationResolutionCallbacks = Effect.fn("Citation.makeDe
         );
         return bad ? yield* unresolved(input.mention.id, "invalid-pin-cite") : { resource: input.last };
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
   });
 });

@@ -36,7 +36,7 @@ import { makeCitationAuthorityId } from "./AuthorityIdentity.ts";
 import { prepareCitationResolution } from "./ResolutionInput.ts";
 import { hasInvalidCitationPinCite, stripCitationAntecedentPunctuation } from "./ResolverText.ts";
 import type { CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Resolve");
 const Entry = S.Struct({
@@ -99,7 +99,7 @@ const matchesParty = (entry: typeof Entry.Type, name: string): boolean =>
  */
 export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(function* (
   input: unknown
-): Effect.fn.Return<CitationDocument, CitationResolveFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationDocument, CitationResolveFailure, Digest.Digest> {
   const snapshot = yield* prepareCitationResolution(input).pipe(
     Effect.mapError((error) => CitationResolveFailure.make({ reason: error.reason }))
   );

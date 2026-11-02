@@ -6,7 +6,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
@@ -18,6 +18,7 @@ import {
   CitationCaseResourceHashInput,
   makeCitationCaseResourceHash,
 } from "../src/internal/Citation/CaseResourceHash.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const Cases = S.Struct({
   schemaVersion: S.Literal("citation-case-resource-hashes/v1"),
@@ -98,19 +99,17 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("exact source case r
       const result = yield* Effect.flip(
         makeCitationCaseResourceHash(row).pipe(
           Effect.provideService(
-            Crypto.Crypto,
-            Crypto.make({
-              randomBytes: (size) => new Uint8Array(size),
-              digest: () =>
-                Effect.fail(
-                  PlatformError.systemError({
-                    module: "Crypto",
-                    method: "digest",
-                    _tag: "Unknown",
-                    cause: "private-document-text",
-                  })
-                ),
-            })
+            Digest.Digest,
+            makeTestCitationDigest(() =>
+              Effect.die(
+                PlatformError.systemError({
+                  module: "Crypto",
+                  method: "digest",
+                  _tag: "Unknown",
+                  cause: "private-document-text",
+                })
+              )
+            )
           )
         )
       );

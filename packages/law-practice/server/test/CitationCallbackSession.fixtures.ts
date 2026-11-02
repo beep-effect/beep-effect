@@ -21,7 +21,7 @@ import * as Tuple from "effect/Tuple";
 import { CitationCallbackResource } from "../src/internal/Citation/CallbackSession.ts";
 import { CitationResourceIdentity } from "../src/internal/Citation/ResourceIdentity.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("test/CitationCallbackSession.fixtures");
 /**
@@ -79,7 +79,7 @@ export const callbackResourcePresentation = (resource: CitationCallbackResource)
  */
 export const normalizeCallbackFixtureResource = Effect.fn("CallbackTest.resource")(function* (
   raw: S.Json
-): Effect.fn.Return<CitationCallbackResource, S.SchemaError, Crypto.Crypto> {
+): Effect.fn.Return<CitationCallbackResource, S.SchemaError, Digest.Digest> {
   if (raw === null) return callbackNoneResource();
   if (A.isArray(raw) && A.length(raw) > 0)
     return CitationCallbackResource.cases.Unhashable.make({ truthy: true, value: { kind: "list", value: raw } });

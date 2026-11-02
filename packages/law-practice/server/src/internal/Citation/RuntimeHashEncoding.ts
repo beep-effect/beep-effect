@@ -62,7 +62,8 @@ export const encodeCitationRuntimeString = Effect.fn("Citation.pythonJsonString"
  */
 export const hashCitationRuntimePreimage = Effect.fn("Citation.pythonShaHash")(function* (preimage: string) {
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => failure("digest-failed"))
+    Effect.mapError(() => failure("digest-failed")),
+    Effect.catchDefect(() => Effect.fail(failure("digest-failed")))
   );
   return BigInt(`0x${digest}`) % BigInt("2305843009213693951");
 });

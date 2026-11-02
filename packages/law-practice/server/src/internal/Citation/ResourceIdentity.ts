@@ -17,7 +17,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationAuthorityIdentityInput, makeCitationAuthorityId } from "./AuthorityIdentity.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceIdentity");
 const encoder = new TextEncoder();
@@ -136,7 +136,7 @@ const invalid = () => CitationResourceIdentityFailure.make({ reason: "invalid-in
  */
 export const makeCitationResourceAuthorityId = Effect.fn("Citation.makeResourceAuthorityId")(function* (
   input: unknown
-): Effect.fn.Return<CitationAuthorityId, CitationResourceIdentityFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationAuthorityId, CitationResourceIdentityFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CitationResourceIdentity))(input).pipe(
     Effect.mapError(invalid)
   );
@@ -153,7 +153,8 @@ export const makeCitationResourceAuthorityId = Effect.fn("Citation.makeResourceA
     snapshot.key,
   ]).pipe(Effect.mapError(invalid));
   const hash = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => CitationResourceIdentityFailure.make({ reason: "digest-failed" }))
+    Effect.mapError(() => CitationResourceIdentityFailure.make({ reason: "digest-failed" })),
+    Effect.catchDefect(() => Effect.fail(CitationResourceIdentityFailure.make({ reason: "digest-failed" })))
   );
   return CitationAuthorityId.make(`ca1:${hash}`);
 });

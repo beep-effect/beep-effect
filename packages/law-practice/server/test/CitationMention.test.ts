@@ -18,7 +18,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -31,6 +31,7 @@ import {
   restoreCitationMention,
 } from "../src/internal/Citation/Mention.ts";
 import { makeCitationMentionId } from "../src/internal/Citation/MentionIdentity.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const text = "1. 😀 1 U.S. 1; 1 U.S. 1\r\n";
 const artifact = Sha256Hex.make("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef");
@@ -268,25 +269,23 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
   it.effect("hashes the source once for all anchors and snapshots caller data before asynchronous verification", () =>
     Effect.gen(function* () {
       const { source, receipt, mention } = yield* fixture;
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let calls = 0;
-      const mutating = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: (algorithm, bytes) =>
-          Effect.sync(() => {
-            calls += 1;
-            if (calls === 1) {
-              Reflect.set(receipt.anchor.anchor, "quote", "2 U.S. 1");
-              Reflect.set(receipt.anchor.source, "scopeRef", "matter:tampered");
-            }
-          }).pipe(Effect.andThen(crypto.digest(algorithm, bytes))),
-      });
+      const mutating = makeTestCitationDigest((algorithm, bytes) =>
+        Effect.sync(() => {
+          calls += 1;
+          if (calls === 1) {
+            Reflect.set(receipt.anchor.anchor, "quote", "2 U.S. 1");
+            Reflect.set(receipt.anchor.source, "scopeRef", "matter:tampered");
+          }
+        }).pipe(Effect.andThen(crypto.digest(algorithm, bytes)))
+      );
       const restored = yield* restoreCitationMention({
         receipt,
         expectedSource: source,
         expectedEngineArtifact: artifact,
         sourceText: text,
-      }).pipe(Effect.provideService(Crypto.Crypto, mutating));
+      }).pipe(Effect.provideService(Digest.Digest, mutating));
       expect(calls).toBe(2); // raw source digest + occurrence identity digest
       expect(restored.id).toBe(mention.id);
       expect(restored.anchor.anchor.quote).toBe("1 U.S. 1");
@@ -297,16 +296,14 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
   it.effect("snapshots semantic kind and engine metadata before occurrence hashing", () =>
     Effect.gen(function* () {
       const { input, mention } = yield* fixture;
-      const crypto = yield* Crypto.Crypto;
-      const mutating = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: (algorithm, bytes) =>
-          Effect.sync(() => {
-            Reflect.set(input.citation, "type", "id");
-            Reflect.set(input, "engineArtifact", otherArtifact);
-          }).pipe(Effect.andThen(crypto.digest(algorithm, bytes))),
-      });
-      const created = yield* makeCitationMention(input).pipe(Effect.provideService(Crypto.Crypto, mutating));
+      const crypto = yield* Digest.Digest;
+      const mutating = makeTestCitationDigest((algorithm, bytes) =>
+        Effect.sync(() => {
+          Reflect.set(input.citation, "type", "id");
+          Reflect.set(input, "engineArtifact", otherArtifact);
+        }).pipe(Effect.andThen(crypto.digest(algorithm, bytes)))
+      );
+      const created = yield* makeCitationMention(input).pipe(Effect.provideService(Digest.Digest, mutating));
       expect(created.citation.type).toBe("case");
       expect(created.engineArtifact).toBe(artifact);
       expect(created.id).toBe(mention.id);
@@ -316,21 +313,19 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
   it.effect("enforces the hard UTF-16 source ceiling before hashing", () =>
     Effect.gen(function* () {
       const { source, receipt } = yield* fixture;
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let calls = 0;
-      const counting = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: (algorithm, bytes) =>
-          Effect.sync(() => {
-            calls += 1;
-          }).pipe(Effect.andThen(crypto.digest(algorithm, bytes))),
-      });
+      const counting = makeTestCitationDigest((algorithm, bytes) =>
+        Effect.sync(() => {
+          calls += 1;
+        }).pipe(Effect.andThen(crypto.digest(algorithm, bytes)))
+      );
       const failure = yield* restoreCitationMention({
         receipt,
         expectedSource: source,
         expectedEngineArtifact: artifact,
         sourceText: Str.repeat(500_001)("😀"),
-      }).pipe(Effect.provideService(Crypto.Crypto, counting), Effect.flip);
+      }).pipe(Effect.provideService(Digest.Digest, counting), Effect.flip);
       expect(failure.reason).toBe("invalid-input");
       expect(calls).toBe(0);
     })
@@ -339,19 +334,17 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
   it.effect("discards sensitive adapter causes in private typed failures", () =>
     Effect.gen(function* () {
       const { input } = yield* fixture;
-      const broken = Crypto.make({
-        randomBytes: (size) => new Uint8Array(size),
-        digest: () =>
-          Effect.fail(
-            PlatformError.systemError({
-              _tag: "Unknown",
-              module: "MentionTest",
-              method: "digest",
-              description: "sensitive source payload",
-            })
-          ),
-      });
-      const failure = yield* makeCitationMention(input).pipe(Effect.provideService(Crypto.Crypto, broken), Effect.flip);
+      const broken = makeTestCitationDigest(() =>
+        Effect.die(
+          PlatformError.systemError({
+            _tag: "Unknown",
+            module: "MentionTest",
+            method: "digest",
+            description: "sensitive source payload",
+          })
+        )
+      );
+      const failure = yield* makeCitationMention(input).pipe(Effect.provideService(Digest.Digest, broken), Effect.flip);
       expect(failure.reason).toBe("identity-failed");
       expect("cause" in failure).toBe(false);
       expect(failure.message).not.toContain("sensitive");

@@ -9,7 +9,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -179,10 +179,13 @@ export const makeCitationClosedHtmlWasi = Effect.fn("Citation.makeClosedHtmlWasi
  * @since 0.0.0
  */
 export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(function* (input: unknown) {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const asset = yield* S.decodeUnknownEffect(Asset)(input).pipe(Effect.mapError(() => fail("invalid-asset")));
   const snapshot = new Uint8Array(asset);
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(snapshot).pipe(Effect.mapError(() => fail("invalid-asset")));
+  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(snapshot).pipe(
+    Effect.mapError(() => fail("invalid-asset")),
+    Effect.catchDefect(() => Effect.fail(fail("invalid-asset")))
+  );
   if (digest !== "99e76b7cdfe01e574886d7b93b685174cbe7cb5944f8ba964c97019d8f53156a")
     return yield* fail("invalid-asset");
   const runtime = yield* S.decodeUnknownEffect(Runtime)(globalThis).pipe(Effect.mapError(() => fail("invalid-asset")));
@@ -222,7 +225,8 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
         });
         const bytes = yield* Effect.fromOption(inventory).pipe(Effect.mapError(() => fail("invalid-asset")));
         const inventorySha = yield* S.decodeEffect(Sha256HexFromBytes)(bytes).pipe(
-          Effect.mapError(() => fail("invalid-asset"))
+          Effect.mapError(() => fail("invalid-asset")),
+          Effect.catchDefect(() => Effect.fail(fail("invalid-asset")))
         );
         if (inventorySha !== "51b99795eaf46526e228b70aa2f109b7a12bff156681d25d60bb02f51092b5bc")
           return yield* fail("invalid-asset");
@@ -287,7 +291,7 @@ export const makeCitationHtmlKernel = Effect.fn("Citation.makeHtmlKernel")(funct
             })
         );
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
   };
 });

@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import {
   CitationCallbackRuntimeIndexFactory,
@@ -28,7 +28,7 @@ import { CitationSessionResourceDescriptors, makeCitationSessionDocumentProjecto
  * @since 0.0.0
  */
 export const makeCitationRegisteredResolver = Effect.fn("Citation.makeRegisteredResolver")(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const editions = yield* CitationFrozenEditions;
   const factory = yield* makeCitationCallbackRuntimeIndexFactory();
   return {
@@ -50,7 +50,7 @@ export const makeCitationRegisteredResolver = Effect.fn("Citation.makeRegistered
         );
         return yield* projector.project(session);
       },
-      Effect.provideService(Crypto.Crypto, crypto),
+      Effect.provideService(Digest.Digest, crypto),
       Effect.provideService(CitationFrozenEditions, editions)
     ),
   };

@@ -11,7 +11,7 @@ import { CitationEngineAbsoluteMaxima } from "@beep/law-practice-use-cases/serve
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
@@ -114,11 +114,12 @@ export const makeCitationFrozenEditions = Effect.fn("Citation.makeFrozenEditions
     reporters: A.map(decoded.reporters, (row) => ({ ...row })),
     editions: A.map(decoded.editions, (row) => ({ ...row })),
   };
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const digest = Effect.fn("Citation.frozenArtifactDigest")((payload: string) =>
     S.decodeEffect(Sha256HexFromBytes)(encoder.encode(payload)).pipe(
-      Effect.provideService(Crypto.Crypto, crypto),
-      Effect.mapError(() => failure("digest-failed"))
+      Effect.provideService(Digest.Digest, crypto),
+      Effect.mapError(() => failure("digest-failed")),
+      Effect.catchDefect(() => Effect.fail(failure("digest-failed")))
     )
   );
   const manifest = yield* S.encodeEffect(Manifest)({

@@ -6,7 +6,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -39,6 +39,7 @@ import {
   CitationCallbackObservation as Row,
   normalizeCallbackFixtureResource as resource,
 } from "./CitationCallbackSession.fixtures.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import type {
   CitationCallbackGroup,
   CitationFullsCallbackInput,
@@ -289,22 +290,20 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
       const wire = yield* S.encodeEffect(codec)(sourceCitation);
       const model = yield* S.decodeEffect(codec)(wire);
       const equalModel = yield* S.decodeEffect(codec)(wire);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const dictionary = yield* makeCitationCallbackDictionary(prepared).pipe(
         Effect.provideService(CitationResolutionWork, work),
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                if (hashes === 1 && model.type === "case")
-                  Reflect.set(model.metadata, "plaintiff", O.some("changed during hash"));
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              if (hashes === 1 && model.type === "case")
+                Reflect.set(model.metadata, "plaintiff", O.some("changed during hash"));
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       yield* dictionary.start;
@@ -389,7 +388,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             Effect.provideService(CitationCallbackDictionary, dictionary),
             Effect.provideService(CitationResolutionWork, work)
           );
-          const crypto = yield* Crypto.Crypto;
+          const crypto = yield* Digest.Digest;
           const byId = HashMap.fromIterable(
             A.map(input.mentions, (mention, index) => Tuple.make(mention.id, { mention, index }))
           );
@@ -450,17 +449,17 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                 if (action !== "default") return yield* resource(action);
                 return yield* defaults.full(mention);
               },
-              Effect.provideService(Crypto.Crypto, crypto),
+              Effect.provideService(Digest.Digest, crypto),
               Effect.mapError(fail)
             ),
             shortCase: Effect.fn("CallbackTest.short")((arg: CitationFullsCallbackInput) =>
-              short(arg).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.mapError(fail))
+              short(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
             ),
             supra: Effect.fn("CallbackTest.supra")((arg: CitationFullsCallbackInput) =>
-              supra(arg).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.mapError(fail))
+              supra(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
             ),
             reference: Effect.fn("CallbackTest.reference")((arg: CitationFullsCallbackInput) =>
-              reference(arg).pipe(Effect.provideService(Crypto.Crypto, crypto), Effect.mapError(fail))
+              reference(arg).pipe(Effect.provideService(Digest.Digest, crypto), Effect.mapError(fail))
             ),
             id: Effect.fn("CallbackTest.id")(
               function* (arg: CitationIdCallbackInput) {
@@ -473,7 +472,7 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
                 if (action !== "default") return { resource: yield* resource(action) };
                 return yield* defaults.id(arg);
               },
-              Effect.provideService(Crypto.Crypto, crypto),
+              Effect.provideService(Digest.Digest, crypto),
               Effect.mapError(fail)
             ),
           });

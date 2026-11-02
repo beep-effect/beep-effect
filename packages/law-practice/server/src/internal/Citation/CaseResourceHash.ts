@@ -14,7 +14,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CitationAuthorityEdition } from "./AuthorityIdentity.ts";
 import { encodeCitationRuntimeString, hashCitationRuntimePreimage } from "./RuntimeHashEncoding.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseResourceHash");
 const IdentityHash = S.BigIntFromString.check(
@@ -103,7 +103,7 @@ const numericHash = Effect.fn("Citation.caseHashPreimage")((preimage: string) =>
  */
 export const makeCitationCaseResourceHash = Effect.fn("Citation.makeCaseResourceHash")(function* (
   input: unknown
-): Effect.fn.Return<CitationCaseResourceHash, CitationCaseResourceHashFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationCaseResourceHash, CitationCaseResourceHashFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CitationCaseResourceHashInput))(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );

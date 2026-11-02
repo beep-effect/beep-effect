@@ -11,7 +11,7 @@ import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MentionIdentity");
 const encoder = new TextEncoder();
@@ -116,7 +116,7 @@ const IdentityPreimage = S.fromJsonString(
  */
 export const makeCitationMentionId = Effect.fn("Citation.makeMentionId")(function* (
   input: unknown
-): Effect.fn.Return<CitationMentionId, CitationMentionIdentityFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationMentionId, CitationMentionIdentityFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(CitationMentionIdentityInput)(input).pipe(
     Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "invalid-input" }))
   );
@@ -139,7 +139,8 @@ export const makeCitationMentionId = Effect.fn("Citation.makeMentionId")(functio
     anchor.quote,
   ]).pipe(Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "invalid-input" })));
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(preimage)).pipe(
-    Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "digest-failed" }))
+    Effect.mapError(() => CitationMentionIdentityFailure.make({ reason: "digest-failed" })),
+    Effect.catchDefect(() => Effect.fail(CitationMentionIdentityFailure.make({ reason: "digest-failed" })))
   );
   return CitationMentionId.make(`cm1:${digest}`);
 });

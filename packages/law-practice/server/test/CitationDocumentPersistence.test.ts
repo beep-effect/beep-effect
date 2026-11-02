@@ -29,7 +29,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -43,6 +43,7 @@ import {
   CitationResourceIdentity,
   makeCitationResourceAuthorityId,
 } from "../src/internal/Citation/ResourceIdentity.ts";
+import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
 const membership = (authorityId: CitationAuthorityId, ids: ReadonlyArray<CitationMentionId>) => {
@@ -216,7 +217,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         authorities: [CitationAuthority.make({ id: authorityId, representative: O.some(member(mention.id)) })],
         resolutions: [CitationResolved.make({ mentionId: mention.id, authorityId, confidence: O.none() })],
       });
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const receipt = yield* projectCitationDocumentReceipt({
         document,
@@ -224,16 +225,14 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
         resourceBindings: [binding],
       }).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                if (hashes === 1) Reflect.set(binding, "decisions", [staleMention]);
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              if (hashes === 1) Reflect.set(binding, "decisions", [staleMention]);
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(receipt.authorities).toEqual(document.authorities);
@@ -565,21 +564,19 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
   it.effect("hashes the raw source once across the whole document and snapshots receipt data", () =>
     Effect.gen(function* () {
       const data = yield* fixture;
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const captured = yield* S.encodeEffect(Json)(data.receipt);
       const restored = yield* restoreCitationDocument(data.restore).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                if (hashes === 1) Reflect.set(A.getUnsafe(data.receipt.resolutions, 0), "authorityId", staleAuthority);
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              if (hashes === 1) Reflect.set(A.getUnsafe(data.receipt.resolutions, 0), "authorityId", staleAuthority);
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(hashes).toBe(6); // One source, three mentions, two resolved full keys.
@@ -595,20 +592,18 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
     Effect.gen(function* () {
       const data = yield* fixture;
       const expected = yield* S.encodeEffect(Json)(data.receipt);
-      const crypto = yield* Crypto.Crypto;
+      const crypto = yield* Digest.Digest;
       let hashes = 0;
       const receipt = yield* projectCitationDocumentReceipt({ document: data.document, editions: data.editions }).pipe(
         Effect.provideService(
-          Crypto.Crypto,
-          Crypto.make({
-            randomBytes: (size) => new Uint8Array(size),
-            digest: (algorithm, bytes) =>
-              Effect.suspend(() => {
-                hashes += 1;
-                if (hashes === 1) Reflect.set(A.getUnsafe(data.document.resolutions, 0), "authorityId", staleAuthority);
-                return crypto.digest(algorithm, bytes);
-              }),
-          })
+          Digest.Digest,
+          makeTestCitationDigest((algorithm, bytes) =>
+            Effect.suspend(() => {
+              hashes += 1;
+              if (hashes === 1) Reflect.set(A.getUnsafe(data.document.resolutions, 0), "authorityId", staleAuthority);
+              return crypto.digest(algorithm, bytes);
+            })
+          )
         )
       );
       expect(yield* S.encodeEffect(Json)(receipt)).toBe(expected);

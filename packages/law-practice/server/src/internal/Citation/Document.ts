@@ -36,7 +36,7 @@ import { restoreCitationMentionAgainstVerifiedSource } from "./Mention.ts";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import { CitationResourceBinding, makeCitationResourceAuthorityId } from "./ResourceIdentity.ts";
 import type { CitationAuthorityId, CitationResourceGroup } from "@beep/law-practice-domain/values";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Document");
 const FailureReason = LiteralKit([
@@ -311,7 +311,7 @@ const verifyAuthorities = Effect.fn("Citation.verifyDocumentAuthorities")(functi
  */
 export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumentReceipt")(function* (
   input: unknown
-): Effect.fn.Return<CitationDocumentReceipt, CitationDocumentFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationDocumentReceipt, CitationDocumentFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(ProjectInput)(input).pipe(Effect.mapError(invalid));
   const anchors = A.map(decoded.document.mentions, (mention) => mention.anchor);
   const data = {
@@ -367,7 +367,7 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
  */
 export const restoreCitationDocument = Effect.fn("Citation.restoreDocument")(function* (
   input: unknown
-): Effect.fn.Return<CitationDocument, CitationDocumentFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationDocument, CitationDocumentFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(RestoreBoundary)(input).pipe(Effect.mapError(invalid));
   const json = yield* S.encodeEffect(RestoreJson)(decoded).pipe(Effect.mapError(invalid));
   const snapshot = yield* S.decodeEffect(RestoreJson)(json).pipe(Effect.mapError(invalid));

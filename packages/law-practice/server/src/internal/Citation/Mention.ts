@@ -32,7 +32,7 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { makeCitationMentionId } from "./MentionIdentity.ts";
 import type { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Mention");
 const FailureReason = LiteralKit([
@@ -108,7 +108,7 @@ const snapshotMetadata = Effect.fn("Citation.snapshotMentionMetadata")(function*
  */
 export const makeCitationMention = Effect.fn("Citation.makeMention")(function* (
   input: unknown
-): Effect.fn.Return<CitationMention, CitationMentionFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CreateInput))(input).pipe(Effect.mapError(invalid));
   const metadata = yield* snapshotMetadata(decoded);
   const anchor = decoded.anchor;
@@ -141,7 +141,7 @@ export const makeCitationMention = Effect.fn("Citation.makeMention")(function* (
  */
 export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionReceipt")(function* (
   input: unknown
-): Effect.fn.Return<CitationMentionReceipt, CitationMentionFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationMentionReceipt, CitationMentionFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CitationMention))(input).pipe(Effect.mapError(invalid));
   const metadata = yield* snapshotMetadata(decoded);
   const id = decoded.id;
@@ -211,7 +211,7 @@ const reverify = Effect.fn("Citation.reverifyMentionAnchor")(function* (
  */
 export const restoreCitationMention = Effect.fn("Citation.restoreMention")(function* (
   input: unknown
-): Effect.fn.Return<CitationMention, CitationMentionFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(RestoreInput))(input).pipe(Effect.mapError(invalid));
   // Copy all structural input before the first asynchronous hash. Receipts are
   // data, and caller-owned objects cannot be allowed to change mid-verification.
@@ -242,19 +242,19 @@ export const restoreCitationMentionAgainstVerifiedSource: {
   (
     sourceProof: VerifiedSourceText,
     expectedEngineArtifact: Sha256Hex
-  ): (input: CitationMentionReceipt) => Effect.Effect<CitationMention, CitationMentionFailure, Crypto.Crypto>;
+  ): (input: CitationMentionReceipt) => Effect.Effect<CitationMention, CitationMentionFailure, Digest.Digest>;
   (
     input: CitationMentionReceipt,
     sourceProof: VerifiedSourceText,
     expectedEngineArtifact: Sha256Hex
-  ): Effect.Effect<CitationMention, CitationMentionFailure, Crypto.Crypto>;
+  ): Effect.Effect<CitationMention, CitationMentionFailure, Digest.Digest>;
 } = dual(
   3,
   Effect.fn("Citation.restoreMentionAgainstSource")(function* (
     input: CitationMentionReceipt,
     sourceProof: VerifiedSourceText,
     expectedEngineArtifact: Sha256Hex
-  ): Effect.fn.Return<CitationMention, CitationMentionFailure, Crypto.Crypto> {
+  ): Effect.fn.Return<CitationMention, CitationMentionFailure, Digest.Digest> {
     const verifiedSource = yield* S.decodeEffect(VerifiedSourceText)(sourceProof).pipe(
       Effect.mapError(evidenceFailure)
     );

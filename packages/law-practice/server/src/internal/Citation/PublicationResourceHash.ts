@@ -24,7 +24,7 @@ import {
   hashCitationRuntimePreimage,
   makeCitationRuntimeStringOrder,
 } from "./RuntimeHashEncoding.ts";
-import type * as Crypto from "effect/Crypto";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PublicationResourceHash");
 const Reporter = S.Struct({
@@ -123,7 +123,7 @@ const fieldOrder = Order.mapInput(stringOrder, (field: readonly [string, string]
  */
 export const makeCitationPublicationResourceHash = Effect.fn("Citation.makePublicationResourceHash")(function* (
   input: unknown
-): Effect.fn.Return<CitationCaseResourceHash, CitationPublicationResourceHashFailure, Crypto.Crypto> {
+): Effect.fn.Return<CitationCaseResourceHash, CitationPublicationResourceHashFailure, Digest.Digest> {
   const decoded = yield* S.decodeUnknownEffect(S.toType(CitationPublicationResourceHashInput))(input).pipe(
     Effect.mapError(() => failure("invalid-input"))
   );

@@ -21,7 +21,7 @@ import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
-import * as Crypto from "effect/Crypto";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
@@ -72,7 +72,7 @@ const limit = () => CitationCallbackFailure.make({ reason: "limit-exceeded" });
  * @since 0.0.0
  */
 export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSessionDocumentProjector")(function* () {
-  const crypto = yield* Crypto.Crypto;
+  const crypto = yield* Digest.Digest;
   const descriptors = yield* CitationSessionResourceDescriptors;
   return {
     project: Effect.fn("Citation.projectCapturedSession")(
@@ -126,7 +126,8 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             slot,
           ]).pipe(Effect.mapError(invalid));
           return yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text)).pipe(
-            Effect.mapError(failed)
+            Effect.mapError(failed),
+            Effect.catchDefect(() => Effect.fail(failed()))
           );
         });
         for (const decision of state.decisions) {
@@ -249,7 +250,7 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
         }).pipe(Effect.mapError(failed));
         return { document, receipt, resourceBindings };
       },
-      Effect.provideService(Crypto.Crypto, crypto)
+      Effect.provideService(Digest.Digest, crypto)
     ),
   };
 });
