@@ -40,7 +40,7 @@ import {
   isCiSync,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
-  renderTurboEnvironmentHealthWarning,
+  renderTurboEnvironmentHealthWarnings,
   turboEnvExtendsAmbient,
   turboEnvironmentHealthWarnings,
   turboEnvOverrides,
@@ -1339,8 +1339,9 @@ const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(
   }
 
   const environmentWarnings = yield* turboEnvironmentHealthWarnings(step.cwd, Bun.env);
-  yield* Effect.forEach(environmentWarnings, flow(renderTurboEnvironmentHealthWarning, Console.warn), {
-    discard: true,
+  yield* O.match(renderTurboEnvironmentHealthWarnings(environmentWarnings), {
+    onNone: () => Effect.void,
+    onSome: Console.warn,
   });
 
   // A missing, expired, or denied 1Password session degrades the lane to

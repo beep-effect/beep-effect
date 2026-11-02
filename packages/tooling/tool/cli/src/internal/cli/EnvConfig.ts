@@ -629,35 +629,62 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
   return warnings;
 });
 
+const environmentHealthNamedLimit = 5;
+
+const environmentHealthCacheNote = "cache readiness uses only TURBO_API, TURBO_TOKEN, TURBO_TEAM, and TURBO_CACHE";
+
 /**
- * Render one value-suppressed environment-health warning for plan output.
+ * Render the value-suppressed environment-health warnings as one plan line.
  *
  * **Details**
  *
- * Only the failing variable name is interpolated. The cache quad is called out
- * explicitly so operators know an unrelated warning did not disable remote
- * reads.
+ * Only failing variable names are interpolated, never a reference or a
+ * resolved value. A single failure is named in full. Several failures collapse
+ * into one line that names the first five and counts the rest, because a
+ * checkout whose `.env` points at a vault the current `op` account cannot read
+ * otherwise prints one line per variable. The cache quad is called out so
+ * operators know an unrelated warning did not disable remote reads. Returns
+ * `Option.none()` when there is nothing to report.
  *
- * **Example** (Render a named warning)
+ * **Example** (Summarize unavailable references)
  *
  * ```ts
  * import {
- *   renderTurboEnvironmentHealthWarning,
+ *   renderTurboEnvironmentHealthWarnings,
  *   TurboEnvironmentHealthWarning
  * } from "@beep/repo-cli/test/SharedInternals"
  *
- * const warning = TurboEnvironmentHealthWarning.make({ variableName: "STALE_SERVICE_TOKEN" })
- * console.log(renderTurboEnvironmentHealthWarning(warning))
+ * const warnings = [
+ *   TurboEnvironmentHealthWarning.make({ variableName: "STALE_SERVICE_TOKEN" }),
+ *   TurboEnvironmentHealthWarning.make({ variableName: "STALE_DATABASE_URL" })
+ * ]
+ * console.log(renderTurboEnvironmentHealthWarnings(warnings))
  * ```
  *
- * @param warning - Named reference-resolution warning.
- * @returns A warning line that contains no reference or resolved value.
+ * @param warnings - Named reference-resolution warnings.
+ * @returns One warning line, or `Option.none()` when no reference failed.
  * @category formatting
  * @since 0.0.0
  */
-export const renderTurboEnvironmentHealthWarning = (warning: TurboEnvironmentHealthWarning): string =>
-  `[beep-cli] turbo cache plan warning: ${warning.variableName} has an unavailable 1Password reference; ` +
-  "cache readiness uses only TURBO_API, TURBO_TOKEN, TURBO_TEAM, and TURBO_CACHE";
+export const renderTurboEnvironmentHealthWarnings = (
+  warnings: ReadonlyArray<TurboEnvironmentHealthWarning>
+): O.Option<string> => {
+  const names = A.map(warnings, (warning) => warning.variableName);
+  if (A.isReadonlyArrayEmpty(names)) return O.none();
+  if (names.length === 1) {
+    return O.some(
+      `[beep-cli] turbo cache plan warning: ${names[0]} has an unavailable 1Password reference; ${environmentHealthCacheNote}`
+    );
+  }
+  const hidden = names.length - environmentHealthNamedLimit;
+  const named = A.join(A.take(names, environmentHealthNamedLimit), ", ");
+  const listed = hidden > 0 ? `${named}, and ${hidden} more` : named;
+  return O.some(
+    `[beep-cli] turbo cache plan warning: ${names.length} .env variables have unavailable 1Password references ` +
+      `(${listed}); the current op account may lack access to their vault, ` +
+      `probe with \`op run --env-file=.env -- true\`; ${environmentHealthCacheNote}`
+  );
+};
 
 /**
  * Decide whether a Turbo spawn may inherit the ambient process environment.

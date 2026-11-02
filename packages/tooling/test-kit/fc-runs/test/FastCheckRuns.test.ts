@@ -1,4 +1,4 @@
-import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
+import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, fcRunsCapped, parseFcNumRunsFloor } from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -69,5 +69,58 @@ describe("environment seed parsing", () => {
     } finally {
       load.mockRestore();
     }
+  });
+});
+
+describe("fcRunsCapped (fixed runs for I/O-heavy properties)", () => {
+  const withEnv = (env: Record<string, string>, body: () => void) => {
+    const provider = Context.get(Context.empty(), ConfigProvider.ConfigProvider);
+    const configured = ConfigProvider.fromEnv({ env });
+    const load = vi.spyOn(provider, "load").mockImplementation(configured.load);
+    try {
+      body();
+    } finally {
+      load.mockRestore();
+    }
+  };
+
+  it("uses the inline count when the environment is empty", () => {
+    withEnv({}, () => {
+      expect(fcRunsCapped(10)).toEqual({ runs: 10 });
+    });
+  });
+
+  it("ignores the BEEP_FC_NUM_RUNS floor that raises fcRuns", () => {
+    withEnv({ BEEP_FC_NUM_RUNS: "1000" }, () => {
+      expect(fcRuns(10).runs).toBe(1000);
+      expect(fcRunsCapped(10).runs).toBe(10);
+    });
+  });
+
+  it("keeps the BEEP_FC_SEED pin so seeded reruns stay reproducible", () => {
+    withEnv({ BEEP_FC_NUM_RUNS: "1000", BEEP_FC_SEED: "521938102" }, () => {
+      expect(fcRunsCapped(10)).toEqual({ runs: 10, seed: 521938102 });
+    });
+  });
+
+  it("ignores the floor in a fresh process (boot snapshot)", () => {
+    const probe = A.join(
+      [
+        'const { fcRunsCapped } = await import("@beep/fc-runs");',
+        "const options = fcRunsCapped(10);",
+        "process.stdout.write(`${options.runs}/${options.seed}`);",
+      ],
+      "\n"
+    );
+    const result = Bun.spawnSync({
+      cmd: ["bun", "-e", probe],
+      cwd: import.meta.dir,
+      env: { ...Bun.env, BEEP_FC_NUM_RUNS: "1000", BEEP_FC_SEED: "42" },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const diagnostic = `fcRunsCapped boot probe: exit=${result.exitCode}, signal=${result.signalCode}, stderr=${Str.slice(0, 2000)(result.stderr.toString())}`;
+    assertTrue(result.success, diagnostic);
+    expect(result.stdout.toString(), diagnostic).toBe("10/42");
   });
 });
