@@ -16,7 +16,6 @@
   },
   "homepage": "https://github.com/beep-effect/beep-effect/tree/main/infra",
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bun run beep:coverage",
@@ -28,7 +27,6 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "echo 'no build needed'",
     "beep:check": "tsrs -b tsconfig.json && bun run beep:check:tests",
     "beep:coverage": "bun run --cwd node_modules/@pulumi/gharunners build && bunx vitest run --coverage --exclude=test/integration/**",

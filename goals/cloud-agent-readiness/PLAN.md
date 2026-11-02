@@ -16,7 +16,7 @@ Status: `in-progress` — P0 and P1 complete 2026-10-01 (PR #1378); P3 complete
 | --- | --- | --- | --- |
 | P0 Research | complete | Probe a fresh cloud container and record every failure with its command. | [`research/2026-10-01-container-probe.md`](./research/2026-10-01-container-probe.md) (F1–F15) exists; decisions D1–D7 are written into `SPEC.md`. |
 | P1 Toolchain bootstrap | complete | `scripts/cloud-session-setup.sh`: pinned bun (D1), preflight for denied hosts (D2), frozen install with CI's retry, post-install assertion. | Acceptance rows 1–3 pass; `shellcheck` clean; the script runs green on a workstation and in the cloud once `pkg.pr.new` is allowed. |
-| P2 Harness host awareness | pending | `BEEP_AGENT_HOST=cloud` guards in `.claude/hooks/*` and `graft-hooks.cjs`; MCP expectations recorded (D3, D7). | Acceptance row 4 passes; pulse conformance green if a literal was added. |
+| P2 Harness host awareness | pending | `BEEP_AGENT_HOST=cloud` guards in `.claude/hooks/*` (the original `graft-hooks.cjs` item is retired: graft was removed on 2026-10-28, `standards/memory-architecture/04-decision-log.md`); MCP expectations recorded (D3, D7). | Acceptance row 4 passes; pulse conformance green if a literal was added. |
 | P3 Publish handoff | complete | Document and exercise the D4 end state from a cloud session: proof → push → PR via API → `ready-for-heavy` requested in the body; operator closeout steps named. | Met by #2486 (merged 2026-11-02 as `43d0a511`): [`history/2026-11-01-claude-cloud-smoke.md`](./history/2026-11-01-claude-cloud-smoke.md) shows the loop on `@beep/types` (acceptance row 6). |
 | P4 Doctrine | pending | `AGENTS.md` cloud section (now "Cloud Environments"), the existing [`docs/runbooks/cloud-environments.md`](../../docs/runbooks/cloud-environments.md) runbook (SPEC D42: no separate `cloud-sessions.md`), cross-links, roadmap accelerator row, fourth meter in `agent-pools.md` (D6). | Acceptance row 5 passes against the current names; docs cross-link check green. |
 | P5 Yeet: PR to mergeable | pending | Publish through yeet (operator-side per D4) and drive the PR to mergeable: required checks green, review threads answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -61,8 +61,11 @@ so the v3↔v4 validation rule can be honored in the cloud (F13).
 - `hook-pulse.sh`: when `BEEP_AGENT_HOST=cloud`, skip the desktop notifier and
   keep writing rows. Check `HookPulseV1` for a host field; add the `cloud`
   literal only if the writer would otherwise fail its conformance test.
-- `graft-hooks.cjs session-start` / `stop`: exit `0` immediately when
-  `BEEP_AGENT_HOST=cloud` and `graft/` is absent.
+- ~~`graft-hooks.cjs session-start` / `stop`: exit `0` immediately when
+  `BEEP_AGENT_HOST=cloud` and `graft/` is absent.~~ Retired, not open work:
+  graft was removed from every repo surface on 2026-10-28
+  (`standards/memory-architecture/04-decision-log.md`), so no graft hook
+  exists to guard. Do not reintroduce it.
 - `packet-projections.sh`: already non-blocking; leave it, but make it skip
   when `node_modules/effect` is absent so it does not spend the SessionStart
   timeout on a known failure.

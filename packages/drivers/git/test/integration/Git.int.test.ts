@@ -23,7 +23,7 @@
 // surface) and the real Git service itself for checkout, which IS part of
 // the surface this package owns.
 
-import { Git, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, GitOptions, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import { runCollected } from "@beep/git/internal/run";
 import { $GitId } from "@beep/identity/packages";
 import { NodeServices } from "@effect/platform-node";
@@ -381,6 +381,44 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
           assert.strictEqual(content, fixture.bigContent);
         }),
       10_000
+    );
+
+    // G6: the per-stream ceiling against a REAL pipe. big.txt (~1.5 MiB) lands
+    // on stdout; under a 64 KiB ceiling the collector must kill the child and
+    // fail typed instead of deadlocking on the half-drained pipe, and under
+    // the default ceiling the same read succeeds whole.
+    it.effect(
+      "show of big.txt under a 64 KiB maxOutputBytes fails kind truncated without deadlocking; the default succeeds",
+      () =>
+        Effect.gen(function* () {
+          const bounded = yield* Git.makeWith(GitOptions.make({ maxOutputBytes: 64 * 1024 }));
+          const failure = yield* Effect.flip(bounded.show(fixture.dir, fixture.commit3, "big.txt"));
+          assert.instanceOf(failure, GitCommandError);
+          if (S.is(GitCommandError)(failure)) {
+            assert.strictEqual(failure.kind, "truncated");
+            assert.include(failure.detail, "stdout");
+            assert.include(failure.detail, `${64 * 1024} byte`);
+          }
+          const git = yield* Git;
+          assertSome(yield* git.show(fixture.dir, fixture.commit3, "big.txt"), fixture.bigContent);
+        }),
+      10_000
+    );
+
+    it.effect("revParse: quiet and plain forms both classify a real nonexistent ref as UnknownRefError", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        const quiet = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist", { quiet: true }));
+        assert.instanceOf(quiet, UnknownRefError);
+        if (S.is(UnknownRefError)(quiet)) assert.strictEqual(quiet.ref, "refs/heads/does-not-exist");
+        const loud = yield* Effect.flip(git.revParse(fixture.dir, "refs/heads/does-not-exist"));
+        assert.instanceOf(loud, UnknownRefError);
+        // peel: "commit" through the tag resolves to the commit it points at.
+        assert.strictEqual(
+          yield* git.revParse(fixture.dir, fixture.tag, { peel: "commit", quiet: true }),
+          fixture.commit2
+        );
+      })
     );
 
     // THE backpressure guard. Discriminates runCollected's

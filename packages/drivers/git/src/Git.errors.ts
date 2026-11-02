@@ -26,10 +26,12 @@ const $I = $GitId.create("Git");
  * `exitCode` and `stderr` are populated when git actually ran. `detail`
  * carries a human-readable explanation whenever the failure is not summed up
  * by an exit code: an absorbed spawn-level `PlatformError`, a per-run timeout,
- * a pre-spawn guard refusal, or output git produced that the member could not
- * parse. `kind` discriminates a pre-spawn guard rejection (`"refused"`) from a
- * genuine git failure (`"failed"`) structurally, so composed retry/fallback
- * logic never has to parse the prose in `message` or `detail`.
+ * a pre-spawn guard refusal, an output stream that outgrew the service's
+ * `maxOutputBytes` ceiling, or output git produced that the member could not
+ * parse. `kind` discriminates a pre-spawn guard rejection (`"refused"`), a
+ * genuine git failure (`"failed"`) and an over-limit output stream
+ * (`"truncated"`) structurally, so composed retry/fallback logic never has to
+ * parse the prose in `message` or `detail`.
  *
  * **`message` is the rendering; `detail` is the datum.** `message` composes a
  * one-line prose from the redacted argv, the cwd, and — whenever `detail` is
@@ -65,13 +67,16 @@ export class GitCommandError extends S.TaggedError<GitCommandError, { readonly b
      * Discriminates a pre-spawn guard rejection from a genuine git failure.
      * `"refused"` — a pre-spawn guard (an option-like ref) rejected the
      * invocation and no process was ever spawned. `"failed"` — git actually ran
-     * and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback
-     * logic routes on this instead of matching `detail` prose.
+     * and exited non-zero, or the spawn/IO itself failed. `"truncated"` — one
+     * of git's output streams grew past the service's `maxOutputBytes` ceiling,
+     * so the child was killed and nothing was parsed; `detail` names the stream
+     * and the limit. Composed retry/fallback logic routes on this instead of
+     * matching `detail` prose.
      */
-    kind: S.Literals(["refused", "failed"]).pipe(
+    kind: S.Literals(["refused", "failed", "truncated"]).pipe(
       $I.annoteKey("GitCommandError.kind", {
         description:
-          'Discriminates a pre-spawn guard rejection from a genuine git failure. `"refused"` — a pre-spawn guard (an option-like ref) rejected the invocation and no process was ever spawned. `"failed"` — git actually ran and exited non-zero, or the spawn/IO itself failed. Composed retry/fallback logic routes on this instead of matching `detail` prose.',
+          'Discriminates a pre-spawn guard rejection from a genuine git failure. `"refused"` — a pre-spawn guard (an option-like ref) rejected the invocation and no process was ever spawned. `"failed"` — git actually ran and exited non-zero, or the spawn/IO itself failed. `"truncated"` — an output stream grew past the service\'s `maxOutputBytes` ceiling, the child was killed and nothing was parsed. Composed retry/fallback logic routes on this instead of matching `detail` prose.',
       })
     ),
     /**

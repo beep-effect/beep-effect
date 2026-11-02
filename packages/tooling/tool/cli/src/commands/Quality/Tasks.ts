@@ -2966,6 +2966,7 @@ export const readLintPolicySweeps = Effect.fn("QualityTasks.readLintPolicySweeps
 // are unfiltered even locally; their non-file state cannot drive affected selection.
 const policyCheapTasks = [
   "lint:package-scripts",
+  "lint:deprecated-imports",
   "lint:policy-fingerprint",
   "lint:tsgo-rules",
   "lint:ecosystem-polarity",
@@ -3363,30 +3364,30 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
   yield* runPolicySteps(steps, true);
 });
 
+// `bun run audit` is the four cached quality graphs in order (build, check, test,
+// lint), not a fifth per-package `audit` script: the old `turbo run audit` task was
+// uncached, chained through `^audit`, and repeated build+check+test+lint inside every
+// package (43 minutes on a 188-package tree for work the cached graphs already do).
+// CI keeps the fresh-run posture by forcing every graph; a local run reuses caches.
+const rootAuditPackagesArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => ciFreshTurboArgs(args);
+
+// The static part of the composed audit plan. `test` has no static plan (its runner
+// resolves lanes and the SQL resource at run time), so `runRootTask` runs the test
+// lane between the check and lint steps listed here.
+const rootAuditPackagesStaticSteps = (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+): ReadonlyArray<QualityTaskStep> => [
+  ...rootBuildSteps(repoRoot, args),
+  ...rootCheckSteps(repoRoot, args),
+  ...rootLintSteps(repoRoot, args, false),
+];
+
 const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   const selection = parseRootAuditSelection(args);
 
   if (selection.mode === "packages") {
-    const step = turboStep(
-      repoRoot,
-      "audit:packages",
-      ["audit"],
-      boundedRootTurboArgs(ciFreshTurboArgs(selection.args))
-    );
-    // An unresolved reference is not an external test database. Keep an empty
-    // override so Bun cannot reload the reference from .env in child processes.
-    return [
-      QualityTaskStep.make({
-        ...step,
-        ...O.getSomesStruct({
-          env: pipe(
-            O.fromUndefinedOr(Bun.env.BEEP_TEST_DATABASE_URL),
-            O.filter(isUnresolvedSecretReference),
-            O.map(() => ({ ...step.env, BEEP_TEST_DATABASE_URL: "" }))
-          ),
-        }),
-      }),
-    ];
+    return rootAuditPackagesStaticSteps(repoRoot, rootAuditPackagesArgs(selection.args));
   }
 
   const auditArgs = selection.args;
@@ -3401,6 +3402,19 @@ const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
 
   return [repoCliStep(repoRoot, `audit:${scriptMode}`, ["quality", "github-checks", ...scriptArgs])];
 };
+
+const runRootAuditPackagesTask = Effect.fn("QualityTasks.runRootAuditPackagesTask")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const graphArgs = rootAuditPackagesArgs(args);
+  yield* runStreamingStepGroup("audit", [
+    ...rootBuildSteps(repoRoot, graphArgs),
+    ...rootCheckSteps(repoRoot, graphArgs),
+  ]);
+  yield* runRootTestTask(repoRoot, graphArgs);
+  yield* runRootLintTask(repoRoot, graphArgs, false);
+});
 
 const invocationArgs = (invocation: QualityTaskInvocation): ReadonlyArray<string> =>
   invocation.args ?? A.empty<string>();
@@ -3429,7 +3443,9 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
  * **Details**
  *
  * Only `build`, `check`, `lint`, and `audit` have a static plan; `test` and
- * `coverage` return no steps because their runners plan at run time.
+ * `coverage` return no steps because their runners plan at run time. The
+ * package `audit` plan lists its build, check and lint steps; its test lane is
+ * run-time planned like `test`.
  *
  * **Example** (Run a quality task)
  *
@@ -3759,36 +3775,49 @@ const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (pac
   return yield* readPackageJsonFile(path.join(packageDir, "package.json"));
 });
 
-const runPackageTask = Effect.fn("QualityTasks.runPackageTask")(function* (
+// A package-scoped `beep audit` runs the package's own quality scripts in graph order;
+// there is no separate `beep:audit` script (see `rootAuditSteps`).
+const packageAuditTasks: ReadonlyArray<QualityTaskName> = ["build", "check", "test", "lint"];
+
+const runPackageTask: (
   packageDir: string,
   invocation: QualityTaskInvocation
-) {
-  const packageJson = yield* readPackageJson(packageDir);
-  const scripts = packageJson.scripts ?? {};
-  const profile = profileByTask[invocation.task];
-  const fix = invocationFix(invocation);
-  const args = invocationArgs(invocation);
-  const script = pipe(
-    O.fromUndefinedOr(profile.fixScript),
-    O.filter(() => fix),
-    O.getOrElse(() => profile.script)
-  );
-  const packageName = packageJson.name ?? packageDir;
+) => Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> = Effect.fn("QualityTasks.runPackageTask")(
+  function* (packageDir: string, invocation: QualityTaskInvocation) {
+    if (invocation.task === "audit") {
+      for (const task of packageAuditTasks) {
+        yield* runPackageTask(packageDir, QualityTaskInvocation.make({ ...invocation, task }));
+      }
+      return;
+    }
 
-  if (pipe(scripts, R.get(script), O.isNone)) {
-    yield* Console.log(`[beep-cli] ${packageName} ${invocation.task}${fix ? ":fix" : ""}: no-op`);
-    return;
+    const packageJson = yield* readPackageJson(packageDir);
+    const scripts = packageJson.scripts ?? {};
+    const profile = profileByTask[invocation.task];
+    const fix = invocationFix(invocation);
+    const args = invocationArgs(invocation);
+    const script = pipe(
+      O.fromUndefinedOr(profile.fixScript),
+      O.filter(() => fix),
+      O.getOrElse(() => profile.script)
+    );
+    const packageName = packageJson.name ?? packageDir;
+
+    if (pipe(scripts, R.get(script), O.isNone)) {
+      yield* Console.log(`[beep-cli] ${packageName} ${invocation.task}${fix ? ":fix" : ""}: no-op`);
+      return;
+    }
+
+    yield* runStep(
+      QualityTaskStep.make({
+        label: `${packageName} ${script}`,
+        command: "bun",
+        args: ["run", script, ...args],
+        cwd: packageDir,
+      })
+    );
   }
-
-  yield* runStep(
-    QualityTaskStep.make({
-      label: `${packageName} ${script}`,
-      command: "bun",
-      args: ["run", script, ...args],
-      cwd: packageDir,
-    })
-  );
-});
+);
 
 const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   repoRoot: string,
@@ -3856,6 +3885,14 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
   if (invocation.task === "coverage") {
     yield* runRootCoverageTask(repoRoot, invocationArgs(invocation));
     return;
+  }
+
+  if (invocation.task === "audit") {
+    const selection = parseRootAuditSelection(invocationArgs(invocation));
+    if (selection.mode === "packages") {
+      yield* runRootAuditPackagesTask(repoRoot, selection.args);
+      return;
+    }
   }
 
   const steps = rootStepsFor(repoRoot, invocation);
