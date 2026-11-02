@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -175,7 +176,8 @@ type DiscoveryRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 type Discovered = {
   readonly candidates: ReadonlyArray<ResidueReapCandidate>;
@@ -564,29 +566,25 @@ const canonicalDirectoryShape = Effect.fnUntraced(function* (
   });
 });
 
+// `Git.status` without the optional index refresh (the reap polls trees other processes work in),
+// expanding untracked directories and hiding no submodule change; any kit failure, truncation
+// included, is the failed probe the capture reported (SPEC D-10).
 const gitCleanSkip = Effect.fnUntraced(function* (
   gitMarkers: ReadonlyArray<string>
-): Effect.fn.Return<
-  O.Option<ResidueReapSkipReason>,
-  never,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
+): Effect.fn.Return<O.Option<ResidueReapSkipReason>, never, Git> {
+  const git = yield* Git;
   const readings = yield* Effect.forEach(
     gitMarkers,
     (marker) =>
-      runRepoCommandCapture(
-        "git",
-        ["--no-optional-locks", "status", "--porcelain", "--untracked-files=all", "--ignore-submodules=none"],
-        marker
-      ).pipe(Effect.option),
+      git
+        .status(marker, { noOptionalLocks: true, untrackedFiles: "all", ignoreSubmodules: "none" })
+        .pipe(Effect.option),
     { concurrency: 2 }
   );
-  if (A.some(readings, (reading) => O.isNone(reading) || reading.value.exitCode !== 0 || reading.value.truncated)) {
+  if (A.some(readings, O.isNone)) {
     return O.some("git-probe-failed");
   }
-  return A.some(A.getSomes(readings), (capture) => Str.isNonEmpty(Str.trim(capture.output)))
-    ? O.some("dirty-tree")
-    : O.none();
+  return A.some(A.getSomes(readings), A.isReadonlyArrayNonEmpty) ? O.some("dirty-tree") : O.none();
 });
 
 const directoryLivenessSkip = Effect.fnUntraced(function* (
@@ -611,7 +609,7 @@ const directoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const shape = yield* canonicalDirectoryShape(root, candidatePath);
@@ -682,7 +680,7 @@ const topLevelDirectoryCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -719,7 +717,7 @@ const turboCandidates = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<ResidueReapCandidate>,
   never,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1203,7 +1201,7 @@ const reassessTurboEntry = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ResidueReapCandidate,
   never,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2037,6 +2035,15 @@ const checkoutWriteSkip = Effect.fnUntraced(function* (
     ? O.some<ResidueReapSkipReason>("checkout-recent-write")
     : O.none();
 });
+// Every service a checkout safety probe may need; the probe lists mix file-system, process and `Git`
+// readers, and TypeScript infers one requirement for the list rather than their union.
+type ReapProbeRequirements =
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
+
 const firstSafetySkip = Effect.fnUntraced(function* <E, R>(
   probes: ReadonlyArray<Effect.Effect<O.Option<ResidueReapSkipReason>, E, R>>
 ) {
@@ -2068,7 +2075,7 @@ const checkoutSafetySkip = Effect.fnUntraced(function* (
       A.some(Str.split(path.sep)(name), isProtectedResidueName)
   );
   if (protectedChild) return O.some<ResidueReapSkipReason>("protected-name");
-  return yield* firstSafetySkip([
+  return yield* firstSafetySkip<never, ReapProbeRequirements>([
     ...A.map(scan.beneath, (name) => checkoutProcessFileSkip(checkout, name, policy)),
     checkoutDraftSkip(beep),
     checkoutAttachmentSkip(entry.path),
@@ -2197,7 +2204,7 @@ const checkoutEligibilitySkip = Effect.fnUntraced(function* (
   const { ruling, terminalLane, gitMarkers, enriched } = metadata;
   const checkout = optionOr(entry.checkoutRoot, path.dirname(entry.root));
   const evidenceSkip = terminalLane ? A.empty() : [checkoutAuthoritySkip(entry, ruling)];
-  return yield* firstSafetySkip([
+  return yield* firstSafetySkip<never, ReapProbeRequirements>([
     Effect.succeed(checkoutDispositionSkip(entry, ruling)),
     ...evidenceSkip,
     gitCleanSkip(gitMarkers),

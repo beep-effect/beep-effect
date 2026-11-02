@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import { GoalManifest } from "@beep/repo-cli/commands/Goals";
 import {
@@ -50,7 +51,11 @@ const encodeGoalManifestJson = S.encodeEffect(S.fromJsonString(GoalManifest));
 
 const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer);
+// `Git` rides beside the platform services: the checkout facts probe takes it from the context (W2).
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer)
+);
 
 const row = (
   overrides: Partial<{
@@ -770,6 +775,8 @@ describe("session ledger failures", () => {
         const facts = (spawnable: boolean) =>
           sessionCheckoutFacts("/nowhere").pipe(
             Effect.flip,
+            // `Git` is built over the stub spawner, so the kit's reads reach the scripted answers (W2).
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, gitWithoutCheckout(spawnable))
           );
         const exited = yield* facts(true);

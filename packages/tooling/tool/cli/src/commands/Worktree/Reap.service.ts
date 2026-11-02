@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -26,8 +25,9 @@ import { runRepoCommandCapture, scanProcessAttachments } from "../../internal/re
 import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
-import { FleetLivenessReadings, parseWorktreePorcelain, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
-import { runWorktreeGitCapture, WorktreeRemovalService } from "./Worktree.service.ts";
+import { FleetLivenessReadings, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
+import { listRepositoryWorktrees, WorktreeRemovalService } from "./Worktree.service.ts";
+import type { Git } from "@beep/git/Git";
 import type { DomainError } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -642,21 +642,15 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   | Path.Path
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const removalService = yield* WorktreeRemovalService;
-  const currentRoot = yield* findRepoRoot(options.startFrom).pipe(
-    Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
-  );
-  const porcelain = yield* runWorktreeGitCapture(
-    currentRoot,
-    ["worktree", "list", "--porcelain", "-z"],
+  const { currentRoot, entries } = yield* listRepositoryWorktrees(
+    options.startFrom,
     "Failed to list registered git worktrees."
-  );
-  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
-    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
   );
   const mainCheckout = O.getOrElse(
     O.map(A.head(entries), (entry) => entry.path),

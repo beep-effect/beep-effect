@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import { docgenCommand } from "@beep/repo-cli/commands/Docgen";
 import {
   aggregateDocgenPackagesForTesting,
@@ -76,7 +77,8 @@ import type { DocgenQualityPackageReport, DocgenQualityReview, DocgenQualitySubj
 
 const UnknownJson = S.fromJsonString(S.Unknown);
 
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+// `Git` rides beside the platform services: the local plan's changed-file reads take it from the context (W2).
+const CommandPlatformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   FsUtilsLive.pipe(Layer.provideMerge(CommandPlatformLayer)),
@@ -970,11 +972,17 @@ export const ProofFixture = 1;
           packageSelector: O.none(),
           parallel: 1,
           plan: true,
-        }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned)))
+        }).pipe(
+          // `Git` is built over the stub spawner, so the kit's range read reaches the rejecting stub (W2).
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, rangeRejectingSpawner(spawned))
+        )
       );
 
       assertTrue(exit._tag === "Failure");
-      expect(A.some(spawned, Str.includes("git diff --no-renames --name-only origin/main...HEAD"))).toBe(true);
+      expect(
+        A.some(spawned, Str.includes("git diff --name-only -z --no-relative --no-renames origin/main...HEAD"))
+      ).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
   });
 

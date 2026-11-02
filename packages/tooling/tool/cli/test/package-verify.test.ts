@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   collectPackageVerifyChangedFilesForTesting,
   PackageVerifyReport,
@@ -39,10 +40,13 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
+const SpawnerLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer));
 const PlatformLayer = Layer.mergeAll(
   BunCrypto.layer,
   FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
+  SpawnerLayer,
+  // `Git` rides beside the platform services: the verify's `HEAD` read takes it from the context (W2).
+  Git.layer.pipe(Layer.provide(SpawnerLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(FileSystemLayer))
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -437,8 +441,8 @@ export const invalidCategory = 1;
             quick: true,
           }).pipe(Effect.flip);
 
-          expect(error.message).toContain("git rev-parse HEAD failed with exit code");
-          expect(error.command).toBe("git rev-parse HEAD");
+          expect(error.message).toContain("git rev-parse --verify HEAD failed with exit code");
+          expect(error.command).toBe("git rev-parse --verify HEAD");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );

@@ -1,5 +1,6 @@
 import * as NodeBuffer from "node:buffer";
 import * as NodeZlib from "node:zlib";
+import { Git } from "@beep/git/Git";
 import {
   CacheActivationPreview,
   CacheCensusNode,
@@ -736,6 +737,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
   });
   const run = (changed = request) =>
     runCachePilotForTesting(root, changed).pipe(
+      Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, observedFs)
@@ -746,12 +748,14 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
         MemoryStats,
         MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) })
       ),
+      Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, observedFs)
     );
   const runSigned = (changed = request, interfaces = "lo", issuer: O.Option<string> = O.none()) =>
     runCacheSignedPilotWorker(root, changed, issuer).pipe(
+      Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, {
@@ -795,6 +799,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       Redacted.make(secrets.writer),
       Redacted.make("synthetic-owned-upload-key")
     ).pipe(
+      Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
       Effect.provideService(CacheQualificationService, service),
       Effect.provideService(FileSystem.FileSystem, {
