@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "6fd3c4ab9fe16bfe95983569490705740219c29c6fddf7ceb936246fc086b9d7",
+  "specSha256": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1",
   "acceptance": [
     {
       "id": "AC-01",
@@ -473,5 +473,7 @@
   "specNormalizationReview": "Source digest refreshed for the current producer SPEC. All nine acceptance obligations remain unproven; this is not an evidence promotion.",
   "priorSpecSha256BeforeWorkerObservation": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253",
   "priorSpecSha256BeforePrivateObjectTransfer": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
-  "privateObjectTransferCheckpoint": "research/private-producer-object-checkpoint-2026-11-02.json"
+  "privateObjectTransferCheckpoint": "research/private-producer-object-checkpoint-2026-11-02.json",
+  "priorSpecSha256AtPrivateObjectHostedFollowup": "6fd3c4ab9fe16bfe95983569490705740219c29c6fddf7ceb936246fc086b9d7",
+  "privateObjectHostedFollowup": "research/private-producer-object-checkpoint-2026-11-02.json"
 }

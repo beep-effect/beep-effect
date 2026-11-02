@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
-      "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad glob to .tsx and dropped its test/fixtures exclusion, and //#jsdoc:ratchet:check dropped every directory exclusion but node_modules, so both follow the files their scanners read. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
+      "reviewer": "Codex (PR #2611, source-bound private observation storage input review)",
+      "reason": "Acknowledge only the new storage module in the generated quality-seal input closure; preserve all other settings, reviews, scope, profile, epoch and qualification state.",
       "basis": {
-        "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
-        "sha256": "91f4bc09115cfc630dfb97300d2345d156e95c299604915429feba1d37b98c63"
+        "path": "goals/turborepo-cache-trust-observability/research/private-object-quality-closure-review-2026-11-02.md",
+        "sha256": "3a9d001296e84b134b8f9370dcdb864f7f460168ae976527c74c66b3632daee1"
       }
     },
     "@beep/acp": {
@@ -6661,6 +6661,7 @@
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.upload.ts",
@@ -121735,7 +121736,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "ca51beab147fd0adde9ac64f1f0e6b73815b7f3c91df8edce8b79b990c648bf1"
+        "sha256": "251da5316fe8cde77e41b9cd924c16a53e2d5e7b744733e40e60e5f5e42797a0"
       }
     ]
   }

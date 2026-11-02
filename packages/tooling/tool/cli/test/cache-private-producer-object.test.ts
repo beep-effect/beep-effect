@@ -39,12 +39,14 @@ import * as TestClock from "effect/testing/TestClock";
 import { preparePublishedProducerObservation } from "./helpers/cache-hosted-publication-fixture.ts";
 import { makeIssuedProducerObservationFixture as issuedFixture } from "./helpers/cache-producer-execution-fixture.ts";
 
-const controlledFetch = (
+function controlledFetch(
   handler: (
     input: Parameters<typeof globalThis.fetch>[0],
     options?: Parameters<typeof globalThis.fetch>[1]
   ) => Promise<Response>
-): typeof globalThis.fetch => Object.assign(handler, { preconnect: () => {} });
+): typeof globalThis.fetch {
+  return Object.assign(handler, { preconnect: () => {} });
+}
 
 const publishedFixture = Effect.fn("PrivateProducerObjectTest.publish")(function* (
   tamperMac: typeof S.Boolean.Type = false

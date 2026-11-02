@@ -990,3 +990,14 @@ its existing bounded failure behavior.
 - Reversal removes these opt-in commands and the private-object transport.
   Existing cache artifacts and services are unchanged. Exact-object cleanup and
   the existing retention policy govern synthetic observations already uploaded.
+
+
+### Private storage module quality-seal acknowledgement, 2026-11-02
+
+Follow the existing generated quality-input review path for the additive
+`Cache.workflow.storage.ts` dependency. The canonical fingerprint writer adds
+that one path; a reviewed compare-and-swap request stamps only root subject
+`//` and preserves every other review, scope, current profile/epoch and ledger.
+This records a conservative implementation input, not task qualification or a
+cached security verdict. Reverse through a fresh reviewed request after restoring
+the prior closure, never by overwriting a newer baseline or the ledger.

@@ -1728,3 +1728,17 @@ projection. Review caught the omitted regeneration before current-head validatio
 `bun run beep cache profile --write` regenerates it; the freshness command then
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
+
+### 2026-11-02 — hosted isolation census and generated quality closure
+
+Hosted unit shard 2 classified `typeof globalThis.fetch =>` in the new pure
+factory as a global assignment. A function declaration preserves the same typed
+factory without adding a state-isolated worker. The actual census and transport
+suite then pass together. Unit shard 5 and Property Laws found one missing
+quality-seal input: `Cache.workflow.storage.ts`. The canonical fingerprint writer
+adds exactly that path, with no removal or other setting change. A root-only
+reviewed baseline acknowledgement preserves the ledger, scope, profile and epoch.
+The combined 160 tests, package lint/type checks and cache policy audit pass.
+Keep the census and generated policy input check in the focused new-module
+replay so the first hosted run can find substantive defects instead of metadata
+omissions. Failed hosted receipts remain separate from passing local controls.

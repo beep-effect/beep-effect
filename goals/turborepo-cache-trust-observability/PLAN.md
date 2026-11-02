@@ -1098,3 +1098,17 @@ profile or independent hosted approval. Every case fails closed when delivery
 resumes. These complete local race controls; native protected execution and
 real R2 acceptance remain unproven. The accepted reusable Heavy verifier and
 shared main repair remain prerequisites for the live workflow.
+
+
+### Private observation hosted follow-up, 2026-11-02
+
+The private-object checkpoint retains two real hosted unit failures and the
+matching Property Laws failure. The pure fetch factory now uses a declaration
+that the conservative isolation census recognizes correctly. Canonical policy
+regeneration adds only the new storage module to the quality seal; the
+[source-bound review](research/private-object-quality-closure-review-2026-11-02.md)
+and [root-only request](research/private-object-quality-closure-request-2026-11-02.json)
+acknowledge that input without granting qualification. All other reviews,
+profile, epoch, scope and ledger bytes remain unchanged. A combined 160-case
+replay, package lint/type checks and policy audit pass. Fresh hosted proof remains
+required; no production signing, rollout or whole-goal acceptance changes.

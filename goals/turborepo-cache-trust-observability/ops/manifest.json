@@ -118,7 +118,9 @@
     "research/producer-quality-closure-baseline-request-2026-10-31.json",
     "research/inspection-routing-checkpoint-2026-11-02.json",
     "research/supervisor-safe-hints-checkpoint-2026-11-02.json",
-    "research/private-producer-object-checkpoint-2026-11-02.json"
+    "research/private-producer-object-checkpoint-2026-11-02.json",
+    "research/private-object-quality-closure-review-2026-11-02.md",
+    "research/private-object-quality-closure-request-2026-11-02.json"
   ],
   "agentLaunchers": [
     {
