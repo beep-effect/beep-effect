@@ -433,7 +433,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [],
+    flags: [...TURBO_SHAPE_FLAGS],
+    notes:
+      "Pull-request runs pass --affected --base: `beep lint policy --affected` runs Turbo's changed scope unless the change set escalates it; push runs state --full.",
   }),
   CiLaneDescriptor.make({
     id: "repo-sanity",
@@ -1677,11 +1679,21 @@ export const ciLaneStepsForTesting: {
           options
         ),
       ],
-      // `--full` states the hosted scope in the argv instead of inheriting it
-      // from ambient `CI=true`, so a local replay scans the same repo-wide
-      // surface the required Lint Policy context does. Hosted runs are
-      // unchanged: `beep lint policy` already forces the full sweep under CI.
-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
+      // The argv states the scope instead of inheriting it from ambient
+      // `CI=true`. Pull requests (perf audit K1) run the changed scope, which
+      // `beep lint policy` widens to the full sweep on deletions, `@deprecated`,
+      // tsconfig, dependency, Turbo, lint-config or policy-implementation
+      // changes; pushes and local replays without the affected shape run
+      // `--full`. `--summarize` is accepted for the shared matrix argv: the
+      // policy graphs always write their Turbo summaries.
+      "lint-policy": () => [
+        bunRunStep(repoRoot, "ci:lint-policy", [
+          "beep",
+          "lint",
+          "policy",
+          ...(options.affected ? ["--affected", "--base", options.base] : ["--full"]),
+        ]),
+      ],
       nix: () => [
         QualityTaskStep.make({
           label: "ci:nix:flake-check",
@@ -2694,7 +2706,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     // (TTC ruling 58), so the local replay passes it too.
     labs: () => ["--summarize"],
     lint: () => turboShapeFlags,
-    "lint-policy": A.empty<string>,
+    "lint-policy": () => turboShapeFlags,
     nix: A.empty<string>,
     property: () => turboShapeFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),

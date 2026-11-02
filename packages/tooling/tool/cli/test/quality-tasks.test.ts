@@ -4711,17 +4711,18 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:opaque-roundtrips",
         "lint:jsdoc",
         "lint:jsdoc:root",
+        "lint:jsdoc-module-tags",
+        "jsdoc:inventory:check",
+        "jsdoc:ratchet:check",
       ]);
+      // D2 git-delta/clock checks and the uncertified binary walkers stay unfiltered.
       expect(taskNames(O.getOrThrow(A.get(local, 2)))).toEqual([
         "knowledge:semantic-delta",
         "knowledge:refs-check",
-        "lint:jsdoc-module-tags",
         "goals:doctor",
         "lint:oxlint",
         "lint:shadcn",
         "lint:typos",
-        "jsdoc:inventory:check",
-        "jsdoc:ratchet:check",
       ]);
       for (const index of [0, 1, 4]) {
         const step = O.getOrThrow(A.get(local, index));
@@ -4759,7 +4760,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ]);
       expect(taskNames(O.getOrThrow(A.get(full, 1)))).toEqual([
         ...pipe(A.get(local, 1), O.getOrThrow, taskNames, A.take(16)),
-        ...pipe(A.get(local, 2), O.getOrThrow, taskNames),
+        "knowledge:semantic-delta",
+        "knowledge:refs-check",
+        "lint:jsdoc-module-tags",
+        "goals:doctor",
+        "lint:oxlint",
+        "lint:shadcn",
+        "lint:typos",
+        "jsdoc:inventory:check",
+        "jsdoc:ratchet:check",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
       // knowledge doctor (report-only until the first seal) to the hosted plan; the changed-scope
@@ -4997,6 +5006,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             `${root}/standards/lint-policy.sweeps.jsonc`,
             '{"schemaVersion":"lint-policy-sweeps/v1","deprecatedApis":"oxlint"}'
           );
+          // A readable seal keeps the empty change set changed-scope instead of escalating it.
+          yield* fs.writeFileString(
+            `${root}/standards/policy-tools.fingerprint.json`,
+            '{"schemaVersion":"policy-tools-fingerprint/v2","shared":[],"sharedTasks":[],"check":[],"entries":[]}'
+          );
           yield* withoutCiEffect(
             withEnvVarEffect(
               "TURBO_CACHE",
@@ -5020,9 +5034,22 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                       Effect.exit
                     );
                     expectPolicyGroupFailure(exit, failedLabel);
-                    expect(spawnedPolicyCommands(spawned)).toEqual(
-                      A.map(expectedPolicyRun(plan, full, failedLabel), (step) =>
-                        policyCommandKey(policyStepCommand(step))
+                    // The changed scope probes Turbo once before planning; the fake spawner's empty
+                    // stdout is no plan, so the per-package Turbo tasks stay. Steps inside a stage run
+                    // abreast, so the spawned commands are compared as a set.
+                    const probes = A.filter(spawnedPolicyCommands(spawned), Str.includes("--dry=json"));
+                    expect(A.length(probes)).toBe(full ? 0 : 1);
+                    expect(
+                      A.sort(
+                        A.filter(spawnedPolicyCommands(spawned), (key) => !Str.includes("--dry=json")(key)),
+                        Order.String
+                      )
+                    ).toEqual(
+                      A.sort(
+                        A.map(expectedPolicyRun(plan, full, failedLabel), (step) =>
+                          policyCommandKey(policyStepCommand(step))
+                        ),
+                        Order.String
                       )
                     );
                   }
