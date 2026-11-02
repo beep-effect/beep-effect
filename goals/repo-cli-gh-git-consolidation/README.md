@@ -31,13 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, SPEC D-10), the W3 kit
-(#2556), W3 sites (#2614, SPEC D-12) and the W4 kit (#2600) merged. W2b (this PR, SPEC D-11): the remaining Yeet
-git halves, the Library inventory read and ai-metrics' `ls-files` run through `Git`, with Sweep's probes behind the
-`sweepProbeFromGit` CommandProbe adapter. Next: W4 sites, then W5.
+P1 Implement, W4 sites in review (this PR). The Yeet review-thread reads and resolutions of `Status`, `WatchMode`,
+`MergeGate`, `Reply`, `closeout/GhCollect` and `GhOps` run on the kit's `ReviewThread`, and the merge gate's and squash
+reader's REST calls on `GithubRest`, `GitHubRepository` and `GitHubClient`, built once per command surface as the
+operator's gh login (SPEC D-13). `GhCall.ts` is deleted, `GithubGraphql.ts` keeps only the ready-flip document and
+`GhCommand.ts` only `ghOutput`. The current-branch `gh pr view` / `gh pr checks` reads stay (no kit member);
+`PullRequest`, `ProvenanceFooter`, `ReviewWindow`, `Merge` and `Monitor*` are deferred behind their capture seams.
+Earlier waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11),
+the W3 kit (#2556), W3 sites (#2614, D-12) and the W4 kit (#2600). Next: W5.
 
 ## Latest Evidence
 
+- 2026-11-02 W4 sites: `research/review-thread-differential-w4.json` (40 scenarios, 29 same, 11 classified, 0
+  unclassified); repo-cli typecheck clean, every `yeet-*` and `shared-internals` suite green (62 files, 1577 tests),
+  the `@beep/github` `ReviewThread` suite green with the cursor hardening.
 - 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
   unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
 - 2026-11-02 W3 sites: `research/reviewer-ci-github-differential-w3.json` (45 scenarios, 37 same, 8 classified,
