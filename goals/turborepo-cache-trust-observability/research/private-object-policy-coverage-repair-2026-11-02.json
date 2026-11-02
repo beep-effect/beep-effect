@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "cache-private-object-policy-coverage-repair/v1",
+  "recordedAt": "2026-11-02T20:45:47.337112+00:00",
+  "authority": "Focused local Bun/Istanbul and policy repair; fresh hosted verdict remains required. No cloud or whole-goal acceptance.",
+  "priorHead": "53fdcd82deb9c73c2afec10887a55ad17b3a2eec",
+  "introducedFailures": {
+    "lintPolicy": {
+      "job": 125518696579,
+      "rule": "beep(no-inline-schema-compile)",
+      "count": 3
+    },
+    "coverageRegression": {
+      "job": 125526936979,
+      "workflowUncoveredCallbacks": 3,
+      "newStorageFileBranchPercent": 76.08
+    }
+  },
+  "repair": [
+    "Hoist three schema encoders to module scope.",
+    "Exercise storage approval, absent storage and missing credentials without real capabilities.",
+    "Reject unexpected successful PUT status201 and empty or oversized archives.",
+    "Exercise the existing omitted upload-runtime default in the supervised workflow success test."
+  ],
+  "focusedProof": {
+    "runtime": "Bun",
+    "provider": "istanbul",
+    "testsPassed": 90,
+    "productionSourceUnchanged": true,
+    "workflow": {
+      "functions": {
+        "covered": 36,
+        "total": 36
+      },
+      "statements": {
+        "covered": 193,
+        "total": 193
+      },
+      "branches": {
+        "covered": 62,
+        "total": 62
+      }
+    },
+    "storage": {
+      "functions": {
+        "covered": 19,
+        "total": 26
+      },
+      "statements": {
+        "covered": 100,
+        "total": 116
+      },
+      "branches": {
+        "covered": 37,
+        "total": 46,
+        "percent": 80.43
+      }
+    },
+    "coverageFloorsChanged": false,
+    "hostedReplaced": false
+  },
+  "sourceBindings": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2",
+    "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts": "f2ad6292fa9f76824fa68ccf7a03d32875a102fae4323a5ac929be533f3108b4",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "0d52e2b006beb31139fa87dc0af50efadb8fca38818c0b780b43e4a1d722c285"
+  }
+}
