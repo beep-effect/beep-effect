@@ -27,12 +27,15 @@ import * as Stream from "effect/Stream";
 Bun.env.BEEP_SI_BOOL_YES = "YES";
 Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 
+import { Git, GitCommandError } from "@beep/git/Git";
 import { QualityTaskStep } from "@beep/repo-cli/test/Process";
 import {
   applyJsoncModification,
   booleanEnvValue,
   canUseTurboCacheSecretSession,
   clearTurboCacheSecretSessionVerdictsForTesting,
+  collectBaseRangeChangedFiles,
+  collectDirtyWorktreeFiles,
   configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
@@ -923,6 +926,55 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         const failure = PlatformError.badArgument({ module: "ChildProcess", method: "spawn", description: "ENOENT" });
         expect(yield* sessionWith({}, [Effect.fail(failure)])).toEqual({ usable: false, spawned: 1 });
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+
+  describe("ChangedFiles kit error fold", { concurrent: false }, () => {
+    // A `GitCommandError` without an exit code is a spawn that never ran git.
+    const spawnFailure = GitCommandError.make({
+      kind: "failed",
+      args: ["diff"],
+      cwd: "/repo",
+      stderr: "",
+      detail: "spawn ENOENT",
+    });
+    const withUnspawnableDiffs = Effect.provideService(
+      Git,
+      Git.makeTest({
+        changedFiles: () => Effect.fail(spawnFailure),
+        unstagedChanges: () => Effect.fail(spawnFailure),
+        stagedChanges: () => Effect.succeed(["packages\\a\\src\\index.ts", " "]),
+        untrackedFiles: () => Effect.succeed(A.empty()),
+      })
+    );
+
+    it.effect("reports an unspawnable base-range diff with the capture's failed-to-run wording", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(
+          collectBaseRangeChangedFiles("/repo", {
+            base: "origin/main",
+            head: "HEAD",
+            diffFilter: "ACMR",
+            pathspecs: [],
+          })
+        );
+        expect(error.message).toBe(
+          "git diff --name-only -z --no-relative --diff-filter=ACMR origin/main...HEAD failed to run."
+        );
+      }).pipe(withUnspawnableDiffs)
+    );
+
+    it.effect("fails a strict dirty scan on an unspawnable probe and degrades a tolerant one", () =>
+      Effect.gen(function* () {
+        const strict = yield* Effect.flip(
+          collectDirtyWorktreeFiles("/repo", { pathspecs: [], onProbeFailure: "fail" })
+        );
+        expect(strict.message).toBe(
+          'Unable to resolve dirty worktree files via "git diff --name-only -z --no-relative HEAD".'
+        );
+        const tolerant = yield* collectDirtyWorktreeFiles("/repo", { pathspecs: [], onProbeFailure: "ignore" });
+        expect(tolerant).toStrictEqual(["packages/a/src/index.ts"]);
+      }).pipe(withUnspawnableDiffs)
     );
   });
 });
