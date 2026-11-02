@@ -6,7 +6,7 @@
     "title": "Claim Element Antecedent Check",
     "status": "active",
     "created": "2026-10-14",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/claim-element-antecedent-check",
@@ -26,14 +26,14 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2502,
+        "number": 2513,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_claim-element-closeout-de30f7bf5b55/verdict.json",
+        "ref": ".beep/yeet/runs/docs_claim-element-final-receipt-d8db717617c1/verdict.json",
         "gating": true
       },
       {
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Implementation PR #2411 merged as 3057999b33 under the designated orchestrator S11 exception; its hosted jobs were pending/cancelled, not green. Post-merge v24 retains 37/538, all 34 protected and all 37 prior matches with zero losses. All 115 sampled questions and 605 evidence quotes preserve historical automated judgments; actual-attorney flags remain false. Exact original v11 bytes are restored and all 631 pins match. Three current package audit/docgen checks pass. Closeout reflection and final follow-up evidence are prepared; operative lifecycle remains active until canonical readiness and merge receipts verify completion. Final follow-up PR #2502 declares prospective completed-retained status; the operative lifecycle remains active until exact-head readiness, required-check and merge-time rule-suite receipts verify it.",
+  "statusNote": "Implementation #2411 and measurement #2502 merged under S11; neither cancelled/pending check is counted as passing. Canonical completion refresh for #2502 is unsatisfied because required checks must finish before merge. Final metadata-only PR #2513 requires strict pre-merge readiness, normal review window and exact-head merge-time evidence. All 21 v24 runtime files and dependency lock are unchanged on current main; 37/538, all 34 protected/all 37 prior passes and all historical evidence remain retained. Operative lifecycle stays active pending verified final acceptance; no local verify/publish queue is used.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2502
+    "finalPullRequest": 2513
   }
 }

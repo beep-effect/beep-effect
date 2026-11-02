@@ -55,13 +55,15 @@ Sibling goals:
 
 ## Current Phase
 
-P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in [final follow-up PR #2502](https://github.com/beep-effect/beep-effect/pull/2502); operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
+P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in [strict final PR #2513](https://github.com/beep-effect/beep-effect/pull/2513); operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
 The user explicitly requires autonomous completion without attorney presence. [Autonomous acceptance v1](research/AUTONOMOUS-ACCEPTANCE-v1.md) governs current work: independent automated review/adjudication, immutable references/results, explicit uncertainty and optional later attorney review. Historical human-hold records remain intact and are superseded for current completion.
 
 ## Latest Evidence
+
+- [Strict pre-merge acceptance hold](history/2026-11-02-premerge-acceptance-hold.md): #2502 merged with pending checks and its canonical completion refresh is unsatisfied. Final PR #2513 must earn normal readiness before merge; all measured source and dependency bytes remain unchanged.
 
 - [Post-merge v24 report and closeout](history/2026-11-01-post-merge-evaluation.md): current implementation freeze, fixed replay, retained/lost gate, corrected nesting diagnostic, source-bound historical review identity, exact v11 byte restoration and current package proofs.
 - [Delivery exception](history/2026-11-01-post-merge-delivery.json) and [closeout reflection](history/reflections/2026-11-01-codex.md): seven resolved threads, recorded S11 merge and explicit non-passing hosted outcomes.

@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — strict final acceptance after S11
+
+PR #2502 merged under S11 while lint/unit checks were pending, and canonical completion refresh reports unsatisfied. The verifier requires check completion before the merge timestamp, so later reruns cannot recover that proof. Bind prospective final acceptance to metadata-only PR #2513 and hold relaxed/S11 merging until normal, exact-head readiness is recorded. Push/open all ready work promptly and use hosted CI; do not wait for local verify/publish. All 21 measured v24 runtime hashes and the dependency lock match current main. Reversal: release the temporary hold after strict readiness and preserve both S11 records and the measured results.
+
 ### 2026-11-01 — post-merge evidence and lifecycle closeout
 
 Final follow-up PR #2502 uses the current canonical Yeet publish/readiness and goal-completion receipt workflow. The earlier hosted-first exception belonged to the now-retired source takeover lane; it does not supply a publish verdict for this new final PR. All 1,103 pre-handover history/public-fixture files are byte-identical after restoring v11, as recorded in the new full-history preservation receipt.
