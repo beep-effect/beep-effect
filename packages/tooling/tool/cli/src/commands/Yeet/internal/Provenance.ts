@@ -10,6 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -27,6 +28,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderPrettyCommandJson } from "../../../internal/cli/Json.ts";
 import { runGitOutput } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -1630,7 +1632,8 @@ type Requirements =
   | Path.Path
   | Digest.Digest
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 /**
  * Construct the live provenance detector with captured platform requirements.
  *

@@ -42,7 +42,9 @@
  *
  * Exit status is non-zero when a surface differs or a probe shift is unclassified.
  */
+
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import {
   collectCoverageSnapshot,
   compareCoverageRegressionBaseline,
@@ -544,4 +546,8 @@ const program = Effect.gen(function* () {
   }
 });
 
-program.pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), NodeRuntime.runMain);
+// CoverageRegression reads merge bases through `Git` since repo-cli-gh-git-consolidation W1a.
+program.pipe(
+  Effect.provide(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  NodeRuntime.runMain
+);

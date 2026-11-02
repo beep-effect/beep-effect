@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
 import {
   decideMergeGate,
@@ -55,6 +56,9 @@ import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { commandArgs } from "./support/commandArgs.ts";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -715,7 +719,10 @@ const withScriptedGh = <A, E, R>(
     TestClock.setTime,
     Effect.andThen(Ref.make<ReadonlyArray<string>>(A.empty())),
     Effect.flatMap((calls) =>
-      use(calls).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls)))
+      use(calls).pipe(
+        Effect.provideServiceEffect(Git, Git.make),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedGh(script, calls))
+      )
     )
   );
 
@@ -736,7 +743,7 @@ const commandOptions = (overrides: Partial<Parameters<typeof MergeGateCommandOpt
     ...overrides,
   });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestConsole.layer), { timeout: "30 seconds" })(
   "yeet merge-gate against recorded gh payloads",
   (it) => {
     it.effect("reads the PR, check runs, review window, threads and ruleset into one read", () =>

@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
 import { JsonStringCodec } from "@beep/repo-cli/test/SharedInternals";
@@ -39,11 +40,14 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import { makeRecord } from "./yeet-pr-fixtures.ts";
 
-const TestLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  TestConsole.layer,
-  Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+const TestLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+  )
 );
 const HostileProvenanceJson = JsonStringCodec(
   S.Struct({ schemaVersion: S.tag(2), agents: S.Array(S.Struct({ command: S.String })) })
@@ -531,6 +535,7 @@ describe("yeet resume", () => {
           })
         ).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
         );
         expect(yield* Ref.get(spawned)).toStrictEqual(["codex", "resume", "codex-thread"]);
@@ -559,6 +564,7 @@ describe("yeet resume", () => {
           })
         ).pipe(
           Effect.provideService(ConfigProvider.ConfigProvider, provider),
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.flip
         );

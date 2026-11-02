@@ -21,6 +21,7 @@
  *
  * @since 0.0.0
  */
+
 import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
@@ -48,6 +49,7 @@ import {
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
 import { CHANGE_ATOM_KIND_VALUES, ChangeAtom, ChangeSet, RouteError } from "./Route.schemas.ts";
 import { ChangeClassifier } from "./Route.service.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -968,12 +970,12 @@ const classifyCommitRange = Effect.fn("RouteClassify.classifyCommitRange")(funct
 export const ChangeClassifierLive: Layer.Layer<
   ChangeClassifier,
   never,
-  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > = Layer.effect(
   ChangeClassifier,
   Effect.gen(function* () {
     const context = yield* Effect.context<
-      Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+      Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
     >();
     return ChangeClassifier.of({
       classify: Effect.fn("ChangeClassifier.classify")((input: ClassifyInput) =>
