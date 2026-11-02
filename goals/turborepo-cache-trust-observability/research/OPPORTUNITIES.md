@@ -1692,3 +1692,29 @@ test group. An introduced runner callback exceeded the cognitive limit by one;
 use the existing Effect Boolean helper. The subsequent 60-case replay, package
 quick lint/type check and scoped complexity check all pass. Retain the failed
 receipts; no floor, rule, timeout or production setting was changed.
+
+
+### Separate selected-task speed from the qualification command, 2026-11-02
+
+The ordinary stable matrix completed in 1,113.197 seconds. Its 73 recorded
+selected-task intervals occupy 37.962 seconds of wall time after overlap is
+unioned. Baseline selected fresh runs took 610–746 ms, while their signed
+remote replays took 0–1 ms. The remaining command time includes prerequisites,
+process/mount setup, hashing and controls; it is not measured agent idle time or
+a CI saving. Preserve this distinction when prioritizing broader adoption and
+consume the CI-economics owner's whole-command baseline. Do not extrapolate the
+near-zero selected replay interval into a whole-workflow speedup.
+
+
+### Attribute a toolchain fingerprint false positive before publication, 2026-11-02
+
+The first evidence commit was refused by the generic API-key scanner on the
+`runtimeKeyDigest` fields. Source assigns this fingerprint from the sandbox
+runtime identity toolchain. A reconstruction assertion rejected an incorrect
+assumption that it equals the separate host toolchain digest, before changing
+the reports. Preserve both values. The public view labels the sandbox fingerprint
+`runtimeToolchainSha256` and records its native-field mapping; reconstruct and
+compare the complete decoded private receipt. The original reports remain
+unchanged. No scanner rule, exception or proof requirement is changed, and the
+public view cannot substitute for a native validator input. Retain the failed
+publication-hook receipt and the rejected projection attempt.

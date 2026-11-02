@@ -276,5 +276,13 @@
       "elapsedSeconds": 17.52,
       "finishedAt": "2026-11-02T11:24:04.856057+00:00"
     }
+  },
+  "ordinaryNativeFollowup": {
+    "checkpoint": "research/ordinary-native-matrix-checkpoint-2026-11-02.json",
+    "executedSupervisorAndWorkerRevision": "976ca2a943b13bd32f9690ebfdbfc69bd64f239b",
+    "frozenTaskSourceRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+    "stableAndCurrentCanaryPassed": true,
+    "originalRemainingListScope": "Retained historical state from the component implementation checkpoint; subsequent proof is explicitly bound in the followup.",
+    "qualificationOrProductionActivationGranted": false
   }
 }

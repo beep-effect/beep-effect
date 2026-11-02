@@ -1093,3 +1093,30 @@ main. All 52 owned-file export positions are verified. This component
 retains deadlines, selected-task overlap, report/issuer validation and existing
 cache configuration. Hosted review, an ordinary frozen-source stable/canary run,
 actual protected publication and all whole-goal gates remain required.
+
+
+### Ordinary stable and current-canary matrices, 2026-11-02
+
+The [ordinary matrix checkpoint](research/ordinary-native-matrix-checkpoint-2026-11-02.json)
+binds complete stable and current-canary receipts to supervisor/worker source
+`976ca2a943` and frozen task fixtures `68834a997e`. Stable completed in 1,113.197
+seconds and canary in 1,070.584 seconds, each inside the unchanged twenty-minute
+limit. Each passes four capture controls, four non-execution controls, seven
+mutations, ten shadows, three fresh pairs and three signed producer/replay pairs.
+Actual selected-task overlap is positive in one fresh pair per channel: 543 ms
+and 754 ms. All three signed remote replays per channel match the fresh logs.
+
+These are ordinary CLI executions, without preload/spy instrumentation, task
+padding, clock manipulation, admission bypass or a weaker overlap rule. Earlier
+failed ordinary receipts and the separately instrumented diagnostic remain. The
+public views reconstruct the complete decoded private receipts through an
+explicit runtime-toolchain fingerprint field mapping; raw-artifact byte digests
+are separate. No private home paths, secret
+references or raw secret/header/payload/signature fields are published.
+
+The persistent issuer-material argument was absent. This is local private-loopback
+evidence for the frozen tuple; it does not prove protected issuer denial, current
+main adoption, actual R2 publication or production signing. The later adoption
+census has changed manifests/lock/entrypoint bindings and cannot inherit this
+execution by rehashing it. Obtain current protected source inspection, independent
+approval and bounded owned publication next; all whole-goal gates remain open.
