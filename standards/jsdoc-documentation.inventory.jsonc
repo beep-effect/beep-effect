@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T18:59:13.161Z",
+  "generatedAt": "2026-11-02T19:12:16.076Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -546601,8 +546601,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-163-loadreviewercredentials",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-162-loadreviewercredentials",
           "currentTags": [
             "@category",
             "@since"
@@ -546623,8 +546623,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 216,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-216-githubappauth",
+          "line": 214,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-214-githubappauth",
           "currentTags": [
             "@category",
             "@since"
@@ -546645,8 +546645,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-254-mintreviewertoken",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-251-mintreviewertoken",
           "currentTags": [
             "@param",
             "@returns",
@@ -546669,8 +546669,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 287,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-287-makegithubappauth",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-284-makegithubappauth",
           "currentTags": [
             "@param",
             "@returns",
@@ -546693,8 +546693,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Reviewer/GitHubAppAuth.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Reviewer/GitHubAppAuth.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-333-githubappauthlive",
+          "line": 330,
+          "anchor": "packages-tooling-tool-cli-src-commands-reviewer-githubappauth-ts-330-githubappauthlive",
           "currentTags": [
             "@category",
             "@since"
