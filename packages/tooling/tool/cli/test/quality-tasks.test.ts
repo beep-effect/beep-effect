@@ -1406,13 +1406,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "quality:catalog-usage")).toEqual(["run", "beep", "quality", "catalog-usage"]);
       expect(qualityLaneArgs(lanes, "lint:schema-catalog")).toEqual(["run", "beep", "lint", "schema-catalog"]);
       expect(qualityLaneArgs(lanes, "lint:oxlint")).toEqual(["run", "lint:oxlint"]);
-      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual([
-        "run",
-        "beep",
-        "quality",
-        "jsdoc-ratchet",
-        "--regenerate",
-      ]);
+      // The regenerated ratchet rides the cached root chain
+      // (`//#jsdoc:inventory:check` -> `//#jsdoc:ratchet:check`), not an in-process scan.
+      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual(
+        expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
+      );
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
         "run",
         "beep",
@@ -1422,6 +1420,46 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
         A.map(lanes, (lane) => lane.id)
       );
+    });
+
+    it("hands the cheap tier's JSDoc inventory to the pre-push ratchet through the Turbo content hash", () => {
+      const cheap = githubCheckLanesForModeForTesting("/repo", "cheap-gates");
+      const prePush = githubCheckLanesForModeForTesting("/repo", "pre-push");
+      // Cheap tier: one Turbo run of the ratchet task, whose dependency produces the inventory.
+      expect(qualityLaneArgs(cheap, "quality:jsdoc-ratchet:regenerated")).toEqual(
+        expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
+      );
+      // Pre-push: the hosted lane body without `--inventory`, so it re-enters the same
+      // producer task. A same-tree run restores the cheap tier's inventory from cache; a
+      // different head or tree misses and rescans. A bare file path would skip that check.
+      expect(qualityLaneArgs(prePush, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
+      const body = ciLaneStepsForTesting(
+        "/repo",
+        "jsdoc-ratchet",
+        CiLaneRunOptions.make({
+          affected: false,
+          base: "origin/main",
+          head: "HEAD",
+          summarize: false,
+          mode: "affected",
+          to: "HEAD",
+          last: false,
+          changesetStatus: false,
+          validateEnvelopes: false,
+        })
+      );
+      expect(A.map(body, (step) => step.label)).toEqual(["ci:jsdoc-ratchet:inventory", "ci:jsdoc-ratchet:ratchet"]);
+      expect(body[0]?.args).toEqual(expectedTurboArgs("jsdoc:inventory:check", ["--summarize"]));
+      expect(body[1]?.args).toEqual([
+        "run",
+        "beep",
+        "quality",
+        "jsdoc-ratchet",
+        "--inventory",
+        ".beep/ci/jsdoc-documentation.inventory.jsonc",
+      ]);
+      // No lane in either tier still regenerates in-process.
+      expect(A.some([...cheap, ...prePush], (lane) => A.contains(lane.step.args, "--regenerate"))).toBe(false);
     });
 
     // TTC ruling 28: a lane id names the command it runs and doubles as the step

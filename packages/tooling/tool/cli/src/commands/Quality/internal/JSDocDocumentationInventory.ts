@@ -1238,9 +1238,9 @@ const sourceFileIsInPackageInventory = (
   exclude: ReadonlyArray<string>,
   repoRoot: string,
   path: Path.Path,
-  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>
+  candidatePaths: O.Option<MutableHashSet.MutableHashSet<string>>
 ): boolean =>
-  O.match(trackedPaths, {
+  O.match(candidatePaths, {
     onNone: () => true,
     onSome: (paths) => MutableHashSet.has(paths, repoRelative(sourceFilePath, repoRoot, path)),
   }) &&
@@ -1319,7 +1319,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   topoOrder: number,
   repoRoot: string,
   path: Path.Path,
-  trackedPaths: O.Option<MutableHashSet.MutableHashSet<string>>,
+  candidatePaths: O.Option<MutableHashSet.MutableHashSet<string>>,
   forbiddenRootImports: MutableHashSet.MutableHashSet<string>
 ): Effect.fn.Return<PackageInventory, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
@@ -1330,7 +1330,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const exclude = A.isArray(docgenConfig.exclude) ? A.filter(docgenConfig.exclude, P.isString) : [];
   const sourceRoot = path.join(packageInfo.absolutePath, srcDir);
   const sourceFiles = A.filter(yield* listSourceFiles(sourceRoot, path), (sourceFilePath) =>
-    sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, trackedPaths)
+    sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
   const project = createInMemoryTsMorphProject();
   const modules: Array<InventoryEntry> = [];
@@ -1633,8 +1633,16 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const hasGitMetadata = yield* fs
     .exists(path.join(repoRoot, ".git"))
     .pipe(QualityArtifactGeneratorError.mapError("Failed to inspect repository Git metadata.", { filePath: repoRoot }));
-  const trackedPaths = hasGitMetadata
-    ? O.some(MutableHashSet.fromIterable(yield* runGitLines(repoRoot, ["ls-files"], gitCommandErrorAdapter)))
+  // Tracked plus untracked-but-not-ignored paths: the same file set Turbo hashes
+  // for `//#jsdoc:inventory:check` and the lane-proof tree (`git add -A`) seals.
+  // Tracked-only would let `git add` of an unchanged file reuse a cached
+  // inventory that never counted it.
+  const candidatePaths = hasGitMetadata
+    ? O.some(
+        MutableHashSet.fromIterable(
+          yield* runGitLines(repoRoot, ["ls-files", "--cached", "--others", "--exclude-standard"], gitCommandErrorAdapter)
+        )
+      )
     : O.none<MutableHashSet.MutableHashSet<string>>();
   const rootPolicy = yield* analyzeRootPolicy(repoRoot, path);
   // Ecosystem members are documented to the published-package grammar and
@@ -1656,7 +1664,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)
         ? Effect.succeed(analyzeMissingPackage(packageName, index + 1))
-        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, trackedPaths, forbiddenRootImports);
+        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, candidatePaths, forbiddenRootImports);
     },
     { concurrency: 1 }
   );

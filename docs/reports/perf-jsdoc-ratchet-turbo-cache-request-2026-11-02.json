@@ -1,0 +1,20 @@
+{
+  "previous": "fb66163dc4f064bcb55dfc24680e8f00fd58231eb49865567283fc3f633406be",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
+    "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad input glob to .tsx, matching the files its scanner reads. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
+      "sha256": "19628900389ca6beb76837926e75d9d55f390d226dc5786fae130b1d2a994912"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -944,7 +944,11 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-quality",
     "preflight",
-    repoCliLane(repoRoot, "quality:jsdoc-ratchet:regenerated", ["jsdoc-ratchet", "--regenerate"])
+    // The cached root task chain (`//#jsdoc:inventory:check` -> `//#jsdoc:ratchet:check`)
+    // replaces an in-process `jsdoc-ratchet --regenerate` scan that never hit a cache
+    // (p50 344 s). The pre-push `quality:jsdoc-ratchet` lane restores the same inventory
+    // output by content hash, so a full verify scans once (perf audit M7, 2026-11-02).
+    rootTaskLane(repoRoot, "quality:jsdoc-ratchet:regenerated", "jsdoc:ratchet:check")
   ),
   githubCheckLane(
     "quality:jsdoc-ratchet:committed",

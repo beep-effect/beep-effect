@@ -4955,7 +4955,7 @@
         "**/docgen.json",
         "**/package.json",
         "{packages,apps,infra}/**/*.{ts,tsx}",
-        "scratchpad/**/*.ts",
+        "scratchpad/**/*.{ts,tsx}",
         "tools/**/*.{ts,tsx}",
         "tsdoc.json",
         "!**/node_modules/**",
