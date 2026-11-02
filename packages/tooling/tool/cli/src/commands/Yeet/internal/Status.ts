@@ -14,7 +14,6 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
-import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -34,6 +33,7 @@ import {
   staleGateVerdicts,
   unprovenGateVerdicts,
 } from "./GateStaleness.ts";
+import { collectStagedPublishPaths, collectUnstagedTrackedPaths, collectUntrackedPaths } from "./GitExec.ts";
 import { deriveYeetMergeReady, mergeStateIsAcceptable, outstandingThreadCount } from "./MergeReadiness.policy.ts";
 import type { Git } from "@beep/git/Git";
 
@@ -645,14 +645,6 @@ const statusWatchCheck = (row: GhStatusCheck, required: boolean): YeetWatchCheck
   });
 };
 
-const sortedUniquePaths: (paths: ReadonlyArray<string>) => ReadonlyArray<string> = flow(
-  A.filter(Str.isNonEmpty),
-  A.dedupe,
-  A.sort(Order.String)
-);
-
-const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(Str.split("\0"), sortedUniquePaths);
-
 /**
  * Return the status artifact path for a Yeet run context.
  *
@@ -684,42 +676,21 @@ const statusPathForContext = Effect.fn("YeetStatus.statusPathForContext")(functi
   return yield* runArtifactPathForContext(context, "status.json");
 });
 
-const runGitPaths = Effect.fn("YeetStatus.runGitPaths")(function* (
-  repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runRepoCommandCapture("git", args, repoRoot).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to run git ${A.join(args, " ")}.`))
-  );
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      command: `git ${A.join(args, " ")}`,
-      exitCode: result.exitCode,
-      message: `git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`,
-    });
-  }
-  return pathListFromNulOutput(result.output);
-});
-
 const collectWorktreeStatus = Effect.fn("YeetStatus.collectWorktreeStatus")(function* (
   context: RepoRunContext
 ): Effect.fn.Return<
   YeetStatusWorktree,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   // The three reads are independent, so they run at once; their outcomes are
   // then surfaced in the old sequential order, so the first failing read still
   // names the error.
   const [stagedResult, unstagedResult, untrackedResult] = yield* Effect.all(
     [
-      runGitPaths(context.repoRoot, ["diff", "--cached", "--name-only", "-z"]),
-      runGitPaths(context.repoRoot, ["diff", "--name-only", "-z"]),
-      runGitPaths(context.repoRoot, ["ls-files", "--others", "--exclude-standard", "-z"]),
+      collectStagedPublishPaths(context.repoRoot),
+      collectUnstagedTrackedPaths(context.repoRoot),
+      collectUntrackedPaths(context.repoRoot),
     ],
     { concurrency: "unbounded", mode: "result" }
   );
@@ -1518,7 +1489,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
 ): Effect.fn.Return<
   YeetStatusRemote,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (!remote) {
     return skippedRemote;

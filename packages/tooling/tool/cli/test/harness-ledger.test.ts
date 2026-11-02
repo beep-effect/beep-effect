@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   AI_METRICS_LOCAL_INSECURE_HASH_SALT,
   AiMetricsConfigSnapshotInput,
@@ -66,6 +67,7 @@ const encodeUnknownTranscript = S.encodeUnknownEffect(transcriptJson);
 const encodeTranscript = S.encodeEffect(transcriptJson);
 
 const TestLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(ConfigProvider.layer(ConfigProvider.fromUnknown({})))
 );
@@ -1477,6 +1479,7 @@ const ProjectedLayer = Layer.unwrap(
       })
     );
     return HarnessLedgerServiceLive.pipe(
+      Layer.provideMerge(Git.layer),
       Layer.provideMerge(NodeServices.layer),
       Layer.provideMerge(
         ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
@@ -1560,6 +1563,7 @@ const EqualNamespaceLayer = Layer.unwrap(
       })
     );
     return HarnessLedgerServiceLive.pipe(
+      Layer.provideMerge(Git.layer),
       Layer.provideMerge(NodeServices.layer),
       Layer.provideMerge(
         ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
@@ -1797,6 +1801,7 @@ const sentinelLayer = <E, R>(sentinel: Effect.Effect<string, E, R>) =>
   Layer.unwrap(
     Effect.map(sentinel, (value) =>
       HarnessLedgerServiceLive.pipe(
+        Layer.provideMerge(Git.layer),
         Layer.provideMerge(NodeServices.layer),
         Layer.provideMerge(
           ConfigProvider.layer(

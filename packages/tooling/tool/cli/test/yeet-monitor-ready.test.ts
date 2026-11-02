@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   appendYeetInboxRow,
   GreptileSummary,
@@ -178,7 +179,11 @@ const options = {
   replayComments: () => Effect.void,
   commentRows: () => Effect.succeed(A.empty()),
 };
+// The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
+// answer keeps the heavy-admission verdict these fixtures were written against.
+const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
 const platform = Layer.mergeAll(
+  mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
