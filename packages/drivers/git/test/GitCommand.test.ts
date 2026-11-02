@@ -53,6 +53,16 @@ describe("GitCommand", () => {
     assertGitCommand(GitCommand.mergeBase("main", "feat/git"), ["merge-base", "main", "feat/git"]);
   });
 
+  it("isAncestor builds `git merge-base --is-ancestor <ancestor> <descendant>`", () => {
+    assertGitCommand(GitCommand.isAncestor("main", "feat/git"), ["merge-base", "--is-ancestor", "main", "feat/git"]);
+    assert.deepStrictEqual(pipe("main", GitCommand.isAncestor("feat/git")).command.args, [
+      "merge-base",
+      "--is-ancestor",
+      "main",
+      "feat/git",
+    ]);
+  });
+
   it("changedFiles builds `git diff --name-only -z --no-relative <base>...<head>`", () => {
     // --no-relative is explicit on the default branch so an inherited
     // diff.relative=true config cannot silently make the output cwd-relative.
@@ -834,6 +844,7 @@ describe("GitCommand", () => {
       assertGitCommand(GitCommand.worktreeList(), ["worktree", "list", "--porcelain", "-z"]);
       assertGitCommand(GitCommand.worktreeRemove("../wt"), ["worktree", "remove", "../wt"]);
       assertGitCommand(GitCommand.worktreeRemove("../wt", true), ["worktree", "remove", "--force", "../wt"]);
+      assertGitCommand(GitCommand.worktreePrune(), ["worktree", "prune"]);
     });
 
     it("lsFiles pins --stage -z and scopes to a -- pathspec when given", () => {
