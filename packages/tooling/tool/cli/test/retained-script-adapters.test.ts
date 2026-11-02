@@ -64,7 +64,7 @@ const cloudDownloadScenarios = [
     exitCode: 1,
     name: "timeout expiry during unresponsive extraction",
   },
-  { signal: "", phase: "wait", worker: "node", exitCode: 1, name: "failed Bun download" },
+  { signal: "", phase: "await", worker: "node", exitCode: 1, name: "failed Bun download" },
   { signal: "", phase: "wait", worker: "op", exitCode: 1, name: "failed Bun with optional op still running" },
   { signal: "TERM", phase: "wait", worker: "node", exitCode: 143, name: "TERM interruption" },
   { signal: "TERM", phase: "register", worker: "bun", exitCode: 143, name: "TERM before PID registration" },
@@ -72,7 +72,9 @@ const cloudDownloadScenarios = [
   {
     signal: "TERM",
     phase: "exit-cleanup",
-    worker: "node",
+    // Node is awaited after a Bun failure; the optional op worker is what is
+    // still in flight when cleanup starts.
+    worker: "op",
     exitCode: 143,
     name: "TERM at failed-download cleanup entry",
   },
@@ -258,6 +260,8 @@ while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/releas
 done
 elif [ "$worker" = bun ]; then
   while [ -d "$BEEP_BOOTSTRAP_FIXTURE" ] && [ ! -f "$BEEP_BOOTSTRAP_FIXTURE/worker-ready" ]; do sleep 0.01; done
+  # Bootstrap awaits every required worker after Bun fails: let Node finish.
+  if [ "$BEEP_BOOTSTRAP_PHASE" = await ]; then : > "$BEEP_BOOTSTRAP_FIXTURE/release-workers"; fi
 fi
 exit 22
 `,
@@ -325,7 +329,7 @@ const assertCloudDownloadEvents = (
     expect(events).toContain("worker-live");
   } else {
     expect(events, stderr).toBe(
-      scenario.worker === "unzip" || scenario.worker === "checksum"
+      scenario.worker === "unzip" || scenario.worker === "checksum" || scenario.phase === "await"
         ? "cleanup\n"
         : `${scenario.worker}-finished\ncleanup\n`
     );

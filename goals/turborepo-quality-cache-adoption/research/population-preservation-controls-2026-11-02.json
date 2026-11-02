@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "population-preservation-controls/v1",
+  "observedAt": "2026-11-02T06:37:10.427189+00:00",
+  "authority": "Isolated data-preservation regression controls; no semantic task review or qualification",
+  "recipeSha256": "e901c3e499b38234a7595e8575f15974838a870ab361101a49bdbaad557982fe",
+  "priorRecipeSha256": "e0ae5adb9d1aed84dc64770825abd4eb67528d5326dd0c71fc8adee2cd1c3911",
+  "controls": [
+    {
+      "control": "old writer reproduces reviewed-evidence replacement",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "control": "default refuses to replace reviewed evidence",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "control": "explicit archive preserves exact evidence and qualification",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "control": "later refresh retains verified history and population count",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "control": "changed history refuses without replacing current evidence",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "control": "existing-archive",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "control": "changed-census-source",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "control": "removed-computation",
+      "passed": true,
+      "exit": 0
+    },
+    {
+      "control": "escaped-archive",
+      "passed": true,
+      "exit": 1
+    },
+    {
+      "control": "multiple generations retain the complete byte-bound history",
+      "passed": true
+    },
+    {
+      "control": "changed ancestor prevents both current replacement and a new archive",
+      "passed": true,
+      "exit": 1
+    }
+  ]
+}

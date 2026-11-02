@@ -5,6 +5,8 @@
  * `goals/<slug>/ops/manifest.json` — grouped by canonical status, one row per
  * packet (slug, title, phases x/y, updated, one-line mission) — and
  * `--check` proves generation and rejects drift when a local copy exists.
+ * `--json` prints the same rows, with each packet's phases and status note,
+ * as a canonical JSON report for dashboards and other tools.
  * The ignored file is never hand-edited, staged, or linked as tracked GitHub
  * truth; packet manifests remain authoritative.
  *
@@ -26,10 +28,11 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { readGoalLifecycle } from "./Completion.ts";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { decodeGoalManifest, GoalPhase, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
 import { renderCapabilityMermaidSection } from "./Graph.mermaid.ts";
 import { compileCapabilityProjection, evaluateCapabilityGraph } from "./Graph.projection.ts";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
+import { canonicalJsonTextPretty } from "./PacketCore/PacketDigest.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
@@ -87,11 +90,49 @@ export class PortfolioIndexRow extends S.Opaque<PortfolioIndexRow, { readonly br
     status: GoalStatus,
     phasesComplete: S.Finite,
     phasesTotal: S.Finite,
+    created: S.optionalKey(S.String),
     updated: S.optionalKey(S.String),
     mission: S.optionalKey(S.String),
+    statusNote: S.optionalKey(S.String),
+    phases: GoalPhase.pipe(S.Array, S.optionalKey),
   }).pipe(
     $I.annoteSchema("PortfolioIndexRow", {
-      description: "One rendered goals-index row (slug, title, status, phase progress, updated, mission).",
+      description:
+        "One goals-index row (slug, title, status, phase progress, dates, mission, status note, phase entries).",
+    })
+  )
+) {}
+
+/**
+ * Machine-readable goals portfolio, printed by `beep goals index --json`.
+ *
+ * **Details**
+ *
+ * Carries the same rows the Markdown index renders, plus each packet's phase entries and status
+ * note, sorted by slug. Slugs whose manifest is missing or does not decode are listed in `invalid`
+ * instead of being dropped.
+ *
+ * **Example** (Build an empty report)
+ *
+ * ```ts
+ * import { PortfolioIndexReport } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
+ *
+ * const report = PortfolioIndexReport.make({ packets: [], invalid: [] })
+ *
+ * console.log(report.packets.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PortfolioIndexReport extends S.Opaque<PortfolioIndexReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("goals-portfolio-index/v1"),
+    packets: S.Array(PortfolioIndexRow),
+    invalid: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("PortfolioIndexReport", {
+      description: "Every goal packet's index row plus the slugs whose manifest is missing or invalid.",
     })
   )
 ) {}
@@ -179,27 +220,8 @@ export const renderPortfolioIndex: {
   return A.join(lines, "\n");
 });
 
-/**
- * Builds the current goals index content by reading every packet manifest under a repository root.
- *
- * **Details**
- *
- * Packets whose manifest is missing or fails to decode are not dropped: they are collected as
- * invalid slugs and rendered in their own section, so a broken manifest is visible rather than
- * silently absent from the index.
- *
- * **Example** (Build the index for the current working tree)
- *
- * ```ts
- * import { buildPortfolioIndexContent } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
- * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(buildPortfolioIndexContent())) // true
- * ```
- *
- * @category queries
- * @since 0.0.0
- */
-export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* (repoRoot = ".") {
+// One lenient pass over every packet feeds both the Markdown index and the JSON report.
+const collectPortfolioIndex = Effect.fn("Goals.collectPortfolioIndex")(function* (repoRoot: string) {
   const records = yield* listGoalPackets(repoRoot);
   let rows = A.empty<PortfolioIndexRow>();
   let invalid = A.empty<string>();
@@ -233,11 +255,69 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
         status,
         phasesComplete: A.length(A.filter(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))),
         phasesTotal: A.length(phases),
+        ...optionalProp("created", O.fromUndefinedOr(manifest.value.initiative.created)),
         ...optionalProp("updated", O.fromUndefinedOr(manifest.value.initiative.updated)),
         ...optionalProp("mission", mission),
+        ...optionalProp("statusNote", O.fromUndefinedOr(manifest.value.statusNote)),
+        phases,
       })
     );
   }
+
+  return {
+    rows: A.sort(rows, rowBySlug),
+    invalid: A.sort(invalid, Order.String),
+    decoded,
+    operativeStatuses,
+  } as const;
+});
+
+/**
+ * Builds the machine-readable goals portfolio by reading every packet manifest under a repository root.
+ *
+ * **Details**
+ *
+ * Uses the same lenient read as the Markdown index: each row's `status` is the packet's operative
+ * lifecycle (a verified proposed closeout counts), and undecodable manifests land in `invalid`.
+ *
+ * **Example** (Build the report for the current working tree)
+ *
+ * ```ts
+ * import { buildPortfolioIndexReport } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(buildPortfolioIndexReport())) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const buildPortfolioIndexReport = Effect.fn("Goals.buildPortfolioIndexReport")(function* (repoRoot = ".") {
+  const { rows, invalid } = yield* collectPortfolioIndex(repoRoot);
+  return PortfolioIndexReport.make({ packets: rows, invalid });
+});
+
+/**
+ * Builds the current goals index content by reading every packet manifest under a repository root.
+ *
+ * **Details**
+ *
+ * Packets whose manifest is missing or fails to decode are not dropped: they are collected as
+ * invalid slugs and rendered in their own section, so a broken manifest is visible rather than
+ * silently absent from the index.
+ *
+ * **Example** (Build the index for the current working tree)
+ *
+ * ```ts
+ * import { buildPortfolioIndexContent } from "@beep/repo-cli/commands/Goals/PortfolioIndex"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(buildPortfolioIndexContent())) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* (repoRoot = ".") {
+  const { rows, invalid, decoded, operativeStatuses } = yield* collectPortfolioIndex(repoRoot);
 
   // The capability graph uses only manifests whose id matches their directory, so
   // the lenient table and the fail-closed graph never disagree about identity.
@@ -250,7 +330,7 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
     operativeStatuses
   );
   const graph = renderCapabilityMermaidSection(projection, evaluateCapabilityGraph(projection));
-  return `${renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String))}${graph}\n`;
+  return `${renderPortfolioIndex(rows, invalid)}${graph}\n`;
 });
 
 /**
@@ -283,6 +363,22 @@ const checkFlag = Flag.Boolean("check").pipe(
   Flag.withDescription("Prove generation and refresh a stale git-ignored local goals/INDEX.md copy in place")
 );
 
+const jsonFlag = Flag.Boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print every packet's row, phases and status note as canonical JSON")
+);
+
+const printPortfolioIndexJson = Effect.fn("Goals.printPortfolioIndexJson")(function* () {
+  const report = yield* buildPortfolioIndexReport();
+  // The report is built through `PortfolioIndexReport.make`, so encoding it cannot fail; a failure
+  // here is a defect, not a reportable command outcome.
+  const rendered = yield* S.encodeEffect(PortfolioIndexReport)(report).pipe(
+    Effect.orDie,
+    Effect.map(canonicalJsonTextPretty)
+  );
+  yield* Console.log(Str.trimEnd(rendered));
+});
+
 const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (content: string) {
   const fs = yield* FileSystem.FileSystem;
   const existing = yield* fs
@@ -308,10 +404,15 @@ const checkPortfolioIndex = Effect.fn("Goals.checkPortfolioIndex")(function* (co
 const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
   readonly write: boolean;
   readonly check: boolean;
+  readonly json: boolean;
 }) {
-  if (options.write && options.check) {
-    yield* Console.error("[goals:index] --write and --check are mutually exclusive.");
-    return yield* failWithReportedExit("goals index: --write and --check are mutually exclusive.");
+  if (A.length(A.filter([options.write, options.check, options.json], Boolean)) > 1) {
+    yield* Console.error("[goals:index] --write, --check and --json are mutually exclusive.");
+    return yield* failWithReportedExit("goals index: --write, --check and --json are mutually exclusive.");
+  }
+
+  if (options.json) {
+    return yield* printPortfolioIndexJson();
   }
 
   if (options.write) {
@@ -337,7 +438,8 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
  * proves generation and compares an existing local copy: the file's absence is
  * accepted and a stale copy is rewritten from the projection, because the file
  * is git-ignored workstation state that no hosted lane carries and that may
- * never hold authored content. `--check` writes nothing tracked.
+ * never hold authored content. `--check` writes nothing tracked. `--json`
+ * prints the {@link PortfolioIndexReport} instead and writes nothing.
  *
  * **Example** (Read the subcommand identity)
  *
@@ -352,8 +454,12 @@ const runGoalsIndex = Effect.fn("Goals.runGoalsIndex")(function* (options: {
  */
 export const goalsIndexCommand = Command.make(
   "index",
-  { write: writeFlag, check: checkFlag },
-  Effect.fn(function* ({ check, write }) {
-    yield* runGoalsIndex({ write, check });
+  { write: writeFlag, check: checkFlag, json: jsonFlag },
+  Effect.fn(function* ({ check, json, write }) {
+    yield* runGoalsIndex({ write, check, json });
   })
-).pipe(Command.withDescription("Generate the local goals/INDEX.md from packet manifests or verify a local copy"));
+).pipe(
+  Command.withDescription(
+    "Generate the local goals/INDEX.md from packet manifests, verify a local copy, or print the portfolio as JSON"
+  )
+);

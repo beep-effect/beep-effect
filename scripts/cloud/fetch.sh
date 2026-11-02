@@ -13,6 +13,29 @@ NODE_VERSION="$3"
 OP_PINNED_VERSION="$3"
 download_limits=(--connect-timeout 15 --max-time 120 --retry-max-time 120)
 
+# Required-host download. Only a network-policy denial exits 78: the egress
+# proxy refusing the CONNECT tunnel (%{http_connect} 403) or, with no proxy
+# configured, the target not resolving or connecting (curl 6/7). Proxy faults
+# (curl 5, or 6/7 through a proxy), an origin 403, timeouts, 404 and 5xx keep
+# their plain non-zero exit. The recorded host is the one curl reports it was
+# fetching when it stopped (%{url_effective}, so a denied redirect hop is named
+# rather than the caller's host), falling back to the caller's literal; it is
+# never parsed from curl's error text.
+fetch_required() {
+  local host="$1" output="$2" url="$3" report http_connect effective proxy rc=0
+  report="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+    --write-out '%{http_code} %{http_connect} %{url_effective}' --output "${output}" "${url}")" || rc=$?
+  [ "${rc}" -eq 0 ] && return 0
+  read -r _ http_connect effective <<< "${report}"
+  proxy="${HTTPS_PROXY:-${https_proxy:-${ALL_PROXY:-${all_proxy:-}}}}"
+  if [ "${http_connect:-}" = 403 ] || { [ -z "${proxy}" ] && { [ "${rc}" -eq 6 ] || [ "${rc}" -eq 7 ]; }; }; then
+    effective="${effective#*://}"; effective="${effective%%/*}"; effective="${effective##*@}"; effective="${effective%%:*}"
+    printf '%s\n' "${effective:-${host}}" > "${run_dir}/${kind}.denied"
+    exit 78
+  fi
+  return "${rc}"
+}
+
 fetch_bun() {
   local sha work archive
   IFS= read -r sha < .bun-linux-x64.sha256 || [ -n "${sha}" ]
@@ -20,8 +43,7 @@ fetch_bun() {
   work="${run_dir}/bun"
   mkdir -p "${work}"
   archive="${work}/bun-linux-x64.zip"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${archive}" \
+  fetch_required github.com "${archive}" \
     "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
   printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
   unzip -oq "${archive}" -d "${work}"
@@ -37,16 +59,13 @@ fetch_node() {
   local version work
   work="${run_dir}/node"
   mkdir -p "${work}"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/index.tab" "https://nodejs.org/dist/index.tab" || return 1
+  fetch_required nodejs.org "${work}/index.tab" "https://nodejs.org/dist/index.tab" || return 1
   awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }' "${work}/index.tab" > "${work}/version"
   IFS= read -r version < "${work}/version" || return 1
   [ -n "${version}" ] || return 1
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/node.tar.xz" \
+  fetch_required nodejs.org "${work}/node.tar.xz" \
     "https://nodejs.org/dist/${version}/node-${version}-linux-x64.tar.xz"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/SHASUMS256.txt" \
+  fetch_required nodejs.org "${work}/SHASUMS256.txt" \
     "https://nodejs.org/dist/${version}/SHASUMS256.txt"
   pushd "${work}" >/dev/null
   grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null

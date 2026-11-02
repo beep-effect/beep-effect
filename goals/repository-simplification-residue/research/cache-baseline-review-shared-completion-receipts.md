@@ -22,3 +22,11 @@ input lists of the four seal tasks in root `turbo.json`.
 Commands, outputs, cache flags and dependency edges are unchanged. The only
 change is the three added input paths. No qualification is granted, and no
 other subject changes.
+
+## Main merge (2026-11-02)
+
+Merging `origin/main` took main's `standards/cache-qualification-baseline.json`
+and re-ran `bun run beep lint policy-fingerprint --write`. The audit reported
+the same four `//#lint:policy-fingerprint:*` configuration-drift subjects for
+the same three added input paths; nothing else drifted. The re-recorded request
+binds `previous` to main's baseline bytes.

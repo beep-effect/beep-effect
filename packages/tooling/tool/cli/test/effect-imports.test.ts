@@ -179,7 +179,13 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           yield* fs.makeDirectory(".repos");
           yield* fs.symlink("../reference", ".repos/demo");
           yield* writeProjectFile("packages/demo/src/index.ts", demoSource);
-          for (const directory of ["node_modules", "dist", "vendor", "packages/demo/.repos"]) {
+          for (const directory of [
+            "node_modules",
+            "dist",
+            "infra/lambda/demo/build",
+            "vendor",
+            "packages/demo/.repos",
+          ]) {
             yield* writeProjectFile(`${directory}/ignored.ts`, demoSource);
             yield* writeProjectFile(`${directory}/ignored.md`, '```ts\nimport { Effect } from "effect";\n```\n');
             yield* fs.symlink("loop", `${directory}/loop`);

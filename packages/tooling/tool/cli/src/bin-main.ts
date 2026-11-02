@@ -15,6 +15,7 @@ import type { DispatchTarget, RuntimeService } from "./internal/dispatch/Dispatc
 const { A, Str } = await import("@beep/utils");
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
+const { Git } = await import("@beep/git/Git");
 const [ConfigProvider, Console, Effect, Layer, Logger, Option, R, Runtime, { CliRuntime }, { renderCliFailure }] =
   await Promise.all([
     import("effect/ConfigProvider"),
@@ -40,7 +41,8 @@ const [Dispatch, { loadQualityTasks }, HashSet, Command] = await Promise.all([
 const O = await import("effect/Option");
 
 /**
- * Foundation layer providing Node.js implementations of FileSystem, Path, and Terminal.
+ * Foundation layer providing Node.js implementations of FileSystem, Path, and Terminal,
+ * plus the `@beep/git` service over that spawner.
  *
  * These three services are leaf dependencies required by virtually every CLI
  * command and are combined here so they can be shared by all derived layers.
@@ -49,7 +51,13 @@ const O = await import("effect/Option");
  * @category configuration
  * @since 0.0.0
  */
-const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
+// `Git.layer` is provided once here, at the runtime edge, so a command path
+// takes `Git` from its requirements instead of rebuilding the service at a
+// leaf with `Git.make` (effected-promotion W4-l; repo-cli-gh-git-consolidation D-06).
+const BaseLayers = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer)
+);
 
 /**
  * Effect's default loggers, provided around each whole program.

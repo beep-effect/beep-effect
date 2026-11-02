@@ -133,6 +133,19 @@ Known gotchas:
   every attempt in a fresh session, record the error in the packet and fall
   back to a setup script of `npm install -g bun@<pin>` plus `bun install` with
   `HTTPS_PROXY` honoured, or run that lane on Codex instead.
+- A denied required download host (`github.com` for Bun, `nodejs.org` for
+  Node) exits `78` before anything is placed or installed, with one line
+  naming each denied host and the remedy: add it to the environment's allowed
+  domains. Every required download is waited on first, so a Bun failure in
+  the same run is reported too but does not hide the denial. "Denied" means the egress proxy refused the CONNECT tunnel
+  (`403`), or, when none of `HTTPS_PROXY`, `https_proxy`, `ALL_PROXY` or
+  `all_proxy` is set, the host does not resolve or connect. `NO_PROXY` is not
+  consulted, so a direct failure to a host it exempts conservatively exits `1`. The host named is the one curl was fetching when it stopped, so a
+  refused redirect hop (for example a release-asset host) is named instead of
+  `github.com`. An unreachable proxy, an origin `403`, a timeout, `404`, `5xx`
+  or checksum mismatch stays a plain exit `1`. The optional 1Password CLI host only warns. Install
+  registries (`registry.npmjs.org`, `buf.build`) are not classified yet: their
+  denial still surfaces as the `bun install` failure above.
 - The `enabledPlugins` and `extraKnownMarketplaces` blocks in
   `.claude/settings.json` do not install in the cloud, and user-level
   `~/.claude` settings never reach the VM. Anything a cloud lane needs must be
