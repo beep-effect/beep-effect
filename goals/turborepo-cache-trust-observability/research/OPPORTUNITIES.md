@@ -1714,3 +1714,14 @@ with one owner for final global serialization, would avoid reanalyzing unrelated
 packages. Preserve the fresh mutating aggregate and every semantic input; do not
 cache the whole writer or relax its finding totals. These are command elapsed
 times, not a measured production cache saving.
+
+A later accepted-main merge caused two more generated inventory conflicts and
+a 308.841-second canonical refresh. The scan also binds ten inherited completion
+store exports and one public module missing from the accepted inventory; all
+those source files match main exactly. Fresh cache workflow controls pass, but
+package checking now exposes an inherited missing pipeable signature on
+`applyScaffoldRuleForTesting` from PR #2553. Route one main repair through its
+owner; retain the failing receipt and do not lower a baseline or duplicate its
+patch in consumer lanes. The cleared verification lane also observed HTTP401
+from its local cache endpoint; use explicit local-only caching in that lane,
+without changing durable credentials based on that observation.

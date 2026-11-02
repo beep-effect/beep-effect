@@ -7,9 +7,9 @@
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "2cbf4b41a7aebe16a4341d027afb7d5e6e3ea2abe78a3a2c98ac84ec64d76e17",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "bd08e75eb231437e75bc7d6891769b8c6a103d2e706d019445f0ea4ad2133914",
     "packages/tooling/tool/cli/test/cache-workflow.test.ts": "70c94d486a194cf54f8f9c6e5a12c6946cbfa961ddcbabd67fac50242e4711eb",
-    "standards/jsdoc-documentation.inventory.jsonc": "add83ef446c593f88372d62f47d54643391540a966bb8d2504cb674052d5be14",
-    "standards/jsdoc-documentation.inventory.md": "078eea2a17e7105c4ef9498ff8a21bb2ea05e29258b968b66baa7b0d8c6d051b",
-    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "1097f9050c526b08aeae34e8ca54826efac09022326f21171db81500d05ada7e"
+    "standards/jsdoc-documentation.inventory.jsonc": "4555587d0c675d936d2980cef658b443a79138747e20020757e3a5ba18086b71",
+    "standards/jsdoc-documentation.inventory.md": "59d6e54508774129026b517171fc3c974bf143a2086b23b8c3398d522606e8d7",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "5f356314c107b2ef8be8ae47320f05b2c5554412b72fa1ebd27d9d3f9e5db96a"
   },
   "actualFailure": {
     "run": 41413340460,
@@ -149,5 +149,115 @@
     "changedSourceExportPositionsVerified": 16,
     "decisionBlocks": "Both independent append-only blocks retained; manifest references combined.",
     "generatedConflicts": "Both previous versions retained privately; regenerated using the canonical writer."
+  },
+  "latestBaseIntegration": {
+    "acceptedMainRevision": "6bb8584b6dbc9aee927a200901c9eebc0abd63b1",
+    "recordedAt": "2026-11-02T10:50:20.804306+00:00",
+    "ownedSourceBytesUnchanged": true,
+    "checks": {
+      "workflow45Tests": {
+        "exit": 0,
+        "elapsedSeconds": 8.064,
+        "finishedAt": "2026-11-02T10:41:58.854476+00:00"
+      },
+      "canonicalInventory": {
+        "exit": 0,
+        "elapsedSeconds": 308.841,
+        "finishedAt": "2026-11-02T10:45:04.820759+00:00"
+      },
+      "realSourceCollection": {
+        "exit": 0,
+        "elapsedSeconds": 10.36,
+        "finishedAt": "2026-11-02T10:46:55.697749+00:00"
+      }
+    },
+    "realTree": {
+      "files": 14994,
+      "relativeAliases": 1616,
+      "directoryAliases": 1500,
+      "v55rBound": true,
+      "nestedMus6Bound": true,
+      "authority": "Read-only source collection only; no frozen-profile approval, dependency qualification or protected producer grant."
+    },
+    "inventoryFindingTotalsUnchanged": true,
+    "inventoryTotalsDelta": {
+      "publicModules": {
+        "acceptedMain": 3573,
+        "current": 3574
+      },
+      "publicExports": {
+        "acceptedMain": 25389,
+        "current": 25399
+      }
+    },
+    "newlyInventoriedInheritedExports": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptJson",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptStore",
+        "kind": "class"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "GoalCompletionReceiptStoreShape",
+        "kind": "interface"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "goalCompletionReceiptPartition",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "goalCompletionReceiptStore",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "layerGoalCompletionReceiptStoreLive",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "layerGoalCompletionReceiptStoreMemory",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "makeGoalCompletionReceiptStoreAt",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
+        "symbol": "makeGoalCompletionReceiptStoreLive",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+        "symbol": "export * from \"./CompletionReceiptStore.service.ts\";",
+        "kind": "re-export"
+      }
+    ],
+    "inheritedSourceFilesUnchanged": true,
+    "changedSourceExportPositionsVerified": 16,
+    "packageQuick": {
+      "result": {
+        "exit": 1,
+        "elapsedSeconds": 6.663,
+        "finishedAt": "2026-11-02T10:41:57.452863+00:00"
+      },
+      "attribution": "inherited from accepted main commit1d748d103916beeb773796d582616caedfc1c643 / PR2553",
+      "path": "packages/tooling/tool/cli/src/internal/package-scripts/PackageScripts.schemas.ts",
+      "line": 1465,
+      "diagnostic": "TS377101 missingPipeableSignature on applyScaffoldRuleForTesting",
+      "sourceSha256": "6fd8529fb45e90c082f89916af5bae79b88fb8bb1d541e0a5eb38730ec8ee219",
+      "coordination": "Primary notified for one consolidated main repair; no duplicate patch or suppression.",
+      "discussion": "https://github.com/beep-effect/beep-effect/pull/2562#issuecomment-6575212482"
+    },
+    "verificationEnvironment": "An unauthenticated remote-cache read was observed in the cleared verification lane; use explicit local-only caching for subsequent verification. No credential change inferred."
   }
 }

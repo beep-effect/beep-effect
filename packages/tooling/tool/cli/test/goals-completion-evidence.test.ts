@@ -10,6 +10,7 @@ import {
   GoalMergeTimeEvidenceRequest,
   GoalObservedCheckRun,
   GoalPullRequestRef,
+  layerGoalCompletionReceiptStoreMemory,
   observeGoalCompletion,
   readGoalCompletionGit,
   readGoalCompletionGithub,
@@ -194,7 +195,9 @@ const gapsOf = (receipt: GoalCompletionReceipt) =>
     A.empty
   );
 
-it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal merge-time completion evidence", (it) => {
+const ReceiptStoreTestLayer = Layer.mergeAll(NodeTestLayer, layerGoalCompletionReceiptStoreMemory);
+
+it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time completion evidence", (it) => {
   it.effect("verifies complete recorded evidence bound to the accepted head", () =>
     Effect.gen(function* () {
       const receipt = yield* observe();
@@ -520,7 +523,10 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goal merge-time completion e
         data: withRuns(A.map((run) => (run.name === "Lint" ? { ...run, conclusion: "failure" } : run))),
       });
       const green = yield* observe();
-      const newer = GoalCompletionReceipt.make({ ...green, verifiedAt: DateTime.add(red.verifiedAt, { seconds: 1 }) });
+      const newer = GoalCompletionReceipt.make({
+        ...green,
+        verifiedAt: DateTime.add(red.verifiedAt, { seconds: 1 }),
+      });
       const lines = `${yield* encodeReceiptJson(red)}\n${yield* encodeReceiptJson(newer)}\n`;
       yield* writeProjectFile(".beep/goals/completion-receipts.ndjson", lines);
       const data = yield* recorded();
