@@ -1,7 +1,7 @@
 {
   "schemaVersion": "cache-source-directory-alias/v1",
   "recordedAt": "2026-11-02T10:15:22.027628+00:00",
-  "sourceBaseRevision": "be80899ddb",
+  "sourceBaseRevision": "be80899ddb0ddb083b9185762ce84da99b4cef80",
   "authority": "Focused source/runtime controls and read-only real-tree collection; no protected approval, signed publication, rollout or whole-goal acceptance.",
   "sourceSha256": {
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "2cbf4b41a7aebe16a4341d027afb7d5e6e3ea2abe78a3a2c98ac84ec64d76e17",
