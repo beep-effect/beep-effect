@@ -48,6 +48,44 @@ import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../
 const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
 
 /**
+ * The wording a {@link yeetGitErrorAdapter} folds git failures into.
+ *
+ * **Details**
+ *
+ * `spawnFailure` is a fixed message for a run git never reached; when it is absent the message is
+ * `Failed to run <command line>.`. A non-zero exit renders `<command line> <nonZeroExit> <code>.`, and
+ * a truncated run `<command line> <truncated>`, carrying `truncatedExitCode` when one is set.
+ *
+ * **Example** (Describe the strict reader wording)
+ *
+ * ```ts
+ * import { YeetGitErrorWording } from "@beep/repo-cli/test/Yeet"
+ *
+ * const wording = YeetGitErrorWording.make({
+ *   spawnFailure: "Failed to read the working-tree status.",
+ *   nonZeroExit: "exited with code",
+ *   truncated: "produced more output than the capture bound.",
+ * })
+ * console.log(wording.nonZeroExit) // exited with code
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetGitErrorWording extends S.Opaque<YeetGitErrorWording, { readonly brand: unique symbol }>()(
+  S.Struct({
+    spawnFailure: S.optionalKey(S.String),
+    nonZeroExit: S.String,
+    truncated: S.String,
+    truncatedExitCode: S.optionalKey(S.Finite),
+  }).pipe(
+    $I.annoteSchema("YeetGitErrorWording", {
+      description: "Message text Yeet renders for a git run that failed to spawn, exited non-zero or was truncated.",
+    })
+  )
+) {}
+
+/**
  * Build a `GitCommandErrorAdapter` that folds every git failure into `YeetCommandError` with the
  * given wording.
  *
@@ -55,37 +93,29 @@ const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
  *
  * Yeet keeps two historical wordings: the bounded capture (`<command line> failed with exit code
  * <n>.`) and the strict readers in Settle (`<command line> exited with code <n>.`). Both share this
- * shape and differ only in the text and in whether a truncated run carries exit code 1, so each
- * wording is one call here (repo-cli-gh-git-consolidation W2b, SPEC D-11).
+ * shape and differ only in their {@link YeetGitErrorWording} (repo-cli-gh-git-consolidation W2b,
+ * SPEC D-11).
  *
- * **Example** (Build the strict reader wording)
+ * **Example** (Build the strict reader adapter)
  *
  * ```ts
- * import { yeetGitErrorAdapter } from "@beep/repo-cli/test/Yeet"
+ * import { YeetGitErrorWording, yeetGitErrorAdapter } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * const adapter = yeetGitErrorAdapter({
- *   spawnFailure: () => "Failed to read the working-tree status.",
- *   nonZeroExit: "exited with code",
- *   truncated: "produced more output than the capture bound.",
- *   truncatedExitCode: O.none(),
- * })
+ * const adapter = yeetGitErrorAdapter(
+ *   YeetGitErrorWording.make({ nonZeroExit: "exited with code", truncated: "produced more output than the capture bound." })
+ * )
  * console.log(O.isSome(adapter.onTruncated)) // true
  * ```
  *
- * @param wording - The spawn-failure message, the non-zero-exit verb phrase, the truncation suffix
- *   and the exit code a truncated run carries.
+ * @param wording - The message text for each failure kind.
  * @returns The adapter for `adaptGitKitError` or the bounded capture.
  * @category execution
  * @since 0.0.0
  */
-export const yeetGitErrorAdapter = (wording: {
-  readonly spawnFailure: (commandLine: string) => string;
-  readonly nonZeroExit: string;
-  readonly truncated: string;
-  readonly truncatedExitCode: O.Option<number>;
-}): GitCommandErrorAdapter<YeetCommandError> => ({
-  onSpawnFailure: (commandLine) => YeetCommandError.new(wording.spawnFailure(commandLine)),
+export const yeetGitErrorAdapter = (wording: YeetGitErrorWording): GitCommandErrorAdapter<YeetCommandError> => ({
+  onSpawnFailure: (commandLine) =>
+    YeetCommandError.new(O.getOrElse(O.fromUndefinedOr(wording.spawnFailure), () => `Failed to run ${commandLine}.`)),
   onNonZeroExit: ({ commandLine, exitCode }) =>
     YeetCommandError.make({
       message: `${commandLine} ${wording.nonZeroExit} ${exitCode}.`,
@@ -96,17 +126,21 @@ export const yeetGitErrorAdapter = (wording: {
     YeetCommandError.make({
       message: `${commandLine} ${wording.truncated}`,
       command: commandLine,
-      ...O.match(wording.truncatedExitCode, { onNone: () => ({}), onSome: (exitCode) => ({ exitCode }) }),
+      ...O.match(O.fromUndefinedOr(wording.truncatedExitCode), {
+        onNone: () => ({}),
+        onSome: (exitCode) => ({ exitCode }),
+      }),
     })
   ),
 });
 
-const gitErrorAdapter = yeetGitErrorAdapter({
-  spawnFailure: (commandLine) => `Failed to run ${commandLine}.`,
-  nonZeroExit: "failed with exit code",
-  truncated: "output exceeded the repo-run capture limit.",
-  truncatedExitCode: O.some(1),
-});
+const gitErrorAdapter = yeetGitErrorAdapter(
+  YeetGitErrorWording.make({
+    nonZeroExit: "failed with exit code",
+    truncated: "output exceeded the repo-run capture limit.",
+    truncatedExitCode: 1,
+  })
+);
 
 /**
  * Fold a `Git` member's typed error into Yeet's historical `YeetCommandError` wording.

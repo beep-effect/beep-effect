@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-01",
+  "generatedOn": "2026-11-02",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -2294,16 +2294,6 @@
       "line": 55,
       "owner": "@beep/repo-cli",
       "reason": "Store regression scenarios use exact SQLite rows, staged process termination and injected audit-write failure to prove transaction, lease and resolution recovery contracts. Arbitrary operator-evidence transport properties live in agent-message-models.test.ts; random codec round-trips cannot replace these deterministic failure points."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/ai-metrics-observation-deployment.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 54,
-      "owner": "@beep/repo-cli",
-      "reason": "Deterministic command/rendering regressions verify expected unit/proxy configuration, journal-derived limits, interpolation/path-overlap refusal, malformed inputs and absence of installation side effects. Deliberate adversarial literals and boundaries are the subject. Exit: a changed escaping/path contract motivates an independently designed rendering property, or reusable schema laws move here. Independent Astra review: intentional deterministic integration/regression coverage; no unverified property coverage elsewhere is claimed."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",
