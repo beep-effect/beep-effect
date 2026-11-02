@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (skill-contract-gate-certificates, claude/skill-contract-gate-certs-oodgzh)",
-      "reason": "Re-record the root subject on main's baseline after the fourth origin/main merge into #2490 (d4b36ecd): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
+      "reason": "Re-record the root subject on main's baseline after the fifth origin/main merge into #2490 (b5c2b466): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
       "basis": {
-        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-4.md",
-        "sha256": "6f29dbf1bf585d4bb70a15f1b0b35c442d4631b7f7788521cbe5855adcf3f48a"
+        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-5.md",
+        "sha256": "6bc033d48d7ebf409d2df572e42240749c9f289467088cda792c93530d7428c5"
       }
     },
     "@beep/acp": {
@@ -3340,6 +3340,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -3893,6 +3894,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -6362,6 +6364,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -121741,7 +121744,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "822025f2b21f93dee338820290227548788d3fcdb2367b8ff98937b1a99c43cb"
+        "sha256": "84421ab63e5db7b4e7bcc6e0fe33249e517e1f8cfeccc94c8cf25a9571ff4a54"
       }
     ]
   }

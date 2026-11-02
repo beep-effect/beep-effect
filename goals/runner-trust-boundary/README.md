@@ -2,8 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`; P1 and P2 complete 2026-08-24, P3 through P7 complete
-2026-08-25, P8 reactivated 2026-08-30
+Lifecycle: `active` until the closeout PR's completion is verified; P0 through P8
+complete (P8 on 2026-11-02, E1 accepted as a residual by the operator).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -92,22 +92,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Active at P8 Post-release JIT containment. P4 Boundary verification completed
-on 2026-08-25: the final-head red
-team (run `32893112867` on `4764cdb4ba`) passed Gates A through J, L, and the
-new M JIT-replay gate exactly once each, with `AMI_PIN`, a live
-`METADATA_DISABLED (disabled applied)` sample, scoped deregistration, and EC2
-termination one second after completion. GitHub refused the replayed one-use
-JIT configuration with `A session for this runner already exists.` (concurrent
-replay only; post-release replay is exception E1). The live runner-group and
-AWS state were re-read and match the committed controller source. P5 through P7 closed the same day: every remediation PR is merged, the
-six exact Codex IDs are closed as Already fixed with the ledger in
-[`ops/closures.json`](./ops/closures.json), and the reflection is retained.
-The 2026-08-30 security review identified that the packet nevertheless closed
-while post-release replay and argv exposure remained unproved. P8 now owns
-that residual and prevents lifecycle closure until containment or server-side
-replay rejection is demonstrated live.
-Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
+P8 completed on 2026-11-02 and the packet proposes `completed-retained`
+through its closeout PR. The deployed runner class re-passed the A-through-L
+red team on `main` (run `41409672251`). Probe N showed that a leaked one-use
+JIT configuration is refused from the original and a second host after an
+orderly listener stop (run `41422745680`), and accepted after a SIGKILL stop
+until the original job ends (run `41429667965`). A 12-minute hold of such a
+session started no job (run `41452707373`). The operator accepted that
+residual (SPEC Decision Log). Evidence: [`history/`](./history/).
 
 ## Latest Evidence
 
@@ -119,8 +111,15 @@ JIT configuration from the original host and from a disposable second host
 the same-host replay was **accepted** about three minutes later while the
 registration stayed busy until the job timed out (run `41429667965`). E1 is
 confirmed for that stop; P8 is stopped for an operator decision (options in
-[`PLAN.md`](./PLAN.md#p8-operator-decision-open-since-2026-11-02)). Receipts:
+[`PLAN.md`](./PLAN.md#p8-operator-decision-decided-2026-11-02-accept-e1-as-a-residual)). Receipts:
 [`history/`](./history/).
+
+The operator chose to measure the exposure first. In run `41452707373` the
+replayed session was held for 12 minutes and no job started on it: a
+decoy and all 32 real heavy jobs that started during the hold went to other
+runners, and the session ended
+when the original job was cancelled. The operator then accepted E1 as a
+residual (SPEC Decision Log).
 
 On 2026-11-02 run `41409672251` re-passed Gates A through J and L,
 `AMI_PIN`, live `METADATA_DISABLED`, deregistration and teardown on `main`,

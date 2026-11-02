@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { CacheProducerBinding, CacheProducerBundle, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
 import {
   CacheHostedProducerVerifier,
@@ -38,7 +39,8 @@ it.layer(
     NodeCrypto.layer,
     NodeServices.layer,
     PublishedContentClient,
-    FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+    FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+    Git.layer.pipe(Layer.provide(NodeServices.layer))
   ),
   {
     timeout: "30 seconds",

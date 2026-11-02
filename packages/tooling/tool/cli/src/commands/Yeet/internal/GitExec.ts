@@ -14,6 +14,7 @@
 
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -21,6 +22,7 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   adaptGitKitError,
@@ -42,6 +44,8 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
+
+const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
   onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),
@@ -320,9 +324,9 @@ export const patientGit: Effect.Effect<GitShape, never, ChildProcessSpawner.Chil
  *
  * **Details**
  *
- * An `origin/<branch>` base runs `Git.fetch(repoRoot, { remote: "origin", ref:
- * "refs/heads/<branch>:refs/remotes/origin/<branch>" })`, the explicit refspec that materializes
- * `origin/<branch>` under a single-branch clone too. Any other base is verified in place with
+ * An `origin/<branch>` base runs `Git.fetch` against remote `origin` with the explicit refspec
+ * `refs/heads/<branch>:refs/remotes/origin/<branch>`, which materializes `origin/<branch>` under a
+ * single-branch clone too. Any other base is verified in place with
  * `Git.revParse(repoRoot, base)`; a base git would read as an option is refused before any spawn
  * and reaches Yeet as the spawn-failure wording.
  *
@@ -445,9 +449,9 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  *
  * **Details**
  *
- * KEEP (W1b): this reader stays on the bounded capture because `Git.changedFiles` takes no
- * pathspec yet; it moves onto the kit with the G7 dirty-axis flags in W2
- * (repo-cli-gh-git-consolidation PLAN "Waves").
+ * Runs `Git.changedFiles(repoRoot, { base, head, pathspec: ["bun.lock"] })` (the G7 pathspec,
+ * repo-cli-gh-git-consolidation W2, SPEC D-10); any failure reads as "unchanged", as the tolerant
+ * capture it replaces did.
  *
  * **Example** (Detect bun.lock changes)
  *
@@ -472,34 +476,47 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  */
 export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase")(function* (
   context: RepoRunContext
-): Effect.fn.Return<boolean, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const changed = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${context.base}...${context.head}`,
-    "--",
-    "bun.lock",
-  ]).pipe(Effect.orElseSucceed(A.empty<string>));
-  return !A.isReadonlyArrayEmpty(changed);
+): Effect.fn.Return<boolean, YeetCommandError, Git> {
+  const git = yield* Git;
+  const changed = yield* git
+    .changedFiles(context.repoRoot, { base: context.base, head: context.head, pathspec: ["bun.lock"] })
+    .pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.isReadonlyArrayNonEmpty(changed);
 });
 
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
+ * **Example** (Represent a successful mutation without captured output)
+ *
+ * ```ts
+ * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
+ *
+ * const exit = GitKitExit.make({ exitCode: 0, output: "" })
+ * console.log(exit.exitCode) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type GitKitExit = {
-  readonly exitCode: number;
-  readonly output: string;
-};
+export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Finite,
+    output: S.String,
+  }).pipe(
+    $I.annoteSchema("GitKitExit", {
+      description: "A Git mutation's finite exit code and output, with empty output for a successful kit call.",
+    })
+  )
+) {}
 
-const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed({ exitCode: 0, output: "" });
+const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed(
+  GitKitExit.make({ exitCode: 0, output: "" })
+);
 
 const kitExitAdapter = (failedToRun: string): GitCommandErrorAdapter<Result.Result<GitKitExit, YeetCommandError>> => ({
   onSpawnFailure: () => (cause) => Result.fail(YeetCommandError.new(failedToRun)(cause)),
-  onNonZeroExit: ({ exitCode, output }) => Result.succeed({ exitCode, output }),
+  onNonZeroExit: ({ exitCode, output }) => Result.succeed(GitKitExit.make({ exitCode, output })),
   onTruncated: O.none(),
 });
 
