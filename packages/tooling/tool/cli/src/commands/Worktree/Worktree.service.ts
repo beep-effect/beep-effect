@@ -28,6 +28,7 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { A, O, Str } from "@beep/utils";
@@ -97,6 +98,7 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
 import type {
+  WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
   WorktreeUpstreamVerdict,
 } from "./Worktree.schemas.ts";
@@ -620,6 +622,56 @@ export const worktreeGitErrorAdapter = (failMessage: string): GitCommandErrorAda
   onNonZeroExit: ({ commandLine, exitCode }) =>
     WorktreeCommandError.make({ message: `${failMessage} (exit ${exitCode}).`, command: commandLine, exitCode }),
   onTruncated: O.none(),
+});
+
+/**
+ * Locate the repository from `startFrom` and read its registered worktrees through `Git.worktreeList`.
+ *
+ * **Details**
+ *
+ * The listing is fail-closed: a kit failure folds through {@link worktreeGitErrorAdapter} with
+ * `failMessage`, and unparseable output becomes the "must use NUL delimiters" refusal. Entries are
+ * mapped onto {@link WorktreeListEntry}, main checkout first, the order `git worktree list` reports.
+ *
+ * **Example** (List the worktrees of the current repository)
+ *
+ * ```ts
+ * import { listRepositoryWorktrees } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const listing = listRepositoryWorktrees(undefined, "Failed to list git worktrees.")
+ * console.log(Effect.isEffect(listing)) // true
+ * ```
+ *
+ * @param startFrom - Directory to resolve the repository root from; the process cwd when omitted.
+ * @param failMessage - Message attached to a failed listing.
+ * @returns The repository root and its worktree entries.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const listRepositoryWorktrees = Effect.fn("Worktree.listRepositoryWorktrees")(function* (
+  startFrom: string | undefined,
+  failMessage: string
+): Effect.fn.Return<
+  { readonly currentRoot: string; readonly entries: ReadonlyArray<WorktreeListEntry> },
+  WorktreeCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+> {
+  const git = yield* Git;
+  const currentRoot = yield* findRepoRoot(startFrom).pipe(
+    Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
+  );
+  const entries = yield* git.worktreeList(currentRoot).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(
+        GitCommand.worktreeList(),
+        worktreeGitErrorAdapter(failMessage),
+        O.some(() => WorktreeCommandError.make({ message: "Git worktree listing must use NUL delimiters." }))
+      ),
+      onSuccess: worktreeListEntriesFromGit,
+    })
+  );
+  return { currentRoot, entries };
 });
 
 const preservationErrorAdapter = (

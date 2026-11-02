@@ -3250,6 +3250,7 @@
     {"name":"Worktree.installRegenerateMergeDriver","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Worktree.invokerExemption","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Worktree.linkReferences","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Worktree.listRepositoryWorktrees","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Worktree.prepare","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Worktree.renderArchivedRemovalReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Worktree.renderCleanRemovalReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},

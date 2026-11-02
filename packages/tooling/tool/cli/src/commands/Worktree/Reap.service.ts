@@ -5,10 +5,7 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
-import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot } from "@beep/repo-utils";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -24,12 +21,13 @@ import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { adaptGitKitError, runRepoCommandCapture, scanProcessAttachments } from "../../internal/repo-run/index.ts";
+import { runRepoCommandCapture, scanProcessAttachments } from "../../internal/repo-run/index.ts";
 import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
-import { FleetLivenessReadings, WorktreeRemovalRequest, worktreeListEntriesFromGit } from "./Worktree.schemas.ts";
-import { WorktreeRemovalService, worktreeGitErrorAdapter } from "./Worktree.service.ts";
+import { FleetLivenessReadings, WorktreeRemovalRequest } from "./Worktree.schemas.ts";
+import { listRepositoryWorktrees, WorktreeRemovalService } from "./Worktree.service.ts";
+import type { Git } from "@beep/git/Git";
 import type { DomainError } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -650,19 +648,9 @@ export const runWorktreeReap = Effect.fn("WorktreeReap.runWorktreeReap")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const removalService = yield* WorktreeRemovalService;
-  const git = yield* Git;
-  const currentRoot = yield* findRepoRoot(options.startFrom).pipe(
-    Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
-  );
-  const entries = yield* git.worktreeList(currentRoot).pipe(
-    Effect.mapBoth({
-      onFailure: adaptGitKitError(
-        GitCommand.worktreeList(),
-        worktreeGitErrorAdapter("Failed to list registered git worktrees."),
-        O.some(() => WorktreeCommandError.make({ message: "Git worktree listing must use NUL delimiters." }))
-      ),
-      onSuccess: worktreeListEntriesFromGit,
-    })
+  const { currentRoot, entries } = yield* listRepositoryWorktrees(
+    options.startFrom,
+    "Failed to list registered git worktrees."
   );
   const mainCheckout = O.getOrElse(
     O.map(A.head(entries), (entry) => entry.path),
