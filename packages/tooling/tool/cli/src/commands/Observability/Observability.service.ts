@@ -25,6 +25,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Project } from "ts-morph";
+import { resolveShardScope, shardScopeIncludes } from "../../internal/cli/ShardScope.ts";
 import { createWorkspaceOwnerResolver } from "../../internal/tsmorph/index.ts";
 import { ObservabilityCommandError } from "./Observability.errors.ts";
 import { combineHarvests, harvestSourceFile } from "./Observability.harvest.ts";
@@ -77,8 +78,16 @@ export interface InstrumentationCatalogShape {
   readonly harvest: Effect.Effect<SpanHarvest, ObservabilityCommandError>;
   /** Imports every `src/**\/*.instruments.ts` file and keeps its declarations exports. */
   readonly loadDeclarations: Effect.Effect<ReadonlyArray<DeclarationsFile>, ObservabilityCommandError>;
-  /** Builds the catalog, then writes or checks the catalog shards and the standard's generated section. */
-  readonly run: (mode: CatalogRunMode) => Effect.Effect<CatalogRunReport, ObservabilityCommandError>;
+  /**
+   * Builds the catalog, then writes or checks the catalog shards and the standard's generated section.
+   *
+   * With `scope`, only the shards of the packages owning those paths are
+   * built and compared, and the standard's generated section is skipped.
+   */
+  readonly run: (
+    mode: CatalogRunMode,
+    scope?: ReadonlyArray<string> | undefined
+  ) => Effect.Effect<CatalogRunReport, ObservabilityCommandError>;
 }
 
 /**
@@ -111,10 +120,16 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     Effect.mapError(failure(repoRoot, "Failed to resolve workspace packages."))
   );
 
-  const harvest = Effect.gen(function* () {
+  // Both loaders glob with the full scan's globs; a scoped run narrows the matched files with
+  // `includes`, so a scoped shard is parsed from exactly the files the full scan attributes to it.
+  const harvestFiles = Effect.fn("InstrumentationCatalog.harvestFiles")(function* (
+    includes: (absolutePath: string) => boolean
+  ) {
     const files = yield* fsUtils
       .globFiles(SOURCE_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
-      .pipe(Effect.mapError(failure(repoRoot, "Failed to list source files.")));
+      .pipe(
+        Effect.mapBoth({ onSuccess: A.filter(includes), onFailure: failure(repoRoot, "Failed to list source files.") })
+      );
     const project = new Project({ skipAddingFilesFromTsConfig: true });
     const harvests = yield* Effect.forEach(
       A.filter(A.sort(files, Str.Order), (file) => !isExcludedTypeScriptSourcePath(relative(file))),
@@ -137,12 +152,23 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
         })
     );
     return combineHarvests(harvests);
-  }).pipe(Effect.withSpan("InstrumentationCatalog.harvest"));
+  });
 
-  const loadDeclarations = Effect.gen(function* () {
+  const everyFile = (): boolean => true;
+
+  const harvest = harvestFiles(everyFile).pipe(Effect.withSpan("InstrumentationCatalog.harvest"));
+
+  const loadDeclarationsFiles = Effect.fn("InstrumentationCatalog.loadDeclarationsFiles")(function* (
+    includes: (absolutePath: string) => boolean
+  ) {
     const files = yield* fsUtils
       .globFiles(DECLARATION_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
-      .pipe(Effect.mapError(failure(repoRoot, "Failed to list instruments files.")));
+      .pipe(
+        Effect.mapBoth({
+          onSuccess: A.filter(includes),
+          onFailure: failure(repoRoot, "Failed to list instruments files."),
+        })
+      );
     return yield* Effect.forEach(A.sort(files, Str.Order), (file) =>
       Effect.tryPromise({
         try: (): Promise<Record<string, unknown>> => import(file),
@@ -161,7 +187,11 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
         })
       )
     );
-  }).pipe(Effect.withSpan("InstrumentationCatalog.loadDeclarations"));
+  });
+
+  const loadDeclarations = loadDeclarationsFiles(everyFile).pipe(
+    Effect.withSpan("InstrumentationCatalog.loadDeclarations")
+  );
 
   const sync = Effect.fn("InstrumentationCatalog.sync")(function* (
     mode: CatalogRunMode,
@@ -209,14 +239,44 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     return A.sort([...A.map(shards, relative), ...(retired ? [RETIRED_INSTRUMENTATION_CATALOG_PATH] : [])], Str.Order);
   });
 
-  const run = Effect.fn("InstrumentationCatalog.run")(function* (mode: CatalogRunMode) {
-    const harvested = yield* harvest;
-    const files = yield* loadDeclarations;
+  // A scoped run reads only the owning packages' sources. Shards never mix
+  // packages, so the scoped text equals the full scan's text for those owners;
+  // the standard's generated section and orphan retirement need the whole
+  // catalog and are left to the full run.
+  const resolveScope = Effect.fn("InstrumentationCatalog.resolveScope")(function* (paths: ReadonlyArray<string>) {
+    const scope = yield* resolveShardScope(repoRoot, paths, ownerOf).pipe(
+      Effect.mapError(failure(repoRoot, "Failed to resolve the owning packages of the scoped paths.")),
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
+    return {
+      owners: A.getSomes(A.map(scope.owners, (owner) => decodePackageName(owner.owner))),
+      includes: shardScopeIncludes(scope, ownerOf),
+    };
+  });
+
+  const run = Effect.fn("InstrumentationCatalog.run")(function* (
+    mode: CatalogRunMode,
+    scopePaths?: ReadonlyArray<string> | undefined
+  ) {
+    const scope = O.fromNullishOr(scopePaths).pipe(O.filter(A.isReadonlyArrayNonEmpty));
+    const scoped = O.isSome(scope) ? O.some(yield* resolveScope(scope.value)) : O.none();
+    const harvested = yield* O.match(scoped, {
+      onNone: () => harvest,
+      onSome: ({ includes }) => harvestFiles(includes),
+    });
+    const files = yield* O.match(scoped, {
+      onNone: () => loadDeclarations,
+      onSome: ({ includes }) => loadDeclarationsFiles(includes),
+    });
     const build = buildCatalog(
       harvested,
       A.flatMap(files, (file) => file.declarations)
     );
-    const shards = shardCatalog(build.document);
+    const scopedOwners = O.map(scoped, ({ owners }) => owners);
+    const shards = A.filter(shardCatalog(build.document), (shard) =>
+      O.match(scopedOwners, { onNone: () => true, onSome: A.contains(shard.package) })
+    );
     const expected = HashSet.fromIterable(A.map(shards, (shard) => shardPath(shard.package)));
     const written = yield* Effect.forEach(shards, (shard) => {
       const shardFile = shardPath(shard.package);
@@ -226,20 +286,34 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
         Effect.map((status) => GeneratedFile.make({ path: PosixPath.make(shardFile), status }))
       );
     });
-    const orphans = A.filter(yield* existingCatalogFiles, (file) => !HashSet.has(expected, file));
-    const retired = yield* Effect.forEach(orphans, (file) =>
+    // Scoped: only an in-scope owner that lost its last span is an orphan.
+    const orphans = yield* O.match(scopedOwners, {
+      onNone: () =>
+        Effect.map(
+          existingCatalogFiles,
+          A.filter((file) => !HashSet.has(expected, file))
+        ),
+      onSome: (owners) =>
+        Effect.filter(
+          A.filter(A.map(owners, shardPath), (file) => !HashSet.has(expected, file)),
+          (file) => fs.exists(path.join(repoRoot, file)).pipe(Effect.mapError(failure(file, "Failed to stat file.")))
+        ),
+    });
+    const retired = yield* Effect.forEach(A.sort(orphans, Str.Order), (file) =>
       Effect.map(retire(mode, file), (status) => GeneratedFile.make({ path: PosixPath.make(file), status }))
     );
-    const standard = yield* sync(mode, OBSERVABILITY_STANDARD_PATH, (current) =>
-      Effect.fromOption(O.flatMap(current, spliceStandardSection(STANDARD_SECTION))).pipe(
-        Effect.mapError(() =>
-          ObservabilityCommandError.make({
-            path: OBSERVABILITY_STANDARD_PATH,
-            message: "Generated section markers are missing.",
-          })
-        )
-      )
-    );
+    const standard = O.isSome(scoped)
+      ? GeneratedFileStatus.Enum.skipped
+      : yield* sync(mode, OBSERVABILITY_STANDARD_PATH, (current) =>
+          Effect.fromOption(O.flatMap(current, spliceStandardSection(STANDARD_SECTION))).pipe(
+            Effect.mapError(() =>
+              ObservabilityCommandError.make({
+                path: OBSERVABILITY_STANDARD_PATH,
+                message: "Generated section markers are missing.",
+              })
+            )
+          )
+        );
     const drifted = A.filter([...written, ...retired], (file) => file.status !== GeneratedFileStatus.Enum.current);
     const interpolated = A.filter(harvested.findings, (finding) => SpanNameFindingKind.is.interpolated(finding.kind));
     const nonLiteral = A.filter(harvested.findings, (finding) => SpanNameFindingKind.is["non-literal"](finding.kind));
