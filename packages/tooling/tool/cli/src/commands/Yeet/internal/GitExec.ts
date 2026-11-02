@@ -487,14 +487,13 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
- * **Example** (Decode a refused worktree add)
+ * **Example** (Represent a successful mutation without captured output)
  *
  * ```ts
  * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
- * import * as S from "effect/Schema"
  *
- * const exit = S.decodeUnknownSync(GitKitExit)({ exitCode: 128, output: "fatal: invalid reference" })
- * console.log(exit.exitCode) // 128
+ * const exit = GitKitExit.make({ exitCode: 0, output: "" })
+ * console.log(exit.exitCode) // 0
  * ```
  *
  * @category models
@@ -502,11 +501,11 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
  */
 export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
   S.Struct({
-    exitCode: S.Int,
+    exitCode: S.Finite,
     output: S.String,
   }).pipe(
     $I.annoteSchema("GitKitExit", {
-      description: "The exit code and output a repo-run capture reported for a git mutation.",
+      description: "A Git mutation's finite exit code and output, with empty output for a successful kit call.",
     })
   )
 ) {}

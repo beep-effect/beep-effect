@@ -5111,7 +5111,7 @@
         "**/docgen.json",
         "**/package.json",
         "{packages,apps,infra}/**/*.{ts,tsx}",
-        "scratchpad/**/*.ts",
+        "scratchpad/**/*.{ts,tsx}",
         "tools/**/*.{ts,tsx}",
         "tsdoc.json",
         "!**/node_modules/**",
@@ -5122,7 +5122,6 @@
         "!**/coverage/**",
         "!**/.next/**",
         "!**/storybook-static/**",
-        "!**/test/fixtures/**",
         "!scratchpad/docs/**",
         "!scratchpad/.jsdoc-loop/**",
         "!.claude/worktrees/**"
@@ -5204,14 +5203,7 @@
       "inputs": [
         "{packages,apps}/**/src/**/*.{ts,tsx}",
         "standards/jsdoc-totals.regression-baseline.jsonc",
-        "!**/node_modules/**",
-        "!**/.beep/**",
-        "!**/.turbo/**",
-        "!**/dist/**",
-        "!**/build/**",
-        "!**/coverage/**",
-        "!**/.next/**",
-        "!**/storybook-static/**"
+        "!**/node_modules/**"
       ]
     },
     "//#changeset:status": {

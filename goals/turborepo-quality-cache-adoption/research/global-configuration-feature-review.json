@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "cache-global-configuration-feature-review/v1",
+  "recordedAt": "2026-11-02T14:22:28.211541+00:00",
+  "feature": "futureFlag:globalConfiguration",
+  "decision": "retain-current-enabled-setting-without-input-narrowing",
+  "authority": "No-change feature decision backed by current source and synthetic native controls. Real computation qualification, hosted acceptance and measured production speedup remain separate.",
+  "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
+  "sourceBindings": [
+    {
+      "path": "turbo.json",
+      "sha256": "0b42ac96273cbf1060421b7e501d4e427d8455ebc73182b16da2d4360e202d5d"
+    },
+    {
+      "path": "apps/beep-effect-web/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d"
+    },
+    {
+      "path": "apps/docket-intake/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/labs/api-docs/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/labs/ciops/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/labs/lejeune-bolt-workbench/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d"
+    },
+    {
+      "path": "apps/labs/semantica/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d"
+    },
+    {
+      "path": "apps/labs/trustgraph-workbench/turbo.json",
+      "sha256": "377d43a7204b727d9cb97534c959078fab21fdc406f0687b3f1d3b88c6b3a65d"
+    },
+    {
+      "path": "apps/oip-web/turbo.json",
+      "sha256": "dba3f716c7a3ec2b6241eeffd2004a31c054c0e1e4ac8ab572ccc3a4d5a3e468"
+    },
+    {
+      "path": "apps/practice-claude-mod/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/practice-identify/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/practice-m365-contacts/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/practice-mail-tagging/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/practice-review-hub/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/practice-setup/turbo.json",
+      "sha256": "80938e084f3274721a66d1b33b35cfa250168e89775191d5bfde311a98954709"
+    },
+    {
+      "path": "apps/professional-desktop/turbo.json",
+      "sha256": "fbabf0485199158999e72970af6f5551adfb690191bad72aab962d415554b543"
+    },
+    {
+      "path": "apps/storybook/turbo.json",
+      "sha256": "1e2b850fcd13e1031be1dcdb1f9b42678d76827f032250d871955a815c2f4dac"
+    },
+    {
+      "path": "apps/todox/turbo.json",
+      "sha256": "1ca8e70d24d01aed40278dc1629160ec67a528edcca367ef9c1438142ba2baf4"
+    },
+    {
+      "path": "infra/turbo.json",
+      "sha256": "3466632a41e387b7b6fe8c455d81771b77bb3997fa521bf5559624c499df4340"
+    },
+    {
+      "path": "packages/foundation/modeling/identity/turbo.json",
+      "sha256": "b2cf6ff3291c134a7ee884245d21fbedf5bf6ef87f3c9131407db4492b005a97"
+    },
+    {
+      "path": "packages/foundation/primitive/types/turbo.json",
+      "sha256": "6c8d1d6e3c12318fa0273a3ec1585487e4661e8a80bda2ccf5d48a2c821dedd4"
+    },
+    {
+      "path": "packages/tooling/library/ai-sync/turbo.json",
+      "sha256": "e68a2becd965278b7ef29b9540d2b71695e77fd476931d3ba0f6e24fdc4d082b"
+    },
+    {
+      "path": "packages/tooling/policy-pack/repo-configs/turbo.json",
+      "sha256": "a8d6070aa5f31cb7d0f9fd42550a5adba806912fdd18ca84c18ee47f5649987b"
+    },
+    {
+      "path": "packages/tooling/test-kit/fc-runs/turbo.json",
+      "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57"
+    },
+    {
+      "path": "packages/tooling/test-kit/test-runner/turbo.json",
+      "sha256": "427d28a29603a6fd99910c3de7f75fee1b5437f345e52890300c994753c3bf57"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/fixtures/proof-epoch/turbo.json",
+      "sha256": "2ef47f50a33dccec36bb7d308ebc132669fa410c7562c85edaaa50b22660ed2e"
+    },
+    {
+      "path": "packages/tooling/tool/cli/turbo.json",
+      "sha256": "c52155e26db44b552bf3462bf1da200496fb5792050908fd2f16dd80f2483f8d"
+    }
+  ],
+  "currentConfiguration": {
+    "enabled": true,
+    "rootUsesGlobalNamespace": true,
+    "legacyTopLevelKeysAbsent": true,
+    "rootGlobalInputPaths": [
+      ".bun-version",
+      ".nvmrc",
+      "package.json",
+      "tsconfig.json",
+      "tsconfig.base.json",
+      "tsconfig.packages.json"
+    ],
+    "childConfigurations": 26,
+    "childGlobalNamespacesAbsent": true,
+    "runtimeConfigurationChanged": false
+  },
+  "nativeEvidence": {
+    "path": "research/native-global-configuration-controls.json",
+    "sha256": "a14816d2ae212e6fd3dcf8b0616b749c1771ae1a9e40b5d23a523c5fa33c1c2f",
+    "driverSha256": "07d1c3efef835b7c618984b7ab20eb7a49f610f546481656126a283b3e5a503b",
+    "taskObservations": 72,
+    "configurationRefusals": 6,
+    "driverControls": {
+      "controls": [
+        {
+          "control": "optimized",
+          "exit": 1,
+          "expectedDiagnosticMatched": true,
+          "stderrAndStdoutSha256": "ed9329da4ff06f87cd467b811c6dc64917c9978bd71c184a66aab145e19bedab"
+        },
+        {
+          "control": "existing-report",
+          "exit": 1,
+          "expectedDiagnosticMatched": true,
+          "stderrAndStdoutSha256": "34310de294b898ca5695aea59a934514bd5efd758cf9fbc1f418c42004df1151"
+        },
+        {
+          "control": "wrong-native-pin",
+          "exit": 1,
+          "expectedDiagnosticMatched": true,
+          "stderrAndStdoutSha256": "bb5664dc604f3bd0bb497513d3a145a96667fbffb8841409af0ac4b85e13c806"
+        },
+        {
+          "control": "omit-child-policy-write",
+          "exit": 1,
+          "intendedCase": "stable-legacy-child-input-policy-change/b/cache-result",
+          "stdoutAndStderrSha256": "bd88c4cbd3f6a8011c7e026012c47c4593d1c66692d94663c58e6110d7fe9de2"
+        }
+      ],
+      "passingReportUnchanged": true,
+      "sourceRestoredExactly": true,
+      "reportSha256": "a14816d2ae212e6fd3dcf8b0616b749c1771ae1a9e40b5d23a523c5fa33c1c2f",
+      "driverSha256": "07d1c3efef835b7c618984b7ab20eb7a49f610f546481656126a283b3e5a503b",
+      "refusedOutputsAbsent": true
+    },
+    "publicCopyByteIdentical": true
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "observations": [
+    "Both pins restore exact outputs after deletion. Shared source and semantic environment changes invalidate; ignored passthrough and unrelated file changes reuse.",
+    "A child input-policy edit invalidates only that child. Its later source edit also invalidates only that child, while root output inheritance remains effective.",
+    "Legacy globalDependencies contributes the shared file to the global hash. With globalConfiguration, the file is in per-task inputs and absent from the global file hash.",
+    "On both pins, the tested child negation is retained in the resolved definition but the shared file remains hashed; both tasks recompute after it changes. No exclusion speedup is asserted.",
+    "Mixed legacy/root-global keys, a global block with the flag disabled, and a child global block all fail before output materialization on both pins."
+  ],
+  "decisionRationale": "The current root already uses the global namespace and all 26 child configurations avoid root-only global settings. Retain that enabled layout and its existing six global inputs. The native controls support this configuration boundary; the unsupported exclusion expectation gives no authority to narrow any real semantic input.",
+  "expectedBenefit": "Preserve the existing reviewed configuration layout. No new production critical-path or cost benefit is measured by retaining it.",
+  "qualificationGranted": false,
+  "productionChanged": false,
+  "limitations": [
+    "Synthetic Linux workspace evidence only; actual task contracts and supported cross-host profiles still require qualification.",
+    "The broader graph/global-and-child feature family and all whole-goal acceptance criteria remain pending.",
+    "The original exclusion expectation failed; source, native summaries and bounded logs are retained privately. The final report asserts the observed conservative recomputation instead."
+  ],
+  "reopenWhen": [
+    "A native client changes global-input projection or exclusion semantics.",
+    "Any proposal removes a current global input, moves a global setting into child configuration, or changes the enabled flag.",
+    "A named task or consumer requires a measured global-input narrowing optimization."
+  ],
+  "rollback": "No runtime setting changes. Revert this research decision and evidence registration while retaining original receipts; an actual global-layout migration needs its own reviewed source and native controls."
+}
