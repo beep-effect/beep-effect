@@ -159,12 +159,14 @@ if ! printf '%s  runner.tgz\n' "${runner_sha256}" | sha256sum -c --quiet; then
 fi
 tar xzf runner.tgz && dnf install -y -q libicu > /dev/null 2>&1 || true
 con "NOTE $(date -u +%FT%TZ) runner ${runner_version} verified; replaying"
-(RUNNER_ALLOW_RUNASROOT=1 exec timeout 120 ./bin/Runner.Listener run --jitconfig "${jit}" > listener.log 2>&1) &
+# Absolute path: the pkill patterns below match the command line, so a
+# relative ./bin launch would escape them.
+(RUNNER_ALLOW_RUNASROOT=1 exec timeout 120 /root/rtb/bin/Runner.Listener run --jitconfig "${jit}" > listener.log 2>&1) &
 replay=$!
 verdict=""
 for _ in $(seq 1 125); do
   if grep -Eq 'Listening for Jobs' listener.log; then
-    pkill -KILL -f /root/rtb/bin/Runner || true; verdict="accepted"; break
+    kill -KILL "${replay}" 2> /dev/null || true; pkill -KILL -f /root/rtb/bin/Runner || true; verdict="accepted"; break
   fi
   line="$(grep -Em1 \
     -e 'A session for this runner already exists' \
@@ -178,7 +180,7 @@ for _ in $(seq 1 125); do
     -e '(access|permission) denied' \
     listener.log | tr -d '\r' || true)"
   if [[ -n "${line}" ]]; then
-    pkill -KILL -f /root/rtb/bin/Runner || true
+    kill -KILL "${replay}" 2> /dev/null || true; pkill -KILL -f /root/rtb/bin/Runner || true
     line="${line//${jit}/[redacted]}"
     line="$(printf '%s' "${line}" | sed -E 's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-200)"
     if [[ "${line}" == *'A session for this runner already exists'* ]]; then
@@ -191,7 +193,7 @@ for _ in $(seq 1 125); do
   kill -0 "${replay}" 2> /dev/null || break
   sleep 1
 done
-pkill -KILL -f /root/rtb/bin/Runner || true
+kill -KILL "${replay}" 2> /dev/null || true; pkill -KILL -f /root/rtb/bin/Runner || true
 wait "${replay}" 2> /dev/null || true
 if [[ -z "${verdict}" ]]; then
   first="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' listener.log | cut -c1-200)"
