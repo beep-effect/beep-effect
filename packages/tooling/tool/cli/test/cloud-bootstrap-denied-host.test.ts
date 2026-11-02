@@ -151,6 +151,8 @@ exec /usr/bin/rm "$@"
   mv: `#!/bin/sh
 case "$FIXTURE_MV_FAIL" in
   typos) case "$*" in *"/.bun/bin/typos"*) echo 'mv: cannot move' >&2; exit 1 ;; esac ;;
+  # Interrupt the bootstrap shell (this stub's parent) at the rename itself.
+  term) case "$*" in *"/.bun/bin/typos"*) kill -TERM "$PPID"; sleep 1; exit 1 ;; esac ;;
 esac
 exec /usr/bin/mv "$@"
 `,
@@ -214,7 +216,7 @@ type Scenario = {
   readonly tool404?: string;
   readonly timeoutKind?: string;
   readonly installFail?: "dir" | "copy";
-  readonly mvFail?: "typos";
+  readonly mvFail?: "typos" | "term";
   readonly lnFail?: string;
   readonly sudo?: "capable";
   readonly rmFail?: "staged";
@@ -332,10 +334,18 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
 
 const runBootstrap = Effect.fn("CloudBootstrapDeniedHostTest.runBootstrap")(function* (
   fixture: { readonly root: string; readonly bin: string; readonly home: string },
-  scenario: Scenario
+  scenario: Scenario,
+  // A run ended by a signal has no exit code for ChildProcess to report; the
+  // reporting wrapper prints the shell's status for it instead (143 for TERM).
+  options: { readonly reportStatus?: boolean } = {}
 ) {
   const path = yield* Path.Path;
-  const handle = yield* ChildProcess.make("bash", [path.join(fixture.root, "scripts/cloud/bootstrap.sh")], {
+  const script = path.join(fixture.root, "scripts/cloud/bootstrap.sh");
+  const [command, args] =
+    options.reportStatus === true
+      ? (["/bin/sh", ["-c", 'bash "$1"; echo "bootstrap-status=$?" >&2', "sh", script]] as const)
+      : (["bash", [script]] as const);
+  const handle = yield* ChildProcess.make(command, args, {
     cwd: fixture.root,
     env: {
       BEEP_CLOUD_SKIP_OP: "1",
@@ -823,6 +833,27 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       const info = yield* fs.stat(path.join(fixture.home, ".bun/bin/typos"));
       expect(info.type).toBe("File");
       expect(result.stdout).toContain("publication tools: ready");
+    })
+  );
+
+  it.effect("removes the staged file and keeps the old binary when interrupted just before the rename", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      yield* placeOldTypos(fixture.home);
+      const result = yield* runBootstrap(
+        fixture,
+        { bun: "pinned", node: "pinned", mvFail: "term" },
+        { reportStatus: true }
+      );
+      // TERM ends the run (128 + 15) before the rename completes.
+      expect(result.stderr).toContain("bootstrap-status=143");
+      // The EXIT trap, not the rename-failure branch, did the cleanup.
+      expect(result.stderr).not.toContain("typos: rename into");
+      expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
+      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
+      expect(yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"))).toEqual([]);
     })
   );
 });

@@ -146,3 +146,13 @@ A4 update: #2536 merged (`a0b0944b`) and released the runbook to this PR. The tw
 sentences are now in `docs/runbooks/cloud-environments.md`, in step 2 of Network access and in
 the denied-host bullet. A merge preview (`git merge-tree`) against `origin/main` is
 conflict-free, and the merged file equals main's file plus exactly those two edits.
+
+## Final-panel dispositions (Astra, Grok, Fable finals on `7a04f1d8`; zero required)
+
+| Finding | Disposition |
+| --- | --- |
+| Astra P3 ×2, Grok history cell | Fixed in the doc commit on top of `7a04f1d8`: the `mv -fT` comment now says what the code does (a directory is refused; a symlink is replaced and its referent left untouched); the push-denial row has an appended resolution row (cause still unknown); and the A4 history cell has an appended current-disposition row. The older rows are kept. |
+| Fable N5: PR body proof is stale | Fixed: the body now states this head's root result, attributes the 28/28 non-root run and the whole-PR scans to the parent, and drops the stale `34b34370` proof claims. |
+| Fable N6: no test for an interruption before the rename | **Test added.** The `mv` stub sends TERM to its parent bootstrap shell at the rename. Bash runs the EXIT trap and then re-raises TERM (observed: status 143 through an `sh -c` status wrapper). The test asserts 143, no rename-failure warning (so the trap did the cleanup), no staged leftover, the old bytes intact and the run directory removed. Mutation check: removing the in-progress staged file from the trap's cleanup list fails only this test (28/29). Test-only change; no host process or privilege change. |
+| Fable N7: stubs exec `/usr/bin/{install,mv,rm,tar,timeout}` | **Kept as is, from the source.** `bootstrap.sh` refuses anything but Linux x86_64. The vendor VMs are Ubuntu, where `/bin` is merged into `/usr/bin`, so those paths hold there. The fixture is a hermetic Linux harness for that contract, not a portable one. A non-merged-usr host would fail the fixture loudly, not pass it silently. |
+| A3 | The live-qualification limit stays as accepted. |
