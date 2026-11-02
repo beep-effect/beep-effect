@@ -3,12 +3,11 @@ import {
   failYeetReplyOnFailedOutcomes,
   findReplyThread,
   markReplyThreadStates,
+  PrCloseoutOptions,
   planReplyActions,
   REPLY_DRAFTS_FILE_NAME,
   REPLY_REPORT_FILE_NAME,
   REPLY_RERUN_COMMAND,
-  REPLY_THREAD_MUTATION,
-  RESOLVE_THREAD_MUTATION,
   ReplyDraft,
   ReplyDraftOutcome,
   ReplyDrafts,
@@ -26,8 +25,9 @@ import {
   replyOutcomeTarget,
   replyReportPathForContext,
   replyResolveRetryCommand,
-  replyReviewThreadsPageQuery,
+  runPrCloseout,
   runYeetReply,
+  yeetAutomaticCloseoutOptions,
 } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -49,7 +49,9 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { expectReportedExit } from "./support/CommandTest.ts";
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubCallLine, isGraphql, recordedGithub } from "./support/YeetGithub.ts";
 import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
+import type { GithubAnswer, GithubRoutes } from "./support/YeetGithub.ts";
 
 const OPEN_COMMENT_ID = 2_284_119_001;
 const RESOLVED_COMMENT_ID = 2_284_119_002;
@@ -504,11 +506,101 @@ const stubSpawner = (stubs: ReadonlyArray<readonly [string, CommandStub]>, spawn
 
 const repoViewJson = `{"name":"beep-effect","owner":{"login":"YeeBois"}}`;
 
-const reviewThreadsJson = `{"data":{"repository":{"pullRequest":{"reviewThreads":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRT_open","isResolved":false,"isOutdated":false,"path":"src/commands/Yeet/internal/Reply.ts","line":42,"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_open","databaseId":${OPEN_COMMENT_ID}}]}},{"id":"PRRT_resolved","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Verdict.ts","line":7,"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_resolved","databaseId":${RESOLVED_COMMENT_ID}}]}}]}}}}}`;
+// The GraphQL page `ReviewThread.list` reads, in the kit's selection.
+const wireComment = (id: string, databaseId: number | null, author: unknown = null) => ({
+  id,
+  databaseId,
+  author,
+  body: "",
+  path: "src/commands/Yeet/internal/Reply.ts",
+  line: null,
+  originalLine: null,
+  createdAt: "2026-08-16T00:00:00Z",
+  url: `https://github.com/YeeBois/beep-effect/pull/558#discussion_${id}`,
+});
+
+const wireThread = (
+  fields: {
+    readonly id: string;
+    readonly isResolved: boolean;
+    readonly path: string;
+    readonly line: number;
+    readonly resolvedBy?: string;
+  },
+  comments: ReadonlyArray<ReturnType<typeof wireComment>>,
+  latest: ReadonlyArray<ReturnType<typeof wireComment>> = comments
+) => ({
+  ...fields,
+  isOutdated: false,
+  isCollapsed: false,
+  startLine: null,
+  diffSide: "RIGHT",
+  resolvedBy: fields.resolvedBy === undefined ? null : { login: fields.resolvedBy },
+  comments: { pageInfo: closedPageInfo, nodes: comments },
+  latest: { nodes: A.takeRight(latest, 1) },
+});
+
+const threadsPage = (author: string | null, nodes: ReadonlyArray<ReturnType<typeof wireThread>>) => ({
+  data: {
+    repository: {
+      pullRequest: {
+        author: author === null ? null : { login: author },
+        reviewThreads: { pageInfo: closedPageInfo, nodes },
+      },
+    },
+  },
+});
+
+const livePage = threadsPage(null, [
+  wireThread({ id: "PRRT_open", isResolved: false, path: "src/commands/Yeet/internal/Reply.ts", line: 42 }, [
+    wireComment("PRRC_open", OPEN_COMMENT_ID),
+  ]),
+  wireThread({ id: "PRRT_resolved", isResolved: true, path: "src/commands/Yeet/internal/Verdict.ts", line: 7 }, [
+    wireComment("PRRC_resolved", RESOLVED_COMMENT_ID),
+  ]),
+]);
 
 // A pull request whose author resolved both threads: a human reviewer spoke
 // last on the first (a follow-up), a bot on the second (an acknowledgement).
-const resolvedThreadsJson = `{"data":{"repository":{"pullRequest":{"author":{"login":"octocat"},"reviewThreads":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRT_followup","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Status.ts","line":12,"resolvedBy":{"login":"octocat"},"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_followup","databaseId":${FOLLOW_UP_COMMENT_ID}}]},"latest":{"nodes":[{"author":{"__typename":"User","login":"reviewer"}}]}},{"id":"PRRT_acknowledged","isResolved":true,"isOutdated":false,"path":"src/commands/Yeet/internal/Handler.ts","line":3,"resolvedBy":{"login":"octocat"},"comments":{"pageInfo":{"endCursor":null,"hasNextPage":false},"nodes":[{"id":"PRRC_ack","databaseId":${ACKNOWLEDGED_COMMENT_ID}}]},"latest":{"nodes":[{"author":{"__typename":"Bot","login":"coderabbitai"}}]}}]}}}}}`;
+const resolvedThreads = threadsPage("octocat", [
+  wireThread(
+    {
+      id: "PRRT_followup",
+      isResolved: true,
+      path: "src/commands/Yeet/internal/Status.ts",
+      line: 12,
+      resolvedBy: "octocat",
+    },
+    [wireComment("PRRC_followup", FOLLOW_UP_COMMENT_ID)],
+    [wireComment("PRRC_followup_latest", null, { __typename: "User", login: "reviewer" })]
+  ),
+  wireThread(
+    {
+      id: "PRRT_acknowledged",
+      isResolved: true,
+      path: "src/commands/Yeet/internal/Handler.ts",
+      line: 3,
+      resolvedBy: "octocat",
+    },
+    [wireComment("PRRC_ack", ACKNOWLEDGED_COMMENT_ID)],
+    [wireComment("PRRC_ack_latest", null, { __typename: "Bot", login: "coderabbitai" })]
+  ),
+]);
+
+const replied = { data: { addPullRequestReviewThreadReply: { comment: wireComment("PRRC_reply", 1) } } };
+const resolved = { data: { result: { thread: { id: "PRRT_open", isResolved: true } } } };
+
+// The GitHub side of a reply pass: the thread page, then each mutation.
+const replyRoutes =
+  (threads: unknown, reply: GithubAnswer = { body: replied }): GithubRoutes =>
+  (call) =>
+    isGraphql("addPullRequestReviewThreadReply")(call)
+      ? reply
+      : isGraphql("resolveReviewThread")(call)
+        ? { body: resolved }
+        : isGraphql("reviewThreads")(call)
+          ? { body: threads }
+          : undefined;
 
 const replyContext = (root: string): RepoRunContext =>
   RepoRunContext.make({
@@ -539,18 +631,7 @@ const deniedRepoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["gh repo view", { exitCode: 1, output: "gh: authentication required" }],
 ];
 
-const liveThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
-  ["gh repo view", ok(repoViewJson)],
-  ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
-  ["addPullRequestReviewThreadReply", ok("")],
-  ["resolveReviewThread", ok("")],
-];
-
-const resolvedThreadStubs: ReadonlyArray<readonly [string, CommandStub]> = [
-  ["gh repo view", ok(repoViewJson)],
-  ["YeetReplyReviewThreads", ok(resolvedThreadsJson)],
-  ["addPullRequestReviewThreadReply", ok("")],
-];
+const repoViewStubs: ReadonlyArray<readonly [string, CommandStub]> = [["gh repo view", ok(repoViewJson)]];
 
 describe("runYeetReply", () => {
   const twoDrafts = draftsOf([
@@ -565,7 +646,7 @@ describe("runYeetReply", () => {
         const context = replyContext(root);
         yield* writeDrafts(context, twoDrafts);
 
-        const error = yield* Effect.flip(runYeetReply(context));
+        const error = yield* Effect.flip(runYeetReply(context).pipe(recordedGithub(replyRoutes(livePage)).provide));
         expect(error.message).toContain("preflight failed before any draft could be posted");
         expect(error.exitCode).toBe(1);
 
@@ -587,34 +668,35 @@ describe("runYeetReply", () => {
     );
   });
 
-  it.layer(replyTestLayer(liveThreadStubs), { timeout: "30 seconds" })((it) => {
+  it.layer(replyTestLayer(repoViewStubs), { timeout: "30 seconds" })((it) => {
     it.effect("writes a reply-report.json that decodes back through ReplyReportJson", () =>
       Effect.gen(function* () {
         const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
         const spawned: Array<ReadonlyArray<string>> = [];
+        const github = recordedGithub(replyRoutes(livePage));
         const context = replyContext(root);
         yield* writeDrafts(context, twoDrafts);
 
         const report = yield* runYeetReply(context).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(liveThreadStubs, spawned))
+          github.provide,
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(repoViewStubs, spawned))
         );
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["resolved", "stale"]);
 
-        expect(A.filter(spawned, (args) => A.some(args, Str.includes("mutation(")))).toEqual([
-          [
-            "gh",
-            "api",
-            "graphql",
-            "-f",
-            `query=${REPLY_THREAD_MUTATION}`,
-            "-f",
-            "threadId=PRRT_open",
-            "-f",
-            "body=Fixed in 0123456.",
-          ],
-          ["gh", "api", "graphql", "-f", `query=${RESOLVE_THREAD_MUTATION}`, "-f", "threadId=PRRT_open"],
+        expect(A.map(github.calls, githubCallLine)).toEqual([
+          "graphql reviewThreads",
+          "graphql addPullRequestReviewThreadReply",
+          "graphql resolveReviewThread",
         ]);
-        expect(spawned).toHaveLength(4);
+        expect(A.map(A.drop(github.calls, 1), (call) => call.body)).toMatchObject([
+          { variables: { threadId: "PRRT_open", body: "Fixed in 0123456." } },
+          { variables: { threadId: "PRRT_open" } },
+        ]);
+        // The thread page is read from the repository `gh repo view` names.
+        expect(A.map(A.take(github.calls, 1), (call) => call.body)).toMatchObject([
+          { variables: { owner: "YeeBois", name: "beep-effect", number: 558 } },
+        ]);
+        expect(spawned).toHaveLength(1);
         const fs = yield* FileSystem.FileSystem;
         const written = yield* fs.readFileString(yield* replyReportPathForContext(context));
         expect(written).not.toContain('"_id":"Option"');
@@ -623,11 +705,11 @@ describe("runYeetReply", () => {
     );
   });
 
-  it.layer(replyTestLayer(resolvedThreadStubs), { timeout: "30 seconds" })((it) => {
+  it.layer(replyTestLayer(repoViewStubs), { timeout: "30 seconds" })((it) => {
     it.effect("answers a reviewer follow-up without resolving, and leaves an acknowledgement alone", () =>
       Effect.gen(function* () {
         const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
-        const spawned: Array<ReadonlyArray<string>> = [];
+        const github = recordedGithub(replyRoutes(resolvedThreads));
         const context = replyContext(root);
         yield* writeDrafts(
           context,
@@ -637,31 +719,23 @@ describe("runYeetReply", () => {
           ])
         );
 
-        const report = yield* runYeetReply(context).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, stubSpawner(resolvedThreadStubs, spawned))
-        );
+        const report = yield* runYeetReply(context).pipe(github.provide);
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["posted", "stale"]);
         const [followUp, acknowledged] = report.outcomes;
         expect(followUp?.detail).toContain("answered a reviewer follow-up on a resolved thread");
         expect(acknowledged?.detail).toContain("already resolved upstream");
         // The follow-up thread is already resolved on GitHub: the run posts the
         // answer and must not fire the resolve mutation for either thread.
-        expect(A.filter(spawned, (args) => A.some(args, Str.includes("addPullRequestReviewThreadReply")))).toHaveLength(
-          1
-        );
-        expect(A.filter(spawned, (args) => A.some(args, Str.includes("resolveReviewThread")))).toEqual([]);
+        expect(A.map(github.calls, githubCallLine)).toEqual([
+          "graphql reviewThreads",
+          "graphql addPullRequestReviewThreadReply",
+        ]);
       })
     );
   });
 });
 
 describe("reply operator surfaces", () => {
-  it("requests the comment databaseId that the comment-id matcher joins on", () => {
-    expect(replyReviewThreadsPageQuery).toContain("databaseId");
-    expect(replyReviewThreadsPageQuery).toContain("reviewThreads(first: 100");
-    expect(replyReviewThreadsPageQuery).toContain("isResolved");
-  });
-
   it("renders a body-free resolve retry for a thread left open", () => {
     const command = replyResolveRetryCommand("PRRT_open");
     expect(command).toContain("resolveReviewThread");
@@ -680,11 +754,7 @@ describe("reply operator surfaces", () => {
 // `yeet reply && bun run beep yeet monitor` walked straight past threads that
 // are still open — and an unresolved thread is a hard merge gate. The batch
 // still runs to completion; the exit code is what changed.
-const deniedReplyMutationStubs: ReadonlyArray<readonly [string, CommandStub]> = [
-  ["gh repo view", ok(repoViewJson)],
-  ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
-  ["addPullRequestReviewThreadReply", { exitCode: 1, output: "gh: Resource not accessible by integration" }],
-];
+const deniedReply: GithubAnswer = { status: 403, body: { message: "Resource not accessible by integration" } };
 
 const reportOf = (outcomes: ReadonlyArray<ReplyDraftOutcome>): ReplyReport =>
   ReplyReport.make({
@@ -783,7 +853,7 @@ describe("reply run verdict", () => {
     })
   );
 
-  it.layer(replyTestLayer(deniedReplyMutationStubs), { timeout: "30 seconds" })((it) => {
+  it.layer(replyTestLayer(repoViewStubs), { timeout: "30 seconds" })((it) => {
     it.effect("fails the whole reply run when a live draft's reply is rejected", () =>
       Effect.gen(function* () {
         const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
@@ -796,13 +866,67 @@ describe("reply run verdict", () => {
           ])
         );
 
-        const report = yield* runYeetReply(context);
+        const report = yield* runYeetReply(context).pipe(recordedGithub(replyRoutes(livePage, deniedReply)).provide);
         // The batch still ran: the stale draft was still classified.
         expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "stale"]);
 
         expectReportedExit(
           yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context)))
         );
+      })
+    );
+  });
+});
+
+// The closeout collector reads the same kit thread page the reply engine does;
+// its comment and review pages and the pull request view stay on gh.
+const emptyConnection = { pageInfo: closedPageInfo, nodes: [] };
+const closeoutStubs: ReadonlyArray<readonly [string, CommandStub]> = [
+  ["gh repo view", ok(repoViewJson)],
+  [
+    "gh pr view",
+    ok(
+      JSON.stringify({
+        number: 558,
+        headRefName: "feat/merge-loop",
+        state: "OPEN",
+        url: "https://github.com/YeeBois/beep-effect/pull/558",
+        headRefOid: "abc1234def",
+        isDraft: false,
+        author: { login: "octocat" },
+      })
+    ),
+  ],
+  [
+    "YeetPrCloseoutComments",
+    ok(JSON.stringify({ data: { repository: { pullRequest: { comments: emptyConnection } } } })),
+  ],
+  [
+    "YeetPrCloseoutReviews",
+    ok(JSON.stringify({ data: { repository: { pullRequest: { reviews: emptyConnection } } } })),
+  ],
+];
+
+describe("runPrCloseout", () => {
+  it.layer(replyTestLayer(closeoutStubs), { timeout: "30 seconds" })((it) => {
+    it.effect("reads the threads through the kit and re-triggers Greptile with a REST comment", () =>
+      Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const github = recordedGithub((call) =>
+          call.path === "{repo}/issues/558/comments"
+            ? { status: 201, body: { id: 1, html_url: "https://github.com/c/1" } }
+            : replyRoutes(livePage)(call)
+        );
+        const report = yield* runPrCloseout(
+          replyContext(root),
+          PrCloseoutOptions.make({ ...yeetAutomaticCloseoutOptions, retriggerGreptile: true })
+        ).pipe(github.provide);
+        expect(report.prNumber).toBe(558);
+        expect(report.retriggeredGreptile).toBe(true);
+        expect(A.map(github.calls, githubCallLine)).toEqual([
+          "graphql reviewThreads",
+          "POST {repo}/issues/558/comments",
+        ]);
       })
     );
   });

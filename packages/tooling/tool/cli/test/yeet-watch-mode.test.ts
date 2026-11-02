@@ -49,6 +49,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { legacyGhGithubLayer } from "./support/YeetGithub.ts";
 import type { YeetCheckFailedRow } from "@beep/repo-cli/test/Yeet";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -264,7 +265,7 @@ const scriptedSpawnerLayer = (
     )
     // `Git` rides over the scripted spawner: the merge-base diff runs through the kit (W2b), whose
     // `diff --name-only` argv the router above answers by prefix.
-  ).pipe((scripted) => Layer.provideMerge(Git.layer, scripted));
+  ).pipe((scripted) => Layer.provideMerge(legacyGhGithubLayer, Layer.provideMerge(Git.layer, scripted)));
 
 const greenScript = (headSha: string, labels: ReadonlyArray<string> = []): PollScript => ({
   view: { exitCode: 0, output: viewJson("OPEN", headSha, "CLEAN", null, labels) },
@@ -708,7 +709,7 @@ describe("collectYeetWatchSnapshot", () => {
       Effect.gen(function* () {
         const failure = yield* Effect.flip(collectYeetWatchSnapshot(context));
 
-        expect(failure.message).toContain("another GraphQL page without an end cursor");
+        expect(failure.message).toContain("another page was reported without an end cursor");
       })
     );
   });

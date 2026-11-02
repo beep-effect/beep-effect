@@ -1,0 +1,55 @@
+{
+  "controls": [
+    {
+      "control": "optimized",
+      "exit": 64,
+      "expectedDiagnosticMatched": true,
+      "reportPreserved": true,
+      "diagnosticSha256": "10d99b6c947e30385bfa31a8aff61accc2cfba4daef7acb1462672cf44758817"
+    },
+    {
+      "control": "existing-report",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "reportPreserved": true,
+      "diagnosticSha256": "68e8cb326f012ef4bde782db3deba378db944e6ef58b4923211594f8d6631408"
+    },
+    {
+      "control": "wrong-native-pin",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "reportPreserved": true,
+      "diagnosticSha256": "978ecf733ba887789901e2b7c8cbe41bda4366323d20b5f437bd7a53b20b5b5e"
+    },
+    {
+      "control": "omitted-prerequisite",
+      "exit": 1,
+      "expectedDiagnosticMatched": true,
+      "reportPreserved": true,
+      "diagnosticSha256": "57b4fedc4cbe8637bf5711a8fbad1e254439022ea6daab55bc1bd53b636f73fe"
+    },
+    {
+      "control": "stream-byte-bound",
+      "expectedDiagnosticMatched": true,
+      "elapsedSeconds": 0.007,
+      "ownedChildActiveAfterReturn": false,
+      "ownedChildTerminalState": "absent"
+    },
+    {
+      "control": "owned-process-timeout",
+      "expectedDiagnosticMatched": true,
+      "elapsedSeconds": 0.284,
+      "ownedChildActiveAfterReturn": false,
+      "ownedChildTerminalState": "absent"
+    },
+    {
+      "control": "whole-observation-expired",
+      "expectedDiagnosticMatched": true,
+      "elapsedSeconds": 0.0
+    }
+  ],
+  "historicalCasesCompared": 44,
+  "historicalSemanticProjectionEqual": true,
+  "historicalReportSha256": "048d44ace9322686c87adeb5cfca07ccc251e16c9e8aba74066b9b46a85e41f9",
+  "driverSha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1"
+}
