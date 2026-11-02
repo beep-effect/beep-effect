@@ -1,8 +1,20 @@
 """Canonical source membership for synthetic root preparation and verification."""
 import hashlib
+from pathlib import Path
 
 if not __debug__:
     raise RuntimeError('Root source verification requires Python assertions to remain enabled')
+
+
+def verify_declared_root_module(workspace):
+    expected = workspace/'goals/agent-observability-foundation/ops/declared_root_inputs.py'
+    assert Path(__file__).resolve(strict=True) == expected.resolve(strict=True), 'Root proof must execute the workspace membership module'
+
+
+def verify_declared_root_execution(workspace, preparer):
+    verify_declared_root_module(workspace)
+    expected = workspace/'goals/agent-observability-foundation/ops/prepare-declared-canary-root.py'
+    assert preparer.resolve(strict=True) == expected.resolve(strict=True), 'Root proof must execute the workspace preparer'
 
 
 def declared_root_sources(workspace):

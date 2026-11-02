@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from declared_root_inputs import declared_root_source_hashes, declared_root_sources, verify_declared_root_sources
+from declared_root_inputs import declared_root_source_hashes, declared_root_sources, verify_declared_root_execution, verify_declared_root_sources
 
 
 class DeclaredRootInputTests(unittest.TestCase):
@@ -58,6 +58,24 @@ class DeclaredRootInputTests(unittest.TestCase):
                              capture_output=True, timeout=5)
         self.assertNotEqual(run.returncode, 0)
         self.assertIn(b'assertions to remain enabled', run.stderr)
+
+    def test_real_preparer_and_module_match_their_workspace(self):
+        ops = Path(__file__).resolve().parent
+        verify_declared_root_execution(ops.parents[2], ops/'prepare-declared-canary-root.py')
+
+    def test_wrong_checkout_refuses_before_creating_output(self):
+        preparer = Path(__file__).with_name('prepare-declared-canary-root.py')
+        output = self.workspace/'must-not-be-created'
+        run = subprocess.run([sys.executable, str(preparer), '--workspace', str(self.workspace), '--output', str(output)],
+                             capture_output=True, timeout=5)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn(b'execute the workspace membership module', run.stderr)
+        self.assertFalse(output.exists())
+
+    def test_wrong_preparer_refuses_even_with_matching_module(self):
+        ops = Path(__file__).resolve().parent
+        with self.assertRaisesRegex(AssertionError, 'execute the workspace preparer'):
+            verify_declared_root_execution(ops.parents[2], self.workspace/'goals/agent-observability-foundation/ops/prepare-declared-canary-root.py')
 
 
 if __name__ == '__main__':

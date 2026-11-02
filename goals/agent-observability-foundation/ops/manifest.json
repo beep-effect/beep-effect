@@ -110,7 +110,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "PR2364 is supporting historical delivery with an unsatisfied completion receipt. PR2508 is final follow-up; PR2519 repairs incoming namespace writer/reader and historical-alias defects. Main coverage repair2517 has merged. Root membership hardening has seven passing focused controls. Earlier855/40/73 package and88/87 route receipts remain bound to7ae source; incoming expanded membership and namespace source require fresh qualification after immediate publication/integration. Lifecycle stays active; recovery hold intact.",
+  "statusNote": "PR2364 is supporting historical delivery with an unsatisfied completion receipt. PR2508 is final follow-up; PR2519 repairs incoming namespace writer/reader and historical-alias defects. Main coverage repair2517 has merged. Root membership hardening has ten passing focused controls. Earlier855/40/73 package and88/87 route receipts remain bound to7ae source; incoming expanded membership and namespace source require fresh qualification after immediate publication/integration. Lifecycle stays active; recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

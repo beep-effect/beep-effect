@@ -11,7 +11,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
-from declared_root_inputs import verify_declared_root_sources
+from declared_root_inputs import verify_declared_root_module, verify_declared_root_sources
 
 if not __debug__:
     raise RuntimeError('Declared canary verification requires Python assertions to remain enabled')
@@ -40,6 +40,7 @@ class DeclaredCanary:
         self.verify()
 
     def verify(self):
+        verify_declared_root_module(self.workspace)
         for name, mode in [('', 0o700), ('repository', 0o700),
                            ('qualification.json', 0o600), ('root-probe.json', 0o600)]:
             info = (self.directory/name).lstat()

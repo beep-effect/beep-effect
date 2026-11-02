@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from declared_root_inputs import declared_root_source_hashes
+from declared_root_inputs import declared_root_source_hashes, verify_declared_root_execution
 
 
 def main():
@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     workspace = args.workspace.resolve(strict=True)
+    verify_declared_root_execution(workspace, Path(__file__))
     output = args.output.absolute()
     # Fail on reuse: no prior fixture, user repository or uncertain attempt is overwritten.
     output.mkdir(mode=0o700)
