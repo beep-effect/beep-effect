@@ -1,11 +1,10 @@
-import { Git } from "@beep/git/Git";
+import { Git, WorktreeEntry } from "@beep/git/Git";
 import {
   addWorktree,
   branchDeleteCommand,
   CLAUDE_WORKTREES_RELATIVE_ROOT,
   copyLocalFiles,
   defaultWorktreeBranch,
-  parseWorktreePorcelain,
   renderWorktreeRemovalReceipt,
   resolveWorktreeContext,
   restoreBeepMaterial,
@@ -36,6 +35,7 @@ import {
   worktreeCommand,
   worktreeDoctorEntryLines,
   worktreeDoctorReportForContext,
+  worktreeListEntriesFromGit,
   worktreeRemoveArgs,
   worktreeResidueReason,
 } from "@beep/repo-cli/commands/Worktree";
@@ -419,18 +419,25 @@ describe("worktree argument builders", () => {
   });
 });
 
-describe("parseWorktreePorcelain", () => {
-  it.effect("rejects ambiguous line listings and control characters in NUL-delimited paths", () =>
-    Effect.gen(function* () {
-      const hostile = "worktree /repo-worktrees/real\nworktree /unrelated\0HEAD abc123\0branch refs/heads/feature\0\0";
-      expect(yield* parseWorktreePorcelain(hostile)).toEqual([]);
-      expect(yield* parseWorktreePorcelain("worktree /repo\nHEAD abc123\n").pipe(Effect.flip)).toMatchObject({
-        _tag: "SchemaError",
-      });
-      expect(yield* parseWorktreePorcelain("")).toEqual([]);
-      expect(yield* parseWorktreePorcelain(`worktree /repo\0HEAD abc123\0\0${hostile}`)).toHaveLength(1);
-    })
-  );
+describe("worktreeListEntriesFromGit", () => {
+  it("drops an entry whose path carries control characters and keeps the rest", () => {
+    const hostile = WorktreeEntry.make({
+      path: "/repo-worktrees/real\nworktree /unrelated",
+      head: "abc123",
+      branch: "refs/heads/feature",
+      detached: false,
+      bare: false,
+      prunable: false,
+    });
+    expect(worktreeListEntriesFromGit([hostile])).toEqual([]);
+    expect(worktreeListEntriesFromGit([])).toEqual([]);
+    expect(
+      worktreeListEntriesFromGit([
+        WorktreeEntry.make({ path: "/repo", head: "abc123", detached: false, bare: false, prunable: false }),
+        hostile,
+      ])
+    ).toHaveLength(1);
+  });
 
   it("rejects traversal and control characters in removal names", () => {
     for (const name of ["../outside", "/outside", "..", ".", "a/b", "a\\b", "a\nb", "a\rb", "a\0b"]) {
@@ -439,36 +446,43 @@ describe("parseWorktreePorcelain", () => {
     expect(isWorktreeRemovalName("feature-x")).toBe(true);
   });
 
-  it.effect("parses a branch entry, a detached+locked entry, and a prunable entry", () =>
-    Effect.gen(function* () {
-      const entries = yield* parseWorktreePorcelain(
-        A.join(
-          [
-            "worktree /repo",
-            "HEAD 1111111111111111111111111111111111111111",
-            "branch refs/heads/main",
-            "",
-            "worktree /repo-worktrees/pinned",
-            "HEAD 2222222222222222222222222222222222222222",
-            "detached",
-            "locked pinned for a while",
-            "",
-            "worktree /tmp/stale",
-            "HEAD 3333333333333333333333333333333333333333",
-            "detached",
-            "prunable gitdir file points to non-existent location",
-            "",
-          ],
-          "\0"
-        )
-      );
+  it("maps a branch entry, a detached+locked entry, and a prunable entry", () => {
+    const entries = worktreeListEntriesFromGit([
+      WorktreeEntry.make({
+        path: "/repo",
+        head: "1111111111111111111111111111111111111111",
+        branch: "refs/heads/main",
+        detached: false,
+        bare: false,
+        prunable: false,
+      }),
+      WorktreeEntry.make({
+        path: "/repo-worktrees/pinned",
+        head: "2222222222222222222222222222222222222222",
+        detached: true,
+        bare: false,
+        locked: "pinned for a while",
+        prunable: false,
+      }),
+      WorktreeEntry.make({
+        path: "/tmp/stale",
+        head: "3333333333333333333333333333333333333333",
+        detached: true,
+        bare: false,
+        prunable: true,
+      }),
+    ]);
 
-      expect(entries).toHaveLength(3);
-      expect(entries[0]).toMatchObject({ path: "/repo", branch: "main", detached: false, locked: false });
-      expect(entries[1]).toMatchObject({ path: "/repo-worktrees/pinned", branch: null, detached: true, locked: true });
-      expect(entries[2]).toMatchObject({ path: "/tmp/stale", detached: true, prunable: true });
-    })
-  );
+    expect(entries).toHaveLength(3);
+    expect(entries[0]).toMatchObject({ path: "/repo", branch: "main", detached: false, locked: false });
+    expect(entries[1]).toMatchObject({ path: "/repo-worktrees/pinned", branch: null, detached: true, locked: true });
+    expect(entries[2]).toMatchObject({
+      path: "/tmp/stale",
+      head: "3333333333333333333333333333333333333333",
+      detached: true,
+      prunable: true,
+    });
+  });
 });
 
 describe("WorktreeResidueManifest", () => {

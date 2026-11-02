@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CacheConformanceComparison,
   CacheConformanceEvidence,
@@ -48,7 +49,8 @@ const Services = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  Git.layer.pipe(Layer.provide(NodeServices.layer))
 );
 
 const encodeTarget = S.encodeEffect(S.fromJsonString(CacheConformanceTarget));
