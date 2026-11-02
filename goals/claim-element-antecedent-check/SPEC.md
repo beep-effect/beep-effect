@@ -203,7 +203,7 @@ Higher sources outrank lower sources when they conflict.
 - [x] No NC-licensed data file is in the diff; only derived metrics and source
       IDs.
 - [x] No unrelated refactors or formatting churn.
-- [ ] A closeout reflection exists under `history/reflections/`.
+- [x] A closeout reflection exists under `history/reflections/` (2026-11-01-codex.md).
 
 ## Verification Matrix
 
@@ -235,6 +235,10 @@ Scope growth, destructive side effects and policy calls are not stops: decide
 them and record each in the Decision Log.
 
 ## Decision Log
+
+### 2026-11-01 — post-merge evidence and lifecycle closeout
+
+The designated orchestrator merged PR #2411 under the higher-priority repository S11 exception, with a forced review window and pending jobs recorded. This is source-delivery evidence, not CLEAN/all-green hosted proof or a passing canonical completion receipt; operative lifecycle remains active until the final follow-up earns current readiness and merge proof. After takeover, freeze and measure the exact merged implementation as v24 before claiming current accuracy. Preserve all earlier measurements, including the corrected nested-feature summaries. Restore the v11 result's original bytes after unrelated formatting-only drift and protect frozen result formatting without disabling lint. Carry historical automated judgments only with exact sampled question/source/evidence identity; disclose four changed segmentation records and claim no fresh review or attorney authority. Reversal: reopen the packet with a new authority revision and additional measurements; retain every prior artifact and this S11 receipt.
 
 Seeded from
 [`explorations/claim-element-graph/DECISIONS.md`](../../explorations/claim-element-graph/DECISIONS.md)

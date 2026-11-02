@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P0–P3 measured; autonomous acceptance and uncertainty recorded; P4 delivery in progress)
+Status: `active` (P0–P3 measured; merged implementation; final readiness and closeout receipt pending)
 
 ## Binding Sequencing
 
@@ -20,7 +20,7 @@ are fixed, never before.
 | P2 Deterministic implementation + USPTO adapter + labelled set | complete under autonomous acceptance v1 | Implement the pure decomposer and checker, one rule and fixture per determiner edge case; the server-side USPTO adapter over `@beep/uspto`; the `ClaimSelfCheck` Layer; the first vertical slice; the labelled set (~60 families via the extractor/critic loop with ~10% independent automated spot-check; ~200 allowed sets). | P1 exit met. | Vertical slice passes strict equality and emits the expected `missing-antecedent`; all rule fixtures pass; labelled fixtures committed (public USPTO only); `package-verify` green for domain, use-cases, server. |
 | P3 Review items + evaluation | complete under autonomous acceptance v1 | Add the practice MCP read tool that returns findings as `claim-finding` `ReviewItem`s; run the evaluation and write the report. | P2 exit met **and** `review-verdict-envelope` P1 schema (`ReviewItem` / `VerdictRow`) merged. | `ReviewItem` fixture round-trips; the `VerdictRow` → `ClaimDisposition` projection test passes once `review-verdict-envelope` P2 (`VerdictProjector`) has merged, and is recorded as pending in Current Blockers until then; report in `history/` gives strict-equality floor, automated erroneous-alert estimate or identification bounds with conditional interval/envelope, IPRally smoke result; findings advisory. |
 | P4 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | P3 exit met. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P5 Close | pending | Write the closeout reflection and flip packet state. | P4 exit met. | Packet status and evidence are updated; a closeout reflection exists. |
+| P5 Close | in-progress | Write the closeout reflection and flip packet state. | P4 exit met. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Dependencies
 
@@ -40,7 +40,7 @@ are fixed, never before.
 
 ## Current Blockers
 
-No attorney attendance dependency remains. P2/P3 measurements and independent automated reviews are recorded in [the current report](history/2026-10-31-autonomous-evaluation.md), including all unresolved outcomes and high alert noise. Accepted main #2399 is synchronized; the new replay preserves both full results and all 251 prediction reports. All three current-base package verifications pass. P4 still requires Yeet publication, required hosted checks and review readiness. P5 requires the final reflection and packet closure. These delivery gates remain active.
+No remaining attendance dependency. [The post-merge report](history/2026-11-01-post-merge-evaluation.md) records v24 at 37/538, all 34 protected/all 37 prior matches retained, the exact historical byte restoration, current package proofs and bounded review uncertainty. Implementation PR #2411 merged under S11; its pending/cancelled jobs are not claimed green. The final follow-up carries the new measurement and closeout reflection, while canonical current-head readiness and merge evidence remain required for operative completed-retained status. Historical holds below remain evidence.
 
 ## Historical checkpoints and superseded holds
 

@@ -55,7 +55,7 @@ Sibling goals:
 
 ## Current Phase
 
-P2/P3 are measured under autonomous acceptance v1. The fixed benchmark is **37/538**, retaining every protected pass. Independent source reviews and the current-runtime allowed sample are complete with uncertainty retained. Findings remain advisory; alert noise and structural recovery remain poor. P4 publication/readiness and P5 closeout are in progress; attorney attendance is optional.
+P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 final closeout is prepared in a follow-up PR; operative lifecycle stays active until current readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
@@ -63,13 +63,16 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Post-merge v24 report and closeout](history/2026-11-01-post-merge-evaluation.md): current implementation freeze, fixed replay, retained/lost gate, corrected nesting diagnostic, source-bound historical review identity, exact v11 byte restoration and current package proofs.
+- [Delivery exception](history/2026-11-01-post-merge-delivery.json) and [closeout reflection](history/reflections/2026-11-01-codex.md): seven resolved threads, recorded S11 merge and explicit non-passing hosted outcomes.
+
 - [Current v23 delivery compatibility](history/2026-10-31-v23-delivery-compatibility.json): consumes accepted main through #2423, retains byte-identical v22 dependency replay and all 251 prediction reports, and preserves 37/538 with all 34 protected/all 37 previous matches. An equivalent untraced callback and canonical doctest/catalog repairs address the owned hosted lint failures. Six integrated-base package audit/docgen proofs pass; the callback then passes scoped laws, lint/check and 10 tests. The reviewed USPTO-only cache baseline changes no qualification. Hosted readiness and final closeout remain pending.
 
 - [Review repairs and retained evaluation](history/2026-10-31-review-repair-evaluation.md): rejects and preserves the 35/538 attempt; the refined v22 scores 37/538 with all 34 protected and all 37 prior passes. It corrects component defining-clause boundaries, binds review identities, bounds tool responses and uses canonical documentation categories. The original 30-claim automated judgments carry forward only because their exact prediction reports and evidence remain unchanged; no fresh or attorney review is claimed.
 
 - [App integration repair and full package proofs](history/2026-10-31-delivery-integration-repair.json): preserves every assertion and extends the all-tools telemetry canary to the new tool. MCP and app audit/docgen pass; generated identity profile freshness and cache audit pass.
 
-- **Primary delivery PR:** [#2411](https://github.com/beep-effect/beep-effect/pull/2411) is published as a draft. Its first hosted checks exposed missing app tool metadata and telemetry registration, a pipe-style diagnostic in an MCP regression test, and a stale generated identity lint profile. The current delivery wave repairs those integration gaps while retaining the fixed 37/538 measurement and every protected pass. Hosted readiness and closeout remain pending; earlier unpublished checkpoints below are historical.
+- **Primary delivery PR:** [#2411](https://github.com/beep-effect/beep-effect/pull/2411) merged on November 1 under the recorded S11 exception. Its first hosted checks exposed missing app tool metadata and telemetry registration, a pipe-style diagnostic in an MCP regression test, and a stale generated identity lint profile. The current delivery wave repairs those integration gaps while retaining the fixed 37/538 measurement and every protected pass. Hosted readiness and closeout remain pending; earlier unpublished checkpoints below are historical.
 
 - [Schema inventory reconciliation](history/2026-10-31-schema-inventory-refresh.json): the first publication collection passed 24/25 checks in over ten minutes. Accepted main #2409 removes its five obsolete inventory rows; the fresh standalone check passes with no new exceptions. Publication proceeds through the documented hosted-first route, retaining every failed and successful receipt.
 
