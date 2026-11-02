@@ -90,6 +90,8 @@ beforeEach(() => {
   vi.restoreAllMocks();
   vi.spyOn(Tasks, "resolveCiCoverageArtifactPlan").mockImplementation(mocks.plan);
   vi.spyOn(Tasks, "runQualityTaskStreamingStepGroup").mockImplementation(mocks.run);
+  // Compound producers run through the buffered group since they execute two at a time.
+  vi.spyOn(Tasks, "runQualityTaskBufferedStepGroup").mockImplementation(mocks.run);
   vi.spyOn(StepExec, "runCaptured").mockImplementation(mocks.discover);
   vi.spyOn(CoverageArtifacts, "writeCoverageProducerArtifact").mockImplementation(mocks.write);
   vi.spyOn(CoverageArtifacts, "compareCoverageProducerArtifacts").mockImplementation(mocks.compare);
@@ -257,19 +259,18 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "repo-cli-2",
         "repo-cli-3",
         "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
         "unit-a",
         "unit-b",
+        "unit-c",
+        "unit-d",
         "labs",
       ]);
-      const quarters = A.map(A.take(input.expectedPartitions, 4), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[6]?.packages[0];
+      const sixths = A.map(A.take(input.expectedPartitions, 6), (partition) => partition.packages[0]?.shard);
+      const lab = input.expectedPartitions[10]?.packages[0];
       assertDefined(lab);
-      expect(quarters).toEqual([
-        { index: 1, total: 4 },
-        { index: 2, total: 4 },
-        { index: 3, total: 4 },
-        { index: 4, total: 4 },
-      ]);
+      expect(sixths).toEqual(A.map(A.range(1, 6), (index) => ({ index, total: 6 })));
       expect(lab.packageName).toBe("@beep/ciops");
       expect(mocks.run).not.toHaveBeenCalled();
       expect(mocks.write).not.toHaveBeenCalled();
@@ -494,7 +495,8 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
           artifactRoot: ".beep/downloaded",
           expectedPartitions: expect.arrayContaining([
             expect.objectContaining({
-              partitionId: "unit-b",
+              // FNV-1a default placement over four unit bins (unit-a..unit-d) lands @beep/tool in unit-c.
+              partitionId: "unit-c",
               packages: [expect.objectContaining({ packageName: "@beep/mcpb-kit" })],
             }),
           ]),

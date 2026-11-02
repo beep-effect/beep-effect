@@ -1805,26 +1805,58 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
   S.Struct({
     aggregator: S.NonEmptyString,
     lane: S.NonEmptyString,
-    shards: S.NonEmptyArray(S.NonEmptyString),
+    // Every shard layout the lane has run under; a run is complete when its attempt-one shard set is exactly
+    // one of them, so a census window that straddles a layout change (10 Test Unit shards from 2026-11-02)
+    // still judges each run against the layout that produced it.
+    shardLayouts: S.NonEmptyString.pipe(S.NonEmptyArray, S.NonEmptyArray),
   }).pipe(
     $I.annoteSchema("CiEffectiveLaneSpec", {
-      description: "Required aggregator and complete shard-name set used to derive one effective lane span.",
+      description:
+        "Required aggregator and the complete shard-name sets (one per layout generation) used to derive one effective lane span.",
     })
   )
 ) {}
 
+const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
+
+// The layout whose every shard has an attempt-one job in this run; the newest layout wins a tie (a layout
+// that is a superset of an older one always wins when complete).
+const completeShardLayout = (
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): O.Option<ReadonlyArray<string>> =>
+  A.findFirst(A.reverse(spec.shardLayouts), (layout) =>
+    A.every(layout, (shardName) => O.isSome(attemptOneJobNamed(jobs, shardName)))
+  );
+
 const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
-  CiEffectiveLaneSpec.make({ aggregator: "Lint", lane: "Lint", shards: ["Lint (lint-a)", "Lint (lint-b)"] }),
+  CiEffectiveLaneSpec.make({ aggregator: "Lint", lane: "Lint", shardLayouts: [["Lint (lint-a)", "Lint (lint-b)"]] }),
   CiEffectiveLaneSpec.make({
     aggregator: "Test Unit",
     lane: "Test Unit",
-    shards: [
-      "Test Unit (repo-cli-1)",
-      "Test Unit (repo-cli-2)",
-      "Test Unit (repo-cli-3)",
-      "Test Unit (repo-cli-4)",
-      "Test Unit (unit-a)",
-      "Test Unit (unit-b)",
+    shardLayouts: [
+      // #1195 (2026-09-22) to 2026-11-02: four repo-cli quarters and two unit bins.
+      [
+        "Test Unit (repo-cli-1)",
+        "Test Unit (repo-cli-2)",
+        "Test Unit (repo-cli-3)",
+        "Test Unit (repo-cli-4)",
+        "Test Unit (unit-a)",
+        "Test Unit (unit-b)",
+      ],
+      // From 2026-11-02 (ci-lane-economics D4): six repo-cli shards and four unit bins.
+      [
+        "Test Unit (repo-cli-1)",
+        "Test Unit (repo-cli-2)",
+        "Test Unit (repo-cli-3)",
+        "Test Unit (repo-cli-4)",
+        "Test Unit (repo-cli-5)",
+        "Test Unit (repo-cli-6)",
+        "Test Unit (unit-a)",
+        "Test Unit (unit-b)",
+        "Test Unit (unit-c)",
+        "Test Unit (unit-d)",
+      ],
     ],
   }),
 ];
@@ -1966,7 +1998,8 @@ const effectiveLaneSpecForJobName = (name: string): O.Option<CiEffectiveLaneSpec
   A.findFirst(
     CI_EFFECTIVE_LANE_SPECS,
     (spec) =>
-      Str.equivalence(spec.aggregator, name) || A.some(spec.shards, (shardName) => Str.equivalence(shardName, name))
+      Str.equivalence(spec.aggregator, name) ||
+      A.some(specShardNames(spec), (shardName) => Str.equivalence(shardName, name))
   );
 
 const windowRunOrder = Order.combine(
@@ -2386,9 +2419,13 @@ const effectiveDurationRow = (
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
   spec: CiEffectiveLaneSpec
 ): CiLaneTimingWindowRow => {
-  const expectedNames = A.prepend(spec.shards, spec.aggregator);
-  const componentOptions = A.map(expectedNames, (name) => attemptOneJobNamed(jobs, name));
-  const components = A.getSomes(componentOptions);
+  const layout = completeShardLayout(jobs, spec);
+  if (O.isNone(layout)) {
+    return incompleteEffectiveRow(run, spec);
+  }
+  const shards = layout.value;
+  const expectedNames = A.prepend(shards, spec.aggregator);
+  const components = A.getSomes(A.map(expectedNames, (name) => attemptOneJobNamed(jobs, name)));
   if (A.length(components) !== A.length(expectedNames)) {
     return incompleteEffectiveRow(run, spec);
   }
@@ -2408,9 +2445,7 @@ const effectiveDurationRow = (
     });
   }
   const shardStartedAtMillis = A.getSomes(
-    A.map(spec.shards, (shardName) =>
-      O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at))
-    )
+    A.map(shards, (shardName) => O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at)))
   );
   const aggregatorCompletedAtMillis = O.flatMap(attemptOneJobNamed(jobs, spec.aggregator), (job) =>
     epochMillis(job.completed_at)
@@ -2423,7 +2458,7 @@ const effectiveDurationRow = (
       (startedAt, completedAt) => (completedAt - startedAt) / 1_000
     ),
     O.filter((seconds) => seconds >= 0),
-    O.filter(() => A.length(shardStartedAtMillis) === A.length(spec.shards))
+    O.filter(() => A.length(shardStartedAtMillis) === A.length(shards))
   );
   return O.match(durationSeconds, {
     onNone: () =>
@@ -2461,7 +2496,7 @@ const shardPickupRows = (
   A.flatMap(CI_EFFECTIVE_LANE_SPECS, (spec) =>
     pipe(
       jobs,
-      A.filter((job) => A.some(spec.shards, (shardName) => Str.equivalence(shardName, job.name))),
+      A.filter((job) => A.some(specShardNames(spec), (shardName) => Str.equivalence(shardName, job.name))),
       A.map((job) =>
         O.map(attemptOnePickupSeconds(CiWorkflowJob.make(job)), (pickupSeconds) =>
           CiLaneTimingPickupRow.make({
@@ -2489,7 +2524,7 @@ const laterEffectiveRows = (
     CI_EFFECTIVE_LANE_SPECS,
     A.filter((spec) => HashSet.has(requiredContexts, spec.lane)),
     A.flatMap((spec) => {
-      const componentNames = A.prepend(spec.shards, spec.aggregator);
+      const componentNames = A.prepend(specShardNames(spec), spec.aggregator);
       const laterComponents = A.filter(
         runJobs.jobs,
         (job) =>
