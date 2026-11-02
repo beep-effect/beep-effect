@@ -19,6 +19,7 @@ export {
   DirtyWorktreeError,
   Git,
   GitCommandError,
+  GitOptions,
   type GitShape,
   type GitStubs,
   LsFilesEntry,

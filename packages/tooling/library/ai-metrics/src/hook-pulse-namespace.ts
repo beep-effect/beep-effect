@@ -29,6 +29,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { AI_METRICS_LOCAL_INSECURE_HASH_SALT, resolveAiMetricsHashSaltValue } from "./privacy.ts";
 import type * as Path from "effect/Path";
 
 const $I = $RepoAiMetricsId.create("hook-pulse-namespace");
@@ -99,9 +100,39 @@ export const HookPulseNamespaceSource = LiteralKit([
  */
 export type HookPulseNamespaceSource = typeof HookPulseNamespaceSource.Type;
 
-const ProjectionHashSalt = S.String.check(S.isPattern(/\S/)).pipe(
+const SupportedSaltText = S.String.check(S.isPattern(/^[^\u0000-\u001f\u007f-\u009f]*(?![\s\S])/)).pipe(
+  $I.annoteSchema("SupportedSaltText", {
+    description: "Salt text without control characters that shell variables cannot preserve safely.",
+  })
+);
+const isSupportedSaltText = S.is(SupportedSaltText);
+
+const ProjectionHashSalt = SupportedSaltText.check(S.isPattern(/\S/)).pipe(
   $I.annoteSchema("ProjectionHashSalt", {
     description: "Hook-pulse hash salt carried by the projection; whitespace-only is invalid, never a silent fallback.",
+  })
+);
+
+// Restrict the wire instant before DateTime's permissive parser can normalize
+// impossible calendar dates. The shell validates this same UTC wire format.
+const ProjectionCutover = S.String.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/),
+  S.makeFilter(
+    (text) =>
+      O.exists(
+        DateTime.make(text),
+        (instant) => DateTime.formatIso(instant) === (Str.length(text) === 20 ? `${Str.slice(0, -1)(text)}.000Z` : text)
+      ),
+    $I.annote("ProjectionCutoverCalendar", {
+      title: "Valid UTC cutover",
+      description: "A real UTC calendar instant, without parser normalization.",
+      message: "Expected a valid UTC cutover instant.",
+    })
+  )
+).pipe(
+  S.decodeTo(S.DateTimeUtcFromString),
+  $I.annoteSchema("ProjectionCutover", {
+    description: "A real UTC cutover at second or millisecond precision, without calendar normalization.",
   })
 );
 
@@ -110,7 +141,8 @@ const ProjectionHashSalt = S.String.check(S.isPattern(/\S/)).pipe(
  *
  * **Details**
  *
- * The file is JSON with exactly these keys. `cutoverUtc` is the instant the
+ * The file is one JSON document with these required keys; extra keys are ignored.
+ * `cutoverUtc` is the instant the
  * projection was applied; rows timestamped before it belong to
  * `previousRegime`. The shell writer reads `hashSalt` with `jq` and refuses to
  * write a row when the file exists but does not decode, so a damaged projection
@@ -137,7 +169,7 @@ export class HookPulseNamespaceProjection extends S.Opaque<
 >()(
   S.Struct({
     version: S.tag(1),
-    cutoverUtc: S.DateTimeUtcFromString,
+    cutoverUtc: ProjectionCutover,
     hashSalt: ProjectionHashSalt,
     previousRegime: HookPulseNamespaceRegime,
   }).pipe(
@@ -179,8 +211,8 @@ export class HookPulseNamespaceError extends S.TaggedError<HookPulseNamespaceErr
     description: "The hook-pulse namespace projection exists but is unreadable, a symlink, or undecodable.",
   })
 ) {
-  static readonly new = (message: string, cause: unknown): HookPulseNamespaceError =>
-    HookPulseNamespaceError.make({ message, cause });
+  static readonly new = (message: string, _cause: unknown): HookPulseNamespaceError =>
+    HookPulseNamespaceError.make({ message, cause: { kind: "namespace-invalid" } });
   static readonly wrap =
     (message: string) =>
     (cause: unknown): HookPulseNamespaceError =>
@@ -222,7 +254,7 @@ export const hookPulseNamespaceProjectionPath: Config.Config<O.Option<string>> =
 ).pipe(
   Config.option,
   Config.flatMap((explicit) =>
-    O.match(explicit, {
+    O.match(O.filter(explicit, Str.isNonEmpty), {
       onSome: (file) => Config.succeed(O.some(file)),
       onNone: () => XdgBase.dir("cache").pipe(Config.map(O.map((cache) => `${cache}/${projectionRelativePath}`))),
     })
@@ -268,19 +300,17 @@ export const readHookPulseNamespaceProjection: Effect.Effect<
     Effect.mapError(HookPulseNamespaceError.wrap("Cannot resolve the hook-pulse namespace projection path."))
   );
   if (O.isNone(file)) return O.none<HookPulseNamespaceProjection>();
-  const exists = yield* fs
-    .exists(file.value)
-    .pipe(Effect.mapError(HookPulseNamespaceError.wrap("Cannot inspect the hook-pulse namespace projection.")));
-  if (!exists) return O.none<HookPulseNamespaceProjection>();
-  // `readLink` succeeds only on a symlink; the apply script never writes one, so
-  // a link here is drift and is refused before the target is read.
+  // Inspect links before exists(), which follows targets and hides dangling links.
   const link = yield* fs.readLink(file.value).pipe(Effect.option);
   if (O.isSome(link)) {
     return yield* HookPulseNamespaceError.new("Hook-pulse namespace projection must not be a symlink.", {
       kind: "symlink",
-      file: file.value,
     });
   }
+  const exists = yield* fs
+    .exists(file.value)
+    .pipe(Effect.mapError(HookPulseNamespaceError.wrap("Cannot inspect the hook-pulse namespace projection.")));
+  if (!exists) return O.none<HookPulseNamespaceProjection>();
   const info = yield* fs
     .stat(file.value)
     .pipe(Effect.mapError(HookPulseNamespaceError.wrap("Cannot stat the hook-pulse namespace projection.")));
@@ -397,7 +427,7 @@ export const hookPulseNamespaceSalts = (
     onSome: (projection) =>
       HookPulseNamespaceRegime.match(projection.previousRegime, {
         "library-default": () =>
-          O.isNone(namespace.hashSalt)
+          resolveAiMetricsHashSaltValue(namespace.hashSalt) === AI_METRICS_LOCAL_INSECURE_HASH_SALT
             ? A.of(current)
             : A.make(current, HookPulseNamespaceSalt.make({ regime: "previous", hashSalt: O.none() })),
       }),
@@ -443,8 +473,9 @@ const nonBlank = (value: O.Option<string>): O.Option<string> =>
  *
  * **Gotchas**
  *
- * An empty or whitespace-only environment rung is treated as absent here, which
- * is what the shell's `${VAR:-}` fallthrough does. {@link hookPulseHashSalt}
+ * An empty or whitespace-only environment rung is treated as absent. Control
+ * characters are refused before fallthrough, and significant spaces are preserved.
+ * An explicit instrument override bypasses the projection, including its cutover. {@link hookPulseHashSalt}
  * keeps its documented two-rung behaviour for the codec; this resolver is for
  * readers (reconciliation, the forwarder) that can open the projection file.
  *
@@ -477,13 +508,20 @@ export const hookPulseNamespace: Effect.Effect<
   const readRung = (name: string) =>
     Config.String(name).pipe(
       Config.option,
-      Effect.mapBoth({ onSuccess: nonBlank, onFailure: HookPulseNamespaceError.wrap(`Cannot read ${name}.`) })
+      Effect.mapError(HookPulseNamespaceError.wrap(`Cannot read ${name}.`)),
+      Effect.flatMap((value) =>
+        O.isSome(value) && !isSupportedSaltText(value.value)
+          ? Effect.fail(
+              HookPulseNamespaceError.new("Hook-pulse hash salt contains unsupported control characters.", {})
+            )
+          : value.pipe(nonBlank, Effect.succeed)
+      )
     );
   const instrument = yield* readRung("BEEP_HOOK_PULSE_HASH_SALT");
-  const projection = yield* readHookPulseNamespaceProjection;
   if (O.isSome(instrument)) {
-    return HookPulseNamespace.make({ hashSalt: instrument, source: "hook-pulse-env", projection });
+    return HookPulseNamespace.make({ hashSalt: instrument, source: "hook-pulse-env", projection: O.none() });
   }
+  const projection = yield* readHookPulseNamespaceProjection;
   if (O.isSome(projection)) {
     return HookPulseNamespace.make({
       hashSalt: O.some(projection.value.hashSalt),

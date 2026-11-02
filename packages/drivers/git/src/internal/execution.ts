@@ -19,6 +19,7 @@ import * as HashSet from "effect/HashSet";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GitOptions } from "../Git.models.ts";
 import { GitCommand } from "../GitCommand.ts";
 import { runClassified } from "./classification.ts";
 import { BASE_ENV, OPENSSH_VARIANTS, sshEnv } from "./sshEnvironment.ts";
@@ -78,7 +79,9 @@ export interface Execution {
 }
 
 /**
- * Captures the process spawner and ambient SSH settings for one service instance.
+ * Captures the process spawner and ambient SSH settings for one service
+ * instance, binding `options` (the per-stream output ceiling and the per-run
+ * timeout) into every run it performs.
  *
  * **Details**
  *
@@ -86,19 +89,20 @@ export interface Execution {
  * infallible construction contract. Repository settings are resolved later,
  * per network call, because one instance can serve multiple repositories.
  *
- * **Example** (Describe execution construction)
+ * **Example** (Bind a tighter output ceiling)
  *
- * ```ts import.meta.vitest name="Describe execution construction"
- * import { make } from "@beep/git/internal/execution";
+ * ```ts import.meta.vitest name="Bind a tighter output ceiling"
+ * import { GitOptions } from "@beep/git/Git";
+ * import { makeWith } from "@beep/git/internal/execution";
  * import * as Effect from "effect/Effect";
  *
- * Effect.isEffect(make) // => true
+ * Effect.isEffect(makeWith(GitOptions.make({ maxOutputBytes: 64 * 1024 }))) // => true
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const make: Effect.Effect<Execution, never, ChildProcessSpawner.ChildProcessSpawner> = Effect.gen(function* () {
+export const makeWith = Effect.fnUntraced(function* (options: GitOptions) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   // The AMBIENT ENVIRONMENT is read ONCE, here, and never again — it
   // cannot change under a running service. The read goes through
@@ -131,7 +135,7 @@ export const make: Effect.Effect<Execution, never, ChildProcessSpawner.ChildProc
   const runFor: RunFor = dual(
     3,
     <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K): Effect.Effect<ClassifiedFor<K>> =>
-      runClassified(invocation, cwd, kind, BASE_ENV).pipe(
+      runClassified(invocation, cwd, kind, BASE_ENV, options).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       )
   );
@@ -211,11 +215,32 @@ export const make: Effect.Effect<Execution, never, ChildProcessSpawner.ChildProc
     3,
     Effect.fnUntraced(function* <K extends ClassifyKind>(invocation: GitInvocation, cwd: string, kind: K) {
       const env = yield* resolveSshEnv(cwd);
-      return yield* runClassified(invocation, cwd, kind, env).pipe(
+      return yield* runClassified(invocation, cwd, kind, env, options).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
     })
   );
 
-  return { runFor, runForNetwork };
+  const execution: Execution = { runFor, runForNetwork };
+  return execution;
 });
+
+/**
+ * {@link makeWith} under the default {@link GitOptions}: a 16 MiB per-stream
+ * output ceiling and a 30 s per-run timeout.
+ *
+ * **Example** (Describe execution construction)
+ *
+ * ```ts import.meta.vitest name="Describe execution construction"
+ * import { make } from "@beep/git/internal/execution";
+ * import * as Effect from "effect/Effect";
+ *
+ * Effect.isEffect(make) // => true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const make: Effect.Effect<Execution, never, ChildProcessSpawner.ChildProcessSpawner> = makeWith(
+  GitOptions.make({})
+);
