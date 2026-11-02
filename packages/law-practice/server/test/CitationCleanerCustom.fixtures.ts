@@ -5,6 +5,7 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -41,6 +42,22 @@ export const controlledLiteralScenes = [
   "registry-delete",
   "registry-add",
   "registry-noncallable",
+  "unhashable-stops",
+  "unhashable-callable",
+  "integer-step",
+  "bytes-step",
+  "steps-none",
+  "steps-string",
+  "iterator-raises",
+  "iterator-raises-first",
+  "live-step-append",
+  "dispatch:miss",
+  "dispatch:switch-hash",
+  "dispatch:hash-raises",
+  "dispatch:equality-raises",
+  "dispatch:false-equality",
+  "dispatch:delete-during-equality",
+  "dispatch:delete-second-hash",
 ];
 type Body = (
   value: CitationCleanerObject,
@@ -60,6 +77,11 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   let views = HashMap.empty<number, () => S.Json>();
   let slots = HashMap.empty<number, number>();
   let events = A.empty<S.Json>();
+  let unhashable = HashSet.empty<number>();
+  let integer = O.none<number>();
+  let dispatch = O.none<CitationCleanerObject>();
+  let hashCalls = 0;
+  const mode = Str.replace("dispatch:", "")(scene);
   const slot = (value: CitationCleanerObject) => {
     const found = HashMap.get(slots, value.slot);
     if (O.isSome(found)) return found.value;
@@ -200,6 +222,32 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         )
       ),
     ];
+  } else if (scene === "unhashable-stops" || scene === "unhashable-callable") {
+    const value = yield* scene === "unhashable-stops"
+      ? retain([], () => ({ kind: "list", slot: 0, items: [] }))
+      : callback("uncalled", (_input, work) => emitText("WRONG", work));
+    unhashable = HashSet.add(unhashable, value.slot);
+    steps = scene === "unhashable-stops" ? [value, suffix] : [value];
+  } else if (scene === "integer-step") {
+    const value = yield* retain(1, () => ({ kind: "int", value: "1" }));
+    integer = O.some(value.slot);
+    steps = [value, suffix];
+  } else if (scene === "bytes-step") steps = [yield* h.values.bytes(new TextEncoder().encode("html")), suffix];
+  else if (scene === "steps-string") steps = yield* Effect.forEach(["h", "t", "m", "l"], h.values.text);
+  else if (scene === "steps-none") steps = [];
+  else if (scene === "iterator-raises" || scene === "iterator-raises-first")
+    steps = [suffix, yield* h.values.text("html"), suffix];
+  else if (scene === "live-step-append") {
+    steps = [
+      yield* callback("append-step", (value, work) => {
+        steps.push(suffix);
+        return emit(value, work);
+      }),
+    ];
+  } else if (Str.startsWith("dispatch:")(scene)) {
+    const value = yield* retain({ controlledStep: mode }, () => ({ kind: "step", mode }));
+    dispatch = O.some(value);
+    steps = [value];
   } else if (Str.startsWith("registry-")(scene)) {
     const html = yield* h.values.text("html");
     const added = yield* h.values.text("added");
@@ -223,10 +271,71 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
   } else if (scene !== "empty-text-subclass" && scene !== "steps-empty-string") return yield* fail();
   h.select(steps);
   h.hooks({
-    callable: (value) => Effect.succeed(HashMap.has(callbacks, value.slot)),
-    hash: (value) => Effect.succeed(BigInt(value.slot + 100)),
-    equal: h.values.same,
+    callable: (value) => Effect.succeed(O.contains(dispatch, value) || HashMap.has(callbacks, value.slot)),
+    hash: Effect.fn("CleanerCustomTest.hash")(function* (value) {
+      if (HashSet.has(unhashable, value.slot)) return yield* fail();
+      if (!O.contains(dispatch, value)) return O.contains(integer, value.slot) ? BigInt(1) : BigInt(value.slot + 100);
+      hashCalls++;
+      events = A.append(events, { kind: "step-hash", mode, call: hashCalls });
+      if (mode === "hash-raises") return yield* fail();
+      if (mode === "delete-second-hash" && hashCalls === 2) yield* h.registry.remove(yield* h.values.text("html"));
+      const key = mode === "switch-hash" && hashCalls > 1 ? "underscores" : mode === "miss" ? "missing" : "html";
+      const result = yield* h.hashes.text(key).pipe(Effect.mapError(fail));
+      events = A.append(events, { kind: "step-hash-return", raw: result.toString() });
+      return result;
+    }),
+    open: Effect.fn("CleanerCustomTest.open")(function* () {
+      if (scene === "steps-none") return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
+      const traced = scene === "iterator-raises" || scene === "iterator-raises-first" || scene === "live-step-append";
+      let begun = false;
+      let index = 0;
+      return {
+        next: Effect.suspend(() =>
+          Effect.gen(function* () {
+            if (traced && !begun) {
+              events = A.append(events, { kind: "iterator-enter" });
+              begun = true;
+            }
+            if ((scene === "iterator-raises-first" && index === 0) || (scene === "iterator-raises" && index === 1)) {
+              events = A.append(events, { kind: "iterator-raise", index });
+              return yield* CitationCleanerFailure.make({ reason: "iteration-failed" });
+            }
+            const value = A.get(steps, index);
+            if (O.isNone(value)) {
+              if (traced) events = A.append(events, { kind: "iterator-complete" });
+              return O.none<CitationCleanerObject>();
+            }
+            if (traced) {
+              const name = HashMap.get(names, value.value.slot);
+              const descriptor = O.isSome(name) ? { kind: "callback", name: name.value } : yield* present(value.value);
+              events = A.append(events, { kind: "iterator-yield", index, value: descriptor });
+            }
+            index++;
+            return value;
+          })
+        ),
+      };
+    }),
+    equal: Effect.fn("CleanerCustomTest.equal")(function* (left, right) {
+      if (!O.contains(dispatch, left) && !O.contains(dispatch, right)) return yield* h.values.same(left, right);
+      events = A.append(events, {
+        kind: "step-equality",
+        mode,
+        other: yield* present(O.contains(dispatch, left) ? right : left),
+      });
+      if (mode === "equality-raises") return yield* fail();
+      if (mode === "delete-during-equality") yield* h.registry.remove(yield* h.values.text("html"));
+      if (mode === "false-equality") {
+        events = A.append(events, { kind: "equality-bool", result: false });
+        return false;
+      }
+      return true;
+    }),
     invoke: Effect.fn("CleanerCustomTest.invoke")(function* (fn, value, work) {
+      if (O.contains(dispatch, fn)) {
+        events = A.append(events, { kind: "step-call", mode, value: yield* present(value) });
+        return yield* emitText("CALLBACK", work);
+      }
       const body = yield* Effect.fromOption(HashMap.get(callbacks, fn.slot), () =>
         CitationCleanerFailure.make({ reason: "not-callable" })
       );

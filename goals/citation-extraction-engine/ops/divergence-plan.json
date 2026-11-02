@@ -233,7 +233,8 @@
         "packages/law-practice/server/test/CitationCleanerCustom.fixtures.ts",
         "packages/law-practice/server/test/CitationCleanerCustomCorpus.test.ts",
         "packages/law-practice/server/test/CitationCleanerNamedCorpus.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-controlled-cleaner-replay.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-controlled-cleaner-replay.md",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-protocol-replay.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

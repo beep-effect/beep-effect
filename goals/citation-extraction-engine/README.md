@@ -174,6 +174,13 @@ mutation. Final outputs/identity, closed failure reasons and operation cleanup
 are checked through the admitted live cleaner. The other 27 controlled scenes,
 504 HTML cases and full event/final-registry proof remain open.
 
+The [iteration and dispatch replay](./history/evidence/2026-11-02-cleaner-protocol-replay.md)
+now extends controlled coverage to 40 scenes, 42 runs and 104 exact observable
+callback/iterator/hash/equality/dispatch events. It preserves live step mutation,
+separate membership/get hashes and lookup failure after key deletion. Eleven
+native HTML/builtin-function scenes and the remaining full event/registry proof
+remain open; canonical parity rows are not promoted by this focused evidence.
+
 ## Mission
 
 Deliver an Effect-native citation engine with observable capability parity to
