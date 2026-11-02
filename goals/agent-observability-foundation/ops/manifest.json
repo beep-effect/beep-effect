@@ -5,7 +5,7 @@
     "title": "Trustworthy agent observability foundation",
     "status": "active",
     "created": "2026-10-27",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-observability-foundation",
@@ -102,7 +102,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Source implementation and bounded synthetic qualification supported; PR2364 remains the final delivery gate. Prospective closeout is declared, operative lifecycle stays active, and only exact-head readiness plus merge-time required-check verification can derive completion. Recovery hold intact.",
+  "statusNote": "PR2364 merged with an unsatisfied canonical completion receipt. Current-source Node package and declared disposable/live synthetic proof passed; the reviewed follow-up will become final when its PR number and verdict reference are updated together. Operative lifecycle remains active; recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

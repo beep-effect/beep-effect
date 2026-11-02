@@ -1,6 +1,23 @@
 # Acceptance evidence audit
 
-## Current source refresh — October 31
+## Current qualification — November 2 UTC
+
+The [post-merge qualification](POST-MERGE-QUALIFICATION.md) is the current delivery status. PR2364 merged with an unsatisfied canonical completion result; the original merge-time receipt is preserved. A follow-up final PR must earn its own readiness and merge-time evidence. The assessments below remain scoped historical support.
+
+Current-main runtime changes are covered by fresh Node22.23.4 package suites: 855 AI-metrics tests, 40 Phoenix tests and 73 managed-provider tests. Fresh declared-root preparation independently binds 82 source inputs; paired digest and optimized-Python refusal controls pass. Independent Astra review accepted the fresh disposable/live pair, all 104 Node source/lockfile bindings and all thirteen SPEC criteria at their stated source, synthetic-test and canary scope. Current-source stage evidence is tracked in the post-merge report. No package or canary result substitutes for the final repository gates.
+
+| AC | Current support and retained boundary |
+| --- | --- |
+| 1–2 | Current typed inventory/identity tests and positive root probe; capability, launch and event populations stay separate. Global Codex identity remains protected. Seven real-harness populations remain Unknown. |
+| 3 | Current discovery/page/sweep suites cover fair N+1 traversal, incomplete and unreadable children, interrupted page re-offer and per-attempt scheduling, alongside retained rotation/copy/partial-line fixtures. Unseen rewrites are not universally detected. |
+| 4–6 | Actual encoder/HTTP/crash/ledger suites plus fresh exact event/attempt/visibility checks support event time, bounded metadata and exclusive states. Historical replay/epoch experiments retain their original execution scope. |
+| 7 | Current provider/cache export tests and historical pinned-backend usage/UI reconciliation retain their distinct scopes. The fresh two-record route does not repeat the aggregate/UI experiment. |
+| 8–10 | All 25 retained Dankserver source bindings still match. Fresh template, private maintenance, queue/health and local alert proofs support the qualified arrangement; elapsed-age expiry and production backup readiness are not newly qualified. |
+| 11 | Orchestrator rechecked masked/inactive historical service and timer. Independent artifact review confirms distinct owned canary resources and no hold-release claim. |
+| 12 | Fresh same-root disposable then live pair independently binds expected IDs to native/local/backend/visibility sets with privacy and rollback. Real enrollment is unqualified. |
+| 13 | Current ownership/compatibility tests and fresh rollback retain queues, journals, backend evidence and historical IDs/archives. Off-device recovery and production generation management remain deployment obligations. |
+
+## Historical source refresh — October 31
 
 The October 29 assessments below retain their historical execution scope. The
 latest completed route qualification is now
