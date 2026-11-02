@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { isRegisteredWorktree, removeGitWorktree, runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -48,7 +49,10 @@ const failingSpawner = ChildProcessSpawner.make(() =>
   )
 );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GitWorktree", (it) => {
+// `Git` rides beside the platform services: the worktree probes take it from the context (W1b).
+it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), {
+  timeout: "30 seconds",
+})("GitWorktree", (it) => {
   it.effect("recognizes a registered linked worktree, including through a symlinked path", () =>
     withRepository((root, repoRoot) =>
       Effect.gen(function* () {
@@ -90,7 +94,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GitWorktree", (i
 
         assertNone(yield* isRegisteredWorktree(notARepository, notARepository));
         assertNone(
+          // `Git` is rebuilt over the failing spawner: the probe takes the service from the context (W1b).
           yield* isRegisteredWorktree(repoRoot, repoRoot).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
           )
         );
@@ -126,6 +132,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GitWorktree", (i
         expect(yield* fs.exists(plain)).toBe(true);
         expect(
           yield* removeGitWorktree(repoRoot, plain).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
           )
         ).toBe(false);

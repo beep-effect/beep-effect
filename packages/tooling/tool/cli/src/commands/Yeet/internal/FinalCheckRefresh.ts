@@ -30,6 +30,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -63,7 +64,6 @@ import {
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
 import { runGitFoldedStdout, runGitOutput, runGitPathList } from "./GitExec.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -488,11 +488,10 @@ export const collectFinalCheckRefreshFacts = Effect.fn("Yeet.collectFinalCheckRe
   });
 });
 
+// `Git.isAncestor` answers `false` for a non-ancestor; an unknown object, a non-repository or a
+// spawn failure also reads as `false` here, the probe-unreliable answer the capture gave.
 const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
-  runGitOutput(repoRoot, ["merge-base", "--is-ancestor", ancestor, head]).pipe(
-    Effect.as(true),
-    Effect.orElseSucceed(constFalse)
-  );
+  Effect.flatMap(Git, (git) => git.isAncestor(repoRoot, ancestor, head)).pipe(Effect.orElseSucceed(constFalse));
 
 /**
  * Find the nearest strict ancestor of a head that carries a final-check receipt
