@@ -39,19 +39,16 @@ import {
   configStringEqualsSync,
   configStringOption,
   configStringOptionSync,
-  cursorArgs,
   decodeOrFail,
   decodeSchemaFirstPolicyFindingLine,
   encodeSchemaFirstPolicyFinding,
   envValue,
-  GhPageInfo,
   GhPrView,
   intEnvValue,
   isUnresolvedSecretReference,
   JsoncModification,
   JsonStringCodec,
   localOnlyTurboCacheArgs,
-  nextCursor,
   RemoteReadTurboCache,
   readOptionalConfigString,
   readOptionalRedactedConfigString,
@@ -324,46 +321,6 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(view.url).toBe("https://github.com/o/r/pull/7");
         expect(view.isDraft).toBe(false);
         expect(view.headRefOid).toBe("abc123");
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it("cursorArgs builds the -F cursor pair only when present", () => {
-      expect(cursorArgs(O.some("abc"))).toEqual(["-F", "cursor=abc"]);
-      expect(cursorArgs(O.none())).toEqual([]);
-    });
-
-    it.effect("nextCursor completes pagination when there is no next page", () =>
-      Effect.gen(function* () {
-        const result = yield* nextCursor({
-          pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: false }),
-          label: "comments",
-          onMissingCursor: (label) => SharedInternalsTestError.make({ message: label }),
-        });
-        result.pipe(assertNone);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it.effect("nextCursor yields the next cursor when a page follows", () =>
-      Effect.gen(function* () {
-        const result = yield* nextCursor({
-          pageInfo: GhPageInfo.make({ endCursor: "next", hasNextPage: true }),
-          label: "comments",
-          onMissingCursor: (label) => SharedInternalsTestError.make({ message: label }),
-        });
-        assertSome(result, "next");
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it.effect("nextCursor fails when another page has no end cursor", () =>
-      Effect.gen(function* () {
-        const exit = yield* Effect.exit(
-          nextCursor({
-            pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: true }),
-            label: "comments",
-            onMissingCursor: (label) => SharedInternalsTestError.make({ message: `${label} missing cursor` }),
-          })
-        );
-        expect(exit._tag).toBe("Failure");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

@@ -48,6 +48,9 @@
  * @since 0.0.0
  */
 
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
+import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -61,20 +64,13 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GithubRest } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { decodeYeetGhOutput, yeetGh } from "./GhCall.ts";
-import { parseYeetInheritedRedsRecord } from "./GhOps.ts";
+import { parseYeetInheritedRedsRecord, provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
-import {
-  deriveYeetReviewThreadState,
-  YeetReviewThreadNewestComment,
-  YeetReviewThreadStateInput,
-  yeetReviewCommentAuthorKind,
-  yeetReviewThreadStateOutstanding,
-} from "./ReviewThreadState.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
 import {
@@ -85,6 +81,8 @@ import {
 } from "./SquashCommitlint.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GithubCheckRunRecord, GithubWorkflowRunRecord } from "../../../internal/github/index.ts";
+import type { YeetGithubServices } from "./GhOps.ts";
 
 export { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 
@@ -1120,151 +1118,54 @@ export const renderMergeGateDecision = (decision: MergeGateDecision): string =>
     ? `#${decision.prNumber} HOLD ${decision.reason}: ${decision.detail}`
     : renderMerge(decision);
 
-const GhPull = S.Struct({
-  number: S.Finite,
-  title: S.String,
-  body: S.String.pipe(S.NullOr, S.optionalKey),
-  draft: S.Boolean,
-  created_at: S.String,
-  mergeable_state: S.NullOr(S.String),
-  head: S.Struct({ sha: S.String }),
-  base: S.Struct({ ref: S.String }),
-  user: S.NullOr(S.Struct({ login: S.String })),
-  labels: S.Array(S.Struct({ name: S.String })).pipe(S.optionalKey),
-});
 const GhCompare = S.Struct({
   merge_base_commit: S.Struct({ sha: S.String }),
   base_commit: S.Struct({ sha: S.String }),
 });
-const GhCheckRuns = S.Struct({
-  check_runs: S.Array(S.Struct({ id: S.Finite, name: S.String, status: S.String, conclusion: S.NullOr(S.String) })),
-});
-const GhThreadNode = S.Struct({
-  id: S.String,
-  isResolved: S.Boolean,
-  isOutdated: S.Boolean,
-  resolvedBy: S.NullOr(S.Struct({ login: S.String })),
-  comments: S.Struct({
-    nodes: S.Array(
-      S.Struct({
-        createdAt: S.optionalKey(S.String),
-        author: S.NullOr(S.Struct({ __typename: S.optionalKey(S.String), login: S.String })),
-      })
-    ),
-  }),
-});
-const GhThreads = S.Struct({
-  data: S.Struct({
-    repository: S.Struct({
-      pullRequest: S.Struct({
-        reviewThreads: S.Struct({ totalCount: S.Finite, nodes: S.Array(GhThreadNode) }),
-      }),
-    }),
-  }),
-});
-const GhMergeResult = S.Struct({ merged: S.Boolean, sha: S.optionalKey(S.String), message: S.optionalKey(S.String) });
-const GhWorkflowRuns = S.Struct({
-  workflow_runs: S.Array(S.Struct({ id: S.Finite, head_sha: S.String, status: S.String })),
-});
 
-const decodePull = S.decodeUnknownEffect(S.fromJsonString(GhPull));
-const decodeCompare = S.decodeUnknownEffect(S.fromJsonString(GhCompare));
-const decodeCheckRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhCheckRuns)));
-const decodeThreads = S.decodeUnknownEffect(S.fromJsonString(GhThreads));
-const decodeMergeResult = S.decodeUnknownEffect(S.fromJsonString(GhMergeResult));
-const decodeWorkflowRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhWorkflowRuns)));
+const COMPARE_ROUTE = "GET /repos/{owner}/{repo}/compare/{basehead}";
 
-// AGENTS.md "Mergeable": an unresolved thread, or one the author resolved
-// that a human commented on afterwards, still owes a reply. Same rule as
-// closeout, status and watch: deriveYeetReviewThreadState.
-const outstandingThreadCount = (
-  nodes: ReadonlyArray<typeof GhThreadNode.Type>,
-  pullRequestAuthor: O.Option<string>
-): number =>
-  A.length(
-    A.filter(nodes, (node) =>
-      yeetReviewThreadStateOutstanding(
-        deriveYeetReviewThreadState(
-          YeetReviewThreadStateInput.make({
-            threadId: node.id,
-            isResolved: node.isResolved,
-            isOutdated: node.isOutdated,
-            pullRequestAuthor,
-            resolvedBy: O.fromNullishOr(node.resolvedBy?.login),
-            newestComment: A.last(node.comments.nodes).pipe(
-              O.flatMap((comment) =>
-                O.map(O.fromNullishOr(comment.author), (author) =>
-                  YeetReviewThreadNewestComment.make({
-                    authorLogin: author.login,
-                    authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(author.__typename)),
-                    createdAt: O.fromUndefinedOr(comment.createdAt),
-                  })
-                )
-              )
-            ),
-          })
-        )
-      )
-    )
-  );
+const toMergeGateCheckRun = (run: GithubCheckRunRecord): MergeGateCheckRun =>
+  MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: O.getOrNull(run.conclusion) });
 
-const toMergeGateCheckRun = (run: (typeof GhCheckRuns.Type)["check_runs"][number]): MergeGateCheckRun =>
-  MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion });
-
-const readBaseCommitRuns = (context: RepoRunContext, sha: string) =>
-  yeetGh(context, `gh api base check-runs ${sha10(sha)}`, [
-    "api",
-    `repos/{owner}/{repo}/commits/${sha}/check-runs?per_page=100`,
-    "--paginate",
-    "--slurp",
-  ]).pipe(
-    Effect.flatMap((output) => decodeYeetGhOutput("the base check runs", decodeCheckRunPages, output)),
-    Effect.map((pages) =>
-      MergeGateBaseRuns.make({
-        sha,
-        checkRuns: A.map(
-          A.flatMap(pages, (page) => page.check_runs),
-          toMergeGateCheckRun
-        ),
-      })
-    )
+const readBaseCommitRuns = (sha: string) =>
+  GithubRest.use((rest) => rest.checkRuns(sha)).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGithubFailure(`gh api base check-runs ${sha10(sha)}`),
+      onSuccess: (runs) => MergeGateBaseRuns.make({ sha, checkRuns: A.map(runs, toMergeGateCheckRun) }),
+    })
   );
 
 // The inherited-red evidence: one compare of base...head names the merge-base
 // commit and the base tip; then every check run on each (one read when they
 // are the same commit). Any read failing yields None, which holds an
 // unattributed relaxed red (an unknown base is never green) and nothing else.
+// The kit's `GitHubCommit.compare` projects the merge-base and base-tip commits
+// away, so the compare stays a `GitHubClient` read of this module's schema.
 const readMergeBaseRuns = Effect.fnUntraced(function* (
-  context: RepoRunContext,
   baseRef: string,
   headSha: string
-): Effect.fn.Return<
-  O.Option<MergeGateBaseEvidence>,
-  never,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
-  return yield* yeetGh(context, "gh api compare base...head", [
-    "api",
-    `repos/{owner}/{repo}/compare/${baseRef}...${headSha}`,
-  ]).pipe(
-    Effect.flatMap((output) => decodeYeetGhOutput("the merge base", decodeCompare, output)),
-    Effect.flatMap((compare) =>
-      readBaseCommitRuns(context, compare.merge_base_commit.sha).pipe(
-        Effect.flatMap((mergeBase) =>
-          (compare.base_commit.sha === mergeBase.sha
-            ? Effect.succeed(mergeBase)
-            : readBaseCommitRuns(context, compare.base_commit.sha)
-          ).pipe(Effect.map((baseTip) => MergeGateBaseEvidence.make({ mergeBase, baseTip })))
+): Effect.fn.Return<O.Option<MergeGateBaseEvidence>, never, GitHubClient | GithubRest | Repo> {
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  return yield* client
+    .requestDecoded(COMPARE_ROUTE, { owner, repo, basehead: `${baseRef}...${headSha}` }, GhCompare)
+    .pipe(
+      Effect.mapError(yeetGithubFailure("gh api compare base...head")),
+      Effect.flatMap((compare) =>
+        readBaseCommitRuns(compare.merge_base_commit.sha).pipe(
+          Effect.flatMap((mergeBase) =>
+            (compare.base_commit.sha === mergeBase.sha
+              ? Effect.succeed(mergeBase)
+              : readBaseCommitRuns(compare.base_commit.sha)
+            ).pipe(Effect.map((baseTip) => MergeGateBaseEvidence.make({ mergeBase, baseTip })))
+          )
         )
-      )
-    ),
-    Effect.asSome,
-    Effect.orElseSucceed(O.none<MergeGateBaseEvidence>)
-  );
+      ),
+      Effect.asSome,
+      Effect.orElseSucceed(O.none<MergeGateBaseEvidence>)
+    );
 });
-
-const THREADS_QUERY =
-  "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewThreads(first:100){totalCount nodes{id isResolved isOutdated resolvedBy{login} comments(last:1){nodes{createdAt author{__typename login}}}}}}}}";
 
 /**
  * Read everything the gate needs for one pull request, once.
@@ -1296,73 +1197,44 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
 ): Effect.fn.Return<
   MergeGateRead,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | YeetGithubServices
 > {
-  const pull = yield* decodeYeetGhOutput(
-    "the pull request",
-    decodePull,
-    yield* yeetGh(context, `gh api pulls/${prNumber}`, ["api", `repos/{owner}/{repo}/pulls/${prNumber}`])
-  );
-  // `--slurp` wraps pages in an array; fold the pages back into one check_runs list.
-  const checkRunPages = yield* decodeYeetGhOutput(
-    "the head check runs",
-    decodeCheckRunPages,
-    yield* yeetGh(context, "gh api check-runs", [
-      "api",
-      `repos/{owner}/{repo}/commits/${pull.head.sha}/check-runs?per_page=100`,
-      "--paginate",
-      "--slurp",
-    ])
-  );
-  const checkRuns = A.flatMap(checkRunPages, (page) => page.check_runs);
-  const unresolvedThreads = yield* yeetGh(context, "gh api graphql threads", [
-    "api",
-    "graphql",
-    "-f",
-    `query=${THREADS_QUERY}`,
-    "-F",
-    "owner={owner}",
-    "-F",
-    "name={repo}",
-    "-F",
-    `number=${prNumber}`,
-  ]).pipe(
-    Effect.flatMap((output) => decodeYeetGhOutput("the review threads", decodeThreads, output)),
-    Effect.map(({ data }) => {
-      const threads = data.repository.pullRequest.reviewThreads;
-      // More threads than one page: the count is unknown, never a lower bound.
-      return threads.totalCount > A.length(threads.nodes)
-        ? O.none<number>()
-        : O.some(outstandingThreadCount(threads.nodes, O.fromNullishOr(pull.user?.login)));
-    }),
+  const rest = yield* GithubRest;
+  const reviewThreads = yield* ReviewThread;
+  const pull = yield* rest.pullRequest(prNumber).pipe(Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`)));
+  const checkRuns = yield* rest.checkRuns(pull.headSha).pipe(Effect.mapError(yeetGithubFailure("gh api check-runs")));
+  // Every page of threads is read; a read that fails is unknown, never zero.
+  const unresolvedThreads = yield* reviewThreads.list(prNumber).pipe(
+    Effect.map((read) => O.some(outstanding(read))),
     Effect.orElseSucceed(O.none<number>)
   );
+  const body = O.liftPredicate(pull.body, Str.isNonEmpty);
   // The PR's own base decides the required contexts, not the caller's --base.
   const ruleset = yield* readYeetRulesetRequiredContexts(
-    RepoRunContext.make({ ...context, base: `origin/${pull.base.ref}` })
+    RepoRunContext.make({ ...context, base: `origin/${pull.baseRef}` })
   );
   const squashCommitlint = yield* readSquashCommitlint(
     context,
-    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body: O.fromNullishOr(pull.body) })
+    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body })
   );
-  const baseRuns = yield* readMergeBaseRuns(context, pull.base.ref, pull.head.sha);
+  const baseRuns = yield* readMergeBaseRuns(pull.baseRef, pull.headSha);
   return MergeGateRead.make({
     prNumber: pull.number,
     title: pull.title,
-    headSha: pull.head.sha,
+    headSha: pull.headSha,
     draft: pull.draft,
-    mergeableState: pull.mergeable_state ?? "unknown",
-    labels: A.map(pull.labels ?? [], (label) => label.name),
+    mergeableState: O.getOrElse(pull.mergeableState, () => "unknown"),
+    labels: pull.labels,
     // The body record counts only on the head it was stamped for; a later push falls back to the base evidence.
-    attributedChecks: parseYeetInheritedRedsRecord(pull.body ?? "").pipe(
-      O.filter((record) => Str.startsWith(record.head)(pull.head.sha)),
+    attributedChecks: parseYeetInheritedRedsRecord(pull.body).pipe(
+      O.filter((record) => Str.startsWith(record.head)(pull.headSha)),
       O.map((record) => record.checks),
       O.getOrElse(() => A.empty<string>())
     ),
     requiredContexts: O.map(ruleset, (rules) => rules.contexts),
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.head.sha }),
+    window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.headSha }),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,
@@ -1410,12 +1282,11 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
  * @since 0.0.0
  */
 export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
-  context: RepoRunContext,
   decision: MergeGateMerge
 ): Effect.fn.Return<
   MergeGateMerged,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest
 > {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
     withReviewerOperatorClient(process.cwd()),
@@ -1423,31 +1294,23 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
     )
   );
-  const result = yield* decodeYeetGhOutput(
-    "the merge result",
-    decodeMergeResult,
-    yield* yeetGh(context, `gh api merge #${decision.prNumber}`, [
-      "api",
-      "-X",
-      "PUT",
-      `repos/{owner}/{repo}/pulls/${decision.prNumber}/merge`,
-      "-f",
-      "merge_method=squash",
-      "-f",
-      `sha=${decision.headSha}`,
-      "-f",
-      `commit_title=${decision.commitTitle}`,
-    ])
-  );
+  // No commit message: GitHub writes the body its squash settings prescribe.
+  const result = yield* GithubRest.use((rest) =>
+    rest.mergePullRequest(decision.prNumber, {
+      sha: decision.headSha,
+      commitTitle: decision.commitTitle,
+      method: "squash",
+    })
+  ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge #${decision.prNumber}`)));
   if (!result.merged) {
     return yield* YeetCommandError.make({
-      message: `GitHub did not merge #${decision.prNumber}: ${result.message ?? "no message"}`,
+      message: `GitHub did not merge #${decision.prNumber}: ${Str.isEmpty(result.message) ? "no message" : result.message}`,
       exitCode: 1,
     });
   }
   return MergeGateMerged.make({
     prNumber: decision.prNumber,
-    mergeSha: result.sha ?? "",
+    mergeSha: result.sha,
     commitTitle: decision.commitTitle,
   });
 });
@@ -1503,56 +1366,36 @@ const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, wind
   );
 
 const postS11MergeComment = Effect.fn("Yeet.postS11MergeComment")(function* (
-  context: RepoRunContext,
   decision: MergeGateMerge,
   merged: MergeGateMerged,
   windowForced: boolean
 ) {
-  yield* yeetGh(context, `gh api comment #${decision.prNumber}`, [
-    "api",
-    "-X",
-    "POST",
-    `repos/{owner}/{repo}/issues/${decision.prNumber}/comments`,
-    "-f",
-    `body=${s11MergeComment(decision, merged, windowForced)}`,
-  ]);
+  yield* GithubRest.use((rest) =>
+    rest.createIssueComment(decision.prNumber, s11MergeComment(decision, merged, windowForced))
+  ).pipe(Effect.mapError(yeetGithubFailure(`gh api comment #${decision.prNumber}`)));
   yield* Console.log(`[yeet] recorded the S11 merge in a comment on #${decision.prNumber}`);
 });
 
-// Only decoded non-terminal runs on the merged head are cancelled. Listing
-// and each cancellation are independently best effort after the merge.
-const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (
-  context: RepoRunContext,
-  headSha: string
-) {
-  const pages = yield* yeetGh(context, "gh api merged head runs", [
-    "api",
-    `repos/{owner}/{repo}/actions/runs?head_sha=${headSha}&per_page=100`,
-    "--paginate",
-    "--slurp",
-  ]).pipe(
-    Effect.flatMap((output) => decodeYeetGhOutput("the merged head's workflow runs", decodeWorkflowRunPages, output)),
+// Only non-terminal runs on the merged head are cancelled. Listing and each
+// cancellation are independently best effort after the merge.
+const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (headSha: string) {
+  const rest = yield* GithubRest;
+  const runs = yield* rest.workflowRunsForSha(headSha).pipe(
+    Effect.mapError(yeetGithubFailure("gh api merged head runs")),
     Effect.catch((error) =>
       warnAfterMerge("listing the merged head's workflow runs")(error).pipe(
-        Effect.as(A.empty<typeof GhWorkflowRuns.Type>())
+        Effect.as(A.empty<GithubWorkflowRunRecord>())
       )
     )
   );
   const runIds = A.dedupe(
-    A.flatMap(pages, (page) =>
-      A.map(
-        A.filter(page.workflow_runs, (run) => run.head_sha === headSha && run.status !== "completed"),
-        (run) => run.id
-      )
+    A.map(
+      A.filter(runs, (run) => run.headSha === headSha && run.status !== "completed"),
+      (run) => run.id
     )
   );
   const [cancelled, failures] = yield* Effect.partition(runIds, (runId) =>
-    yeetGh(context, `gh api cancel run ${runId}`, [
-      "api",
-      "-X",
-      "POST",
-      `repos/{owner}/{repo}/actions/runs/${runId}/cancel`,
-    ])
+    rest.cancelWorkflowRun(runId).pipe(Effect.mapError(yeetGithubFailure(`gh api cancel run ${runId}`)))
   );
   yield* Effect.forEach(failures, warnAfterMerge("cancelling a leftover workflow run"), { discard: true });
   yield* Console.log(
@@ -1595,6 +1438,10 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
+  return yield* runMergeGateAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
+});
+
+const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunContext, options: MergeGateRunOptions) {
   const read = yield* readMergeGate(context, options.prNumber);
   yield* Console.log(
     `[yeet] squash-commitlint #${read.prNumber}: ${renderSquashCommitlintVerdict(read.squashCommitlint.verdict)} (header "${read.squashCommitlint.message.header}")`
@@ -1621,15 +1468,15 @@ export const runMergeGate = Effect.fn("Yeet.runMergeGate")(function* (
     yield* Console.log(`[yeet] dry run: would squash-merge #${decision.prNumber} as "${decision.commitTitle}"`);
     return decision;
   }
-  const merged = yield* executeMergeGate(context, decision);
+  const merged = yield* executeMergeGate(decision);
   yield* Console.log(
     `[yeet] MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}"`
   );
   if (decision.relaxed) {
-    yield* postS11MergeComment(context, decision, merged, options.forceWindow).pipe(
+    yield* postS11MergeComment(decision, merged, options.forceWindow).pipe(
       Effect.catch(warnAfterMerge("the S11 merge comment"))
     );
-    yield* cancelMergedHeadRuns(context, decision.headSha);
+    yield* cancelMergedHeadRuns(decision.headSha);
   }
   return decision;
 });

@@ -73,6 +73,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { YeetRunOptions } from "@beep/repo-cli/test/Yeet";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
@@ -189,6 +190,7 @@ const withProcesses =
   (replies: ReadonlyArray<Reply>, commands: Ref.Ref<ReadonlyArray<string>>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>) =>
     effect.pipe(
+      provideLegacyGh,
       Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, scriptedSpawner(replies, commands))
     );
