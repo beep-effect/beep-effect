@@ -552,8 +552,8 @@ const DEFAULT_SKEW = Duration.seconds(60);
  * A down-scoped {@link TokenRequest} is a ceiling, not a floor: GitHub silently
  * intersects what was asked with what the installation holds, and the result
  * lands in `InstallationToken.permissions`. This reads that map through
- * `TokenPermissions.fromGitHub` and fails with `TokenPermissionError
- * { kind: "insufficient" }` unless every required permission is held at least
+ * `TokenPermissions.fromGitHub` and fails with
+ * `TokenPermissionError { kind: "insufficient" }` unless every required permission is held at least
  * at the level asked for. It passes the token through on success so it
  * composes after `GitHubApp.token`. Use `TokenPermissions.assertExact` directly
  * when a broader grant is also a misconfiguration.
