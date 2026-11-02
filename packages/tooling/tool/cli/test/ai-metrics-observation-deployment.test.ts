@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
 import {
@@ -35,15 +36,18 @@ const input = {
 };
 // Command dispatch requires the platform capabilities for all branches. These
 // fixtures only read synthetic files; an attempted subprocess is a test defect.
-const testServices = Layer.mergeAll(
-  MemoryFileSystem.layer,
-  NodeCrypto.layer,
-  NodePath.layer,
-  NodeStdio.layer,
-  NodeTerminal.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+const testServices = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    NodeCrypto.layer,
+    NodePath.layer,
+    NodeStdio.layer,
+    NodeTerminal.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+    )
   )
 );
 

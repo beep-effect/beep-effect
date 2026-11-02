@@ -65,6 +65,41 @@ const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
 };
 
 /**
+ * Fold a `Git` member's typed error into Yeet's historical `YeetCommandError` wording.
+ *
+ * **Details**
+ *
+ * The same wording {@link runGitOutput} gives the bounded capture: a run git reported is
+ * `<command line> failed with exit code <n>.` (128 for an unknown ref or a non-repository), a
+ * truncated run is the capture-limit wording, and a run git never reached (spawn failure, timeout,
+ * a pre-spawn refusal) is `Failed to run <command line>.`. The command line is `git` plus the kit
+ * invocation's redacted argv (repo-cli-gh-git-consolidation W2b, SPEC D-11).
+ *
+ * **Example** (Fold a kit commit failure)
+ *
+ * ```ts
+ * import { Git } from "@beep/git/Git"
+ * import { GitCommand } from "@beep/git/GitCommand"
+ * import { yeetGitKitError } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const commit = Effect.flatMap(Git, (git) =>
+ *   git.commit("/repo", "chore: empty", { allowEmpty: true }).pipe(
+ *     Effect.mapError(yeetGitKitError(GitCommand.commit("chore: empty", false, true)))
+ *   )
+ * )
+ * console.log(Effect.isEffect(commit)) // true
+ * ```
+ *
+ * @param invocation - The kit invocation the member ran, for the redacted command line.
+ * @returns The fold from one kit failure to Yeet's error.
+ * @category execution
+ * @since 0.0.0
+ */
+export const yeetGitKitError = (invocation: GitInvocation): ((error: GitKitError) => YeetCommandError) =>
+  adaptGitKitError(invocation, gitErrorAdapter);
+
+/**
  * Run Git with Yeet's historical bounded-output error wording.
  *
  * **Example** (Map git status length)

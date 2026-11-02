@@ -93,6 +93,7 @@
  */
 
 import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { shellQuote } from "@beep/repo-ai-metrics";
 import { guardLiteralArg } from "@beep/repo-utils";
@@ -102,12 +103,13 @@ import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { constFalse, dual, flow, pipe } from "effect/Function";
+import { constFalse, dual, flow, identity, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
 import {
+  adaptGitKitError,
   RepoRunContext,
   runRepoCommandCapture,
   runTmpfsReap,
@@ -116,7 +118,7 @@ import {
 import { recordSweepDone } from "../../Session/SessionLedger.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
-import { optionFromNonEmpty } from "./GitExec.ts";
+import { optionFromNonEmpty, patientGit } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   SweepPlan,
@@ -131,9 +133,12 @@ import {
   SweepStepOutcome,
   SweepStepSkipped,
 } from "./Sweep.schemas.ts";
+import type { WorktreeEntry as GitWorktreeEntry } from "@beep/git/Git";
+import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter, GitKitError } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Sweep");
 
@@ -679,6 +684,9 @@ type CommandProbe = {
   readonly truncated: boolean;
 };
 
+/** A {@link CommandProbe} that also carries the kit's typed answer when the read succeeded. */
+type GitProbe<A> = CommandProbe & { readonly value: O.Option<A> };
+
 type WorktreeEntry = {
   readonly path: string;
   readonly branch: O.Option<string>;
@@ -700,16 +708,126 @@ const captureCommand = (
     Effect.orElseSucceed((): CommandProbe => ({ exitCode: 1, output: "", truncated: false }))
   );
 
-// A probe that failed to spawn, exited nonzero, or overran the capture bound
-// proves nothing about the fact it was asked for; "empty output" and "the
-// worktree is clean" are the same bytes, and only one is safe to delete against.
+// A failed spawn reads exactly as the capture's did (exit 1, no output); a run git reported keeps
+// its exit code and stderr; a run past the kit's output bound is the truncated probe.
+const gitProbeAdapter: GitCommandErrorAdapter<CommandProbe> = {
+  onSpawnFailure: () => () => ({ exitCode: 1, output: "", truncated: false }),
+  onNonZeroExit: ({ exitCode, output }) => ({ exitCode, output: Str.trim(output), truncated: false }),
+  onTruncated: O.some(() => ({ exitCode: 1, output: "", truncated: true })),
+};
+
+/**
+ * Read a `Git` member's outcome as the exit-code probe Sweep's planner reads.
+ *
+ * **Details**
+ *
+ * Sweep's planner and steps were written against the bounded capture's
+ * `{ exitCode, output, truncated }` view, and "unreliable" means a probe that
+ * failed, exited nonzero or overran its bound. This folds one kit read or
+ * mutation onto that view through `adaptGitKitError`: success is exit 0 with
+ * `render(value)` trimmed as its output; a failure git reported keeps its exit
+ * code and trimmed stderr (128 with the typed message for an unknown ref or a
+ * non-repository); a run git never reached (spawn failure, timeout, a pre-spawn
+ * refusal) is exit 1 with no output, as the capture's spawn failure was; a run
+ * past the kit's output bound is `truncated` (repo-cli-gh-git-consolidation
+ * W2b, SPEC D-11). The kit's answer rides along as `value` for a caller that
+ * reads the typed result, `None` whenever the probe failed.
+ *
+ * **Example** (Probe the current branch)
+ *
+ * ```ts
+ * import { Git } from "@beep/git/Git"
+ * import { GitCommand } from "@beep/git/GitCommand"
+ * import { sweepProbeFromGit } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const probe = Effect.flatMap(Git, (git) =>
+ *   git.currentBranch("/repo").pipe(
+ *     sweepProbeFromGit(GitCommand.currentBranch(), O.getOrElse(() => "HEAD"))
+ *   )
+ * )
+ * console.log(Effect.isEffect(probe)) // true
+ * ```
+ *
+ * @param self - The kit read or mutation to probe.
+ * @param invocation - The kit invocation it ran, for the redacted command line.
+ * @param render - The probe output for a successful answer.
+ * @returns The exit-code probe, never failing.
+ * @category execution
+ * @since 0.0.0
+ */
+export const sweepProbeFromGit: {
+  <A, R>(
+    self: Effect.Effect<A, GitKitError, R>,
+    invocation: GitInvocation,
+    render: (value: A) => string
+  ): Effect.Effect<GitProbe<A>, never, R>;
+  <A>(
+    invocation: GitInvocation,
+    render: (value: A) => string
+  ): <R>(self: Effect.Effect<A, GitKitError, R>) => Effect.Effect<GitProbe<A>, never, R>;
+} = dual(
+  3,
+  <A, R>(
+    self: Effect.Effect<A, GitKitError, R>,
+    invocation: GitInvocation,
+    render: (value: A) => string
+  ): Effect.Effect<GitProbe<A>, never, R> =>
+    self.pipe(
+      Effect.map(
+        (value): GitProbe<A> => ({
+          exitCode: 0,
+          output: Str.trim(render(value)),
+          truncated: false,
+          value: O.some(value),
+        })
+      ),
+      Effect.catch((error) =>
+        Effect.succeed<GitProbe<A>>({ ...adaptGitKitError(error, invocation, gitProbeAdapter), value: O.none() })
+      )
+    )
+);
+
+const renderNothing = (): string => "";
+
+const renderLines = A.join("\n");
+
+// A failed spawn, a nonzero exit or an overrun bound proves nothing about the fact the probe was
+// asked for; "empty output" and "the worktree is clean" are the same bytes, and only one is safe
+// to delete against.
 const probeUnreliable = (probe: CommandProbe): boolean => probe.truncated || probe.exitCode !== 0;
 
-const captureGit = (
-  cwd: string,
-  args: ReadonlyArray<string>
-): Effect.Effect<CommandProbe, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-  captureCommand("git", args, cwd);
+const sweepWorktreeEntry = (entry: GitWorktreeEntry): WorktreeEntry => ({
+  path: entry.path,
+  branch: pipe(
+    O.fromUndefinedOr(entry.branch),
+    O.filter(Str.startsWith("refs/heads/")),
+    O.map(Str.slice(Str.length("refs/heads/")))
+  ),
+});
+
+const probeWorktrees = (cwd: string) =>
+  Effect.flatMap(Git, (git) =>
+    git.worktreeList(cwd).pipe(
+      sweepProbeFromGit(GitCommand.worktreeList(), (entries) => renderLines(A.map(entries, (entry) => entry.path))),
+      Effect.map((probe) => ({ probe, worktrees: A.map(O.getOrElse(probe.value, A.empty), sweepWorktreeEntry) }))
+    )
+  );
+
+// `refs/heads/<main>..refs/remotes/origin/<main>` and `<tip>..refs/heads/<main>` as a two-tree
+// `bun.lock` diff: did the lockfile move between the two commits.
+const probeLockfileDiff = (cwd: string, base: string, head: string) =>
+  Effect.flatMap(Git, (git) =>
+    git
+      .changedFiles(cwd, { base, head, twoDot: true, pathspec: ["bun.lock"] })
+      .pipe(
+        sweepProbeFromGit(
+          GitCommand.changedFiles(base, head, false, { twoDot: true, pathspec: ["bun.lock"] }),
+          renderLines
+        )
+      )
+  );
 
 const firstLine = (text: string): string =>
   pipe(
@@ -720,29 +838,6 @@ const firstLine = (text: string): string =>
   );
 
 const probeFailureText = (probe: CommandProbe): string => firstLine(probe.output);
-
-const valueAfter = (prefix: string, line: string): string => Str.trim(Str.slice(Str.length(prefix))(line));
-
-const parseWorktreeList = (output: string): ReadonlyArray<WorktreeEntry> =>
-  pipe(
-    Str.split(output, "\n\n"),
-    A.map((block) => {
-      const lines = pipe(Str.split(block, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
-      return pipe(
-        A.findFirst(lines, Str.startsWith("worktree ")),
-        O.map(
-          (line): WorktreeEntry => ({
-            path: valueAfter("worktree ", line),
-            branch: pipe(
-              A.findFirst(lines, Str.startsWith("branch refs/heads/")),
-              O.map((branchLine) => valueAfter("branch refs/heads/", branchLine))
-            ),
-          })
-        )
-      );
-    }),
-    A.getSomes
-  );
 
 // The path is what a handoff needs: "main is held elsewhere" tells an operator
 // they are blocked, not where to go, and re-running the sweep in the blocked
@@ -765,12 +860,12 @@ const lsRemoteTip = (output: string): O.Option<string> =>
     O.flatMap((line) => pipe(Str.split(line, "\t"), A.head, O.flatMap(flow(Str.trim, optionFromNonEmpty))))
   );
 
-const observeSha = (
-  cwd: string,
-  ref: string
-): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-  captureGit(cwd, ["rev-parse", "--verify", "--quiet", ref]).pipe(
-    Effect.map((probe) => (probe.exitCode === 0 ? optionFromNonEmpty(probe.output) : O.none<string>()))
+const observeSha = (cwd: string, ref: string): Effect.Effect<O.Option<string>, never, Git> =>
+  Effect.flatMap(Git, (git) =>
+    git.revParse(cwd, ref, { quiet: true }).pipe(
+      sweepProbeFromGit(GitCommand.revParse(ref, { quiet: true }), identity),
+      Effect.map((probe) => (probe.exitCode === 0 ? optionFromNonEmpty(probe.output) : O.none<string>()))
+    )
   );
 
 const decodePullRequestView = S.decodeUnknownOption(S.fromJsonString(GhPrView));
@@ -896,10 +991,22 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   const mainBranch = yield* refuseUnsafeName(mainBranchFromContext(context), "base branch");
   const repoRoot = context.repoRoot;
 
-  const head = yield* captureGit(repoRoot, ["rev-parse", "--abbrev-ref", "HEAD"]);
-  const status = yield* captureGit(repoRoot, ["status", "--porcelain"]);
-  const toplevel = yield* captureGit(repoRoot, ["rev-parse", "--show-toplevel"]);
-  const worktreeList = yield* captureGit(repoRoot, ["worktree", "list", "--porcelain"]);
+  const git = yield* Git;
+  const head = yield* git.currentBranch(repoRoot).pipe(
+    sweepProbeFromGit(
+      GitCommand.currentBranch(),
+      O.getOrElse(() => "HEAD")
+    )
+  );
+  const status = yield* git
+    .status(repoRoot)
+    .pipe(
+      sweepProbeFromGit(GitCommand.status(), (entries) =>
+        renderLines(A.map(entries, (entry) => `${entry.x}${entry.y} ${entry.path}`))
+      )
+    );
+  const toplevel = yield* git.repoRoot(repoRoot).pipe(sweepProbeFromGit(GitCommand.repoRoot(), identity));
+  const { probe: worktreeList, worktrees } = yield* probeWorktrees(repoRoot);
   const mainTip = yield* observeSha(repoRoot, `refs/heads/${mainBranch}`);
   const localTip = yield* observeSha(repoRoot, `refs/heads/${branch}`);
   const trackedTip = yield* observeSha(repoRoot, `refs/remotes/origin/${branch}`);
@@ -908,7 +1015,7 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
   // unreadable answer leaves both unknown, so the deletion stays blocked.
   const remote = O.isSome(trackedTip)
     ? { tip: trackedTip, absent: false }
-    : yield* captureGit(repoRoot, ["ls-remote", "origin", `refs/heads/${branch}`]).pipe(
+    : yield* captureCommand("git", ["ls-remote", "origin", `refs/heads/${branch}`], repoRoot).pipe(
         Effect.map((probe) => {
           const tip = probeUnreliable(probe) ? O.none<string>() : lsRemoteTip(probe.output);
           return { tip, absent: !probeUnreliable(probe) && O.isNone(tip) };
@@ -916,19 +1023,12 @@ export const observeSweepGitState = Effect.fn("Yeet.observeSweepGitState")(funct
       );
   // `Git.isAncestor` is `false` for a non-ancestor; a missing ref, a non-repository or a spawn
   // failure also reads as "not merged", the conservative answer the exit-code probe gave.
-  const merged = yield* Effect.flatMap(Git, (git) =>
-    git.isAncestor(repoRoot, `refs/heads/${branch}`, `refs/remotes/origin/${mainBranch}`)
-  ).pipe(Effect.orElseSucceed(constFalse));
-  const lockfile = yield* captureGit(repoRoot, [
-    "diff",
-    "--name-only",
-    `refs/heads/${mainBranch}..refs/remotes/origin/${mainBranch}`,
-    "--",
-    "bun.lock",
-  ]);
+  const merged = yield* git
+    .isAncestor(repoRoot, `refs/heads/${branch}`, `refs/remotes/origin/${mainBranch}`)
+    .pipe(Effect.orElseSucceed(constFalse));
+  const lockfile = yield* probeLockfileDiff(repoRoot, `refs/heads/${mainBranch}`, `refs/remotes/origin/${mainBranch}`);
   const pullRequest = yield* observePullRequest(context, branch);
 
-  const worktrees = parseWorktreeList(worktreeList.output);
   return SweepGitState.make({
     branch,
     mainBranch,
@@ -1019,6 +1119,12 @@ const runCommandStep = (
     Effect.map((probe) => (probe.exitCode === 0 ? executedFrom(probe) : skippedFromFailure(action, probe)))
   );
 
+const runGitStep = <R>(
+  probe: Effect.Effect<CommandProbe, never, R>,
+  action: string
+): Effect.Effect<SweepStepOutcome, never, R> =>
+  Effect.map(probe, (result) => (result.exitCode === 0 ? executedFrom(result) : skippedFromFailure(action, result)));
+
 // "stale info" is git's own force-with-lease rejection phrase and the ONLY
 // marker here on purpose: a bare "[rejected]"/"[remote rejected]" can come
 // from any server policy or hook, and classifying those as a benign
@@ -1036,7 +1142,8 @@ const runRemoteDeletionStep = (
   cwd: string,
   action: string
 ): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-  captureGit(cwd, leasedRemoteDeletionArgs(state)).pipe(
+  // KEEP (W2b): `Git.push` has no `--force-with-lease=<ref>:<expected>` lease value.
+  captureCommand("git", leasedRemoteDeletionArgs(state), cwd).pipe(
     Effect.map((probe) => {
       if (probe.exitCode === 0) {
         return executedFrom(probe);
@@ -1086,17 +1193,25 @@ export const revalidateLocalDeletion: {
     state: SweepGitState
   ): (
     cwd: string
-  ) => Effect.Effect<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<
+    O.Option<string>,
+    never,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  >;
   (
     cwd: string,
     state: SweepGitState
-  ): Effect.Effect<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
+  ): Effect.Effect<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git>;
 } = dual(
   2,
   (
     cwd: string,
     state: SweepGitState
-  ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+  ): Effect.Effect<
+    O.Option<string>,
+    never,
+    ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  > =>
     observeSha(cwd, `refs/heads/${state.branch}`).pipe(
       Effect.map((fresh) =>
         tipsMatch(fresh, state.localTip)
@@ -1155,7 +1270,7 @@ export const revalidateRemoteDeletion: {
     cwd: string,
     state: SweepGitState
   ): Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
-    captureGit(cwd, ["ls-remote", "origin", `refs/heads/${state.branch}`]).pipe(
+    captureCommand("git", ["ls-remote", "origin", `refs/heads/${state.branch}`], cwd).pipe(
       Effect.map((probe) => {
         if (probeUnreliable(probe)) {
           return O.some(`could not re-verify origin/${state.branch} before deletion: ${probeFailureText(probe)}`);
@@ -1288,7 +1403,7 @@ const runLockfileInstallStep = (
   cwd: string,
   action: string,
   priorSteps: ReadonlyArray<SweepReportStep>
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git> =>
   O.match(installBlockedByEndState(state, priorSteps), {
     onSome: (reason) => Effect.succeed<SweepStepOutcome>(SweepStepSkipped.make({ reason })),
     onNone: () => runLockfileInstallOnMain(state, cwd, action),
@@ -1298,7 +1413,7 @@ const runLockfileInstallOnMain = (
   state: SweepGitState,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git> =>
   O.match(state.mainTip, {
     onNone: () => runCommandStep("bun", ["install"], cwd, action),
     onSome: (observedTip) =>
@@ -1319,13 +1434,7 @@ const runLockfileInstallOnMain = (
               // unreconciled dependency state lands in the batched handoff
               // instead of waiting for someone to read a buried skip.
               Effect.succeed<SweepStepOutcome>(refreshNotCompletedHandoff(state, localMain, trackingMain))
-            : captureGit(cwd, [
-                "diff",
-                "--name-only",
-                `${observedTip}..refs/heads/${state.mainBranch}`,
-                "--",
-                "bun.lock",
-              ]).pipe(
+            : probeLockfileDiff(cwd, observedTip, `refs/heads/${state.mainBranch}`).pipe(
                 Effect.flatMap((probe) =>
                   !probeUnreliable(probe) && Str.isEmpty(probe.output)
                     ? Effect.succeed<SweepStepOutcome>(
@@ -1344,10 +1453,15 @@ const runEndStateStep = (
   state: SweepGitState,
   cwd: string,
   action: string
-): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git> =>
   state.headBranch === state.mainBranch
     ? Effect.succeed(SweepStepExecuted.make({ detail: O.some(`already on ${state.mainBranch}`) }))
-    : captureGit(cwd, ["switch", state.mainBranch]).pipe(
+    : patientGit.pipe(
+        Effect.flatMap((git) =>
+          git
+            .checkout(cwd, state.mainBranch)
+            .pipe(sweepProbeFromGit(GitCommand.checkout(state.mainBranch), renderNothing))
+        ),
         Effect.map((probe) =>
           probe.exitCode === 0
             ? SweepStepExecuted.make({ detail: O.some(`switched to ${state.mainBranch}`) })
@@ -1385,13 +1499,13 @@ export const runTmpfsWorktreesStep = Effect.fn("Yeet.runTmpfsWorktreesStep")(fun
   never,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  const probe = yield* captureGit(cwd, ["worktree", "list", "--porcelain"]);
+  const { probe, worktrees } = yield* probeWorktrees(cwd);
   if (probeUnreliable(probe)) {
     return SweepStepSkipped.make({
       reason: `${worktreeProbeCommand} failed or was truncated: ${probeFailureText(probe)}`,
     });
   }
-  const worktreePaths = A.map(parseWorktreeList(probe.output), (entry) => entry.path);
+  const worktreePaths = A.map(worktrees, (entry) => entry.path);
   return yield* runTmpfsReap({
     apply: true,
     classes: ["git-worktree"],
@@ -1433,6 +1547,7 @@ const performSweepStep = (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > =>
   SweepStepId.match(planStep.id, {
+    // KEEP (W2b): `Git.fetch` needs a ref, and the bare `fetch --prune origin` fetches the configured refspecs.
     "fetch-prune": () => runCommandStep("git", ["fetch", "--prune", "origin"], context.repoRoot, planStep.action),
     "ff-main": () =>
       state.headBranch === state.mainBranch
@@ -1442,19 +1557,32 @@ const performSweepStep = (
             context.repoRoot,
             planStep.action
           )
-        : runCommandStep(
-            "git",
-            ["fetch", "origin", `${state.mainBranch}:${state.mainBranch}`],
-            context.repoRoot,
+        : runGitStep(
+            patientGit.pipe(
+              Effect.flatMap((git) =>
+                git
+                  .fetch(context.repoRoot, { remote: "origin", ref: `${state.mainBranch}:${state.mainBranch}` })
+                  .pipe(
+                    sweepProbeFromGit(
+                      GitCommand.fetch("origin", `${state.mainBranch}:${state.mainBranch}`),
+                      renderNothing
+                    )
+                  )
+              )
+            ),
             planStep.action
           ),
     "delete-local-branch": () =>
       guardedDeletion(
         revalidateLocalDeletion(context.repoRoot, state),
-        runCommandStep(
-          "git",
-          ["branch", state.branchMergedIntoBase ? "-d" : "-D", state.branch],
-          context.repoRoot,
+        runGitStep(
+          Effect.flatMap(Git, (git) =>
+            git
+              .branchDelete(context.repoRoot, state.branch, { force: !state.branchMergedIntoBase })
+              .pipe(
+                sweepProbeFromGit(GitCommand.branchDelete(state.branch, !state.branchMergedIntoBase), renderNothing)
+              )
+          ),
           planStep.action
         )
       ),

@@ -39,9 +39,13 @@ is-ancestor probes -> `isAncestor`, the head-install preflight's `worktreeAdd` /
 `worktreePrune` read back through `captureGitKitExit`), `Git` lifted into the Yeet unions, and the leaf
 `Git.make` provisions dropped from `GitWorktree.ts` and `TmpfsReap.ts` (SPEC D-09); `lockfileChangedSinceBase`
 waits for the G7 pathspec. W0 merged (#2514); the W1 kit merged (#2522). Next: W2.
+W2b (this PR): the remaining Yeet git halves, the Library inventory read and ai-metrics' `ls-files` run
+through `Git`, with Sweep's probes behind the `sweepProbeFromGit` CommandProbe adapter (SPEC D-11).
 
 ## Latest Evidence
 
+- 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
+  unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
 - 2026-11-02 W1b: `research/yeet-git-differential-w1b.json` (31 scenarios, 27 same, 4 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*`, `step-git-exec`, `tmpfs-reap`, `residue-reap`,
   `git-worktree` and `git-adoption-sites` suite green (64 files, 1640 tests).

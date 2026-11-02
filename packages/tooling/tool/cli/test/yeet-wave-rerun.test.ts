@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
   appendYeetInboxRow,
@@ -244,7 +245,11 @@ const handle = (output: string) =>
 // The loop's triage lists the head's workflow runs (none here) and the job
 // launcher asks systemd whether the job's unit is still loaded and recoverable.
 // These wave tests retain a live runner, so recovery must leave the job pending.
+// The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
+// answer keeps the heavy-admission verdict these fixtures were written against.
+const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
 const platform = Layer.mergeAll(
+  mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,

@@ -36,7 +36,8 @@
     "research/p0-site-inventory-2026-11-02.md",
     "research/is-ancestor-prune-differential-w0.json",
     "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json"
+    "research/yeet-git-differential-w1b.json",
+    "research/yeet-remainder-differential-w2b.json"
   ],
   "agentLaunchers": [
     {
@@ -100,6 +101,10 @@
     {
       "path": "ops/yeet-git-differential-w1b.ts",
       "purpose": "W1b differential: the frozen Yeet git bodies (base-ref refresh with and without an origin remote, current commit sha on a branch, detached and unborn, the is-ancestor probes, and the head-install preflight's worktree add, remove --force and prune) compared with their Git-backed replacements over scratch repositories with a bare origin carrying a tag, an option-like ref and a non-repository."
+    },
+    {
+      "path": "ops/yeet-remainder-differential-w2b.ts",
+      "purpose": "W2b differential: the frozen Yeet Settle/ProofShadow/Sweep/Retire/MergedPreview/ReadyGate/PullRequest/Status git bodies, the Library inventory commit read and the ai-metrics ls-files read compared with their Git-backed replacements over scratch repositories with a bare origin, a linked worktree, a detached HEAD, a dirty tree, a spaced and a non-ASCII path, a lockfile change, merged, upstream-only and unpushed branches, a non-fast-forward push, an unmerged index and a non-repository, plus the CommandProbe adapter spawn-failure case."
     }
   ]
 }
