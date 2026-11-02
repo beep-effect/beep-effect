@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-01",
+  "generatedOn": "2026-11-02",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -2013,14 +2013,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
-      "symbol": "ReviewerInstallationToken",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerModels.ts",
       "symbol": "ReviewerResult",
       "kind": "plain-data-schema-class",
       "status": "exception",
@@ -2046,14 +2038,6 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
       "symbol": "Check",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts",
-      "symbol": "Checks",
       "kind": "plain-data-schema-class",
       "status": "exception",
       "owner": "@beep/repo-cli",
@@ -2101,14 +2085,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-      "symbol": "CheckPage",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
       "symbol": "CheckRun",
       "kind": "plain-data-schema-class",
       "status": "exception",
@@ -2134,14 +2110,6 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
       "symbol": "CreatedResource",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "The operator explicitly requires module-scope S.Class schemas for this GitHub App implementation. Retained as a branded S.Class under that task-specific requirement; codecs remain compiled at module scope."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Reviewer/ReviewerService.ts",
-      "symbol": "PullRequest",
       "kind": "plain-data-schema-class",
       "status": "exception",
       "owner": "@beep/repo-cli",

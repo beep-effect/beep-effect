@@ -4021,6 +4021,7 @@
         "@beep/chalk": "workspace:^",
         "@beep/cli-kit": "workspace:^",
         "@beep/colors": "workspace:^",
+        "@beep/commands": "workspace:^",
         "@beep/config-file": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemics": "workspace:^",
