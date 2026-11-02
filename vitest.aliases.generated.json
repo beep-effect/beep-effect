@@ -2259,5 +2259,7 @@
   ],
   "@beep/repo-cli/commands/Holds": [
     "./packages/tooling/tool/cli/src/commands/Holds/index.ts"
-  ]
+  ],
+  "@beep/party-domain": ["./packages/party/domain/src/index.ts"],
+  "@beep/party-domain/*": ["./packages/party/domain/src/*"]
 }

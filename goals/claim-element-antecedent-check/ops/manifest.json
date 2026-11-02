@@ -26,14 +26,14 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2577,
+        "number": 2609,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_claim-element-premerge-final-b1b9a65c660b/verdict.json",
+        "ref": ".beep/yeet/runs/docs_claim-element-readiness-recovery-744539fbc89e/verdict.json",
         "gating": true
       },
       {
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Final PR #2577 is ready for review and binds prospective pre-merge proof after #2513 merged without retained readiness. Accepted main includes the #2568 hosted coverage repair. v27 archives all 29 source/environment files before prediction; only root package.json differs from v26. Both full result values match v26 except the digest, and all 251 reports remain byte-identical: 37/538 with all 34 protected and all 37 prior matches retained. All 631 original pins and 1,126 accepted history/fixture files are exact. Historical automated review identity carries forward; no fresh or attorney review claimed. Operative lifecycle stays active until current-head hosted verification, genuine pre-merge readiness and merge proof pass. Accepted main #2580 fixes the inherited repo-utils effect-vitest failure; all 29 v27 frozen files remain exact. The strict owner merge hold remains; no completion-verifier weakening or local full verify/publish queue.",
+  "statusNote": "Final PR #2609 binds the recovery after #2577 merged without a positive owner readiness verdict. All 15 required contexts at #2577 verify, but its canonical completion remains unknown. The retained incident report defines draft-first publication and the subsequent native ready transition without weakening completion rules. v27 remains 37/538, with all 34 protected and all 37 previous matches retained; no fresh measurement or attorney review is claimed. Frozen references, previous results, runtime scope and uncertainty remain unchanged. The initiative stays active until #2609 has current-head hosted verification, genuine pre-merge readiness and merge proof. Strict owner hold: no generic merge waiter or local full verification queue.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2577
+    "finalPullRequest": 2609
   }
 }
