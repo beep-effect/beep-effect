@@ -111,6 +111,17 @@ Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
 
 ## Latest Evidence
 
+On 2026-11-02 the post-release replay probe ran live (Probe N,
+[`ops/post-release-replay.sh`](./ops/post-release-replay.sh)). After an
+orderly listener stop, GitHub deleted the registration and refused the leaked
+JIT configuration from the original host and from a disposable second host
+(run `41422745680`). After a SIGKILL stop, which a sudo-capable job can do,
+the same-host replay was **accepted** about three minutes later while the
+registration stayed busy until the job timed out (run `41429667965`). E1 is
+confirmed for that stop; P8 is stopped for an operator decision (options in
+[`PLAN.md`](./PLAN.md#p8-operator-decision-open-since-2026-11-02)). Receipts:
+[`history/`](./history/).
+
 On 2026-11-02 run `41409672251` re-passed Gates A through J and L,
 `AMI_PIN`, live `METADATA_DISABLED`, deregistration and teardown on `main`,
 and a read-only audit matched the deployed IAM, launch template and runner
