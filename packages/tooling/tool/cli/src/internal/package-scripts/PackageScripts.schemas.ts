@@ -1462,7 +1462,10 @@ const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScript
  * @category testing
  * @since 0.0.0
  */
-export const applyScaffoldRuleForTesting = scaffoldRule;
+export const applyScaffoldRuleForTesting: {
+  (rule: TaskScriptRule): (scripts: HashMap.HashMap<string, string>) => HashMap.HashMap<string, string>;
+  (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule): HashMap.HashMap<string, string>;
+} = dual(2, scaffoldRule);
 
 const scaffoldRuleEnabled =
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
