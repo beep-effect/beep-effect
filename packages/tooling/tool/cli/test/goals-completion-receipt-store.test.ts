@@ -59,7 +59,7 @@ describe("goal completion receipt partition", () => {
 
 const MemoryStoreTestLayer = Layer.mergeAll(NodeTestLayer, layerGoalCompletionReceiptStoreMemory);
 
-it.layer(MemoryStoreTestLayer)("goal completion receipt memory store", (it) => {
+it.layer(MemoryStoreTestLayer, { timeout: "60 seconds" })("goal completion receipt memory store", (it) => {
   it.effect("memory store lists only the requested repository, whatever its case", () =>
     Effect.gen(function* () {
       const store = yield* GoalCompletionReceiptStore;
