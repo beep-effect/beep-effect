@@ -58,6 +58,7 @@ import {
   FleetSnapshot,
   worktreeListEntriesFromGit,
 } from "./Worktree.schemas.ts";
+import type { StatusEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -891,19 +892,48 @@ type StatusFacts = {
   readonly dirtyPaths: ReadonlyArray<string>;
 };
 
+/**
+ * Reduce `Git.status` entries to the fleet's dirty count and contested paths.
+ *
+ * **Details**
+ *
+ * Each entry counts once, and a rename or copy contributes both its new path
+ * and its `origPath`, because a sibling checkout editing either side contests
+ * the change. Untracked files inside an untracked directory arrive as separate
+ * entries because the probe asks for `--untracked-files=all`.
+ *
+ * **Example** (Count a rename once with both paths)
+ *
+ * ```ts
+ * import { StatusEntry } from "@beep/git/Git"
+ * import { statusFactsFromEntries } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const facts = statusFactsFromEntries([StatusEntry.make({ x: "R", y: " ", path: "new.ts", origPath: "old.ts" })])
+ * console.log(facts.entryCount, facts.paths) // 1 [ "new.ts", "old.ts" ]
+ * ```
+ *
+ * @param entries - The checkout's status entries.
+ * @returns The entry count and every path the entries touch, in status order.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const statusFactsFromEntries = (
+  entries: ReadonlyArray<StatusEntry>
+): { readonly entryCount: number; readonly paths: ReadonlyArray<string> } => ({
+  entryCount: A.length(entries),
+  paths: A.flatMap(entries, (entry) => [entry.path, ...A.fromOption(O.fromUndefinedOr(entry.origPath))]),
+});
+
 const statusFacts = Effect.fn("Fleet.statusFacts")(function* (
   checkoutPath: string
 ): Effect.fn.Return<StatusFacts, never, FleetMirrorServiceRequirements> {
   const git = yield* Git;
   // Every untracked file inside an untracked directory is its own entry (`--untracked-files=all`);
   // a rename or copy contributes both of its paths, because both are contested by the change.
-  const status = yield* gitProbe(git.status(checkoutPath, { untrackedFiles: "all" }));
+  const status = O.map(yield* gitProbe(git.status(checkoutPath, { untrackedFiles: "all" })), statusFactsFromEntries);
   return {
-    dirtyCount: O.match(status, { onNone: () => null, onSome: A.length }),
-    dirtyPaths: O.match(status, {
-      onNone: A.empty<string>,
-      onSome: A.flatMap((entry) => [entry.path, ...A.fromOption(O.fromUndefinedOr(entry.origPath))]),
-    }),
+    dirtyCount: O.match(status, { onNone: () => null, onSome: (facts) => facts.entryCount }),
+    dirtyPaths: O.match(status, { onNone: A.empty<string>, onSome: (facts) => facts.paths }),
   };
 });
 
