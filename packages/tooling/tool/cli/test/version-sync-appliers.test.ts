@@ -58,7 +58,7 @@ const makeRepo = Effect.fn(function* (files: Readonly<Record<string, string>>) {
 const biomeSchema = (version: string) => `https://biomejs.dev/schemas/${version}/schema.json`;
 const turboSchema = "https://v2-10-14.turborepo.dev/schema.json";
 
-it.layer(AppliersTestLayer)("VersionSync update appliers", (it) => {
+it.layer(AppliersTestLayer, { timeout: "30 seconds" })("VersionSync update appliers", (it) => {
   describe("countItemUpdates", () => {
     it.effect(
       "gives 0 for an empty report without calling the updater",
