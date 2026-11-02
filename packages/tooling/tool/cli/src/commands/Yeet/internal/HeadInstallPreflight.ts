@@ -10,6 +10,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -23,6 +25,7 @@ import {
   runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { captureGitKitExit } from "./GitExec.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -92,10 +95,11 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const git = yield* Git;
   const commandText = commandTextForStep(step);
   const cacheRoot = yield* resolveBeepCacheRoot().pipe(
     Effect.mapError(YeetCommandError.new("Failed to resolve the head-install preflight cache root."))
@@ -112,11 +116,16 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
   return yield* Effect.acquireUseRelease(
     Effect.succeed(worktreePath),
     Effect.fnUntraced(function* (checkout: string) {
-      const add = yield* runRepoCommandCapture(
-        "git",
-        ["worktree", "add", "--detach", checkout, "HEAD"],
-        context.repoRoot
-      ).pipe(Effect.mapError(YeetCommandError.new("Failed to create the clean-HEAD preflight worktree.")));
+      // `Git.worktreeAdd` surfaces no transcript on a zero exit, so the rendered block carries
+      // git's text only when the add failed (SPEC D-09).
+      const add = yield* git
+        .worktreeAdd(context.repoRoot, checkout, { ref: "HEAD", detach: true })
+        .pipe(
+          captureGitKitExit(
+            GitCommand.worktreeAdd(checkout, "HEAD", true),
+            "Failed to create the clean-HEAD preflight worktree."
+          )
+        );
       const addOutput = renderCommandOutput("git worktree add --detach <tmp> HEAD", add.output);
       if (add.exitCode !== 0) {
         const output = A.join([addOutput, HEAD_INSTALL_PREFLIGHT_FAILURE_HINT], "\n");
@@ -127,7 +136,7 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
           commandText,
           exitCode: add.exitCode,
           output,
-          truncated: add.truncated,
+          truncated: false,
           ...O.getSomesStruct({ rawOutputRef: rawOutputPath }),
         });
       }
@@ -147,20 +156,17 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
         commandText,
         exitCode: install.exitCode,
         output,
-        truncated: add.truncated || install.truncated,
+        truncated: install.truncated,
         ...O.getSomesStruct({ rawOutputRef: rawOutputPath }),
       });
     }),
     Effect.fnUntraced(function* (checkout: string) {
-      const remove = yield* runRepoCommandCapture(
-        "git",
-        ["worktree", "remove", "--force", checkout],
-        context.repoRoot
-      ).pipe(
-        Effect.map((result) => result.exitCode),
+      const remove = yield* git.worktreeRemove(context.repoRoot, checkout, { force: true }).pipe(
+        captureGitKitExit(GitCommand.worktreeRemove(checkout, true), "Failed to run git worktree remove."),
+        Effect.map((exit) => exit.exitCode),
         Effect.option
       );
-      yield* runRepoCommandCapture("git", ["worktree", "prune"], context.repoRoot).pipe(Effect.ignore);
+      yield* git.worktreePrune(context.repoRoot).pipe(Effect.ignore);
       const removedTemp = yield* fs.remove(tempRoot, { recursive: true }).pipe(Effect.as(0), Effect.option);
       const warnings = A.getSomes([
         cleanupWarning("`git worktree remove --force`", remove),

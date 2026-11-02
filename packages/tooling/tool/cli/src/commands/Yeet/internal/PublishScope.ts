@@ -904,7 +904,7 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
 ): Effect.fn.Return<
   O.Option<YeetExistingCommitPublishIntent>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const remoteRef = `origin/${context.branch}`;
   const remoteRefExists = yield* runRepoCommandCapture(
@@ -937,7 +937,7 @@ const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(functi
 ): Effect.fn.Return<
   YeetPublishIntent,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const cleanWorktree = A.isReadonlyArrayEmpty(unstagedPaths) && A.isReadonlyArrayEmpty(untrackedPaths);
   const existingCommitIntent = cleanWorktree
