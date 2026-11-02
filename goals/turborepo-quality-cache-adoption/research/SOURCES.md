@@ -519,3 +519,14 @@ disabled caching before re-establishing 198 whole-task dispositions. It grants
 no pure-counterpart reuse. `Cache.census.ts` hashes the complete workspace script
 map as `commandDigest`; grouping that digest alone does not establish identical
 commands or semantic profiles.
+
+
+### 2026-11-02 — exact current-canary selection replay
+
+[Current-pair controls](native-selection-current-canary-controls.json) use the
+existing reviewed [client manifest](errors-only-client-pins.json), including its
+verified published canary native digest. [Compatibility controls](native-selection-historical-compatibility-controls.json)
+preserve the original pair's semantic projection. The [checkpoint](selection-current-canary-checkpoint.json)
+binds both report generations, immutable historical source and seven driver
+refusals. These are synthetic runtime observations, not repository-task or
+production qualification.

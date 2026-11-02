@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "selection-sibling-invoke-compatibility/v1",
+  "scope": "Actual sibling loader and owned-process compatibility only; no new native feature observations, feature acceptance or qualification.",
+  "brokenHead": "0dce46e6c1153f90a4340bc3267a9800712eb65b",
+  "reviewThread": "PRRT_kwDOPbO_N86y0mHs",
+  "sourceBindings": {
+    "goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.py": "680dcb7f6b6bdf586d8bd9bfa28c03c8d819446d22cac7b967c212c0e84f0182",
+    "goals/turborepo-quality-cache-adoption/research/native-cargo-controls.py": "3595eeb56d3c2de16a26a6a869929b609002349a0d75a9a0ac137ae4e7a9c194",
+    "goals/turborepo-quality-cache-adoption/research/native-cargo-applicability.py": "391e48407a750964e62e7bb69bb6ff1f1010d0c71256ccb01e58749ba37a3d71",
+    "goals/turborepo-quality-cache-adoption/research/native-log-presentation-controls.py": "47232a3da72af95f48c7fe42c928b4707f415f642d565cb8eeca6b3f8ebdb63a",
+    "goals/turborepo-quality-cache-adoption/research/native-log-cache-controls.py": "55097ee5b7ab08bf373c61c31fe93821595b5766ff543e226ba3d584032db685",
+    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
+    "goals/turborepo-quality-cache-adoption/research/test_selection_invoke_compatibility.py": "06987a7b4dac4fb2336615442be9bb380c7569831ce7c844f4ea5dc9d421a118"
+  },
+  "historicalInvoke": {
+    "immutableSourceCommit": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+    "driverSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
+    "functionSha256": "f7106fa0488de694b4f9e5a6f658d2bfc5a54a2af7cd1690894a0930e8e8cda1",
+    "definitionByteIdentical": true,
+    "contract": "Five sibling AST loaders retain the self-contained invoke and Cargo applicability stdout adaptation. Current selection invokes only the separately named streaming invoke_bounded."
+  },
+  "before": {
+    "failures": 6,
+    "errors": 16,
+    "scope": "The six regression methods reproduce missing capture/timeout context, Cargo applicability load failure, and the missing current bounded helper route."
+  },
+  "after": {
+    "unitTests": 6,
+    "siblingLoadAndProcessSubcases": 25,
+    "currentSelectionStreamingRouteGuard": 1,
+    "exit": 0,
+    "drivers": [
+      "native-base-ref-controls.py",
+      "native-cargo-controls.py",
+      "native-cargo-applicability.py",
+      "native-log-presentation-controls.py",
+      "native-log-cache-controls.py"
+    ],
+    "controls": [
+      "Actual unchanged loader prelude, normal exit/stdout/stderr",
+      "Existing stdout ceilings, including Cargo applicability eight-MiB adaptation",
+      "Existing stderr ceiling",
+      "Owned-child timeout and actual process absence after return",
+      "Expired observation refusal"
+    ]
+  },
+  "historicalFeatureReportsRewritten": false,
+  "notes": [
+    "Historical feature report hashes continue to identify their original immutable whole-driver bytes. A future full feature replay records its actual new source digest.",
+    "This compatibility report does not renew native Cargo, base-ref or task-log feature evidence and does not widen any collector or production limit."
+  ]
+}
