@@ -697,7 +697,7 @@
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-          "sha256": "6b6c2cc200ecbe72682e18bdefbb9af83f3af092aed0b10f279731b539f07859"
+          "sha256": "4a2bc19c4dd7da57de28d5017c053fc133df0e80dd8723c0b97ddad11bcfead0"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",

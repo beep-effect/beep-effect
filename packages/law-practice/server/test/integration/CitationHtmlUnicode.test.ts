@@ -5,9 +5,13 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { CitationOperationAdmission, makeCitationOperationAdmission } from "../../src/internal/Citation/Admission.ts";
+import { makeCitationCleanerOperation } from "../../src/internal/Citation/CleanerOperation.ts";
+import { CitationCleanerRuntime } from "../../src/internal/Citation/CleanerPipeline.ts";
 import { CitationPythonUnicodeStorage, makeCitationPythonHash } from "../../src/internal/Citation/PythonHash.ts";
 import {
   loadCitationUnicodeHistories,
@@ -33,8 +37,19 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       () =>
         Effect.gen(function* () {
           const corpus = yield* loadCitationUnicodeHistories();
+          const limits = {
+            ...(yield* defaultCitationEnginePolicy).limits,
+            concurrentOperations: 2,
+            cleanDeadline: Duration.seconds(30),
+            operationDeadline: Duration.seconds(60),
+          };
+          const admission = yield* makeCitationOperationAdmission(limits);
           const replay = Effect.fn("HtmlUnicodeTest.replayLane")(function* (rows: typeof corpus.cases) {
             const owned = yield* makeCitationUnicodePipelineHarness(true);
+            const operation = yield* makeCitationCleanerOperation(limits).pipe(
+              Effect.provideService(CitationOperationAdmission, admission),
+              Effect.provideService(CitationCleanerRuntime, owned.runtime)
+            );
             const hash = yield* makeCitationPythonHash((yield* defaultCitationEnginePolicy).limits);
             let histories = 0;
             let snapshots = 0;
@@ -72,10 +87,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
                 }),
                 row.steps
               );
-              if (row.failure === null) yield* owned.pipeline.run({ text: "", plan: "native-source-history" });
+              if (row.failure === null) yield* operation.run({ text: "", plan: "native-source-history" });
               else {
                 expect(
-                  yield* Effect.flip(owned.pipeline.run({ text: "", plan: "native-source-history" })),
+                  yield* Effect.flip(operation.run({ text: "", plan: "native-source-history" })),
                   row.name
                 ).toMatchObject({ _tag: "CitationCleanerFailure", reason: "html-parse-error" });
                 failures++;
@@ -118,6 +133,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(totals.snapshots).toBe(6412);
           expect(totals.failures).toBe(482);
           expect(totals.children).toBe(1025);
+          expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
         }),
       { timeout: 1_200_000 }
     );

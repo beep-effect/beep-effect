@@ -35,3 +35,11 @@ Global native-process ownership, full source-event replay, mappings, extraction,
 annotation, public boundary translation and remaining parity obligations stay
 open. Hosted and repository-wide acceptance remains with the coordinated CI
 workflow; it is not a reason to stop independent implementation.
+
+The existing hosted CitationHtmlUnicode qualification now uses the admitted
+cleaner operation too. Both independent replay lanes share one admission owner
+with an explicit two-operation qualification policy within the frozen ceiling.
+Its 2,016 histories, 6,412 snapshots, 482 expected parser failures and 1,025 child
+exit confirmations are unchanged, with a final zero-active/zero-queued assertion.
+Source/test type checking and focused lint pass for this wiring. The full native
+replay remains hosted and has not been run locally or claimed successful.
