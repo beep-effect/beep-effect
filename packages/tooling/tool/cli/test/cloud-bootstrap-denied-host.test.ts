@@ -31,6 +31,20 @@ while [ "$#" -gt 0 ]; do
 done
 host=\${url#https://}; host=\${host%%/*}
 printf 'curl %s\\n' "$host" >> "$FIXTURE/events"
+case " $FIXTURE_DENY_LATE " in
+  *" $host "*)
+    # Deny only after the other required worker has already failed, so the
+    # denial is recorded strictly later than the Bun failure.
+    tries=0
+    until [ -f "$FIXTURE/failed.$FIXTURE_DENY_LATE_AFTER" ]; do
+      tries=$((tries + 1)); [ "$tries" -ge 500 ] && break; sleep 0.01
+    done
+    sleep 0.5
+    printf '000 403 %s' "$url"
+    echo 'curl: (56) CONNECT tunnel failed, response 403' >&2
+    exit 56
+    ;;
+esac
 case " $FIXTURE_DENY " in
   *" $host "*)
     printf '000 403 %s' "$url"
@@ -68,6 +82,7 @@ case " $FIXTURE_MISSING " in
         tries=$((tries + 1)); [ "$tries" -ge 500 ] && break; sleep 0.01
       done
     fi
+    : > "$FIXTURE/failed.$host"
     printf '404 000 %s' "$url"; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
 esac
 version=$(cat .nvmrc)
@@ -110,6 +125,8 @@ type Scenario = {
   readonly unresolved?: string;
   readonly missing?: string;
   readonly failAfterDenial?: string;
+  readonly denyLate?: string;
+  readonly denyLateAfter?: string;
   readonly redirectDeny?: string;
   readonly proxyDown?: string;
   readonly origin403?: string;
@@ -170,6 +187,8 @@ const runBootstrap = Effect.fn("CloudBootstrapDeniedHostTest.runBootstrap")(func
       FIXTURE_BAD_SUM: scenario.badSum === true ? "1" : "",
       FIXTURE_BUN: scenario.bun,
       FIXTURE_DENY: scenario.deny ?? "",
+      FIXTURE_DENY_LATE: scenario.denyLate ?? "",
+      FIXTURE_DENY_LATE_AFTER: scenario.denyLateAfter ?? "",
       FIXTURE_FAIL_AFTER_DENIAL: scenario.failAfterDenial ?? "",
       FIXTURE_ORIGIN_403: scenario.origin403 ?? "",
       FIXTURE_PROXY_DOWN: scenario.proxyDown ?? "",
@@ -250,7 +269,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       const result = yield* runBootstrap(fixture, { bun: "stale", node: "pinned", missing: "github.com" });
       expect(result.exitCode, result.stderr).toBe(1);
       expect(result.stderr).toContain("download or checksum failed");
-      expect(result.stderr).toContain("no required-host denial was recorded before stopping");
       expect(result.stderr).not.toContain("required download host denied");
       yield* expectUntouched(fixture, result.stderr);
     })
@@ -266,6 +284,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
         deny: "nodejs.org",
         failAfterDenial: "node",
       });
+      expect(result.exitCode, result.stderr).toBe(78);
+      expect(result.stderr).toContain("download or checksum failed");
+      expect(result.stderr).toContain(remedy("nodejs.org"));
+      yield* expectUntouched(fixture, result.stderr);
+    })
+  );
+
+  it.effect("waits for a Node denial that is recorded only after Bun has failed", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture();
+      const result = yield* runBootstrap(fixture, {
+        bun: "stale",
+        node: "stale",
+        missing: "github.com",
+        denyLate: "nodejs.org",
+        denyLateAfter: "github.com",
+      });
+      expect(yield* fs.exists(path.join(fixture.root, "failed.github.com"))).toBe(true);
       expect(result.exitCode, result.stderr).toBe(78);
       expect(result.stderr).toContain("download or checksum failed");
       expect(result.stderr).toContain(remedy("nodejs.org"));

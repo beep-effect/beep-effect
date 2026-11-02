@@ -39,24 +39,30 @@ Base: `origin/main` at `7ae3f014`, in a Claude cloud session.
   redirect hop is named), falling back to the caller's literal. It is never
   parsed from curl's error text. A denial writes `<kind>.denied` and exits
   `78`. Every other failure keeps its previous non-zero exit.
-- `bootstrap.sh` collects `78` exits from the required workers (`bun`,
-  `node`, not `op`). When no Bun non-denial failure stops the loop early, all
-  required downloads settle, then it prints one line and exits `78`, before
-  step 2 places anything:
+- `bootstrap.sh` waits for every required worker (`bun`, `node`), each
+  bounded by its own four-minute deadline, then collects their `78` exits.
+  A non-denial Bun failure no longer ends the loop early. Once Bun has
+  failed, the optional `op` worker is not waited on, and the EXIT trap cancels
+  it. If any required host was denied, the script prints the Bun failure line
+  (when there is one), then one line, and exits `78` before step 2 places
+  anything:
   `ERROR: required download host denied: <hosts>; remedy: add <hosts> to the
   environment's allowed domains (docs/runbooks/cloud-environments.md).`
   The parallel workers, their cleanup, the checksum and GPG checks, the frozen
   install and its three-attempt retry, the vendor guard and the stamps are
   unchanged. The optional `op` worker still only warns.
-- Mixed failures (review follow-up). Bun is waited on first and a non-denial
-  Bun failure stops the loop early; the EXIT trap cancels the downloads still
-  in flight. On `ebc5a1f6`, a Bun `404` with a Node `403` already recorded
-  exited `1` without naming `nodejs.org`. Now a denial another required worker
-  already recorded is still named (exit `78`), after the Bun failure line. A
-  denial still in flight is unknown, so it is not claimed: the exit-1 message
-  says no denial was recorded before stopping and that in-flight downloads
-  were cancelled. A Bun denial with a Node non-denial failure was already exit
-  `78` naming `github.com`, and is now pinned by a test.
+- Mixed failures (review R1). At `ebc5a1f6` and `989df624`, a non-denial Bun
+  failure ended the wait loop at once and the EXIT trap cancelled Node, so a
+  `nodejs.org` denial was hidden behind exit `1`. `989df624` named only a
+  denial already recorded, which made the outcome depend on timing. Now every
+  required worker is waited on: a denial recorded before or after the Bun
+  failure exits `78` naming it, and the Bun failure is still reported. With no
+  denial, the Bun failure exits `1` as before. A Bun denial with a Node
+  non-denial failure exits `78` naming `github.com`. The existing signal suite
+  was adjusted to match: in "failed Bun download", Node now finishes and is
+  waited on instead of being cancelled. "TERM at failed-download cleanup
+  entry" now keeps the optional `op` worker in flight, so it still proves
+  that cleanup settles a running worker under a repeated TERM.
 - Not covered: denial of the install registries (`registry.npmjs.org`,
   `buf.build`) during `bun install`. Naming them would mean parsing bun's
   output, which would infer the host, so they keep the existing loud exit-1
@@ -81,7 +87,8 @@ request leaves the host.
 | `github.com` 404 (non-denial) | exit 1: pass | exit 1, no denial line |
 | Node checksum mismatch | exit 1: pass | exit 1, no denial line |
 | Allowed host, then re-run | exit 0: pass | exit 0; install runs once, re-run skips |
-| Bun 404 + Node 403 recorded (`ebc5a1f6` scripts) | exit 1, no `nodejs.org`: **fail** | exit 78 naming `nodejs.org` |
+| Bun 404 + Node 403 recorded first (`ebc5a1f6` scripts) | exit 1, no `nodejs.org`: **fail** | exit 78 naming `nodejs.org` |
+| Node 403 recorded 0.5 s after the Bun 404 (`f1359e77` scripts) | exit 1: **fail** | exit 78 naming `nodejs.org` |
 | Bun 403 + Node 404 | exit 78: pass | exit 78 naming `github.com` |
 | Redirect hop refused (`github.com` → release-asset host) | exit 78 naming `github.com`: **fail** | exit 78 naming the hop's host |
 | curl `5` (proxy does not resolve) | exit 78: **fail** | exit 1, no denial line |
@@ -93,7 +100,7 @@ or `ln` call, and that no `~/.bun`, `~/.local`, `~/.bashrc` or `node_modules`
 was created, and that the run directory under the cache was removed. The
 failure-before column comes from running the same test file with the
 `7ae3f014` copies of both scripts swapped in (3 failed, 3 passed). After the
-fix, the new file plus `retained-script-adapters.test.ts` give 32/32 passing.
+fix, the new file plus `retained-script-adapters.test.ts` give 33/33 passing.
 The R2 rows were checked against the `989df624` `fetch.sh`, where 8 of 12
 failed. The four R2 rows are the intended failures. The other four (the
 earlier denial and mixed cases) failed only because the stub now reports a

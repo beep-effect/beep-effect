@@ -136,7 +136,8 @@ Known gotchas:
 - A denied required download host (`github.com` for Bun, `nodejs.org` for
   Node) exits `78` before anything is placed or installed, with one line
   naming each denied host and the remedy: add it to the environment's allowed
-  domains. "Denied" means the egress proxy refused the CONNECT tunnel
+  domains. Every required download is waited on first, so a Bun failure in
+  the same run is reported too but does not hide the denial. "Denied" means the egress proxy refused the CONNECT tunnel
   (`403`), or, with no proxy configured, the host does not resolve or
   connect. The host named is the one curl was fetching when it stopped, so a
   refused redirect hop (for example a release-asset host) is named instead of
