@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "kind": "Audit-script-only applicability delta after shared main repair",
+  "recordedAt": "2026-11-02T09:08:42.167481+00:00",
+  "originalExecutionHead": "e2d941a0e9046669fa3b5bd72b90127ad83a75b2",
+  "publicationHead": "53de23f692460d7716bbd608efcc4a194128a306",
+  "sharedRepair": {
+    "pullRequest": 2535,
+    "merge": "6925f03ef8a816ffdb8e29e74bc1d7cc00fdccc6"
+  },
+  "packageInputCount": 249,
+  "membershipUnchanged": true,
+  "unchangedInputCount": 245,
+  "changedManifests": {
+    "package.json": {
+      "originalSha256": "7847a27710af030c63345a836e1d6af2337ff0426bcc3e3a0e38e14660545825",
+      "currentSha256": "bdb73cf27f6c7879c6da15284ada121985772149e98e6444cfd050d213659b91",
+      "scriptKeysRemoved": [],
+      "scriptKeysAdded": ["lint:deprecated-imports"],
+      "allOtherJsonValuesIdentical": true
+    },
+    "packages/drivers/ai-provider-cli/package.json": {
+      "originalSha256": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73",
+      "currentSha256": "1f7dc5f03b3d2154fc94df88d970f930d7320c9ad040de0abc6b7b083fc51513",
+      "scriptKeysRemoved": ["audit", "beep:audit"],
+      "scriptKeysAdded": [],
+      "allOtherJsonValuesIdentical": true
+    },
+    "packages/drivers/phoenix/package.json": {
+      "originalSha256": "71a2a657e9be5e9ebea96882b15466265b3ddbaac854176c7aad9931890c2a71",
+      "currentSha256": "cdcbdfda5609d21f715ef71521f1de607c12dcad3ad45f46ba8ee2ebf9104de1",
+      "scriptKeysRemoved": ["audit", "beep:audit"],
+      "scriptKeysAdded": [],
+      "allOtherJsonValuesIdentical": true
+    },
+    "packages/tooling/library/ai-metrics/package.json": {
+      "originalSha256": "0e028a518bcae45ab6100065cb0771f3f1107d4e56f08e610555cf0a784ce3d9",
+      "currentSha256": "1fcafb56ca8392374272f3f71e6a40db5a07bee22b39fbb5dc7357144dfe9027",
+      "scriptKeysRemoved": ["audit", "beep:audit"],
+      "scriptKeysAdded": [],
+      "allOtherJsonValuesIdentical": true
+    }
+  },
+  "commandApplicability": "Original commands invoke Node Vitest directly with identical Vitest/source/test/configuration/lock inputs. Removed package audit scripts and the added root lint script are not invoked by those commands. Original executions and hashes remain unchanged; this review does not claim a rerun or a complete transitive dependency closure.",
+  "qualifiedInputSets": {
+    "preparation": {
+      "inputCount": 84,
+      "allMatchCurrentGitAndFiles": true
+    },
+    "disposable": {
+      "inputCount": 90,
+      "allMatchCurrentGitAndFiles": true
+    },
+    "live": {
+      "inputCount": 89,
+      "allMatchCurrentGitAndFiles": true
+    }
+  },
+  "independentReview": "Named Astra seat independently accepted exact249 membership,245 unchanged inputs, four script-key-only JSON deltas, direct command applicability, unchanged84/90/89 source bindings and unchanged scanner-policy source. No fresh test execution, transitive closure or hosted readiness is inferred.",
+  "requiredHostedChecks": "Still mandatory on the final accepted head.",
+  "goalComplete": false,
+  "recoveryHoldReleased": false,
+  "privateOriginalSha256": "f6343bd841461a93a79b93322514cd842b645b4d143ea26e392f430a0392567f"
+}

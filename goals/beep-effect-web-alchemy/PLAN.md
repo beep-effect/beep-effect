@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. P0–P4 done; https://beep-effect.com deploys from CI on every `main` push that touches the app (first green run 41244684210, 2026-10-31). P5 Close in progress.
+Status: `active`. P0–P5 done; https://beep-effect.com deploys from CI on every `main` push that touches the app (first green run 41244684210, 2026-10-31). Completion is derived from final PR #2523.
 
 ## Phases
 
@@ -13,7 +13,7 @@ Status: `active`. P0–P4 done; https://beep-effect.com deploys from CI on every
 | P2 First deploy (local) | complete | Check the IaC token's permissions (Workers Scripts, Workers custom domains, DNS edit, Secrets Store edit). Export the zone DNS to `history/`. `op run -- alchemy state bootstrap --backend cloudflare`; `plan --stage prod`; `deploy --stage prod --adopt` scoped to the apex/www records; redeploy as a no-op check. | Apex 200, www 301, browser QA evidence in `history/`. |
 | P3 CI deploy | complete | GitHub Actions workflow on `main` (paths `apps/beep-effect-web/**`), with `CLOUDFLARE_*` secrets, `CI=true`, and concurrency group `alchemy-beep-effect-web-prod`. | One green deploy run recorded. |
 | P4 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable. | Merge gate passes. |
-| P5 Close | in-progress | Closeout reflection and packet state flip. | Reflection exists and completion refresh verifies. |
+| P5 Close | complete | Closeout reflection and packet state flip. | Reflection exists and completion refresh verifies. |
 
 ## Current Blockers
 
