@@ -8,12 +8,15 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import stat
 import subprocess
+from declared_root_inputs import verify_declared_root_module, verify_declared_root_sources
+
+if not __debug__:
+    raise RuntimeError('Declared canary verification requires Python assertions to remain enabled')
 
 SALT = 'synthetic-launch-proof-salt'
-QUALIFICATION_SHA = '30e49630d28c7b72ed89e17dead852d7eea7fedf7c8c70d357762d7808cec631'
-PROBE_SHA = 'ad227f12771ae17d0298334260d825ee393c1db7346444fa6aa5a6c8d0c0856c'
 
 
 def sha(data):
@@ -25,12 +28,17 @@ def private_hash(value):
 
 
 class DeclaredCanary:
-    def __init__(self, directory, workspace):
+    def __init__(self, directory, workspace, *, qualification_sha, probe_sha):
+        assert isinstance(qualification_sha, str) and re.fullmatch(r'[0-9a-f]{64}', qualification_sha), 'An exact qualification digest is required'
+        assert isinstance(probe_sha, str) and re.fullmatch(r'[0-9a-f]{64}', probe_sha), 'An exact root-probe digest is required'
+        self.qualification_sha = qualification_sha
+        self.probe_sha = probe_sha
         self.directory = directory.absolute()
         self.workspace = workspace
         self.verify()
 
     def verify(self):
+        verify_declared_root_module(self.workspace)
         for name, mode in [('', 0o700), ('repository', 0o700),
                            ('qualification.json', 0o600), ('root-probe.json', 0o600)]:
             info = (self.directory/name).lstat()
@@ -38,17 +46,16 @@ class DeclaredCanary:
             assert stat.S_IMODE(info.st_mode) == mode
         qualified = (self.directory/'qualification.json').read_bytes()
         probe_bytes = (self.directory/'root-probe.json').read_bytes()
-        assert sha(qualified) == QUALIFICATION_SHA and sha(probe_bytes) == PROBE_SHA
+        assert sha(qualified) == self.qualification_sha and sha(probe_bytes) == self.probe_sha
         self.qualification = json.loads(qualified)
         probe = json.loads(probe_bytes)
         q = self.qualification
-        assert q['probeSha256'] == PROBE_SHA and q['sourceStableDuringRun'] is True
+        assert q['probeSha256'] == self.probe_sha and q['sourceStableDuringRun'] is True
         assert probe['inventory']['hosts'] == [q['host']]
         assert probe['inventory']['roots'] == [q['root']]
         assert all(r['knownLaunches']['_tag'] == r['expectedEvents']['_tag'] == 'Unknown'
                    for r in probe['inventory']['routes'])
-        for relative, expected in q['sourceSha256'].items():
-            assert sha((self.workspace/relative).read_bytes()) == expected, relative
+        verify_declared_root_sources(self.workspace, q['sourceSha256'])
         git_env = {'PATH': os.environ['PATH'], 'HOME': str(self.directory/'home'),
                    'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1'}
         def git(*args):
@@ -91,7 +98,7 @@ class DeclaredCanary:
                 'recordedAt': datetime.now(timezone.utc).isoformat(), 'stage': stage,
                 'syntheticOnly': True, 'actualHarnessCoverage': False,
                 'associationBasis': 'Explicit synthetic producer declaration; not inferred harness or repository coverage',
-                'qualificationSha256': QUALIFICATION_SHA, 'rootProbeSha256': PROBE_SHA,
+                'qualificationSha256': self.qualification_sha, 'rootProbeSha256': self.probe_sha,
                 'host': q['host'], 'root': q['root'], 'routeId': route_id,
                 'project': project, 'expectedEvents': events,
                 'workerConfigSha256': sha(config_path.read_bytes()),

@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
+      "inputs": ["$TURBO_EXTENDS$", ".env*"],
       "env": [
         "$TURBO_EXTENDS$",
         "APP_ADMINS_EMAILS",
