@@ -28,6 +28,7 @@ import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.t
 import { evaluateLaw } from "./EvalLawLanes.ts";
 import { RecordAgentEffectivenessEvalScoreOptions, recordAgentEffectivenessEvalScore } from "./EvalRecord.ts";
 import { EvalScoring } from "./EvalScoring.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
@@ -261,7 +262,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
 }: RunAgentEffectivenessEvalScoreCommandOptions): Effect.fn.Return<
   void,
   AgentEffectivenessEvalScorerError | S.SchemaError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const taskText = yield* fs

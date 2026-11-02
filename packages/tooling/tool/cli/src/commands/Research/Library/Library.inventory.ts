@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -17,7 +18,6 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as StepExec from "../../../internal/process/StepExec.ts";
 import { LibraryError } from "./Library.errors.ts";
 import {
   LibraryArtifact,
@@ -759,11 +759,10 @@ export const inventoryLibrary = Effect.fn("ResearchLibrary.inventory")(function*
         }
       });
       const snapshotInputRoot = Effect.fn("ResearchLibrary.snapshotInputRoot")(function* (inputRoot: string) {
-        const repo = yield* StepExec.runCaptured({
-          command: "git",
-          args: ["-C", path.resolve(inputRoot), "rev-parse", "HEAD"],
-        }).pipe(Effect.option);
-        const repoCommit = O.isSome(repo) && repo.value.exitCode === 0 ? Str.trim(repo.value.output) : "";
+        // A root outside any repository (or with no commit) records no commit.
+        const repoCommit = yield* Effect.flatMap(Git, (git) => git.revParse(path.resolve(inputRoot), "HEAD")).pipe(
+          Effect.orElseSucceed(() => "")
+        );
         intakeRoots = A.append(intakeRoots, LibraryIntakeRoot.make({ path: path.resolve(inputRoot), repoCommit }));
         const relativeLibrary = path.relative(path.resolve(inputRoot), path.resolve(options.libraryRoot));
         if (

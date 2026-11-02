@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import {
   AgentEffectivenessEvalLaneReport,
   AgentEffectivenessEvalScoreBreakdown,
@@ -56,7 +57,7 @@ const temporaryFixture = FileSystem.FileSystem.use((fs) =>
 
 const decodeUnknownSkillOptTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 
-const TestLayer = Layer.mergeAll(NodeServices.layer, BunCrypto.layer);
+const TestLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, BunCrypto.layer));
 const UnknownJson = S.fromJsonString(S.Unknown);
 const encodeJson = flow(S.encodeUnknownResult(UnknownJson), Result.getOrThrow);
 const decodeUnknownJson = S.decodeUnknownEffect(UnknownJson);

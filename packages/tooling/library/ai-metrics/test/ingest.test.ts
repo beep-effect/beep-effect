@@ -1,4 +1,5 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { Git } from "@beep/git/Git";
 import {
   AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
   AgentEffectivenessAnnotationValue,
@@ -127,6 +128,9 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as TestClock from "effect/testing/TestClock";
+
+// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
+const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
 
 const ForwarderStampScenario = LiteralKit([
   "qualified",
@@ -790,7 +794,7 @@ it("pins stamp verdicts so neither completeness nor qualification determines the
   ]);
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
+it.layer(GitNodeServices, { timeout: "30 seconds" })("@beep/repo-ai-metrics", (it) => {
   it.effect(
     "summarizes Codex JSONL and counts rejected lines",
     Effect.fn(function* () {

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
@@ -17,6 +18,7 @@ import { flow, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Random from "effect/Random";
@@ -27,6 +29,7 @@ import { isNestedGitRoot } from "./identity-registry.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
 import { ConfigSnapshot } from "./models.ts";
 import { hashPublicTextSha256 } from "./privacy.ts";
+import type { GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 
 const $I = $RepoAiMetricsId.create("config-snapshot");
 
@@ -632,22 +635,29 @@ const isSessionScopePath = S.is(SessionScopePath);
 const scopeFor = (relativePath: string): AiMetricsConfigScope =>
   isSessionScopePath(relativePath) ? AiMetricsConfigScope.Enum.session : AiMetricsConfigScope.Enum.baseline;
 
+// `git ls-files --stage -z` through `Git.lsFiles`: the stage columns are dropped and the paths
+// are the plain `ls-files -z` answer, an unmerged path once per stage as before. The kit bounds the
+// listing (16 MiB); a run past the bound is an unreadable index, a run git never reached a launch
+// failure, and a run git reported keeps its exit code as the cause (repo-cli-gh-git-consolidation
+// W2b, SPEC D-11).
+const indexEnumerationFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError) => {
+  if (P.isTagged(error, "GitCommandError") && error.kind === "truncated")
+    return configSnapshotFailure("Cannot read Git snapshot index.", error);
+  return O.match(gitExitCode(error), {
+    onNone: () => configSnapshotFailure("Cannot start Git index enumeration.", error),
+    onSome: (exitCode) => configSnapshotFailure("Git index enumeration failed.", exitCode),
+  });
+};
+
+// The exit code git reported, `None` when git never ran; a typed refusal (an unknown ref, a
+// non-repository) is git's own exit 128.
+const gitExitCode = (error: GitCommandError | NotARepositoryError | UnknownRefError): O.Option<number> =>
+  P.isTagged(error, "GitCommandError") ? O.fromUndefinedOr(error.exitCode) : O.some(128);
+
 const readTrackedSnapshotPaths = Effect.fn("AiMetrics.readTrackedSnapshotPaths")(function* (repoRoot: string) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const handle = yield* spawner
-    .spawn(
-      ChildProcess.make("git", ["ls-files", "-z"], {
-        cwd: repoRoot,
-        stdout: "pipe",
-        stderr: "ignore",
-      })
-    )
-    .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot start Git index enumeration.", cause)));
-  const [text, status] = yield* Effect.all([handle.stdout.pipe(Stream.decodeText, Stream.mkString), handle.exitCode], {
-    concurrency: "unbounded",
-  }).pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read Git snapshot index.", cause)));
-  if (status !== 0) return yield* configSnapshotFailure("Git index enumeration failed.", status);
-  return O.some<ReadonlyArray<string>>(pipe(text, Str.split("\0"), A.filter(Str.isNonEmpty)));
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot).pipe(Effect.mapError(indexEnumerationFailure));
+  return O.some<ReadonlyArray<string>>(A.map(entries, (entry) => entry.path));
 });
 
 /**
@@ -690,6 +700,8 @@ const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // KEEP (W2b, SPEC D-11): `Git.repoRoot` trims its answer, and a checkout whose name ends in
+  // whitespace (`checkout\r`) must keep it; only git's terminating newline is stripped here.
   const top = yield* spawner
     .string(ChildProcess.make("git", ["rev-parse", "--show-toplevel"], { cwd: repoRoot, stderr: "ignore" }))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed checkout root.", cause)));
@@ -736,7 +748,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
 ): Effect.fn.Return<
   ConfigSnapshotEnumeration,
   AiMetricsConfigSnapshotError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathApi = yield* Path.Path;
@@ -1226,12 +1238,14 @@ const readPreviousSnapshot = (previousSnapshotPath: O.Option<string>) =>
  * **Example** (Snapshotting a repo root)
  *
  * ```ts
+ * import { Git } from "@beep/git/Git"
  * import { AiMetricsConfigSnapshotInput, makeAiMetricsConfigSnapshot } from "@beep/repo-ai-metrics"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
  * const program = makeAiMetricsConfigSnapshot(
  *   AiMetricsConfigSnapshotInput.make({ repoRoot: "/repo" })
- * ).pipe(Effect.provide(NodeServices.layer))
+ * ).pipe(Effect.provide(Layer.provideMerge(Git.layer, NodeServices.layer)))
  *
  * console.log(program)
  * ```

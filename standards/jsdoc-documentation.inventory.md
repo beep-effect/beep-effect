@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-02T19:35:49.395Z
+Generated: 2026-11-02T20:32:31.454Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 167 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3575 |
-| publicExports | 25444 |
+| publicModules | 3587 |
+| publicExports | 25456 |
 | openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -163,7 +163,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 105 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 6 | 202 | 0 | 0 |
 | 106 | `@beep/poppler` | `packages/drivers/poppler` | clean | 3 | 9 | 0 | 0 |
 | 107 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 38 | 303 | 0 | 0 |
-| 108 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 60 | 610 | 12 | 0 |
+| 108 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 72 | 622 | 12 | 0 |
 | 109 | `@beep/repo-workspaces` | `packages/tooling/library/repo-workspaces` | clean | 28 | 250 | 0 | 0 |
 | 110 | `@beep/sbom` | `packages/foundation/modeling/sbom` | clean | 9 | 75 | 0 | 0 |
 | 111 | `@beep/skill-contract` | `packages/foundation/modeling/skill-contract` | clean | 9 | 113 | 0 | 0 |

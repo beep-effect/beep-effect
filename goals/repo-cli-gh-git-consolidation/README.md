@@ -31,15 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546) and W2 (#2593, SPEC D-10) merged; W2b
-(#2606, SPEC D-11) in review. W3 sites (this PR, SPEC D-12): the reviewer App token runs on `GitHubApp` (down-scoped
-request, fail-closed `assertPermissions`, `clientLayer` with a five-minute refresh skew), reviewer publishing, ruleset
-administration and the merge gate on `GitHubClient`, the `gh auth token` / `op read` reads on `@beep/commands`
-`Run.text`, and the Ci `gh api` reader, runner-loss rerun and governance client on `GitHubClient` with the transient
-table kept. Next: W4 sites, then W5.
+P1 Implement. W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, SPEC D-10), the W3 kit
+(#2556), W3 sites (#2614, SPEC D-12) and the W4 kit (#2600) merged. W2b (this PR, SPEC D-11): the remaining Yeet
+git halves, the Library inventory read and ai-metrics' `ls-files` run through `Git`, with Sweep's probes behind the
+`sweepProbeFromGit` CommandProbe adapter. Next: W4 sites, then W5.
 
 ## Latest Evidence
 
+- 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
+  unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
 - 2026-11-02 W3 sites: `research/reviewer-ci-github-differential-w3.json` (45 scenarios, 37 same, 8 classified,
   0 unclassified); repo-cli typecheck and lint clean, the reviewer, ci and yeet merge-gate suites green.
 - 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
