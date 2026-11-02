@@ -52,6 +52,11 @@ now matches thirteen histories and forty outcomes, including conversion and
 equality mutation. Retained tables use per-call probe guards with captured
 aggregate accounting; production hashes and live cleaner ownership remain open.
 
+The [frozen Python primitive hash service](./history/evidence/2026-10-31-python-hashes.md)
+now matches 1,056 full vectors, preserving explicit source Unicode storage and
+paired-surrogate distinctions with bounded streaming and captured timing. Full
+source value ownership, object protocols and live registry replay remain open.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 P0 source acquisition and public prerequisite compatibility are evidenced. The

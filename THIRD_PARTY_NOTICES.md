@@ -698,3 +698,38 @@ Its build receipt records feature switches, canonical build paths, exports,
 compiler version and memory maximum. Rebuilding is maintainer tooling; the
 engine does not require the SDK, C compiler or Python at runtime. Worker and
 engine lifecycle qualification is tracked separately in the citation goal.
+
+## CPython SipHash13 adaptation
+
+The private citation `PythonHash.ts` adapts CPython 3.11.15 `Python/pyhash.c`
+(SHA-256 `7f18429290df0726669cbd6d8b5a8b48b843efff648fe8863d48da5db4745628`)
+and canonical Unicode storage hashing from `Objects/unicodeobject.c`.
+It streams bounded immutable bytes, uses cooperative Effect interruption and
+captured deadlines, fixes the oracle's zero seed and signed result rules, and
+retains explicit Unicode storage where JavaScript text is insufficient.
+Python modifications remain covered by the complete PSF license above.
+The embedded SipHash implementation also carries the following MIT notice.
+
+<!-- citation-siphash-mit:begin -->
+
+     Copyright (c) 2013  Marek Majkowski <marek@popcount.org>
+
+     Permission is hereby granted, free of charge, to any person obtaining a copy
+     of this software and associated documentation files (the "Software"), to deal
+     in the Software without restriction, including without limitation the rights
+     to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+     copies of the Software, and to permit persons to whom the Software is
+     furnished to do so, subject to the following conditions:
+
+     The above copyright notice and this permission notice shall be included in
+     all copies or substantial portions of the Software.
+
+     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+     IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+     AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+     LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+     THE SOFTWARE.
+
+<!-- citation-siphash-mit:end -->

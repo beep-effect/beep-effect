@@ -1213,6 +1213,36 @@ global process ownership. See
   tests to reduce cold-loading contention without changing production limits.
   Removing that package configuration override reverses the runner decision.
 
+- **2026-10-31 Python primitive hashes:** a captured service streams frozen
+  SipHash13 over bytes and canonical one/two/four-byte Unicode storage. All
+  1,056 vectors retain full values, including two surrogate-pair controls whose
+  native storage differs from the JSON text projection. Complete MIT attribution
+  is retained. Source Unicode ownership, object protocols and full registry
+  replay remain open; no text-equivalence normalization is introduced.
+
+- **2026-11-02 UTC remote qualification routing:** the workstation's traced
+  earlyoom stop ends heavy local retries. Qualification uses the exact source
+  snapshot in an isolated checkout on an existing admitted worker, with no
+  forwarded SSH agent or publication. The first worker reached its runtime
+  limit; controlled Go/Bun memory experiments also reached task and parent
+  memory-high thresholds. Their receipts are retained without claiming test
+  success. A newly idle worker provides an existing larger shared allowance;
+  the task uses 5.5 GiB memory-high, the same 6 GiB hard maximum, no swap,
+  200 percent CPU, 448 tasks and a one-hour runtime under its unchanged shared
+  7/8 GiB thresholds and 512-task ceiling. Bun 1.4.4 and Node 24.22.1 are
+  selected from existing installations. No shared guard, unrelated service,
+  production limit or verification scope is weakened. Gate completion remains
+  pending. Reversal requires live admission and the same source-bound full
+  gates on another suitable worker; these private job settings add no engine
+  runtime contract. See the Python primitive hash evidence for outcomes.
+
+- **2026-11-02 operator publication direction:** open the existing work as one
+  draft PR now, rather than holding publication for full verification or local
+  compute. Retain the passing focused checks and explicit pending full gates;
+  hosted CI is authoritative. Remaining implementation, exhaustive parity,
+  review and completion requirements continue in that PR. This supersedes the
+  prior publication-order hold, without changing behavior or acceptance laws.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1225,7 +1255,10 @@ source callback traces under its dedicated checker. The html-bytes report retain
 complete byte/non-text outcomes under ops/verify-html-bytes.py. The
 cleaner-identities report retains full text and object-identity observations
 under ops/verify-cleaner-identities.py. The unicode-dictionary report retains
-complete transition histories under ops/verify-unicode-dictionary.py. They retain upstream legal spellings, source expressions
+complete transition histories under ops/verify-unicode-dictionary.py. The
+python-hashes report retains full code points/native bytes under its dedicated
+ops/verify-python-hashes.py checker. They retain upstream legal spellings,
+source expressions
 or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to
 authored code or unrelated fixtures. Remove each exact exclusion when its

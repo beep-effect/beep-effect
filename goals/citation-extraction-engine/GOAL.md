@@ -67,6 +67,11 @@ Required interpretation:
 Approved 2026-10-29: native HTML resource exhaustion fails without partial
 output per `ops/html-safety-exception.json`. Other parity duties remain.
 
+Approved 2026-11-02: publish the ongoing work as one draft PR without waiting
+for full verification or competing for local compute. Record completed and
+pending checks explicitly, use hosted CI, and continue the remaining goal work
+in that PR. This changes publication timing, not parity or completion criteria.
+
 Stop rather than weaken scope when a prerequisite is incompatible, exhaustive
 parity cannot be proved, safety/fidelity needs an unrecorded divergence, or the
 one-PR constraint cannot remain reviewable.

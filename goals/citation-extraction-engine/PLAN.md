@@ -189,11 +189,18 @@ now matches thirteen source histories and forty outcomes, and retained lifetime
 work is separated from each outer call guard. Production hashes, protocol
 dispatch, live registry/cursors and complete sequence replay remain open.
 
+The [primitive Python hash service](./history/evidence/2026-10-31-python-hashes.md)
+now matches 1,056 full byte/Unicode-storage vectors with complete MIT attribution,
+cooperative streaming and captured timing. Exact source Unicode value ownership,
+object protocols and live registry/cursor replay remain open.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use
-reviewable local commits, but do not publish partial phase PRs or repeatedly
-push incomplete checkpoints.
+reviewable local commits. Operator direction on 2026-11-02 opens the ongoing
+branch as one draft PR now and moves full verification to hosted CI. Continue
+the remaining work in that PR; do not create separate phase PRs or claim the
+unfinished engine is complete.
 
 This means one PR, not one commit or one unverifiable batch:
 
@@ -202,8 +209,9 @@ This means one PR, not one commit or one unverifiable batch:
 2. each phase ends in a focused local green commit with its evidence archived;
 3. no partial surface is described as stable or complete before all parity
    rows close; and
-4. publish only after local parity and repo gates are green, then address hosted
-   review in the same PR.
+4. publish ready work without waiting on constrained verification, explicitly
+   record passed and pending gates, and address hosted checks and review in
+   the same draft PR. Full parity and quality remain mandatory for completion.
 
 If the all-in branch becomes too large to review or verify safely, stop for
 product direction. Do not silently split the PR, weaken parity, or hide

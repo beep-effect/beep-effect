@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "ebec6fc89fac3bb6b761ccaa51819097b859bc3cd6cf0b7ec2141bebc2eac0cb",
+  "planSha256": "05ed8a79d3db9f5f2975c66ddb832f627b7ffe2fdca3a21b27b03bf0b7947d93",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -614,6 +614,30 @@
         {
           "path": "packages/law-practice/server/vitest.config.ts",
           "sha256": "0427fd8a6c122ce1fba82e3a0cc676bcb3c562601422758e6e89a4c31580dd1d"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
+          "sha256": "dfcb545f8dc2382e746a92243af4f758ae6049efd41052e5a22fb496633537c3"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/probe-python-hashes.py",
+          "sha256": "0fb99d08dcdf7b2217b4bdcb78b44b0ca38a9cdb7a0010529d397a486abe9fce"
+        },
+        {
+          "path": "goals/citation-extraction-engine/ops/verify-python-hashes.py",
+          "sha256": "9653b35409ea6f3ca7202e7907db0c112529d4b522f4f2ecbd97baa36a35cc88"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/PythonHash.ts",
+          "sha256": "8493459eee5fd2e0ddaaa85e9d165e6d83bbcb51713aee9474bd4e18625a8562"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationPythonHash.test.ts",
+          "sha256": "f0ff303b2e944570ccf07326319523c91a91b7d6a461b02590a3b2a666c13515"
+        },
+        {
+          "path": "packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
+          "sha256": "844816162ce40d63b3e21a447bb4d1aa2c2310157a959c8c5c0f4ae8d86b0c89"
         }
       ],
       "workflowState": "audit",

@@ -188,7 +188,13 @@
         "goals/citation-extraction-engine/ops/verify-unicode-dictionary.py",
         "packages/law-practice/server/test/CitationUnicodeDictionary.test.ts",
         "packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
-        "packages/law-practice/server/vitest.config.ts"
+        "packages/law-practice/server/vitest.config.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-10-31-python-hashes.md",
+        "goals/citation-extraction-engine/ops/probe-python-hashes.py",
+        "goals/citation-extraction-engine/ops/verify-python-hashes.py",
+        "packages/law-practice/server/src/internal/Citation/PythonHash.ts",
+        "packages/law-practice/server/test/CitationPythonHash.test.ts",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",
