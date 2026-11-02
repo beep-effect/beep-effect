@@ -10,8 +10,9 @@ import {
 } from "@beep/repo-ai-metrics";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -115,7 +116,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         );
         expect(overridden.source).toBe("hook-pulse-env");
         assertSome(overridden.hashSalt, "instrument");
-        assertTrue(overridden.projection.pipe(O.isSome));
+        assertNone(overridden.projection);
         const blankOverride = yield* withEnv(
           { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: "   " },
           hookPulseNamespace
@@ -159,6 +160,46 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
         );
         expect(linkExit._tag).toBe("HookPulseNamespaceError");
         expect(linkExit.message).toContain("symlink");
+      })
+    );
+
+    it.effect("deduplicates the effective default and bypasses an invalid projection with an explicit override", () =>
+      Effect.gen(function* () {
+        const { file } = yield* writeProjection(
+          yield* projectionJson({ hashSalt: AI_METRICS_LOCAL_INSECURE_HASH_SALT })
+        );
+        const namespace = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace);
+        expect(hookPulseNamespaceSalts(namespace)).toHaveLength(1);
+        const malformed = yield* writeProjection("{invalid");
+        const overridden = yield* withEnv(
+          {
+            BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: malformed.file,
+            BEEP_HOOK_PULSE_HASH_SALT: "  explicit salt  ",
+          },
+          hookPulseNamespace
+        );
+        assertSome(overridden.hashSalt, "  explicit salt  ");
+        assertNone(overridden.projection);
+      })
+    );
+
+    it.effect("renders safe diagnostics and rejects control characters in environment salts", () =>
+      Effect.gen(function* () {
+        const privateMarker = "private-projection-salt-marker";
+        const { file } = yield* writeProjection(yield* projectionJson({ hashSalt: `${privateMarker}\n` }));
+        const cause = yield* withEnv({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }, hookPulseNamespace).pipe(
+          Effect.sandbox,
+          Effect.flip
+        );
+        const rendered = Cause.pretty(cause);
+        expect(rendered).not.toContain(privateMarker);
+        expect(rendered).not.toContain(file);
+        for (const name of ["BEEP_HOOK_PULSE_HASH_SALT", "BEEP_AI_METRICS_HASH_SALT"]) {
+          for (const salt of ["salt\u0000", "salt\n", "salt\r", "salt\t", "salt\u0001", "salt\u007f", "salt\u0085"]) {
+            const error = yield* withEnv({ [name]: salt }, hookPulseNamespace).pipe(Effect.flip);
+            expect(error._tag).toBe("HookPulseNamespaceError");
+          }
+        }
       })
     );
 

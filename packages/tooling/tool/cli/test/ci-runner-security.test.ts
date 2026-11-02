@@ -1449,6 +1449,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-producer-inspect.yml:Inspect producer sources and tools",
+        "heavy.yml:Heavy / Inspect producer sources and tools",
         "data-sync.yml:Sync Official Data",
         // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
@@ -1503,9 +1504,45 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(policy.permissions).toEqual({ contents: "read" });
       expect(policy.on).toEqual({ workflow_dispatch: null });
       expect(yamlAt(workflow, ["jobs", "inspect", "if"])).toBe("github.ref == 'refs/heads/main'");
-      expect(yamlAt(workflow, ["jobs", "inspect", "environment"])).toBe("turbo-cache-write");
-      expect(yamlAt(workflow, ["jobs", "inspect", "timeout-minutes"])).toBe(10);
-      const steps = jobSteps(yield* workflowJobs(workflow), "inspect");
+      // A matching label is insufficient: the live runner group admits the
+      // Heavy workflow at main, and only jobs defined there can use the fleet.
+      expect(yamlAt(workflow, ["jobs", "inspect", "uses"])).toBe(
+        "beep-effect/beep-effect/.github/workflows/heavy.yml@main"
+      );
+      expect(yamlAt(workflow, ["jobs", "inspect", "with"])).toEqual({
+        admitted: false,
+        producer_inspection: true,
+      });
+      expect(yamlAt(workflow, ["jobs", "inspect", "runs-on"])).toBeUndefined();
+      expect(yamlAt(workflow, ["jobs", "inspect", "steps"])).toBeUndefined();
+      expect(yamlAt(workflow, ["jobs", "inspect", "secrets"])).toBeUndefined();
+      const heavyText = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
+      const heavy = parseWorkflowYaml(heavyText);
+      expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_inspection"])).toEqual({
+        description:
+          "Run only the credential-free protected source inspection for the exact main manual dispatcher. Ordinary quality callers leave this off.",
+        required: false,
+        type: "boolean",
+        default: false,
+      });
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe("${{ !inputs.producer_inspection }}");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
+        A.join(
+          [
+            "inputs.producer_inspection &&",
+            "github.repository == 'beep-effect/beep-effect' &&",
+            "github.event_name == 'workflow_dispatch' &&",
+            "github.ref == 'refs/heads/main' &&",
+            "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-producer-inspect.yml@refs/heads/main'",
+          ],
+          " "
+        )
+      );
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
+      const steps = jobSteps(yield* workflowJobs(heavy), "producer-inspect");
       const setup = stepByName(steps, "Setup pinned toolchain without cache capabilities");
       expect(setup.uses).toBe(SETUP_MONOREPO_ACTION);
       expect(setup.with).toEqual({
@@ -1536,6 +1573,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "compression-level": 0,
       });
       expect(yield* workflowPolicyDiagnostics("cache-producer-inspect.yml", text)).toEqual([]);
+      expect(yield* workflowPolicyDiagnostics("heavy.yml", heavyText)).toEqual([]);
     })
   );
 

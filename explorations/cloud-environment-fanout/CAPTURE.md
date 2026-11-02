@@ -40,3 +40,8 @@ First-session work (this packet's opening lane): `scripts/cloud/bootstrap.sh`
 as the single vendor-neutral bootstrap; `.cursor/install.sh` becomes a thin
 caller; a `CLAUDE_CODE_REMOTE`-guarded SessionStart hook; runbook
 `docs/runbooks/cloud-environments.md` with the per-vendor paste text.
+
+## 2026-11-02 — append
+
+Parked; execution moved to `goals/cloud-agent-readiness` (see `DECISIONS.md`
+2026-11-02). The capture above is kept as written.
