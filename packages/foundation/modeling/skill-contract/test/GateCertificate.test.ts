@@ -21,6 +21,7 @@ import {
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
@@ -90,6 +91,12 @@ describe("@beep/skill-contract GateCertificate settlement", () => {
     expect(settleGateCertificateOutcome("incomplete", [passed])).toBe("cantTell");
     expect(settleGateCertificateOutcome("unknown", [passed])).toBe("cantTell");
     expect(settleGateCertificateOutcome("complete", [check("a", "inapplicable")])).toBe("inapplicable");
+    expect(
+      settleGateCertificateOutcome("complete", [
+        check("a", "failed", { severity: "advisory" }),
+        check("b", "inapplicable"),
+      ])
+    ).toBe("passed");
     expect(settleGateCertificateOutcome("complete", [])).toBe("inapplicable");
     expect(settleGateCertificateOutcome("complete", [passed, check("b", "untested", { inReach: false })])).toBe(
       "cantTell"
@@ -142,7 +149,7 @@ describe("@beep/skill-contract GateCertificate settlement", () => {
           timeVerified: "2026-11-02T00:00:00.000Z",
           verifier,
         });
-        expect(Result.isFailure(decoded)).toBe(true);
+        decoded.pipe(Result.isFailure, assertTrue);
       }),
     { arbitrary: fcRuns(25) }
   );

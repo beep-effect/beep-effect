@@ -11,12 +11,14 @@
  * @since 0.0.0
  */
 
+import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
 import { SessionStore } from "@beep/qa-capture";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
   applyGateCertificatePlan,
   EvidenceDigest,
   EvidenceSubject,
+  GateCertificateApplyVerdict,
   GateCertificateReceipt,
 } from "@beep/skill-contract";
 import { A } from "@beep/utils";
@@ -49,7 +51,7 @@ import { QaCommandError } from "./Qa.errors.ts";
 import { renderInventoryMarkdown } from "./Qa.render.ts";
 import { qaRootPath, readEventLog } from "./Qa.session.ts";
 import type { RoundLayout } from "@beep/qa-capture";
-import type { GateCertificateApplyPlan, GateCertificateApplyVerdict } from "@beep/skill-contract";
+import type { GateCertificateApplyPlan } from "@beep/skill-contract";
 import type * as Digest from "effect/crypto/Digest";
 import type { QaInventory } from "./Inventory.schemas.ts";
 import type { JudgeOutputDecodeFailure } from "./JudgeContract.ts";
@@ -61,6 +63,7 @@ const decodeGateCertificateJson = S.decodeEffect(S.fromJsonString(GateCertificat
 const decodeSha256HexFromBytes = S.decodeEffect(Sha256HexFromBytes);
 const utf8Encoder = new TextEncoder();
 const utf8Decoder = new TextDecoder();
+const evidenceSubjectEquivalence = S.toEquivalence(EvidenceSubject);
 
 /**
  * File name of the schema-validated inventory inside a round.
@@ -106,7 +109,7 @@ export const INVENTORY_MARKDOWN_FILE = "inventory.md";
  * **Example** (Log the certificate filename)
  *
  * ```ts
- * import { GATE_CERTIFICATE_FILE } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import { GATE_CERTIFICATE_FILE } from "@beep/repo-cli/commands/Qa"
  *
  * console.log(GATE_CERTIFICATE_FILE) // "gate-certificate.json"
  * ```
@@ -196,9 +199,9 @@ export type JudgeOutputDecodeMessages = { readonly [Failure in JudgeOutputDecode
  * ```ts
  * import {
  *   evaluateJudgeOutputInventoryDecodes,
- *   JudgeOutputInventoryDecodesInput
- * } from "@beep/repo-cli/commands/Qa/JudgeContract"
- * import { requireDecodedInventory } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ *   JudgeOutputInventoryDecodesInput,
+ *   requireDecodedInventory
+ * } from "@beep/repo-cli/commands/Qa"
  * import * as Effect from "effect/Effect"
  *
  * const program = evaluateJudgeOutputInventoryDecodes(JudgeOutputInventoryDecodesInput.make({ candidate: "{" })).pipe(
@@ -253,7 +256,7 @@ const subjectOfBytes = Effect.fn("QaJudgeIngest.subjectOfBytes")(function* (
  * **Example** (Bind empty inventory bytes)
  *
  * ```ts
- * import { inventoryEvidenceSubject } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import { inventoryEvidenceSubject } from "@beep/repo-cli/commands/Qa"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
  * import * as Effect from "effect/Effect"
  *
@@ -284,9 +287,8 @@ export const inventoryEvidenceSubject = (
  * **Example** (Write a certificate and read back its bound subject)
  *
  * ```ts
- * import { writeQaJudgeCertificate } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import { QaJudgeSettlement, writeQaJudgeCertificate } from "@beep/repo-cli/commands/Qa"
  * import { RoundLayout } from "@beep/qa-capture"
- * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
@@ -349,15 +351,83 @@ export const writeQaJudgeCertificate = Effect.fn("QaJudgeIngest.writeQaJudgeCert
 ): Effect.fn.Return<QaJudgeCertificate, QaCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const encoded = yield* encodeQaJudgeCertificate(settlement);
+  yield* fs
+    .writeFile(path.join(layout.root, GATE_CERTIFICATE_FILE), encoded.bytes)
+    .pipe(QaCommandError.mapError(`qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}.`));
+  return encoded.certificate;
+});
+
+const encodeQaJudgeCertificate = Effect.fn("QaJudgeIngest.encodeQaJudgeCertificate")(function* (
+  settlement: QaJudgeSettlement
+) {
   const receipt = yield* certifyQaJudgeSettlement(settlement);
   const json = yield* encodeGateCertificateJson(receipt).pipe(
     QaCommandError.mapError("qa judge could not serialize the gate certificate.")
   );
   const bytes = utf8Encoder.encode(json);
-  yield* fs
-    .writeFile(path.join(layout.root, GATE_CERTIFICATE_FILE), bytes)
-    .pipe(QaCommandError.mapError(`qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}.`));
-  return QaJudgeCertificate.make({ receipt, subject: yield* subjectOfBytes(GATE_CERTIFICATE_FILE, bytes) });
+  const subject = yield* subjectOfBytes(GATE_CERTIFICATE_FILE, bytes);
+  return { bytes, certificate: QaJudgeCertificate.make({ receipt, subject }) };
+});
+
+/**
+ * Write a set of round artifacts, restoring the previous set if any write fails.
+ *
+ * **Details**
+ *
+ * Each file is written with `writeFileWithinRootAtomically` (temporary file
+ * plus rename). The prior bytes of every target are read first; when a write
+ * fails, every target is put back to its prior bytes, or removed if it did
+ * not exist, so a failed run never leaves a new inventory beside an old or
+ * missing certificate. This is failure rollback, not crash atomicity across
+ * files.
+ */
+const commitRoundArtifacts = Effect.fn("QaJudgeIngest.commitRoundArtifacts")(function* (
+  root: string,
+  artifacts: ReadonlyArray<readonly [name: string, bytes: Uint8Array]>
+): Effect.fn.Return<void, QaCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const write = (name: string, bytes: Uint8Array) =>
+    writeFileWithinRootAtomically({ bytes, candidate: name, root }).pipe(Effect.asVoid);
+  const prior = yield* Effect.forEach(artifacts, ([name]) =>
+    fs
+      .exists(path.join(root, name))
+      .pipe(
+        Effect.flatMap((exists) => (exists ? Effect.asSome(fs.readFile(path.join(root, name))) : Effect.succeedNone))
+      )
+  ).pipe(QaCommandError.mapError(`qa judge-ingest could not read the previous artifacts in ${root}.`));
+  const restore = Effect.forEach(
+    A.zip(artifacts, prior),
+    ([[name], before]) =>
+      O.match(before, {
+        onNone: () => fs.remove(path.join(root, name), { force: true }),
+        onSome: (bytes) => write(name, bytes),
+      }),
+    { discard: true }
+  );
+  yield* Effect.forEach(artifacts, ([name, bytes]) => write(name, bytes), { discard: true }).pipe(
+    Effect.catch((cause) =>
+      restore.pipe(
+        Effect.matchEffect({
+          onFailure: (restoreCause) =>
+            Effect.fail(
+              QaCommandError.make({
+                cause: [cause, restoreCause],
+                message: `qa judge-ingest could not write into ${root}, and restoring the previous inventory and gate certificate also failed; check ${root} by hand.`,
+              })
+            ),
+          onSuccess: () =>
+            Effect.fail(
+              QaCommandError.make({
+                cause,
+                message: `qa judge-ingest could not write into ${root}; the previous inventory and gate certificate were restored.`,
+              })
+            ),
+        })
+      )
+    )
+  );
 });
 
 /**
@@ -367,8 +437,10 @@ export const writeQaJudgeCertificate = Effect.fn("QaJudgeIngest.writeQaJudgeCert
  *
  * This is the consumer boundary for the kernel's `applyGateCertificatePlan`:
  * the subject the plan is checked against is always the SHA-256 of
- * `bytes`, never a caller-supplied value. Any change to the certificate,
- * including a re-certified run, refuses the plan as `stale-digest`.
+ * `bytes`, never a caller-supplied value. The digest is compared before any
+ * decode, so any change to the bytes, including corrupt JSON or a receipt that
+ * no longer decodes, refuses the plan as `stale-digest`. Only bytes matching
+ * the plan's subject are decoded; a decode failure there is a real error.
  *
  * **Example** (Apply a plan, then refuse it once the certificate bytes change)
  *
@@ -376,12 +448,12 @@ export const writeQaJudgeCertificate = Effect.fn("QaJudgeIngest.writeQaJudgeCert
  * import {
  *   applyQaJudgeCertificatePlan,
  *   GATE_CERTIFICATE_FILE,
+ *   QaJudgeSettlement,
  *   writeQaJudgeCertificate
- * } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * } from "@beep/repo-cli/commands/Qa"
  * import { GateId } from "@beep/skill-contract/Gate"
  * import { GateCertificateApplyPlan } from "@beep/skill-contract/GateCertificate"
  * import { RoundLayout } from "@beep/qa-capture"
- * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
  * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
@@ -453,10 +525,15 @@ export const applyQaJudgeCertificatePlan = Effect.fn("QaJudgeIngest.applyQaJudge
   plan: GateCertificateApplyPlan,
   bytes: Uint8Array
 ): Effect.fn.Return<GateCertificateApplyVerdict, QaCommandError, Digest.Digest> {
+  // Hash first: bytes that differ from the plan's subject are stale whatever
+  // they contain, so they are refused before any decode is attempted.
+  const subject = yield* subjectOfBytes(GATE_CERTIFICATE_FILE, bytes);
+  if (!evidenceSubjectEquivalence(plan.certificate, subject)) {
+    return GateCertificateApplyVerdict.cases.refused.make({ reason: "stale-digest", unknownIds: [] });
+  }
   const receipt = yield* decodeGateCertificateJson(utf8Decoder.decode(bytes)).pipe(
     QaCommandError.mapError(`qa judge could not decode ${GATE_CERTIFICATE_FILE}.`)
   );
-  const subject = yield* subjectOfBytes(GATE_CERTIFICATE_FILE, bytes);
   return applyGateCertificatePlan(plan, subject, receipt);
 });
 
@@ -556,16 +633,7 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
   );
   const bytes = utf8Encoder.encode(json);
 
-  yield* Effect.all(
-    [
-      fs.writeFile(inventoryJsonPath(path, layout), bytes),
-      fs.writeFileString(path.join(layout.root, INVENTORY_MARKDOWN_FILE), renderInventoryMarkdown(inventory)),
-    ],
-    { concurrency: 2, discard: true }
-  ).pipe(QaCommandError.mapError(`qa judge-ingest could not write into ${layout.root}.`));
-
-  yield* writeQaJudgeCertificate(
-    layout,
+  const certificate = yield* encodeQaJudgeCertificate(
     QaJudgeSettlement.make({
       artifact: O.some(settled.artifact),
       crossCheck: O.some(settled.crossCheck),
@@ -575,6 +643,13 @@ export const runQaJudgeIngest = Effect.fn("QaJudgeIngest.run")(function* (
       round: O.some(round),
     })
   );
+  // inventory.json, inventory.md and gate-certificate.json are prepared in
+  // memory first and committed as one set, restored together on failure.
+  yield* commitRoundArtifacts(layout.root, [
+    [INVENTORY_JSON_FILE, bytes],
+    [INVENTORY_MARKDOWN_FILE, utf8Encoder.encode(renderInventoryMarkdown(inventory))],
+    [GATE_CERTIFICATE_FILE, certificate.bytes],
+  ]);
 
   yield* printLines([
     `qa judge-ingest: round ${options.round}`,

@@ -14,7 +14,9 @@ import {
   Viewport,
 } from "@beep/qa-capture";
 import {
+  applyQaJudgeCertificatePlan,
   crossCheckAgainstRound,
+  GATE_CERTIFICATE_FILE,
   isCrossCheckClean,
   JUDGE_PROMPT_TEMPLATE,
   QaEventLog,
@@ -28,6 +30,7 @@ import {
   readEventLog,
   renderCrossCheckFailure,
   requireCapturedEvents,
+  requireInventoryRound,
   requireLiveHandle,
   resolveExistingRound,
   resolveRound,
@@ -36,7 +39,6 @@ import {
   runQaJudgePack,
   runQaReport,
 } from "@beep/repo-cli/commands/Qa";
-import { applyQaJudgeCertificatePlan, GATE_CERTIFICATE_FILE } from "@beep/repo-cli/commands/Qa/JudgeIngest";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
   EvidenceDigest,
@@ -50,12 +52,14 @@ import { A, thunk } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -113,6 +117,8 @@ const prepareRound = Effect.fnUntraced(function* (cwd: string, round: number) {
 });
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeCertificate = S.decodeEffect(S.fromJsonString(GateCertificateReceipt));
+const sha256 = S.decodeEffect(Sha256HexFromBytes);
 const fence = Str.repeat(3)("`");
 
 const inventoryText = Effect.fnUntraced(function* (round: number) {
@@ -675,8 +681,6 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
   });
 
   describe("commands/Qa judge runs emit one gate certificate", () => {
-    const decodeCertificate = S.decodeUnknownEffect(S.fromJsonString(GateCertificateReceipt));
-    const sha256 = S.decodeEffect(Sha256HexFromBytes);
     const utf8 = new TextDecoder();
     // Independent of the producer: hashes the bytes on disk with the shared schema helper.
     const subjectOf = Effect.fnUntraced(function* (name: string, bytes: Uint8Array) {
@@ -925,6 +929,404 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           expect(stale).toMatchObject({ reason: "stale-digest", verdict: "refused" });
         })
       )
+    );
+  });
+
+  describe("commands/Qa gate certificate write failures", () => {
+    // Fails only writes and renames onto gate-certificate.json; every other file operation is real.
+    // The rename failure is one-shot, like a transient fault, so a rollback that
+    // restores the previous certificate can succeed.
+    const withFailingCertificateWrites = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+      Effect.flatMap(FileSystem.FileSystem, (fs) => {
+        const renameFault = { pending: true };
+        return Effect.provideService(
+          effect,
+          FileSystem.FileSystem,
+          FileSystem.FileSystem.of({
+            ...fs,
+            writeFile: Effect.fn("failingCertificateWriteFile")(function* (
+              path: string,
+              data: Uint8Array,
+              options?: Parameters<FileSystem.FileSystem["writeFile"]>[2]
+            ) {
+              if (Str.endsWith(GATE_CERTIFICATE_FILE)(path)) {
+                return yield* PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  method: "writeFile",
+                  module: "FileSystem",
+                  pathOrDescriptor: path,
+                });
+              }
+              return yield* fs.writeFile(path, data, options);
+            }),
+            rename: Effect.fn("failingCertificateRename")(function* (from: string, to: string) {
+              if (Str.endsWith(GATE_CERTIFICATE_FILE)(to) && renameFault.pending) {
+                renameFault.pending = false;
+                return yield* PlatformError.systemError({
+                  _tag: "PermissionDenied",
+                  method: "rename",
+                  module: "FileSystem",
+                  pathOrDescriptor: to,
+                });
+              }
+              return yield* fs.rename(from, to);
+            }),
+          })
+        );
+      });
+    const lintWithConsole = Effect.fn("lintWithConsole")(
+      function* (cwd: string) {
+        const failure = yield* withFailingCertificateWrites(
+          runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
+        ).pipe(Effect.flip, Effect.option);
+        return {
+          errorLines: A.filter(yield* TestConsole.errorLines, P.isString),
+          failure,
+          lines: A.filter(yield* TestConsole.logLines, P.isString),
+        };
+      },
+      Effect.provideServiceEffect(Console.Console, TestConsole.make)
+    );
+
+    it.effect("keeps judge-lint's own failure and reports the certificate write failure on stderr", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const copied = yield* encodeJson({
+            findings: [],
+            judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
+            requiredCount: 0,
+            round: 2,
+            schemaVersion: "qa-inventory/v1",
+            sessionRef: "session.json",
+          });
+          yield* fs.writeFileString(path.join(layout.root, "inventory.json"), copied);
+
+          const { errorLines, failure } = yield* lintWithConsole(cwd);
+
+          assertSome(
+            O.map(failure, (error) => error.message),
+            "qa judge inventory declares round 2 but round 1 was requested."
+          );
+          expect(errorLines).toEqual([
+            `qa judge-lint warning: qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}. The run's own failure is reported instead.`,
+          ]);
+          expect(yield* fs.exists(path.join(layout.root, GATE_CERTIFICATE_FILE))).toBe(false);
+        })
+      )
+    );
+
+    it.effect("keeps the legacy cross-check output and exit when a dirty run cannot write its certificate", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const inventoryPath = path.join(layout.root, "inventory.json");
+          const dirty = yield* encodeJson({
+            findings: [
+              {
+                evidence: [{ eventIds: [412], kind: "strip", path: "frames/ghost.png" }],
+                fix: "Fix it.",
+                id: "R1-01",
+                lens: "selection-smear",
+                repro: "Drag the sash.",
+                severity: "P0",
+                title: "Ghost evidence",
+              },
+            ],
+            judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
+            requiredCount: 1,
+            round: 1,
+            schemaVersion: "qa-inventory/v1",
+            sessionRef: "session.json",
+          });
+          yield* fs.writeFileString(inventoryPath, dirty);
+
+          const observed = yield* Effect.gen(function* () {
+            const error = yield* withFailingCertificateWrites(
+              runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }))
+            ).pipe(Effect.flip);
+            return {
+              error,
+              errorLines: A.filter(yield* TestConsole.errorLines, P.isString),
+              lines: A.filter(yield* TestConsole.logLines, P.isString),
+            };
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
+
+          expect(observed.error).toMatchObject({
+            _tag: "CliReportedExit",
+            exitCode: 1,
+            message: "qa judge-lint: round 1 inventory is not backed by evidence",
+          });
+          expect(observed.lines).toEqual([
+            "qa judge-lint: round 1",
+            "  findings: 1 (required 1)",
+            `  inventory: ${inventoryPath}`,
+            "qa judge inventory for round 1 cites evidence the round cannot back up.\n" +
+              "  missing artifact: frames/ghost.png\n" +
+              "  missing event id: 412",
+          ]);
+          expect(observed.errorLines).toEqual([
+            `qa judge-lint warning: qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}. The run's own failure is reported instead.`,
+          ]);
+        })
+      )
+    );
+
+    it.effect("fails a clean judge-lint run whose certificate cannot be written", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+
+          const { errorLines, failure, lines } = yield* lintWithConsole(cwd);
+
+          assertSome(
+            O.map(failure, (error) => error.message),
+            `qa judge could not write ${GATE_CERTIFICATE_FILE} into ${layout.root}.`
+          );
+          expect(errorLines).toEqual([]);
+          // The documented verdict is printed before the persistence failure.
+          expect(lines).toEqual([
+            "qa judge-lint: round 1",
+            "  findings: 0 (required 0)",
+            `  inventory: ${path.join(layout.root, "inventory.json")}`,
+            "  cross-check: ok",
+          ]);
+        })
+      )
+    );
+
+    it.effect("rolls an empty round back when the ingest certificate cannot be committed", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+
+          const failed = yield* withFailingCertificateWrites(
+            runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }))
+          ).pipe(Effect.flip);
+
+          expect(failed).toMatchObject({
+            _tag: "QaCommandError",
+            message: `qa judge-ingest could not write into ${layout.root}; the previous inventory and gate certificate were restored.`,
+          });
+          for (const name of ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE]) {
+            expect(yield* fs.exists(path.join(layout.root, name)), name).toBe(false);
+          }
+        })
+      )
+    );
+
+    it.effect("restores the previous inventory and certificate pair when a replacement cannot be committed", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+
+          const replacement = yield* encodeJson({
+            findings: [
+              {
+                evidence: [{ eventIds: [1], kind: "strip", path: "events.ndjson" }],
+                fix: "Fix it.",
+                id: "R1-01",
+                lens: "selection-smear",
+                repro: "Drag the sash.",
+                severity: "P2",
+                title: "Replacement",
+              },
+            ],
+            judge: { effort: "high", model: "gpt-daybreak-blue-latest" },
+            requiredCount: 0,
+            round: 1,
+            schemaVersion: "qa-inventory/v1",
+            sessionRef: "session.json",
+          });
+          yield* fs.writeFileString(transcript, `${fence}json\n${replacement}\n${fence}\n`);
+          const failed = yield* withFailingCertificateWrites(
+            runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }))
+          ).pipe(Effect.flip);
+          const after = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+
+          expect(failed).toMatchObject({
+            _tag: "QaCommandError",
+            message: `qa judge-ingest could not write into ${layout.root}; the previous inventory and gate certificate were restored.`,
+          });
+          expect(after).toEqual(before);
+          const receipt = yield* decodeCertificate(after[2] ?? "");
+          const digest = yield* sha256(yield* fs.readFile(path.join(layout.root, "inventory.json")));
+          expect(receipt.subject).toEqual([
+            EvidenceSubject.make({ digest: EvidenceDigest.make({ sha256: digest }), name: "inventory.json" }),
+          ]);
+        })
+      )
+    );
+  });
+
+  describe("commands/Qa gate certificate fault paths", () => {
+    it.effect("certifies an unreadable witness log as untested evidence and keeps the read error", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+          yield* fs.remove(layout.eventsPath);
+          yield* fs.makeDirectory(layout.eventsPath);
+
+          const error = yield* runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) })).pipe(
+            Effect.flip
+          );
+          const receipt = yield* decodeCertificate(
+            yield* fs.readFileString(path.join(layout.root, GATE_CERTIFICATE_FILE))
+          );
+
+          expect(error).toMatchObject({
+            _tag: "QaCommandError",
+            message: `qa could not read the witness log at ${layout.eventsPath}.`,
+          });
+          expect(A.map(receipt.predicate.checks, (check) => check.outcome)).toEqual([
+            "passed",
+            "passed",
+            "untested",
+            "untested",
+            "untested",
+          ]);
+          expect(receipt.predicate.outcome).toBe("untested");
+        })
+      )
+    );
+
+    it.effect("reports a failed rollback when the previous certificate cannot be restored either", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+
+          const failed = yield* Effect.flatMap(FileSystem.FileSystem, (base) =>
+            runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })).pipe(
+              Effect.provideService(
+                FileSystem.FileSystem,
+                FileSystem.FileSystem.of({
+                  ...base,
+                  rename: Effect.fn("alwaysFailingCertificateRename")(function* (from: string, to: string) {
+                    if (Str.endsWith(GATE_CERTIFICATE_FILE)(to)) {
+                      return yield* PlatformError.systemError({
+                        _tag: "PermissionDenied",
+                        method: "rename",
+                        module: "FileSystem",
+                        pathOrDescriptor: to,
+                      });
+                    }
+                    return yield* base.rename(from, to);
+                  }),
+                })
+              )
+            )
+          ).pipe(Effect.flip);
+
+          expect(failed).toMatchObject({
+            _tag: "QaCommandError",
+            message: `qa judge-ingest could not write into ${layout.root}, and restoring the previous inventory and gate certificate also failed; check ${layout.root} by hand.`,
+          });
+        })
+      )
+    );
+
+    it.effect("removes a stale certificate once the inventory is gone, and warns if it cannot", () =>
+      withTempCwd(
+        Effect.fnUntraced(function* (cwd) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { layout } = yield* prepareRound(cwd, 1);
+          const transcript = path.join(cwd, "judge-stdout.txt");
+          const certificatePath = path.join(layout.root, GATE_CERTIFICATE_FILE);
+          const inventoryPath = path.join(layout.root, "inventory.json");
+          const lint = () => runQaJudgeLint(cwd, QaJudgeLintOptions.make({ round: RoundNumber.make(1) }));
+          yield* fs.writeFileString(transcript, yield* inventoryText(1));
+          yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
+          yield* lint();
+          expect(yield* fs.exists(certificatePath)).toBe(true);
+
+          yield* fs.remove(inventoryPath);
+          const missing = yield* lint().pipe(Effect.flip);
+          expect(missing.message).toContain("first.");
+          expect(yield* fs.exists(certificatePath)).toBe(false);
+
+          // An unremovable stale certificate is reported on stderr; the missing-inventory error stays.
+          yield* fs.writeFileString(certificatePath, "{}");
+          const observed = yield* Effect.flatMap(FileSystem.FileSystem, (base) =>
+            Effect.gen(function* () {
+              const error = yield* lint().pipe(Effect.flip);
+              return { error, errorLines: A.filter(yield* TestConsole.errorLines, P.isString) };
+            }).pipe(
+              Effect.provideServiceEffect(Console.Console, TestConsole.make),
+              Effect.provideService(
+                FileSystem.FileSystem,
+                FileSystem.FileSystem.of({
+                  ...base,
+                  remove: Effect.fn("failingCertificateRemove")(function* (
+                    target: string,
+                    options?: Parameters<FileSystem.FileSystem["remove"]>[1]
+                  ) {
+                    if (Str.endsWith(GATE_CERTIFICATE_FILE)(target)) {
+                      return yield* PlatformError.systemError({
+                        _tag: "PermissionDenied",
+                        method: "remove",
+                        module: "FileSystem",
+                        pathOrDescriptor: target,
+                      });
+                    }
+                    return yield* base.remove(target, options);
+                  }),
+                })
+              )
+            )
+          );
+          expect(observed.error.message).toContain("first.");
+          expect(observed.errorLines).toHaveLength(1);
+          expect(observed.errorLines[0]).toContain(`could not remove the stale ${GATE_CERTIFICATE_FILE}`);
+        })
+      )
+    );
+
+    it.effect("keeps the exported requireInventoryRound failure for a copied round", () =>
+      Effect.gen(function* () {
+        const inventory = QaInventory.make({
+          findings: [],
+          judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),
+          requiredCount: 0,
+          round: 2,
+          schemaVersion: "qa-inventory/v1",
+          sessionRef: "session.json",
+        });
+        const error = yield* requireInventoryRound(1, inventory).pipe(Effect.flip);
+        yield* requireInventoryRound(2, inventory);
+
+        expect(error.message).toBe("qa judge inventory declares round 2 but round 1 was requested.");
+      })
     );
   });
 

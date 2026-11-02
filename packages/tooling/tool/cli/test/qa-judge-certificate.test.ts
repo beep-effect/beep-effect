@@ -1,9 +1,12 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { MarkerEvent, RoundLayout, RoundNumber } from "@beep/qa-capture";
 import {
+  applyQaJudgeCertificatePlan,
   certifyQaJudgeSettlement,
   DeclaredRoundCoherentInput,
   evaluateDeclaredRoundCoherent,
   evaluateJudgeOutputInventoryDecodes,
+  GATE_CERTIFICATE_FILE,
   JudgeOutputInventoryDecodesInput,
   JudgeOutputInventoryDecodesVerdict,
   QaEventLog,
@@ -11,12 +14,8 @@ import {
   QaJudgeContractSubject,
   QaJudgeSettlement,
   settleAgainstRound,
-} from "@beep/repo-cli/commands/Qa";
-import {
-  applyQaJudgeCertificatePlan,
-  GATE_CERTIFICATE_FILE,
   writeQaJudgeCertificate,
-} from "@beep/repo-cli/commands/Qa/JudgeIngest";
+} from "@beep/repo-cli/commands/Qa";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import {
   EvidenceDigest,
@@ -31,7 +30,6 @@ import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -47,7 +45,7 @@ const encodeReceipt = S.encodeUnknownEffect(S.fromJsonString(GateCertificateRece
 const decodeReceipt = S.decodeUnknownEffect(S.fromJsonString(GateCertificateReceipt));
 const sha256 = S.decodeEffect(Sha256HexFromBytes);
 
-const TestLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, BunCrypto.layer);
+const TestLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer, BunCrypto.layer);
 
 const subjectFor = Effect.fn(function* (name: string, text: string) {
   const digest = yield* sha256(new TextEncoder().encode(text));
@@ -183,7 +181,7 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
             check.outcome === "untested" ? A.isReadonlyArrayEmpty(check.evidenceSubjects) : true
           )
         ).toBe(true);
-      }).pipe(Effect.scoped),
+      }),
     { arbitrary: fcRuns(10) }
   );
 
@@ -235,6 +233,24 @@ it.layer(TestLayer, { timeout: "30 seconds" })("commands/Qa judge settlement gat
       });
       expect(unknown).toMatchObject({ reason: "unknown-id", unknownIds: ["not-a-qa-gate"], verdict: "refused" });
       expect(stale).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
+
+      // Changed bytes that no longer decode are stale too: the digest is checked first.
+      const corrupt = yield* applyQaJudgeCertificatePlan(
+        plan(["cited-artifact-exists"]),
+        new TextEncoder().encode("{")
+      );
+      const incoherent = yield* applyQaJudgeCertificatePlan(
+        plan(["cited-artifact-exists"]),
+        new TextEncoder().encode(
+          yield* encodeJson({
+            predicate: "not a certificate",
+            predicateType: written.receipt.predicateType,
+            subject: written.receipt.subject,
+          })
+        )
+      );
+      expect(corrupt).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
+      expect(incoherent).toMatchObject({ reason: "stale-digest", unknownIds: [], verdict: "refused" });
     })
   );
 });

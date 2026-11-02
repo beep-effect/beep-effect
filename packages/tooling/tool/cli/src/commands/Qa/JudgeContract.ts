@@ -865,7 +865,7 @@ export const QaJudgeContract = SkillContract.make({
  * **Example** (Inspect settlement fields)
  *
  * ```ts
- * import { RoundCrossCheckSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { RoundCrossCheckSettlement } from "@beep/repo-cli/commands/Qa"
  *
  * console.log(RoundCrossCheckSettlement.fields.crossCheck !== undefined) // true
  * ```
@@ -897,7 +897,7 @@ export class RoundCrossCheckSettlement extends S.Opaque<RoundCrossCheckSettlemen
  * **Example** (Describe a settlement that stopped at decode)
  *
  * ```ts
- * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
  * import * as O from "effect/Option"
@@ -967,7 +967,7 @@ const certifiedOutcome = (verdict: O.Option<{ readonly verdict: GateOutcome }>):
  * **Example** (Certify a settlement that never ran)
  *
  * ```ts
- * import { certifyQaJudgeSettlement, QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { certifyQaJudgeSettlement, QaJudgeSettlement } from "@beep/repo-cli/commands/Qa"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
  * import * as Effect from "effect/Effect"
@@ -1044,7 +1044,7 @@ export const certifyQaJudgeSettlement = Effect.fn("QaJudgeContract.certifyQaJudg
  * **Example** (Inspect the written-certificate fields)
  *
  * ```ts
- * import { QaJudgeCertificate } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { QaJudgeCertificate } from "@beep/repo-cli/commands/Qa"
  *
  * console.log(Object.keys(QaJudgeCertificate.fields).sort()) // ["receipt", "subject"]
  * ```

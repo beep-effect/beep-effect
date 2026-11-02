@@ -381,9 +381,7 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
  *
  * ```ts
  * import { RoundLayout } from "@beep/qa-capture"
- * import { QaInventory, QaJudgeRef } from "@beep/repo-cli/commands/Qa/Inventory.schemas"
- * import { settleAgainstRound } from "@beep/repo-cli/commands/Qa/JudgeCheck"
- * import { QaEventLog } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import { QaEventLog, QaInventory, QaJudgeRef, settleAgainstRound } from "@beep/repo-cli/commands/Qa"
  * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
  * import * as NodePath from "@effect/platform-node/NodePath"
  * import * as Effect from "effect/Effect"
@@ -477,8 +475,11 @@ export const raiseCrossCheckFailure: {
  * **Example** (Fail on a copied inventory round)
  *
  * ```ts
- * import { DeclaredRoundCoherentInput, evaluateDeclaredRoundCoherent } from "@beep/repo-cli/commands/Qa/JudgeContract"
- * import { requireRoundCoherentVerdict } from "@beep/repo-cli/commands/Qa/JudgeCheck"
+ * import {
+ *   DeclaredRoundCoherentInput,
+ *   evaluateDeclaredRoundCoherent,
+ *   requireRoundCoherentVerdict
+ * } from "@beep/repo-cli/commands/Qa"
  * import * as Effect from "effect/Effect"
  *
  * const program = evaluateDeclaredRoundCoherent(

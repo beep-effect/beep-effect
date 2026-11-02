@@ -16,6 +16,7 @@
 
 import { SessionStore } from "@beep/qa-capture";
 import * as A from "@beep/utils/Array";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -37,6 +38,7 @@ import {
   QaJudgeSettlement,
 } from "./JudgeContract.ts";
 import {
+  GATE_CERTIFICATE_FILE,
   inventoryEvidenceSubject,
   inventoryJsonPath,
   requireDecodedInventory,
@@ -58,7 +60,8 @@ const utf8Decoder = new TextDecoder();
  * ```ts
  * import { runQaJudgeLint } from "@beep/repo-cli/commands/Qa/JudgeLint"
  * import { QaJudgeLintOptions } from "@beep/repo-cli/commands/Qa/Qa.schemas"
- * import * as Effect from "effect/Effect";
+ * import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
  * const program = runQaJudgeLint("/repo", QaJudgeLintOptions.make({ round: 3 }))
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -80,16 +83,38 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
 
   const layout = store.roundLayout(qaRootPath(path, cwd), options.round);
   const inventoryPath = inventoryJsonPath(path, layout);
-  const bytes = yield* fs
-    .readFile(inventoryPath)
-    .pipe(
-      QaCommandError.mapError(
-        `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round ${options.round} --from <file>\` first.`
-      )
-    );
+  const bytes = yield* fs.readFile(inventoryPath).pipe(
+    QaCommandError.mapError(
+      `qa judge-lint could not read ${inventoryPath}; run \`bun run beep qa judge-ingest --round ${options.round} --from <file>\` first.`
+    ),
+    // Without an inventory there is nothing a certificate can describe, so a
+    // certificate left by an earlier run is removed rather than left standing.
+    Effect.tapError(() =>
+      fs
+        .remove(path.join(layout.root, GATE_CERTIFICATE_FILE), { force: true })
+        .pipe(
+          Effect.catch((error) =>
+            Console.error(
+              `qa judge-lint warning: could not remove the stale ${GATE_CERTIFICATE_FILE} in ${layout.root}: ${error.message}`
+            )
+          )
+        )
+    )
+  );
   const subject = yield* inventoryEvidenceSubject(bytes);
   const certify = (settlement: Pick<QaJudgeSettlement, "artifact" | "crossCheck" | "decode" | "eventId" | "round">) =>
     writeQaJudgeCertificate(layout, QaJudgeSettlement.make({ ...settlement, inventory: subject }));
+  // On a failing run the certificate is best-effort evidence: the run's own
+  // failure stays the reported error, and a certificate-write failure is
+  // printed to stderr instead of replacing it.
+  const certifyAfterFailure = (
+    settlement: Pick<QaJudgeSettlement, "artifact" | "crossCheck" | "decode" | "eventId" | "round">
+  ) =>
+    certify(settlement).pipe(
+      Effect.catch((error) =>
+        Console.error(`qa judge-lint warning: ${error.message} The run's own failure is reported instead.`)
+      )
+    );
   const untested = O.none();
 
   const decode = yield* evaluateJudgeOutputInventoryDecodes(
@@ -100,7 +125,7 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
     "malformed-json": `qa judge-lint could not parse ${inventoryPath} as JSON.`,
   }).pipe(
     Effect.tapError(() =>
-      certify({
+      certifyAfterFailure({
         artifact: untested,
         crossCheck: untested,
         decode: O.some(decode),
@@ -121,16 +146,18 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
     eventId: untested,
     round: O.some(round),
   };
-  yield* requireRoundCoherentVerdict(round).pipe(Effect.tapError(() => certify(beforeSettlement)));
+  yield* requireRoundCoherentVerdict(round).pipe(Effect.tapError(() => certifyAfterFailure(beforeSettlement)));
 
-  const eventLog = yield* readEventLog(layout.eventsPath).pipe(Effect.tapError(() => certify(beforeSettlement)));
+  const eventLog = yield* readEventLog(layout.eventsPath).pipe(
+    Effect.tapError(() => certifyAfterFailure(beforeSettlement))
+  );
   const settled = yield* settleAgainstRound(layout, inventory, eventLog);
-  yield* certify({
+  const settledCertificate = {
     ...beforeSettlement,
     artifact: O.some(settled.artifact),
     crossCheck: O.some(settled.crossCheck),
     eventId: O.some(settled.eventId),
-  });
+  };
   const check = evidenceCrossCheckVerdictToCrossCheck(settled.crossCheck);
 
   yield* printLines([
@@ -141,8 +168,13 @@ export const runQaJudgeLint = Effect.fn("QaJudgeLint.run")(function* (
 
   if (!isCrossCheckClean(check)) {
     yield* printLines([renderCrossCheckFailure(options.round, check)]);
+    // A dirty run keeps the cross-check failure as its reported outcome.
+    yield* certifyAfterFailure(settledCertificate);
     return yield* failWithReportedExit(`qa judge-lint: round ${options.round} inventory is not backed by evidence`, 1);
   }
 
   yield* printLines(["  cross-check: ok"]);
+  // A clean run must leave its certificate, so a write failure fails it after
+  // the verdict has been printed.
+  yield* certify(settledCertificate);
 });

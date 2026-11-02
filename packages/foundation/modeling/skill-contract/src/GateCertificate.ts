@@ -199,7 +199,9 @@ const settleGateCertificateOutcomeImpl = (
   if (!CertificateReach.is.complete(reach) || A.length(inReach) < A.length(checks)) {
     return "cantTell";
   }
-  return has("passed") ? "passed" : "inapplicable";
+  // Evaluated checks (passed, or failed at advisory severity) settle passed;
+  // only an aggregate with nothing evaluated in reach is inapplicable.
+  return has("passed") || has("failed") ? "passed" : "inapplicable";
 };
 
 /**
@@ -214,10 +216,12 @@ const settleGateCertificateOutcomeImpl = (
  *    check settles `untested`. Inconclusive checks never count as success.
  * 3. Reach other than `complete`, or a `complete` reach that lists an
  *    out-of-reach check, settles `cantTell`.
- * 4. At least one `passed` check settles `passed`; otherwise `inapplicable`.
+ * 4. At least one evaluated in-reach check (`passed`, or `failed` at
+ *    advisory severity) settles `passed`; otherwise `inapplicable`.
  *
  * An advisory `failed` check does not fail the aggregate, matching the
- * kernel's gate-summary blocking policy.
+ * kernel's gate-summary blocking policy, but it does count as evaluated: an
+ * aggregate of advisory failures alone is `passed`, never `inapplicable`.
  *
  * **Example** (Settle an aggregate with an untested check)
  *
