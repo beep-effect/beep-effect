@@ -114,7 +114,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "PR2364 remains supporting historical delivery with an unsatisfied completion receipt. PR2519 namespace repairs are merged and integrated in final PR2508. Fresh870/40/73/44 tests bind249 selected inputs; independent review accepted84 preparation inputs and90/89 disposable/live stages and all13 domain criteria at explicit scopes. Final hosted/review/merge and canonical completion remain pending; a public-digest scanner false positive is under supporting PR2534, a separate base-reviewed correction. Lifecycle active; historical recovery hold intact.",
+  "statusNote": "PR2364 remains supporting historical delivery with an unsatisfied completion receipt. PR2519 namespace repairs are merged and integrated in final PR2508. Fresh870/40/73/44 tests bind249 selected inputs; independent review accepted84 preparation inputs and90/89 disposable/live stages and all13 domain criteria at explicit scopes. Final hosted/review/merge and canonical completion remain pending; a public-digest scanner false positive is under supporting PR2534, a separate base-reviewed correction. Lifecycle active; historical recovery hold intact. Shared main package-generation fix2535 is integrated; independent applicability review preserves original test execution provenance with245 unchanged inputs and four audit/lint-script-only manifests. All84/90/89 source bindings remain unchanged; final-head hosted tests still required.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
