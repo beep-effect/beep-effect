@@ -93,9 +93,16 @@ cleanup_run_dir() {
   done
   # Bare wait also joins a worker interrupted between launch and PID recording.
   wait || true
-  # A publication tool staged but not yet renamed into place is removed; the
-  # previously installed binary, if any, is still the published one.
-  [ -z "${publish_staged:-}" ] || rm -f -- "${publish_staged}"
+  # A publication tool staged but not yet renamed into place, and any staged
+  # file an earlier cleanup could not remove, is retried here; the previously
+  # installed binary, if any, is still the published one. A failure is named and
+  # never stops the run-directory cleanup below.
+  local leftover
+  for leftover in ${publish_staged:+"${publish_staged}"} ${publish_leftovers[@]+"${publish_leftovers[@]}"}; do
+    if ! rm -f -- "${leftover}" 2>/dev/null; then
+      printf '[beep-cloud:%s] WARN: could not remove staged file %s\n' "${VENDOR}" "${leftover}" >&2
+    fi
+  done
   rm -rf -- "${run_dir}"
 }
 cancel_downloads() {
@@ -340,6 +347,17 @@ fi
 # unique sibling of the destination and renamed over it in one step, so a
 # failed or interrupted install leaves the previous binary intact.
 publish_staged=""
+publish_leftovers=()
+# Removes the current staged file; on failure keeps its path for the EXIT trap's
+# retry and names it, instead of aborting under errexit.
+discard_staged() {
+  local tool="$1"
+  if ! rm -f -- "${publish_staged}"; then
+    warn "${tool}: could not remove staged file ${publish_staged}; retrying at exit."
+    publish_leftovers+=("${publish_staged}")
+  fi
+  publish_staged=""
+}
 install_publish_tool() {
   local tool="$1" needed="$2" fetched_ok="$3" dest="${BUN_INSTALL}/bin"
   if [ "${needed}" != "1" ] || [ "${fetched_ok}" != "1" ] || [ ! -f "${run_dir}/${tool}/${tool}" ]; then
@@ -355,13 +373,15 @@ install_publish_tool() {
     return 0
   fi
   if ! install -m 0755 "${run_dir}/${tool}/${tool}" "${publish_staged}"; then
-    rm -f -- "${publish_staged}"; publish_staged=""
     warn "${tool}: copy into ${dest} failed; previous binary, if any, kept."
+    discard_staged "${tool}"
     return 0
   fi
-  if ! mv -f -- "${publish_staged}" "${dest}/${tool}"; then
-    rm -f -- "${publish_staged}"; publish_staged=""
+  # -T: the target is the exact file path. A directory (or a link to one) at
+  # that path is refused instead of receiving the staged file inside it.
+  if ! mv -fT -- "${publish_staged}" "${dest}/${tool}"; then
     warn "${tool}: rename into ${dest} failed; previous binary, if any, kept."
+    discard_staged "${tool}"
     return 0
   fi
   publish_staged=""

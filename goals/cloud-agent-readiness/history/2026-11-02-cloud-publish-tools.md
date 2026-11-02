@@ -123,3 +123,20 @@ The parent ran ShellCheck 0.11.0 on `34b34370` and found only the inherited SC10
 also scanned the whole PR with typos and gitleaks (no findings) and checked both digests
 against the primary manifest and checksum asset. ShellCheck was not run on this head
 here, because it is not installed in the container.
+
+## Delta-panel correction wave (same seats on `9a7be78d`)
+
+| Finding | Disposition |
+| --- | --- |
+| Astra R1 residual: the `rm -f` cleanup branches and the EXIT trap's staged-file removal ran unguarded under errexit | **Fixed.** `discard_staged` checks `rm`, names a staged file it cannot remove and keeps the path for the EXIT trap. The trap retries every kept path plus any staged file still in progress, warns per failure, and always goes on to remove the run directory. |
+| Astra R2 / parent non-root replay (24/25 on `9a`): the global-link fault was reachable only as root | **Fixed in the fixture** (`4f05c8cd`): a scenario-scoped `sudo` stub answers `-n true` and sends `-n ln` to the failing `ln` stub; the test asserts the link attempt. The source was already correct. The parent's non-root failure on `9a` stays on record. This head's root run does not prove the non-root profile. |
+| Astra P3: `mv -f` treats a directory, or a link to one, as a container | **Fixed.** `mv -fT --` takes the exact file path. A directory there is refused: the old contents are kept, the staged file is removed and the run reports `NOT ready`. A symlink to a directory is replaced as a link, and the linked directory is left empty. |
+| Fable N1/N2, Grok link gap | Duplicates of the rows above. Grok's temp-global-directory setting was **not** added: the `sudo`/`ln` fixture route reaches the same branch without a new production setting. |
+| A3 (version-token shape) | Limit accepted unchanged; no live qualification claimed. |
+| A4 (runbook) | Still open, held by #2536; the proposed text is on #2582. |
+
+| Scripts | Result (same 28-test file, root runner) |
+| --- | --- |
+| this head | 28 passed |
+| `9a7be78d` | 25 passed, **3 failed**: the cleanup-failure case aborts the run; the directory target gets no refusal; the symlink case writes the staged file into the linked directory |
+| `origin/main` | **14 passed** (the original cases), **14 failed** (every new case) |

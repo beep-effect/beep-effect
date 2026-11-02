@@ -140,6 +140,14 @@ case "$FIXTURE_INSTALL_FAIL" in
 esac
 exec /usr/bin/install "$@"
 `,
+  // FIXTURE_RM_FAIL=staged makes every removal of a staged typos file fail, both
+  // in the install path and in the EXIT trap's retry.
+  rm: `#!/bin/sh
+if [ "$FIXTURE_RM_FAIL" = staged ]; then
+  case "$*" in *"/.bun/bin/.typos."*) echo 'rm: cannot remove' >&2; exit 1 ;; esac
+fi
+exec /usr/bin/rm "$@"
+`,
   mv: `#!/bin/sh
 case "$FIXTURE_MV_FAIL" in
   typos) case "$*" in *"/.bun/bin/typos"*) echo 'mv: cannot move' >&2; exit 1 ;; esac ;;
@@ -209,6 +217,7 @@ type Scenario = {
   readonly mvFail?: "typos";
   readonly lnFail?: string;
   readonly sudo?: "capable";
+  readonly rmFail?: "staged";
 };
 
 // Each scenario field becomes one stub-facing environment variable; fields a
@@ -236,6 +245,7 @@ const scenarioEnvKeys: { readonly [K in keyof Scenario]-?: string } = {
   mvFail: "FIXTURE_MV_FAIL",
   lnFail: "FIXTURE_LN_FAIL",
   sudo: "FIXTURE_SUDO",
+  rmFail: "FIXTURE_RM_FAIL",
 };
 
 const scenarioEnv = (scenario: Scenario): Record<string, string> =>
@@ -753,6 +763,66 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       for (const line of extractions) {
         expect(line).toContain("--no-same-owner --no-same-permissions");
       }
+    })
+  );
+
+  it.effect("names a staged file it cannot remove, retries it at exit, and still finishes core preparation", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      yield* placeOldTypos(fixture.home);
+      const result = yield* runBootstrap(fixture, {
+        bun: "pinned",
+        node: "pinned",
+        installFail: "copy",
+        rmFail: "staged",
+      });
+      yield* expectCorePrepared(fixture, result);
+      const leftovers = yield* stagedLeftovers(fixture.home);
+      expect(leftovers.length).toBe(1);
+      expect(result.stderr).toContain("typos: copy into");
+      expect(result.stderr).toMatch(/typos: could not remove staged file \S+\/\.typos\.\S+; retrying at exit\./);
+      expect(result.stderr).toMatch(/WARN: could not remove staged file \S+\/\.typos\./);
+      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
+      expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
+      // The trap's failed retry did not skip the run-directory cleanup.
+      expect(yield* fs.readDirectory(path.join(fixture.root, "cache/beep/cloud-bootstrap"))).toEqual([]);
+    })
+  );
+
+  it.effect("refuses to move the tool into a directory that sits at its target path", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const target = path.join(fixture.home, ".bun/bin/typos");
+      yield* fs.makeDirectory(target, { recursive: true });
+      yield* fs.writeFileString(path.join(target, "keep"), "kept\n");
+      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale" });
+      yield* expectCorePrepared(fixture, result);
+      expect(result.stderr).toContain("typos: rename into");
+      expect(yield* fs.readDirectory(target)).toEqual(["keep"]);
+      expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
+      expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
+    })
+  );
+
+  it.effect("replaces a symlink to a directory at the target path without writing into that directory", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const linkedDir = path.join(fixture.home, "linked-dir");
+      yield* fs.makeDirectory(linkedDir, { recursive: true });
+      yield* fs.makeDirectory(path.join(fixture.home, ".bun/bin"), { recursive: true });
+      yield* fs.symlink(linkedDir, path.join(fixture.home, ".bun/bin/typos"));
+      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale" });
+      yield* expectCorePrepared(fixture, result);
+      expect(yield* fs.readDirectory(linkedDir)).toEqual([]);
+      const info = yield* fs.stat(path.join(fixture.home, ".bun/bin/typos"));
+      expect(info.type).toBe("File");
+      expect(result.stdout).toContain("publication tools: ready");
     })
   );
 });
