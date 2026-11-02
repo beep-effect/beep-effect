@@ -32285,6 +32285,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts": {
+          "lines": 96.11,
+          "statements": 86.2,
+          "branches": 80.43,
+          "functions": 73.07,
+          "uncovered": {
+            "lines": 4,
+            "statements": 16,
+            "branches": 9,
+            "functions": 7
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": {
           "lines": 100,
           "statements": 100,

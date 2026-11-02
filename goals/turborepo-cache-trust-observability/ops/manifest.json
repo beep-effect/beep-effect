@@ -36,7 +36,13 @@
     "explorations/turborepo-quality-cache/DECISIONS.md",
     "explorations/turborepo-quality-cache/MAP.md",
     "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-review-2026-10-31.md",
-    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-request-2026-10-31.json"
+    "goals/turborepo-cache-trust-observability/research/producer-accepted-r5b-baseline-request-2026-10-31.json",
+    "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-review-2026-11-02.md",
+    "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-request-2026-11-02.json",
+    "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
+    "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-request-2026-11-02.json",
+    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-review-2026-11-02.md",
+    "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-checkpoint-2026-11-02.json"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -117,7 +123,14 @@
     "research/producer-quality-closure-baseline-review-2026-10-31.md",
     "research/producer-quality-closure-baseline-request-2026-10-31.json",
     "research/inspection-routing-checkpoint-2026-11-02.json",
-    "research/supervisor-safe-hints-checkpoint-2026-11-02.json"
+    "research/supervisor-safe-hints-checkpoint-2026-11-02.json",
+    "research/private-producer-object-checkpoint-2026-11-02.json",
+    "research/private-object-quality-closure-review-2026-11-02.md",
+    "research/private-object-quality-closure-request-2026-11-02.json",
+    "research/private-object-accepted-main-checkpoint-2026-11-02.json",
+    "research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
+    "research/private-object-accepted-coverage-baseline-request-2026-11-02.json",
+    "research/private-object-policy-coverage-repair-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

@@ -131,6 +131,40 @@ export class CacheProducerUploadRuntime extends S.Opaque<
 ) {}
 
 /**
+ * Minimal private-object storage capability without artifact signing or adapter bearer access.
+ *
+ * **Details**
+ * Keep this runtime value in memory. The approved target descriptor determines
+ * the destination; neither credential is serialized into reports or approval.
+ *
+ * **Example** (Inspect the limited storage boundary)
+ * ```ts
+ * import { CacheProducerStorageRuntime } from "@beep/repo-cli/test/Cache"
+ * console.assert("accessKey" in CacheProducerStorageRuntime.fields)
+ * console.assert(!("signing" in CacheProducerStorageRuntime.fields))
+ * ```
+ *
+ * @internal
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheProducerStorageRuntime extends S.Opaque<
+  CacheProducerStorageRuntime,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    target: CacheConformanceTarget,
+    accessKey: S.Redacted(S.NonEmptyString),
+    secretKey: S.Redacted(S.NonEmptyString),
+  }).pipe(
+    $I.annoteSchema("CacheProducerStorageRuntime", {
+      description:
+        "Unserialized approved R2 target and storage-only credential pair, without artifact-key or adapter bearer capabilities.",
+    })
+  )
+) {}
+
+/**
  * Nonsecret execution settings installed beside a pre-provisioned issuer.
  *
  * **Details**

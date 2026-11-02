@@ -1,0 +1,455 @@
+{
+  "schemaVersion": "cache-private-producer-object-checkpoint/v1",
+  "authority": "Local component proof only. No Cloudflare traffic, protected execution, runtime signing, task qualification or whole-goal acceptance.",
+  "decision": "SPEC.md#bounded-private-complete-observation-transfer-2026-11-02",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+      "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+      "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+      "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+      "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+      "sha256": "48f2ea65d7469af44047d3b9e9700d501f2a5de9611f2e5504f1ec2b6196428d"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+      "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+      "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+      "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+    }
+  ],
+  "dataBoundary": {
+    "private": "Complete issued observations remain in the private R2 pilot bucket and owner-only local files.",
+    "public": "Only the existing immutable complete-observation digest report enters GitHub artifacts.",
+    "key": "Fixed private prefix / approved namespace / authenticated run / attempt / canonical observation digest.",
+    "credentials": "Only the R2 pair is loaded. Both identities must differ from the independently approved artifact-key identity; no artifact signing key or adapter bearer is loaded."
+  },
+  "bounds": {
+    "observationWithLocalNewlineBytes": 8388608,
+    "compressedArchiveBytes": 1048576,
+    "publicReportBytes": 65536,
+    "exchangeSeconds": 30,
+    "nativeRetries": 0,
+    "nativeQueueSize": 1,
+    "nativePartBytes": 8388608,
+    "unchangedTrial": "50 MiB synthetic artifacts / 200 Class A / 2000 Class B / ten minutes; aggregate accounting remains required before activation."
+  },
+  "controls": [
+    "Schema-generated positive run/attempt identities select exactly their canonical object and approved native options.",
+    "Real issuer MAC required independently of immutable hosted content digest.",
+    "Authenticated run/workflow/archive checks precede private-object access; canonical bytes, MAC and publication join are checked before returning.",
+    "Three in-flight controls mutate real private state after GET begins and before body delivery. Issuer revocation, execution-profile changes and independent publication-approval changes are rejected.",
+    "Reader transfer works with only the two storage variables; either artifact-key alias is denied before network access.",
+    "Revoked issuer, substituted run, changed body, invalid UTF-8, unsafe mode, symbolic link, hard link and oversized file are rejected.",
+    "Oversized streamed download is cancelled; a missing private object is not classified as a cache miss.",
+    "Finite 403/404/429/503 and raw transport failures expose no remote body or synthetic credential; uncertain PUT is not retried.",
+    "Real CLI publisher dispatches one saved observation and preserves it after a failed upload.",
+    "Fetch refuses an existing private output before metadata or credential access; cleanup selects the exact authenticated observation only.",
+    "The thirty-second exchange deadline cancels a stalled response after request-start synchronization; real Bun interruption cleanup is separately proven."
+  ],
+  "verification": {
+    "docgen": {
+      "examples": 3684,
+      "exit": 0,
+      "elapsedSeconds": 48.917,
+      "finishedAt": "2026-11-02T16:54:12.966601+00:00"
+    },
+    "fallowAudit": {
+      "exit": 0,
+      "elapsedSeconds": 11.79,
+      "finishedAt": "2026-11-02T16:51:40.727737+00:00"
+    },
+    "effectVitestRatchet": {
+      "findings": 442,
+      "exit": 0,
+      "elapsedSeconds": 52.936,
+      "finishedAt": "2026-11-02T17:06:35.139494+00:00",
+      "scope": "Final dedicated TestClock removes the introduced EV015 judgment; no new baseline entry or exception."
+    },
+    "inventory": {
+      "packages": 184,
+      "openPackages": 15,
+      "openExports": 94,
+      "openModules": 115,
+      "rootPolicyOpen": 0,
+      "exit": 0,
+      "elapsedSeconds": 308.3,
+      "finishedAt": "2026-11-02T16:56:38.371412+00:00"
+    },
+    "nativeBun": {
+      "runtime": "1.4.4",
+      "network": "loopback-only synthetic S3; test bridge rewrites approved native endpoint after option selection",
+      "moduleCanonicalPutRequests": 1,
+      "moduleBytes": 109128,
+      "sixMiBNativeOptionsRequests": 1,
+      "sixMiBBytes": 6291456,
+      "interruptionRequests": 1,
+      "interruptedResponseStreamCancelled": true,
+      "automaticRetries": 0,
+      "noCloudCredentials": true,
+      "noProductionQualification": true,
+      "sourceBindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        }
+      ],
+      "setupFailuresRetained": [
+        "Outside-package script resolution failed before execution.",
+        "The large raw-native control initially reused the completed module request abort signal; a fresh signal was supplied. Neither setup failure is a negative security control."
+      ]
+    },
+    "priorFocused": {
+      "tests": 150,
+      "files": 8,
+      "exit": 0,
+      "elapsedSeconds": 25.085,
+      "finishedAt": "2026-11-02T16:59:48.479885+00:00",
+      "scope": "Includes21 new transport/CLI controls plus existing issuer/workflow/runtime/acceptance/command suites. Final explicit boolean type annotation changes no test behavior."
+    },
+    "synchronizedDeadline": {
+      "tests": 22,
+      "exit": 0,
+      "elapsedSeconds": 5.704,
+      "finishedAt": "2026-11-02T17:03:05.132669+00:00",
+      "scope": "First synchronized replay passed with a native Promise handshake; the final source uses an Effect Deferred and a dedicated nested TestClock layer. Later exact-source proof is recorded separately."
+    },
+    "fallowHealth": {
+      "exit": 0,
+      "elapsedSeconds": 103.141,
+      "finishedAt": "2026-11-02T17:00:33.493923+00:00"
+    },
+    "packetDoctor": {
+      "newBlockingFindings": 0,
+      "exit": 0,
+      "elapsedSeconds": 3.199,
+      "finishedAt": "2026-11-02T17:03:55.115038+00:00"
+    },
+    "focused": {
+      "tests": 154,
+      "files": 8,
+      "exit": 0,
+      "elapsedSeconds": 22.787,
+      "finishedAt": "2026-11-02T17:13:23.274764+00:00",
+      "scope": "Exact final source including25 transport/CLI cases and all three concurrent-change refusals."
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 14.453,
+      "finishedAt": "2026-11-02T17:11:18.044535+00:00"
+    },
+    "effectVitestRatchetBeforeOwnedClock": {
+      "findings": 443,
+      "exit": 0,
+      "elapsedSeconds": 55.027,
+      "finishedAt": "2026-11-02T17:04:45.739287+00:00",
+      "scope": "Passing ratchet with one EV015 informational clock ownership judgment; subsequent source isolates that case in its own TestClock layer."
+    },
+    "concurrentPrivateChanges": {
+      "tests": 25,
+      "files": 1,
+      "exit": 0,
+      "elapsedSeconds": 7.821,
+      "finishedAt": "2026-11-02T17:11:10.216168+00:00",
+      "scope": "All25 transfer/CLI cases including three real private-file mutations after fetch begins but before body delivery: issuer revocation, runtime change and approval change."
+    },
+    "priorFocusedAtPublished169": {
+      "tests": 151,
+      "files": 8,
+      "exit": 0,
+      "elapsedSeconds": 24.399,
+      "finishedAt": "2026-11-02T17:06:04.081695+00:00",
+      "scope": "Exact final production/test source; includes22 transport/CLI controls and the dedicated owned-clock deadline case."
+    },
+    "acceptedMainIntegration": {
+      "acceptedBase": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+      "scope": "Adds the existing Git layer to the private-object command test platform, matching accepted-main Cache CLI fixtures. Production/private-transport sources are unchanged; old receipts retain old bindings.",
+      "focused": {
+        "tests": 154,
+        "files": 8,
+        "exit": 0,
+        "elapsedSeconds": 29.626,
+        "finishedAt": "2026-11-02T17:34:03.695756+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 15.59,
+        "finishedAt": "2026-11-02T17:33:29.648730+00:00"
+      },
+      "inventory": {
+        "packages": 184,
+        "openPackages": 15,
+        "openExports": 94,
+        "openModules": 115,
+        "rootPolicyOpen": 0,
+        "exit": 0,
+        "elapsedSeconds": 347.679,
+        "finishedAt": "2026-11-02T17:31:03.953379+00:00"
+      },
+      "failureRetained": "Initial post-integration package check failed at three real CLI cases because the accepted-main Git service was absent. No production check was weakened."
+    },
+    "hostedCensusAndPolicyFollowup": {
+      "failures": {
+        "unitIsolationJob": 125453086230,
+        "unitPolicyJob": 125453085941,
+        "propertyPolicyJob": 125453085921,
+        "aggregateUnitJob": 125468176721,
+        "coverageUnitGateJob": 125468218223
+      },
+      "scope": "A pure factory return type arrow matched the conservative global-assignment census. A function declaration preserves behavior and keeps the suite shared. Canonical policy regeneration adds only Cache.workflow.storage.ts to the quality-seal input closure.",
+      "combinedFocused": {
+        "tests": 160,
+        "files": 10,
+        "exit": 0,
+        "elapsedSeconds": 28.831,
+        "finishedAt": "2026-11-02T18:43:08.306620+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 13.837,
+        "finishedAt": "2026-11-02T18:42:53.285682+00:00"
+      },
+      "cacheAudit": {
+        "blockingFindings": 0,
+        "findings": [],
+        "unassessedCount": 1674,
+        "exit": 0,
+        "elapsedSeconds": 5.789,
+        "finishedAt": "2026-11-02T18:42:45.291517+00:00"
+      },
+      "baselinePostconditions": {
+        "changedNode": ["//#lint:policy-fingerprint:quality"],
+        "changedSource": ["turbo.json"],
+        "nodeCount": 2436,
+        "addedNodes": 0,
+        "removedNodes": 0,
+        "otherReviewsPreserved": true,
+        "scopeProfileEpochPreserved": true,
+        "ledgerByteIdentical": true
+      },
+      "runtimeStorageSourcesUnchanged": true,
+      "oldFailureReceiptsRetained": true
+    }
+  },
+  "setupFailuresRetained": [
+    "Initial helper import used the test facade instead of the public schema barrel; corrected before complete replay.",
+    "Four metadata controls were initially registered below a helper return and were not counted as passing coverage; moved to the real test suite.",
+    "Initial GitHub fixture used the request table instead of requestDecoded; corrected without changing authenticated validation.",
+    "Native probe resolution and aborted-signal setup failures remain separately recorded.",
+    "The first virtual deadline advance preceded asynchronous private-file reads and timed out at the outer test bound; request-start synchronization fixes the test without extending the production deadline. The final handshake uses Deferred.doneUnsafe solely at the native stream callback boundary.",
+    "The clock ratchet identified the timeout control sharing its parent clock. A dedicated nested TestClock layer now owns that one case; no clock reset or live timeout extension was added."
+  ],
+  "remaining": [
+    "Accept resolved Heavy verifier PR2603 before actual reusable-workflow provenance; integrate accepted main repair2610 once available.",
+    "Fresh hosted CI/review and accepted-main integration.",
+    "Source/runtime/issuer provisioning preview and protected workflow publication wiring.",
+    "Real bounded R2 transfer, replay and authenticated acceptance with aggregate resource accounting.",
+    "Deployment trust matrix, tuple qualification, eligible adoption, economics and representative windows."
+  ],
+  "wholeGoalAcceptanceChanged": false,
+  "runtimeSigningChanged": false,
+  "cloudChanges": false,
+  "priorSourceBindings": [
+    {
+      "scope": "150-case checkpoint before adding the synchronized deadline control; original receipts remain at their original source.",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "7f3946db102459893733cb37f71e9bc5d2b28f0288f4a97e8a38bb972d6c2d1d"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    },
+    {
+      "scope": "Published169e8f98cf initial transfer/CLI and151-case proof before the three concurrent-change controls.",
+      "revision": "169e8f98cfca27274fb9763a6828b2983a5744da",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "59a7510656ff5726deeb1a1333c31bc1b971effff9d410cd85d5257daa4c6afa"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    },
+    {
+      "scope": "Published c0f0f63 checkpoint before accepted-main Git service integration in the three command tests; historical focused, quick and inventory receipts remain bound to that source.",
+      "commit": "c0f0f63dab7d7d1ff355f9fab1c7a7852f8bdc9a",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "8afd49b6c8b20af821618c412f4049a782e89cbd58a43844952ad5c3d1de2e8e"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    },
+    {
+      "scope": "Published 5e3a5c6 before the hosted census/quality-seal follow-up; its 154-case receipt retains this exact source.",
+      "commit": "5e3a5c60bf7081e7029ef6f79dc4dc646a49a5f7",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "4ca74689216b6a9cad5c4589c8d61eba95c5d6312a73dca8667eef1e18968992"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    }
+  ]
+}
