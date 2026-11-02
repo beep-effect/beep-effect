@@ -1,3 +1,4 @@
+import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
 import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
@@ -11,6 +12,8 @@ import {
   LintPolicySweeps,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+  QualityAdmissionLoad,
+  QualityConcurrencyPlan,
   QualityProfileDetectionInput,
 } from "@beep/repo-cli/commands/Quality";
 import {
@@ -90,12 +93,15 @@ import {
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting,
   githubCheckPrePushExternalLanesForTesting,
+  githubCheckPrePushLanes,
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
   githubCheckTierConcurrency,
+  githubCheckWaveSegments,
   LaneProofSession,
   lintFixChangedStepForTesting,
+  localQualityConcurrencyPlan,
   missingTestTsgoTaskMessageForTesting,
   parseQualityTaskInvocation,
   persistLaneProofs,
@@ -107,13 +113,17 @@ import {
   planWorkspaceCoverageAffectedScope,
   prepareLaneProofSession,
   promotedFallowGithubCheckLaneIdsForTesting,
+  provideQualityConcurrency,
   QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
+  QualityConcurrency,
   QualityTaskFailed,
   QualityTaskGroupFailed,
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskStep,
+  qualityAdmissionLoadOf,
   qualityCommandPrimitiveHelpersForTesting,
+  qualityConcurrencyPlan,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
   readTurboLaneLedger,
@@ -122,6 +132,8 @@ import {
   renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
   resolveLaneInputDigestForTesting,
+  resolveLiveQualityConcurrencyPlan,
+  resolveQualityConcurrencyPlan,
   reviewFixDocgenLocalArgsForTesting,
   rootDocsCacheKey,
   rootLintPolicyStepsForTesting,
@@ -134,6 +146,7 @@ import {
   runQualityTaskStreamingStepGroupForTesting,
   runRootLintPolicyTask,
   runSqlIntegrationTestLaneForTesting,
+  scaleQualityWidthByAdmission,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
   TURBO_LANE_LEDGER_ENV,
@@ -150,6 +163,7 @@ import {
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
+import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
   clearTurboCacheSecretSessionVerdictsForTesting,
   hasRemoteTurboCacheArgs,
@@ -182,6 +196,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, flow, identity, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -442,6 +457,21 @@ const isTurboConcurrencyArg = (arg: string): boolean =>
 // The retired exclusion must never return to root task command plans.
 const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
 
+const hostDetectionInput = QualityProfileDetectionInput.make({
+  ci: false,
+  cpuCount: NodeOS.cpus().length,
+  totalMemoryBytes: NodeOS.totalmem(),
+});
+const ciDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: true, cpuCount: 64, totalMemoryBytes: 128 * 1024 * 1024 * 1024 })
+);
+const currentDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: false, cpuCount: 8, totalMemoryBytes: 16 * 1024 * 1024 * 1024 })
+);
+const workstationDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: false, cpuCount: 64, totalMemoryBytes: 128 * 1024 * 1024 * 1024 })
+);
+
 const policyTurboStep = (
   label: string,
   base?: string,
@@ -477,7 +507,17 @@ const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyA
   ...expectedTurboCacheArgs(args),
   ...args,
 ];
+// The root graphs take `--concurrency` from the live concurrency plan: the `ci`
+// profile under CI, the detected local profile (`current` or `workstation`)
+// otherwise, so the expectation is derived the same way the planner derives it.
 const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  expectedTurboArgs(
+    task,
+    A.some(args, isTurboConcurrencyArg) ? args : [`--concurrency=${localQualityConcurrencyPlan().rootTurbo}`, ...args]
+  );
+// Coverage keeps its fixed caps (the shard worker topology is the ratchet's
+// baseline shape): the fleet cap under CI, three locally.
+const expectedCoverageTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
   expectedTurboArgs(
     task,
     A.some(args, isTurboConcurrencyArg)
@@ -544,6 +584,27 @@ const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLane
   yield* runGit(repoRoot, ["add", "."]);
   yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
   yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+});
+
+// Prepends a `git` shim to PATH: the shim runs `prelude` (which may exit to
+// fail the call) and then the real git, so a test can count or break the
+// lane-proof virtual-tree calls without touching the lanes themselves.
+const withGitShim = Effect.fnUntraced(function* <Out, E, R>(
+  root: string,
+  prelude: string,
+  use: Effect.Effect<Out, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const shimDirectory = path.join(root, ".beep", "git-shim");
+  yield* fs.makeDirectory(shimDirectory, { recursive: true });
+  // Dropping the shim's own PATH entry lets the final exec resolve the real git.
+  yield* fs.writeFileString(
+    path.join(shimDirectory, "git"),
+    `#!/bin/sh\n${prelude}\nPATH="\${PATH#*:}" exec git "$@"\n`
+  );
+  yield* fs.chmod(path.join(shimDirectory, "git"), 0o755);
+  return yield* withEnvVarEffect("PATH", `${shimDirectory}:${Bun.env.PATH ?? ""}`, use);
 });
 
 const laneProofTestLane = (
@@ -859,6 +920,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             const spawned: Array<string> = [];
             yield* runBunAudit(repoRoot).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -930,10 +992,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\n${changed}\n` : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\0${changed}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -962,6 +1025,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           return Effect.succeed(qualityCommandHandle("", 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -1012,10 +1076,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? A.join(changed, "\n") : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${A.join(changed, "\0")}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
@@ -1050,6 +1115,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           function* () {
             const spawned: Array<string> = [];
             yield* runGithubChecks("review-fix").pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -1445,44 +1511,134 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(A.filter(HM.toEntries(idsByCommand), ([, ids]) => A.length(ids) > 1)).toEqual([]);
       expect(A.every(cheapGateLanes, (lane) => lane.tier === "cheap-gates")).toBe(true);
       expect(A.every(prePushLanes, (lane) => lane.tier === "pre-push")).toBe(true);
-      // D9: the cheap tier runs four abreast; heavy pre-push lanes stay serial.
-      expect(githubCheckTierConcurrency("cheap-gates")).toBe(4);
-      expect(githubCheckTierConcurrency("pre-push")).toBe(1);
+      // D9: the cheap tier runs four abreast and heavy pre-push lanes stay serial on
+      // the `current` and `ci` profiles; the workstation profile widens both.
+      const profile = withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", undefined, localQualityConcurrencyPlan);
+      expect(githubCheckTierConcurrency("cheap-gates", profile)).toBe(profile.cheapGates);
+      expect(githubCheckTierConcurrency("pre-push", profile)).toBe(profile.prePushLanes);
+      expect(
+        githubCheckTierConcurrency("cheap-gates", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
+      ).toBe(4);
+      expect(
+        githubCheckTierConcurrency("pre-push", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
+      ).toBe(1);
     });
 
     it("keeps cheap gates within the configured worker budget and warns on malformed settings", () => {
       const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       try {
+        const profileDefault = withoutCi(() =>
+          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", undefined, () => localQualityConcurrencyPlan().cheapGates)
+        );
         for (const [value, expected, malformed] of [
-          [undefined, 4, false],
+          [undefined, profileDefault, false],
           ["1", 1, false],
           ["2", 2, false],
           ["3", 3, false],
           ["4", 4, false],
+          ["5", 5, false],
+          ["16", 16, false],
           ["0", 1, true],
-          ["5", 1, true],
+          ["17", 1, true],
           ["2.5", 1, true],
           ["01", 1, true],
           ["serial", 1, true],
           ["", 1, true],
         ] as const) {
           warning.mockClear();
-          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", value, () => {
-            expect(githubCheckTierConcurrency("cheap-gates")).toBe(expected);
-            expect(warning).toHaveBeenCalledTimes(malformed ? 1 : 0);
-            if (malformed) {
-              expect(warning).toHaveBeenCalledWith(
-                "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
-              );
-            }
-            warning.mockClear();
-            expect(githubCheckTierConcurrency("pre-push")).toBe(1);
-            expect(warning).not.toHaveBeenCalled();
-          });
+          withoutCi(() =>
+            withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", value, () => {
+              const plan = localQualityConcurrencyPlan();
+              expect(githubCheckTierConcurrency("cheap-gates", plan)).toBe(expected);
+              expect(warning).toHaveBeenCalledTimes(malformed ? 1 : 0);
+              if (malformed) {
+                expect(warning).toHaveBeenCalledWith(
+                  "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected an integer from 1 to 16. Using 1 lane."
+                );
+              }
+              expect(githubCheckTierConcurrency("pre-push", plan)).toBe(plan.prePushLanes);
+            })
+          );
         }
+        // Hosted-shaped environments keep the pre-profile domain.
+        warning.mockClear();
+        withEnvVar("CI", "true", () =>
+          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", "5", () => {
+            expect(localQualityConcurrencyPlan().cheapGates).toBe(1);
+            expect(warning).toHaveBeenCalledWith(
+              "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
+            );
+          })
+        );
       } finally {
         warning.mockRestore();
       }
+    });
+
+    it("runs shared lanes abreast and exclusive lanes alone inside one wave", () => {
+      const lane = (id: string, exclusive = false, blockedBy: ReadonlyArray<string> = []) => {
+        const spec = githubCheckLanePlan.githubCheckLane(
+          id,
+          "pre-push",
+          "repo-quality",
+          "test",
+          githubCheckLanePlan.bunRunLane("/repo", id, ["run", id]),
+          blockedBy
+        );
+        return exclusive ? githubCheckLanePlan.exclusiveGithubCheckLane(spec) : spec;
+      };
+      const ids = (segments: ReadonlyArray<ReadonlyArray<readonly [number, GithubCheckLaneSpec]>>) =>
+        A.map(segments, (segment) => A.map(segment, ([index, entry]) => `${index}:${entry.id}`));
+
+      const lanes = [lane("a"), lane("b"), lane("c", true), lane("d"), lane("e"), lane("f"), lane("g", false, ["e"])];
+      // Only an exclusive lane splits the wave; `g` shares the pool with its
+      // blocker `e` and waits on it at run time instead.
+      expect(ids(githubCheckWaveSegments(lanes))).toEqual([["0:a", "1:b"], ["2:c"], ["3:d", "4:e", "5:f", "6:g"]]);
+      expect(ids(githubCheckWaveSegments([lane("x", true), lane("y", true)]))).toEqual([["0:x"], ["1:y"]]);
+      expect(githubCheckWaveSegments([])).toEqual([]);
+      // Every declared exclusive pre-push lane owns shared state no neighbour may touch.
+      expect(
+        pipe(
+          githubCheckPrePushLanes("/repo", [githubCheckChangesetStatusLane("/repo")]),
+          A.filter((entry) => entry.isolation === "exclusive"),
+          A.map((entry) => entry.id)
+        )
+      ).toEqual([
+        "quality:build",
+        "quality:lint",
+        "quality:lint-policy",
+        "quality:check",
+        "quality:coverage",
+        "quality:codegen",
+        "quality:test-integration",
+      ]);
+      expect(A.every(githubCheckCheapGateLanes("/repo"), (entry) => entry.isolation === "shared")).toBe(true);
+    });
+
+    it("folds consecutive same-wave lanes of an evidence order into one wave", () => {
+      const lane = (id: string, wave: "preflight" | "heavy" | "test") =>
+        githubCheckLanePlan.githubCheckLane(
+          id,
+          "pre-push",
+          "repo-quality",
+          wave,
+          githubCheckLanePlan.bunRunLane("/repo", id, ["run", id])
+        );
+      const waves = githubCheckLanePlan.githubCheckOrderedLaneWaves([
+        lane("a", "preflight"),
+        lane("b", "preflight"),
+        lane("c", "heavy"),
+        lane("d", "preflight"),
+        lane("e", "test"),
+        lane("f", "test"),
+      ]);
+      expect(A.map(waves, (wave) => [wave.wave, A.map(wave.lanes, (entry) => entry.id)])).toEqual([
+        ["preflight", ["a", "b"]],
+        ["heavy", ["c"]],
+        ["preflight", ["d"]],
+        ["test", ["e", "f"]],
+      ]);
+      expect(githubCheckLanePlan.githubCheckOrderedLaneWaves([])).toEqual([]);
     });
 
     // ship-velocity B1: a local green must mean what a hosted green means, so the
@@ -2451,6 +2607,158 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    it.effect(
+      "starts a waiting lane as soon as a pool slot frees and folds results in declaration order",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-" });
+            const doneMarker = `"${path.join(tempRoot, "late.done")}"`;
+            const { laneReport, report } = yield* collectGithubCheckLaneWavesForTesting(
+              "pool",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    // Passes only if the third lane finished while it slept, which a
+                    // chunked runner (third lane waits for this chunk) never allows.
+                    githubCheckTestLane(
+                      "pool:slow",
+                      "preflight",
+                      `await Bun.sleep(3000); process.exit((await Bun.file(${doneMarker}).exists()) ? 0 : 7)`
+                    ),
+                    githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
+                    githubCheckTestLane("pool:late", "preflight", `await Bun.write(${doneMarker}, "done")`),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              undefined,
+              2
+            );
+            expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+              ["pool:slow", "passed"],
+              ["pool:fast", "passed"],
+              ["pool:late", "passed"],
+            ]);
+            expect(A.map(laneReport.lanes, (lane) => lane.id)).toEqual(["pool:slow", "pool:fast", "pool:late"]);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        TestClock.withLive
+      )
+    );
+
+    it.effect(
+      "stops a pooled wave at lane granularity while running lanes finish",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-fail-fast-" });
+            const tailMarker = path.join(tempRoot, "tail.ran");
+            const { failures, report } = yield* collectGithubCheckLaneWavesForTesting(
+              "pool-fail-fast",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    githubCheckTestLane("pool:slow", "preflight", "await Bun.sleep(3000)"),
+                    githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
+                    githubCheckTestLane(
+                      "pool:red",
+                      "preflight",
+                      "process.exit(2)",
+                      O.some(githubCheckTestEstimate("pool:red", 1))
+                    ),
+                    githubCheckTestLane("pool:tail", "preflight", `await Bun.write("${tailMarker}", "ran")`),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              undefined,
+              2
+            );
+            // Chunks of two would have launched the tail beside the red; the pool
+            // reads the stop before launching it, and the slow lane still finishes.
+            expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+              ["pool:slow", "passed"],
+              ["pool:fast", "passed"],
+              ["pool:red", "failed"],
+              ["pool:tail", "not-run-early-stop"],
+            ]);
+            expect(A.map(failures, (failure) => failure.label)).toEqual(["pool:red"]);
+            expect(yield* fs.exists(tailMarker)).toBe(false);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        TestClock.withLive
+      )
+    );
+
+    it.effect(
+      "holds a blocked lane until its blocker finishes and runs an exclusive lane alone",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-blocked-" });
+            const marker = (name: string) => `"${path.join(tempRoot, name)}"`;
+            const blocked = GithubCheckLaneSpec.make({
+              ...githubCheckTestLane(
+                "pool:blocked",
+                "preflight",
+                `process.exit((await Bun.file(${marker("blocker.done")}).exists()) ? 0 : 7)`
+              ),
+              blockedBy: ["pool:blocker"],
+            });
+            const exclusive = GithubCheckLaneSpec.make({
+              ...githubCheckTestLane(
+                "pool:exclusive",
+                "preflight",
+                // Fails if the shared lane before it is still running or the one after it already started.
+                `process.exit((await Bun.file(${marker("before.done")}).exists()) && !(await Bun.file(${marker("after.started")}).exists()) ? 0 : 8)`
+              ),
+              isolation: "exclusive",
+            });
+            const { report } = yield* collectGithubCheckLaneWavesForTesting(
+              "pool-blocked",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    githubCheckTestLane(
+                      "pool:blocker",
+                      "preflight",
+                      `await Bun.sleep(800); await Bun.write(${marker("blocker.done")}, "done")`
+                    ),
+                    blocked,
+                    githubCheckTestLane(
+                      "pool:before",
+                      "preflight",
+                      `await Bun.sleep(400); await Bun.write(${marker("before.done")}, "done")`
+                    ),
+                    exclusive,
+                    githubCheckTestLane("pool:after", "preflight", `await Bun.write(${marker("after.started")}, "x")`),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              undefined,
+              4
+            );
+            expect(A.map(report.lanes, (lane) => lane.status)).toEqual(A.replicate("passed", 5));
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        TestClock.withLive
+      )
+    );
+
     it.effect("continues after an imprecise red under fail-fast", () =>
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
@@ -2651,23 +2959,167 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* initializeLaneProofRepository(tempRoot);
 
             const lane = laneProofTestLane(tempRoot, "proof:tree-failure", "preflight", "process.exit(0)");
-            const originalSpawnSync = Bun.spawnSync;
-            const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(((
-              command: ReadonlyArray<string>,
-              options: unknown
-            ) => {
-              if (A.contains(command, "write-tree")) {
-                throw new Error("simulated write-tree failure");
-              }
-              return originalSpawnSync(command as never, options as never);
-            }) as never);
+            const session = yield* withGitShim(
+              tempRoot,
+              'if [ "$1" = write-tree ]; then echo "simulated write-tree failure" >&2; exit 1; fi',
+              prepareLaneProofSession([lane], "active")
+            );
+            session.pipe(assertNone);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
 
-            try {
-              const session = yield* prepareLaneProofSession([lane], "active");
-              session.pipe(assertNone);
-            } finally {
-              spawnSync.mockRestore();
-            }
+    it.effect(
+      "disables lane-proof reuse when git cannot be spawned",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-no-git-" });
+            yield* initializeLaneProofRepository(tempRoot);
+            const emptyPath = path.join(tempRoot, ".beep", "empty-path");
+            yield* fs.makeDirectory(emptyPath, { recursive: true });
+
+            const lane = laneProofTestLane(tempRoot, "proof:no-git", "preflight", "process.exit(0)");
+            const session = yield* withEnvVarEffect("PATH", emptyPath, prepareLaneProofSession([lane], "active"));
+            session.pipe(assertNone);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "hashes the virtual tree once up front and once per wave, never per lane",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-single-hash-" });
+            const hashLog = path.join(tempRoot, ".beep", "write-tree.log");
+            yield* initializeLaneProofRepository(tempRoot);
+            yield* fs.makeDirectory(path.dirname(hashLog), { recursive: true });
+
+            const lanes = (wave: GithubCheckLaneWave) =>
+              A.map(["a", "b", "c"], (suffix) =>
+                laneProofTestLane(tempRoot, `proof:${wave}:${suffix}`, wave, `echo ${suffix} >> .beep/${wave}.txt`)
+              );
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-single-hash",
+              [
+                GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: lanes("preflight") }),
+                GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: lanes("heavy") }),
+              ],
+              "fail-fast",
+              "active",
+              3
+            );
+            const counted = withGitShim(tempRoot, `if [ "$1" = write-tree ]; then echo hash >> '${hashLog}'; fi`, run);
+
+            const first = yield* counted;
+            expect(A.map(first.report.lanes, (result) => result.status)).toEqual(A.replicate("passed", 6));
+            // One hash before the first wave plus one fence per wave: 3, where
+            // the per-lane start and persist hashes cost 12.
+            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(3);
+
+            const second = yield* counted;
+            expect(A.map(second.report.lanes, (result) => result.status)).toEqual(A.replicate("reused", 6));
+            // All reused: the up-front hash plus the preflight refresh the heavy
+            // wave reads; the last wave persists nothing and skips its fence.
+            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(5);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "never hashes the tree for a battery of non-reusable lanes",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-non-reusable-hash-" });
+            const hashLog = path.join(tempRoot, ".beep", "write-tree.log");
+            yield* initializeLaneProofRepository(tempRoot);
+            yield* fs.makeDirectory(path.dirname(hashLog), { recursive: true });
+
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-non-reusable-hash",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    laneProofTestLane(tempRoot, "quality:security", "preflight", "true"),
+                    laneProofTestLane(tempRoot, "repo-sanity:bun-audit", "preflight", "true"),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              "active",
+              2
+            );
+            const result = yield* withGitShim(
+              tempRoot,
+              `if [ "$1" = write-tree ]; then echo hash >> '${hashLog}'; fi`,
+              run
+            );
+
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            expect(yield* fs.exists(hashLog)).toBe(false);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "fences a concurrent wave when any of its lanes moves the tree",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-concurrent-mutation-" });
+            yield* initializeLaneProofRepository(tempRoot);
+
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-concurrent-mutation",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    laneProofTestLane(tempRoot, "proof:quiet", "preflight", "echo quiet >> .beep/quiet.txt"),
+                    laneProofTestLane(
+                      tempRoot,
+                      "proof:mutator",
+                      "preflight",
+                      'echo run >> .beep/mutator.txt; echo "# moved $(cat .beep/mutator.txt | wc -l)" > README.md'
+                    ),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              "active",
+              2
+            );
+
+            const first = yield* run;
+            const second = yield* run;
+            expect(A.map(first.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            // The mutator moved the tree inside the wave, so the quiet lane's
+            // proof is fenced out too, and nothing is reused on the rerun.
+            expect(A.map(second.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "quiet.txt"))).toBe("quiet\nquiet\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3095,7 +3547,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               tempRoot,
               "quality:security",
               "preflight",
-              "echo security >> .beep/security.txt"
+              "mkdir -p .beep && echo security >> .beep/security.txt"
             );
             const run = collectGithubCheckLaneWavesForTesting(
               "proof-security",
@@ -3282,7 +3734,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ],
             "collect-all",
             undefined,
-            githubCheckTierConcurrency("cheap-gates")
+            // Four abreast, the cheap tier's `current` width.
+            githubCheckTierConcurrency("cheap-gates", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
           )
         );
         const runOf = (id: string) => O.getOrThrow(A.findFirst(result.laneReport.lanes, (lane) => lane.id === id));
@@ -3313,7 +3766,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("stops fail-fast scheduling at the next chunk boundary when lanes run abreast", () =>
+    // The lane beside the red sleeps so the red always lands while it still holds
+    // its slot: every later lane then reads the stop before it can start.
+    it.effect("stops fail-fast scheduling at the next pool slot when lanes run abreast", () =>
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
         [
@@ -3321,7 +3776,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             wave: "preflight",
             lanes: [
               githubCheckTestLane("quality:secrets", "preflight", "process.exit(1)"),
-              githubCheckTestLane("quality:security", "preflight", "process.exit(0)"),
+              githubCheckTestLane("quality:security", "preflight", "await Bun.sleep(1500)"),
               githubCheckTestLane("quality:sast", "preflight", "process.exit(0)"),
               githubCheckTestLane("quality:nix", "preflight", "process.exit(0)"),
               githubCheckTestLane("quality:commitlint", "preflight", "process.exit(0)"),
@@ -3386,6 +3841,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3437,6 +3893,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3496,6 +3953,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               })
             ).pipe(
               Effect.provideService(Console.Console, testConsole),
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(
                 ChildProcessSpawner.ChildProcessSpawner,
                 cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
@@ -3805,6 +4263,160 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityProfileConfigForTesting("workstation")).toMatchObject({
         fullProofSlots: 1,
         turboConcurrency: 8,
+        policyLintConcurrency: 8,
+        cheapGateConcurrency: 8,
+        prePushLaneConcurrency: 4,
+        oxlintThreads: 16,
+      });
+      // `ci` carries the hosted values verbatim; `current` keeps the pre-profile local values.
+      expect(qualityProfileConfigForTesting("ci")).toMatchObject({
+        turboConcurrency: 4,
+        policyLintConcurrency: 4,
+        cheapGateConcurrency: 4,
+        prePushLaneConcurrency: 1,
+        oxlintThreads: 4,
+      });
+      expect(qualityProfileConfigForTesting("current")).toMatchObject({
+        turboConcurrency: 3,
+        policyLintConcurrency: 4,
+        cheapGateConcurrency: 4,
+        prePushLaneConcurrency: 1,
+        oxlintThreads: 4,
+      });
+    });
+
+    it("resolves the concurrency plan from the profile, the overrides and the admission load", () => {
+      const idle = O.none<QualityAdmissionLoad>();
+      const ciPlan = resolveQualityConcurrencyPlan(ciDetection, {}, idle);
+      expect(ciPlan).toMatchObject({
+        profile: "ci",
+        rootTurbo: 4,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+        notes: [],
+      });
+      assertNone(ciPlan.admission);
+      expect(resolveQualityConcurrencyPlan(currentDetection, {}, idle)).toMatchObject({
+        profile: "current",
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, idle)).toMatchObject({
+        profile: "workstation",
+        rootTurbo: 8,
+        policyLint: 8,
+        cheapGates: 8,
+        prePushLanes: 4,
+        oxlintThreads: 16,
+      });
+
+      // Overrides: the policy lint width honours BEEP_QUALITY_CHECK_CONCURRENCY over the
+      // local one-to-sixteen domain, the hosted profile keeps its 2/3/4 domain.
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "12" }, idle)
+      ).toMatchObject({
+        policyLint: 12,
+        rootTurbo: 8,
+      });
+      expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "12" }, idle)).toMatchObject({
+        policyLint: 4,
+        notes: ["[quality] Invalid BEEP_QUALITY_CHECK_CONCURRENCY; expected 2, 3 or 4. Using the profile width."],
+      });
+      expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "2" }, idle)).toMatchObject({
+        policyLint: 2,
+      });
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHEAP_GATE_CONCURRENCY: "3" }, idle)
+      ).toMatchObject({ cheapGates: 3 });
+
+      // Admission: other runs' tokens scale every width an override did not pin; `ci` never scales.
+      const half = O.some(QualityAdmissionLoad.make({ activeTokens: 4, capacityTokens: 8 }));
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, half)).toMatchObject({
+        rootTurbo: 4,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 2,
+        oxlintThreads: 8,
+        admission: half,
+        notes: ["[quality] admission: 4/8 tokens held by other runs; local widths scaled."],
+      });
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "8" }, half)
+      ).toMatchObject({ policyLint: 8, rootTurbo: 4 });
+      const ciPlanUnderLoad = resolveQualityConcurrencyPlan(ciDetection, {}, half);
+      expect(ciPlanUnderLoad).toMatchObject({ rootTurbo: 4, notes: [] });
+      assertNone(ciPlanUnderLoad.admission);
+      // A saturated host degrades to the `current` widths, never below them.
+      const saturated = O.some(QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 9 }));
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, saturated)).toMatchObject({
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
+      expect(resolveQualityConcurrencyPlan(currentDetection, {}, saturated)).toMatchObject({
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
+      expect(
+        resolveQualityConcurrencyPlan(
+          workstationDetection,
+          {},
+          O.some(QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 }))
+        )
+      ).toMatchObject({ rootTurbo: 8, notes: [] });
+
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 }))).toBe(
+        8
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 3, capacityTokens: 8 }))).toBe(
+        5
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 8, capacityTokens: 8 }))).toBe(
+        1
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 8 }))).toBe(
+        1
+      );
+      // Hard floor engaged: capacity zero runs serially.
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 0 }))).toBe(
+        1
+      );
+      expect(scaleQualityWidthByAdmission(1, QualityAdmissionLoad.make({ activeTokens: 7, capacityTokens: 8 }))).toBe(
+        1
+      );
+    });
+
+    it("bounds the root Turbo graphs by the detected profile", () => {
+      const rootArgs = (steps: ReadonlyArray<QualityTaskStep>) => O.getOrThrow(A.head(steps)).args;
+      withEnvVar("CI", "true", () => {
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check"])))).toContain("--concurrency=4");
+      });
+      withoutCi(() => {
+        const plan = localQualityConcurrencyPlan();
+        expect(plan.profile).toBe(detectQualityProfileForTesting(hostDetectionInput).profile);
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["build"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["lint"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        // An explicit caller width always wins.
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check", "--concurrency=1"])))).toContain(
+          "--concurrency=1"
+        );
       });
     });
 
@@ -4253,13 +4865,37 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it("bounds policy Turbo concurrency using Check overrides and a four-worker default", () => {
-      for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
-        withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
-          const expected = value === "2" || value === "3" ? value : "4";
-          expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
-        });
-      }
+    it("bounds policy Turbo concurrency using Check overrides over the profile's budget", () => {
+      // Hosted: Check's 2/3 overrides plus the four-worker budget, nothing wider.
+      withEnvVar("CI", "true", () => {
+        for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
+          withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
+            const expected = value === "2" || value === "3" ? value : "4";
+            expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
+          });
+        }
+      });
+      // Local: any width from one to sixteen, else the detected profile's budget.
+      withoutCi(() => {
+        const budget = withEnvVar(
+          "BEEP_QUALITY_CHECK_CONCURRENCY",
+          undefined,
+          () => localQualityConcurrencyPlan().policyLint
+        );
+        for (const [value, expected] of [
+          [undefined, budget],
+          ["2", 2],
+          ["8", 8],
+          ["16", 16],
+          ["17", budget],
+          ["invalid", budget],
+          ["", budget],
+        ] as const) {
+          withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
+            expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
+          });
+        }
+      });
     });
 
     it("leaves changed-file selection to Turbo rather than manufacturing include arguments", () => {
@@ -4338,6 +4974,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     );
                     const spawned = A.empty<string>();
                     const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
+                      Effect.provideServiceEffect(Git, Git.make),
                       Effect.provideService(
                         ChildProcessSpawner.ChildProcessSpawner,
                         cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)
@@ -4543,7 +5180,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         // The ratchet invocation carries the same Vitest topology the writer and
         // the full shards use, so all three measure the same rows.
         args: localOnlyTurboCacheArgs(
-          expectedRootTurboArgs("coverage", ["--", "--fileParallelism=true", "--maxWorkers=1"])
+          expectedCoverageTurboArgs("coverage", ["--", "--fileParallelism=true", "--maxWorkers=1"])
         ),
         env: {
           BEEP_FC_SEED: "20260708",
@@ -9236,6 +9873,97 @@ describe("documentation input digest", () => {
         }
         expect(yield* rootDocsCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
       })
+    );
+  });
+});
+
+it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("quality concurrency plan service", () => {
+    const fixedPlan = QualityConcurrencyPlan.make({
+      profile: "current",
+      rootTurbo: 2,
+      policyLint: 2,
+      cheapGates: 2,
+      prePushLanes: 1,
+      oxlintThreads: 2,
+      notes: [],
+    });
+    const idleStats = MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) });
+
+    it("folds an admission snapshot into the tokens other runs hold", () => {
+      const snapshot = {
+        capacityTokens: 8,
+        leases: [
+          { pid: 10, weightTokens: 3 },
+          { pid: 20, weightTokens: 3 },
+          { pid: 30, weightTokens: 2 },
+        ],
+      };
+      const load = qualityAdmissionLoadOf(snapshot, HashSet.make(10));
+      expect(load.activeTokens).toBe(5);
+      expect(load.capacityTokens).toBe(8);
+      expect(qualityAdmissionLoadOf(HashSet.empty<number>())(snapshot).activeTokens).toBe(8);
+    });
+
+    it.effect("reads the provided plan, else resolves the unscaled local plan", () =>
+      Effect.gen(function* () {
+        const provided = yield* qualityConcurrencyPlan.pipe(
+          Effect.provideServiceEffect(QualityConcurrency, QualityConcurrency.make(fixedPlan))
+        );
+        expect(provided.rootTurbo).toBe(2);
+        const local = yield* withoutCiEffect(qualityConcurrencyPlan);
+        expect(local.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+        const live = yield* qualityConcurrencyPlan.pipe(provideQualityConcurrency, withoutCiEffect);
+        expect(live.rootTurbo).toBe(local.rootTurbo);
+      })
+    );
+
+    it.effect("keeps the hosted plan unscaled and skips admission under CI", () =>
+      Effect.gen(function* () {
+        const plan = yield* withEnvVarEffect(
+          "CI",
+          "true",
+          resolveLiveQualityConcurrencyPlan().pipe(Effect.provideService(MemoryStats, idleStats))
+        );
+        expect(plan.profile).toBe("ci");
+        expect(plan.rootTurbo).toBe(4);
+        assertNone(plan.admission);
+      })
+    );
+
+    it.effect("scales by the live admission snapshot when MemoryStats is provided", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-admission-" }), "runtime");
+        const plan = yield* withoutCiEffect(
+          resolveLiveQualityConcurrencyPlan().pipe(
+            Effect.provideService(MemoryStats, idleStats),
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root }))
+          )
+        );
+        const load = O.getOrThrow(plan.admission);
+        expect(load.activeTokens).toBe(0);
+        expect(load.capacityTokens).toBe(8);
+        expect(plan.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+      })
+    );
+
+    it.effect("falls back to the unscaled plan when the admission snapshot cannot be read", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const blocker = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-blocked-" }), "runtime");
+        yield* fs.writeFileString(blocker, "not a directory");
+        const plan = yield* withoutCiEffect(
+          resolveLiveQualityConcurrencyPlan().pipe(
+            Effect.provideService(MemoryStats, idleStats),
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: blocker }))
+          )
+        );
+        assertNone(plan.admission);
+        expect(plan.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
 });

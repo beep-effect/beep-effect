@@ -788,7 +788,7 @@ const worktreeIsDirty = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   boolean,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   if (!Str.Equivalence(candidate.reapClass, "git-worktree") || O.isNone(candidate.parentRepo)) {
     return false;
@@ -810,16 +810,14 @@ const worktreeIsDirty = Effect.fnUntraced(function* (
   if (locked) {
     return true;
   }
-  const status = yield* runRepoCommandCapture(
-    "git",
-    ["-C", candidate.path, "status", "--porcelain", "--no-renames"],
-    candidate.parentRepo.value
-  ).pipe(Effect.option);
+  // `Git.status` from the worktree itself (the capture ran `-C <path>` from the parent), renames
+  // reported as their delete and add; a worktree whose status cannot be read is treated as dirty:
+  // never force-remove what cannot be proven clean (SPEC D-10).
+  const git = yield* Git;
+  const status = yield* git.status(candidate.path, { noRenames: true }).pipe(Effect.option);
   return O.match(status, {
-    // A worktree whose status cannot be read is treated as dirty: never
-    // force-remove what cannot be proven clean.
     onNone: () => true,
-    onSome: (capture) => capture.exitCode !== 0 || Str.isNonEmpty(Str.trim(capture.output)),
+    onSome: A.isReadonlyArrayNonEmpty,
   });
 });
 
@@ -920,7 +918,7 @@ const releaseNestedHeadInstallCheckout = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   if (!Str.Equivalence(candidate.reapClass, "head-install")) {
     return A.empty();
@@ -950,7 +948,7 @@ const removeDanglingWorktreeStub = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const pathService = yield* Path.Path;
@@ -1008,7 +1006,7 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   if (Str.Equivalence(candidate.reapClass, "dangling-worktree-stub")) {
@@ -1031,45 +1029,40 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
   return { reaped: true, warnings: nestedWarnings };
 });
 
-// `Git` is provided at this leaf with `Git.make` (the @beep/git README trade-off): the reap runs under
-// Yeet's sweep and merge steps, whose requirement unions lift `Git` in the Yeet git-layer wave of
-// goals/repo-cli-gh-git-consolidation; until then the service is rebuilt per removal.
-const removeGitWorktreeCandidate = Effect.fnUntraced(
-  function* (
-    candidate: DiscoveredCandidate
-  ): Effect.fn.Return<
-    ApplyOutcome,
-    never,
-    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
-  > {
-    const fs = yield* FileSystem.FileSystem;
-    const pathService = yield* Path.Path;
-    if (!(yield* candidatePathIsStillSafe(candidate))) {
-      return emptyApplyOutcome(`Skipped ${candidate.path}: worktree path changed or escaped its discovery root.`);
-    }
-    if (O.isNone(candidate.parentRepo)) {
-      return emptyApplyOutcome(`Skipped unclassified Git worktree ${candidate.path}.`);
-    }
-    const parentRepo = candidate.parentRepo.value;
-    const parentPresent = yield* fs
-      .exists(pathService.join(parentRepo, ".git"))
-      .pipe(Effect.orElseSucceed(() => false));
-    if (!parentPresent) {
-      return yield* removeDirectoryCandidate(candidate);
-    }
-    const git = yield* Git;
-    const removed = yield* git.worktreeRemove(parentRepo, candidate.path, { force: true }).pipe(Effect.isSuccess);
-    if (!removed) {
-      return emptyApplyOutcome(`Failed to remove Git worktree ${candidate.path} through ${parentRepo}.`);
-    }
-    const pruned = yield* git.worktreePrune(parentRepo).pipe(Effect.isSuccess);
-    return {
-      reaped: true,
-      warnings: pruned ? [] : [`Removed ${candidate.path}, but Git worktree prune failed for ${parentRepo}.`],
-    };
-  },
-  Effect.provideServiceEffect(Git, Git.make)
-);
+// `Git` comes from the requirements: the reap runs under Yeet's sweep and the quality command, whose
+// unions carry `Git` since repo-cli-gh-git-consolidation W1b, and the runtime edge provides `Git.layer`
+// once (D-06).
+const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
+  candidate: DiscoveredCandidate
+): Effect.fn.Return<
+  ApplyOutcome,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const pathService = yield* Path.Path;
+  if (!(yield* candidatePathIsStillSafe(candidate))) {
+    return emptyApplyOutcome(`Skipped ${candidate.path}: worktree path changed or escaped its discovery root.`);
+  }
+  if (O.isNone(candidate.parentRepo)) {
+    return emptyApplyOutcome(`Skipped unclassified Git worktree ${candidate.path}.`);
+  }
+  const parentRepo = candidate.parentRepo.value;
+  const parentPresent = yield* fs.exists(pathService.join(parentRepo, ".git")).pipe(Effect.orElseSucceed(() => false));
+  if (!parentPresent) {
+    return yield* removeDirectoryCandidate(candidate);
+  }
+  const git = yield* Git;
+  const removed = yield* git.worktreeRemove(parentRepo, candidate.path, { force: true }).pipe(Effect.isSuccess);
+  if (!removed) {
+    return emptyApplyOutcome(`Failed to remove Git worktree ${candidate.path} through ${parentRepo}.`);
+  }
+  const pruned = yield* git.worktreePrune(parentRepo).pipe(Effect.isSuccess);
+  return {
+    reaped: true,
+    warnings: pruned ? [] : [`Removed ${candidate.path}, but Git worktree prune failed for ${parentRepo}.`],
+  };
+});
 
 const candidatePathIsStillSafe = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate
@@ -1110,7 +1103,7 @@ const applyCandidate = Effect.fnUntraced(function* (
 ): Effect.fn.Return<
   ApplyOutcome,
   never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   if (O.isSome(candidate.skipReason)) {
     return { reaped: false, warnings: [] };

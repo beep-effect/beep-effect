@@ -500,3 +500,22 @@ twenty-four flag refusals and six managed prerequisites. Three driver refusals
 preserve the passing report. [The applicability review](setup-feature-review.json)
 binds current bootstrap sources and retains their ownership without changing
 production setup, task qualification, hosted statuses or performance claims.
+
+### Source census after package audit consolidation, 2026-11-02
+
+The [current source checkpoint](population-current-source-checkpoint-2026-11-02.json)
+records the native query/dry-plan result and verifies all 438 source bindings.
+Accepted [PR2526](https://github.com/beep-effect/beep-effect/pull/2526), commit
+`3ceb6833dbdbc16022c819eaa24e1008347c569b`, explains all 188 removed audit
+computations and the added root deprecated-import check. No quality task ran
+during census collection, and unchanged configured cache settings are not
+qualification.
+
+The [complete prior current population](population-before-source-refresh-2026-11-02.json)
+and its earlier reviewed population remain digest-bound historical evidence.
+The [current keep-fresh review](current-source-fresh-disposition-review-2026-11-02.json)
+checks exact literal wrappers, fixer implementations, service persistence and
+disabled caching before re-establishing 198 whole-task dispositions. It grants
+no pure-counterpart reuse. `Cache.census.ts` hashes the complete workspace script
+map as `commandDigest`; grouping that digest alone does not establish identical
+commands or semantic profiles.

@@ -138,7 +138,8 @@ const ciExecutionLayer = (
         return Effect.die("the CI lane test never spawns a piped command");
       }
       spawned.push(A.join([command.command, ...commandArgs(command)], " "));
-      const output = command.command === "git" ? A.join(changedFiles, "\n") : "";
+      // The kit reads `-z` output, so the scripted diff answers NUL-separated.
+      const output = command.command === "git" ? A.join(changedFiles, "\0") : "";
       return Effect.succeed(
         commandHandle(output, failedTask !== undefined && A.contains(commandArgs(command), failedTask) ? 1 : 0)
       );
@@ -2050,7 +2051,7 @@ it.layer(ciExecutionLayer(["packages/a/src/index.ts"], [], autoDocgenCommands), 
       Effect.gen(function* () {
         yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-        expect(autoDocgenCommands[0]).toBe("git diff --name-only origin/main...HEAD");
+        expect(autoDocgenCommands[0]).toBe("git diff --name-only -z --no-relative origin/main...HEAD");
         expect(autoDocgenCommands[1]).toContain("bun run docgen:local -- --base origin/main --head HEAD");
       })
     );
@@ -2065,7 +2066,7 @@ it.layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands), { ti
       Effect.gen(function* () {
         yield* runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" }));
 
-        expect(inertDocgenCommands).toEqual(["git diff --name-only origin/main...HEAD"]);
+        expect(inertDocgenCommands).toEqual(["git diff --name-only -z --no-relative origin/main...HEAD"]);
       })
     );
   }

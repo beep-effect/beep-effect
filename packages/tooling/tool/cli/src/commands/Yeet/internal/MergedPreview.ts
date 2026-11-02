@@ -50,6 +50,7 @@ import { RepoRunContext, removeGitWorktree, runRepoCommandCapture } from "../../
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { runGitOutput } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -480,7 +481,7 @@ export const yeetMergedPreviewPath = Effect.fn("Yeet.yeetMergedPreviewPath")(fun
 const removeMergePreviewWorktree = Effect.fn("Yeet.removeMergePreviewWorktree")(function* (
   context: RepoRunContext,
   worktreePath: string
-): Effect.fn.Return<void, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, never, Git> {
   yield* removeGitWorktree(context.repoRoot, worktreePath);
 });
 
@@ -530,7 +531,7 @@ export const createYeetMergePreview = Effect.fn("Yeet.createYeetMergePreview")(f
 ): Effect.fn.Return<
   YeetMergePreview,
   YeetCommandError,
-  Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const worktreePath = yield* yeetMergedPreviewPath(context);
   const headSha = yield* runGitOutput(context.repoRoot, ["rev-parse", context.head]).pipe(Effect.map(Str.trim));
@@ -697,7 +698,7 @@ export const withYeetMergePreview: {
   ) => Effect.Effect<
     A,
     E | YeetCommandError,
-    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >;
   <A, E, R>(
     context: RepoRunContext,
@@ -705,7 +706,7 @@ export const withYeetMergePreview: {
   ): Effect.Effect<
     A,
     E | YeetCommandError,
-    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >;
 } = dual(
   2,
@@ -715,7 +716,7 @@ export const withYeetMergePreview: {
   ): Effect.Effect<
     A,
     E | YeetCommandError,
-    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    R | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   > =>
     Effect.acquireUseRelease(createYeetMergePreview(context), use, (preview) =>
       removeMergePreviewWorktree(context, preview.worktreePath)

@@ -1,4 +1,5 @@
 import * as NodeOS from "node:os";
+import { Git } from "@beep/git/Git";
 import {
   canonicalRuntimeRootForTesting,
   MemoryStats,
@@ -35,8 +36,11 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  NodeChildProcessSpawner.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+  )
 );
 
 const contextAt = (repoRoot: string): RepoRunContext =>
