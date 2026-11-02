@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   collectYeetStatus,
@@ -170,7 +171,10 @@ const scripted =
     );
   };
 
-const reviewReadPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer);
+const reviewReadPlatform = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, MemoryFileSystem.layer)
+);
 
 const readWith = Effect.fn("readWith")(function* (answers: Answers) {
   const calls = yield* Ref.make<ReadonlyArray<string>>([]);
@@ -470,6 +474,7 @@ const writeBoundCloseout = Effect.gen(function* () {
 const statusWith = Effect.fn("statusWith")(function* (answers: Answers, bucket: "pass" | "pending" = "pass") {
   const restCalls = yield* Ref.make<ReadonlyArray<string>>([]);
   const snapshot = yield* collectYeetStatus(context, true).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghRunner(answers, bucket, restCalls))
   );
   return { snapshot, restCalls: yield* Ref.get(restCalls) };
