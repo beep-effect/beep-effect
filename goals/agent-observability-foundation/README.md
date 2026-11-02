@@ -38,6 +38,13 @@ Required final-head hosted/review/merge proof and canonical completion remain op
 one scanner false positive in a public test-file digest is being corrected through
 the base-reviewed policy lane.
 
+Current declared-root proof commands require both `--declared-qualification-sha256`
+and `--declared-probe-sha256`; there is no implicit historical pair. The
+[explicit-pin review](./ops/history/explicit-pin-proof-applicability-20261102.json)
+records six passing boundary tests,22 refusal controls,84 exact preparation inputs,
+and the two reviewed guard-only changes relative to the retained90/89 stage inputs.
+Those earlier executions retain their original hashes and dates.
+
 The foundation remains **active**. [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
 merged before its readiness gates completed. Canonical completion refresh records
 that historical result as unsatisfied; a merge alone cannot complete this packet.
