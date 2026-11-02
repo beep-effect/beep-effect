@@ -25,6 +25,30 @@ pre-commit:
     instructions-drift:
       glob: "{CLAUDE.md,AGENTS.md}"
       run: bun run instructions:drift
+    # Generated catalog shards (standards/schema-catalog, standards/instrumentation-catalog) are
+    # checked hosted-only (Repo Sanity) and by the cheap gates `yeet publish` runs, so a PR pushed
+    # with package-scoped checks only learned about a stale shard after its first hosted run and the
+    # S11 merge carried it to main (#2522, #2526, #2540 on 2026-11-02). These hooks regenerate the
+    # shards of the packages owning the staged sources, scoped so a commit costs seconds, and stage
+    # them so the commit carries them. Shard text never mixes packages, so the scoped write is byte
+    # for byte what the full writer produces. `files` replaces lefthook's {staged_files} (ACMR) so a
+    # deleted or moved schema module drops its entries too; `--no-renames` lists both sides of a move.
+    schema-catalog:
+      files: git diff --name-only --cached --no-renames --diff-filter=ACMD
+      glob: "{apps,packages,infra}/**/*.{ts,tsx}"
+      exclude:
+        - "**/docs/**"
+        - "**/*.d.ts"
+        - "**/node_modules/**"
+      run: bun run beep lint schema-catalog --write --stage {files}
+    instrumentation-catalog:
+      files: git diff --name-only --cached --no-renames --diff-filter=ACMD
+      glob: "{apps,packages}/**/src/**/*.{ts,tsx}"
+      exclude:
+        - "**/test/**"
+        - "**/*.d.ts"
+        - "**/node_modules/**"
+      run: bun run beep observability catalog --write --stage {files}
 
 commit-msg:
   commands:

@@ -24,3 +24,20 @@ change pointing `proposedCloseout` and the final `pullRequests` entry at it, wit
 as supporting PRs. The orchestrator
 merges it through the strict gate (every required check green), so the merge-push rule suite
 passes and the refresh can verify.
+
+## Second re-final (2026-11-02)
+
+#2447 also merged as `63a13a6e7b` with required checks still pending. It was a manual
+operator merge at 01:53:24Z, while Heavy / Check, Docgen, Doctest, Test Integration and two
+Test Unit shards were still running on `ff83202b94`. The refresh reported
+`hosted-required-checks` unsatisfied and `yeet-verdict` unknown. The PR had been opened with a
+plain push, so no publish verdict existed, and the readiness monitor writes only `status.json`.
+
+The next final PR follows the verdict route:
+
+1. Run `yeet verify` on the final head.
+2. Run `yeet publish --push-only --reuse-verified`, which writes a success publish verdict at
+   that head.
+3. Run `yeet monitor --until-ready` until it prints `merge-ready: yes`.
+4. Merge without bypass, only after every required check is green.
+5. Run `goals completion refresh --readiness-job <job>` from the clone that ran the monitor.

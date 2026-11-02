@@ -236,6 +236,20 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — integrate complete shared coverage repairs
+
+Consume accepted main #2548 (RouteCensus/Graph/PruneWindow) and #2553 (PackageScripts) after the actual hosted comparison reports eight shared CLI floors. The PackageScripts repair removes obsolete audit backfill and exposes the existing reducer through a documented testing alias; focused tests retain the defensive cases and all 33 canonical scaffold outputs. This changes no claim API or schema. All 29 v26 selected source/environment files remain byte-identical, and fresh positive/allowed replays reproduce both complete result files and all 251 prediction reports exactly. Retain the failed hosted comparison and the scoped local-proof/archive limitations; the new final-head comparison remains required. Reversal: revert the shared repair in a separately reviewed change, retaining the prior failures, source references and every claim measurement.
+
+### 2026-11-02 — package-script compatibility after shared test repair
+
+Consume accepted main #2535 for the inherited package-generator expectation failure and #2533 for the shared helper's Effect.fn form, then push before measuring. Main #2526 changes the root lint script and removes consumer audit scripts while leaving the 21 algorithm files, dependency lock and Bun pin unchanged. v26 archives 29 source/environment files before replay; both full result values match v25 except the implementation digest, and all 251 prediction reports and the non-US smoke result match exactly. Preserve every v25 artifact. Historical automated review identity carries forward without a fresh-review claim. Reversal: keep both environment freezes and result versions, and return to an earlier package-script environment only through a separately reviewed change.
+
+### 2026-11-02 — strict final acceptance after S11
+
+After the initial strict declaration, main #2507 updated dependencies and #2517 repaired inherited PortfolioIndex coverage. Merge main once and push before compatibility work. v25 then pins the unchanged 21 algorithm files plus the lockfile, root manifest and Bun version; fresh offline replay verifies both result values and all 251 report bytes against v24. This is dependency compatibility, not new recovery or adjudication. Old initial-main lock identity statements refer to their recorded pre-update base. Reversal: retain both dependency versions and all measurements; return to the earlier lock only in a separately reviewed change.
+
+PR #2502 merged under S11 while lint/unit checks were pending, and canonical completion refresh reports unsatisfied. The verifier requires check completion before the merge timestamp, so later reruns cannot recover that proof. Bind prospective final acceptance to metadata-only PR #2513 and hold relaxed/S11 merging until normal, exact-head readiness is recorded. Push/open all ready work promptly and use hosted CI; do not wait for local verify/publish. All 21 measured v24 runtime hashes and the dependency lock match current main. Reversal: release the temporary hold after strict readiness and preserve both S11 records and the measured results.
+
 ### 2026-11-01 — post-merge evidence and lifecycle closeout
 
 Final follow-up PR #2502 uses the current canonical Yeet publish/readiness and goal-completion receipt workflow. The earlier hosted-first exception belonged to the now-retired source takeover lane; it does not supply a publish verdict for this new final PR. All 1,103 pre-handover history/public-fixture files are byte-identical after restoring v11, as recorded in the new full-history preservation receipt.
