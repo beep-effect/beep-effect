@@ -1,0 +1,20 @@
+{
+  "previous": "d2209a3ecb539ed8c83216050ba6bf01a28acd50c2a5cf9c5688fd9af048c9d2",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (perf-lint-policy-scope, claude/perf-lint-policy-scope-6c226f)",
+    "reason": "Re-record the legacy cache posture of the root subject after bun run beep lint policy-fingerprint --write added the changed-scope Lint Policy modules (LintPolicyScope.ts, DocsOxlintPlugin.ts, PolicyFingerprint.schemas.ts) to four seal input lists (quality audit K1/M16). No command, output, cache flag, env key or dependency edge changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perf-lint-policy-scope-cache-review-2026-11-02.md",
+      "sha256": "df7cd36d40b8417da4ec2d9fa310a56a1e786fb0c8413fb2f420ea0ad785a092"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

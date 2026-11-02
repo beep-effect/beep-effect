@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Codex (PR #2611, accepted a88d baseline conflict review)",
-      "reason": "Preserve accepted main configuration, record the accepted party-domain expansion once, and retain only the owned storage-module seal input. No qualification or enablement.",
+      "reviewer": "Claude Opus 5.5 (perf-lint-policy-scope, claude/perf-lint-policy-scope-6c226f)",
+      "reason": "Re-record the legacy cache posture of the root subject after bun run beep lint policy-fingerprint --write added the changed-scope Lint Policy modules (LintPolicyScope.ts, DocsOxlintPlugin.ts, PolicyFingerprint.schemas.ts) to four seal input lists (quality audit K1/M16). No command, output, cache flag, env key or dependency edge changed; no qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
-        "sha256": "3ee460b6c537dbaa1f1e130dd05ff017b1108c658391539ad1c68ac7c0600f7d"
+        "path": "docs/reports/perf-lint-policy-scope-cache-review-2026-11-02.md",
+        "sha256": "df7cd36d40b8417da4ec2d9fa310a56a1e786fb0c8413fb2f420ea0ad785a092"
       }
     },
     "@beep/acp": {
@@ -3628,6 +3628,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
             "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
+            "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
@@ -3638,9 +3639,11 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageEnvironment.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
             "packages/tooling/tool/cli/src/commands/Worktree/Worktree.constants.ts",
@@ -4242,6 +4245,7 @@
             "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
             "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
             "packages/tooling/tool/cli/src/commands/Models/Models.apply.service.ts",
             "packages/tooling/tool/cli/src/commands/Models/Models.catalog.schemas.ts",
@@ -4261,9 +4265,11 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageEnvironment.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
             "packages/tooling/tool/cli/src/commands/Skills/SkillFrontmatter.schemas.ts",
@@ -4961,6 +4967,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
             "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
+            "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
@@ -4971,8 +4978,10 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageEnvironment.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/TurboLaneDigest.ts",
             "packages/tooling/tool/cli/src/internal/ManifestRead.ts",
@@ -6734,6 +6743,7 @@
             "packages/tooling/tool/cli/src/commands/Docgen/internal/RunDocgen.ts",
             "packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.service.ts",
             "packages/tooling/tool/cli/src/commands/Quality/CatalogUsage.ts",
@@ -6750,11 +6760,13 @@
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageEnvironment.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/DocsOxlintPlugin.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/LaneProofReuse.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/PackageVerify.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/ResidueTerminalLaneLive.ts",
@@ -122730,7 +122742,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "44c446d3cac904e1bcdb16feefd1b7b4f3509223066beb2f38ec0dfafb111d2e"
+        "sha256": "247d0e3ea2782bc268985759cc5f3db7979043e6c9e6b131dcdeb1b611ab5c2a"
       }
     ]
   }
