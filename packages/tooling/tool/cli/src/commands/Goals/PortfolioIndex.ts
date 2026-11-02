@@ -3,8 +3,10 @@
  *
  * `beep goals index --write` renders one deterministic Markdown index from
  * `goals/<slug>/ops/manifest.json` — grouped by canonical status, one row per
- * packet (slug, title, phases x/y, updated, one-line mission) — and
- * `--check` proves generation and rejects drift when a local copy exists.
+ * packet (slug, title, phases x/y, updated, proposed closeout, one-line
+ * mission) — and `--check` proves generation and rejects drift when a local
+ * copy exists. It reads committed manifests only, never the clone-scoped
+ * completion receipt, so every clone renders the same bytes.
  * The ignored file is never hand-edited, staged, or linked as tracked GitHub
  * truth; packet manifests remain authoritative.
  *
@@ -25,8 +27,7 @@ import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { readGoalLifecycle } from "./Completion.ts";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus, renderGoalProposedCloseout } from "./Goals.schemas.ts";
 import { renderCapabilityMermaidSection } from "./Graph.mermaid.ts";
 import { compileCapabilityProjection, evaluateCapabilityGraph } from "./Graph.projection.ts";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
@@ -89,9 +90,11 @@ export class PortfolioIndexRow extends S.Opaque<PortfolioIndexRow, { readonly br
     phasesTotal: S.Finite,
     updated: S.optionalKey(S.String),
     mission: S.optionalKey(S.String),
+    closeout: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("PortfolioIndexRow", {
-      description: "One rendered goals-index row (slug, title, status, phase progress, updated, mission).",
+      description:
+        "One rendered goals-index row (slug, title, committed status, phase progress, updated, mission, proposed closeout).",
     })
   )
 ) {}
@@ -105,6 +108,45 @@ const sanitizeCell = flow(Str.replace(/\|/g, "\\|"), Str.replace(/\s+/g, " "), S
 const truncateCell = (text: string): string =>
   Str.length(text) <= MISSION_CELL_MAX ? text : `${pipe(text, Str.slice(0, MISSION_CELL_MAX - 1))}…`;
 
+const EMPTY_CELL = "—";
+
+const optionalCell = (value: string | undefined, render: (text: string) => string): string =>
+  value === undefined ? EMPTY_CELL : render(value);
+
+const renderIndexRow = (row: PortfolioIndexRow): string => {
+  const phases = row.phasesTotal > 0 ? `${row.phasesComplete}/${row.phasesTotal}` : EMPTY_CELL;
+  const updated = row.updated ?? EMPTY_CELL;
+  const closeout = optionalCell(row.closeout, sanitizeCell);
+  const mission = optionalCell(row.mission, flow(sanitizeCell, truncateCell));
+  return `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${closeout} | ${mission} |`;
+};
+
+const renderIndexGroup = (status: GoalStatus, groupRows: ReadonlyArray<PortfolioIndexRow>): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(groupRows)
+    ? A.empty<string>()
+    : [
+        "",
+        `## ${GROUP_TITLES[status]} (${A.length(groupRows)})`,
+        "",
+        "| Packet | Title | Phases | Updated | Closeout | Mission |",
+        "| --- | --- | --- | --- | --- | --- |",
+        ...A.map(groupRows, renderIndexRow),
+      ];
+
+const renderInvalidSection = (invalid: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.isReadonlyArrayEmpty(invalid)
+    ? A.empty<string>()
+    : [
+        "",
+        `## Invalid or missing manifests (${A.length(invalid)})`,
+        "",
+        ...A.map(
+          A.sort(invalid, Order.String),
+          (slug) =>
+            `- \`${slug}\` — manifest missing or does not decode as GoalManifest; see \`bun run beep goals doctor\`.`
+        ),
+      ];
+
 /**
  * Renders the goals index Markdown from prepared rows.
  *
@@ -112,7 +154,9 @@ const truncateCell = (text: string): string =>
  *
  * Pure and deterministic: groups follow the canonical status order, rows sort by slug, and no
  * timestamps are embedded, so identical inputs render byte-identical output. That byte-stability is
- * what lets the drift check compare generated and committed content directly.
+ * what lets the drift check compare generated and committed content directly. A row's `closeout`
+ * is the manifest's proposed closeout, rendered without consulting the clone-scoped completion
+ * receipt, so the same manifests render the same index in every clone.
  *
  * **Example** (Render an index with no packets)
  *
@@ -139,43 +183,22 @@ export const renderPortfolioIndex: {
     GoalStatus.literals,
     (status) => `${A.length(A.filter(sortedRows, (row) => row.status === status))} ${status}`
   );
-  const lines: Array<string> = [
+  const lines: ReadonlyArray<string> = [
     "# Goals Index",
     "",
     "Generated locally by `bun run beep goals index --write` from `goals/*/ops/manifest.json`.",
     "This file is ignored and untracked; edit packet manifests, never this projection.",
     "",
     `${A.length(sortedRows) + A.length(invalid)} packets: ${A.join(counts, " · ")}.`,
+    ...A.flatMap(GoalStatus.literals, (status) =>
+      renderIndexGroup(
+        status,
+        A.filter(sortedRows, (row) => row.status === status)
+      )
+    ),
+    ...renderInvalidSection(invalid),
+    "",
   ];
-
-  for (const status of GoalStatus.literals) {
-    const groupRows = A.filter(sortedRows, (row) => row.status === status);
-    if (!A.isReadonlyArrayNonEmpty(groupRows)) {
-      continue;
-    }
-    lines.push("", `## ${GROUP_TITLES[status]} (${A.length(groupRows)})`, "");
-    lines.push("| Packet | Title | Phases | Updated | Mission |");
-    lines.push("| --- | --- | --- | --- | --- |");
-    for (const row of groupRows) {
-      const phases = row.phasesTotal > 0 ? `${row.phasesComplete}/${row.phasesTotal}` : "—";
-      const updated = row.updated ?? "—";
-      const mission = row.mission === undefined ? "—" : truncateCell(sanitizeCell(row.mission));
-      lines.push(
-        `| [${row.slug}](./${row.slug}/README.md) | ${sanitizeCell(row.title)} | ${phases} | ${updated} | ${mission} |`
-      );
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(invalid)) {
-    lines.push("", `## Invalid or missing manifests (${A.length(invalid)})`, "");
-    for (const slug of A.sort(invalid, Order.String)) {
-      lines.push(
-        `- \`${slug}\` — manifest missing or does not decode as GoalManifest; see \`bun run beep goals doctor\`.`
-      );
-    }
-  }
-
-  lines.push("");
   return A.join(lines, "\n");
 });
 
@@ -187,6 +210,12 @@ export const renderPortfolioIndex: {
  * Packets whose manifest is missing or fails to decode are not dropped: they are collected as
  * invalid slugs and rendered in their own section, so a broken manifest is visible rather than
  * silently absent from the index.
+ *
+ * The index renders committed facts only. A packet's status is its manifest field and a proposed
+ * closeout is shown as `proposed completed-retained via #N`; the completion receipt that would
+ * verify it lives in one clone's `.beep/goals/completion-receipts.ndjson`, so reading it here
+ * would make the generated file differ between clones. `session open`, `goals doctor` and
+ * `goals explain` are the surfaces that show the verified, derived status.
  *
  * **Example** (Build the index for the current working tree)
  *
@@ -204,7 +233,6 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
   let rows = A.empty<PortfolioIndexRow>();
   let invalid = A.empty<string>();
   let decoded = A.empty<readonly [string, GoalManifest]>();
-  const operativeStatuses: Record<string, GoalStatus> = {};
 
   for (const record of records) {
     const parsed = record.manifestText === undefined ? O.none() : parseGoalManifestText(record.manifestText);
@@ -218,8 +246,6 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
       continue;
     }
     decoded = A.append(decoded, [record.slug, manifest.value] as const);
-    const status = yield* readGoalLifecycle(repoRoot, record.slug, manifest.value);
-    operativeStatuses[record.slug] = status;
     const phases = goalManifestPhases(manifest.value);
     const mission = pipe(
       O.fromNullishOr(manifest.value.mission),
@@ -230,24 +256,29 @@ export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexCo
       PortfolioIndexRow.make({
         slug: record.slug,
         title: manifest.value.initiative.title ?? record.slug,
-        status,
+        status: manifest.value.initiative.status,
         phasesComplete: A.length(A.filter(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))),
         phasesTotal: A.length(phases),
         ...optionalProp("updated", O.fromUndefinedOr(manifest.value.initiative.updated)),
         ...optionalProp("mission", mission),
+        ...optionalProp(
+          "closeout",
+          O.map(O.fromUndefinedOr(manifest.value.proposedCloseout), renderGoalProposedCloseout)
+        ),
       })
     );
   }
 
   // The capability graph uses only manifests whose id matches their directory, so
-  // the lenient table and the fail-closed graph never disagree about identity.
+  // the lenient table and the fail-closed graph never disagree about identity. It
+  // takes the committed statuses, like the table, so the rendered graph is the
+  // same in every clone.
   const projection = compileCapabilityProjection(
     pipe(
       decoded,
       A.filter(([slug, manifest]) => manifest.initiative.id === slug),
       A.map(([, manifest]) => manifest)
-    ),
-    operativeStatuses
+    )
   );
   const graph = renderCapabilityMermaidSection(projection, evaluateCapabilityGraph(projection));
   return `${renderPortfolioIndex(A.sort(rows, rowBySlug), A.sort(invalid, Order.String))}${graph}\n`;

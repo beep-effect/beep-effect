@@ -1,0 +1,20 @@
+{
+  "previous": "5eae400b284cf6d5cf2b900349bd3debdd3358773f7ba3a91f58e77e37b10e6d",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (derived goal completion rendering, claude/hungry-torvalds-da136f)",
+    "reason": "Record the two root policy seals whose inputs shrink after PortfolioIndex.ts stops importing Completion.ts so goals/INDEX.md renders committed facts only: //#lint:policy-fingerprint:goals-index (352 -> 70 inputs) and //#lint:policy-fingerprint:lint-roadmap-refs (371 -> 91 inputs); no seal gains an input and no qualification is granted.",
+    "basis": {
+      "path": "goals/repository-simplification-confidence/research/cache-baseline-review-2026-11-02-derived-completion.md",
+      "sha256": "9f31c0702fc8838eef26a2b44a5ef07337aa319ab990fb1b6676d09d0fbad9ee"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}
