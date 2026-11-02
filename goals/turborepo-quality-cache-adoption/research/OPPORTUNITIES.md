@@ -1,5 +1,20 @@
 # Friction and opportunities
 
+### Catalog staging coverage blocks otherwise unrelated CLI changes, 2026-11-02
+
+The hosted Coverage Regression jobs for #2569 and #2592 rejected the new
+`ShardScope.ts` file from #2563 because it had no baseline identity and retained
+four uncovered branches, one function, two lines and two statements. A focused
+V8 run reproduced the exact hosted figures: 42.85% branches, 93.33% functions,
+93.54% lines and 94.28% statements. Add six boundary tests for no-op staging,
+index-lock recovery and non-retryable typed failures. The original six catalog
+integration tests plus these controls cover every production counter at 100%;
+package lint and type checks pass. Production source, retry policy and coverage
+baselines are unchanged. Preserve the before/final counter reports and use
+hosted CI for complete proof. This is a shared test-gap repair, not a cache
+speedup or a whole-goal acceptance result.
+
+
 Record friction as it occurs: work, minimum command/error/file evidence,
 impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
