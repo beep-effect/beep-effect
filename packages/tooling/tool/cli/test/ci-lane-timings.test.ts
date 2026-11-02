@@ -1412,20 +1412,30 @@ describe("ci lane timing admission window", () => {
       `{"created_at":"${createdAt}","event":"pull_request","head_branch":"lane-${id}","head_sha":"sha-${id}","id":${id},"run_attempt":1,"run_started_at":"${createdAt}","updated_at":"${createdAt}"}`;
     const firstHalf = encodeURIComponent("2026-10-28T00:00:00.000Z..2026-10-31T12:00:00.000Z");
     const secondHalf = encodeURIComponent("2026-10-31T12:00:00.000Z..2026-11-04T00:00:00.000Z");
+    // First matching route wins; the capped full-span listing is the last workflow-runs route, so the
+    // half-span listings are matched before it.
+    const routes: ReadonlyArray<{ readonly matches: (endpoint: string) => boolean; readonly body: string }> = [
+      { matches: Str.includes("/history?"), body: historyJson },
+      { matches: Str.endsWith("/history/54940515"), body: snapshot15Json },
+      { matches: Str.includes("event=push"), body: '{"total_count":0,"workflow_runs":[]}' },
+      {
+        matches: Str.includes(`created=${firstHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes(`created=${secondHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes("/actions/workflows/"),
+        body: `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`,
+      },
+    ];
     const response = (endpoint: string) =>
-      Str.includes("/history?")(endpoint)
-        ? Effect.succeed(historyJson)
-        : Str.endsWith("/history/54940515")(endpoint)
-          ? Effect.succeed(snapshot15Json)
-          : Str.includes("event=push")(endpoint)
-            ? Effect.succeed('{"total_count":0,"workflow_runs":[]}')
-            : Str.includes(`created=${firstHalf}`)(endpoint)
-              ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`)
-              : Str.includes(`created=${secondHalf}`)(endpoint)
-                ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`)
-                : Str.includes("/actions/workflows/")(endpoint)
-                  ? Effect.succeed(`{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`)
-                  : windowGithubResponse(endpoint);
+      O.match(
+        A.findFirst(routes, (route) => route.matches(endpoint)),
+        { onNone: () => windowGithubResponse(endpoint), onSome: (route) => Effect.succeed(route.body) }
+      );
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
         ".",
