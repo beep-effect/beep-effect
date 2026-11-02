@@ -32,16 +32,17 @@ Sources, all read 2026-11-02 (the pages show no last-updated date):
 
 | Source | What it says |
 | --- | --- |
-| [MCP](https://code.claude.com/docs/en/mcp) | Three scopes: local (`~/.claude.json`, this project only), project (`.mcp.json`, shared through version control), user (`~/.claude.json`, all projects). When a server is defined in more than one place, the highest-precedence definition wins whole (local > project > user > plugin > claude.ai connectors). An organization's `managedMcpServers` definition "ranks above all of these". There is no per-host or per-machine enable rule. `${VAR}` and `${VAR:-default}` expand in `command`, `args`, `env`, `url` and `headers`. That is value substitution, not conditional enablement; an unset variable with no default stays as literal text, and the CLI warns. `disabledMcpjsonServers` "in any settings file still rejects the server." Committed `enabledMcpjsonServers`/`enableAllProjectMcpServers` are ignored in an untrusted folder. A stdio server that fails to start is marked failed and the session continues without its tools. |
-| [Settings](https://code.claude.com/docs/en/settings) | Precedence: managed > `--settings` > `.claude/settings.local.json` > `.claude/settings.json` > `~/.claude/settings.json`. List keys merge across files. Cloud sessions read the committed `.claude/settings.json` (single-repo sessions only) and server-managed settings; they do **not** read `~/.claude/settings.json` or `.claude/settings.local.json`. |
-| [Settings reference](https://code.claude.com/docs/en/settings-reference) | All five MCP keys were read in full; the page was read through all of its ~442,600 characters in five ranges. `enabledMcpjsonServers` and `disabledMcpjsonServers` are arrays of `.mcp.json` server names, scope "Any file", default unset. "A rejection in any settings file applies, including a project `.claude/settings.json`." `enableAllProjectMcpServers` is a Boolean. In an untrusted folder, the approval keys are honored only from user, managed or `--settings` sources. `allowedMcpServers` and `deniedMcpServers` match by `serverName`, `serverCommand` or `serverUrl`, not by host. Some entries vary by OS, surface (cloud, desktop, VS Code) or a named environment variable, but those conditions are built into the product. None of them is user-written conditional syntax, and none makes an MCP key apply by machine or hostname. The one dynamic mechanism is `policyHelper`, a managed-only executable that computes managed settings at startup. It is read only from a machine's MDM, registry or managed file, is ignored in server-managed settings, and is never read from `.claude/settings.json`. It is an organization-admin tool, not repo syntax, and is out of scope here. |
-| [Managed MCP](https://code.claude.com/docs/en/managed-mcp) | These are org-admin controls: `managed-mcp.json` gives a fixed server set and exclusive control, and `managedMcpServers` gives remote servers to every user. `allowedMcpServers` and `deniedMcpServers` match by `serverName`, `serverCommand` or `serverUrl`. `managed-mcp.json` lives at a per-OS system path (`/etc/claude-code/` on Linux), and "cannot be delivered through server-managed settings". On a self-hosted runner host it also governs cloud sessions. `managedMcpServers` is read only from managed sources. Both are per-machine admin deployments, not repo syntax. Neither has a host-conditional field. |
-| [Cloud environments](https://code.claude.com/docs/en/cloud-environments), "What carries over" | A repo's `.mcp.json` servers: "Yes, in a session with one repository." Servers added with `claude mcp add` at local or user scope: "No", because they live in `~/.claude.json`. Hooks "run in both local and cloud sessions"; to scope a hook, exit early unless `CLAUDE_CODE_REMOTE` is `true`. That is a script-side check, not settings syntax. |
+| [MCP](https://code.claude.com/docs/en/mcp) | Three scopes: local (`~/.claude.json`, this project only), project (`.mcp.json`, shared through version control), user (`~/.claude.json`, all projects). When a server is defined in more than one place, the highest-precedence definition wins whole (local > project > user > plugin > claude.ai connectors). An organization's `managedMcpServers` definition "ranks above all of these". No per-host or per-machine enable rule was found on the page. `${VAR}` and `${VAR:-default}` expand in `command`, `args`, `env`, `url` and `headers`. That is value substitution, not conditional enablement; an unset variable with no default stays as literal text, and the CLI warns. `disabledMcpjsonServers` "in any settings file still rejects the server." Committed `enabledMcpjsonServers`/`enableAllProjectMcpServers` are ignored in an untrusted folder. A stdio server that fails to start is marked failed and the session continues without its tools. |
+| [Settings](https://code.claude.com/docs/en/settings) | Precedence: managed > `--settings` > `.claude/settings.local.json` > `.claude/settings.json` > `~/.claude/settings.json`. List keys merge across files. A cloud session with one repository, outside a project thread, reads the committed `.claude/settings.json` and server-managed settings. A cloud project thread applies none of the repo's permission rules, hooks or `env`. Cloud sessions do **not** read `~/.claude/settings.json` or `.claude/settings.local.json`. |
+| [Settings reference](https://code.claude.com/docs/en/settings-reference) | All five MCP keys were read in full; the page was read through all of its ~442,600 characters in five ranges. `enabledMcpjsonServers` and `disabledMcpjsonServers` are arrays of `.mcp.json` server names, scope "Any file", default unset. "A rejection in any settings file applies, including a project `.claude/settings.json`." `enableAllProjectMcpServers` is a Boolean. In an untrusted folder, the approval keys are honored only from user, managed or `--settings` sources. `allowedMcpServers` and `deniedMcpServers` match by `serverName`, `serverCommand` or `serverUrl`, not by host. Some entries vary by OS, surface (cloud, desktop, VS Code) or a named environment variable, but those conditions are built into the product. None of the entries read is user-written conditional syntax, and none of them makes an MCP key apply by machine or hostname. The one dynamic mechanism is `policyHelper`, a managed-only executable that computes managed settings at startup. It is read only from a machine's MDM, registry or managed file, is ignored in server-managed settings, and per its Scope line is not read from `.claude/settings.json`. It is an organization-admin tool, not repo syntax, and is out of scope here. |
+| [Managed MCP](https://code.claude.com/docs/en/managed-mcp) | These are org-admin controls: `managed-mcp.json` gives a fixed server set and exclusive control, and `managedMcpServers` gives remote servers to every user. `allowedMcpServers` and `deniedMcpServers` match by `serverName`, `serverCommand` or `serverUrl`. `managed-mcp.json` lives at a per-OS system path (`/etc/claude-code/` on Linux), and "cannot be delivered through server-managed settings". On a self-hosted runner host it also governs cloud sessions. `managedMcpServers` is read only from managed sources. Both are per-machine admin deployments, not repo syntax. No host-conditional field is documented for either. Both rank above the repo's project scope: a `managedMcpServers` entry overrides a same-name local, project or user server. |
+| [Cloud environments](https://code.claude.com/docs/en/cloud-environments), "What carries over" | A repo's `.mcp.json` servers: "Yes, in a session with one repository." Repository hooks, `.mcp.json` and settings carry over only to a session with one repository, outside a project thread. Servers added with `claude mcp add` at local or user scope: "No", because they live in `~/.claude.json`. Hooks "run in both local and cloud sessions"; to scope a hook, exit early unless `CLAUDE_CODE_REMOTE` is `true`. That is a script-side check, not settings syntax. |
 | [Cloud sessions](https://code.claude.com/docs/en/claude-code-on-the-web) | Lists no MCP host scoping; settings changes for a cloud session go through environment variables or the committed `.claude/settings.json`. |
 | `claude --help`, `claude mcp --help` | `--mcp-config` and `--strict-mcp-config` choose servers for a single invocation; `claude mcp reset-project-choices` resets approvals. No host-conditional option. |
 
-Supported routes the packet owner could choose from. None is applied here,
-and none is settings syntax:
+Routes the packet owner could consider. None is applied here, and none is
+host-conditional settings syntax. Only route 1 and the hook form of route 2
+are documented behavior:
 
 1. **Per-machine split by file location.** Files in `~/.claude.json`,
    `~/.claude/settings.json` or `.claude/settings.local.json` stay on that
@@ -55,9 +56,10 @@ and none is settings syntax:
    `CLAUDE_CODE_REMOTE` environment variable is `true`." The repo's hooks
    already key off the explicit `BEEP_AGENT_HOST=cloud` (D3). A stdio server's
    `command` could point at a wrapper script that makes the same check. The
-   docs do not describe that pattern for MCP; it is an owner option, not
-   documented MCP behavior. A wrapper that exits still shows up as a failed
-   server.
+   docs do not describe that pattern for MCP. It is a possible owner design,
+   not a supported MCP conditional setting, and it is untested here. Under
+   the documented stdio failure rule, a wrapper that exits without serving
+   would likely show up as a failed server.
 3. **Org-admin managed MCP** (`managed-mcp.json` or `managedMcpServers`). It
    is per-machine or organization-wide policy, outside this repo's control.
 
@@ -76,12 +78,12 @@ bootstrap hook reinstalled dependencies (see 2a).
 | --- | --- | --- | --- | --- | --- |
 | `shadcn` | stdio | — | connected | failed: connect timeout (30 s) | connected in this session's startup; can time out |
 | `next-devtools` | stdio | — | connected | failed: connect timeout (30 s) | connected in this session's startup; can time out |
-| `nlp` | stdio | — | connected | connected | available after bootstrap |
-| `fallow` | stdio | — | connected | connected | available after bootstrap (F11's ENOENT was pre-bootstrap) |
-| `beep-m365-outbox` | stdio | — | failed: `op` not found | same | expected failure; `op` never enters the cloud |
+| `nlp` | stdio | — | connected | connected | connected in both observed starts (after bootstrap) |
+| `fallow` | stdio | — | connected | connected | connected in both observed starts (after bootstrap; F11's ENOENT was pre-bootstrap) |
+| `beep-m365-outbox` | stdio | — | failed: `op` not found | same | expected to fail while `op` is absent from the cloud VM (bootstrap reports `op missing`) |
 | `stately` | http | `enabledMcpjsonServers` | failed: proxy refused tunnel (403) | same | expected failure under the current allowlist (not expanded) |
 | `phoenix-docs` | http | `enabledMcpjsonServers` | failed: proxy refused tunnel (403) | same | expected failure under the current allowlist (not expanded) |
-| `serena` | stdio | `disabledMcpjsonServers` | not attempted | not attempted | not connected (rejected by committed settings everywhere) |
+| `serena` | stdio | `disabledMcpjsonServers` | not attempted | not attempted | not connected wherever the committed settings are read |
 | `chrome-devtools` | stdio | `disabledMcpjsonServers` | not attempted | not attempted | not connected |
 | `webstorm` | http | `disabledMcpjsonServers` | not attempted | not attempted | not connected |
 | `phoenix` | http | `disabledMcpjsonServers` | not attempted | not attempted | not connected |
@@ -97,7 +99,7 @@ The GitHub MCP tools in a cloud session come from the vendor session, not
 All of these failures are **optional MCP connection errors**. They are not repo-hook
 errors, and the session continued without those tools. D7 named `serena`,
 `webstorm`, `phoenix`, `phoenix-docs` and `chrome-devtools`. Current `main`
-differs: four of those are rejected by committed settings and never fail, and
+differs: four of those are rejected by committed settings and were not attempted in either observed start, and
 `beep-m365-outbox` and `stately` are additional cloud failures. The runbook's
 prose bullet already names the three observed failures. D7 asks for a runbook
 *table*, which belongs to P4 doctrine work and is still open.
