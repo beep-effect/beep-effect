@@ -161,6 +161,12 @@ now bounds top-level work and queues across cleaner instances, with captured
 Clock/policy, cancellation cleanup and scope shutdown. Nested plans reuse their
 outer permit and ledger. Public engine composition and full parity remain open.
 
+The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
+now matches all 600 non-HTML named/official outcomes in the original 1,155-case
+cleaner corpus, including 599 result/identity observations and the invalid-name
+failure. Full host traces, 504 HTML cases and 51 custom scenes remain separate
+proof obligations; this does not promote a canonical completion row.
+
 ## Mission
 
 Deliver an Effect-native citation engine with observable capability parity to

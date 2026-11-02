@@ -229,6 +229,12 @@ source-event replay and remaining engine work stay open. The operator assigns
 repository-wide green checks to the Claude orchestrator; merge main regularly
 and continue implementation without treating unrelated reds as a work hold.
 
+The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
+now matches all 600 non-HTML named/official outcomes in the original 1,155-case
+cleaner corpus, including 599 result/identity observations and the invalid-name
+failure. Full host traces, 504 HTML cases and 51 custom scenes remain separate
+proof obligations; this does not promote a canonical completion row.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use
