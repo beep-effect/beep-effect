@@ -2481,7 +2481,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
             const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-" });
-            const doneMarker = JSON.stringify(path.join(tempRoot, "late.done"));
+            const doneMarker = `"${path.join(tempRoot, "late.done")}"`;
             const { laneReport, report } = yield* collectGithubCheckLaneWavesForTesting(
               "pool",
               [
@@ -2540,11 +2540,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                       "process.exit(2)",
                       O.some(githubCheckTestEstimate("pool:red", 1))
                     ),
-                    githubCheckTestLane(
-                      "pool:tail",
-                      "preflight",
-                      `await Bun.write(${JSON.stringify(tailMarker)}, "ran")`
-                    ),
+                    githubCheckTestLane("pool:tail", "preflight", `await Bun.write("${tailMarker}", "ran")`),
                   ],
                 }),
               ],
