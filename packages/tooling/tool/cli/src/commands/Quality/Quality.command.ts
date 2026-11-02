@@ -113,6 +113,8 @@ import {
 import {
   detectQualityProfile,
   detectQualityProfileForTesting as detectQualityProfileForTestingImpl,
+  provideQualityConcurrency,
+  qualityConcurrencyPlan,
   qualityProfileConfigForTesting as qualityProfileConfigForTestingImpl,
 } from "./Quality.plan.ts";
 import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.ts";
@@ -902,16 +904,19 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
     })
   );
 
-const runGithubCheckLaneGroup = (
+const runGithubCheckLaneGroup = Effect.fn("QualityScriptCommands.runGithubCheckLaneGroup")(function* (
   label: string,
   lanes: ReadonlyArray<GithubCheckLaneSpec>,
   failurePolicy: GithubCheckFailurePolicyType,
-  concurrency = githubCheckTierConcurrency("pre-push")
-): Effect.Effect<
+  concurrency?: number
+): Effect.fn.Return<
   void,
   QualityTaskConfigurationError | QualityTaskGroupFailed,
   QualityScriptEnvironment | Digest.Digest
-> => runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, concurrency);
+> {
+  const width = concurrency ?? githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckLaneWaves(lanes), failurePolicy, width);
+});
 
 const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   "QualityScriptCommands.runEvidenceOrderedGithubCheckLaneGroup"
@@ -925,7 +930,16 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   QualityScriptEnvironment | WaveOrder | Digest.Digest
 > {
   const waveOrder = yield* WaveOrder;
-  yield* runQualityTaskGithubCheckLaneWaves(label, githubCheckOrderedLaneWaves(waveOrder.order(lanes)), failurePolicy);
+  // Pre-push lanes run `prePushLanes` wide inside each run of consecutive
+  // same-wave lanes; exclusive lanes (Turbo graphs, coverage, integration,
+  // codegen) still run alone.
+  const width = githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
+  yield* runQualityTaskGithubCheckLaneWaves(
+    label,
+    githubCheckOrderedLaneWaves(waveOrder.order(lanes)),
+    failurePolicy,
+    width
+  );
 });
 
 const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function* (
@@ -1173,7 +1187,7 @@ const runCheapGates = Effect.fn("QualityScriptCommands.runCheapGates")(function*
     "github-checks:cheap-gates",
     [...changesetStatusLanes, ...githubCheckCheapGateLanes(repoRoot)],
     "collect-all",
-    githubCheckTierConcurrency("cheap-gates")
+    githubCheckTierConcurrency("cheap-gates", yield* qualityConcurrencyPlan)
   );
 });
 
@@ -1558,17 +1572,19 @@ export const runGithubChecks = Effect.fn("QualityScriptCommands.runGithubChecks"
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const failurePolicy = options.failurePolicy ?? GithubCheckFailurePolicy.Enum["fail-fast"];
 
-  yield* GithubCheckMode.match(mode, {
-    "cheap-gates": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runCheapGates(repoRoot))),
-    quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot, failurePolicy))),
-    "review-fix": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runReviewFix(repoRoot, options))),
-    "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot, failurePolicy))),
-    secrets: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSecretScan(repoRoot))),
-    security: () => runSecurityScan(repoRoot),
-    sast: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSastScan(repoRoot))),
-    nix: () => runNixChecks(repoRoot),
-    "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot, failurePolicy))),
-  });
+  yield* provideQualityConcurrency(
+    GithubCheckMode.match(mode, {
+      "cheap-gates": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runCheapGates(repoRoot))),
+      quality: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runQuality(repoRoot, failurePolicy))),
+      "review-fix": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runReviewFix(repoRoot, options))),
+      "repo-sanity": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runRepoSanity(repoRoot, failurePolicy))),
+      secrets: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSecretScan(repoRoot))),
+      security: () => runSecurityScan(repoRoot),
+      sast: () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runSastScan(repoRoot))),
+      nix: () => runNixChecks(repoRoot),
+      "pre-push": () => pipe(ensureOriginMain(repoRoot), Effect.andThen(runPrePushChecks(repoRoot, failurePolicy))),
+    })
+  );
 });
 
 const readGithubChecksFallowFeatureMatrix = Effect.fn("QualityScriptCommands.readGithubChecksFallowFeatureMatrix")(

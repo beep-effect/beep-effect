@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation W1b, feat/gh-git-w1b-yeet)",
-      "reason": "Record the W1b root re-seal: Yeet/internal/GitExec.ts enters the goals-doctor and knowledge policy closures after the leaf Git.make provisions in GitWorktree.ts and TmpfsReap.ts are dropped; no manifest or dependency changes; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (profile-derived quality concurrency, claude/perf-quality-concurrency-d42a27)",
+      "reason": "Record Quality.plan.ts, ProcessAttachment.ts and ProcessTable.ts added to the goals-doctor, knowledge and lint-deprecated-apis seal inputs, and ShardScope.ts added to the lint-schema-catalog seal (stale on main since #2563); commands, outputs and cache settings are unchanged and no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w1b.md",
-        "sha256": "23edadefc89d8f745b91a13deedf85bd65c6acbae19bd0f41b6a00cfac328764"
+        "path": "docs/reports/quality-concurrency-cache-review-2026-11-02.md",
+        "sha256": "c3f3eab8d5e5d2e54c63de644838baeb6c91312b071b5f1e2b027bbb335fafd9"
       }
     },
     "@beep/acp": {
@@ -3593,6 +3593,7 @@
             "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
             "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4210,6 +4211,7 @@
             "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
             "packages/tooling/tool/cli/src/commands/Models/Models.spans.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4919,6 +4921,7 @@
             "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
             "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+            "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
             "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -4950,6 +4953,8 @@
             "packages/tooling/tool/cli/src/internal/ratchet/index.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+            "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
             "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts"
           ],
           "env": [],
@@ -6117,6 +6122,7 @@
             "packages/tooling/tool/cli/src/internal/artifacts/index.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+            "packages/tooling/tool/cli/src/internal/cli/ShardScope.ts",
             "packages/tooling/tool/cli/src/internal/cli/Timing.ts",
             "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
             "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
@@ -121734,7 +121740,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "9dad72615199920e173f9b9d2158c91fe786c13708ea4a03d0f7370d799c7ac8"
+        "sha256": "0b42ac96273cbf1060421b7e501d4e427d8455ebc73182b16da2d4360e202d5d"
       }
     ]
   }
