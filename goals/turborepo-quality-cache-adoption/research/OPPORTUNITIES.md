@@ -566,3 +566,21 @@ from the current population and feature rows, and check both entry views before
 publication. Preserve versioned native evidence rather than calling an older
 shared pin observation current. No acceptance or qualification is inferred from
 this documentation repair.
+
+### Signature-key safeguard calibration, 2026-11-02
+
+The first synthetic native invocation combined mutually exclusive `--force`
+and `--cache` options and was refused before task execution. Preserve that
+receipt as an argument failure, not signature evidence. Use an empty cache per
+case instead. A local-only calibration then correctly performed no remote key
+validation; explicitly enable synthetic remote settings inside denied networking
+to exercise the native minimum. The full 168-case matrix confirms a supplied
+short key is rejected, but an absent key may execute and warn later. Retain the
+separate Beep role policy and actual transport/provenance proof requirements.
+
+The normal commit hook rejected a non-secret driver checksum because its
+filename was a JSON map property containing `signature-key`. Use the existing
+source-binding representation with named `path` and `sha256` fields rather than
+filenames as property names. Preserve the failed hook and original report,
+re-execute the same cases against the revised driver, and keep scanner rules
+unchanged. Checksums are provenance metadata, not credentials.

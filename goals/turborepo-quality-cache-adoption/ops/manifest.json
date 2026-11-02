@@ -41,7 +41,8 @@
     "goals/turborepo-quality-cache-adoption/research/refresh-current-population.py",
     "goals/turborepo-quality-cache-adoption/research/population-refresh-checkpoint-2026-11-02.json",
     "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json",
-    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py"
+    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py",
+    "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.py"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -101,7 +102,9 @@
     "research/setup-feature-review.json",
     "research/population-before-source-refresh-2026-11-02.json",
     "research/current-source-fresh-disposition-review-2026-11-02.json",
-    "research/population-current-source-checkpoint-2026-11-02.json"
+    "research/population-current-source-checkpoint-2026-11-02.json",
+    "research/native-signature-key-controls.json",
+    "research/signature-key-feature-observation.json"
   ],
   "agentLaunchers": [
     {
