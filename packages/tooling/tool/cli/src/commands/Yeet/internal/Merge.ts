@@ -43,6 +43,7 @@ import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -199,7 +200,7 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
 ): Effect.fn.Return<
   MergeOutcome,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const branch = yield* guardLiteralArg(context.branch).pipe(
     Effect.mapError(

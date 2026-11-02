@@ -6,17 +6,24 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { jsonFlag } from "../../internal/cli/Flags.ts";
 import { printCommandJson } from "../../internal/cli/Json.ts";
+import { stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import {
   CatalogRunReport,
+  GeneratedFileStatus,
   INSTRUMENTATION_CATALOG_DIR,
   INSTRUMENTATION_CATALOG_GENERATED_BY,
   OBSERVABILITY_STANDARD_PATH,
@@ -24,6 +31,7 @@ import {
 import { InstrumentationCatalog, InstrumentationCatalogLive } from "./Observability.service.ts";
 
 const encodeReport = S.encodeEffect(CatalogRunReport);
+const isStagedStatus = S.is(S.Literals([GeneratedFileStatus.Enum.wrote, GeneratedFileStatus.Enum.removed]));
 
 const reportLines = (report: CatalogRunReport): ReadonlyArray<string> => [
   `[observability-catalog] ${INSTRUMENTATION_CATALOG_DIR}: shards=${report.shards} drifted=${A.length(report.drifted)}`,
@@ -59,13 +67,34 @@ const catalogCommand = Command.make(
         "Fail on stale, missing or orphaned shards, conflicts, cross-package duplicate names or interpolated names (default)"
       )
     ),
+    stage: Flag.Boolean("stage").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("After --write, add every rewritten or removed shard to the git index (pre-commit hook)")
+    ),
     json: jsonFlag,
+    paths: Argument.String("paths").pipe(
+      Argument.variadic,
+      Argument.withDescription(
+        "Source paths whose owning packages' shards are regenerated; omit to scan the whole repository"
+      )
+    ),
   },
-  Effect.fn(function* ({ write, check, json }) {
+  Effect.fn(function* ({ write, check, stage, json, paths }) {
     if (write && check) {
       return yield* failWithReportedExit("observability catalog: pass --write or --check, not both.");
     }
-    const report = yield* InstrumentationCatalog.use((catalog) => catalog.run(write ? "write" : "check"));
+    const report = yield* InstrumentationCatalog.use((catalog) =>
+      catalog.run(write ? "write" : "check", A.filter(paths, P.isString))
+    );
+    if (write && stage) {
+      const repoRoot = yield* findRepoRoot();
+      yield* stageGeneratedFiles(
+        repoRoot,
+        A.filterMap(report.drifted, (file) =>
+          isStagedStatus(file.status) ? Result.succeed(file.path) : Result.failVoid
+        )
+      );
+    }
     if (json) {
       yield* printCommandJson(yield* encodeReport(report));
     } else {

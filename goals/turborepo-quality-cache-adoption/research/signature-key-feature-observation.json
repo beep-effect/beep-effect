@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "cache-signature-key-feature-observation/v1",
+  "recordedAt": "2026-11-02T13:03:39.681224+00:00",
+  "feature": "futureFlag:longerSignatureKey",
+  "authority": "Native semantics and rollout prerequisite evidence; feature adoption and task qualification remain pending.",
+  "nativeEvidence": {
+    "path": "native-signature-key-controls.json",
+    "sha256": "295dee52c2f80d3e19fe4b0bf11f1d9d219bff217ea2c7f2e7c00786cb58d6e4",
+    "cases": 168,
+    "driverSha256": "ed62bcf2883d45f44301181e5cd2d13c2807ff0ba51dcede52c12b08dfa3c3fb",
+    "driverRefusals": {
+      "driverSha256": "ed62bcf2883d45f44301181e5cd2d13c2807ff0ba51dcede52c12b08dfa3c3fb",
+      "rows": [
+        {
+          "case": "optimized-python",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "ed9329da4ff06f87cd467b811c6dc64917c9978bd71c184a66aab145e19bedab"
+        },
+        {
+          "case": "existing-report",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "49bc95f82ec59d81be4529415f0b89cd45e13e53e3050f27cba6cef39126c7c0"
+        },
+        {
+          "case": "wrong-native-pin",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "bf8ed650a423f3038fa4f4a7c8201eb6ece147aa7dcc46d83e349989bec750fe"
+        }
+      ],
+      "passingReportUnchanged": true,
+      "refusedOutputsAbsent": true
+    },
+    "sourceScope": "Recorded Git revision is the experiment base; the newly authored driver is bound by its exact sourceBindings digest. The public copy has identical bytes."
+  },
+  "registryObservation": {
+    "observedAt": "2026-11-02T12:56:54.725252+00:00",
+    "authority": "npm registry package metadata",
+    "tags": {
+      "latest": "2.11.10",
+      "canary": "2.11.11-canary.1"
+    }
+  },
+  "observations": [
+    "With remote caching, signing and longerSignatureKey enabled, supplied keys shorter than 32 UTF-8 bytes are rejected before task execution. Empty and 31-byte keys are included in the test cases. Bearer and team settings are synthetic.",
+    "When longerSignatureKey is absent or false, short supplied keys produce a warning and the task executes.",
+    "Sixteen non-ASCII characters encoded as 32 UTF-8 bytes pass the length check. Fifteen of those characters plus one ASCII character are 31 bytes and fail when enforcement is enabled.",
+    "A missing key still permits task execution and a later artifact signature warning. Native length enforcement does not replace the Beep role policy for missing keys.",
+    "Local execution and execution with signing disabled do not enforce the minimum remote signature key length."
+  ],
+  "pending": [
+    "Choose and qualify the signed rollout configuration, including this native safeguard.",
+    "Preserve reader local-only and protected writer/canary fail-closed behavior when the required key is missing.",
+    "Prove actual remote signed artifact restoration and current-source protected producer provenance."
+  ],
+  "productionChanged": false,
+  "featureAcceptanceStatus": "pending",
+  "taskQualificationGranted": false,
+  "retainedCalibrationFailures": [
+    "Initial --force and --cache combination was refused before task execution; no signature conclusion was drawn.",
+    "Local-only calibration correctly performed no key-length enforcement; this was not treated as remote behavior.",
+    "The first commit hook rejected a source checksum stored under a filename used as a map property. The driver now uses explicit path and sha256 source bindings. The same 168 cases were rerun without changing scanner rules."
+  ]
+}

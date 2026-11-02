@@ -517,3 +517,38 @@ The stale-output case reports `CodegenDriftError`, prints the unified diff and
 leaves source unchanged. The native probe's initial configuration-filename and
 stream-assertion mistakes remain recorded separately. This repairs a generator
 prerequisite; no computation disposition, qualification or cache policy changes.
+
+### Current source after audit-wrapper removal, 2026-11-02
+
+The [current checkpoint](research/population-current-source-checkpoint-2026-11-02.json)
+binds a new native census to accepted source `e274d3e619`. It records 191
+workspaces, 4,457 graph nodes and 2,434 executable computations. Accepted PR2526
+removed 188 package audit wrappers and added one root deprecated-import check;
+no computation was removed by this refresh's scope decision. Existing members'
+cache settings are unchanged. The 1,666 configured cache-enabled computations
+are not qualified by that setting.
+
+The [previous current population](research/population-before-source-refresh-2026-11-02.json)
+is byte-identical to its accepted-main version, and both retained history links
+verify. All 199 historical reviews remain. The
+[new literal-source review](research/current-source-fresh-disposition-review-2026-11-02.json)
+re-establishes 186 source-writing fixers and twelve persistent services as
+whole-task keep-fresh. Every workspace script-map digest changed, while these
+literal operations and disabled cache policy remain identical. Pure counterparts
+stay unqualified. There are 2,236 pending current computation reviews; the 28
+feature reviews, ordinary qualification, protected evidence, real observation
+windows and full-goal closure remain outstanding.
+
+### Native signature-key length boundary, 2026-11-02
+
+The [feature observation](research/signature-key-feature-observation.json)
+records 168 native cases on stable 2.11.10 and canary 2.11.11-canary.1,
+plus optimized-Python, existing-report and wrong-pin driver refusals. The
+[driver](research/native-signature-key-controls.py) reuses the existing bounded
+stream collector and exposes only synthetic fixtures to isolated networking.
+Supplied keys below 32 UTF-8 bytes fail before task execution when the length
+flag, signing and remote cache are active. Missing keys still permit execution
+and a later signature warning; local-only and signing-disabled cases also run.
+The native length flag therefore cannot replace Beep's missing-key role policy.
+No real remote service or signed artifact was exercised. Production settings,
+qualification and the 28 pending feature decisions remain unchanged.
