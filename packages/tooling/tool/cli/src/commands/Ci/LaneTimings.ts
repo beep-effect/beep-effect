@@ -782,7 +782,8 @@ class CiWorkflowRunsPage extends S.Opaque<CiWorkflowRunsPage, { readonly brand: 
 
 const decodeCiWorkflowRunsPage = S.decodeUnknownEffect(S.fromJsonString(CiWorkflowRunsPage));
 
-const CI_WORKFLOW_RUNS_JQ = "{total_count,workflow_runs:[.workflow_runs[]|{created_at,event,head_sha,id,run_attempt}]}";
+const CI_WORKFLOW_RUNS_JQ =
+  "{total_count,workflow_runs:[.workflow_runs[]|{created_at,event,head_branch,head_sha,id,run_attempt,run_started_at,updated_at}]}";
 const CI_LEGACY_WORKFLOW_JOBS_JQ =
   "{total_count,jobs:[.jobs[]|{completed_at,conclusion,created_at,id,labels,name,run_attempt,run_id,runner_name,started_at,status,steps}]}";
 const CI_WINDOW_WORKFLOW_JOBS_JQ =
@@ -1378,12 +1379,16 @@ export class CiWorkflowWindowRun extends S.Opaque<CiWorkflowWindowRun, { readonl
   S.Struct({
     created_at: S.DateTimeUtcFromString,
     event: CiLaneTimingWindowRunEvent,
+    head_branch: S.NullOr(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     head_sha: S.NonEmptyString,
     id: S.Finite,
     run_attempt: S.Finite,
+    run_started_at: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    updated_at: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("CiWorkflowWindowRun", {
-      description: "Workflow-run identity, event, head, creation time, and attempt retained by the census.",
+      description:
+        "Workflow-run identity, event, head, creation time, attempt, and (when the API supplies them) the head branch and in-flight bounds the per-day peak column reads.",
     })
   )
 ) {}
@@ -1625,6 +1630,48 @@ export class CiLaneTimingPickupStat extends S.Opaque<CiLaneTimingPickupStat, { r
 ) {}
 
 /**
+ * Peak CI-active load observed on one UTC day of a census window.
+ *
+ * **Details**
+ *
+ * A run is in flight from `run_started_at` to `updated_at` (an upper bound:
+ * `updated_at` trails completion when a run is re-run later). A branch is
+ * CI-active while it has at least one run in flight; `main` counts like any
+ * other branch. The sweep records, per UTC day, the largest number of runs in
+ * flight at once and the largest number of distinct branches in flight at
+ * once. Repair decision 3 (`goals/ci-lane-economics/research/repair-decision-3.md`)
+ * caps admitted load at six CI-active branches and asks every window-4 census
+ * to carry this column so a pass or breach can be attributed to the cap, a
+ * governor leak, or capacity.
+ *
+ * **Example** (Describe one quiet day)
+ *
+ * ```ts
+ * import { CiLaneTimingDayPeak } from "@beep/repo-cli/commands/Ci"
+ *
+ * const peak = CiLaneTimingDayPeak.make({ day: "2026-09-24", peakBranches: 2, peakRuns: 2 })
+ * console.log(peak.peakBranches <= 6)
+ * // true
+ * ```
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export class CiLaneTimingDayPeak extends S.Opaque<CiLaneTimingDayPeak, { readonly brand: unique symbol }>()(
+  S.Struct({
+    day: S.NonEmptyString,
+    peakBranches: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    peakRuns: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+  }).pipe(
+    $I.annoteSchema("CiLaneTimingDayPeak", {
+      description: "Largest simultaneous in-flight run and distinct-branch counts observed on one UTC day.",
+    })
+  )
+) {}
+
+const ciLaneTimingDayPeaksDefault = A.empty<CiLaneTimingDayPeak>();
+
+/**
  * Reproducible admission-census report over one bounded UTC window.
  *
  * **Details**
@@ -1653,6 +1700,7 @@ export class CiLaneTimingWindowReport extends S.Opaque<CiLaneTimingWindowReport,
   S.Struct({
     attribution: S.Array(CiLaneTimingAttributionStat),
     contextCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    dayPeaks: S.Array(CiLaneTimingDayPeak).pipe(S.withConstructorDefault(Effect.succeed(ciLaneTimingDayPeaksDefault))),
     laneStats: S.Array(CiLaneTimingWindowStat),
     pickup: CiLaneTimingPickupStat,
     populationChanges: S.Array(CiRulesetPopulationChange).pipe(
@@ -1674,6 +1722,11 @@ export class CiLaneTimingWindowReport extends S.Opaque<CiLaneTimingWindowReport,
 const CI_LANE_TIMING_RULESET_ID = 10_240_248;
 const CI_LANE_TIMING_CHARTER = Duration.minutes(20);
 const CI_LANE_TIMING_QUEUE_TRIPWIRE = Duration.minutes(5);
+// Repair decision 3, ruling 2: the orchestration doctrine admits at most six CI-active branches.
+const CI_LANE_TIMING_ADMITTED_BRANCH_CAP = 6;
+// GitHub lists at most 1000 workflow runs per query; a wider span has to be split before paging.
+const CI_WORKFLOW_RUNS_LIST_CAP = 1000;
+const CI_WORKFLOW_RUNS_MIN_SPLIT_SPAN = Duration.hours(1);
 const CI_LANE_TIMING_JOB_FETCH_CONCURRENCY = 8;
 const HEAVY_LANE_PREFIX = "Heavy / ";
 
@@ -1729,6 +1782,11 @@ const CI_LANE_TIMING_RATIFIED_POPULATIONS: ReadonlyArray<CiLaneTimingRatifiedPop
   CiLaneTimingRatifiedPopulation.make({ contextCount: 17, ratifiedOn: "2026-09-22", versionId: 49_479_116 }),
   // Heavy / Lint Policy removed at 2026-09-25T14:46:59.802Z; ratified for the window-3 census.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 16, ratifiedOn: "2026-10-01", versionId: 50_918_272 }),
+  // Knip removed 2026-10-14T17:55:21.339Z; beep-reviewer (2026-10-14 to 2026-10-27) and Heavy / Effect Diagnostics
+  // (2026-10-15 to 2026-10-27) came and went in between. Version 54940515 is effective 2026-10-27T09:49:40.844Z;
+  // ratified 2026-11-02 for the window-4 census: goals/ci-lane-economics/PLAN.md (Population ratification
+  // 2026-11-02) and SPEC.md Decision Log D2; the census itself lands as research/admission-week-4-p95.md.
+  CiLaneTimingRatifiedPopulation.make({ contextCount: 15, ratifiedOn: "2026-11-02", versionId: 54_940_515 }),
 ];
 
 const CI_LANE_TIMING_RATIFIED_CONTEXT_COUNTS = HashSet.fromIterable(
@@ -1991,6 +2049,10 @@ const runIsInsideWindow = (options: CiLaneTimingWindowOptions, run: CiWorkflowWi
   return insideBounds && matchesHead;
 };
 
+const windowSpanIsSplittable = (options: CiLaneTimingWindowOptions): boolean =>
+  DateTime.toEpochMillis(options.until) - DateTime.toEpochMillis(options.since) >
+  Duration.toMillis(CI_WORKFLOW_RUNS_MIN_SPLIT_SPAN);
+
 const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRunPages")(function* (
   repoRoot: string,
   options: CiLaneTimingWindowOptions,
@@ -2005,6 +2067,21 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
   const page = yield* decodeCiWorkflowWindowRunsPage(json).pipe(
     CiCommandError.mapError(`Failed to decode ${event} workflow-runs page ${pageNumber}.`)
   );
+  if (pageNumber === 1 && page.total_count > CI_WORKFLOW_RUNS_LIST_CAP && windowSpanIsSplittable(options)) {
+    // The listing stops at 1000 runs no matter how many pages are asked for, so a busier span is halved
+    // until every half fits; the half-open bounds keep a run from landing in both halves.
+    const midpoint = DateTime.makeUnsafe(
+      Math.floor((DateTime.toEpochMillis(options.since) + DateTime.toEpochMillis(options.until)) / 2)
+    );
+    const halves = [
+      CiLaneTimingWindowOptions.make({ ...options, until: midpoint }),
+      CiLaneTimingWindowOptions.make({ ...options, since: midpoint }),
+    ];
+    const collectedHalves = yield* Effect.forEach(halves, (half) =>
+      collectCiWorkflowWindowRunPages(repoRoot, half, event, 1, 0, A.empty())
+    );
+    return A.appendAll(collected, A.flatten(collectedHalves));
+  }
   const nextFetchedCount = fetchedCount + A.length(page.workflow_runs);
   const nextCollected = A.appendAll(
     collected,
@@ -2611,7 +2688,8 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
   runCount: number,
   rows: ReadonlyArray<CiLaneTimingWindowRow>,
   rulesetVersion: O.Option<CiRulesetHistoryVersion> = O.none(),
-  populationChanges: ReadonlyArray<CiRulesetPopulationChange> = ciRulesetPopulationChangesDefault
+  populationChanges: ReadonlyArray<CiRulesetPopulationChange> = ciRulesetPopulationChangesDefault,
+  dayPeaks: ReadonlyArray<CiLaneTimingDayPeak> = ciLaneTimingDayPeaksDefault
 ): Effect.fn.Return<CiLaneTimingWindowReport, CiCommandError> {
   yield* assertRequiredContextCount(requiredContextSet, rulesetVersion);
   const requiredContexts = A.sort(A.fromIterable(requiredContextSet), Order.String);
@@ -2621,6 +2699,7 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
   return CiLaneTimingWindowReport.make({
     attribution: A.map(requiredContexts, (lane) => timingAttributionStat(attributionRows, lane)),
     contextCount: HashSet.size(requiredContextSet),
+    dayPeaks,
     laneStats: A.map(requiredContexts, (lane) => timingWindowStat(durationRows, lane)),
     pickup: timingPickupStat(pickupRows),
     populationChanges,
@@ -2641,9 +2720,9 @@ const reportFromRows = Effect.fn("Ci.reportFromLaneTimingWindowRows")(function* 
  * reusable-workflow prefix, replaces sharded `Lint` and `Test Unit` aggregator
  * spans with their effective critical paths, and rejects any required-context
  * set whose normalized cardinality is not a ratified population size. With no
- * ruleset version to look up, it accepts any count in the ratified table
- * (17 or 18); the windowed collector pins the exact count for the resolved
- * version.
+ * ruleset version to look up, it accepts any count in the ratified table; the
+ * windowed collector pins the exact count for the resolved version. The
+ * per-day peak column is swept from the paired runs' in-flight bounds.
  *
  * **Example** (Observe the fail-closed context assertion)
  *
@@ -2668,7 +2747,14 @@ export const buildCiLaneTimingWindowReport = Effect.fn("Ci.buildCiLaneTimingWind
   const requiredContextSet = HashSet.fromIterable(A.map(requiredContexts, normalizeRequiredLaneName));
   yield* assertRequiredContextCount(requiredContextSet);
   const rows = A.flatMap(runs, (runJobs) => rowsForRun(requiredContextSet, runJobs));
-  return yield* reportFromRows(requiredContextSet, A.length(runs), rows);
+  return yield* reportFromRows(
+    requiredContextSet,
+    A.length(runs),
+    rows,
+    O.none(),
+    ciRulesetPopulationChangesDefault,
+    ciLaneTimingDayPeaks(A.map(runs, (runJobs) => runJobs.run))
+  );
 });
 
 const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWindowWithClient")(function* (
@@ -2696,7 +2782,14 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
       A.appendAll(collected, rowsForRun(requiredContextSet, runJobs))
     )
   );
-  return yield* reportFromRows(requiredContextSet, A.length(runs), rows, O.some(version), changes);
+  return yield* reportFromRows(
+    requiredContextSet,
+    A.length(runs),
+    rows,
+    O.some(version),
+    changes,
+    ciLaneTimingDayPeaks(runs)
+  );
 });
 
 /**
@@ -2874,6 +2967,228 @@ const renderLaterAttemptsMarkdown = (report: CiLaneTimingWindowReport): Readonly
   ),
 ];
 
+class CiLaneTimingInFlightRun extends S.Opaque<CiLaneTimingInFlightRun, { readonly brand: unique symbol }>()(
+  S.Struct({
+    branch: S.NonEmptyString,
+    endMillis: S.Finite,
+    startMillis: S.Finite,
+  }).pipe(
+    $I.annoteSchema("CiLaneTimingInFlightRun", {
+      description: "One run's CI-active interval in epoch milliseconds with the branch it keeps active.",
+    })
+  )
+) {}
+
+// A run without both in-flight bounds (an older fixture, a run GitHub never started) carries no load.
+const inFlightRunFor = (run: CiWorkflowWindowRun): O.Option<CiLaneTimingInFlightRun> =>
+  O.map(O.all([run.run_started_at, run.updated_at]), ([startedAt, updatedAt]) =>
+    CiLaneTimingInFlightRun.make({
+      branch: O.getOrElse(O.filter(O.flatMap(run.head_branch, O.fromNullishOr), Str.isNonEmpty), () => run.head_sha),
+      endMillis: Math.max(DateTime.toEpochMillis(startedAt), DateTime.toEpochMillis(updatedAt)),
+      startMillis: DateTime.toEpochMillis(startedAt),
+    })
+  );
+
+const utcDayOf = (millis: number): string => DateTime.formatIsoDate(DateTime.makeUnsafe(millis));
+
+const utcMidnightsBetween = (startMillis: number, endMillis: number): ReadonlyArray<number> => {
+  const first = DateTime.add(DateTime.removeTime(DateTime.makeUnsafe(startMillis)), { days: 1 });
+  return A.unfold(DateTime.toEpochMillis(first), (millis) =>
+    millis <= endMillis
+      ? O.some([millis, DateTime.toEpochMillis(DateTime.add(DateTime.makeUnsafe(millis), { days: 1 }))])
+      : O.none()
+  );
+};
+
+// Starts before ticks before ends at equal instants: a run that ends exactly when another starts is still
+// counted alongside it, matching the inclusive sampling repair decision 3 used. The literal order is the rank.
+const InFlightEventKind = LiteralKit(["start", "tick", "end"]);
+type InFlightEventKind = typeof InFlightEventKind.Type;
+
+type InFlightEvent = {
+  readonly millis: number;
+  readonly kind: InFlightEventKind;
+  readonly branch: O.Option<string>;
+};
+
+const inFlightEventRank = (kind: InFlightEventKind): number =>
+  O.getOrElse(
+    A.findFirstIndex(InFlightEventKind.literals, (literal) => literal === kind),
+    () => 0
+  );
+const inFlightEventOrder = Order.combine(
+  Order.mapInput(Order.Number, (event: InFlightEvent) => event.millis),
+  Order.mapInput(Order.Number, (event: InFlightEvent) => inFlightEventRank(event.kind))
+);
+
+type DayPeakState = {
+  readonly live: HashMap.HashMap<string, number>;
+  readonly liveRuns: number;
+  readonly peaks: HashMap.HashMap<string, { readonly peakBranches: number; readonly peakRuns: number }>;
+};
+
+const observeDayPeak = (state: DayPeakState, millis: number): DayPeakState => {
+  const day = utcDayOf(millis);
+  const branches = HashMap.size(state.live);
+  const recorded = HashMap.get(state.peaks, day);
+  // A midnight tick with nothing in flight does not open a zero row: quiet days stay absent.
+  if (state.liveRuns === 0 && O.isNone(recorded)) {
+    return state;
+  }
+  const previous = O.getOrElse(recorded, () => ({ peakBranches: 0, peakRuns: 0 }));
+  return {
+    ...state,
+    peaks: HashMap.set(state.peaks, day, {
+      peakBranches: Math.max(previous.peakBranches, branches),
+      peakRuns: Math.max(previous.peakRuns, state.liveRuns),
+    }),
+  };
+};
+
+const applyInFlightEvent = (state: DayPeakState, event: InFlightEvent): DayPeakState =>
+  InFlightEventKind.match(event.kind, {
+    tick: () => observeDayPeak(state, event.millis),
+    start: () => {
+      const branch = O.getOrThrow(event.branch);
+      const count = O.getOrElse(HashMap.get(state.live, branch), () => 0);
+      return observeDayPeak(
+        { ...state, live: HashMap.set(state.live, branch, count + 1), liveRuns: state.liveRuns + 1 },
+        event.millis
+      );
+    },
+    end: () => {
+      const branch = O.getOrThrow(event.branch);
+      const count = O.getOrElse(HashMap.get(state.live, branch), () => 1);
+      return {
+        ...state,
+        live: count <= 1 ? HashMap.remove(state.live, branch) : HashMap.set(state.live, branch, count - 1),
+        liveRuns: Math.max(0, state.liveRuns - 1),
+      };
+    },
+  });
+
+/**
+ * Sweep a window's runs into per-UTC-day peak CI-active run and branch counts.
+ *
+ * **Details**
+ *
+ * Every run that carries both `run_started_at` and `updated_at` contributes
+ * one in-flight interval on its head branch (the head SHA when GitHub omits
+ * the branch). An exact sweep over interval starts and ends, plus a tick at
+ * every UTC midnight inside the span, records the largest simultaneous run
+ * count and distinct-branch count per day; load carried across midnight is
+ * attributed to the new day by the tick. Runs without both bounds contribute
+ * nothing, so a report built from minimal fixtures has an empty column rather
+ * than a fabricated zero day.
+ *
+ * **Example** (Two overlapping runs on different branches)
+ *
+ * ```ts
+ * import { CiWorkflowWindowRun, ciLaneTimingDayPeaks } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const run = (id: number, branch: string, start: string, end: string) =>
+ *   CiWorkflowWindowRun.make({
+ *     created_at: DateTime.makeUnsafe(start),
+ *     event: "pull_request",
+ *     head_branch: O.some(branch),
+ *     head_sha: `${id}`,
+ *     id,
+ *     run_attempt: 1,
+ *     run_started_at: O.some(DateTime.makeUnsafe(start)),
+ *     updated_at: O.some(DateTime.makeUnsafe(end)),
+ *   })
+ * const peaks = ciLaneTimingDayPeaks([
+ *   run(1, "a", "2026-10-28T10:00:00Z", "2026-10-28T10:20:00Z"),
+ *   run(2, "b", "2026-10-28T10:10:00Z", "2026-10-28T10:30:00Z"),
+ * ])
+ * console.log(peaks.map((peak) => [peak.day, peak.peakRuns, peak.peakBranches]))
+ * // [["2026-10-28", 2, 2]]
+ * ```
+ *
+ * @param runs - Census runs, in any order.
+ * @returns One peak row per UTC day that saw load, ordered by day.
+ * @category mapping
+ * @since 0.1.0
+ */
+export const ciLaneTimingDayPeaks = (runs: ReadonlyArray<CiWorkflowWindowRun>): ReadonlyArray<CiLaneTimingDayPeak> => {
+  const inFlight = A.getSomes(A.map(runs, inFlightRunFor));
+  if (!A.isReadonlyArrayNonEmpty(inFlight)) {
+    return ciLaneTimingDayPeaksDefault;
+  }
+  const startMillis = A.min(
+    A.map(inFlight, (run) => run.startMillis),
+    Order.Number
+  );
+  const endMillis = A.max(
+    A.map(inFlight, (run) => run.endMillis),
+    Order.Number
+  );
+  const events: ReadonlyArray<InFlightEvent> = A.sort(
+    [
+      ...A.flatMap(
+        inFlight,
+        (run): ReadonlyArray<InFlightEvent> => [
+          { branch: O.some(run.branch), kind: "start", millis: run.startMillis },
+          { branch: O.some(run.branch), kind: "end", millis: run.endMillis },
+        ]
+      ),
+      ...A.map(
+        utcMidnightsBetween(startMillis, endMillis),
+        (millis): InFlightEvent => ({
+          branch: O.none(),
+          kind: "tick",
+          millis,
+        })
+      ),
+    ],
+    inFlightEventOrder
+  );
+  const final = A.reduce(
+    events,
+    { live: HashMap.empty(), liveRuns: 0, peaks: HashMap.empty() } as DayPeakState,
+    applyInFlightEvent
+  );
+  return pipe(
+    A.fromIterable(HashMap.entries(final.peaks)),
+    A.map(([day, peak]) => CiLaneTimingDayPeak.make({ day, peakBranches: peak.peakBranches, peakRuns: peak.peakRuns })),
+    A.sort(Order.mapInput(Order.String, (peak: CiLaneTimingDayPeak) => peak.day))
+  );
+};
+
+const renderDayPeakLoad = (peak: CiLaneTimingDayPeak): string =>
+  peak.peakBranches > CI_LANE_TIMING_ADMITTED_BRANCH_CAP
+    ? `above cap (+${peak.peakBranches - CI_LANE_TIMING_ADMITTED_BRANCH_CAP})`
+    : "within cap";
+
+const renderDayPeaksMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
+  "## Per-day peak CI-active branches",
+  "",
+  `Cap: ${CI_LANE_TIMING_ADMITTED_BRANCH_CAP} CI-active branches (repair decision 3, ruling 2). A run is in flight from its start to its last update; a branch is CI-active while it has a run in flight.`,
+  "",
+  "| UTC day | Peak concurrent runs | Peak concurrent branches | Load |",
+  "| --- | ---: | ---: | --- |",
+  ...A.match(report.dayPeaks, {
+    onEmpty: () => ["| — | — | — | no run carried in-flight bounds |"],
+    onNonEmpty: A.map(
+      (peak) => `| ${peak.day} | ${peak.peakRuns} | ${peak.peakBranches} | ${renderDayPeakLoad(peak)} |`
+    ),
+  }),
+];
+
+const dayPeakBranchOrder = Order.mapInput(Order.Number, (peak: CiLaneTimingDayPeak) => peak.peakBranches);
+
+const renderDayPeaksSummary = (report: CiLaneTimingWindowReport): string =>
+  A.match(report.dayPeaks, {
+    onEmpty: () => "peak CI-active branches: unavailable — no run carried in-flight bounds.",
+    onNonEmpty: (peaks) => {
+      const peak = A.max(peaks, dayPeakBranchOrder);
+      const aboveCap = A.length(A.filter(peaks, (day) => day.peakBranches > CI_LANE_TIMING_ADMITTED_BRANCH_CAP));
+      return `peak CI-active branches: ${peak.peakBranches} on ${peak.day} (${renderDayPeakLoad(peak)}); ${aboveCap} of ${A.length(peaks)} days above the cap of ${CI_LANE_TIMING_ADMITTED_BRANCH_CAP}.`;
+    },
+  });
+
 const renderQueueTripwire = (pickup: CiLaneTimingPickupStat): string =>
   O.match(pickup.p95Seconds, {
     onNone: () => "Queue tripwire: unavailable — no attempt-one shard pickup carried both timestamps.",
@@ -2919,6 +3234,8 @@ export const renderCiLaneTimingWindowMarkdown = (report: CiLaneTimingWindowRepor
       ...renderLaterAttemptsMarkdown(report),
       "",
       renderQueueTripwire(report.pickup),
+      "",
+      ...renderDayPeaksMarkdown(report),
     ],
     "\n"
   );
@@ -2950,6 +3267,7 @@ export const renderCiLaneTimingWindowSummary = (report: CiLaneTimingWindowReport
       `- successful attempt-one lane rows: ${A.length(A.filter(report.rows, isDurationWindowRow))}`,
       `- attributed rows: ${A.length(A.filter(report.rows, isAttributionWindowRow))}`,
       `- ${renderQueueTripwire(report.pickup)}`,
+      `- ${renderDayPeaksSummary(report)}`,
       "",
       renderCiLaneTimingWindowMarkdown(report),
     ],
