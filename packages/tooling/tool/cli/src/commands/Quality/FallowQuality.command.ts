@@ -454,6 +454,11 @@ type ReportPathResolution = {
   readonly rawAbsolute: string;
   readonly rawRelative: string;
 };
+type FallowReportPathOptions = {
+  readonly repoRoot: string;
+  readonly out: string;
+  readonly feature: FallowFeature;
+};
 
 const commandText = (command: string, args: ReadonlyArray<string>) => A.join([command, ...args], " ");
 const csvValues = (value: string): ReadonlyArray<string> =>
@@ -1088,6 +1093,35 @@ const resolveReportPath = Effect.fn("FallowQuality.resolveReportPath")(function*
   };
 });
 
+/**
+ * Resolve the envelope and raw-output paths a Fallow lane writes for its `--out` path.
+ *
+ * **Example** (Find the raw evidence beside a health envelope)
+ *
+ * ```ts
+ * import { fallowReportPathsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ * import * as Effect from "effect/Effect"
+ * import * as Path from "effect/Path"
+ *
+ * const paths = fallowReportPathsForTesting({
+ *   repoRoot: "/repo",
+ *   out: ".beep/fallow/health.check.json",
+ *   feature: "health"
+ * }).pipe(Effect.provide(Path.layer))
+ * console.log(Effect.runSync(paths).rawRelative)
+ * // .beep/fallow/raw/health.check.combined.txt
+ * ```
+ *
+ * @param options - Repository root, the lane's `--out` path and its feature family.
+ * @returns The envelope and raw-output paths, absolute and repository-relative.
+ * @category testing
+ * @since 0.0.0
+ */
+export const fallowReportPathsForTesting = (
+  options: FallowReportPathOptions
+): Effect.Effect<ReportPathResolution, never, Path.Path> =>
+  resolveReportPath(options.repoRoot, options.out, options.feature);
+
 // The dead-code gate already blocks on any finding against a zero baseline; the
 // committed regression baseline (written by root `fallow:dead-code:baseline:write`)
 // is read here so the artifact a writer maintains is also the artifact the gate
@@ -1588,9 +1622,11 @@ const hasPromotedBlockingFindings = (envelope: FallowReportEnvelope): boolean =>
     })
   );
 
+// A non-ok envelope records a tool failure, not a verdict, so it fails advisory runs
+// too: the Fallow Turbo tasks cache, and Turbo caches every task that exits 0.
 const shouldFailInvocation = (envelope: FallowReportEnvelope, options: FallowCommandOptions): boolean => {
   if (!sameEnvelopeStatus(envelope.status, "ok")) {
-    return options.check || !options.advisory;
+    return true;
   }
   if (options.check) {
     return hasPromotedBlockingFindings(envelope);

@@ -29,10 +29,12 @@ import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as Num from "effect/Number";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import {
   isCiSync,
   readTurboCacheEnvironment,
@@ -1477,6 +1479,14 @@ const codegenDriverSteps = (repoRoot: string): ReadonlyArray<QualityTaskStep> =>
 const FALLOW_BLOCKING_LANES = ["audit", "dead-code", "health"] as const;
 const FALLOW_ADVISORY_LANES = ["boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
+type FallowSubLane = readonly [lane: string, gateFlag: "--check" | "--advisory"];
+const FALLOW_SUB_LANES: ReadonlyArray<FallowSubLane> = [
+  ...A.map(FALLOW_BLOCKING_LANES, (lane): FallowSubLane => [lane, "--check"]),
+  ...A.map(FALLOW_ADVISORY_LANES, (lane): FallowSubLane => [lane, "--advisory"]),
+];
+// The sub-lanes write disjoint envelopes, so they run abreast. Three keeps the
+// hosted runner (4 vCPU, 16 GB) at about three Fallow project graphs at once.
+const FALLOW_SUB_LANE_CONCURRENCY = 3;
 
 const fallowReportPath = (lane: string, advisory: boolean): string =>
   `.beep/fallow/${lane}.${advisory ? "advisory" : "check"}.json`;
@@ -1517,17 +1527,16 @@ const fallowEnvelopeCheckSteps = (repoRoot: string): ReadonlyArray<QualityTaskSt
 ];
 
 const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> => [
-  ...A.map(FALLOW_BLOCKING_LANES, (lane) => fallowRunStep(repoRoot, lane, "--check", options.base)),
-  ...A.map(FALLOW_ADVISORY_LANES, (lane) => fallowRunStep(repoRoot, lane, "--advisory", options.base)),
+  ...A.map(FALLOW_SUB_LANES, ([lane, gateFlag]) => fallowRunStep(repoRoot, lane, gateFlag, options.base)),
   ...(options.validateEnvelopes ? fallowEnvelopeCheckSteps(repoRoot) : A.empty<QualityTaskStep>()),
 ];
 
 /**
  * Build the step plan for a CI lane. Exposed for focused unit tests.
  *
- * The fallow lane's plan lists its subprocess steps in execution order; its
- * runtime additionally maintains `.beep/fallow/status.md` accounting (see
- * {@link runCiLane}).
+ * The fallow lane's plan lists its subprocess steps in declaration order; its
+ * runtime runs the seven Fallow sub-lanes three at a time and maintains
+ * `.beep/fallow/status.md` accounting in that same order (see {@link runCiLane}).
  *
  * **Example** (Configure a CI lane)
  *
@@ -1809,25 +1818,31 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     .makeDirectory(fallowDirectory, { recursive: true })
     .pipe(CiCommandError.mapError(`Failed to create ${fallowDirectory}.`));
 
-  const statusLines = A.empty<string>();
+  // Status lines keep declaration order whatever order the sub-lanes finish in,
+  // and the permit stops two finishing sub-lanes from interleaving their writes.
+  const statusLines = MutableHashMap.empty<string, string>();
+  const statusPermit = yield* Semaphore.make(1);
   const writeStatus = Effect.fnUntraced(function* () {
-    const content = A.isReadonlyArrayEmpty(statusLines) ? "" : `${A.join(statusLines, "\n")}\n`;
+    const lines = A.getSomes(A.map(FALLOW_SUB_LANES, ([lane]) => MutableHashMap.get(statusLines, lane)));
+    const content = A.isReadonlyArrayEmpty(lines) ? "" : `${A.join(lines, "\n")}\n`;
     yield* fs.writeFileString(statusPath, content).pipe(CiCommandError.mapError(`Failed to write ${statusPath}.`));
   });
   yield* writeStatus();
 
-  const runFallowSubLane = Effect.fnUntraced(function* (lane: string, gateFlag: string) {
+  const runFallowSubLane = Effect.fnUntraced(function* ([lane, gateFlag]: FallowSubLane) {
     const [elapsed, exitCode] = yield* runLaneProcess(fallowRunStep(repoRoot, lane, gateFlag, options.base)).pipe(
       Effect.timed
     );
     const elapsedSeconds = Math.floor(Duration.toMillis(elapsed) / 1000);
-    A.appendInPlace(statusLines, `- ${lane}: ${exitCode} (${elapsedSeconds}s)`);
-    yield* writeStatus();
+    MutableHashMap.set(statusLines, lane, `- ${lane}: ${exitCode} (${elapsedSeconds}s)`);
+    yield* Semaphore.withPermit(statusPermit, writeStatus());
     return exitCode;
   });
 
-  const blockingExitCodes = yield* Effect.forEach(FALLOW_BLOCKING_LANES, (lane) => runFallowSubLane(lane, "--check"));
-  yield* Effect.forEach(FALLOW_ADVISORY_LANES, (lane) => runFallowSubLane(lane, "--advisory"), { discard: true });
+  const exitCodes = yield* Effect.forEach(FALLOW_SUB_LANES, runFallowSubLane, {
+    concurrency: FALLOW_SUB_LANE_CONCURRENCY,
+  });
+  const blockingExitCodes = A.take(exitCodes, A.length(FALLOW_BLOCKING_LANES));
 
   yield* Effect.forEach(
     FALLOW_BLOCKING_LANES,

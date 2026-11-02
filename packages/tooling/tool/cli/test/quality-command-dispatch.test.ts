@@ -18,8 +18,10 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 
@@ -59,6 +61,10 @@ const recordingSpawner = (spawned: Array<string>, handle = successfulHandle) =>
     A.appendInPlace(spawned, A.join([command.command, ...commandArgs(command)], " "));
     return Effect.succeed(handle);
   });
+
+const decodeEnvelopeStatus = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ advisory: S.Boolean, status: S.String, exitStatus: S.Finite }))
+);
 
 const consoleText = Effect.fn("QualityCommandDispatchTest.consoleText")(function* () {
   const logs = A.filter(yield* TestConsole.logLines, P.isString);
@@ -168,6 +174,41 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
       expect(spawned).toEqual([expect.stringMatching(/^docker run --rm /)]);
     }).pipe(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner(spawned, failedHandle)),
+      Effect.provideServiceEffect(Console.Console, TestConsole.make)
+    );
+  });
+
+  it.effect("fails an advisory Fallow run whose tool failed, so a cached task never replays it", () => {
+    const spawned: Array<string> = [];
+    const toolFailedHandle = ChildProcessSpawner.makeHandle({
+      ...successfulHandle,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(2)),
+      stderr: Stream.make(encoder.encode("simulated fallow failure")),
+    });
+    const fallowSpawner = ChildProcessSpawner.make((command) => {
+      if (!ChildProcess.isStandardCommand(command)) {
+        return Effect.die("quality command dispatch does not spawn piped commands");
+      }
+      const line = A.join([command.command, ...commandArgs(command)], " ");
+      A.appendInPlace(spawned, line);
+      return Effect.succeed(Str.includes("fallow -- health")(line) ? toolFailedHandle : successfulHandle);
+    });
+
+    return Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const out = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "fallow-tool-failed-" }), "health.json");
+
+      const exit = yield* runQualityCommand(["fallow", "health", "--advisory", "--base", "HEAD", "--out", out]).pipe(
+        Effect.exit
+      );
+
+      exit.pipe(Exit.isFailure, assertTrue);
+      expect(A.some(spawned, Str.includes("fallow -- health"))).toBe(true);
+      const envelope = yield* decodeEnvelopeStatus(yield* fs.readFileString(out));
+      expect(envelope).toEqual({ advisory: true, status: "tool-failed", exitStatus: 2 });
+    }).pipe(
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallowSpawner),
       Effect.provideServiceEffect(Console.Console, TestConsole.make)
     );
   });
