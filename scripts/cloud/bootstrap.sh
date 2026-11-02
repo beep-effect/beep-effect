@@ -93,6 +93,9 @@ cleanup_run_dir() {
   done
   # Bare wait also joins a worker interrupted between launch and PID recording.
   wait || true
+  # A publication tool staged but not yet renamed into place is removed; the
+  # previously installed binary, if any, is still the published one.
+  [ -z "${publish_staged:-}" ] || rm -f -- "${publish_staged}"
   rm -rf -- "${run_dir}"
 }
 cancel_downloads() {
@@ -331,13 +334,39 @@ if [ "${op_ok}" = "1" ] && [ -f "${run_dir}/op.verified" ]; then
   fi
 fi
 
-# Publication hook tools land beside bun (already on the persisted PATH).
+# Publication hook tools land beside bun (already on the persisted PATH). Every
+# step is checked explicitly: an optional tool never aborts core preparation,
+# whatever errexit context the caller is in. The new bytes are staged in a
+# unique sibling of the destination and renamed over it in one step, so a
+# failed or interrupted install leaves the previous binary intact.
+publish_staged=""
 install_publish_tool() {
-  local tool="$1" needed="$2" fetched_ok="$3"
-  if [ "${needed}" = "1" ] && [ "${fetched_ok}" = "1" ] && [ -f "${run_dir}/${tool}/${tool}" ]; then
-    install -d -m 0755 "${BUN_INSTALL}/bin"
-    install -m 0755 "${run_dir}/${tool}/${tool}" "${BUN_INSTALL}/bin/${tool}"
-    link_global "${BUN_INSTALL}/bin/${tool}" "${tool}"
+  local tool="$1" needed="$2" fetched_ok="$3" dest="${BUN_INSTALL}/bin"
+  if [ "${needed}" != "1" ] || [ "${fetched_ok}" != "1" ] || [ ! -f "${run_dir}/${tool}/${tool}" ]; then
+    return 0
+  fi
+  if ! install -d -m 0755 "${dest}"; then
+    warn "${tool}: cannot create ${dest}; not installed."
+    return 0
+  fi
+  if ! publish_staged="$(mktemp "${dest}/.${tool}.XXXXXX")"; then
+    publish_staged=""
+    warn "${tool}: cannot stage in ${dest}; not installed."
+    return 0
+  fi
+  if ! install -m 0755 "${run_dir}/${tool}/${tool}" "${publish_staged}"; then
+    rm -f -- "${publish_staged}"; publish_staged=""
+    warn "${tool}: copy into ${dest} failed; previous binary, if any, kept."
+    return 0
+  fi
+  if ! mv -f -- "${publish_staged}" "${dest}/${tool}"; then
+    rm -f -- "${publish_staged}"; publish_staged=""
+    warn "${tool}: rename into ${dest} failed; previous binary, if any, kept."
+    return 0
+  fi
+  publish_staged=""
+  if ! link_global "${dest}/${tool}" "${tool}"; then
+    warn "${tool}: installed in ${dest}, but the global link failed."
   fi
 }
 install_publish_tool typos "${need_typos}" "${typos_ok}"

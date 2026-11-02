@@ -113,7 +113,9 @@ fetch_release_binary() {
   archive="${work}/${name}.tar.gz"
   fetch_required github.com "${archive}" "${url}"
   printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
-  tar -xzf "${archive}" -C "${work}" "${member}"
+  # Root would otherwise apply the archive's recorded owner and mode bits; the
+  # binary's final 0755 mode is set by bootstrap.sh when it is installed.
+  tar -xzf "${archive}" --no-same-owner --no-same-permissions -C "${work}" "${member}"
   [ -f "${work}/${name}" ]
 }
 

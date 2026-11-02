@@ -94,3 +94,32 @@ Same test file run against three versions of the scripts:
   recorded on the PR.
 - The `60c7` commit used `LEFTHOOK_EXCLUDE=typos,gitleaks`. That is a recorded deviation,
   not a passing scan. The parent's own security scan is still required.
+
+## Panel correction wave (same-seat panel on `34b34370`)
+
+| Finding | Disposition |
+| --- | --- |
+| R1/A1: unguarded `install -d`, `install` and link under `set -e` could abort core preparation | **Fixed.** `install_publish_tool` checks every step itself, without relying on its caller's errexit context. Each failure is a tool-named warning, core preparation continues, and readiness reports `NOT ready`. A link failure is warned, and the tool stays installed on the persisted PATH. |
+| R2: a direct install could remove or partly overwrite a working binary | **Fixed.** The bytes are staged with `mktemp` in the same destination directory, installed there, then moved over the old binary in one rename (`mv -f`, same filesystem). Every failure path deletes the staged file, and the EXIT trap removes a staged file left by an interruption before the rename. |
+| A2: root extraction honored the archive's owner and mode | **Fixed.** `tar --no-same-owner --no-same-permissions`; the final 0755 still comes from `install`. |
+| A3: exact upstream version-token shapes are unverified | **Limit kept, no new proof claimed.** The parser takes the last token and strips a leading `v`; a probe that fails, prints nothing or prints another token is "not ready". The only real-binary evidence is still the one pre-correction SessionStart observation above. |
+| A4: the runbook's `github.com` Trusted rows name only Bun | **Not edited here.** `docs/runbooks/cloud-environments.md` is owned by #2536. A proposed sentence was posted on #2582 for the parent to reconcile after #2536 lands. |
+
+New hermetic fault tests (stubbed `install`, `mv`, `ln`, `tar`):
+- a partial-write copy failure and a failed rename each keep the old binary's exact
+  bytes, leave no staged leftover, finish core preparation (install, prepare,
+  `.bashrc`) and report `NOT ready`;
+- a failed directory creation finishes core preparation and reports `NOT ready`;
+- a failed global link keeps the new binary and names the failure;
+- both extractions pass the two tar flags.
+
+| Scripts | Result (same 25-test file) |
+| --- | --- |
+| this head | 25 passed |
+| `34b34370` | 20 passed, **5 failed**: the four fault cases (three abort with a non-zero exit; the rename case shows no staging) and the tar-flag case |
+| `origin/main` | **14 passed** (the original cases), **11 failed** (every new case) |
+
+The parent ran ShellCheck 0.11.0 on `34b34370` and found only the inherited SC1091. It
+also scanned the whole PR with typos and gitleaks (no findings) and checked both digests
+against the primary manifest and checksum asset. ShellCheck was not run on this head
+here, because it is not installed in the container.

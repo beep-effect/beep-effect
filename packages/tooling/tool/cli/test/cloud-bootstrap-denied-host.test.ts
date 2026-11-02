@@ -125,6 +125,30 @@ if [ "$FIXTURE_NODE" = pinned ]; then printf 'v%s\\n' "$(cat .nvmrc)"; else prin
 `,
   ln: `#!/bin/sh
 printf 'ln %s\\n' "$*" >> "$FIXTURE/events"
+if [ -n "$FIXTURE_LN_FAIL" ]; then
+  case "$*" in *"/$FIXTURE_LN_FAIL "*) echo 'ln: failed to create symbolic link' >&2; exit 1 ;; esac
+fi
+`,
+  // Fault injection for the publication-tool install path; anything not named
+  // by the scenario runs the real tool. "copy" writes partial bytes to its
+  // destination first, so a non-staged install would corrupt the old binary.
+  install: `#!/bin/sh
+for arg in "$@"; do last="$arg"; done
+case "$FIXTURE_INSTALL_FAIL" in
+  dir) case " $* " in *" -d "*"/.bun/bin "*) echo 'install: cannot create directory' >&2; exit 1 ;; esac ;;
+  copy) case "$*" in *"/typos/typos "*) printf 'PARTIAL' > "$last"; echo 'install: write error' >&2; exit 1 ;; esac ;;
+esac
+exec /usr/bin/install "$@"
+`,
+  mv: `#!/bin/sh
+case "$FIXTURE_MV_FAIL" in
+  typos) case "$*" in *"/.bun/bin/typos"*) echo 'mv: cannot move' >&2; exit 1 ;; esac ;;
+esac
+exec /usr/bin/mv "$@"
+`,
+  tar: `#!/bin/sh
+case "$*" in *typos.tar.gz*|*gitleaks.tar.gz*) printf 'tar %s\\n' "$*" >> "$FIXTURE/events" ;; esac
+exec /usr/bin/tar "$@"
 `,
   sudo: "#!/bin/sh\nexit 1\n",
   // Pre-existing publication tools: pinned unless the scenario marks them stale.
@@ -169,6 +193,9 @@ type Scenario = {
   readonly gitleaks?: "pinned" | "stale" | "failing";
   readonly tool404?: string;
   readonly timeoutKind?: string;
+  readonly installFail?: "dir" | "copy";
+  readonly mvFail?: "typos";
+  readonly lnFail?: string;
 };
 
 // Each scenario field becomes one stub-facing environment variable; fields a
@@ -192,6 +219,9 @@ const scenarioEnvKeys: { readonly [K in keyof Scenario]-?: string } = {
   gitleaks: "FIXTURE_GITLEAKS",
   tool404: "FIXTURE_TOOL_404",
   timeoutKind: "FIXTURE_TIMEOUT_KIND",
+  installFail: "FIXTURE_INSTALL_FAIL",
+  mvFail: "FIXTURE_MV_FAIL",
+  lnFail: "FIXTURE_LN_FAIL",
 };
 
 const scenarioEnv = (scenario: Scenario): Record<string, string> =>
@@ -611,6 +641,101 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publica
       expect(result.stderr).toMatch(/typos \S+ download or checksum failed \(exit 22\); not installed\./);
       expect(result.stderr).toMatch(/gitleaks \S+ download timed out \(exit 124\); not installed\./);
       expect(result.stderr).toContain("publication tools: NOT ready (missing typos");
+    })
+  );
+
+  // A previously installed, stale typos: the run must try to replace it.
+  const OLD_TYPOS = "#!/bin/sh\nprintf 'typos-cli 0.0.9\\n'\n";
+  const placeOldTypos = Effect.fn("CloudBootstrapDeniedHostTest.placeOldTypos")(function* (home: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.makeDirectory(path.join(home, ".bun/bin"), { recursive: true });
+    yield* fs.writeFileString(path.join(home, ".bun/bin/typos"), OLD_TYPOS);
+    yield* fs.chmod(path.join(home, ".bun/bin/typos"), 0o755);
+  });
+  const expectCorePrepared = Effect.fn("CloudBootstrapDeniedHostTest.expectCorePrepared")(function* (
+    fixture: { readonly root: string; readonly home: string },
+    result: { readonly exitCode: number; readonly stdout: string; readonly stderr: string }
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    expect(result.exitCode, result.stderr).toBe(0);
+    const events = yield* readEvents(fixture.root);
+    expect(events).toContain("bun-install");
+    expect(events).toContain("bun-run-prepare");
+    expect(yield* fs.exists(path.join(fixture.home, ".bashrc"))).toBe(true);
+    expect(result.stdout).toContain("ready: bun");
+  });
+  const stagedLeftovers = Effect.fn("CloudBootstrapDeniedHostTest.stagedLeftovers")(function* (home: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return A.filter(yield* fs.readDirectory(path.join(home, ".bun/bin")), Str.startsWith(".typos."));
+  });
+
+  for (const [name, scenario, warning] of [
+    ["a partial-write copy failure", { installFail: "copy" }, "typos: copy into"],
+    ["a failed rename into place", { mvFail: "typos" }, "typos: rename into"],
+  ] as const) {
+    it.effect(`keeps the previous binary and finishes core preparation after ${name}`, () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* prepareFixture({ fixturePins: true });
+        yield* placeOldTypos(fixture.home);
+        const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", ...scenario });
+        yield* expectCorePrepared(fixture, result);
+        expect(result.stderr).toContain(warning);
+        expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).toBe(OLD_TYPOS);
+        expect(yield* stagedLeftovers(fixture.home)).toEqual([]);
+        expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
+      })
+    );
+  }
+
+  it.effect("finishes core preparation and reports NOT ready when the tool directory cannot be created", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const result = yield* runBootstrap(fixture, {
+        bun: "pinned",
+        node: "pinned",
+        typos: "stale",
+        installFail: "dir",
+      });
+      yield* expectCorePrepared(fixture, result);
+      expect(result.stderr).toContain("typos: cannot create");
+      expect(result.stderr).toContain(`publication tools: NOT ready (missing typos ${TYPOS_VERSION})`);
+    })
+  );
+
+  it.effect("keeps an installed tool and names a failed global link without aborting", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const result = yield* runBootstrap(fixture, {
+        bun: "pinned",
+        node: "pinned",
+        typos: "stale",
+        lnFail: "typos",
+      });
+      yield* expectCorePrepared(fixture, result);
+      expect(result.stderr).toContain("typos: installed in");
+      expect(result.stderr).toContain("but the global link failed");
+      expect(yield* fs.readFileString(path.join(fixture.home, ".bun/bin/typos"))).not.toBe(OLD_TYPOS);
+      expect(result.stdout).toContain("publication tools: ready");
+    })
+  );
+
+  it.effect("extracts verified archives without the archive's owner or mode bits", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
+      expect(result.exitCode, result.stderr).toBe(0);
+      const extractions = A.filter(Str.split("\n")(yield* readEvents(fixture.root)), Str.startsWith("tar -xzf"));
+      expect(extractions.length).toBe(2);
+      for (const line of extractions) {
+        expect(line).toContain("--no-same-owner --no-same-permissions");
+      }
     })
   );
 });
