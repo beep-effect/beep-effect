@@ -1774,9 +1774,9 @@ const runPilot = Effect.fn("CachePilot.run")(
               });
               yield* fixture.setScenario(CacheFixtureScenario.make({ id: `pair-${pair}-seed`, fault: "none" }));
               const seed = yield* executeSignedProducer(producerRoot, `signed-${pair}-seed`);
-              const expectedExit = A.contains(mutationIds.pick(["root-lint-config", "dependency-source"]).literals, id)
-                ? 1
-                : 0;
+              // Deprecated-import verdicts belong to the root policy task.
+              // The package dependency mutation still requires hash invalidation.
+              const expectedExit = id === "root-lint-config" ? 1 : 0;
               if (
                 seed.graphExitCode !== expectedExit ||
                 seed.outcome.selected.exitCode !== expectedExit ||
@@ -2139,12 +2139,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
     const runMutationControls = Effect.fn("CachePilot.runMutationControls")(function* () {
       const runMutationControl = Effect.fn("CachePilot.runMutationControl")(function* (id: typeof mutationIds.Type) {
         const fixture = yield* prepare(sourceRoots[0], "root-a", `mutation-${id}`);
-        const expectedBaselineExit = A.contains(
-          mutationIds.pick(["root-lint-config", "dependency-source"]).literals,
-          id
-        )
-          ? 1
-          : 0;
+        const expectedBaselineExit = id === "root-lint-config" ? 1 : 0;
         yield* prepareMutationBaseline(fixture, id);
         const env = { QUALIFICATION_CONFIG_INPUT: "changed", QUALIFICATION_CHILD_INPUT: "changed" };
         const seeded = yield* execute(fixture, `${id}-baseline`, true, true, "/fixture", env);

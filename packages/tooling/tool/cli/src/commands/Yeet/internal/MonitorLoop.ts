@@ -74,7 +74,7 @@ import {
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
 import { OutputBound, repoRunOutputBound, runCaptured } from "../../../internal/process/StepExec.ts";
-import { runRepoCommandCapture, runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
@@ -1522,7 +1522,7 @@ const observeMonitorHead = Effect.fn("YeetMonitorLoop.observeHead")(function* (
     settleClockMs: millis,
     expected,
     families: O.match(expected, { onNone: A.empty<YeetGatedContextFamily>, onSome: yeetGatedFamiliesFor }),
-    changedPaths: yield* readYeetChangedPaths(context, options.capture ?? runRepoCommandCaptureRaw),
+    changedPaths: yield* readYeetChangedPaths(context),
   });
   // A new head is a push the review lane counts (ruling 81); best effort.
   if (snapshot.remote.number !== undefined) {
@@ -2486,6 +2486,7 @@ export const runYeetMonitorUntilMerged: {
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >;
   (
     context: RepoRunContext,
@@ -2498,6 +2499,7 @@ export const runYeetMonitorUntilMerged: {
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >;
 } = dual(
   2,

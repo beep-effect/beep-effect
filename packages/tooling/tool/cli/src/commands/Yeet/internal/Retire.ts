@@ -14,6 +14,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -25,11 +27,11 @@ import * as Str from "effect/String";
 import { ghOutput } from "../../../internal/github/index.ts";
 import { runCapturedStreams } from "../../../internal/process/index.ts";
 import {
+  adaptGitKitError,
   fallowAuditCacheEnv,
   fallowAuditCacheRemoveArgs,
   RepoRunContext,
   resolveFallowAuditCacheSettings,
-  runRepoCommandCapture,
 } from "../../../internal/repo-run/index.ts";
 import { describeInotifyWatcher, invokerExemption } from "../../Worktree/Worktree.command.ts";
 import { WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
@@ -38,6 +40,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { isSettledProofJob, isTerminalProofJobPhase } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { StoppedLaneJob, YeetRetirePlan, YeetRetireVerdict } from "./Retire.schemas.ts";
+import type { GitInvocation } from "@beep/git/GitCommand";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { WorktreeRemovalReceipt } from "../../Worktree/Worktree.schemas.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
 import type { SweepGitState } from "./Sweep.ts";
@@ -49,18 +53,20 @@ const decodeVerdictTip = S.decodeUnknownOption(YeetRetireVerdict.cases["pr-less-
 // The lane's own CLI always carries --retire, whatever branch the clone sits on.
 const REPO_CLI_ENTRY_PATH = "packages/tooling/tool/cli/src/bin.ts";
 
-const gitOutput = Effect.fn("Yeet.retireGitOutput")(function* (cwd: string, args: ReadonlyArray<string>) {
-  const commandLine = `git ${A.join(args, " ")}`;
-  const result = yield* runRepoCommandCapture("git", args, cwd).pipe(
-    Effect.mapError(YeetCommandError.new(`${commandLine} could not run in ${cwd}.`))
-  );
-  if (result.exitCode !== 0) {
-    return yield* YeetCommandError.make({
-      message: `${commandLine} exited with ${result.exitCode} in ${cwd}: ${Str.trim(result.output)}`,
-    });
-  }
-  return Str.trim(result.output);
+// The retirement's git reads run through `Git`; a failure keeps the capture's wording: a run git
+// never reached "could not run", a run git reported names its exit code and stderr
+// (repo-cli-gh-git-consolidation W2b, SPEC D-11).
+const retireGitAdapter = (cwd: string): GitCommandErrorAdapter<YeetCommandError> => ({
+  onSpawnFailure: (commandLine) => YeetCommandError.new(`${commandLine} could not run in ${cwd}.`),
+  onNonZeroExit: ({ commandLine, exitCode, output }) =>
+    YeetCommandError.make({ message: `${commandLine} exited with ${exitCode} in ${cwd}: ${Str.trim(output)}` }),
+  onTruncated: O.none(),
 });
+
+const retireGitError = (invocation: GitInvocation, cwd: string) => adaptGitKitError(invocation, retireGitAdapter(cwd));
+
+const retireCommonDir = (cwd: string) =>
+  Effect.flatMap(Git, (git) => git.commonDir(cwd)).pipe(Effect.mapError(retireGitError(GitCommand.commonDir(), cwd)));
 
 // A shared thunk, not a lambda per call site: the fallback is the same text everywhere.
 const unknownText = constant("unknown");
@@ -212,8 +218,9 @@ export const renderRetireGate = (verdict: YeetRetireVerdict): string =>
 export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoRunContext, lane: O.Option<string>) {
   const path = yield* Path.Path;
   const anchor = O.match(lane, { onNone: () => context.repoRoot, onSome: (given) => path.resolve(given) });
-  const common = yield* gitOutput(anchor, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-  const toplevel = yield* gitOutput(anchor, ["rev-parse", "--show-toplevel"]);
+  const git = yield* Git;
+  const common = yield* retireCommonDir(anchor);
+  const toplevel = yield* git.repoRoot(anchor).pipe(Effect.mapError(retireGitError(GitCommand.repoRoot(), anchor)));
   const worktreePath = path.resolve(toplevel);
   const owningClone = path.dirname(path.resolve(common));
   if (Eq.equals(worktreePath, owningClone)) {
@@ -225,17 +232,20 @@ export const planRetire = Effect.fn("Yeet.planRetire")(function* (context: RepoR
   }
   // A lane named from elsewhere must belong to this repository, so the sweep
   // that follows resets the clone the lane came from.
-  const invokingCommon = yield* gitOutput(context.repoRoot, [
-    "rev-parse",
-    "--path-format=absolute",
-    "--git-common-dir",
-  ]);
+  const invokingCommon = yield* retireCommonDir(context.repoRoot);
   if (!Eq.equals(path.dirname(path.resolve(invokingCommon)), owningClone)) {
     return yield* YeetCommandError.make({
       message: `yeet sweep --retire --lane ${worktreePath} belongs to ${owningClone}, not to the clone this command runs in.`,
     });
   }
-  const branch = O.isSome(lane) ? yield* gitOutput(anchor, ["rev-parse", "--abbrev-ref", "HEAD"]) : context.branch;
+  const branch = O.isSome(lane)
+    ? yield* git.currentBranch(anchor).pipe(
+        Effect.mapBoth({
+          onFailure: retireGitError(GitCommand.currentBranch(), anchor),
+          onSuccess: O.getOrElse(() => "HEAD"),
+        })
+      )
+    : context.branch;
   return yield* decodeRetirePlan({
     worktreePath,
     owningClone,
@@ -507,9 +517,15 @@ const pullRequestPaths = Effect.fn("Yeet.pullRequestPaths")(function* (plan: Yee
 // clone's main already contains the branch this is empty, which is why the
 // pull request's own list is read as well.
 const branchPaths = Effect.fn("Yeet.branchPaths")(function* (plan: YeetRetirePlan, state: SweepGitState) {
-  const mergeBase = yield* gitOutput(plan.worktreePath, ["merge-base", state.mainBranch, "HEAD"]);
-  const changed = yield* gitOutput(plan.worktreePath, ["diff", "--name-only", mergeBase, "HEAD", "--", "goals/"]);
-  return pipe(Str.split(changed, "\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  const git = yield* Git;
+  const cwd = plan.worktreePath;
+  const mergeBase = yield* git
+    .mergeBase(cwd, state.mainBranch, "HEAD")
+    .pipe(Effect.mapError(retireGitError(GitCommand.mergeBase(state.mainBranch, "HEAD"), cwd)));
+  const options = { twoDot: true, pathspec: ["goals/"] };
+  return yield* git
+    .changedFiles(cwd, { base: mergeBase, head: "HEAD", ...options })
+    .pipe(Effect.mapError(retireGitError(GitCommand.changedFiles(mergeBase, "HEAD", false, options), cwd)));
 });
 
 /**
@@ -558,7 +574,8 @@ export const activePacketsOnBranch = Effect.fn("Yeet.activePacketsOnBranch")(fun
     A.sort(Str.Order)
   );
   return yield* Effect.filter(slugs, (slug) =>
-    gitOutput(plan.worktreePath, ["show", `HEAD:goals/${slug}/ops/manifest.json`]).pipe(
+    Effect.flatMap(Git, (git) => git.show(plan.worktreePath, "HEAD", `goals/${slug}/ops/manifest.json`)).pipe(
+      Effect.flatMap(Effect.fromOption),
       Effect.flatMap(decodePacketLifecycle),
       Effect.map(isOpenWithoutContext),
       Effect.orElseSucceed(constant(false))

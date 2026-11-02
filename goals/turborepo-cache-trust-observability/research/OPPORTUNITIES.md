@@ -1761,3 +1761,19 @@ string encoder as required by the root policy scanner. The ordinary current-sour
 comparison now passes startup but still fails its existing signed mutation seed
 verdict guard. A bounded diagnostic retains only matched source literals; it is
 not ordinary comparison or qualification proof. Keep that guard and failed receipts.
+
+
+### 2026-11-02 — the dependency seed assumed an obsolete local verdict
+
+The ordinary current-source comparison failed its signed mutation seed guard.
+Accepted #2526 had moved deprecated-import analysis to a root task, while the
+package-lint fixture and validator still expected its import to fail locally.
+Review the exact task ownership, update the independent case expectations and
+retain every invalidation/replay guard. The added control fails before repair;
+68 focused tests pass after it. Require new ordinary full-matrix observations.
+
+A separate conflict triage initially compared a head to the PR's older base
+snapshot rather than the live branch ref. Correct that attribution, fetch the
+live main ref and resolve its actual generated-inventory conflicts. A clean
+merge against the old snapshot is not current merge readiness; the primary
+merge hold stays in force.

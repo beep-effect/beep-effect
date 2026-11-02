@@ -987,3 +987,18 @@ an intentional private refusal. Keep that startup control separate from full
 matrix and qualification evidence. Reversal removes the entrypoint wiring and
 regression together; it does not authorize a fallback to an incomplete matrix.
 Admission, mounts, limits, task selection, issuer policy and rollout stay intact.
+
+
+### Align current package-lint seeds with task ownership, 2026-11-02
+
+The [source review](research/current-package-lint-seed-review-2026-11-02.md)
+binds this correction to accepted #2526: deprecated-import checking belongs to
+the root task, outside the four-task package-lint pilot. The dependency-source
+seed must succeed; the invalid-syntax seed must still fail. Keep strict
+case-derived expectations in both runners and the validator, fresh-only seed
+origin, changed hashes, same-backend misses, signed replay, source integrity,
+actual selected-task overlap and the original full matrix/bounds. A successful
+dependency seed must upload before the change, strengthening the stored-artifact
+invalidation control. Preserve old source-bound observations and excluded ledger
+rows; this is no qualification or production activation. Revert all three
+expectation sites and the current fixture together if reversing the repair.
