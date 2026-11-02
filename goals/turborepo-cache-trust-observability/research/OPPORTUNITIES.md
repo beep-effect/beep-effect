@@ -1725,3 +1725,9 @@ owner; retain the failing receipt and do not lower a baseline or duplicate its
 patch in consumer lanes. The cleared verification lane also observed HTTP401
 from its local cache endpoint; use explicit local-only caching in that lane,
 without changing durable credentials based on that observation.
+
+The consolidated PR #2567 main repair supplies the scaffold helper overloads.
+Consuming accepted `560195af60` changes only that upstream file; the owned Cache
+source and generated artifacts remain byte-identical. The fresh quick package
+check passes with explicit local-only caching for this verification lane. Keep
+the earlier source failure and unauthenticated-request receipt as history.

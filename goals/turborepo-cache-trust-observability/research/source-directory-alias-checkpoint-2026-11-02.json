@@ -259,5 +259,20 @@
       "discussion": "https://github.com/beep-effect/beep-effect/pull/2562#issuecomment-6575212482"
     },
     "verificationEnvironment": "An unauthenticated remote-cache read was observed in the cleared verification lane; use explicit local-only caching for subsequent verification. No credential change inferred."
+  },
+  "evidenceScope": "Earlier controls and generatedMetadata describe their recorded scan/base. mainIntegration, latestBaseIntegration and mainFixIntegration retain subsequent results without replacing failed or historical receipts.",
+  "mainFixIntegration": {
+    "acceptedMainRevision": "560195af6030ef73651add0c37924b15f2c6b03a",
+    "source": "PR2567 consolidated main fix for inherited TS377101",
+    "recordedAt": "2026-11-02T11:10:39.581578+00:00",
+    "onlyUpstreamChange": "Pipeable overloads for the existing scaffold test helper; no owned Cache code or generated artifact changed.",
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 16.037,
+      "finishedAt": "2026-11-02T11:08:33.208900+00:00"
+    },
+    "ownedAndGeneratedHashesUnchanged": true,
+    "verificationCache": "Explicit local:rw for isolated verification; no unauthenticated remote request or durable configuration change.",
+    "priorFailedReceiptRetained": true
   }
 }
