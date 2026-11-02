@@ -236,6 +236,10 @@ them and record each in the Decision Log.
 
 ## Decision Log
 
+### 2026-11-02 — integrate complete shared coverage repairs
+
+Consume accepted main #2548 (RouteCensus/Graph/PruneWindow) and #2553 (PackageScripts) after the actual hosted comparison reports eight shared CLI floors. The PackageScripts repair removes obsolete audit backfill and exposes the existing reducer through a documented testing alias; focused tests retain the defensive cases and all 33 canonical scaffold outputs. This changes no claim API or schema. All 29 v26 selected source/environment files remain byte-identical, and fresh positive/allowed replays reproduce both complete result files and all 251 prediction reports exactly. Retain the failed hosted comparison and the scoped local-proof/archive limitations; the new final-head comparison remains required. Reversal: revert the shared repair in a separately reviewed change, retaining the prior failures, source references and every claim measurement.
+
 ### 2026-11-02 — package-script compatibility after shared test repair
 
 Consume accepted main #2535 for the inherited package-generator expectation failure and #2533 for the shared helper's Effect.fn form, then push before measuring. Main #2526 changes the root lint script and removes consumer audit scripts while leaving the 21 algorithm files, dependency lock and Bun pin unchanged. v26 archives 29 source/environment files before replay; both full result values match v25 except the implementation digest, and all 251 prediction reports and the non-US smoke result match exactly. Preserve every v25 artifact. Historical automated review identity carries forward without a fresh-review claim. Reversal: keep both environment freezes and result versions, and return to an earlier package-script environment only through a separately reviewed change.

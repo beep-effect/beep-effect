@@ -63,6 +63,8 @@ The user explicitly requires autonomous completion without attorney presence. [A
 
 ## Latest Evidence
 
+- [Accepted coverage-repair integration](history/2026-11-02-v26-coverage-repair-integration.json): main #2548 and #2553 supply the shared CLI repairs. All 29 v26 pins remain exact. Fresh positive and allowed replays reproduce the complete v26 result bytes and all 251 prediction reports exactly, retaining 37/538 and every previous pass. The helper's focused coverage proof is scoped separately; its exception merge does not supply final-PR hosted readiness.
+
 - [v26 package-script compatibility](history/2026-11-02-v26-package-script-compatibility.json): accepted main #2535 fixes inherited generator-test expectations, and #2533 fixes the shared helper's Effect.fn form. The 21 algorithm files and dependency lock remain unchanged; 29 archived pre-prediction pins include the updated package-script environment. Both complete cohort results match v25 apart from the implementation digest, all 251 reports are byte-identical, and all 37 previous matches are retained. Accuracy remains poor; no fresh review is claimed.
 
 - [v25 dependency compatibility](history/2026-11-02-v25-dependency-compatibility.json): accepted main coverage fix #2517 and dependency updates are synchronized. All 21 algorithm files are unchanged; 24 pre-prediction pins include the dependency environment. Both cohort result values match v24 apart from implementation digest, and all 251 prediction reports are byte-identical. No accuracy gain, label change or new review is claimed.

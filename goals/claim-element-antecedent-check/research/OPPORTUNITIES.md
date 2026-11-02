@@ -235,6 +235,12 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   owner. An optional local documentation inventory scan was stopped in favor
   of hosted verification after the PR was already published. Its incomplete
   result is retained, not reported as a pass.
+- **Archive boundary:** retirement retained the root `.beep` test log and
+  before/after scaffold snapshots, but the package-local coverage counter file
+  was outside that material archive. Preserve the observed terminal summary
+  with that limitation explicit; do not claim the original counter file was
+  recovered. Write future focused reports into root `.beep` or durable external
+  evidence storage before retiring a lane. All claim results remain intact.
 - **Prevention:** route the complete paginated run and inner comparison to
   the owner, including additional failing paths beyond the first reported
   upstream regression. Validate all affected rows before declaring the shared
