@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
@@ -57,6 +58,10 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
 const REPO_ROOT = "/repo";
 const coverageDispatchIdentity = CoverageProducerIdentity.make({
@@ -140,12 +145,15 @@ const ciExecutionLayer = (
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
-  return Layer.mergeAll(
-    BunCrypto.layer,
-    fileSystemAndPath,
-    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
-    processLayer,
-    TestConsole.layer
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
   );
 };
 
@@ -190,10 +198,13 @@ const branchProtectionContextSnapshotUrl = new URL(
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
-const LiveRepoLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const LiveRepoLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 const PartitionLaneLayer = Layer.merge(LiveRepoLayer, TestConsole.layer);
 
@@ -1641,7 +1652,7 @@ describe("ciLaneStepsForTesting", () => {
 
   // The workflow gates only on goals_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
+  it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1701,12 +1712,15 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
-  return Layer.mergeAll(
-    BunCrypto.layer,
-    fileSystemAndPath,
-    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
-    processLayer,
-    TestConsole.layer
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
   );
 };
 

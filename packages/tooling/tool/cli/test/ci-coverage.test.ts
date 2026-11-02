@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CiCommandError,
   CiLanePartitionProof,
@@ -36,6 +37,9 @@ import * as Str from "effect/String";
 import { vi } from "vitest";
 import { parseCLI } from "vitest/node";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const nativeRunCaptured = StepExec.runCaptured;
 
 const mocks = vi.hoisted(() => ({
@@ -47,10 +51,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
-const layer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const layer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 const identity = CoverageProducerIdentity.make({
   executionSha: Str.repeat(40)("a"),
