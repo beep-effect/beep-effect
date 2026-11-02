@@ -1,0 +1,93 @@
+{
+  "recordedAt": "2026-11-02T12:47:04.956898+00:00",
+  "authority": "Bounded real generator behavior under network denial/read-only source, not Turbo qualification or adoption.",
+  "sourceRevision": "0bca3ce9325009773434ee83f67811bd682131db",
+  "captureReuse": {
+    "source": "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py",
+    "sha256": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
+    "deadlineSecondsPerCase": 20,
+    "stdoutMaxBytes": 1048576,
+    "stderrMaxBytes": 65536
+  },
+  "sourceSha256": {
+    "packages/drivers/acp/scripts/generate.ts": "65b4af65632dba0ce0d0c451a2679e8132b23bf07ad7f93579d6ad8016370c2e",
+    "packages/drivers/acp/spec/schema.unstable.json": "42cfef92addff96a7cbf01272eedcbfb20b2642ef0bd17a33d229384cf0b41e5",
+    "packages/drivers/acp/spec/meta.unstable.json": "83baa6039a55935cfa7e200f37be6a591ae9880bec163fda087637d1d3b731b1",
+    "packages/drivers/acp/spec/v1/schema.unstable.json": "97ba7e979ceca18e24f5e47cf2f38adfe28e03de268a0f22c124ab4c5660b7bd",
+    "packages/drivers/acp/spec/v1/meta.unstable.json": "7f0203ba884fd10a3dd5665fb84a97a955d7764c1497c29c2e2fc3ccd304b529",
+    "packages/drivers/acp/src/_generated/schema.gen.ts": "41348cb306d5638d4ed530d92b03919bb988b0854cc04b7670e6980c68c5e5f8",
+    "packages/drivers/acp/src/_generated/schema-v1.gen.ts": "88d367dac3c8f45020a505a476d1319de7b195f94f56efe24f7b891dad27d3a5",
+    "packages/drivers/acp/src/_generated/meta.gen.ts": "7af5d93512fdfb3682c195516430c4dfba1f7aba118e2ce05e507d746a7c7921",
+    "packages/tooling/library/codegen-kit/src/CodegenKit.service.ts": "578e87b0ccf9c9fed465bb0843610139c425ef8449c34d46273af612793a1ce0",
+    "packages/tooling/library/codegen-kit/src/internal/format.ts": "e96d44e82bacbe88b626a50afb0c34f4ceaa9bd2624b727e1db98fc38d076d9a",
+    "bun.lock": "ca8895b7a24b0da6e84473a95c048ea7760a31ed0e7d9dd84c2edd611be218ff",
+    "biome.jsonc": "4b7dbe442c5daf230a10649077376f0d299859af4751b3384e91b5e6cddb5d74"
+  },
+  "sourcesUnchanged": true,
+  "networkDisabled": true,
+  "allRepositorySourceReadOnly": true,
+  "credentialEnvironmentCleared": true,
+  "rows": [
+    {
+      "case": "baseline",
+      "exit": 0,
+      "elapsedSeconds": 1.558,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected": true
+    },
+    {
+      "case": "changed-meta",
+      "exit": 1,
+      "elapsedSeconds": 1.535,
+      "stdoutBytes": 1289,
+      "stderrBytes": 4591,
+      "stdoutSha256": "0810cb37b21ca328eafb9910dac82a5a1d8b5485e72ca5cbe0ada8d30a5a741d",
+      "stderrSha256": "3065587cda228f8ff0704ba0f0c2d82efad2d442e7a36858c179d6ee63ea4145",
+      "expected": true
+    },
+    {
+      "case": "baseline-after-control",
+      "exit": 0,
+      "elapsedSeconds": 1.232,
+      "stdoutBytes": 0,
+      "stderrBytes": 0,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expected": true
+    }
+  ],
+  "complete": true,
+  "schemaVersion": "cache-codegen-readonly-checkpoint/v1",
+  "scope": "Generator drift diagnostics only; no task qualification, cache adoption or production change.",
+  "runtime": {
+    "bun": "1.4.4",
+    "node": "24.22.1",
+    "vitest": "5.0.5"
+  },
+  "verification": {
+    "regressionBeforeFix": {
+      "failed": 3,
+      "skipped": 40,
+      "observed": "CodegenFormatError instead of CodegenDriftError"
+    },
+    "packageTests": {
+      "passed": 43,
+      "failed": 0
+    },
+    "packageQuick": "lint and check passed",
+    "packageVerify": "docgen passed; audit skipped by current package scripts"
+  },
+  "retainedProbeFailures": [
+    {
+      "stage": "preparation",
+      "reason": "Wrong formatter configuration filename; no generator execution."
+    },
+    {
+      "stage": "assertion",
+      "reason": "Expected error in stderr instead of actual stdout; raw streams retained."
+    }
+  ]
+}

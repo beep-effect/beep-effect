@@ -66,6 +66,8 @@
       "!standards/fallow.dead-code.regression-baseline.jsonc",
       "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
+      // Only the CI knowledge mint writes the sealed baseline bytes.
+      "!goals/knowledge-doctor.baseline.jsonc",
       "!**/fixtures/f1/documents",
       "!scratchpad",
       // beep-ci-operational-ontology §4b: digest-locked run evidence. The
