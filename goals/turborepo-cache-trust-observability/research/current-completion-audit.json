@@ -24,7 +24,8 @@
       "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {
@@ -40,7 +41,10 @@
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
       "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
-      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
+      "partialEvidence": [
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
+      ]
     },
     {
       "id": "AC-05",
@@ -50,7 +54,8 @@
       "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {
@@ -68,7 +73,8 @@
       "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {

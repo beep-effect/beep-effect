@@ -3,8 +3,10 @@ import { GitHubContent } from "@beep/github/GitHubContent";
 import { CacheProducerEnvelope, CacheQualificationLive } from "@beep/repo-cli/commands/Cache";
 import {
   buildCacheHostedProducerCompleteReport,
+  CacheHostedProducerApproval,
   CacheHostedProducerReference,
   CacheHostedProducerRunReference,
+  CacheProducerExecutionProfile,
   CacheProducerObservation,
   downloadCacheProducerPrivateObservation,
   makeCacheCommandForTesting,
@@ -29,6 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -565,4 +568,71 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FsUtilsLive.pipe(L
       })
     );
   });
+  it.effect.each(["revocation", "runtime", "approval"])(
+    "rejects concurrent private %s changes while download is in flight",
+    (change) =>
+      Effect.gen(function* () {
+        const fixture = yield* publishedFixture();
+        const started = yield* Deferred.make<ReadableStreamDefaultController<Uint8Array>>();
+        const fetch = controlledFetch(() =>
+          Promise.resolve(
+            new Response(
+              new ReadableStream<Uint8Array>({
+                start(controller) {
+                  Deferred.doneUnsafe(started, Effect.succeed(controller));
+                },
+              })
+            )
+          )
+        );
+        const fiber = yield* downloadCacheProducerPrivateObservation(
+          fixture.directory,
+          fixture.published.reference,
+          fixture.published.publication.archive
+        ).pipe(
+          Effect.provideContext(fixture.metadata),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromEnvRecord(fixture.storageEnvironment)
+          ),
+          Effect.provideService(FetchHttpClient.Fetch, fetch),
+          Effect.flip,
+          Effect.forkChild
+        );
+        const controller = yield* Deferred.await(started);
+        yield* Match.value(change).pipe(
+          Match.when("revocation", () => revokeCacheProducerIssuer(fixture.directory)),
+          Match.when("runtime", () =>
+            Effect.gen(function* () {
+              const profile = CacheProducerExecutionProfile.make({
+                ...fixture.profile,
+                adapterExecutable: "/fixture/changed-adapter",
+              });
+              yield* fixture.fs.writeFileString(
+                fixture.file,
+                yield* S.encodeEffect(S.fromJsonString(CacheProducerExecutionProfile))(profile)
+              );
+            })
+          ),
+          Match.orElse(() =>
+            Effect.gen(function* () {
+              const approval = CacheHostedProducerApproval.make({
+                ...fixture.published.approval,
+                workflowSha256: Sha256Hex.make(Str.repeat(64)("e")),
+              });
+              yield* fixture.fs.writeFileString(
+                fixture.path.join(fixture.directory, "publication.json"),
+                yield* S.encodeEffect(S.fromJsonString(CacheHostedProducerApproval))(approval)
+              );
+            })
+          )
+        );
+        yield* Effect.sync(() => {
+          controller.enqueue(new TextEncoder().encode(fixture.text));
+          controller.close();
+        });
+        const error = yield* Fiber.join(fiber);
+        expect(error.message).toContain(change === "revocation" ? "revoked" : "payload-rejected");
+      })
+  );
 });

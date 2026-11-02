@@ -25,7 +25,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
-      "sha256": "59a7510656ff5726deeb1a1333c31bc1b971effff9d410cd85d5257daa4c6afa"
+      "sha256": "8afd49b6c8b20af821618c412f4049a782e89cbd58a43844952ad5c3d1de2e8e"
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
@@ -60,7 +60,7 @@
     "Schema-generated positive run/attempt identities select exactly their canonical object and approved native options.",
     "Real issuer MAC required independently of immutable hosted content digest.",
     "Authenticated run/workflow/archive checks precede private-object access; canonical bytes, MAC and publication join are checked before returning.",
-    "Source enforces private approval/profile re-reading before download/cleanup returns; dedicated concurrent approval/revocation controls remain required.",
+    "Three in-flight controls mutate real private state after GET begins and before body delivery. Issuer revocation, execution-profile changes and independent publication-approval changes are rejected.",
     "Reader transfer works with only the two storage variables; either artifact-key alias is denied before network access.",
     "Revoked issuer, substituted run, changed body, invalid UTF-8, unsafe mode, symbolic link, hard link and oversized file are rejected.",
     "Oversized streamed download is cancelled; a missing private object is not classified as a cache miss.",
@@ -160,17 +160,17 @@
       "finishedAt": "2026-11-02T17:03:55.115038+00:00"
     },
     "focused": {
-      "tests": 151,
+      "tests": 154,
       "files": 8,
       "exit": 0,
-      "elapsedSeconds": 24.399,
-      "finishedAt": "2026-11-02T17:06:04.081695+00:00",
-      "scope": "Exact final production/test source; includes22 transport/CLI controls and the dedicated owned-clock deadline case."
+      "elapsedSeconds": 22.787,
+      "finishedAt": "2026-11-02T17:13:23.274764+00:00",
+      "scope": "Exact final source including25 transport/CLI cases and all three concurrent-change refusals."
     },
     "packageQuick": {
       "exit": 0,
-      "elapsedSeconds": 10.693,
-      "finishedAt": "2026-11-02T17:05:51.569346+00:00"
+      "elapsedSeconds": 14.453,
+      "finishedAt": "2026-11-02T17:11:18.044535+00:00"
     },
     "effectVitestRatchetBeforeOwnedClock": {
       "findings": 443,
@@ -178,6 +178,22 @@
       "elapsedSeconds": 55.027,
       "finishedAt": "2026-11-02T17:04:45.739287+00:00",
       "scope": "Passing ratchet with one EV015 informational clock ownership judgment; subsequent source isolates that case in its own TestClock layer."
+    },
+    "concurrentPrivateChanges": {
+      "tests": 25,
+      "files": 1,
+      "exit": 0,
+      "elapsedSeconds": 7.821,
+      "finishedAt": "2026-11-02T17:11:10.216168+00:00",
+      "scope": "All25 transfer/CLI cases including three real private-file mutations after fetch begins but before body delivery: issuer revocation, runtime change and approval change."
+    },
+    "priorFocusedAtPublished169": {
+      "tests": 151,
+      "files": 8,
+      "exit": 0,
+      "elapsedSeconds": 24.399,
+      "finishedAt": "2026-11-02T17:06:04.081695+00:00",
+      "scope": "Exact final production/test source; includes22 transport/CLI controls and the dedicated owned-clock deadline case."
     }
   },
   "setupFailuresRetained": [
@@ -189,7 +205,7 @@
     "The clock ratchet identified the timeout control sharing its parent clock. A dedicated nested TestClock layer now owns that one case; no clock reset or live timeout extension was added."
   ],
   "remaining": [
-    "Concurrent private approval/revocation race controls and native protected fetch/cleanup proof.",
+    "Accept resolved Heavy verifier PR2603 before actual reusable-workflow provenance; integrate accepted main repair2610 once available.",
     "Fresh hosted CI/review and accepted-main integration.",
     "Source/runtime/issuer provisioning preview and protected workflow publication wiring.",
     "Real bounded R2 transfer, replay and authenticated acceptance with aggregate resource accounting.",
@@ -225,6 +241,48 @@
         {
           "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
           "sha256": "7f3946db102459893733cb37f71e9bc5d2b28f0288f4a97e8a38bb972d6c2d1d"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",
+          "sha256": "e5f00c5e90a9b29a6e3949bc2b644cbcfb48e6a563d2d80f46c420d3220b759b"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-producer-execution-fixture.ts",
+          "sha256": "4c00672504801c8c6601694e64b787f450c88320e19d50bbef51fabe8a50f558"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/helpers/cache-hosted-publication-fixture.ts",
+          "sha256": "2c3b0dc3cadb5681dfa529575a612f3e15774716278d4df4e3e455b1c08e4688"
+        }
+      ]
+    },
+    {
+      "scope": "Published169e8f98cf initial transfer/CLI and151-case proof before the three concurrent-change controls.",
+      "revision": "169e8f98cfca27274fb9763a6828b2983a5744da",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.storage.ts",
+          "sha256": "2153bbe3ed57051f614a8b42da839a3a353f9edc48e96440b3229414ca462ef2"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+          "sha256": "a15d32bae389f5cebed48ce5f038f926638740f9ff2be24c1cb447771516e4e0"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+          "sha256": "b196d556df495088d1f0ed042df2d53920efb7f1af3ac699aac4499ec5542815"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.command.ts",
+          "sha256": "fba57fec829ab27e3e734025290e8d3c60fd96c8408b78c147440b621f6f6b53"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "16ce194e2d6d565fa044147f37fdbd5f57b986d1fd4d726058fe73c9ed9414f5"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-private-producer-object.test.ts",
+          "sha256": "59a7510656ff5726deeb1a1333c31bc1b971effff9d410cd85d5257daa4c6afa"
         },
         {
           "path": "packages/tooling/tool/cli/test/cache-producer-upload-runtime.test.ts",

@@ -1089,3 +1089,12 @@ activation, protected execution or tuple qualification occurred. Real protected
 source/runtime approval, private material transfer, workflow publication wiring,
 aggregate trial accounting, R2 replay and authenticated acceptance remain next.
 All whole-goal criteria and representative observation windows remain open.
+
+
+The private-object draft now also proves three concurrent-change refusals with
+real private files. The fixture pauses GET body delivery after the target and
+capabilities are selected, then revokes the issuer or changes the execution
+profile or independent hosted approval. Every case fails closed when delivery
+resumes. These complete local race controls; native protected execution and
+real R2 acceptance remain unproven. The accepted reusable Heavy verifier and
+shared main repair remain prerequisites for the live workflow.
