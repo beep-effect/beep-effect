@@ -136,3 +136,20 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   retained process ownership as separate current-head facts. Check immutable
   evidence hashes after broad formatter changes; never infer completion from
   a merge or an aggregate job whose prerequisites were cancelled.
+
+## 2026-11-02 — First-page job counts hid a completed coverage failure
+
+- **Doing:** observing hosted verification for strict final PR #2513 without
+  starting local verify/publish work.
+- **Evidence:** the connected workflow-job tool returns only the first page.
+  Its 30-row response omitted the later Coverage Regression job. A fully
+  paginated read found 33 jobs, including failed job `125137146190`; the
+  earlier count therefore did not prove that the full run had no failures.
+- **Resolution:** use full pagination with page size 100 for complete job
+  counts, inspect the actual failed step, and consume accepted main unblocker
+  #2517. Keep the separate PruneWindow row visible until the new hosted
+  comparison resolves it. The dependency compatibility replay is versioned
+  separately as v25; all 251 reports match v24 exactly and all 37 passes remain.
+- **Prevention:** distinguish partial inventories from complete run state.
+  A first-page result may support a positive observation about listed jobs,
+  but cannot establish that no failure exists anywhere in the run.
