@@ -1292,7 +1292,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "quality:lint",
         "quality:lint-policy",
         "quality:check",
-        "quality:shadcn-lint",
         "quality:jsdoc-ratchet",
         "quality:docgen",
         "quality:doctest",
@@ -1317,17 +1316,13 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "origin/main",
         "--summarize",
       ]);
-      expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(["run", "beep", "ci", "lane", "shadcn-lint"]);
-      assert.deepStrictEqual(
-        O.map(
-          A.findFirst(lanes, (lane) => lane.id === "quality:shadcn-lint"),
-          (lane) => lane.wave
-        ),
-        O.some("preflight")
-      );
+      // The Shadcn Lint context is replayed by the `lint:shadcn` state task inside
+      // `quality:lint-policy`; no separate pre-push lane runs the same oxlint walk again.
+      expect(A.some(lanes, (lane) => lane.id === "quality:shadcn-lint")).toBe(false);
+      expect(A.some(lanes, (lane) => A.contains(lane.step.args, "shadcn-lint"))).toBe(false);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
-      // The repo-wide tsgo extras ride inside `quality:check` (root `bun run check`
-      // keeps them under `--affected`), so no lane runs `test-tsgo` or `tsgo-smoke` again.
+      // `quality test-tsgo` has one owner, the lint-policy plan inside `quality:lint-policy`;
+      // the smoke canary rides inside root `bun run check`. No lane runs either again.
       expect(A.some(lanes, (lane) => A.contains(lane.step.args, "test-tsgo"))).toBe(false);
       expect(A.some(lanes, (lane) => A.contains(lane.step.args, "tsgo-smoke"))).toBe(false);
       expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
@@ -1402,9 +1397,14 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "lint:schema-tag-idioms")).toEqual(
         expectedTurboArgs("lint:schema-tag-idioms", ["--summarize"])
       );
-      expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(["run", "beep", "lint", "effect-vitest"]);
+      // The scan rides the cached root Turbo task (the same one Lint Policy runs), not a direct CLI lane.
+      expect(qualityLaneArgs(lanes, "lint:effect-vitest")).toEqual(
+        expectedTurboArgs("lint:effect-vitest", ["--summarize"])
+      );
       expect(qualityLaneArgs(lanes, "quality:catalog-usage")).toEqual(["run", "beep", "quality", "catalog-usage"]);
-      expect(qualityLaneArgs(lanes, "lint:schema-catalog")).toEqual(["run", "beep", "lint", "schema-catalog"]);
+      expect(qualityLaneArgs(lanes, "lint:schema-catalog")).toEqual(
+        expectedTurboArgs("lint:schema-catalog", ["--summarize"])
+      );
       expect(qualityLaneArgs(lanes, "lint:oxlint")).toEqual(["run", "lint:oxlint"]);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual([
         "run",
@@ -1502,7 +1502,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "quality:test-integration")).toEqual(hostedArgs("test-integration"));
       expect(qualityLaneArgs(lanes, "quality:coverage")).toEqual(hostedArgs("coverage"));
       expect(qualityLaneArgs(lanes, "quality:codegen")).toEqual(hostedArgs("codegen"));
-      expect(qualityLaneArgs(lanes, "quality:shadcn-lint")).toEqual(hostedArgs("shadcn-lint"));
       expect(qualityLaneArgs(lanes, "quality:commitlint")).toEqual(hostedArgs("commitlint"));
       expect(qualityLaneArgs(lanes, "quality:desktop-ipc")).toEqual(hostedArgs("desktop-ipc"));
       expect(qualityLaneArgs(lanes, "quality:docgen")).toEqual(hostedArgs("docgen"));
@@ -1601,7 +1600,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "repo-sanity:config-typecheck",
         "repo-sanity:goals-ops-typecheck",
         "repo-sanity:bun-audit",
-        "quality:cache-policy",
       ]);
       expect(A.every(lanes, (lane) => lane.stage === "repo-sanity")).toBe(true);
       expect(lanes[0]?.step.args).toEqual(["run", "beep", "quality", "changeset-graph"]);
@@ -1612,14 +1610,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         args: ["tsrs", "-p", "goals/tsconfig.ops.json", "--noEmit", "--pretty", "false"],
       });
       expect(lanes[8]?.step.args).toEqual(["run", "beep", "quality", "bun-audit"]);
-      expect(qualityLaneArgs(lanes, "quality:cache-policy")).toEqual(["run", "beep", "quality", "cache-policy"]);
+      // `quality:cache-policy` is owned by the cheap-gates tier alone; the pre-push
+      // copy made a full verify pay the dry plan twice.
+      expect(
+        qualityLaneArgs(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), "quality:cache-policy")
+      ).toEqual(["run", "beep", "quality", "cache-policy"]);
       for (const mode of ["repo-sanity", "quality", "pre-push"] as const) {
-        expect(qualityLaneArgs(githubCheckLanesForModeForTesting("/repo", mode), "quality:cache-policy")).toEqual([
-          "run",
-          "beep",
-          "quality",
-          "cache-policy",
-        ]);
+        expect(
+          A.some(githubCheckLanesForModeForTesting("/repo", mode), (lane) => lane.id === "quality:cache-policy")
+        ).toBe(false);
       }
     });
 
@@ -3809,23 +3808,20 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       });
     });
 
-    it("includes repo-level tsgo diagnostics for affected root check lanes", () => {
+    it("includes the repo-level tsgo smoke canary for affected root check lanes", () => {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--affected", "--summarize"]));
 
-      expect(steps).toHaveLength(3);
+      expect(steps).toHaveLength(2);
       expect(steps[0]).toMatchObject({
         label: "check",
         command: "bunx",
         cwd: "/repo",
       });
       expect(steps[0]?.args).toEqual(expectedRootTurboArgs("check", ["--affected", "--summarize"]));
-      // tsgo-rules is owned by lint-policy alone (`lint:tsgo-rules`); check carries no copy.
+      // tsgo-rules (`lint:tsgo-rules`) and the test-file typecheck (`quality:test-tsgo`)
+      // are owned by lint-policy alone; check carries no copy of either.
+      expect(A.some(steps, (step) => step.label === "quality:test-tsgo")).toBe(false);
       expect(A.slice(steps, { start: 1 })).toEqual([
-        expect.objectContaining({
-          label: "quality:test-tsgo",
-          command: "bun",
-          args: repoCliEntryArgs("quality", "test-tsgo"),
-        }),
         expect.objectContaining({
           label: "quality:tsgo-smoke",
           command: "bun",
@@ -8973,10 +8969,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         O.getOrElse(() => -1)
       );
 
-    it("includes labs in check while repo-wide tsgo steps survive", () => {
+    it("includes labs in check while the repo-wide smoke canary survives", () => {
+      // `quality:test-tsgo` has one owner (the lint-policy plan); check keeps only the canary.
       for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
         const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
-        expect(A.map(steps, (step) => step.label)).toEqual(["check", "quality:test-tsgo", "quality:tsgo-smoke"]);
+        expect(A.map(steps, (step) => step.label)).toEqual(["check", "quality:tsgo-smoke"]);
         expect(argsOf(steps[0])).not.toContain(LABS_EXCLUDE_FILTER);
       }
     });
