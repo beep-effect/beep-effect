@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Opus 5.5 (skill-contract-gate-certificates, claude/skill-contract-gate-certs-oodgzh)",
-      "reason": "Re-record the root subject on main's baseline after the fifth origin/main merge into #2490 (b5c2b466): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
+      "reason": "Re-record the root subject on main's baseline after the sixth origin/main merge into #2490 (9f4bf573): the policy fingerprint still adds GateCertificate.ts to //#lint:policy-fingerprint:quality inputs; one declared input path only, no new computations, no qualification granted.",
       "basis": {
-        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-5.md",
-        "sha256": "6bc033d48d7ebf409d2df572e42240749c9f289467088cda792c93530d7428c5"
+        "path": "goals/skill-contract-gate-certificates/research/cache-baseline-review-2026-11-02-main-merge-6.md",
+        "sha256": "77da06b4d933f86c813885fa262dde19d09898f4dd112076abbf9d8a64f45573"
       }
     },
     "@beep/acp": {
@@ -2153,7 +2153,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "!.claude/worktrees/**",
             "!scratchpad/.jsdoc-loop/**",
             "!scratchpad/docs/**",
@@ -2165,7 +2164,7 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "scratchpad/**/*.ts",
+            "scratchpad/**/*.{ts,tsx}",
             "tools/**/*.{ts,tsx}",
             "tsdoc.json",
             "{packages,apps,infra}/**/*.{ts,tsx}"
@@ -2195,14 +2194,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
             "!**/node_modules/**",
-            "!**/storybook-static/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -121744,7 +121736,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "84421ab63e5db7b4e7bcc6e0fe33249e517e1f8cfeccc94c8cf25a9571ff4a54"
+        "sha256": "70e041a70996bf5852554ba2813dee68546cb51537d44f7b968844fd3c7205fc"
       }
     ]
   }
