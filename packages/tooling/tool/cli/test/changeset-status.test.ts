@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ChangesetGraphPackageReference,
@@ -80,12 +81,16 @@ const statusTestLayer = (
   addedChangesets: ReadonlyArray<string>,
   spawned: Array<string>
 ) =>
-  Layer.mergeAll(
-    MemoryFileSystem.layer,
-    Path.layer,
-    NodeCrypto.layer,
-    TestConsole.layer,
-    gitFixtureLayer(changedFiles, addedChangesets, spawned)
+  // `Git` is built over the fixture spawner, so the kit's diff reads reach the scripted answers (W2).
+  Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      MemoryFileSystem.layer,
+      Path.layer,
+      NodeCrypto.layer,
+      TestConsole.layer,
+      gitFixtureLayer(changedFiles, addedChangesets, spawned)
+    )
   );
 
 const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (

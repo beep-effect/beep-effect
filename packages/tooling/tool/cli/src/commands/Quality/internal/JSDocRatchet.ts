@@ -570,7 +570,33 @@ export const isPackageSourceFileIncludingGenerated = (filePath: string): boolean
   Str.includes("/src/")(filePath) &&
   (Str.endsWith(".ts")(filePath) || Str.endsWith(".tsx")(filePath));
 
-const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
+/**
+ * List the repo-relative workspace source files the zero-legacy gate reads.
+ *
+ * **Details**
+ *
+ * The corpus is every tracked or untracked-but-not-ignored path under
+ * `packages` and `apps` that passes {@link isPackageSourceFile} (or
+ * {@link isPackageSourceFileIncludingGenerated}). It matches the file set Turbo
+ * hashes for `//#jsdoc:ratchet:check`, so staging an unchanged file never
+ * changes the verdict behind a cache hit.
+ *
+ * **Example** (List the zero-legacy corpus)
+ *
+ * ```ts
+ * import { zeroLegacyCorpusFiles } from "@beep/repo-cli/test/Quality"
+ *
+ * const program = zeroLegacyCorpusFiles("/repo", false)
+ * console.log(program)
+ * ```
+ *
+ * @param repoRoot - Repository root the Git listing runs in.
+ * @param includeGenerated - Whether generated sources join the corpus.
+ * @returns Repo-relative source paths, in Git listing order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(function* (
   repoRoot: string,
   includeGenerated: boolean
 ): Effect.fn.Return<
@@ -578,7 +604,13 @@ const zeroLegacyCorpusFiles = Effect.fn("JSDocRatchet.zeroLegacyCorpusFiles")(fu
   QualityScriptCommandError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const lines = yield* runGitLines(repoRoot, ["ls-files", "packages", "apps"], jsdocGitErrorAdapter);
+  // Untracked-but-not-ignored files count too: Turbo hashes them for
+  // `//#jsdoc:ratchet:check`, so `git add` alone must not change the verdict.
+  const lines = yield* runGitLines(
+    repoRoot,
+    ["ls-files", "--cached", "--others", "--exclude-standard", "packages", "apps"],
+    jsdocGitErrorAdapter
+  );
   const predicate = includeGenerated ? isPackageSourceFileIncludingGenerated : isPackageSourceFile;
   return A.filter(lines, predicate);
 });

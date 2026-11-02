@@ -810,16 +810,14 @@ const worktreeIsDirty = Effect.fnUntraced(function* (
   if (locked) {
     return true;
   }
-  const status = yield* runRepoCommandCapture(
-    "git",
-    ["-C", candidate.path, "status", "--porcelain", "--no-renames"],
-    candidate.parentRepo.value
-  ).pipe(Effect.option);
+  // `Git.status` from the worktree itself (the capture ran `-C <path>` from the parent), renames
+  // reported as their delete and add; a worktree whose status cannot be read is treated as dirty:
+  // never force-remove what cannot be proven clean (SPEC D-10).
+  const git = yield* Git;
+  const status = yield* git.status(candidate.path, { noRenames: true }).pipe(Effect.option);
   return O.match(status, {
-    // A worktree whose status cannot be read is treated as dirty: never
-    // force-remove what cannot be proven clean.
     onNone: () => true,
-    onSome: (capture) => capture.exitCode !== 0 || Str.isNonEmpty(Str.trim(capture.output)),
+    onSome: A.isReadonlyArrayNonEmpty,
   });
 });
 
