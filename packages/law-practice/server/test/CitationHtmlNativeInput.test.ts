@@ -114,6 +114,22 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparati
     })
   );
 
+  it.effect("rejects a native buffer detached during complete-frame preflight", () =>
+    Effect.gen(function* () {
+      const preparation = yield* makeCitationHtmlInput((yield* defaultCitationEnginePolicy).limits);
+      const bytes = new Uint8Array([65]);
+      const failure = yield* Effect.flip(
+        preparation.prepareUnicode({ width: 1, bytes }, () =>
+          Effect.sync(() => {
+            structuredClone(bytes, { transfer: [bytes.buffer] });
+          })
+        )
+      );
+      expect(failure).toMatchObject({ reason: "invalid-input" });
+      expect(bytes.byteLength).toBe(0);
+    })
+  );
+
   it.effect("rejects a complete native job before spawning and releases its admission permit", () =>
     Effect.gen(function* () {
       const base = (yield* defaultCitationEnginePolicy).limits;

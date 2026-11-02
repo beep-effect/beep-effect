@@ -149,9 +149,9 @@ const nativeEncoding = (maximum: number): typeof Encoding.Type =>
 const fullDocument = (read: ReadPoint, start: number) =>
   matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
 const nativeReader =
-  (source: typeof NativeStorage.Type): ReadPoint =>
+  (source: typeof NativeStorage.Type, length: number): ReadPoint =>
   (index) => {
-    if (index < 0 || index >= source.bytes.byteLength / source.width) return -1;
+    if (index < 0 || index >= length) return -1;
     let point = 0;
     for (let part = 0; part < source.width; part++)
       point += O.getOrElse(O.fromUndefinedOr(source.bytes[index * source.width + part]), () => 0) * 2 ** (8 * part);
@@ -225,8 +225,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
   const sourceCeiling = limits.sourceUtf16;
   const messageCeiling = limits.processMessageBytes;
   const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);
-  const copyTransport = Effect.fn("Citation.copyHtmlTransport")(function* (source: Uint8Array) {
-    const size = source.byteLength;
+  const copyTransport = Effect.fn("Citation.copyHtmlTransport")(function* (source: Uint8Array, size: number) {
     const bytes = new Uint8Array(size);
     for (let offset = 0; offset < size; offset += 4096) {
       yield* Effect.yieldNow;
@@ -289,7 +288,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       const read = (index: number) => O.getOrElse(O.fromUndefinedOr(source[index]), () => -1);
       const fullHtml = fullDocument(read, start);
       yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding: "AUTO", fullHtml, byteLength: size }));
-      const bytes = yield* copyTransport(source);
+      const bytes = yield* copyTransport(source, size);
       return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
     },
     (body) =>
@@ -307,7 +306,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
       if (size > messageCeiling) return yield* safety("processMessageBytes");
       const length = size / source.width;
-      const read = nativeReader(source);
+      const read = nativeReader(source, length);
       const largest = yield* nativeMaximum(read, length);
       const width = nativeWidth(largest);
       if (source.width !== width) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
@@ -317,7 +316,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       const fullHtml = fullDocument(read, start);
       const encoding = nativeEncoding(largest);
       yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
-      const bytes = yield* copyTransport(source.bytes);
+      const bytes = yield* copyTransport(source.bytes, size);
       return CitationHtmlInput.make({ encoding, bytes, fullHtml });
     },
     (body) =>

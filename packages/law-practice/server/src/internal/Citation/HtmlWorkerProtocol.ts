@@ -162,6 +162,14 @@ const line = (text: string) => encoder.encode(`${text}\n`);
 const encodeReply = Effect.fn("Citation.encodeHtmlReplyJson")((reply: CitationHtmlWorkerReply) =>
   S.encodeEffect(ReplyCodec)(reply).pipe(Effect.mapError(invalid))
 );
+const shortJsonEscape = (point: number) =>
+  point === 34 || point === 92 || point === 8 || point === 9 || point === 10 || point === 12 || point === 13;
+const utf8PointBytes = (point: number) => (point < 128 ? 1 : point < 0x800 ? 2 : point <= 0xffff ? 3 : 4);
+const jsonPointBytes = (point: number) => {
+  if (shortJsonEscape(point)) return 2;
+  if (point < 32 || (point >= 0xd800 && point <= 0xdfff)) return 6;
+  return utf8PointBytes(point);
+};
 /**
  * Exact JSON string-body byte charge, including isolated-surrogate escaping.
  * A bounded metadata header is encoded separately before variable allocation.
@@ -181,18 +189,7 @@ export const citationHtmlJsonBodyBytes = Effect.fn("Citation.htmlJsonBodyBytes")
       nextYield = index + 4096;
     }
     const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-    const size =
-      point === 34 || point === 92 || point === 8 || point === 9 || point === 10 || point === 12 || point === 13
-        ? 2
-        : point < 32 || (point >= 0xd800 && point <= 0xdfff)
-          ? 6
-          : point < 128
-            ? 1
-            : point < 0x800
-              ? 2
-              : point <= 0xffff
-                ? 3
-                : 4;
+    const size = jsonPointBytes(point);
     if (size > available - bytes) return yield* exceeded();
     bytes += size;
     index += point > 0xffff ? 2 : 1;
@@ -280,25 +277,31 @@ const preflightJson = Effect.fn("Citation.preflightHtmlJson")(function* (bytes: 
   let depth = 0;
   let properties = 0;
   const propertyCeiling = R.keys(CitationHtmlWorkerJob.fields).length;
+  const consumeQuoted = (byte: number | undefined) => {
+    if (escaped) escaped = false;
+    else if (byte === 92) escaped = true;
+    else if (byte === 34) quoted = false;
+  };
+  const adjustDepth = Effect.fnUntraced(function* (delta: number) {
+    depth += delta;
+    if (depth < 0 || depth > 2) return yield* invalid();
+  });
+  const consumeStructure = Effect.fnUntraced(function* (byte: number | undefined) {
+    if (byte === 34) {
+      quoted = true;
+      return;
+    }
+    if (byte === 91 || byte === 93) return yield* invalid();
+    if (byte === 123) return yield* adjustDepth(1);
+    if (byte === 125) return yield* adjustDepth(-1);
+    if (byte !== 58) return;
+    properties++;
+    if (properties > propertyCeiling) return yield* invalid();
+  });
   for (let index = 0; index < bytes.byteLength; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
-    const byte = bytes[index];
-    if (quoted) {
-      if (escaped) escaped = false;
-      else if (byte === 92) escaped = true;
-      else if (byte === 34) quoted = false;
-    } else if (byte === 34) quoted = true;
-    else if (byte === 91 || byte === 93) return yield* invalid();
-    else if (byte === 123) {
-      depth++;
-      if (depth > 2) return yield* invalid();
-    } else if (byte === 125) {
-      depth--;
-      if (depth < 0) return yield* invalid();
-    } else if (byte === 58) {
-      properties++;
-      if (properties > propertyCeiling) return yield* invalid();
-    }
+    if (quoted) consumeQuoted(bytes[index]);
+    else yield* consumeStructure(bytes[index]);
   }
   if (quoted || escaped || depth !== 0) return yield* invalid();
 });
@@ -333,29 +336,32 @@ export const readCitationHtmlFrames = Effect.fn("Citation.readHtmlFrames")(funct
   let buffer = new Uint8Array(0);
   let used = 0;
   let frames = 0;
+  const consumeByte = Effect.fnUntraced(function* (byte: number | undefined) {
+    if (frames >= expected) return yield* invalid();
+    if (byte !== 10) {
+      if (used + 1 >= limit) return yield* exceeded();
+      if (used === buffer.byteLength) {
+        const next = new Uint8Array(Num.min(limit - 1, Num.max(1, buffer.byteLength * 2)));
+        next.set(buffer);
+        buffer = next;
+      }
+      buffer[used] = byte ?? 0;
+      used++;
+      return;
+    }
+    const complete = buffer.slice(0, used);
+    yield* onFrame(complete);
+    frames++;
+    used = 0;
+    buffer = new Uint8Array(0);
+  });
   yield* Stream.runForEach(
     source.pipe(Stream.mapError(() => CitationHtmlWorkerFailure.make({ reason: "channel-failed" }))),
     (chunk) =>
       Effect.gen(function* () {
         for (let index = 0; index < chunk.byteLength; index++) {
           if (index % 4096 === 0) yield* Effect.yieldNow;
-          if (frames >= expected) return yield* invalid();
-          if (chunk[index] !== 10) {
-            if (used + 1 >= limit) return yield* exceeded();
-            if (used === buffer.byteLength) {
-              const next = new Uint8Array(Num.min(limit - 1, Num.max(1, buffer.byteLength * 2)));
-              next.set(buffer);
-              buffer = next;
-            }
-            buffer[used] = chunk[index] ?? 0;
-            used++;
-            continue;
-          }
-          const complete = buffer.slice(0, used);
-          yield* onFrame(complete);
-          frames++;
-          used = 0;
-          buffer = new Uint8Array(0);
+          yield* consumeByte(chunk[index]);
         }
       })
   );

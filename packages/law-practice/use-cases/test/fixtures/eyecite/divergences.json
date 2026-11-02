@@ -217,7 +217,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
-          "sha256": "43ef5f4cb6b70106fa3b511a790cba2f9e3f6bff2af74a631cea68b2bac8c895"
+          "sha256": "316070d68337d0603c352bed2979711a3a09eda2105124ec980c105463a7170b"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",
@@ -357,7 +357,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-          "sha256": "739b85420b745b7b78fd5d962e9eafb497a92f0415c955b51c038f1b2aaea2bc"
+          "sha256": "c0721f9b58448c5d3fede2fd794a3f1e016970ac478d0635735ec29887d90ac0"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
@@ -413,7 +413,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProtocol.ts",
-          "sha256": "a6a1530347fa95ef5e80cc323ea5fd64e620bcb28eda8f577f8ad5e3eb4e2af8"
+          "sha256": "c7b5a2821df7477446d2a378e64f110d2018981e7c1660e8b7baf93d7d4a2c2d"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorkerProgram.ts",
@@ -689,7 +689,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlNativeInput.test.ts",
-          "sha256": "4c0793c5f4053f4ad104f301807c5f437156777932a810646d02bdae8154a953"
+          "sha256": "cfcef6658b5bced2c35ca3b604dff6ec4f88d12af1e86a145f4e52207e8b289e"
         },
         {
           "path": "packages/law-practice/server/test/CitationUnicodePipeline.fixtures.ts",
@@ -865,7 +865,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/SessionDocument.ts",
-          "sha256": "43ef5f4cb6b70106fa3b511a790cba2f9e3f6bff2af74a631cea68b2bac8c895"
+          "sha256": "316070d68337d0603c352bed2979711a3a09eda2105124ec980c105463a7170b"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-29-canonical-session-descriptors.md",

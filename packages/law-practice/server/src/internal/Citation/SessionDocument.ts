@@ -133,58 +133,63 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             Effect.catchDefect(() => Effect.fail(failed()))
           );
         });
-        for (const decision of state.decisions) {
+        const appendAmbiguous = Effect.fn("Citation.projectAmbiguousDecision")(function* (
+          mentionId: CitationMentionId,
+          resources: ReadonlyArray<CitationCallbackResource>
+        ) {
+          let seen = HashSet.empty<CitationAuthorityId>();
+          let candidates = Chunk.empty<CitationAuthorityId>();
+          const candidate = Effect.fn("Citation.projectAmbiguousCandidate")(function* (
+            resource: CitationCallbackResource
+          ) {
+            const id = yield* resolve(resource);
+            if (HashSet.has(seen, id)) return;
+            if (candidateEdges >= state.limits.resolutionEdges) return yield* limit();
+            candidateEdges += 1;
+            seen = HashSet.add(seen, id);
+            candidates = Chunk.append(candidates, id);
+          });
+          for (const resource of resources) yield* candidate(resource);
+          // Final descriptors must support distinct authorities. A historical
+          // native count cannot certify distinct final descriptor labels.
+          if (Chunk.size(candidates) < 2) return yield* failed();
+          for (const [id, position] of A.map(A.fromIterable(candidates), (id, position) => [id, position] as const)) {
+            const positions = yield* Effect.fromOption(HashMap.get(candidateSets, id), failed);
+            candidateSets = HashMap.set(candidateSets, id, Chunk.append(positions, { mentionId, position }));
+          }
+          resolutions = Chunk.append(
+            resolutions,
+            CitationAmbiguous.make({
+              mentionId,
+              candidateAuthorityIds: A.fromIterable(candidates),
+              confidence: O.none(),
+            })
+          );
+        });
+        const unresolvedReason = (decision: (typeof state.decisions)[number]) => {
+          if (decision.callback === "unknown") return "unsupported-citation";
+          const observation = decision.observation;
+          return O.isSome(observation) && observation.value._tag === "Unresolved"
+            ? observation.value.reason
+            : "callback-unresolved";
+        };
+        const appendDecision = Effect.fn("Citation.projectSessionDecision")(function* (
+          decision: (typeof state.decisions)[number]
+        ) {
           if (decision.resource._tag === "None") {
             const observation = decision.observation;
             if (O.isSome(observation) && observation.value._tag === "Ambiguous") {
-              let seen = HashSet.empty<CitationAuthorityId>();
-              let candidates = Chunk.empty<CitationAuthorityId>();
-              for (const resource of observation.value.resources) {
-                const id = yield* resolve(resource);
-                if (!HashSet.has(seen, id)) {
-                  if (candidateEdges >= state.limits.resolutionEdges) return yield* limit();
-                  candidateEdges += 1;
-                  seen = HashSet.add(seen, id);
-                  candidates = Chunk.append(candidates, id);
-                }
-              }
-              // Final descriptors must support distinct authorities. A historical
-              // native count cannot certify distinct final descriptor labels.
-              if (Chunk.size(candidates) < 2) return yield* failed();
-              for (const [id, position] of A.map(
-                A.fromIterable(candidates),
-                (id, position) => [id, position] as const
-              )) {
-                const positions = yield* Effect.fromOption(HashMap.get(candidateSets, id), failed);
-                candidateSets = HashMap.set(
-                  candidateSets,
-                  id,
-                  Chunk.append(positions, { mentionId: decision.mentionId, position })
-                );
-              }
-              resolutions = Chunk.append(
-                resolutions,
-                CitationAmbiguous.make({
-                  mentionId: decision.mentionId,
-                  candidateAuthorityIds: A.fromIterable(candidates),
-                  confidence: O.none(),
-                })
-              );
-              continue;
+              yield* appendAmbiguous(decision.mentionId, observation.value.resources);
+              return;
             }
             resolutions = Chunk.append(
               resolutions,
               CitationUnresolved.make({
                 mentionId: decision.mentionId,
-                reason:
-                  decision.callback === "unknown"
-                    ? "unsupported-citation"
-                    : O.isSome(observation) && observation.value._tag === "Unresolved"
-                      ? observation.value.reason
-                      : "callback-unresolved",
+                reason: unresolvedReason(decision),
               })
             );
-            continue;
+            return;
           }
           const id = yield* resolve(decision.resource);
           const decisions = yield* Effect.fromOption(HashMap.get(decisionSets, id), failed);
@@ -193,8 +198,11 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
             resolutions,
             CitationResolved.make({ mentionId: decision.mentionId, authorityId: id, confidence: O.none() })
           );
-        }
-        for (const [position, entry] of A.map(state.groups, (entry, position) => [position, entry] as const)) {
+        });
+        const appendGroup = Effect.fn("Citation.projectSessionGroup")(function* (
+          entry: (typeof state.groups)[number],
+          position: number
+        ) {
           const id = yield* resolve(entry.resource);
           let list = HashMap.get(lists, entry.listSlot);
           if (O.isSome(list) && !membersEquivalent(list.value.members, entry.members)) return yield* invalid();
@@ -217,7 +225,10 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
           groups = Chunk.append(groups, group);
           const expected = yield* Effect.fromOption(HashMap.get(groupSets, id), failed);
           groupSets = HashMap.set(groupSets, id, Chunk.append(expected, { position, id: group.id, list: value }));
-        }
+        });
+        for (const decision of state.decisions) yield* appendDecision(decision);
+        for (const [position, entry] of A.map(state.groups, (entry, position) => [position, entry] as const))
+          yield* appendGroup(entry, position);
         if (
           candidateEdges + A.reduce(A.fromIterable(memberLists), 0, (count, list) => count + A.length(list.members)) >
           state.limits.resolutionEdges
