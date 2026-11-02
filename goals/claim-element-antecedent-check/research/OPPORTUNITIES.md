@@ -187,3 +187,21 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   terminal state and the replacement's registration. A cancellation request is
   not completion; cancel only this lane's obsolete run, preserve its evidence,
   and keep following the existing readiness monitor.
+
+## 2026-11-02 — Shared script removal invalidated generator expectations
+
+- **Doing:** waiting for final-head hosted verification of PR #2513.
+- **Evidence:** job `125174379019` in run `41414031964` reports 11 failed
+  assertions in `create-package.test.ts` and `architecture-operation-plan.test.ts`:
+  generated script objects omit `audit` and `beep:audit`, while the expectations
+  still include them. Coverage upload then fails because its prerequisite failed.
+- **Resolution:** consume accepted main #2535, which updates the expectations
+  after the intentional #2526 script removal, rather than duplicate its fix.
+  The same main integration includes #2533's shared Effect.fn helper correction.
+  Preserve the failed job log and publish the integration before compatibility
+  measurement. The 21 algorithm files remain unchanged; a new v26 freeze/replay
+  will bind the changed package-script environment without altering v25 results.
+- **Prevention:** validate generated output and its literal contract expectations
+  in the same script-removal change. Reproduce the failing inner assertion and
+  distinguish a missing coverage artifact caused by test failure from an
+  independent coverage regression.
