@@ -720,6 +720,12 @@
         ]
       },
       {
+        "name": "@beep/party-domain",
+        "patterns": [
+          "packages/party/domain/src/**"
+        ]
+      },
+      {
         "name": "@beep/pdf-tools",
         "patterns": [
           "packages/drivers/pdf-tools/src/**"
@@ -3830,6 +3836,19 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/party-domain",
+        "allow": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema"
         ]
       },
       {
