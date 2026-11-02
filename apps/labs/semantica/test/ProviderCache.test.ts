@@ -12,12 +12,14 @@ import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
 import * as Clock from "effect/Clock";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -175,6 +177,73 @@ const noOpProviderCache = Layer.succeed(
     lookup: Effect.fn("ProviderCache.lookup")(() => Effect.succeedNone),
     store: Effect.fn("ProviderCache.store")(() => Effect.void),
   })
+);
+
+const CompetingStage = S.Struct({
+  json: S.String,
+  publishOnRead: S.Int,
+  reads: S.Int,
+  promotions: S.Int,
+});
+type CompetingStage = typeof CompetingStage.Type;
+
+// One cache directory and one sequenced filesystem serve every competing-stage case;
+// each case registers its own target, so concurrent cases never share a stage.
+class CompetingStageProbe extends Context.Service<
+  CompetingStageProbe,
+  {
+    readonly cacheDirectory: string;
+    readonly stages: Ref.Ref<HashMap.HashMap<string, CompetingStage>>;
+  }
+>()("@beep/semantica/test/ProviderCache.test/CompetingStageProbe") {}
+
+const CompetingStageProbeLive = Layer.effect(
+  CompetingStageProbe,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return CompetingStageProbe.of({
+      cacheDirectory: yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-competing-stage-" }),
+      stages: yield* Ref.make(HashMap.empty<string, CompetingStage>()),
+    });
+  })
+);
+
+const CompetingStageCacheLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const { cacheDirectory, stages } = yield* CompetingStageProbe;
+    const sequencedFileSystem = FileSystem.FileSystem.of({
+      ...fs,
+      exists: Effect.fn("ProviderCacheTest.publishCompetingEntryOnRead")(function* (candidate) {
+        const stage = yield* Ref.modify(stages, (current) =>
+          O.match(HashMap.get(current, candidate), {
+            onNone: () => [O.none(), current] as const,
+            onSome: (value) => {
+              const next = { ...value, reads: value.reads + 1 };
+              return [O.some(next), HashMap.set(current, candidate, next)] as const;
+            },
+          })
+        );
+        if (O.isSome(stage) && stage.value.reads === stage.value.publishOnRead) {
+          yield* fs.writeFileString(candidate, `${stage.value.json}\n`);
+        }
+        return yield* fs.exists(candidate);
+      }),
+      rename: Effect.fn("ProviderCacheTest.observeCompetingStagePromotion")(function* (from, to) {
+        yield* Ref.update(
+          stages,
+          HashMap.modify(to, (value) => ({ ...value, promotions: value.promotions + 1 }))
+        );
+        return yield* fs.rename(from, to);
+      }),
+    });
+    return providerCacheTestRuntime(cacheDirectory, sequencedFileSystem);
+  })
+);
+
+const CompetingStageServices = CompetingStageCacheLive.pipe(
+  Layer.provideMerge(CompetingStageProbeLive),
+  Layer.provideMerge(BunPlatformLive)
 );
 
 describe("C0 provider cache and language-model boundary", () => {
@@ -743,6 +812,76 @@ describe("C0 provider cache and language-model boundary", () => {
     );
   });
 
+  // The concurrent write-once races above interleave on the real filesystem, so a
+  // contender reaches the competing entry at whichever store stage the scheduler
+  // allows. Each stage is driven here by publishing the competing entry on a fixed
+  // read of the target, so every outcome is covered whatever path a race takes.
+  it.layer(CompetingStageServices, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+    it.effect.each([
+      ["while the live lock blocks acquisition", true, 2, O.none<string>()],
+      ["after the contender acquires the lock", false, 2, O.none<string>()],
+      ["while the contender waits on the live lock", true, 3, O.none<string>()],
+      [
+        "while the live lock blocks acquisition",
+        true,
+        2,
+        O.some("A conflicting response already exists for this provider cache key."),
+      ],
+      [
+        "after the contender acquires the lock",
+        false,
+        2,
+        O.some("A conflicting provider cache write won the atomic promotion race."),
+      ],
+      [
+        "while the contender waits on the live lock",
+        true,
+        3,
+        O.some("A live provider cache writer stored different content for this key."),
+      ],
+    ] as const)(
+      "reconciles a competing entry published %s (live lock %s, publish on target read %s, conflict %o)",
+      ([_stage, liveLock, publishOnRead, conflict]) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { cacheDirectory, stages } = yield* CompetingStageProbe;
+          const cache = yield* ProviderCache;
+          const key = makeKey(`competing entry ${publishOnRead} ${liveLock} ${O.isSome(conflict)}`);
+          const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+          const makeEntry = (response: string) =>
+            ProviderCacheEntry.make({ cacheKey, key, response, responseDigest: sha256TextSync(response) });
+          const entry = makeEntry("contender");
+          const competing = O.isSome(conflict) ? makeEntry("competing-writer") : entry;
+          const target = path.join(cacheDirectory, `${cacheKey}.json`);
+          const lock = `${target}.lock`;
+          const competingJson = yield* encodeProviderCacheEntry(competing);
+          if (liveLock) {
+            yield* fs.makeDirectory(lock);
+            yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
+          }
+          yield* Ref.update(
+            stages,
+            HashMap.set(target, CompetingStage.make({ json: competingJson, publishOnRead, reads: 0, promotions: 0 }))
+          );
+
+          const stored = yield* cache.store(entry).pipe(Effect.result);
+
+          assertSome(
+            HashMap.get(yield* Ref.get(stages), target),
+            CompetingStage.make({ json: competingJson, publishOnRead, reads: publishOnRead, promotions: 0 })
+          );
+          expect(yield* fs.readFileString(target)).toBe(`${competingJson}\n`);
+          expect(yield* fs.exists(lock)).toBe(liveLock);
+          expect(
+            Result.match(stored, {
+              onFailure: (error) => O.some(error.message),
+              onSuccess: () => O.none<string>(),
+            })
+          ).toEqual(conflict);
+        })
+    );
+  });
   it.effect.each([
     [{ AI_ANTHROPIC_API_KEY: "test-key", AI_ANTHROPIC_MODEL: "claude-test-20260826" }, "claude-test-20260826"],
     [{ AI_ANTHROPIC_API_KEY: "test-key" }, ANTHROPIC_DEFAULT_MODEL],
