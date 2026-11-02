@@ -112,7 +112,8 @@
     "research/native-filter-composition-controls.py",
     "research/native-filter-composition-controls.json",
     "research/filter-composition-driver-controls.json",
-    "research/filter-composition-source-review.json"
+    "research/filter-composition-source-review.json",
+    "research/codegen-readonly-drift-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

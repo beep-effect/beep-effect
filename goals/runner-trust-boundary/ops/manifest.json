@@ -24,7 +24,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_rtb-p8-closeout-final-26a2dce12c8f/verdict.json",
+        "ref": ".beep/yeet/runs/docs_rtb-p8-refinal-bcd6fcb3f7f7/verdict.json",
         "gating": true
       }
     ]
@@ -149,6 +149,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2590
+    "finalPullRequest": 2618
   }
 }

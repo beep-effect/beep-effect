@@ -1,3 +1,4 @@
+import { Git, GitOptions } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { QualityTaskFailed, QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/commands/Quality";
 import {
@@ -24,7 +25,6 @@ import {
   ProofShadowEnforcementBar,
   ProofShadowReportInput,
   ProofShadowReportJson,
-  porcelainChangedPaths,
   proofLedgerPathForCheckout,
   proofShadowAttemptFacts,
   RepoRunContext,
@@ -53,10 +53,15 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as Ref from "effect/Ref";
+import * as PlatformError from "effect/PlatformError";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
 
 const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
 
@@ -906,8 +911,10 @@ describe("proof shadow mode", () => {
 
 // C5 (ruling 69): the attempt's changed package set is the branch's own diff against its
 // base unioned with one working-tree snapshot, mapped onto workspaces. Both git reads run
-// through the injected capture, so these fixtures script them.
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow changed packages", (it) => {
+// through `Git` (W2b), so these fixtures rebuild it over a scripted spawner that answers the
+// kit's argv with the bytes git would print.
+const TripwireLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+it.layer(TripwireLayer, { timeout: "30 seconds" })("proof shadow changed packages", (it) => {
   const context = (repoRoot: string): RepoRunContext =>
     RepoRunContext.make({
       base: "origin/main",
@@ -926,13 +933,55 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
     readonly truncated?: boolean;
   };
 
-  const gitStub = (diff: GitAnswer, status: GitAnswer) =>
-    Effect.fn("ProofShadowTest.gitStub")(function* (command: string, args: ReadonlyArray<string>, cwd: string) {
-      expect(command).toBe("git");
-      expect(Str.isNonEmpty(cwd)).toBe(true);
-      const answer = A.contains(args, "diff") ? diff : status;
-      return { exitCode: answer.exitCode ?? 0, output: answer.output, truncated: answer.truncated ?? false };
+  const encoder = new TextEncoder();
+
+  // One scripted run: git's stdout on success, its stderr on a failure.
+  const scriptedHandle = (answer: GitAnswer) => {
+    const exitCode = answer.exitCode ?? 0;
+    const bytes = Stream.make(encoder.encode(answer.output));
+    return ChildProcessSpawner.makeHandle({
+      all: bytes,
+      exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+      getInputFd: () => Sink.drain,
+      getOutputFd: () => Stream.empty,
+      isRunning: Effect.succeed(false),
+      kill: () => Effect.void,
+      pid: ChildProcessSpawner.ProcessId(1),
+      stderr: exitCode === 0 ? Stream.empty : bytes,
+      stdin: Sink.drain,
+      stdout: exitCode === 0 ? bytes : Stream.empty,
+      unref: Effect.succeed(Effect.void),
     });
+  };
+
+  // Rebuilds `Git` over a spawner that answers each git argv through `answer`. A truncated
+  // answer lowers the kit's output bound below that answer's size, so the kit refuses it as
+  // over the bound while every smaller answer still fits.
+  const scriptedGit =
+    (answer: (args: ReadonlyArray<string>) => GitAnswer, bound = 16 * 1024 * 1024) =>
+    <A, E, R>(self: Effect.Effect<A, E, R>) =>
+      self.pipe(
+        Effect.provideServiceEffect(Git, Git.makeWith(GitOptions.make({ maxOutputBytes: bound }))),
+        Effect.provideService(
+          ChildProcessSpawner.ChildProcessSpawner,
+          ChildProcessSpawner.make((command) => {
+            if (!ChildProcess.isStandardCommand(command)) return Effect.die("the tripwire never pipes a command");
+            expect(command.command).toBe("git");
+            return Effect.succeed(scriptedHandle(answer(commandArgs(command))));
+          })
+        )
+      );
+
+  const gitStub = (diff: GitAnswer, status: GitAnswer) =>
+    scriptedGit(
+      (args) => (A.contains(args, "diff") ? diff : status),
+      pipe(
+        [diff, status],
+        A.findFirst((answer) => answer.truncated === true),
+        O.map((answer) => encoder.encode(answer.output).length - 1),
+        O.getOrElse(() => 16 * 1024 * 1024)
+      )
+    );
 
   // Two workspaces are the smallest repository in which "deepest containing workspace"
   // and "outside every workspace" are both observable.
@@ -981,27 +1030,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
     return yield* inTempRoot((root) => Effect.flatMap(seedWorkspaces(root), () => use(root)));
   });
 
-  it("parses porcelain entries, keeping both sides of a rename and paths with spaces", () => {
-    expect(
-      porcelainChangedPaths(
-        " M packages/x/src/a.ts\0R  packages/y/src/new.ts\0packages/x/src/old.ts\0?? packages/y/src/with space.ts\0"
-      )
-    ).toStrictEqual([
-      "packages/x/src/a.ts",
-      "packages/y/src/new.ts",
-      "packages/x/src/old.ts",
-      "packages/y/src/with space.ts",
-    ]);
-    // A capture that carried a stray line instead of a status entry contributes nothing.
-    expect(porcelainChangedPaths("warning: something\0")).toStrictEqual([]);
-    expect(porcelainChangedPaths("")).toStrictEqual([]);
-  });
-
   it.effect("unions the committed diff with the working tree and maps both onto workspaces", () =>
     inWorkspaceCheckout((root) =>
       Effect.gen(function* () {
-        const changed = yield* changedPackagesForAttempt(
-          context(root),
+        const changed = yield* changedPackagesForAttempt(context(root)).pipe(
           gitStub(
             { output: "packages/x/src/a.ts\0" },
             {
@@ -1025,8 +1057,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
   it.effect("reports a clean tree under no workspace as no changed packages", () =>
     inWorkspaceCheckout((root) =>
       Effect.gen(function* () {
-        const changed = yield* changedPackagesForAttempt(
-          context(root),
+        const changed = yield* changedPackagesForAttempt(context(root)).pipe(
           gitStub({ output: "docs/README.md\0" }, { output: "" })
         );
         expect(changed).toMatchObject({ kind: "known", packages: [], paths: 1 });
@@ -1038,8 +1069,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
   it.effect("reports a failed or truncated git read as unavailable rather than an empty change", () =>
     inWorkspaceCheckout((root) =>
       Effect.gen(function* () {
-        const statusFailed = yield* changedPackagesForAttempt(
-          context(root),
+        const statusFailed = yield* changedPackagesForAttempt(context(root)).pipe(
           gitStub({ output: "packages/x/src/a.ts\0" }, { exitCode: 128, output: "fatal: not a git repository" })
         );
         expect(statusFailed).toMatchObject({ kind: "unavailable" });
@@ -1048,8 +1078,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
         ).toBe(true);
         expect(Str.includes("tripwire fails closed")(renderProofChangedPackages(statusFailed))).toBe(true);
 
-        const diffTruncated = yield* changedPackagesForAttempt(
-          context(root),
+        const diffTruncated = yield* changedPackagesForAttempt(context(root)).pipe(
           gitStub({ output: "packages/x/src/a.ts\0", truncated: true }, { output: "" })
         );
         expect(diffTruncated).toMatchObject({ kind: "unavailable" });
@@ -1077,8 +1106,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
         yield* seedWorkspaces(real);
         yield* fs.symlink(real, link);
 
-        const changed = yield* changedPackagesForAttempt(
-          context(link),
+        const changed = yield* changedPackagesForAttempt(context(link)).pipe(
           gitStub({ output: "packages/x/src/a.ts\0" }, { output: "" })
         );
         expect(changed).toMatchObject({ kind: "known", packages: ["@beep/x"], paths: 1 });
@@ -1098,8 +1126,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
           path.join(root, "package.json"),
           '{"name":"tripwire-root","private":true,"workspaces":["packages/*"]}\n'
         );
-        const changed = yield* changedPackagesForAttempt(
-          context(root),
+        const changed = yield* changedPackagesForAttempt(context(root)).pipe(
           gitStub({ output: "packages/x/src/a.ts\0" }, { output: "" })
         );
         expect(changed).toStrictEqual(
@@ -1115,41 +1142,38 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
   it.effect("reads the committed diff NUL-separated and rename-free, keeping paths verbatim", () =>
     inWorkspaceCheckout((root) =>
       Effect.gen(function* () {
-        const invocations = yield* Ref.make(A.empty<ReadonlyArray<string>>());
-        const recordingStub = Effect.fn("ProofShadowTest.recordingStub")(function* (
-          _command: string,
-          args: ReadonlyArray<string>
-        ) {
-          yield* Ref.update(invocations, A.append(args));
+        const invocations: Array<ReadonlyArray<string>> = [];
+        const recordingStub = scriptedGit((args) => {
+          invocations.push(args);
           return {
-            exitCode: 0,
-            truncated: false,
             output: A.contains(args, "diff") ? "packages/y/src/with space.ts\0packages/x/src/caf\u00e9.ts\0" : "",
           };
         });
 
-        const changed = yield* changedPackagesForAttempt(context(root), recordingStub);
+        const changed = yield* changedPackagesForAttempt(context(root)).pipe(recordingStub);
         expect(changed).toMatchObject({ kind: "known", packages: ["@beep/x", "@beep/y"], paths: 2 });
 
         const diffArgs = pipe(
-          yield* Ref.get(invocations),
+          invocations,
           A.findFirst((args) => A.contains(args, "diff")),
           O.getOrThrow
         );
-        expect(diffArgs).toStrictEqual(["diff", "--name-only", "--no-renames", "-z", "origin/main...HEAD"]);
+        expect(diffArgs).toStrictEqual([
+          "diff",
+          "--name-only",
+          "-z",
+          "--no-relative",
+          "--no-renames",
+          "origin/main...HEAD",
+        ]);
 
         // The package set above only observes directory prefixes, so a per-path trim
         // would leave it green. Read the strict reader directly and compare the exact
         // strings, including the leading and trailing spaces that belong to a name.
-        const verbatim = yield* readYeetChangedPathsStrict(
-          context(root),
-          Effect.fn("ProofShadowTest.spacedPaths")(function* () {
-            return {
-              exitCode: 0,
-              truncated: false,
-              output: " packages/x/src/leading.ts\0packages/y/src/with space.ts\0packages/x/src/trailing.ts \0",
-            };
-          })
+        const verbatim = yield* readYeetChangedPathsStrict(context(root)).pipe(
+          scriptedGit(() => ({
+            output: " packages/x/src/leading.ts\0packages/y/src/with space.ts\0packages/x/src/trailing.ts \0",
+          }))
         );
         expect(verbatim).toStrictEqual([
           " packages/x/src/leading.ts",
@@ -1211,11 +1235,33 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("proof shadow cha
     )
   );
 
+  it.effect("reports a git that never ran as unavailable with the reader's own message", () =>
+    inWorkspaceCheckout((root) =>
+      Effect.gen(function* () {
+        const changed = yield* changedPackagesForAttempt(context(root)).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            ChildProcessSpawner.make(() =>
+              Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
+            )
+          )
+        );
+        expect(changed).toStrictEqual(
+          ProofChangedPackagesUnavailable.make({
+            kind: "unavailable",
+            reason: "Failed to read the paths changed across origin/main...HEAD.",
+          })
+        );
+      })
+    )
+  );
+
   it.effect("reports an unreadable workspace list as unavailable", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "tripwire-no-root-" });
-      const changed = yield* changedPackagesForAttempt(context(root), gitStub({ output: "" }, { output: "" }));
+      const changed = yield* changedPackagesForAttempt(context(root)).pipe(gitStub({ output: "" }, { output: "" }));
       expect(changed).toMatchObject({ kind: "unavailable" });
       expect(Str.includes("workspace list")(changed.kind === "unavailable" ? changed.reason : "")).toBe(true);
     })

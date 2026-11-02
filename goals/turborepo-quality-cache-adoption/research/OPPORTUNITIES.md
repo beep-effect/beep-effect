@@ -570,6 +570,24 @@ control rejected that false success. Bind every invocation to the shared
 collector's command slot, commit the correction and replay the complete matrix;
 the failed attempt is not setup evidence.
 
+### Read-only generator drift diagnostics, 2026-11-02
+
+The shared generator staged unified-diff input beside its installed source.
+Under a read-only checkout, changed or missing generated output therefore
+returned `CodegenFormatError` instead of the intended `CodegenDriftError`.
+Three focused cases reproduced that failure before the fix. Use the scoped
+system temporary directory for diff staging; preserve cleanup and output
+comparison. All 43 package tests, lint/check and docgen pass after the fix.
+An actual ACP check also passes with network access denied and all repository
+source read-only; a stale-output overlay reports drift without changing source.
+This removes a prerequisite defect, but does not qualify a Turbo task.
+
+The native probe initially named `biome.json` instead of the real
+`biome.jsonc` and stopped before executing the generator. Its next assertion
+looked for the typed error in stderr, while the actual Effect runtime logs it
+to stdout and prints the diff to stderr. Both original failures are retained;
+the corrected three-case probe checks each real stream and source integrity.
+The checkpoint records the successful behavior separately from those failures.
 ### Revalidate population source before batching semantic reviews, 2026-11-02
 
 The retained census still described 2,621 executable computations, while 231 of
@@ -670,3 +688,20 @@ the stale predecessor without claiming the remaining runner queue has cleared.
 - Correction: retain the full-labs execution contract and correct its rationale; publish the bounded native oracle and five intended refusals/counterfactuals. Do not infer a runtime speedup from the comment repair.
 - Calibration: the first fixture put `remoteCache` outside the enabled global namespace and was refused before selection. A report-variable shadowing error also prevented an initial report; neither was treated as passing evidence. Fixed source is bound to the successful fresh report.
 - Prevention: use the accepted global namespace, keep parsed arguments distinct from selector argv, and require exact-client behavioral evidence before deciding lane scope.
+### 2026-11-02 — formatter rewrote sealed baseline during integration
+
+The normal merge-commit hook rewrote `goals/knowledge-doctor.baseline.jsonc`
+without changing its decoded entries. The actual canonical text verifier returned
+`KnowledgeSealBroken`; a semantic comparison alone missed this. Restore accepted
+main bytes and exclude only this CI-minted file from Biome. A direct formatter
+write must preserve the canonical hash, and normal commit hooks stay enabled.
+The same introduced correction is required in each of this chat's five affected
+PRs; the first merge establishes the identical repository exclusion. This does
+not copy either declared shared CI unblocker or change the sealed data, mint,
+coverage floor, production cache, or whole-goal acceptance.
+
+The narrow Biome exclusion also requires its generated `biome.identity.jsonc`
+projection. Review caught the omitted regeneration before current-head validation.
+`bun run beep cache profile --write` regenerates it; the freshness command then
+passes. Both configuration files remain a projection, without a cache qualification
+or runtime activation. Keep the generated profile in the same config-edit wave.

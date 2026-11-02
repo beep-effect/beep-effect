@@ -31,11 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P2 Verify — in progress. P0 and P1 completed 2026-11-02 on branch
+`claude/skill-contract-gate-certs-oodgzh`; independent review, hosted CI, Yeet and
+merge are still owed before P3/P4.
 
 ## Latest Evidence
 
-Not started.
+[`history/2026-11-02-p0-p1-evidence.md`](./history/2026-11-02-p0-p1-evidence.md):
+kernel `GateCertificate` module, QA judge settlement producer, focused tests, and
+`package-verify` results.
 
 ## Notes
 

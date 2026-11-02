@@ -720,6 +720,12 @@
         ]
       },
       {
+        "name": "@beep/party-domain",
+        "patterns": [
+          "packages/party/domain/src/**"
+        ]
+      },
+      {
         "name": "@beep/pdf-tools",
         "patterns": [
           "packages/drivers/pdf-tools/src/**"
@@ -3833,6 +3839,19 @@
         ]
       },
       {
+        "from": "@beep/party-domain",
+        "allow": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/party-domain",
+          "@beep/schema"
+        ]
+      },
+      {
         "from": "@beep/pdf-tools",
         "allow": [
           "@beep/commands",
@@ -4374,6 +4393,7 @@
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/identity",
           "@beep/jsonl",
           "@beep/memfs",
@@ -4393,6 +4413,7 @@
           "@beep/duckdb",
           "@beep/fc-runs",
           "@beep/file-processing",
+          "@beep/git",
           "@beep/identity",
           "@beep/jsonl",
           "@beep/memfs",
@@ -4415,6 +4436,7 @@
           "@beep/chalk",
           "@beep/cli-kit",
           "@beep/colors",
+          "@beep/commands",
           "@beep/config-file",
           "@beep/duckdb",
           "@beep/epistemics",
@@ -4478,6 +4500,7 @@
           "@beep/chalk",
           "@beep/cli-kit",
           "@beep/colors",
+          "@beep/commands",
           "@beep/config-file",
           "@beep/duckdb",
           "@beep/epistemics",

@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -16,11 +18,11 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, ghOutput } from "../../../internal/github/index.ts";
-import { RepoStepRunResult, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { RepoStepRunResult, runRepoCommandCapture, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { HEAVY_ADMISSION_LABEL, isHeavyDocsOnlyPath } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runIdForContext, runArtifactPathForContext as runOutputPathForContext } from "./ArtifactPaths.ts";
-import { runGitOutput, runGitPathList } from "./GitExec.ts";
+import { runGitOutput, yeetGitKitError } from "./GitExec.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import {
   ensureProvenanceFooter,
@@ -35,7 +37,6 @@ import {
   YeetPullRequestTitleSyncStatus,
 } from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -64,7 +65,14 @@ const ghPullRequestViewOutput = (context: RepoRunContext) =>
   });
 
 const originPushOwner = Effect.fn("Yeet.originPushOwner")(function* (context: RepoRunContext) {
-  const remote = Str.trim(yield* runGitOutput(context.repoRoot, ["remote", "get-url", "--push", "origin"]));
+  const git = yield* Git;
+  // A missing origin reads as no URL, which fails the owner match below.
+  const remote = yield* git.remoteUrl(context.repoRoot, { push: true }).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.remoteUrl("origin", true)),
+      onSuccess: O.getOrElse(() => ""),
+    })
+  );
   const owner = pipe(
     Str.match(/^(?:[^@/\s]+@[^:/\s]+:|ssh:\/\/[^/]+\/|https?:\/\/[^/]+\/)([^/?#\s]+)\/[^/?#\s]+$/)(remote),
     O.flatMap((parts) => O.fromNullishOr(parts[1]))
@@ -102,7 +110,7 @@ export const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestVia
 ): Effect.fn.Return<
   O.Option<GhPrView>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const headOwner = yield* originPushOwner(context);
   const endpoint = `repos/{owner}/{repo}/pulls?head=${encodeURIComponent(headOwner)}%3A${encodeURIComponent(context.branch)}&state=open&per_page=100`;
@@ -183,7 +191,11 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
  */
 export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
-): Effect.fn.Return<GhPrView, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  GhPrView,
+  YeetCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+> {
   // REST first: its budget is separate from the shared GraphQL budget that
   // `gh pr view` spends. `gh pr view` stays as the fallback for a REST failure.
   const viaRest = yield* findOpenPullRequestViaRest(context).pipe(Effect.option, Effect.map(O.flatten));
@@ -242,7 +254,7 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 ): Effect.fn.Return<
   O.Option<GhPrView>,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   // REST first (separate budget); `gh pr view` only when the REST read failed,
   // and a spent GraphQL budget then reports the REST failure, never "no PR".
@@ -273,11 +285,9 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
 // describe the same commits.
 const branchCommitRange = Effect.fn("Yeet.branchCommitRange")(function* (
   context: RepoRunContext
-): Effect.fn.Return<string, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const mergeBase = yield* runGitOutput(context.repoRoot, ["merge-base", context.base, "HEAD"]).pipe(
-    Effect.map(Str.trim),
-    Effect.orElseSucceed(() => "")
-  );
+): Effect.fn.Return<string, never, Git> {
+  const git = yield* Git;
+  const mergeBase = yield* git.mergeBase(context.repoRoot, context.base, "HEAD").pipe(Effect.orElseSucceed(() => ""));
   return Str.isNonEmpty(mergeBase) ? `${mergeBase}..HEAD` : "HEAD";
 });
 
@@ -330,6 +340,7 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   | Git
 > {
   const range = yield* branchCommitRange(context);
+  // KEEP (W2b): `Git.log` carries each commit's subject but not its body (`%b`).
   const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
   const executed = yield* Ref.get(recorder);
   const laneSummary = pipe(
@@ -540,7 +551,7 @@ const finishCreatedPullRequest = Effect.fn("Yeet.finishCreatedPullRequest")(func
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   yield* Console.log(
     `[yeet] --pr: created ${draft ? "draft " : ""}pull request${throughRest ? " through REST" : ""} -> ${printed}`
@@ -602,7 +613,7 @@ const createPullRequestViaRest = Effect.fn("Yeet.createPullRequestViaRest")(func
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const existing = yield* findOpenPullRequestViaRest(context);
   if (O.isSome(existing)) {
@@ -751,7 +762,7 @@ const syncExistingPullRequestTitle = Effect.fn("Yeet.syncExistingPullRequestTitl
 ): Effect.fn.Return<
   YeetPullRequestTitleSync,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const current = O.fromUndefinedOr(existing.title);
   if (!O.exists(current, isMergeCommitSubject)) {
@@ -793,7 +804,7 @@ const reuseExistingPullRequest = Effect.fn("Yeet.reuseExistingPullRequest")(func
 ): Effect.fn.Return<
   YeetEnsuredPullRequest,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   yield* Console.log(
     `[yeet] --pr: open pull request #${existing.number} already exists for ${context.branch}; skipping create`
@@ -926,7 +937,7 @@ interface HeavyAdmissionLabelDependencies {
   ) => Effect.Effect<
     ReadonlyArray<string>,
     YeetCommandError,
-    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >;
 }
 
@@ -953,7 +964,12 @@ const recordPrLabelLane = (
   );
 
 const branchChangedPaths = (context: RepoRunContext) =>
-  runGitPathList(context.repoRoot, ["diff", "--name-only", "-z", `${context.base}...HEAD`]);
+  Effect.flatMap(Git, (git) => git.changedFiles(context.repoRoot, { base: context.base, head: "HEAD" })).pipe(
+    Effect.mapBoth({
+      onFailure: yeetGitKitError(GitCommand.changedFiles(context.base, "HEAD")),
+      onSuccess: sortedUniquePaths,
+    })
+  );
 
 /**
  * Apply the heavy-admission label to the draft pull request a publish just
@@ -1003,7 +1019,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
   labelStep: O.Option<RepoPlanStep>,
   pullRequest: YeetEnsuredPullRequest,
   dependencies: HeavyAdmissionLabelDependencies = {}
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git> {
   if (O.isNone(labelStep)) return;
   if (!pullRequest.created) {
     yield* recordPrLabelLane(
@@ -1076,7 +1092,7 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
  */
 export const validateOpenPullRequest = Effect.fn("Yeet.validateOpenPullRequest")(function* (
   context: RepoRunContext
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git> {
   const pullRequest = yield* runGhPullRequestView(context);
 
   if (pullRequest.state !== "OPEN") {

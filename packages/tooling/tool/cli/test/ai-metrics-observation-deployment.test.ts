@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
 import {
@@ -11,6 +12,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
 import { expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -35,15 +37,18 @@ const input = {
 };
 // Command dispatch requires the platform capabilities for all branches. These
 // fixtures only read synthetic files; an attempted subprocess is a test defect.
-const testServices = Layer.mergeAll(
-  MemoryFileSystem.layer,
-  NodeCrypto.layer,
-  NodePath.layer,
-  NodeStdio.layer,
-  NodeTerminal.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+const testServices = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    NodeCrypto.layer,
+    NodePath.layer,
+    NodeStdio.layer,
+    NodeTerminal.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.die("Unexpected subprocess in synthetic command fixture"))
+    )
   )
 );
 
@@ -53,9 +58,20 @@ const directory = FileSystem.FileSystem.use((fs) =>
 );
 const encodeJsonValue = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeObservationDeploymentPlanJson = S.decodeEffect(S.fromJsonString(ObservationDeploymentPlan));
+const encodeObservationDeploymentPlanJson = S.encodeEffect(S.fromJsonString(ObservationDeploymentPlan));
 const decodeJsonValue = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 it.layer(testServices, { timeout: "30 seconds", concurrent: false })("Observation deployment plan", (it) => {
+  it.effect.prop(
+    "round-trips schema-derived deployment plans through their JSON boundary",
+    [Arbitrary.schema(ObservationDeploymentPlan)],
+    Effect.fnUntraced(function* ([plan]) {
+      const encoded = yield* encodeObservationDeploymentPlanJson(plan);
+      const decoded = yield* decodeObservationDeploymentPlanJson(encoded);
+      expect(yield* encodeObservationDeploymentPlanJson(decoded)).toBe(encoded);
+    })
+  );
+
   it.effect("renders through the registered command without installing or resuming services", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

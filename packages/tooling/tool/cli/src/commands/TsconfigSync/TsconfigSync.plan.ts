@@ -17,6 +17,7 @@ import {
   buildCanonicalAliasTargets,
   deriveWildcardAliasTargetFromExport,
   isFileStemWildcardExportTarget,
+  RootAliasTarget,
   resolveRootExportTarget,
   resolveSubpathExportTarget,
   resolveWildcardExportTarget,
@@ -58,6 +59,7 @@ import {
 } from "./TsconfigSync.schemas.ts";
 
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
+const decodeRootAliasTarget = S.decodeUnknownEffect(RootAliasTarget);
 
 const decodeJsonObjectJson = S.decodeEffect(S.fromJsonString(JsonObject));
 
@@ -263,11 +265,20 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
     const hasDocgenConfig = yield* fs
       .exists(path.join(absoluteDir, DOCGEN_CONFIG_FILENAME))
       .pipe(Effect.orElseSucceed(thunkFalse));
-    const aliasTargets = pipe(
+    // The package.json decoder accepts any string export, but a root alias
+    // cannot be a wildcard; reject it here as a typed error instead of letting
+    // the canonical alias constructor throw.
+    const rootExportTarget = yield* pipe(
       O.fromUndefinedOr(packageJson.exports),
       O.flatMap(resolveRootExportTarget),
-      O.map((rootExportTarget) => buildCanonicalAliasTargets(relativeDir, rootExportTarget))
+      O.map((target) =>
+        decodeRootAliasTarget(target).pipe(
+          Effect.mapError(DomainError.newCauseMessage(`Invalid root export "${target}" in "${packageJsonPath}"`))
+        )
+      ),
+      Effect.transposeOption
     );
+    const aliasTargets = O.map(rootExportTarget, (target) => buildCanonicalAliasTargets(relativeDir, target));
     const wildcardExportTarget = pipe(O.fromUndefinedOr(packageJson.exports), O.flatMap(resolveWildcardExportTarget));
     const packageSubpathAliasTargets = buildPackageSubpathAliasTargets(packageName, relativeDir, packageJson.exports);
     const scopedWildcardAliasTargets = buildScopedWildcardAliasTargets(packageName, relativeDir, packageJson.exports);

@@ -1,5 +1,7 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
+  createYeetMergePreview,
   defaultYeetRunOptions,
   gitObjectIdFromOutput,
   parseYeetMergeTreeResult,
@@ -13,14 +15,18 @@ import {
   yeetMergedPreviewContext,
 } from "@beep/repo-cli/test/Yeet";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const TREE_SHA = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";
@@ -28,7 +34,8 @@ const BASE_SHA = "1111111111111111111111111111111111111111";
 const HEAD_SHA = "2222222222222222222222222222222222222222";
 const COMMIT_SHA = "3333333333333333333333333333333333333333";
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
+const PlatformLayer = Git.layer.pipe(
+  Layer.provideMerge(NodeChildProcessSpawner.layer),
   Layer.provideMerge(Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer))
 );
 
@@ -218,6 +225,75 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("yeet merged tier guards", (i
 
       publishExit.pipe(Exit.isFailure, assertTrue);
       mergedExit.pipe(Exit.isFailure, assertTrue);
+    })
+  );
+});
+
+const scratchGit = Effect.fn("YeetMergedPreviewTest.scratchGit")(function* (cwd: string, args: ReadonlyArray<string>) {
+  const handle = yield* ChildProcess.make("git", [...args], { cwd, stdin: "ignore", stdout: "pipe", stderr: "ignore" });
+  const output = yield* handle.stdout.pipe(Stream.decodeText(), Stream.mkString);
+  expect(yield* handle.exitCode).toBe(0);
+  return Str.trim(output);
+});
+
+// The preview worktree is added through `Git.worktreeAdd` (W2b); these drive the whole
+// materialization against a real repository, so the add, the leftover removal before it and the
+// conflict refusal all run for real.
+it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), {
+  timeout: "30 seconds",
+})("yeet merge preview materialization", (it) => {
+  const scratchRepo = Effect.fn("YeetMergedPreviewTest.scratchRepo")(function* (conflict: boolean) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repo = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-merged-preview-" });
+    yield* scratchGit(repo, ["init", "--quiet", "-b", "main"]);
+    for (const [key, value] of [
+      ["user.email", "preview@example.com"],
+      ["user.name", "Preview"],
+      ["commit.gpgsign", "false"],
+    ] as const)
+      yield* scratchGit(repo, ["config", key, value]);
+    yield* fs.writeFileString(path.join(repo, "README.md"), "base\n");
+    yield* scratchGit(repo, ["add", "README.md"]);
+    yield* scratchGit(repo, ["commit", "--quiet", "-m", "base"]);
+    yield* scratchGit(repo, ["checkout", "--quiet", "-b", "feature"]);
+    yield* fs.writeFileString(path.join(repo, conflict ? "README.md" : "feature.md"), "feature\n");
+    yield* scratchGit(repo, ["add", "-A"]);
+    yield* scratchGit(repo, ["commit", "--quiet", "-m", "feature"]);
+    yield* scratchGit(repo, ["checkout", "--quiet", "main"]);
+    yield* fs.writeFileString(path.join(repo, conflict ? "README.md" : "main.md"), "main\n");
+    yield* scratchGit(repo, ["add", "-A"]);
+    yield* scratchGit(repo, ["commit", "--quiet", "-m", "main"]);
+    yield* scratchGit(repo, ["checkout", "--quiet", "feature"]);
+    return RepoRunContext.make({
+      ...context,
+      base: "main",
+      cwd: repo,
+      packetDir: path.join(repo, ".beep", "yeet"),
+      repoRoot: repo,
+    });
+  });
+
+  it.effect("materializes the merge as a detached worktree, replacing a leftover preview", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoContext = yield* scratchRepo(false);
+      const first = yield* createYeetMergePreview(repoContext);
+      // A second run removes the first run's preview before adding its own.
+      const preview = yield* createYeetMergePreview(repoContext);
+      expect(preview.commitSha).toBe(first.commitSha);
+      expect(yield* fs.exists(path.join(preview.worktreePath, "feature.md"))).toBe(true);
+      expect(yield* fs.exists(path.join(preview.worktreePath, "main.md"))).toBe(true);
+      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"])).toBe(preview.commitSha);
+    })
+  );
+
+  it.effect("refuses a merge that conflicts, naming the conflicted path", () =>
+    Effect.gen(function* () {
+      const repoContext = yield* scratchRepo(true);
+      const error = yield* Effect.flip(createYeetMergePreview(repoContext));
+      expect(error.message).toContain("README.md");
     })
   );
 });
