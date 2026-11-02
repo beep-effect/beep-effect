@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "cache-selection-current-canary-checkpoint/v1",
+  "recordedAt": "2026-11-02T19:17:30.850561+00:00",
+  "authority": "Exact-pin synthetic task-selection regressions and driver integrity only. No current-root semantic review, task qualification, flag activation, remote rollout or whole-goal acceptance.",
+  "sourceBaseRevision": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+  "sourceState": "working-tree-bound",
+  "driver": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
+    "sha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1"
+  },
+  "sourceBindings": {
+    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
+    "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d",
+    "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
+    ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+  },
+  "currentPair": {
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.11-canary.1",
+        "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+      }
+    },
+    "report": "research/native-selection-current-canary-controls.json",
+    "sha256": "db9d71da2e53f98354e9594a3cc640367b5a60340625b0392feb2a22f16ab3ee",
+    "rawReportSha256": "8dc309e3cca9ac788053128ce6842426c6f121e18c83b57529b6e4761271db31",
+    "assertedCases": 44,
+    "nativeInvocations": 88
+  },
+  "historicalCompatibilityReplay": {
+    "clients": {
+      "stable": {
+        "reportedVersion": "2.11.10",
+        "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+      },
+      "canary": {
+        "reportedVersion": "2.11.9-canary.1",
+        "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+      }
+    },
+    "report": "research/native-selection-historical-compatibility-controls.json",
+    "sha256": "6bf51975b0223a0ae65748bdd076379f88c2bdb9b6b1248bcfb2747da0675a97",
+    "assertedCases": 44,
+    "nativeInvocations": 88,
+    "semanticProjectionEqualToOriginal": true
+  },
+  "historicalEvidence": {
+    "report": "research/native-selection-controls.json",
+    "reportSha256": "048d44ace9322686c87adeb5cfca07ccc251e16c9e8aba74066b9b46a85e41f9",
+    "immutableSourceCommit": "9f4bf57385a8adb6b3ff4d7fe5499ebfcd184cce",
+    "driverPath": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
+    "driverSha256": "7ea5bea0adfa2498bc096c639ba3ad87e91c0946bbb669b865fcb8c3d01b4f99",
+    "preservedByteIdentical": true
+  },
+  "driverControls": {
+    "report": "research/selection-current-driver-controls.json",
+    "sha256": "a444f9bcb514ead13fdd33f07e90f64cfbda9f0f9ebc655168ea0e64eb7640e8",
+    "refusals": 7,
+    "expectedDiagnosticsMatched": true,
+    "ownedChildrenGoneAfterBoundRefusals": true
+  },
+  "bounds": {
+    "totalSeconds": 180,
+    "perOwnedProcessSeconds": 10,
+    "stdoutBytes": 1048576,
+    "stderrBytes": 65536,
+    "existingReportsRefused": true,
+    "privateUniqueRawDirectories": true,
+    "collector": "Existing native-future-flag-availability.py run_bounded, reused without changing its source. GNU timeout preserves the stricter selection lifetime inside its owned process group."
+  },
+  "observations": [
+    "All 44 current-pair cases pass, including missing commands, explicit requests, graph-only tasks, dependency/transit closure, --only, empty selections and malformed selectors.",
+    "The parameterized driver replays all 44 historical-pair cases with the exact original semantic projection. Original raw/report claims retain their original driver and pin identity.",
+    "Streaming capture now rejects oversized data while collecting. The existing ten-second process and three-minute observation ceilings remain enforced; actual bound-refusal children are absent at return."
+  ],
+  "remaining": [
+    "Reconcile actual root/child task and entrypoint consumers with the current pinned semantics.",
+    "Qualify applicable real computation tuples and prove their dependency closure and output safety.",
+    "Review remaining selector families and applicable features; all 27 unfinished feature decisions remain pending.",
+    "Complete protected producer/trust/cohort execution, eligible adoption, observation windows and final hosted closeout."
+  ],
+  "productionChanged": false,
+  "qualificationGranted": false,
+  "featureAcceptanceChanged": false,
+  "allWholeGoalAcceptanceUnproven": true,
+  "priorPublishedProof": {
+    "commit": "1a32869a1dcd2e4ceadbae6808d3dceb2475b6ad",
+    "driverSha256": "beadd2ed9db40737f7714425aa88ba403927247a9dc77ca1c1e592c23b8b7580",
+    "reports": {
+      "native-selection-current-canary-controls.json": "621d593b64eb96ca4c10c20766d0d3428411119c389a650cfeac553a1522724f",
+      "native-selection-historical-compatibility-controls.json": "ca1769f56e229294c711290e757aedd44ec9d9588b8e4d0bb8fb66fa0daf85fa",
+      "selection-current-driver-controls.json": "49dcb73471bcc664b3615271fc5e7e97cd696c42eb3d8146bcbbd4b3d43f0a01"
+    },
+    "scope": "Published pre-review current/compatibility observations and seven driver controls; source and report bytes remain available at this immutable Git commit."
+  },
+  "reviewRepair": {
+    "threads": ["PRRT_kwDOPbO_N86yzv9q", "PRRT_kwDOPbO_N86yzv96"],
+    "report": "research/selection-review-source-controls.json",
+    "sha256": "5c33f6b7095059acb84963108065730292e5d7166f64313e8b5458dd6d3eda93",
+    "symlinkCases": 44,
+    "beforePathFailureReproduced": true,
+    "canonicalAliasSourceBindingsAndSemanticsEqual": true,
+    "sourceMutationRefusals": 2,
+    "externalManifestRefusedExplicitly": true,
+    "mutatedSourcesRestoredByteIdentical": true,
+    "scope": "Resolve repository/research paths canonically; bind parsed/executed harness and pin bytes from their captured snapshots. Real mutations between loading and binding are refused before native controls."
+  },
+  "priorReviewedProof": {
+    "commit": "0dce46e6c1153f90a4340bc3267a9800712eb65b",
+    "driverSha256": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828",
+    "reports": {
+      "native-selection-current-canary-controls.json": "f7444ccc7883d269bfdf9df091f814846d9c3f9e9e00ec36b6720951384d9ee3",
+      "native-selection-historical-compatibility-controls.json": "33dd85cdb33dcfd3fc3598b06d3f6d131d70b32efbd91781fde629df45bb3ec5",
+      "selection-current-driver-controls.json": "591b43ecd4d3941dd18c846108d5eedb6d3108ac7808b895592caa022c0fa2cd",
+      "selection-review-source-controls.json": "3635bcac47d7ebbc1e638410219d81ae0f64f79d3097b85b98fd7da80bcbfc35"
+    },
+    "scope": "Earlier source/path review proof; its exact report and driver bytes remain at this immutable commit. The later sibling-loader regression is corrected by the current generation."
+  },
+  "currentReplayParentCommit": "0dce46e6c1153f90a4340bc3267a9800712eb65b",
+  "siblingCompatibility": {
+    "reviewThread": "PRRT_kwDOPbO_N86y0mHs",
+    "report": "research/selection-sibling-driver-compatibility.json",
+    "sha256": "69dfb3f29aa26c97e53b48f135fa57095290a64adfa8ead3720bc727222784a4",
+    "tests": "research/test_selection_invoke_compatibility.py",
+    "testSourceSha256": "06987a7b4dac4fb2336615442be9bb380c7569831ce7c844f4ea5dc9d421a118",
+    "unitTests": 6,
+    "actualSiblingLoadAndProcessSubcases": 25,
+    "currentSelectionStreamingRouteGuard": 1,
+    "historicalInvokeDefinitionByteIdentical": true,
+    "scope": "Helper compatibility only; the five historical feature observations keep their original source pins. No real task or feature qualification."
+  },
+  "sourceEnvelopeReview": {
+    "thread": "PRRT_kwDOPbO_N86y04zV",
+    "priorCommit": "02eb70282ba747959c2fabd992c2a02e9a184ca1",
+    "priorReportSha256": "87f8788d6b1dc7ca92149b97f6072afea2e71853c8594c1ce271f93661865c7a",
+    "observationRecordedAt": "2026-11-02T19:16:29.412512+00:00",
+    "schemaVersionRestored": "cache-selection-source-binding-controls/v1",
+    "observationPayloadUnchanged": true,
+    "nativeDriverUnchanged": true,
+    "newNativeExecutionClaimed": false
+  }
+}

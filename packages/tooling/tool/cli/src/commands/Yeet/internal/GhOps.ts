@@ -25,10 +25,13 @@
  */
 
 import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -44,6 +47,7 @@ import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import {
   GithubCheckRunRecord,
   GithubClientRequest,
+  GithubIdentity,
   GithubPullRequestRecord,
   GithubRest,
   GraphqlBudget,
@@ -54,28 +58,17 @@ import {
   layerGithubRest,
   layerGraphqlBudget,
   markPullRequestReadyDocument,
-  readGithubReviewThreads,
   selectGithubIdentity,
 } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { parsePrProvenanceFooter } from "./Provenance.ts";
-import {
-  deriveYeetReviewThreadState,
-  YeetReviewThreadNewestComment,
-  YeetReviewThreadStateInput,
-  yeetReviewThreadStateOutstanding,
-} from "./ReviewThreadState.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type * as Scope from "effect/Scope";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type {
-  GithubIdentityError,
-  GithubRestShape,
-  GithubReviewThreads,
-  GraphqlBudgetExhausted,
-} from "../../../internal/github/index.ts";
+import type { GithubIdentityError, GithubRestShape, GraphqlBudgetExhausted } from "../../../internal/github/index.ts";
 import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
@@ -469,56 +462,6 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
 };
 
 /**
- * Count the outstanding threads (unresolved, or resolved by the author with a
- * later human follow-up), using the same rule as the readiness monitor.
- *
- * **Example** (No threads)
- *
- * ```ts
- * import { GithubReviewThreads } from "@beep/repo-cli/test/SharedInternals"
- * import { countOutstandingThreads } from "@beep/repo-cli/test/Yeet"
- * import * as O from "effect/Option"
- *
- * console.log(countOutstandingThreads(GithubReviewThreads.make({ author: O.none(), threads: [] }))) // 0
- * ```
- *
- * @param read - The GraphQL thread read.
- * @returns The outstanding thread count.
- * @category decisions
- * @since 0.0.0
- */
-export const countOutstandingThreads = (read: GithubReviewThreads): number =>
-  A.length(
-    A.filter(read.threads, (thread) =>
-      yeetReviewThreadStateOutstanding(
-        deriveYeetReviewThreadState(
-          YeetReviewThreadStateInput.make({
-            threadId: thread.id,
-            isResolved: thread.isResolved,
-            isOutdated: thread.isOutdated,
-            path: O.fromNullishOr(thread.path),
-            line: O.fromNullishOr(thread.line),
-            pullRequestAuthor: read.author,
-            resolvedBy: O.map(O.fromNullishOr(thread.resolvedBy), (actor) => actor.login),
-            newestComment: pipe(
-              A.last(thread.comments.nodes),
-              O.flatMap((comment) =>
-                O.map(O.fromNullishOr(comment.author), (author) =>
-                  YeetReviewThreadNewestComment.make({
-                    authorLogin: author.login,
-                    authorKind: author.__typename === "Bot" ? "bot" : "user",
-                    createdAt: O.fromUndefinedOr(comment.createdAt),
-                  })
-                )
-              )
-            ),
-          })
-        )
-      )
-    )
-  );
-
-/**
  * Options shared by every `yeet gh` subcommand.
  *
  * @category models
@@ -531,8 +474,71 @@ export class YeetGhCommonOptions extends S.Opaque<YeetGhCommonOptions, { readonl
 ) {}
 
 /**
- * The `GithubRest`, `GraphqlBudget`, and `GitHubClient` layer for one `yeet gh`
- * invocation, speaking as the selected identity.
+ * The GitHub services a Yeet surface reads and writes through.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetGithubServices = GithubRest | GraphqlBudget | GitHubClient | Repo | ReviewThread | GitHubRepository;
+
+/**
+ * The identity the Yeet GitHub reads used when they ran the `gh` CLI: the
+ * operator's own `gh` login (`gh auth token`, which also answers `GH_TOKEN`).
+ *
+ * **Example** (Read the identity kind)
+ *
+ * ```ts
+ * import { YEET_GH_LOGIN_IDENTITY } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_GH_LOGIN_IDENTITY.kind) // "gh-cli"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_GH_LOGIN_IDENTITY = GithubIdentity.make({
+  kind: "gh-cli",
+  tokenRef: O.none(),
+  appId: O.none(),
+  installationId: O.none(),
+  privateKeyRef: O.none(),
+});
+
+/**
+ * Every {@link YeetGithubServices} member for one identity, with the client
+ * token and the repository resolved from `cwd`.
+ *
+ * **Example** (Build the layer for the gh login)
+ *
+ * ```ts
+ * import { GithubClientRequest } from "@beep/repo-cli/test/SharedInternals"
+ * import { layerYeetGhFor, YEET_GH_LOGIN_IDENTITY } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof layerYeetGhFor(GithubClientRequest.make({ identity: YEET_GH_LOGIN_IDENTITY, cwd: "." }))) // "object"
+ * ```
+ *
+ * @param request - Who the client speaks as, and where the token read runs and the repository's `origin` is read.
+ * @returns The composed layer.
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerYeetGhFor = ({
+  identity,
+  cwd,
+}: GithubClientRequest): Layer.Layer<
+  YeetGithubServices,
+  GithubIdentityError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> =>
+  Layer.mergeAll(layerGithubRest, layerGraphqlBudget, ReviewThread.layer, GitHubRepository.layer).pipe(
+    Layer.provideMerge(
+      Layer.mergeAll(layerGithubClientFor(GithubClientRequest.make({ identity, cwd })), layerGithubRepoFor(cwd))
+    )
+  );
+
+/**
+ * The `GithubRest`, `GraphqlBudget`, `ReviewThread`, and `GitHubClient` layer
+ * for one `yeet gh` invocation, speaking as the selected identity.
  *
  * **Details**
  *
@@ -557,16 +563,7 @@ export class YeetGhCommonOptions extends S.Opaque<YeetGhCommonOptions, { readonl
 export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
   tokenRef.pipe(
     selectGithubIdentity,
-    Effect.map((identity) =>
-      Layer.mergeAll(layerGithubRest, layerGraphqlBudget).pipe(
-        Layer.provideMerge(
-          Layer.mergeAll(
-            layerGithubClientFor(GithubClientRequest.make({ identity, cwd: process.cwd() })),
-            layerGithubRepoFor(process.cwd())
-          )
-        )
-      )
-    ),
+    Effect.map((identity) => layerYeetGhFor(GithubClientRequest.make({ identity, cwd: process.cwd() }))),
     Layer.unwrap
   );
 
@@ -592,18 +589,151 @@ export const layerYeetGh = ({ tokenRef }: YeetGhCommonOptions) =>
  * ```
  *
  * @param tokenRef - The `--token-ref` value, if any.
- * @returns A function that runs a program with `GithubRest`, `GraphqlBudget`, `GitHubClient`, and `Repo` provided.
+ * @returns A function that runs a program with every {@link YeetGithubServices} member provided.
  * @category layers
  * @since 0.0.0
  */
 export const withYeetGh =
   (tokenRef: O.Option<string>) =>
   <A, E>(
-    program: Effect.Effect<A, E, GithubRest | GraphqlBudget | GitHubClient | Repo>
+    program: Effect.Effect<A, E, YeetGithubServices>
   ): Effect.Effect<A, E | GithubIdentityError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
     Effect.flatMap(Layer.build(layerYeetGh(YeetGhCommonOptions.make({ tokenRef }))), (context) =>
       Effect.provideContext(program, context)
     ).pipe(Effect.scoped);
+
+/**
+ * The GitHub services the Yeet gh-login surfaces run on, when a caller supplies
+ * them; `Option.none()` (the default) builds them from the operator's gh login.
+ *
+ * **Details**
+ *
+ * The seam a suite drives the status, watch, merge-gate, reply and closeout
+ * reads through: it provides a layer over a recorded transport here instead of
+ * scripting a `gh` binary. Production never sets it.
+ *
+ * **Example** (Read the default)
+ *
+ * ```ts
+ * import { YeetGithubLayer } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(Effect.runSync(Effect.service(YeetGithubLayer)))) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const YeetGithubLayer: Context.Reference<O.Option<Layer.Layer<YeetGithubServices>>> = Context.Reference(
+  $I`YeetGithubLayer`,
+  { defaultValue: () => O.none<Layer.Layer<YeetGithubServices>>() }
+);
+
+/**
+ * Build the GitHub services as the operator's gh login
+ * ({@link YEET_GH_LOGIN_IDENTITY}), the identity the `gh` CLI calls they replace
+ * spoke as, with the repository read from `cwd`'s `origin` (or `GH_REPO`).
+ *
+ * **Details**
+ *
+ * The edge every gh-login Yeet surface takes its GitHub services from. Building
+ * the client spawns `gh auth token`, so it is built per command surface rather
+ * than for every CLI command; {@link YeetGithubLayer} replaces it in suites. An
+ * identity or repository that does not resolve fails as
+ * `GitHub access failed (<why>).`, exit 1.
+ *
+ * **Example** (Build the services in a scope)
+ *
+ * ```ts
+ * import { buildYeetGhLogin } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(buildYeetGhLogin(".")))) // true
+ * ```
+ *
+ * @param cwd - Where the token read runs and the repository is resolved.
+ * @returns The services, alive for the enclosing scope.
+ * @category layers
+ * @since 0.0.0
+ */
+export const buildYeetGhLogin = (
+  cwd: string
+): Effect.Effect<
+  Context.Context<YeetGithubServices>,
+  YeetCommandError,
+  Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> =>
+  Effect.flatMap(Effect.service(YeetGithubLayer), (override) =>
+    Layer.build(
+      O.getOrElse(
+        override,
+        (): Layer.Layer<
+          YeetGithubServices,
+          GithubIdentityError,
+          SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+        > => layerYeetGhFor(GithubClientRequest.make({ identity: YEET_GH_LOGIN_IDENTITY, cwd }))
+      )
+    ).pipe(Effect.mapError((error) => yeetGithubFailure("GitHub access")(error)))
+  );
+
+/**
+ * Run a Yeet GitHub program with the services {@link buildYeetGhLogin} builds,
+ * for the program's own scope.
+ *
+ * **Example** (Provide the gh login to a read)
+ *
+ * ```ts
+ * import { GithubRest } from "@beep/repo-cli/test/SharedInternals"
+ * import { provideYeetGhLogin } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = provideYeetGhLogin(".")(GithubRest.use((rest) => rest.pullRequest(1)))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param cwd - Where the token read runs and the repository is resolved.
+ * @returns A function that provides every {@link YeetGithubServices} member.
+ * @category layers
+ * @since 0.0.0
+ */
+export const provideYeetGhLogin =
+  (cwd: string) =>
+  <A, E, R>(
+    program: Effect.Effect<A, E, R>
+  ): Effect.Effect<
+    A,
+    E | YeetCommandError,
+    | Exclude<Exclude<R, YeetGithubServices>, Scope.Scope>
+    | SecureRandom.SecureRandom
+    | ChildProcessSpawner.ChildProcessSpawner
+  > =>
+    Effect.scoped(Effect.flatMap(buildYeetGhLogin(cwd), (context) => Effect.provideContext(program, context)));
+
+/**
+ * Name a failed GitHub read or write the way the `gh` capture it replaced did:
+ * `<label> failed (<why>).`, exit 1, where `<why>` is the kit's own message
+ * (operation, HTTP status and reason) instead of `gh`'s exit and stderr.
+ *
+ * **Example** (Fold a not-found read)
+ *
+ * ```ts
+ * import { GitHubError } from "@beep/github/GitHubError"
+ * import { yeetGithubFailure } from "@beep/repo-cli/test/Yeet"
+ *
+ * const error = yeetGithubFailure("gh api pulls/7")(GitHubError.notFound("GET /repos/{owner}/{repo}/pulls/7", "pull 7"))
+ * console.log(error.message.startsWith("gh api pulls/7 failed (")) // true
+ * ```
+ *
+ * @param label - Names the call in the message, as the `gh` capture's label did.
+ * @returns The fold from any GitHub or identity failure to a `YeetCommandError`.
+ * @category errors
+ * @since 0.0.0
+ */
+export const yeetGithubFailure =
+  (label: string) =>
+  (error: { readonly message: string }): YeetCommandError =>
+    YeetCommandError.make({ message: `${label} failed (${error.message}).`, exitCode: 1, cause: error });
 
 /**
  * Flip a draft pull request on its confirmed head after the GraphQL budget wait.
@@ -946,11 +1076,7 @@ const report = (exitCode: number) => (message: string) => failWithReportedExit(m
 
 const runGh = <A>(
   options: typeof YeetGhCommonOptions.Encoded,
-  program: Effect.Effect<
-    A,
-    GitHubError | GraphqlBudgetExhausted | CliReportedExit,
-    GithubRest | GraphqlBudget | GitHubClient | Repo
-  >
+  program: Effect.Effect<A, GitHubError | GraphqlBudgetExhausted | CliReportedExit, YeetGithubServices>
 ): Effect.Effect<A, CliReportedExit, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
   withYeetGh(options.tokenRef)(program).pipe(
     Effect.catchTags({
@@ -972,9 +1098,11 @@ const readOutstandingThreads = Effect.fn("YeetGh.readOutstandingThreads")(functi
 ) {
   const budget = yield* GraphqlBudget;
   const rest = yield* GithubRest;
-  return yield* readGithubReviewThreads(number).pipe(
+  const threads = yield* ReviewThread;
+  return yield* threads.list(number).pipe(
+    Effect.mapError(graphqlErrorToGitHubError),
     budget.guard("pullRequestReviewThreads", policy),
-    Effect.map((read) => O.some({ outstanding: countOutstandingThreads(read), total: A.length(read.threads) })),
+    Effect.map((read) => O.some({ outstanding: outstanding(read), total: A.length(read.threads) })),
     Effect.catch((error) =>
       rest.hasReviewComments(number).pipe(
         Effect.flatMap((hasComments) =>
