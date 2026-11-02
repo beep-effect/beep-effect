@@ -15,7 +15,6 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/package-scripts/PackageScripts.schemas");
 /**
@@ -1442,6 +1441,29 @@ const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScript
   const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === rule.kind && row.name === binding.impl);
   return O.isSome(implementation) ? HashMap.set(tasks, binding.impl, implementation.value.value) : tasks;
 };
+
+/**
+ * Exercise one decoded scaffold binding with caller-owned seed scripts in tests.
+ *
+ * **Example** (Keep an optional implementation call)
+ *
+ * ```ts
+ * import { applyScaffoldRuleForTesting, TaskScriptBinding, TaskScriptPresence, TaskScriptRule } from "@beep/repo-cli/test/PackageScripts"
+ * import * as HashMap from "effect/HashMap"
+ * const rule = TaskScriptRule.make({
+ *   kind: "library",
+ *   name: "build",
+ *   presence: TaskScriptPresence.cases.optional.make({}),
+ *   binding: TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }),
+ * })
+ * console.log(HashMap.size(applyScaffoldRuleForTesting(HashMap.empty(), rule))) // 2
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const applyScaffoldRuleForTesting = scaffoldRule;
+
 const scaffoldRuleEnabled =
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>) => (rule: TaskScriptRule) =>
     rule.kind === kind &&
@@ -1451,7 +1473,7 @@ const scaffoldRuleEnabled =
  * Construct required scaffold bindings and explicitly selected optional tasks from the rule table.
  *
  * **Details**
- * Includes defaults behind enabled indirections, including the optional audit implementation.
+ * Includes defaults behind enabled indirections.
  * Package-owned tasks and extra scripts remain the caller's responsibility. Derived tasks
  * require filesystem evidence and are left to the policy writer.
  *
@@ -1470,23 +1492,10 @@ export const scaffoldPackageScripts: {
   (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord;
   (optionalTasks: ReadonlyArray<TaskScriptName>): (kind: PackageKind) => ScriptsRecord;
 } = dual(2, (kind: PackageKind, optionalTasks: ReadonlyArray<TaskScriptName>): ScriptsRecord => {
-  let scripts = A.reduce(
+  const scripts = A.reduce(
     A.filter(taskScriptRules, scaffoldRuleEnabled(kind, optionalTasks)),
     HashMap.empty<string, string>(),
     scaffoldRule
   );
-  // An audit may call an implementation even when its public task is absent (tool integration tests).
-  for (const implementation of implScriptDefaults) {
-    if (implementation.kind !== kind || HashMap.has(scripts, implementation.name)) continue;
-    if (
-      scripts.pipe(
-        HashMap.values,
-        A.fromIterable,
-        A.some((value) => A.contains(Str.split(value, " && "), `bun run ${implementation.name}`))
-      )
-    ) {
-      scripts = HashMap.set(scripts, implementation.name, implementation.value);
-    }
-  }
   return R.fromEntries(A.sortWith(HashMap.toEntries(scripts), ([key]) => key, Order.String));
 });
