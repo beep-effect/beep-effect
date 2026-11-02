@@ -1,0 +1,20 @@
+{
+  "previous": "fa32b653a20314362762b985b59ecbfad2de3f99914a818247141e00e30ee1e6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (t3-native-orchestration session)",
+    "reason": "Admit @beep/party-domain, added by #2588 without a cache review, and re-record //#lint:policy-fingerprint after its input list gained packages/party/domain/package.json. No command, output, cache flag or env key changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/party-domain-cache-review-2026-11-02.md",
+      "sha256": "f4d2be5cc8c9cdcf1f190c98b492a76dbd9ddc25b7d489db9e3733b162a9f4c2"
+    }
+  },
+  "subjects": ["//", "@beep/party-domain"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
