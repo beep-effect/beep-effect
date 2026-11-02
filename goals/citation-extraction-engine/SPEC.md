@@ -1243,6 +1243,15 @@ global process ownership. See
   review and completion requirements continue in that PR. This supersedes the
   prior publication-order hold, without changing behavior or acceptance laws.
 
+- **2026-11-02 Unicode composition source:** the report retains 2,016 histories and
+6,412 value snapshots, with actual CPython storage and retained identity checks.
+Twenty corruption controls and the twelfth portable audit component seal the
+source evidence. The current string-only owner loses adjacent surrogate code
+points after literal deletion, and HTML behavior depends on source storage
+width. Preserving this state through the owner, literal stages and native
+transport remains required; no normalization or new divergence is approved.
+See [Unicode source evidence](./history/evidence/2026-11-02-cleaner-unicode.md).
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
@@ -1263,6 +1272,11 @@ or hash-bound payloads. Their separate schema/source/hash/coverage validators
 and corruption controls remain required. These exclusions do not apply to
 authored code or unrelated fixtures. Remove each exact exclusion when its
 artifact is retired.
+
+The cleaner-unicode report is also excluded by exact path. Its complete native
+storage, source code points and identity relations are validated by the portable
+Bun component and ops/verify-cleaner-unicode.py, including twenty corruption
+controls. Authored source and unrelated fixtures are not covered by this rule.
 
 | Exception | Scope | Owner | Removal condition |
 | --- | --- | --- | --- |

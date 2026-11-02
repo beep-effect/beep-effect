@@ -21,6 +21,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationPythonTextData } from "./PythonTextData.ts";
+import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlInput");
 const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", "AUTO"]).pipe(
@@ -112,8 +113,7 @@ const hasDeclaration = Effect.fnUntraced(function* (text: string) {
 });
 const rawText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.sourceUtf16));
 const stageText = S.String.check(S.isMaxLength(CitationEngineAbsoluteMaxima.producedTextUtf16));
-const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
-  CitationSafetyLimitExceeded.make({ operation: "clean", limit });
+const safety = (limit: CitationSafetyBudget) => CitationSafetyLimitExceeded.make({ operation: "clean", limit });
 /**
  * Capture limits and Clock. Prepare owns a byte buffer, yields during each
  * unbounded scan and has R = never. No native regex or HTML parser runs here.

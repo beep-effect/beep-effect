@@ -1,12 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import {
-  CitationRuntimeDictionaryComparison,
-  CitationRuntimeDictionaryFailure,
-  CitationRuntimeDictionaryKey,
-  CitationRuntimeDictionaryLimits,
-  makeCitationRuntimeDictionary,
-} from "@beep/law-practice-server/_test/Citation/RuntimeDictionary";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -20,7 +13,14 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import type { CitationRuntimeDictionaryEntry } from "@beep/law-practice-server/_test/Citation/RuntimeDictionary";
+import {
+  CitationRuntimeDictionaryComparison,
+  CitationRuntimeDictionaryFailure,
+  CitationRuntimeDictionaryKey,
+  CitationRuntimeDictionaryLimits,
+  makeCitationRuntimeDictionary,
+} from "../src/internal/Citation/RuntimeDictionary.ts";
+import type { CitationRuntimeDictionaryEntry } from "../src/internal/Citation/RuntimeDictionary.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRuntimeDictionary");
 const KeyState = S.Struct({

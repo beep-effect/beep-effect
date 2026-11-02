@@ -1,12 +1,4 @@
 import { fileURLToPath } from "node:url";
-import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/_test/Citation/CleanerPipeline";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/_test/Citation/HtmlWorker";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -20,7 +12,15 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CitationCleanerWork } from "@beep/law-practice-server/_test/Citation/CleanerPipeline";
+import {
+  CitationCleanerFailure,
+  CitationCleanerObject,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "../src/internal/Citation/CleanerPipeline.ts";
+import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
+import type { CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
 const owned = (

@@ -1,6 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { Citation } from "@beep/law-practice-domain/values";
-import { CitationAuthorityEdition } from "@beep/law-practice-server/_test/Citation/AuthorityIdentity";
 import { CitationOracleOperations } from "@beep/law-practice-use-cases/test";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
@@ -12,6 +11,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { CitationAuthorityEdition } from "../src/internal/Citation/AuthorityIdentity.ts";
 import { CitationResolutionContext } from "./CitationResolve.fixtures.ts";
 
 type Observation = Extract<CitationOracleOperations["cases"][number], { readonly operation: "resolve_citations" }>;

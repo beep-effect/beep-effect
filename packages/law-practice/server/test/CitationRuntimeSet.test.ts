@@ -1,10 +1,4 @@
 import { fileURLToPath } from "node:url";
-import {
-  CitationRuntimeDictionaryComparison,
-  CitationRuntimeDictionaryFailure,
-  CitationRuntimeDictionaryKey,
-} from "@beep/law-practice-server/_test/Citation/RuntimeDictionary";
-import { makeCitationRuntimeSet } from "@beep/law-practice-server/_test/Citation/RuntimeSet";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -16,6 +10,12 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import {
+  CitationRuntimeDictionaryComparison,
+  CitationRuntimeDictionaryFailure,
+  CitationRuntimeDictionaryKey,
+} from "../src/internal/Citation/RuntimeDictionary.ts";
+import { makeCitationRuntimeSet } from "../src/internal/Citation/RuntimeSet.ts";
 
 const Key = S.Struct({
   objectId: S.Natural,

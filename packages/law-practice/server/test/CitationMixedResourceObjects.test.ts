@@ -6,26 +6,6 @@ import {
   CitationMention,
   FullCitation,
 } from "@beep/law-practice-domain/values";
-import {
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import {
-  CitationResourceModelInput,
-  CitationResourceModels,
-  CitationResourceObjectFailure,
-  makeCitationResourceObjects,
-} from "@beep/law-practice-server/_test/Citation/ResourceObjects";
-import {
-  CitationRuntimeDictionaryComparison,
-  makeCitationRuntimeDictionary,
-} from "@beep/law-practice-server/_test/Citation/RuntimeDictionary";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -37,9 +17,26 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import {
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+} from "../src/internal/Citation/CallbackSession.ts";
+import { CitationFrozenEditions, makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import {
+  CitationResourceModelInput,
+  CitationResourceModels,
+  CitationResourceObjectFailure,
+  makeCitationResourceObjects,
+} from "../src/internal/Citation/ResourceObjects.ts";
+import {
+  CitationRuntimeDictionaryComparison,
+  makeCitationRuntimeDictionary,
+} from "../src/internal/Citation/RuntimeDictionary.ts";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import type { CitationResourceObject } from "@beep/law-practice-server/_test/Citation/ResourceObjects";
+import type { CitationResourceObject } from "../src/internal/Citation/ResourceObjects.ts";
 
 const Operation = S.Union([
   S.Struct({ kind: S.tag("create"), reference: S.Natural }),

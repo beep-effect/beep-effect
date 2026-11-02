@@ -49,6 +49,7 @@ const program = Effect.gen(function* () {
       "check-cleaner-pipeline.ts",
       [path.join(fixtures, "cleaner-pipeline.json"), path.join(fixtures, "operation-cases.json")],
     ],
+    ["cleaner-unicode", "check-cleaner-unicode.ts", [path.join(fixtures, "cleaner-unicode.json")]],
     ["assertions", "check-assertions.ts", [path.join(fixtures, "assertion-cases.json")]],
     ["ledgers", "check-ledgers.ts", [fixtures, ...(audit ? [] : ["--complete"])]],
     [
@@ -131,7 +132,7 @@ const program = Effect.gen(function* () {
   if (!A.every(results, Boolean)) return yield* reject("Citation evidence component validation failed.");
   if (audit) {
     yield* Console.log(
-      "Citation evidence audit passed: 11 components; completion proof remains open. This is not a parity verdict."
+      "Citation evidence audit passed: 12 components; completion proof remains open. This is not a parity verdict."
     );
     return;
   }

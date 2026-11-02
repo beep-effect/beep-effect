@@ -1,18 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { Citation, CitationDetachedId, CitationGroupMember, CitationMentionId } from "@beep/law-practice-domain/values";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationCallbackList,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runCitationCallbackSession,
-  runPreparedCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -33,6 +20,19 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationCallbackList,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runCitationCallbackSession,
+  runPreparedCitationCallbackSession,
+} from "../src/internal/Citation/CallbackSession.ts";
+import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import {
   prepareCallbackObservation as context,
   callbackNoneResource as none,
   callbackResourcePresentation as presentation,
@@ -43,7 +43,7 @@ import type {
   CitationCallbackGroup,
   CitationFullsCallbackInput,
   CitationIdCallbackInput,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
+} from "../src/internal/Citation/CallbackSession.ts";
 
 const Corpus = S.Struct({ schemaVersion: S.tag("citation-custom-resolution-observations/v1"), cases: S.Array(Row) });
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });

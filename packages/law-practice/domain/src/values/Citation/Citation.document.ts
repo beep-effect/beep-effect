@@ -136,6 +136,8 @@ const graphCheck = S.makeFilter(
 /**
  * Runtime mentions, resource catalog, decisions and exact group/list data.
  *
+ * **Details**
+ *
  * Every verified mention has one resolution decision. Group membership is
  * owned only by member-list nodes, preserving independent order, repetitions,
  * empty presence and shared-list identity. A decision is not an assignment.
@@ -162,6 +164,8 @@ export class CitationDocument extends S.Opaque<CitationDocument, { readonly bran
 
 /**
  * Structural document receipt with the same relationship coherence checks.
+ *
+ * **Details**
  *
  * Each mention receipt still needs canonical-source restoration; this schema
  * cannot issue runtime anchor proof or validate authority digest inputs.

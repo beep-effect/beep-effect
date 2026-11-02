@@ -8,6 +8,7 @@ import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { CitationSupplementalTextCase } from "@beep/law-practice-use-cases/test";
 
 class SupplementalError extends S.TaggedError<SupplementalError, { readonly brand: unique symbol }>()(
   "CitationSupplementalError",
@@ -17,6 +18,17 @@ const reject = () => Effect.fail(SupplementalError.make({ message: "Citation sup
 const hash = (value: string | Uint8Array) => new Bun.CryptoHasher("sha256").update(value).digest("hex");
 const read = (path: string | URL) => Effect.tryPromise(() => Bun.file(path).text());
 const same = S.toEquivalence(S.Json);
+const checkTextCaseStructure = Effect.fn("Citation.checkTextCaseStructure")(function* (
+  row: CitationSupplementalTextCase
+) {
+  const value = row.payload.value;
+  if (hash(row.payload.raw) !== row.normalizedSha256) return yield* reject();
+  if (
+    row.operation === "clean_text" &&
+    (value.inputSpans.length > 0 || value.mappedSpans.length > 0 || value.mappingUpdates.length > 0)
+  )
+    return yield* reject();
+});
 const root = new URL("../../../", import.meta.url);
 const program = Effect.gen(function* () {
   const args = A.drop(process.argv, 2);
@@ -188,11 +200,11 @@ const program = Effect.gen(function* () {
     return yield* reject();
   let textCoordinates = 0;
   for (const row of report.textCases) {
+    yield* checkTextCaseStructure(row);
     const expected = A.findFirst(textPlan.cases, (item) => item.id === row.id);
     if (expected._tag === "None") return yield* reject();
     const value = row.payload.value;
     if (
-      hash(row.payload.raw) !== row.normalizedSha256 ||
       row.operation !== expected.value.operation ||
       !same(value.input, expected.value.input) ||
       !same(value.outcome, expected.value.expectedOutcome) ||
@@ -202,8 +214,6 @@ const program = Effect.gen(function* () {
       return yield* reject();
     yield* verifyTarget(row.targetProof);
     if (row.operation === "clean_text") {
-      if (value.inputSpans.length > 0 || value.mappedSpans.length > 0 || value.mappingUpdates.length > 0)
-        return yield* reject();
       continue;
     }
     const input = row.payload.value.input;

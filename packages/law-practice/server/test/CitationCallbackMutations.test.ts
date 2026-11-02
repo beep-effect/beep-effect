@@ -16,23 +16,6 @@ import {
   CitationUnresolved,
   citationAuthorityMembers,
 } from "@beep/law-practice-domain/values";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runPreparedCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import { projectCitationDocumentReceipt } from "@beep/law-practice-server/_test/Citation/Document";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import {
-  CitationResourceBinding,
-  CitationResourceIdentity,
-  makeCitationResourceAuthorityId,
-} from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -49,6 +32,23 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "../src/internal/Citation/CallbackSession.ts";
+import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
+import { projectCitationDocumentReceipt } from "../src/internal/Citation/Document.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import {
+  CitationResourceBinding,
+  CitationResourceIdentity,
+  makeCitationResourceAuthorityId,
+} from "../src/internal/Citation/ResourceIdentity.ts";
+import {
   CitationCallbackObservation,
   callbackNoneResource as none,
   prepareCallbackObservation,
@@ -60,7 +60,7 @@ import type {
   CitationCallbackResource,
   CitationFullsCallbackInput,
   CitationIdCallbackInput,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
+} from "../src/internal/Citation/CallbackSession.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationCallbackMutations");
 const KnownMutation = LiteralKit([

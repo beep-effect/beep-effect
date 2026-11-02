@@ -194,7 +194,12 @@
         "goals/citation-extraction-engine/ops/verify-python-hashes.py",
         "packages/law-practice/server/src/internal/Citation/PythonHash.ts",
         "packages/law-practice/server/test/CitationPythonHash.test.ts",
-        "packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json"
+        "packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-unicode.md",
+        "packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
+        "goals/citation-extraction-engine/ops/probe-cleaner-unicode.py",
+        "goals/citation-extraction-engine/ops/verify-cleaner-unicode.py",
+        "goals/citation-extraction-engine/ops/check-cleaner-unicode.ts"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

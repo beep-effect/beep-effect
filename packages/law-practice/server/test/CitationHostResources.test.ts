@@ -6,40 +6,6 @@ import {
   CitationGroupMember,
   CitationMention,
 } from "@beep/law-practice-domain/values";
-import {
-  CitationCallbackRuntimeIndexFactory,
-  makeCitationCallbackRuntimeIndexFactory,
-} from "@beep/law-practice-server/_test/Citation/CallbackRuntimeIndex";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationCallbackResource,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runPreparedCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import { restoreCitationDocument } from "@beep/law-practice-server/_test/Citation/Document";
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
-import {
-  CitationHostResource,
-  CitationHostResourceAdapterFactory,
-} from "@beep/law-practice-server/_test/Citation/HostResources";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
-import {
-  CitationSessionHostResourceDescriptors,
-  makeCitationRegisteredSessionDescriptors,
-} from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
-import {
-  CitationSessionResourceDescriptors,
-  makeCitationSessionDocumentProjector,
-} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -54,9 +20,37 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import {
+  CitationCallbackRuntimeIndexFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "../src/internal/Citation/CallbackRuntimeIndex.ts";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationCallbackResource,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "../src/internal/Citation/CallbackSession.ts";
+import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
+import { restoreCitationDocument } from "../src/internal/Citation/Document.ts";
+import { CitationFrozenEditions, makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
+import { CitationHostResource, CitationHostResourceAdapterFactory } from "../src/internal/Citation/HostResources.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import { CitationResourceIdentity } from "../src/internal/Citation/ResourceIdentity.ts";
+import {
+  CitationSessionHostResourceDescriptors,
+  makeCitationRegisteredSessionDescriptors,
+} from "../src/internal/Citation/SessionDescriptors.ts";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "../src/internal/Citation/SessionDocument.ts";
 import { CitationCallbackObservation, prepareCallbackObservation } from "./CitationCallbackSession.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import type { CitationHostComparisonOperand } from "@beep/law-practice-server/_test/Citation/HostResources";
+import type { CitationHostComparisonOperand } from "../src/internal/Citation/HostResources.ts";
 
 const HostState = S.Struct({
   hashRaw: S.String,

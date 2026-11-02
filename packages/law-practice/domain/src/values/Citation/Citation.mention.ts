@@ -168,6 +168,8 @@ const MentionShape = S.Struct({ ...MetadataFields, ...EvidenceFields });
 /**
  * Semantic citation composed with genuine verified occurrence evidence.
  *
+ * **Details**
+ *
  * The primary anchor is the citation token span. Extended/full/pincite spans
  * use named components; exact matched text is derived from anchor.anchor.quote.
  * Group membership and resolution pointers belong to CitationDocument.
@@ -224,6 +226,8 @@ const ReceiptShape = S.Struct({
 
 /**
  * Persistable mention data requiring authorized raw-source re-verification.
+ *
+ * **Details**
  *
  * This codec preserves data; it does not authenticate classification, issue
  * runtime proofs or validate that an engine artifact is installed. Restoration

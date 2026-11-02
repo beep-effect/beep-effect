@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/_test/Citation/HtmlWorker";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -18,13 +17,14 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/_test/Citation/HtmlCompletion";
-import type { CitationHtmlInputFailure } from "@beep/law-practice-server/_test/Citation/HtmlInput";
-import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/_test/Citation/HtmlKernel";
-import type { CitationHtmlWorkerSnapshot } from "@beep/law-practice-server/_test/Citation/HtmlWorker";
-import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
+import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import type * as PlatformError from "effect/PlatformError";
+import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
+import type { CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
+import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKernel.ts";
+import type { CitationHtmlWorkerSnapshot } from "../src/internal/Citation/HtmlWorker.ts";
+import type { CitationHtmlWorkerFailure } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 const ready = '{"_tag":"Ready","version":"citation-html-worker/v1"}\\n';
 const started = '{"_tag":"Started","version":"citation-html-worker/v1"}\\n';

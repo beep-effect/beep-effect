@@ -13,6 +13,8 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.resource");
 /**
  * Content identity of one immutable parser-publication edition artifact.
  *
+ * **Details**
+ *
  * Law/journal publications receive no invented case ReporterId.
  * The owning engine artifact must resolve this reference and verify its kind.
  *
@@ -43,6 +45,8 @@ export type CitationEditionRef = typeof CitationEditionRef.Type;
 
 /**
  * Semantic legal locator components with absent and explicit-null keys distinct.
+ *
+ * **Details**
  *
  * The oracle explicitly defines its group keys as non-exhaustive. Preserve
  * all string-valued legal components, including chapter versus title, without

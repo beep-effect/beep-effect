@@ -1,6 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { Citation, CitationMention, citationAuthorityMentionIds } from "@beep/law-practice-domain/values";
-import { resolveCitationMentions } from "@beep/law-practice-server/_test/Citation/Resolve";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -15,6 +14,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { resolveCitationMentions } from "../src/internal/Citation/Resolve.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";
 

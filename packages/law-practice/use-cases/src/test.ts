@@ -81,6 +81,7 @@ export {
  * @since 0.0.0
  */
 export { CitationSupplementalExtraction } from "./internal/citationSupplementalExtraction.ts";
+export { CitationSupplementalTextCase } from "./internal/citationSupplementalText.ts";
 /**
  * Pinned TypeScript donor export/test accounting and disposition obligations.
  *

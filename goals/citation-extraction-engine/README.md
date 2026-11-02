@@ -57,6 +57,11 @@ now matches 1,056 full vectors, preserving explicit source Unicode storage and
 paired-surrogate distinctions with bounded streaming and captured timing. Full
 source value ownership, object protocols and live registry replay remain open.
 
+The [exact Unicode composition evidence](./history/evidence/2026-11-02-cleaner-unicode.md)
+now retains 2,016 source histories and 6,412 native-storage/identity snapshots.
+The portable audit checks this twelfth component. Source width and surrogate
+identity expose an open string-only owner gap; this is not target parity.
+
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 P0 source acquisition and public prerequisite compatibility are evidenced. The

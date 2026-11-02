@@ -1,12 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationHtmlInput } from "@beep/law-practice-server/_test/Citation/HtmlInput";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/_test/Citation/HtmlWorker";
-import {
-  CitationHtmlWorkerJob,
-  CitationHtmlWorkerSuccess,
-  encodeCitationHtmlJob,
-  encodeCitationHtmlReply,
-} from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -20,6 +12,14 @@ import * as HashMap from "effect/HashMap";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
+import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
+import {
+  CitationHtmlWorkerJob,
+  CitationHtmlWorkerSuccess,
+  encodeCitationHtmlJob,
+  encodeCitationHtmlReply,
+} from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 const runtime = Effect.gen(function* () {
   return {

@@ -14,6 +14,8 @@ const $I = $LawPracticeDomainId.create("values/Citation/Citation.law");
 /**
  * Source-backed law metadata with textual date precision preserved.
  *
+ * **Details**
+ *
  * Parsed-year validity, inferred editions and raw component anchors are
  * processing/evidence concerns. Do not coerce these strings into integers or
  * put pin-cite span coordinates into the semantic citation.

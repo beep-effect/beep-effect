@@ -1,40 +1,5 @@
 import { fileURLToPath } from "node:url";
 import { citationAuthorityMentionIds, citationGroupMembers } from "@beep/law-practice-domain/values";
-import { readCitationDefaultObservation } from "@beep/law-practice-server/_test/Citation/CallbackObservations";
-import {
-  CitationCallbackRuntimeIndexFactory,
-  CitationMissingPageIdentities,
-  CitationMissingPageIdentityFactory,
-  makeCitationCallbackRuntimeIndexFactory,
-} from "@beep/law-practice-server/_test/Citation/CallbackRuntimeIndex";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runPreparedCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import {
-  makeDefaultCitationResolutionCallbacks,
-  runDefaultCitationCallbackSession,
-  runPreparedDefaultCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import { restoreCitationDocument } from "@beep/law-practice-server/_test/Citation/Document";
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
-import { makeCitationRegisteredResolver } from "@beep/law-practice-server/_test/Citation/RegisteredResolver";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import { resolveCitationMentions } from "@beep/law-practice-server/_test/Citation/Resolve";
-import { CitationResourceIdentity } from "@beep/law-practice-server/_test/Citation/ResourceIdentity";
-import { makeCitationRegisteredSessionDescriptors } from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
-import {
-  CitationSessionResourceDescriptors,
-  makeCitationSessionDocumentProjector,
-} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -49,6 +14,38 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { readCitationDefaultObservation } from "../src/internal/Citation/CallbackObservations.ts";
+import {
+  CitationCallbackRuntimeIndexFactory,
+  CitationMissingPageIdentities,
+  CitationMissingPageIdentityFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "../src/internal/Citation/CallbackRuntimeIndex.ts";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "../src/internal/Citation/CallbackSession.ts";
+import {
+  makeDefaultCitationResolutionCallbacks,
+  runDefaultCitationCallbackSession,
+  runPreparedDefaultCitationCallbackSession,
+} from "../src/internal/Citation/DefaultCallbacks.ts";
+import { restoreCitationDocument } from "../src/internal/Citation/Document.ts";
+import { CitationFrozenEditions, makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
+import { makeCitationRegisteredResolver } from "../src/internal/Citation/RegisteredResolver.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import { resolveCitationMentions } from "../src/internal/Citation/Resolve.ts";
+import { CitationResourceIdentity } from "../src/internal/Citation/ResourceIdentity.ts";
+import { makeCitationRegisteredSessionDescriptors } from "../src/internal/Citation/SessionDescriptors.ts";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "../src/internal/Citation/SessionDocument.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { CitationResolutionContext, prepareCitationResolutionContext as prepare } from "./CitationResolve.fixtures.ts";
 import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts";

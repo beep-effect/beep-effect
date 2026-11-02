@@ -194,6 +194,13 @@ now matches 1,056 full byte/Unicode-storage vectors with complete MIT attributio
 cooperative streaming and captured timing. Exact source Unicode value ownership,
 object protocols and live registry/cursor replay remain open.
 
+The [exact Unicode composition corpus](./history/evidence/2026-11-02-cleaner-unicode.md)
+adds 2,016 source histories and 6,412 actual native-storage/identity snapshots.
+Its portable audit component and twenty corruption controls preserve the
+distinction between adjacent surrogate code points and a supplementary scalar.
+Next, retain this source state through value ownership, literal composition,
+hashing, callbacks and HTML transport; source capture does not close that work.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

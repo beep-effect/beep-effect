@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationPythonHash } from "@beep/law-practice-server/_test/Citation/PythonHash";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -16,6 +15,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationPythonHash } from "../src/internal/Citation/PythonHash.ts";
 
 const Row = S.Union([
   S.Struct({ kind: S.tag("bytes"), name: S.String, hex: S.String, hash: S.BigIntFromString }),

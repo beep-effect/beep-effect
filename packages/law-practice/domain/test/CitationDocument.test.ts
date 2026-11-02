@@ -1,3 +1,4 @@
+import { fixtureSource, TestCrypto } from "@beep/law-practice-domain/test";
 import {
   Citation,
   CitationAmbiguous,
@@ -39,7 +40,6 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureSource, TestCrypto } from "./officeActionFixtures.ts";
 import type { CitationResolution } from "@beep/law-practice-domain/values";
 
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));

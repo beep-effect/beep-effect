@@ -44,8 +44,7 @@ export const CitationOracleJson = <Value, Encoded>(schema: S.Codec<Value, Encode
       SchemaTransformation.transformEffect({
         decode: (raw) =>
           S.decodeEffect(json)(raw).pipe(
-            Effect.map((value) => ({ raw, value })),
-            Effect.mapError(invalid)
+            Effect.mapBoth({ onSuccess: (value) => ({ raw, value }), onFailure: invalid })
           ),
         encode: ({ raw, value }) =>
           S.decodeEffect(json)(raw).pipe(

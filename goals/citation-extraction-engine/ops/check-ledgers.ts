@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const root = new URL("../../../", import.meta.url);
@@ -98,9 +99,10 @@ const program = Effect.gen(function* () {
     )
       return yield* reject("source content hash mismatch");
   }
-  const capabilitySources = A.filter(
-    inventory.rows,
-    (row) => row.kind === "publicOperation" || row.kind === "modelFamily" || row.kind === "helperFamily"
+  const capabilitySources = A.filterMap(inventory.rows, (row) =>
+    row.kind === "publicOperation" || row.kind === "modelFamily" || row.kind === "helperFamily"
+      ? Result.succeed(row)
+      : Result.failVoid
   );
   if (
     !equalIds(

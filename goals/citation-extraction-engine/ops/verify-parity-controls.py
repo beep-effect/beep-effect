@@ -21,7 +21,7 @@ def main():
                               capture_output=True, text=True, timeout=180)
 
     baseline = invoke("--audit")
-    if baseline.returncode or "audit passed: 11 components" not in baseline.stdout:
+    if baseline.returncode or "audit passed: 12 components" not in baseline.stdout:
         raise SystemExit("package audit baseline must pass")
     strict = invoke()
     if (strict.returncode != 1 or "FAIL ledgers" not in strict.stdout or "FAIL donors" not in strict.stdout or "FAIL supplemental" not in strict.stdout or "FAIL divergences" not in strict.stdout or "FAIL regex-benchmarks" not in strict.stdout
@@ -46,12 +46,13 @@ def main():
         shutil.copytree(evidence, copied_evidence)
         flags = ["--audit", "--fixtures", str(copied_fixtures), "--evidence", str(copied_evidence)]
         relocated = invoke(*flags)
-        if relocated.returncode or "audit passed: 11 components" not in relocated.stdout:
+        if relocated.returncode or "audit passed: 12 components" not in relocated.stdout:
             raise SystemExit("relocated baseline must pass")
         for component, file in {
             "discovery": copied_evidence / "oracle-discovery.json",
             "operations": copied_fixtures / "operation-cases.json",
             "cleaner-pipeline": copied_fixtures / "cleaner-pipeline.json",
+            "cleaner-unicode": copied_fixtures / "cleaner-unicode.json",
             "assertions": copied_fixtures / "assertion-cases.json",
             "ledgers": copied_fixtures / "source-inventory.json",
             "donors": copied_fixtures / "typescript-extensions.json",

@@ -1,7 +1,5 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
-import { CitationAuthorityEdition } from "@beep/law-practice-server/_test/Citation/AuthorityIdentity";
-import { makeCitationMention } from "@beep/law-practice-server/_test/Citation/Mention";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
@@ -16,6 +14,8 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationAuthorityEdition } from "../src/internal/Citation/AuthorityIdentity.ts";
+import { makeCitationMention } from "../src/internal/Citation/Mention.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationResolve.fixtures");
 /**

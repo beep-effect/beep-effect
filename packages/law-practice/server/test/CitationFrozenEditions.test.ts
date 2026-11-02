@@ -1,6 +1,4 @@
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { makeCitationFrozenEditions } from "@beep/law-practice-server/_test/Citation/FrozenEditions";
-import { encodeCitationRuntimeEdition } from "@beep/law-practice-server/_test/Citation/PublicationResourceHash";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -14,6 +12,8 @@ import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
+import { encodeCitationRuntimeEdition } from "../src/internal/Citation/PublicationResourceHash.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("authenticated frozen editions", (it) => {

@@ -1,15 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationBuiltinCleaners } from "@beep/law-practice-server/_test/Citation/BuiltinCleaners";
-import {
-  CitationCleanerFailure,
-  CitationCleanerProduced,
-  CitationCleanerRuntime,
-  makeCitationCleanerPipeline,
-} from "@beep/law-practice-server/_test/Citation/CleanerPipeline";
-import {
-  CitationCleanerValues,
-  makeCitationCleanerValues,
-} from "@beep/law-practice-server/_test/Citation/CleanerValues";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -24,7 +13,15 @@ import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CitationCleanerObject } from "@beep/law-practice-server/_test/Citation/CleanerPipeline";
+import { makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
+import {
+  CitationCleanerFailure,
+  CitationCleanerProduced,
+  CitationCleanerRuntime,
+  makeCitationCleanerPipeline,
+} from "../src/internal/Citation/CleanerPipeline.ts";
+import { CitationCleanerValues, makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
+import type { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const Row = S.Struct({
   name: S.String,

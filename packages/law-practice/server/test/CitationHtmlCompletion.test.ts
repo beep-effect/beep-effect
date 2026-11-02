@@ -1,5 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { completeCitationHtml } from "@beep/law-practice-server/_test/Citation/HtmlCompletion";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -12,7 +11,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/_test/Citation/HtmlCompletion";
+import { completeCitationHtml } from "../src/internal/Citation/HtmlCompletion.ts";
+import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
 
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("approved HTML safety completion", (it) => {
   it.effect("changes only the three source native-depth exhaustion outcomes", () =>

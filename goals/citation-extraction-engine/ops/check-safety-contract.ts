@@ -65,7 +65,7 @@ const program = Effect.gen(function* () {
   const probe = yield* read("regex-process-isolation-probe.json").pipe(
     Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(Probe)))
   );
-  for (const [path, expected] of [
+  const sourceFiles: ReadonlyArray<readonly [string, string]> = [
     ["../../../packages/law-practice/use-cases/src/CitationEngine/CitationEngine.limits.ts", policy.schemaSourceSha256],
     [
       "../../../packages/law-practice/use-cases/src/internal/citationEnginePolicyFixture.ts",
@@ -73,7 +73,8 @@ const program = Effect.gen(function* () {
     ],
     ["./probe-regex-isolation.mjs", probe.parentSourceSha256],
     ["./regex-isolation-probe.child.mjs", probe.childSourceSha256],
-  ]) {
+  ];
+  for (const [path, expected] of sourceFiles) {
     const bytes = yield* Effect.tryPromise(() => Bun.file(new URL(path, import.meta.url)).bytes());
     if (sha(bytes) !== expected) return yield* reject();
   }

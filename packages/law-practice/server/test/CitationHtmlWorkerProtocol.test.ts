@@ -1,4 +1,14 @@
 import { fileURLToPath } from "node:url";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { it } from "@beep/test-runner";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import {
   CitationHtmlWorkerError,
   CitationHtmlWorkerJob,
@@ -12,18 +22,8 @@ import {
   encodeCitationHtmlReply,
   preflightCitationHtmlControlFrames,
   readCitationHtmlFrames,
-} from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
-import { it } from "@beep/test-runner";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import { expect } from "@effect/vitest";
-import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
-import * as Str from "effect/String";
-import type { CitationHtmlWorkerReply } from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
+} from "../src/internal/Citation/HtmlWorkerProtocol.ts";
+import type { CitationHtmlWorkerReply } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 const utf8 = new TextEncoder();
 it.layer(BunFileSystem.layer)("HTML worker protocol", (it) => {

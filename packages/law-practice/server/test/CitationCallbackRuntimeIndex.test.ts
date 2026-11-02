@@ -8,32 +8,6 @@ import {
   citationAuthorityMembers,
   citationGroupMembers,
 } from "@beep/law-practice-domain/values";
-import {
-  CitationCallbackRuntimeIndexFactory,
-  makeCitationCallbackRuntimeIndexFactory,
-} from "@beep/law-practice-server/_test/Citation/CallbackRuntimeIndex";
-import {
-  CitationCallbackDictionary,
-  CitationCallbackFailure,
-  CitationCallbackResource,
-  CitationResolutionCallbacks,
-  CitationResolutionWork,
-  makeCitationCallbackDictionary,
-  makeCitationResolutionWork,
-  runPreparedCitationCallbackSession,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
-import { makeDefaultCitationResolutionCallbacks } from "@beep/law-practice-server/_test/Citation/DefaultCallbacks";
-import { restoreCitationDocument } from "@beep/law-practice-server/_test/Citation/Document";
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/_test/Citation/FrozenEditions";
-import { prepareCitationResolution } from "@beep/law-practice-server/_test/Citation/ResolutionInput";
-import { makeCitationRegisteredSessionDescriptors } from "@beep/law-practice-server/_test/Citation/SessionDescriptors";
-import {
-  CitationSessionResourceDescriptors,
-  makeCitationSessionDocumentProjector,
-} from "@beep/law-practice-server/_test/Citation/SessionDocument";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -47,16 +21,36 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
+  CitationCallbackRuntimeIndexFactory,
+  makeCitationCallbackRuntimeIndexFactory,
+} from "../src/internal/Citation/CallbackRuntimeIndex.ts";
+import {
+  CitationCallbackDictionary,
+  CitationCallbackFailure,
+  CitationCallbackResource,
+  CitationResolutionCallbacks,
+  CitationResolutionWork,
+  makeCitationCallbackDictionary,
+  makeCitationResolutionWork,
+  runPreparedCitationCallbackSession,
+} from "../src/internal/Citation/CallbackSession.ts";
+import { makeDefaultCitationResolutionCallbacks } from "../src/internal/Citation/DefaultCallbacks.ts";
+import { restoreCitationDocument } from "../src/internal/Citation/Document.ts";
+import { CitationFrozenEditions, makeCitationFrozenEditions } from "../src/internal/Citation/FrozenEditions.ts";
+import { prepareCitationResolution } from "../src/internal/Citation/ResolutionInput.ts";
+import { makeCitationRegisteredSessionDescriptors } from "../src/internal/Citation/SessionDescriptors.ts";
+import {
+  CitationSessionResourceDescriptors,
+  makeCitationSessionDocumentProjector,
+} from "../src/internal/Citation/SessionDocument.ts";
+import {
   CitationCallbackObservation,
   callbackResourcePresentation,
   normalizeCallbackFixtureResource,
   prepareCallbackObservation,
 } from "./CitationCallbackSession.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import type {
-  CitationFullsCallbackInput,
-  CitationIdCallbackInput,
-} from "@beep/law-practice-server/_test/Citation/CallbackSession";
+import type { CitationFullsCallbackInput, CitationIdCallbackInput } from "../src/internal/Citation/CallbackSession.ts";
 
 const SourceView = S.Struct({
   groups: S.Record(S.String, S.String),

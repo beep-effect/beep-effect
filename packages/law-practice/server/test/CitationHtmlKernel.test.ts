@@ -1,9 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationHtmlInput } from "@beep/law-practice-server/_test/Citation/HtmlInput";
-import {
-  makeCitationClosedHtmlWasi,
-  makeCitationHtmlKernel,
-} from "@beep/law-practice-server/_test/Citation/HtmlKernel";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -19,9 +14,11 @@ import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/_test/Citation/HtmlCompletion";
-import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/_test/Citation/HtmlKernel";
+import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
+import { makeCitationClosedHtmlWasi, makeCitationHtmlKernel } from "../src/internal/Citation/HtmlKernel.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
+import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKernel.ts";
 
 const loadAsset = Effect.fn("HtmlKernelTest.loadAsset")(function* () {
   return yield* (yield* FileSystem.FileSystem).readFile(

@@ -1,7 +1,4 @@
 import { fileURLToPath } from "node:url";
-import { makeCitationHtmlInput } from "@beep/law-practice-server/_test/Citation/HtmlInput";
-import { makeCitationHtmlKernel } from "@beep/law-practice-server/_test/Citation/HtmlKernel";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/_test/Citation/HtmlWorker";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -15,11 +12,14 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/_test/Citation/HtmlCompletion";
-import type { CitationHtmlInputFailure } from "@beep/law-practice-server/_test/Citation/HtmlInput";
-import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/_test/Citation/HtmlKernel";
-import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/_test/Citation/HtmlWorkerProtocol";
+import { makeCitationHtmlInput } from "../src/internal/Citation/HtmlInput.ts";
+import { makeCitationHtmlKernel } from "../src/internal/Citation/HtmlKernel.ts";
+import { makeCitationHtmlWorker } from "../src/internal/Citation/HtmlWorker.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import type { CitationHtmlCompletionFailure } from "../src/internal/Citation/HtmlCompletion.ts";
+import type { CitationHtmlInputFailure } from "../src/internal/Citation/HtmlInput.ts";
+import type { CitationHtmlKernelFailure } from "../src/internal/Citation/HtmlKernel.ts";
+import type { CitationHtmlWorkerFailure } from "../src/internal/Citation/HtmlWorkerProtocol.ts";
 
 type NativeFailure =
   | CitationHtmlInputFailure

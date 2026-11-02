@@ -1,5 +1,6 @@
 /** Validate portable assertion/loop observations without the live Python suite. */
 import { CitationOracleAssertions, CitationOracleDiscovery } from "@beep/law-practice-use-cases/test";
+import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -222,7 +223,9 @@ const program = Effect.gen(function* () {
     ...A.map(report.iterations, (row) => row.bindings),
     ...A.map(R.values(report.artifacts), (row) => row.payload.value),
   ];
-  const references = A.dedupe(A.flatMap(payloads, refs));
+  const references = yield* Effect.forEach(A.dedupe(A.flatMap(payloads, refs)), (reference) =>
+    S.decodeUnknownEffect(Sha256Hex)(reference)
+  );
   if (
     !A.every(references, (hash) => report.artifacts[hash] !== undefined) ||
     !A.every(R.keys(report.artifacts), (hash) => A.contains(references, hash))
