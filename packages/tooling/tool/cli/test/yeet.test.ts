@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   FallowReportFinding,
   FallowReportOk,
@@ -186,8 +187,11 @@ const encodeYeetVerdictEffect = S.encodeEffect(YeetVerdict);
 const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
 const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
-const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+const PlatformLayer = Layer.provideMerge(
+  Git.layer,
+  NodeChildProcessSpawner.layer.pipe(
+    Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
+  )
 );
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const attemptUuid = S.decodeUnknownEffect(UUID);

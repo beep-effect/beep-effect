@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { runTestTsgoChecksAt, testTsgoPlanningForTesting } from "@beep/repo-cli/test/Quality";
 import { checkScriptTestTypecheckCoverage, expandWorkspaceFiles } from "@beep/repo-cli/test/SharedInternals";
@@ -216,6 +217,7 @@ describe("test-typecheck coverage", () => {
           )
         );
         yield* runTestTsgoChecksAt(root, undefined).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
         );
         expect(spawned).toEqual([]);

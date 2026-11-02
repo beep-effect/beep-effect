@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   collectRemoteChecksForTesting,
   collectYeetStatus,
@@ -22,6 +23,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -125,20 +127,23 @@ const threadsJson = JSON.stringify({
 
 // Answers every read of both collectors; records each `gh pr checks` argv.
 const withGh = (checkArgs: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
-  Effect.provideService(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make((command) => {
-      if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
-      const [first, second] = commandArgs(command);
-      if (command.command === "git") return Effect.succeed(handle(""));
-      if (first === "pr" && second === "view") return Effect.succeed(handle(pullRequestJson));
-      if (first === "pr" && second === "checks")
-        return Ref.update(checkArgs, A.append(commandArgs(command))).pipe(
-          Effect.as(handle(A.contains(commandArgs(command), "--required") ? requiredChecksJson : checksJson))
-        );
-      if (first === "api") return Effect.succeed(handle(threadsJson));
-      return Effect.succeed(handle("[]"));
-    })
+  flow(
+    Effect.provideServiceEffect(Git, Git.make),
+    Effect.provideService(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
+        const [first, second] = commandArgs(command);
+        if (command.command === "git") return Effect.succeed(handle(""));
+        if (first === "pr" && second === "view") return Effect.succeed(handle(pullRequestJson));
+        if (first === "pr" && second === "checks")
+          return Ref.update(checkArgs, A.append(commandArgs(command))).pipe(
+            Effect.as(handle(A.contains(commandArgs(command), "--required") ? requiredChecksJson : checksJson))
+          );
+        if (first === "api") return Effect.succeed(handle(threadsJson));
+        return Effect.succeed(handle("[]"));
+      })
+    )
   );
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);

@@ -385,6 +385,7 @@ jobs:
           # cannot pass as a server-side rejection; an unanticipated rejection phrase fails
           # inconclusive, which is the safe direction for this gate.
           error_line="$(grep -Em1 \
+            -e 'Failed to create (a )?session' \
             -e 'already (been )?(registered|used|configured|exists)' \
             -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
             -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
@@ -410,7 +411,7 @@ jobs:
           fi
 
           unset jit_value
-          if grep -Eq 'Listening for Jobs|Connected to GitHub' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
+          if grep -Eq 'Listening for Jobs' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
             echo "JIT replay: accepted"
             [[ -z "${replay_runner_name}" ]] || echo "JIT replay runner: ${replay_runner_name}"
             exit 1
@@ -676,7 +677,7 @@ jobs:
           set -uo pipefail
           umask 077
           dir=/run/rtb-replay
-          scratch=/var/tmp/rtb-replay-runner
+          scratch="${dir}/runner"
           con() { printf 'RTB-%s\n' "$*" > /dev/console 2>/dev/null || true; }
           note() { con "NOTE $(date -u +%FT%TZ) $*"; }
           finish() {
@@ -712,19 +713,16 @@ jobs:
           base64 -w 64 "${dir}/c" | while IFS= read -r line; do con "C ${line}"; done
           con "WRAPPED"
 
-          # Disarm the shim: kill every runner-user ancestor so nothing powers
-          # the VM off when the listener exits. The root start script remains;
-          # its terminate call has no credentials once IMDS is disabled.
-          runner_uid="$(stat -c %u /proc/${listener})"
-          p="$(awk '{ print $4 }' "/proc/${listener}/stat")"
-          while [[ "${p}" -gt 1 ]]; do
-            parent="$(awk '{ print $4 }' "/proc/${p}/stat" 2>/dev/null || echo 1)"
-            if [[ "$(stat -c %u "/proc/${p}" 2>/dev/null)" == "${runner_uid}" ]]; then
-              note "killing runner-user ancestor $(cat "/proc/${p}/comm" 2>/dev/null)"
-              kill -KILL "${p}" 2>/dev/null || true
-            fi
-            p="${parent}"
-          done
+          # Disarm the shim the way a root job can: shadow its poweroff helper
+          # with /bin/true, so the listener can stop without the VM going down.
+          # Killing the wrapper chain instead let the shim reach poweroff first
+          # (2026-11-02 run 41417188112). The root start script's terminate call
+          # has no credentials once IMDS is disabled.
+          if mount --bind /bin/true /opt/beep/self-poweroff.sh; then
+            note "self-poweroff helper shadowed"
+          else
+            note "could not shadow the self-poweroff helper"; con "VERDICT same-host inconclusive (poweroff not disarmed)"; exit 1
+          fi
 
           # Release the session the way an orderly listener exit does.
           kill -INT "${listener}" 2>/dev/null || true
@@ -753,12 +751,13 @@ jobs:
           note "same-host replay started"
           verdict=""
           for _ in $(seq 1 125); do
-            if grep -Eq 'Listening for Jobs|Connected to GitHub' "${dir}/listener.log"; then
+            if grep -Eq 'Listening for Jobs' "${dir}/listener.log"; then
               pkill -KILL -f "${scratch}/bin/Runner" || true
               verdict="accepted"; break
             fi
             line="$(grep -Em1 \
               -e 'A session for this runner already exists' \
+              -e 'Failed to create (a )?session' \
               -e 'already (been )?(registered|used|configured|exists)' \
               -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
               -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
