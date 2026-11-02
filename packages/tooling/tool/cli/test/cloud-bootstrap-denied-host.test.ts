@@ -370,6 +370,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       "a connect failure through a configured proxy (curl 7)",
       { bun: "stale", node: "pinned", unreachable: "github.com", proxy: "http://proxy.fixture.test:3128" },
     ],
+    [
+      "an unresolvable host through a configured proxy (curl 6)",
+      { bun: "stale", node: "pinned", unresolved: "github.com", proxy: "http://proxy.fixture.test:3128" },
+    ],
   ] as const) {
     it.effect(`does not call ${name} a host denial`, () =>
       Effect.gen(function* () {

@@ -63,6 +63,14 @@ Base: `origin/main` at `7ae3f014`, in a Claude cloud session.
   waited on instead of being cancelled. "TERM at failed-download cleanup
   entry" now keeps the optional `op` worker in flight, so it still proves
   that cleanup settles a running worker under a repeated TERM.
+- Test limitation: the late-denial case orders Node's denial after the Bun
+  failure with a marker file plus a 0.5 s sleep. That is a scheduling margin,
+  not formal synchronization. It holds for the stubs, but a very slow runner
+  could narrow it. No process-observation harness was added to remove it.
+- Proxy scope: `fetch_required` treats curl `6`/`7` as a denial only when
+  none of `HTTPS_PROXY`, `https_proxy`, `ALL_PROXY` or `all_proxy` is set.
+  `NO_PROXY` is not consulted, so a direct failure to an exempted host exits
+  `1`, the conservative direction. Proxied curl `6` and `7` each have a case.
 - Not covered: denial of the install registries (`registry.npmjs.org`,
   `buf.build`) during `bun install`. Naming them would mean parsing bun's
   output, which would infer the host, so they keep the existing loud exit-1
@@ -94,13 +102,14 @@ request leaves the host.
 | curl `5` (proxy does not resolve) | exit 78: **fail** | exit 1, no denial line |
 | Origin `403` through an open tunnel | exit 78: **fail** | exit 1, no denial line |
 | curl `7` with `HTTPS_PROXY` set | exit 78: **fail** | exit 1, no denial line |
+| curl `6` with `HTTPS_PROXY` set | exit 78 | exit 1, no denial line |
 
 Every denial case also asserts no `bun install`, `bun add`, `bun run prepare`
 or `ln` call, and that no `~/.bun`, `~/.local`, `~/.bashrc` or `node_modules`
 was created, and that the run directory under the cache was removed. The
 failure-before column comes from running the same test file with the
 `7ae3f014` copies of both scripts swapped in (3 failed, 3 passed). After the
-fix, the new file plus `retained-script-adapters.test.ts` give 33/33 passing.
+fix, the new file plus `retained-script-adapters.test.ts` give 34/34 passing.
 The R2 rows were checked against the `989df624` `fetch.sh`, where 8 of 12
 failed. The four R2 rows are the intended failures. The other four (the
 earlier denial and mixed cases) failed only because the stub now reports a

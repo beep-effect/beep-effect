@@ -138,8 +138,9 @@ Known gotchas:
   naming each denied host and the remedy: add it to the environment's allowed
   domains. Every required download is waited on first, so a Bun failure in
   the same run is reported too but does not hide the denial. "Denied" means the egress proxy refused the CONNECT tunnel
-  (`403`), or, with no proxy configured, the host does not resolve or
-  connect. The host named is the one curl was fetching when it stopped, so a
+  (`403`), or, when none of `HTTPS_PROXY`, `https_proxy`, `ALL_PROXY` or
+  `all_proxy` is set, the host does not resolve or connect. `NO_PROXY` is not
+  consulted, so a direct failure to a host it exempts conservatively exits `1`. The host named is the one curl was fetching when it stopped, so a
   refused redirect hop (for example a release-asset host) is named instead of
   `github.com`. An unreachable proxy, an origin `403`, a timeout, `404`, `5xx`
   or checksum mismatch stays a plain exit `1`. The optional 1Password CLI host only warns. Install
