@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { YeetCommandError } from "@beep/repo-cli/commands/Yeet/Yeet.errors";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
@@ -95,6 +95,22 @@ it("safeOriginBranchFromBaseForTesting keeps plain origin branches only", () => 
   assertNone(safeOriginBranchFromBaseForTesting("origin/../main"));
   assertNone(safeOriginBranchFromBaseForTesting("main"));
 });
+
+it.effect("captureGitKitExit preserves fractional finite exit codes admitted by the typed producer contract", () =>
+  Effect.gen(function* () {
+    // Synthetic typed-producer contract fixture; OS process exit statuses are integers.
+    const invocation = GitCommand.worktreeAdd("/repo/preview", "HEAD", true);
+    const error = GitCommandError.make({
+      kind: "failed",
+      args: invocation.redactedArgs,
+      cwd: "/repo",
+      exitCode: 1.5,
+      stderr: "synthetic finite exit",
+    });
+    const exit = yield* Effect.fail(error).pipe(captureGitKitExit(invocation, WORKTREE_FAILED));
+    expect(exit).toEqual({ exitCode: 1.5, output: "synthetic finite exit" });
+  })
+);
 
 it.layer(NodeCommandTestLayer, { timeout: "60 seconds" })("yeet git exec over a real checkout", (it) => {
   it.effect("refreshBaseRef fetches origin/main to the origin tip", () =>
