@@ -514,7 +514,7 @@ export const hookPulseNamespace: Effect.Effect<
           ? Effect.fail(
               HookPulseNamespaceError.new("Hook-pulse hash salt contains unsupported control characters.", {})
             )
-          : Effect.succeed(nonBlank(value))
+          : value.pipe(nonBlank, Effect.succeed)
       )
     );
   const instrument = yield* readRung("BEEP_HOOK_PULSE_HASH_SALT");

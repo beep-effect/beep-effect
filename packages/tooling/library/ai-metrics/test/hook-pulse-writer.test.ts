@@ -1949,13 +1949,14 @@ fi
   it.effect("refuses environment salts containing controls on both readers and writers", () =>
     Effect.gen(function* () {
       for (const salt of ["salt\n", "salt\r", "salt\t", "salt\u0001", "salt\u007f", "salt\u0085"]) {
-        for (const instrument of [true, false]) {
-          const options = instrument ? { hashSalt: salt } : { aiMetricsHashSalt: salt };
-          const run = yield* runWriter(yield* encodeJson(preToolUsePayload), options);
+        for (const rung of [
+          { name: "BEEP_HOOK_PULSE_HASH_SALT", options: { hashSalt: salt } },
+          { name: "BEEP_AI_METRICS_HASH_SALT", options: { aiMetricsHashSalt: salt } },
+        ]) {
+          const run = yield* runWriter(yield* encodeJson(preToolUsePayload), rung.options);
           expect(run.rows).toHaveLength(0);
           expect(run.refusals).toHaveLength(1);
-          const name = instrument ? "BEEP_HOOK_PULSE_HASH_SALT" : "BEEP_AI_METRICS_HASH_SALT";
-          const error = yield* withSaltEnv({ [name]: salt }, hookPulseNamespace).pipe(Effect.flip);
+          const error = yield* withSaltEnv({ [rung.name]: salt }, hookPulseNamespace).pipe(Effect.flip);
           expect(error._tag).toBe("HookPulseNamespaceError");
         }
       }
