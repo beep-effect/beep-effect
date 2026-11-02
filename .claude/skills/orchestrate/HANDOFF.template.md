@@ -31,9 +31,9 @@ since this snapshot is where the predecessor stopped.
 
 A row per PR whose owner said "final <sha>". Cleared when merged or withdrawn.
 
-| PR | final sha | ready at | gate job / waiter | order constraint | owner address |
+| PR | final sha | ready at | gate job / waiter | order constraint | owner thread link |
 | --- | --- | --- | --- | --- | --- |
-| #NNNN | abcdef1234 | 2026-10-06T11:10Z | yeet job xyz | after #MMMM | local_... |
+| #NNNN | abcdef1234 | 2026-10-06T11:10Z | yeet job xyz | after #MMMM | <t3 thread link> |
 
 ## Pending operator decisions
 
@@ -59,7 +59,9 @@ a YubiKey-gated `sudo`, a sign-in. Agents decide everything else.
 
 Exact commands a successor needs to re-create what dies with this session or must be re-armed:
 merge-gate arming (argv-file recipe), wait-then-arm units, every `Monitor` and background poller
-command with its timeout, and worker/lane launch commands. Paths here are private; never commit.
+command with its timeout, every T3 scheduled task (`schedule_task` arguments and task id), and
+worker/lane launch calls (`delegate_task` / `t3_thread_launch` arguments with their pins and
+`clientRequestId`). Paths and ids here are private; never commit.
 
 ```bash
 <command>   # what it re-arms, when to re-run it
@@ -74,21 +76,26 @@ Output of `bun run beep session register list --markdown`, pasted at write time.
 
 ## Communication routes
 
-| Unit address | Provider/route | Enrollment generation and scope, if managed | Authorized contact | Last receipt / ambiguity hold | Orphan plan |
+T3 Code is the only cross-session route. One row per unit: its thread `link`, the `environmentId`
+when it runs on a linked host, the provider/model/effort pin it was launched with, the last
+`clientRequestId` sent and the `runId` it returned, and any reply still unread.
+
+| Unit thread link | environmentId | Provider / model / effort | Last clientRequestId → runId | Unread reply / ambiguity hold | Orphan plan |
 | --- | --- | --- | --- | --- | --- |
 
-Record private managed state/profile/grant paths only in this private handoff.
+A unit T3 did not launch has no route: mark it `unreachable`, keep its brief on disk.
 Preserve the originating orchestrator's fallback policy and approved model pins.
-A messaging ACK proves consumption, not role takeover or native turn completion.
-Existing Desktop attachment remains a separate qualification and permission check.
+A `t3_thread_send` receipt proves delivery, not consumption, role takeover or turn completion;
+`t3_thread_wait` on the returned `runId` plus `t3_thread_read` proves the reply.
 
 ## Broadcast
 
-Sent by the successor to authorized units through their recorded native or enrolled messaging
-route. Registration alone does not authorize an app continuation, new task, PR comment or
-message to an external person. Record unreachable units and retain their briefs on disk:
+Sent by the successor with `t3_thread_send` to every unit in the routes table, one stable
+`clientRequestId` per unit. A register row alone never authorizes an app continuation, a new
+task, a PR comment or a message to an external person. Record unreachable units and retain
+their briefs on disk:
 
-> orchestrator: the role moved to <successor title> (<successor id>) at <instant>. Report
+> orchestrator: the role moved to <successor title> (<successor thread link>) at <instant>. Report
 > blockers, "final <sha>", and review-thread fixes there. Rulings in force are unchanged:
 > ready at content-final, 20-minute review window, only money escalates. Your register row:
 > <kind> <address>, owns <...>; reply if anything in it is wrong.

@@ -83,7 +83,6 @@
     "protobufjs": "catalog:"
   },
   "devDependencies": {
-    "@beep/ai-provider-cli": "workspace:^",
     "@beep/fc-runs": "workspace:^",
     "@beep/memfs": "workspace:^",
     "@beep/test-runner": "workspace:^",

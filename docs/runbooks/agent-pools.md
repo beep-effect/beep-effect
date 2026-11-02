@@ -42,7 +42,9 @@ Claude never appears in the Codex chain; Codex (`gpt-6.1-sol` medium) is the fir
 Claude chain since 2026-10-18 (`goals/agent-pool-doctrine/history/2026-10-18-codex-claude-fallback.md`),
 before Cursor and grok-build. Cursor and
 grok-build workers never delegate onward: they return a result or blocker to the originating
-orchestrator, which owns every cross-provider decision and launch. An unfavorable review or an
+orchestrator, which owns every cross-provider decision and launch. From a T3 session that launch
+is `delegate_task` (or `t3_thread_launch`) with the pinned provider, model and effort from
+`orchestrator_capabilities`; the `orchestrate` skill has the procedure. An unfavorable review or an
 ordinary code failure is remediated on the same route. Only existing subscriptions and
 explicitly authorized API billing are used; when a chain is exhausted, report the concrete
 blockers and hold the dependent work. Every route may implement, explore, research, and review

@@ -141,12 +141,12 @@ already exist; the launch and fallback policy does not.
 
 - **Provider session adapters exist.** `@beep/ai-provider-cli`
   (`packages/drivers/ai-provider-cli/src/`) has managed session services for
-  Claude, Codex, Grok and Cursor (`AiProviderCliSession.{claude,codex,grok,cursor}.service.ts`).
-  `goals/agent-session-bridges` (completed-retained, #1571) proved owned
+  Claude, Codex, Grok and Cursor (`AiProviderCliSession.*`, deleted 2026-11-02).
+  `retired:agent-session-bridges` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-session-bridges)) (#1571) proved owned
   Codex, Claude and Grok sessions through the router. The Cursor adapter
   classifies its generation route as blocked rather than faking success.
-- **A durable delivery store exists.** `goals/agent-message-router`
-  (completed-retained) has a transactional delivery store, per-session
+- **A durable delivery store existed.** `retired:agent-message-router` ([last tree](https://github.com/beep-effect/beep-effect/tree/6bb8584b6dbc9aee927a200901c9eebc0abd63b1/goals/agent-message-router))
+  had a transactional delivery store, per-session
   capabilities, policy fingerprints and ambiguous-recovery handling. A wake is
   a message, so this store could carry wakes instead of skulk's SQLite queue.
 - **Launch and fallback stay out of the router by decision.** The

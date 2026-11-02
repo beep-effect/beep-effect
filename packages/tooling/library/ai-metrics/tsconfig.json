@@ -9,9 +9,6 @@
   },
   "references": [
     {
-      "path": "../../../drivers/ai-provider-cli/tsconfig.json"
-    },
-    {
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
