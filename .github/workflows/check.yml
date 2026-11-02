@@ -1386,17 +1386,31 @@ jobs:
           else
             commits="$(git rev-list --no-merges $log_opts)"
           fi
-          expected_commits="$(printf '%s\n' "$commits" | grep -c . || true)"
+          # Empty commits print no diff-tree rows; the awk filters (not grep -v,
+          # which exits 1 on no input under pipefail) keep that range alive.
           missing="$(printf '%s\n' "$commits" \
             | xargs -r -n 1 git diff-tree -r --root --no-commit-id \
-            | awk '{ print $3; print $4 }' | grep -v '^0*$' | sort -u \
+            | awk '{ print $3; print $4 }' | awk '!/^0+$/' | sort -u \
             | GIT_NO_LAZY_FETCH=1 git cat-file --batch-check \
             | awk '$2 == "missing" { print $1 }')"
           if [[ -n "$missing" ]]; then
-            echo "Prefetching $(printf '%s\n' "$missing" | wc -l) blobs for ${log_opts} (${expected_commits} commits)"
+            echo "Prefetching $(printf '%s\n' "$missing" | wc -l) blobs for ${log_opts}"
             printf '%s\n' "$missing" | git -c fetch.negotiationAlgorithm=noop fetch --quiet --no-tags \
               --no-write-fetch-head --recurse-submodules=no --filter=blob:none --stdin origin
           fi
+
+          # gitleaks counts a commit only when it yields a fragment: added text
+          # lines (`-U0`; binaries and empty or delete-only commits yield none).
+          # Count those commits from --numstat, which reads the blobs just
+          # prefetched, so an empty-only or binary-only range expects zero.
+          expected_commits=0
+          for commit in $commits; do
+            if git diff-tree -r --root --no-commit-id --numstat "$commit" \
+              | awk '$1 ~ /^[0-9]+$/ && $1 > 0 { found = 1 } END { exit !found }'; then
+              expected_commits=$((expected_commits + 1))
+            fi
+          done
+          echo "${expected_commits} commit(s) in ${log_opts} add text lines"
 
           # Global allowlists and targetRules require Gitleaks >= 8.25.0.
           # Pin v8.30.1, matching the verified local scanner.
@@ -1416,7 +1430,7 @@ jobs:
             exit 1
           fi
           if (( expected_commits > 0 )) && grep -Eq '(^|[^0-9])0 commits scanned' "$scan_log"; then
-            echo "::error::gitleaks scanned 0 commits but ${log_opts} holds ${expected_commits}"
+            echo "::error::gitleaks scanned 0 commits but ${expected_commits} commit(s) in ${log_opts} add text lines"
             exit 1
           fi
 
