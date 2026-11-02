@@ -39,7 +39,7 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRuns } from "@beep/test-utils";
+import { fcRunsCapped } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -373,6 +373,11 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
             yield* fs.writeFileString(ledger, promoted);
           }
           expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
+          // Each run writes the ledger twice and runs a real audit and transition. The
+          // fixture kernel is "fixture", which no Sha256Hex equals, so every draw is the
+          // same drift class: 10 distinct digests cover it. fcRunsCapped keeps the nightly
+          // BEEP_FC_NUM_RUNS=1000 floor from multiplying the I/O past the 300 s timeout
+          // (#2480) and still honours BEEP_FC_SEED for reruns.
           const runtimeDrift = yield* Arbitrary.checkEffect(
             Arbitrary.schema(Sha256Hex),
             (kernel) =>
@@ -389,7 +394,7 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
                 if (kernel !== toolchain.kernel) expect(yield* fs.readFileString(ledger)).toBe(prior);
                 return true;
               }),
-            fcRuns(10)
+            fcRunsCapped(10)
           );
           expect(runtimeDrift._tag).toBe("Passed");
           observedToolchain.mockReturnValue(Effect.succeed(toolchain));
