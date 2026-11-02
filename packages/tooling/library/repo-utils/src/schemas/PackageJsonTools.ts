@@ -93,22 +93,46 @@ const canonicalizeUnknownValue = (value: unknown): unknown => {
   return value;
 };
 
+// Node matches `exports`/`imports` condition keys in object order (`default` last) and tries array targets in
+// order, so only specifier keys (`.`-prefixed subpaths, `#`-prefixed imports), whose resolution is
+// order-free, are sorted. Condition objects keep their insertion order at every depth.
+const canonicalizeEntryPointMap =
+  (isSpecifierKey: (key: string) => boolean) =>
+  (value: unknown): unknown => {
+    const canonicalizeEntry = canonicalizeEntryPointMap(isSpecifierKey);
+    if (A.isArray(value)) {
+      return A.map(value, canonicalizeEntry);
+    }
+    if (!isStringRecord(value)) {
+      return value;
+    }
+    return A.every(R.keys(value), isSpecifierKey)
+      ? sortStringRecord(value, canonicalizeEntry)
+      : R.map(value, canonicalizeEntry);
+  };
+
+const canonicalizeExportsValue = canonicalizeEntryPointMap(Str.startsWith("."));
+
+const canonicalizeImportsValue = canonicalizeEntryPointMap(Str.startsWith("#"));
+
 const canonicalizePublishConfigValue = (key: string, value: unknown): unknown => {
   if (key === "bin" && isStringRecord(value)) {
     return sortStringRecord(value, identity);
   }
   if (key === "exports") {
-    return canonicalizeUnknownValue(value);
+    return canonicalizeExportsValue(value);
   }
   return value;
 };
 
 // Lay out a JSON object with its documented keys first, in `keyOrder`, then every other key sorted, with
-// `canonicalizeKnown` applied to the documented values and the unknown values canonicalized recursively.
+// `canonicalizeKnown` applied to the documented values and `canonicalizeRest` (by default a recursive key sort)
+// applied to the other values.
 const orderObjectKeys = (
   value: Readonly<Record<string, unknown>>,
   keyOrder: ReadonlyArray<string>,
-  canonicalizeKnown: (key: string, value: unknown) => unknown
+  canonicalizeKnown: (key: string, value: unknown) => unknown,
+  canonicalizeRest: (key: string, value: unknown) => unknown = (_, entry) => canonicalizeUnknownValue(entry)
 ): Record<string, unknown> => {
   let out = R.empty<string, unknown>();
   for (const key of keyOrder) {
@@ -122,9 +146,21 @@ const orderObjectKeys = (
     A.sort(Order.mapInput(Order.String, ([key]: [string, unknown]) => key))
   );
   for (const [key, entryValue] of remaining) {
-    out = R.set(out, key, canonicalizeUnknownValue(entryValue));
+    out = R.set(out, key, canonicalizeRest(key, entryValue));
   }
   return out;
+};
+
+// pnpm documents `typesVersions` as a publishConfig override; an `imports` value in publishConfig's open rest is
+// handled with the same order rules. Both keep the order rules of their top-level counterparts.
+const canonicalizePublishConfigRestValue = (key: string, value: unknown): unknown => {
+  if (key === "imports") {
+    return canonicalizeImportsValue(value);
+  }
+  if (key === "typesVersions") {
+    return value;
+  }
+  return canonicalizeUnknownValue(value);
 };
 
 const canonicalizePublishConfig = (
@@ -133,7 +169,12 @@ const canonicalizePublishConfig = (
   isStringRecord(value)
     ? Result.getOrThrow(
         S.decodeUnknownResult(PublishConfig)(
-          orderObjectKeys(value, publishConfigKeyOrder, canonicalizePublishConfigValue)
+          orderObjectKeys(
+            value,
+            publishConfigKeyOrder,
+            canonicalizePublishConfigValue,
+            canonicalizePublishConfigRestValue
+          )
         )
       )
     : value;
@@ -175,12 +216,12 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ typings: O.fromUndefinedOr(encoded.typings) }),
     ...O.getSomesStruct({
       exports: O.map(O.fromUndefinedOr(encoded.exports), (exports) =>
-        Result.getOrThrow(S.decodeUnknownResult(PackageExports)(canonicalizeUnknownValue(exports)))
+        Result.getOrThrow(S.decodeUnknownResult(PackageExports)(canonicalizeExportsValue(exports)))
       ),
     }),
     ...O.getSomesStruct({
       imports: O.map(O.fromUndefinedOr(encoded.imports), (imports) =>
-        Result.getOrThrow(S.decodeUnknownResult(PackageImports)(canonicalizeUnknownValue(imports)))
+        Result.getOrThrow(S.decodeUnknownResult(PackageImports)(canonicalizeImportsValue(imports)))
       ),
     }),
     ...O.getSomesStruct({
@@ -255,9 +296,11 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ devEngines: O.fromUndefinedOr(encoded.devEngines) }),
     ...O.getSomesStruct({ preferGlobal: O.fromUndefinedOr(encoded.preferGlobal) }),
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
+    // TypeScript takes the first matching version range, resolves equal-prefix path patterns in key order and
+    // tries each substitution array in order, so typesVersions keeps its input order at every level.
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        Result.getOrThrow(S.decodeUnknownResult(TypesVersionsField)(canonicalizeUnknownValue(typesVersions)))
+        Result.getOrThrow(S.decodeResult(TypesVersionsField)(typesVersions))
       ),
     }),
   }) satisfies PackageJson.Encoded;
