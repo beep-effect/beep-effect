@@ -75,7 +75,7 @@ import {
   YeetEconomicsReport,
   YeetEconomicsReportJson,
 } from "./Economics.schemas.ts";
-import { YeetRunMode } from "./Planner.ts";
+import { YeetRunMode } from "./Planner.schemas.ts";
 import { buildYeetEconomicsReviewLane, readYeetReviewLaneLedger, renderYeetEconomicsReviewLane } from "./ReviewLane.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";

@@ -57,9 +57,44 @@ forwarder timer, lane retirement and the agent-effectiveness eval lanes). The
 lint policy fingerprint layout keeps its own parameterized path. Cache's task
 router resolves its entry from `import.meta.url` and needs no constant.
 
-## W1b
+## W1b result
 
-W1b adds the verifier's must-fix files (PLAN, "Verifier must-fix list") to
-`carveOuts`, which turns the issue classification and parsing files into
-library content with six edges into the yeet and quality tools, and splits
-the schemas they need.
+W1b adds the design record's full library map to `carveOuts` (68 entries under
+`commands/`). With the map in place the census first reported 63
+library-to-tool edges; carving library-clean files in place and splitting
+shared vocabulary out of tool files brings it to zero:
+
+| Measure | After W1a | Full map, before splits | After W1b |
+| --- | --- | --- | --- |
+| Files | 958 | 958 | 964 |
+| Edges | 4,661 | 4,661 | 4,704 |
+| Library-to-tool edges | 0 | 63 | 0 |
+| Cross-tool edges | 124 | 35 | 25 |
+
+New split modules, all carved as library content:
+
+| Module | Split from | Why |
+| --- | --- | --- |
+| `Yeet/internal/Planner.schemas.ts` | `Planner.ts` | Run modes, artifact directory and push step id read by proof jobs, verdicts and issue schemas |
+| `Yeet/internal/Settle.schemas.ts` | `Settle.ts` | The settle verdict and census vocabulary the watch events encode |
+| `Yeet/internal/MonitorComments.schemas.ts` | `MonitorComments.ts` | Comment shapes and the excerpt helper the watch events use |
+| `Yeet/internal/Status.schemas.ts` | `Status.ts` | Status artifact and remote models that merge readiness reads |
+| `Yeet/internal/GitErrorAdapter.ts` | `GitExec.ts` | Yeet's git error wording, so library files call the run-layer `runGitOutput` (verifier item 5) |
+| `Cache/Cache.runtime.step.ts`, `Cache/Cache.errors.ts` | `Cache.runtime.ts`, `Cache.census.ts`, `Cache.schemas.ts` | The step router the task runner and CI lanes call |
+
+`writeTextFile` moves into `ArtifactPaths.ts`, and `shellQuote` moves out of
+`@beep/repo-ai-metrics` into `@beep/repo-utils/Shell` (verifier item 8).
+
+## Verifier must-fix list
+
+| Item | State |
+| --- | --- |
+| 1 Issue classification and parsing with the proof subpath | Carved `lib:repo-gates/proof`; their schemas (`Yeet.schemas.ts`) and lane-run helpers are carved with them |
+| 2 Capability graph trio with the packet library | `Graph.mermaid`, `Graph.projection` and `Graph.schemas` carved `lib:repo-packets` with `PortfolioIndex` |
+| 3 Docgen analysis subset with repo-utils | Its only library-side reader is `Quality/internal/PackageVerify.ts`, a cross-tool edge: closes with the W7 gate |
+| 4 Whole skills-lock closure to ai-sync | `SkillsLock.schemas.ts` and `Skills.schemas.ts` carved `lib:ai-sync` |
+| 5 Library-owned errors; retire the Yeet `runGitOutput` duplicate | `YeetCommandError` is library vocabulary (D27); the library files call the run-layer `runGitOutput` |
+| 6 Codex security packet off the quality and goals cycle | No goals file imports Codex any more; Codex reaches only `PortfolioIndex`, now library |
+| 7 Semantic-delta probe reads both layouts | Needs the W8 manifest; closes in W8 |
+| 8 `shellQuote` out of `@beep/repo-ai-metrics` | Moved to `@beep/repo-utils/Shell` |
+| 9 Reference-links service on the worktree route | `Worktree.command.ts` to `Refs` is a cross-tool edge: closes with the W7 gate |

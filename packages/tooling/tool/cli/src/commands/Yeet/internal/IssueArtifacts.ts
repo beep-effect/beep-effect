@@ -8,7 +8,6 @@
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -18,13 +17,14 @@ import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.t
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
 import { YeetRunResult } from "../Yeet.schemas.ts";
-import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
+import { artifactDirForContext, safeArtifactName, writeTextFile } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
@@ -170,41 +170,6 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
     : executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
         Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
       );
-});
-
-/**
- * Write text to a Yeet artifact path, creating parent directories first.
- *
- * **Example** (Write artifact text file)
- *
- * ```ts
- * import * as Effect from "effect/Effect";
- * import { writeTextFile } from "@beep/repo-cli/test/Yeet"
- *
- * const writePacket = writeTextFile(".beep/yeet/runs/example/summary.txt", "ok\n").pipe(
- *   Effect.as("packet written")
- * )
- * ```
- *
- * @param filePath - Absolute or repo-relative file path to write.
- * @param content - Complete file contents, including any desired trailing
- * newline.
- * @returns An Effect that completes after the file is written.
- * @category utilities
- * @since 0.0.0
- */
-export const writeTextFile = Effect.fn("Yeet.writeTextFile")(function* (
-  filePath: string,
-  content: string
-): Effect.fn.Return<void, YeetCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  yield* fs
-    .makeDirectory(path.dirname(filePath), { recursive: true })
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to create directory for "${filePath}".`)));
-  yield* fs
-    .writeFileString(filePath, content)
-    .pipe(Effect.mapError(YeetCommandError.new(`Failed to write "${filePath}".`)));
 });
 
 /**

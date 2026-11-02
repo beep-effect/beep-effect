@@ -30,9 +30,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
+import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { CiLaneClass } from "../../Ci/CiLane.ts";
-import { YeetProofTier } from "./Planner.ts";
 
 export { ProofEnvProfile, ProofStage } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 

@@ -76,7 +76,7 @@ import {
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { PosInt } from "../../internal/schema/PosInt.ts";
-import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { CoverageProducerIdentity, resolveCoverageProducerIdentity } from "./internal/CoverageArtifacts.ts";
 import {
   cleanCoverageRegressionOutputs,

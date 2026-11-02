@@ -28,6 +28,7 @@ import { withCacheProducerAdapter } from "./Cache.adapter.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceSocketProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
@@ -38,7 +39,6 @@ import {
 } from "./Cache.evidence.ts";
 import { CacheSignedPilotReceipt, CacheSignedPilotRequest, CacheSignedPilotRun } from "./Cache.pilot.signed.schemas.ts";
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
 import { joinCacheProducerUpload } from "./Cache.workflow.upload.ts";
 import type { CacheProducerBinding } from "./Cache.producer.schemas.ts";

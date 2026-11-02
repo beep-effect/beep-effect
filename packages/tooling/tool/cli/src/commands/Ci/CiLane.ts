@@ -49,7 +49,7 @@ import { resolveTurboCachePlan, turboCachePlanArgs } from "../../internal/cli/Tu
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { workspaceManifests } from "../../internal/RepoWorkspaces.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
-import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.ts";
+import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { QualityCheckConcurrency } from "../Quality/Quality.schemas.ts";
 import {
   QualityTaskStep,

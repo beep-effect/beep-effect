@@ -39,6 +39,7 @@ import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } fr
 import { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./Cache.conformance.proxy.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { readCacheDependencyMaterialization, verifyCacheDependencies } from "./Cache.dependencies.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import {
   decodeCacheExperimentText as decodeText,
   hashCacheExperimentExecutable as hashExecutable,
@@ -98,7 +99,6 @@ import { assertCachePrivateNetwork } from "./Cache.protocol.runner.ts";
 import {
   CacheActivationPreview,
   CacheActivationRequest,
-  CacheCommandError,
   CacheDependencyTree,
   CacheExecutablePin,
   CacheLinkedFile,

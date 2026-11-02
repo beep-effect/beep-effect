@@ -23,8 +23,8 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { GithubClientRequest, layerGithubClientFor, selectGithubIdentity } from "../../internal/github/index.ts";
 import { OutputBound, runCaptured } from "../../internal/process/index.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { CacheProducerBinding } from "./Cache.producer.schemas.ts";
-import { CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheHostedProducerApproval,
   CacheHostedProducerCompleteReport,

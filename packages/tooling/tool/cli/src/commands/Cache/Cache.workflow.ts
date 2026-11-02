@@ -26,6 +26,7 @@ import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { loadCacheConformanceBearers } from "./Cache.conformance.ts";
+import { CacheCommandError } from "./Cache.errors.ts";
 import { decodeCacheExperimentText, readCacheEvidenceBytes, readCacheExperimentBytes } from "./Cache.evidence.ts";
 import { collectCacheToolchain } from "./Cache.fingerprint.ts";
 import { inspectCacheLinkedFile } from "./Cache.linker.ts";
@@ -42,7 +43,7 @@ import {
 } from "./Cache.producer.ts";
 import { CacheProtocolRequest } from "./Cache.protocol.runner.schemas.ts";
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
-import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
+import { CacheActivationPreview } from "./Cache.schemas.ts";
 import {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
