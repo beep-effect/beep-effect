@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
 import { findRepoRoot } from "@beep/repo-utils";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
@@ -15,10 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { securityRepositoryFromRemote } from "./Security.bundle.ts";
 import { CodexSecurityError, toCodexSecurityError } from "./Security.errors.ts";
@@ -108,19 +106,17 @@ export const assertPrivateOutputDirectory = Effect.fn("CodexSecurity.assertPriva
   }
 });
 
-/** Trimmed stdout of one git invocation inside the repository. */
-const gitOutput = Effect.fn("CodexSecurity.gitOutput")(function* (repo: string, args: ReadonlyArray<string>) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  return Str.trim(yield* spawner.string(ChildProcess.make("git", args, { cwd: repo })));
-});
-
-/** Binds the repository's origin slug and `HEAD` into the receipt written next to the scan. */
+/**
+ * Binds the repository's origin slug and `HEAD` into the receipt written next to the scan.
+ * An origin git does not know reads as the empty remote the slug parser refuses.
+ */
 const resolveSourceReceipt = Effect.fn("CodexSecurity.resolveSourceReceipt")(function* (repo: string) {
-  const repository = yield* securityRepositoryFromRemote(yield* gitOutput(repo, ["remote", "get-url", "origin"]));
+  const git = yield* Git;
+  const repository = yield* securityRepositoryFromRemote(O.getOrElse(yield* git.remoteUrl(repo), () => ""));
   return yield* decodeSourceReceipt({
     schemaVersion: "beep-security-source/v1",
     repository,
-    revision: yield* gitOutput(repo, ["rev-parse", "HEAD"]),
+    revision: yield* git.revParse(repo, "HEAD"),
   });
 });
 
@@ -133,8 +129,9 @@ const requireCleanWorktree = Effect.fn("CodexSecurity.requireCleanWorktree")(fun
   repo: string,
   preflight: boolean
 ) {
-  const status = yield* gitOutput(repo, ["status", "--porcelain"]);
-  if (Str.isEmpty(status)) return;
+  const git = yield* Git;
+  const status = yield* git.status(repo);
+  if (A.isReadonlyArrayEmpty(status)) return;
   if (!preflight) {
     return yield* CodexSecurityError.make({
       message:

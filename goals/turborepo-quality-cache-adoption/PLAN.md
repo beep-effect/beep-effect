@@ -552,3 +552,26 @@ and a later signature warning; local-only and signing-disabled cases also run.
 The native length flag therefore cannot replace Beep's missing-key role policy.
 No real remote service or signed artifact was exercised. Production settings,
 qualification and the 28 pending feature decisions remain unchanged.
+
+
+### Global namespace and child invalidation controls, 2026-11-02
+
+The [source-bound review](research/global-configuration-feature-review.json)
+retains the existing enabled `globalConfiguration` layout and all six root
+global inputs. All 26 actual child configurations avoid root-only global
+settings. The [native report](research/native-global-configuration-controls.json)
+records 72 task observations and six pre-materialization configuration refusals
+on stable 2.11.10 and canary 2.11.11-canary.1. Cold/replay outputs agree; shared
+inputs and semantic environment changes invalidate; ignored passthrough and
+unrelated files reuse. Child policy and source edits invalidate only that child.
+
+The original expected exclusion optimization failed. Both clients retain the
+child negation in the resolved definition but still hash the shared global file
+and recompute after it changes. The report asserts that observed conservative
+behavior; no real input is removed and no exclusion speedup is claimed. Three
+driver refusals and an omitted-child-policy-write negative control preserve the
+passing report and fail for their intended reasons. The inherited review-count
+integrity check was missing the already accepted default status; the status
+mapping now also covers this retained enabled setting. Hosted acceptance remains
+required. The broader global/child family, actual computation qualification,
+production trust and every whole-goal acceptance criterion remain open.

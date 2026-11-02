@@ -25,7 +25,10 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { A, O, Str } from "@beep/utils";
@@ -54,6 +57,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { ghOutput } from "../../internal/github/index.ts";
 import {
+  adaptGitKitError,
   ancestryPidsOf,
   collectUntrackedPaths,
   DesktopTerminalShellState,
@@ -76,7 +80,6 @@ import { PosInt } from "../../internal/schema/PosInt.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
-  parseWorktreePorcelain,
   WorktreeArchivePlan,
   WorktreeBeepMaterialEntry,
   WorktreeFenceSettlePolicy,
@@ -88,13 +91,14 @@ import {
   WorktreeResidueReason,
   WorktreeUnpushedInspection,
   WorktreeUpstreamState,
+  worktreeListEntriesFromGit,
 } from "./Worktree.schemas.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter, ProcessAttachment } from "../../internal/repo-run/index.ts";
 import type {
+  WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
   WorktreeUpstreamVerdict,
 } from "./Worktree.schemas.ts";
@@ -588,11 +592,86 @@ type UpstreamProbeRequirements =
   | Git
   | WorktreeMergedPullRequestProbe;
 
-const commandErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
+/**
+ * The Worktree command's `GitCommandErrorAdapter`: one failure message for every git read.
+ *
+ * **Details**
+ *
+ * A spawn failure carries the message and the command line; a non-zero exit appends the exit code.
+ * The `Git`-backed readers of the Worktree group (`Worktree.command.ts`, `Reap.service.ts`) fold the
+ * kit's typed errors through it with `adaptGitKitError`, so they keep the wording the bounded
+ * capture produced (repo-cli-gh-git-consolidation W2, SPEC D-10).
+ *
+ * **Example** (Render a non-zero exit)
+ *
+ * ```ts
+ * import { worktreeGitErrorAdapter } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const adapter = worktreeGitErrorAdapter("Failed to list git worktrees.")
+ * const error = adapter.onNonZeroExit({ commandLine: "git worktree list --porcelain -z", exitCode: 128, output: "" })
+ * console.log(error.message) // "Failed to list git worktrees. (exit 128)."
+ * ```
+ *
+ * @param failMessage - Message attached to spawn and non-zero-exit failures.
+ * @returns The adapter for one git read.
+ * @category errors
+ * @since 0.0.0
+ */
+export const worktreeGitErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
   onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
   onNonZeroExit: ({ commandLine, exitCode }) =>
     WorktreeCommandError.make({ message: `${failMessage} (exit ${exitCode}).`, command: commandLine, exitCode }),
   onTruncated: O.none(),
+});
+
+/**
+ * Locate the repository from `startFrom` and read its registered worktrees through `Git.worktreeList`.
+ *
+ * **Details**
+ *
+ * The listing is fail-closed: a kit failure folds through {@link worktreeGitErrorAdapter} with
+ * `failMessage`, and unparseable output becomes the "must use NUL delimiters" refusal. Entries are
+ * mapped onto {@link WorktreeListEntry}, main checkout first, the order `git worktree list` reports.
+ *
+ * **Example** (List the worktrees of the current repository)
+ *
+ * ```ts
+ * import { listRepositoryWorktrees } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const listing = listRepositoryWorktrees(undefined, "Failed to list git worktrees.")
+ * console.log(Effect.isEffect(listing)) // true
+ * ```
+ *
+ * @param startFrom - Directory to resolve the repository root from; the process cwd when omitted.
+ * @param failMessage - Message attached to a failed listing.
+ * @returns The repository root and its worktree entries.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const listRepositoryWorktrees = Effect.fn("Worktree.listRepositoryWorktrees")(function* (
+  startFrom: string | undefined,
+  failMessage: string
+): Effect.fn.Return<
+  { readonly currentRoot: string; readonly entries: ReadonlyArray<WorktreeListEntry> },
+  WorktreeCommandError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+> {
+  const git = yield* Git;
+  const currentRoot = yield* findRepoRoot(startFrom).pipe(
+    Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
+  );
+  const entries = yield* git.worktreeList(currentRoot).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(
+        GitCommand.worktreeList(),
+        worktreeGitErrorAdapter(failMessage),
+        O.some(() => WorktreeCommandError.make({ message: "Git worktree listing must use NUL delimiters." }))
+      ),
+      onSuccess: worktreeListEntriesFromGit,
+    })
+  );
+  return { currentRoot, entries };
 });
 
 const preservationErrorAdapter = (
@@ -636,7 +715,7 @@ export const runWorktreeGitCapture = Effect.fn("WorktreeRemovalService.runWorktr
   args: ReadonlyArray<string>,
   failMessage: string
 ): Effect.fn.Return<string, WorktreeCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  return yield* runGitOutput(cwd, args, commandErrorAdapter(failMessage));
+  return yield* runGitOutput(cwd, args, worktreeGitErrorAdapter(failMessage));
 });
 
 const runPreservationCommand = Effect.fn("WorktreeRemovalService.runPreservationCommand")(function* (
@@ -1497,7 +1576,7 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
 ): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (!request.archive && request.deleteBranch) {
     return yield* WorktreeCommandError.make({
@@ -1522,12 +1601,17 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
     return yield* invalid();
   }
-  const listed = yield* runWorktreeGitCapture(
-    request.mainCheckout,
-    ["worktree", "list", "--porcelain", "-z"],
-    "Could not revalidate worktree registration."
+  const git = yield* Git;
+  const entries = yield* git.worktreeList(request.mainCheckout).pipe(
+    Effect.mapBoth({
+      onFailure: adaptGitKitError(
+        GitCommand.worktreeList(),
+        worktreeGitErrorAdapter("Could not revalidate worktree registration."),
+        O.some(invalid)
+      ),
+      onSuccess: worktreeListEntriesFromGit,
+    })
   );
-  const entries = yield* parseWorktreePorcelain(listed).pipe(Effect.mapError(invalid));
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
@@ -1706,7 +1790,7 @@ const removeWorktree = Effect.fn("WorktreeRemovalService.removeWorktree")(functi
 ): Effect.fn.Return<
   void,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   yield* validateRemovalRequest(request);
   yield* runWorktreeGitCapture(
@@ -1765,13 +1849,13 @@ const removeLegacyWorktree = Effect.fn("WorktreeRemovalService.removeLegacyWorkt
     const head = yield* resolveGitCommit(
       request.targetPath,
       "HEAD",
-      commandErrorAdapter(`Failed to resolve HEAD for ${request.targetPath}.`)
+      worktreeGitErrorAdapter(`Failed to resolve HEAD for ${request.targetPath}.`)
     );
     yield* assertAuthorizedHead(request, Str.trim(head));
   }
   const changes = yield* inspectRemovalChanges(
     request.targetPath,
-    commandErrorAdapter(`Failed to inspect ${request.targetPath}.`)
+    worktreeGitErrorAdapter(`Failed to inspect ${request.targetPath}.`)
   );
   return yield* A.match(changes, {
     onEmpty: () =>
