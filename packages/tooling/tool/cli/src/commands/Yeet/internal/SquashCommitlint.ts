@@ -29,21 +29,26 @@
  * @since 0.0.0
  */
 
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubRepository } from "@beep/github/GitHubRepository";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { decodeYeetGhOutput, yeetGh } from "./GhCall.ts";
+import { GithubRest } from "../../../internal/github/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import type { YeetCommandError } from "../Yeet.errors.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/SquashCommitlint");
 
@@ -779,12 +784,14 @@ const GhRepositorySquashSettings = S.Struct({
   squash_merge_commit_title: GhNullableText,
   squash_merge_commit_message: GhNullableText,
 });
-const GhPullCommitPages = S.Struct({ commit: S.Struct({ message: S.String }) }).pipe(S.Array, S.Array);
-const GhPullFacts = S.Struct({ number: S.Finite, title: S.String, body: GhNullableText });
+const GhPullCommits = S.Struct({ commit: S.Struct({ message: S.String }) }).pipe(S.Array);
 
-const decodeSquashSettings = S.decodeUnknownEffect(S.fromJsonString(GhRepositorySquashSettings));
-const decodeCommitPages = S.decodeUnknownEffect(S.fromJsonString(GhPullCommitPages));
-const decodePullFacts = S.decodeUnknownEffect(S.fromJsonString(GhPullFacts));
+const decodeSquashSettings = S.decodeUnknownEffect(GhRepositorySquashSettings);
+const decodeCommits = S.decodeUnknownEffect(GhPullCommits);
+const PULL_COMMITS_ROUTE = "GET /repos/{owner}/{repo}/pulls/{pull_number}/commits";
+
+const decodeGithubAnswer = <A>(what: string, decode: (input: unknown) => Effect.Effect<A, S.SchemaError>) =>
+  flow(decode, Effect.mapError(YeetCommandError.new(`Failed to decode ${what}.`)));
 
 /**
  * Read the repository's squash defaults over REST; an omitted or unrecognised
@@ -801,17 +808,14 @@ const decodePullFacts = S.decodeUnknownEffect(S.fromJsonString(GhPullFacts));
  * @category workflows
  * @since 0.0.0
  */
-export const readGitHubSquashDefaults = Effect.fn("Yeet.readGitHubSquashDefaults")(function* (
-  context: RepoRunContext
-): Effect.fn.Return<
+export const readGitHubSquashDefaults = Effect.fn("Yeet.readGitHubSquashDefaults")(function* (): Effect.fn.Return<
   GitHubSquashDefaults,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  GitHubRepository | Repo
 > {
-  const settings = yield* decodeYeetGhOutput(
-    "the repository squash settings",
-    decodeSquashSettings,
-    yield* yeetGh(context, "gh api repos", ["api", "repos/{owner}/{repo}"])
+  const settings = yield* GitHubRepository.use((repository) => repository.settings).pipe(
+    Effect.mapError(yeetGithubFailure("gh api repos")),
+    Effect.flatMap(decodeGithubAnswer("the repository squash settings", decodeSquashSettings))
   );
   const title = O.fromNullishOr(settings.squash_merge_commit_title).pipe(
     O.filter(S.is(GitHubSquashTitleDefault)),
@@ -860,7 +864,7 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
  * console.log(typeof readSquashCommitlint) // "function"
  * ```
  *
- * @param context - Resolves the repository root the gh calls and the commitlint run execute in.
+ * @param context - Resolves the repository root the commitlint run executes in (and, for a number, the gh login).
  * @param facts - The pull request number, title and description the prediction is built from.
  * @returns The predicted message and commitlint's verdict.
  * @category workflows
@@ -872,26 +876,24 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
 ): Effect.fn.Return<
   SquashCommitlintReport,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GitHubClient | GitHubRepository | Repo
 > {
-  const defaults = yield* readGitHubSquashDefaults(context);
-  // `--slurp` wraps pages in an array; fold the pages back into one commit list.
-  const pages = yield* decodeYeetGhOutput(
-    "the pull request commits",
-    decodeCommitPages,
-    yield* yeetGh(context, `gh api pulls/${facts.number}/commits`, [
-      "api",
-      `repos/{owner}/{repo}/pulls/${facts.number}/commits?per_page=100`,
-      "--paginate",
-      "--slurp",
-    ])
-  );
+  const defaults = yield* readGitHubSquashDefaults();
+  // The kit has no pull-request commit list, so every page is read through the client.
+  const client = yield* GitHubClient;
+  const { owner, repo } = yield* Repo;
+  const commits = yield* client
+    .paginate(PULL_COMMITS_ROUTE, { owner, repo, pull_number: facts.number })
+    .pipe(
+      Effect.mapError(yeetGithubFailure(`gh api pulls/${facts.number}/commits`)),
+      Effect.flatMap(decodeGithubAnswer("the pull request commits", decodeCommits))
+    );
   const message = predictSquashCommitMessage(
     SquashMessageSource.make({
       prNumber: facts.number,
       title: facts.title,
       body: O.getOrElse(facts.body, () => Str.empty),
-      commitMessages: A.map(A.flatten(pages), (entry) => entry.commit.message),
+      commitMessages: A.map(commits, (entry) => entry.commit.message),
       defaults,
       commitTitle: O.some(`${facts.title} (#${facts.number})`),
     })
@@ -911,7 +913,7 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
  * console.log(typeof readSquashCommitlintForPullRequest) // "function"
  * ```
  *
- * @param context - Resolves the repository root the gh calls and the commitlint run execute in.
+ * @param context - Resolves the repository root the commitlint run executes in (and, for a number, the gh login).
  * @param prNumber - Which pull request `pulls/{n}` reads before the commits and settings.
  * @returns The predicted message and commitlint's verdict.
  * @category workflows
@@ -925,13 +927,17 @@ export const readSquashCommitlintForPullRequest = Effect.fn("Yeet.readSquashComm
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
-  const pull = yield* decodeYeetGhOutput(
-    "the pull request",
-    decodePullFacts,
-    yield* yeetGh(context, `gh api pulls/${prNumber}`, ["api", `repos/{owner}/{repo}/pulls/${prNumber}`])
-  );
-  return yield* readSquashCommitlint(
-    context,
-    SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body: O.fromNullishOr(pull.body) })
-  );
+  return yield* Effect.gen(function* () {
+    const pull = yield* GithubRest.use((rest) => rest.pullRequest(prNumber)).pipe(
+      Effect.mapError(yeetGithubFailure(`gh api pulls/${prNumber}`))
+    );
+    return yield* readSquashCommitlint(
+      context,
+      SquashPullRequestFacts.make({
+        number: pull.number,
+        title: pull.title,
+        body: O.liftPredicate(pull.body, Str.isNonEmpty),
+      })
+    );
+  }).pipe(provideYeetGhLogin(context.repoRoot));
 });
