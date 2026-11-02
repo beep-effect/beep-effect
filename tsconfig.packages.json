@@ -484,6 +484,9 @@
       "path": "packages/ontology/use-cases"
     },
     {
+      "path": "packages/party/domain"
+    },
+    {
       "path": "packages/shared/domain"
     },
     {

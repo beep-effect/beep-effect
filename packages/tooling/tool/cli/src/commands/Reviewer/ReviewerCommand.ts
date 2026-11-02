@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { GitHubApp } from "@beep/github/GitHubApp";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
@@ -16,10 +17,15 @@ import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
-import { GitHubAppAuth, GitHubAppAuthLive } from "./GitHubAppAuth.ts";
+import { GitHubAppAuthLive, loadReviewerCredentials, mintReviewerToken } from "./GitHubAppAuth.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
 import { reviewerWire } from "./ReviewerModels.ts";
-import { enforceReviewerGate, releaseReviewerRuleset, requireReviewerRuleset } from "./ReviewerRuleset.ts";
+import {
+  enforceReviewerGate,
+  releaseReviewerRuleset,
+  requireReviewerRuleset,
+  reviewerOperatorClient,
+} from "./ReviewerRuleset.ts";
 import { Reviewer, ReviewerLive } from "./ReviewerService.ts";
 
 const authLayer = ReviewerLive.pipe(Layer.provideMerge(GitHubAppAuthLive));
@@ -44,13 +50,14 @@ const readFile = Effect.fn("Reviewer.readFile")(function* (path: string) {
 });
 const tokenCommand = Command.make("token", {}, () =>
   boundary(
-    Effect.gen(function* () {
-      const auth = yield* GitHubAppAuth;
+    loadReviewerCredentials.pipe(
+      Effect.flatMap(mintReviewerToken),
       // The only deliberate token declassification. Stdout is for a pipe/command substitution, never logs.
-      yield* auth.token.pipe(Effect.map(Redacted.value), Effect.flatMap(Console.log));
-    })
+      Effect.map((minted) => Redacted.value(minted.token)),
+      Effect.flatMap(Console.log)
+    )
   )
-).pipe(Command.provide(GitHubAppAuthLive));
+).pipe(Command.provide(GitHubApp.layer));
 const startCommand = Command.make("start", { pr, sha }, ({ pr, sha }) =>
   boundary(Reviewer.use((reviewer) => reviewer.start(pr, sha)).pipe(Effect.flatMap(Console.log)))
 );
@@ -160,7 +167,8 @@ const rulesetCommand = Command.make("ruleset").pipe(
       ({ apply, dryRun, rulesetId }) =>
         boundary(releaseReviewerRuleset(apply && !O.getOrElse(dryRun, () => false), O.getOrUndefined(rulesetId)))
     ),
-  ])
+  ]),
+  Command.provide(reviewerOperatorClient(process.cwd()))
 );
 const l0Command = Command.make("l0", { pr, sha }, ({ pr, sha }) =>
   boundary(
@@ -188,7 +196,7 @@ const l0Command = Command.make("l0", { pr, sha }, ({ pr, sha }) =>
 ).pipe(Command.provide(authLayer));
 const gateCommand = Command.make("gate", { pr, sha }, ({ pr, sha }) =>
   boundary(enforceReviewerGate(pr, sha).pipe(Effect.andThen(Console.log("beep-reviewer: gate satisfied"))))
-);
+).pipe(Command.provide(reviewerOperatorClient(process.cwd())));
 
 /**
  * Reviewer App CLI with token, check, comment, review, ruleset, and fleet gate operations.

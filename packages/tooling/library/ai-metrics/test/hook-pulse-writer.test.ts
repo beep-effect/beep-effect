@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import {
   AI_METRICS_LOCAL_INSECURE_HASH_SALT,
   AiMetricsConfigSnapshotInput,
@@ -43,6 +44,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -52,6 +54,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+
+// `Git` rides over the platform spawner: the snapshot reads the index through the kit (W2b).
+const GitNodeServices = Layer.provideMerge(Git.layer, NodeServices.layer);
 
 // The writer is shell, so the only honest conformance test spawns the real
 // script and decodes what it wrote. `HookPulseV1` carries the
@@ -755,7 +760,7 @@ const sessionStartPayload = (cwd: string) => ({
   source: "startup",
 });
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
+it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conformance", (it) => {
   it.effect("tags Codex hook rows as codex-cli", () =>
     Effect.gen(function* () {
       const run = yield* runWriter(yield* encodeJson(preToolUsePayload), { writerPath: codexWriterPath });
@@ -2219,7 +2224,7 @@ const expectSwitchOk = (run: SwitchRun): void => {
 // stderr is still expected empty on every success path: `jq` failing to parse a
 // hand-mangled sentinel is handled, and letting its diagnostics through would
 // train operators to ignore the one channel that reports real trouble.
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
+it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse kill-switch conformance", (it) => {
   it.effect("keeps the first disarm's window start and reason when disarm runs again", () =>
     Effect.gen(function* () {
       const store = yield* makeSwitchStore();

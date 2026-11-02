@@ -66,6 +66,8 @@
       "!standards/fallow.dead-code.regression-baseline.jsonc",
       "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
+      // Only the CI knowledge mint writes the sealed baseline bytes.
+      "!goals/knowledge-doctor.baseline.jsonc",
       "!**/fixtures/f1/documents",
       "!scratchpad",
       // beep-ci-operational-ontology §4b: digest-locked run evidence. The
@@ -307,7 +309,10 @@
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
         "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",
-        "standards/cache-qualification-baseline.json"
+        "standards/cache-qualification-baseline.json",
+        // Sealed knowledge-doctor mint: `verify-mint` compares the exact
+        // JSON.stringify(..., 2) bytes, which Biome collapses.
+        "goals/knowledge-doctor.baseline.jsonc"
       ],
       "formatter": { "enabled": false }
     },

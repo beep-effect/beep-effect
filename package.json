@@ -228,6 +228,7 @@
     "tar": "^7.5.22",
     "testcontainers": "^12.2.1",
     "three": "^0.187.0",
+    "tr46": "7.0.0",
     "ts-morph": "^28.0.0",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "turbo": "^2.11.10",
@@ -613,6 +614,7 @@
     "packages/drivers/git",
     "packages/drivers/github",
     "packages/drivers/github-actions",
-    "apps/beep-effect-web"
+    "apps/beep-effect-web",
+    "packages/party/domain"
   ]
 }

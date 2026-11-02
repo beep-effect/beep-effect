@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -28,6 +30,8 @@ import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
 import { decodeYamlTextWith } from "../../internal/schema/TextCodec.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_DESCRIPTORS } from "./CiLane.ts";
+import { githubStatusSuffix, layerCiGithub } from "./LaneTimings.ts";
+import type { GitHubError } from "@beep/github/GitHubError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -152,12 +156,12 @@ const decodeWorkflowDocument = WorkflowDocument.pipe(S.decodeUnknownEffect);
 const PrFileCount = S.Struct({ changed_files: S.Int });
 const PrLabels = S.Array(S.Struct({ name: S.String }));
 const PendingDeployments = S.Array(S.Unknown);
-const decodeRulesetJson = Ruleset.pipe(S.fromJsonString, S.decodeUnknownEffect);
-const decodeEnvironmentJson = SettingsEnvironment.pipe(S.fromJsonString, S.decodeUnknownEffect);
-const decodeHeldRunsJson = HeldRunList.pipe(S.fromJsonString, S.decodeUnknownEffect);
-const decodePendingDeploymentsJson = PendingDeployments.pipe(S.fromJsonString, S.decodeUnknownEffect);
-const decodePrFileCountJson = PrFileCount.pipe(S.fromJsonString, S.decodeUnknownEffect);
-const decodePrLabelsJson = PrLabels.pipe(S.fromJsonString, S.decodeUnknownEffect);
+const decodeRulesetJson = Ruleset.pipe(S.decodeUnknownEffect);
+const decodeEnvironmentJson = SettingsEnvironment.pipe(S.decodeUnknownEffect);
+const decodeHeldRunsJson = HeldRunList.pipe(S.decodeUnknownEffect);
+const decodePendingDeploymentsJson = PendingDeployments.pipe(S.decodeUnknownEffect);
+const decodePrFileCountJson = PrFileCount.pipe(S.decodeUnknownEffect);
+const decodePrLabelsJson = PrLabels.pipe(S.decodeUnknownEffect);
 const snapshotJson = S.fromJsonString(S.Unknown, { space: 2 });
 const encodeSnapshotJson = snapshotJson.pipe(S.encodeUnknownEffect);
 
@@ -192,21 +196,24 @@ export class GithubApiReply extends S.Opaque<GithubApiReply, { readonly brand: u
 ) {}
 
 interface GithubPolicyClientShape {
-  readonly read: (endpoint: string, projection?: string) => Effect.Effect<string, CiCommandError>;
+  readonly read: (endpoint: string) => Effect.Effect<unknown, CiCommandError>;
   readonly request: (args: ReadonlyArray<string>) => Effect.Effect<GithubApiReply, CiCommandError>;
-  readonly write: (args: ReadonlyArray<string>) => Effect.Effect<void, CiCommandError>;
+  readonly write: (route: string, params?: Readonly<Record<string, unknown>>) => Effect.Effect<void, CiCommandError>;
 }
 /**
- * Read and write access to the GitHub REST API through the `gh` CLI.
+ * Read and write access to the GitHub REST API for the governance commands.
  *
  * **Details**
  *
- * `read` and `write` fail with {@link CiCommandError} on any non-zero exit or
- * truncated reply, and report the state as unknown. `request` returns the raw
- * {@link GithubApiReply} instead, failing only when `gh` cannot be spawned.
- * Endpoints may use the `{owner}/{repo}` placeholders, which `gh` resolves
- * from `GH_REPO` or the checkout's remote. Authentication is whatever `gh`
- * finds, normally `GH_TOKEN`.
+ * `read` (a `GET` of an endpoint path, decoded JSON) and `write` (a REST route
+ * such as `DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}`
+ * with its parameters) go through the `@beep/github` `GitHubClient` built by
+ * `layerCiGithub` the first time either is used; any failure is a
+ * {@link CiCommandError} that reports the state as unknown. `{owner}` and
+ * `{repo}` resolve from `GH_REPO` or the checkout's `origin`. `request` stays
+ * on `gh api` and returns the raw {@link GithubApiReply}, failing only when `gh`
+ * cannot be spawned: the dependency review reads `gh`'s own exit code, error
+ * line and `--include` headers from it, which the client does not reproduce.
  *
  * **Example** (Provide a recorded reply in a test)
  *
@@ -219,7 +226,7 @@ interface GithubPolicyClientShape {
  * const recorded = Layer.succeed(
  *   GithubPolicyClient,
  *   GithubPolicyClient.of({
- *     read: () => Effect.succeed(reply.output),
+ *     read: () => Effect.succeed([]),
  *     write: () => Effect.void,
  *     request: () => Effect.succeed(reply),
  *   })
@@ -233,9 +240,19 @@ interface GithubPolicyClientShape {
 export class GithubPolicyClient extends Context.Service<GithubPolicyClient, GithubPolicyClientShape>()(
   $I`GithubPolicyClient`
 ) {}
+const policyFailure = (error: GitHubError) =>
+  CiCommandError.make({
+    message: `GitHub policy request failed${githubStatusSuffix(error)}; state is unknown.`,
+  });
+
 const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string) {
   // Capture the platform dependencies once; commands provide this implementation.
   const capture = yield* Effect.context<SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>();
+  const scope = yield* Effect.scope;
+  // Resolved on first use, so a client used only for `request` never reads a token.
+  const github = yield* Effect.cached(
+    Layer.buildWithScope(layerCiGithub(root), scope).pipe(Effect.provideContext(capture))
+  );
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
     const result = yield* runRepoCommandCapture("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),
@@ -243,19 +260,21 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
     );
     return GithubApiReply.make(result);
   });
-  const execute = Effect.fn("CiGovernance.execute")(function* (args: ReadonlyArray<string>) {
-    const result = yield* request(args);
-    if (result.exitCode !== 0 || result.truncated)
-      return yield* CiCommandError.make({
-        message: `GitHub policy request failed (exit ${result.exitCode}, truncated=${result.truncated}); state is unknown.`,
-      });
-    return result.output;
-  });
+  const call = (route: string, params: Readonly<Record<string, unknown>>) =>
+    Effect.flatMap(github, (context) =>
+      Effect.gen(function* () {
+        const client = yield* GitHubClient;
+        const { owner, repo } = yield* Repo;
+        return yield* client
+          .requestDecoded(route, { owner, repo, ...params }, S.Unknown)
+          .pipe(Effect.mapError(policyFailure));
+      }).pipe(Effect.provideContext(context))
+    );
   return GithubPolicyClient.of({
-    read: Effect.fn("GithubPolicyClient.read")((endpoint: string, projection?: string) =>
-      execute([endpoint, ...A.flatMap(O.toArray(O.fromUndefinedOr(projection)), (jq) => ["--jq", jq])])
+    read: Effect.fn("GithubPolicyClient.read")((endpoint: string) => call(`GET /${endpoint}`, {})),
+    write: Effect.fn("GithubPolicyClient.write")((route: string, params: Readonly<Record<string, unknown>> = {}) =>
+      call(route, params).pipe(Effect.asVoid)
     ),
-    write: Effect.fn("GithubPolicyClient.write")((args: ReadonlyArray<string>) => execute(args).pipe(Effect.asVoid)),
     request,
   });
 });
@@ -598,8 +617,9 @@ const withClient = Effect.fn("CiGovernance.withClient")(function* <V, E, R>(
   effect: Effect.Effect<V, E, R | GithubPolicyClient>
 ) {
   const root = yield* findRepoRoot();
-  const client = yield* makeClient(root);
-  return yield* effect.pipe(Effect.provideService(GithubPolicyClient, client));
+  return yield* Effect.scoped(
+    Effect.flatMap(makeClient(root), (client) => effect.pipe(Effect.provideService(GithubPolicyClient, client)))
+  );
 });
 const snapshotPath = "goals/ship-velocity/research/branch-protection-contexts.json";
 const ciRulesetCommand = Command.make(
@@ -665,10 +685,7 @@ const ciHeldGroupCommand = Command.make("held-group", {}, () =>
     Effect.gen(function* () {
       const client = yield* GithubPolicyClient;
       const runs = yield* client
-        .read(
-          "repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push&per_page=100",
-          "{workflow_runs:[.workflow_runs[]|{id,status,created_at,head_branch}]}"
-        )
+        .read("repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push&per_page=100")
         .pipe(Effect.flatMap(decodeHeldRunsJson));
       const now = yield* DateTime.now;
       const held = heldGroupRunIds(runs.workflow_runs, DateTime.toEpochMillis(now));
@@ -711,17 +728,17 @@ const ciPrSizeCommand = Command.make("pr-size", { number: Argument.Int("number")
       yield* Effect.forEach(
         diff.remove,
         (label) =>
-          client.write(["-X", "DELETE", `repos/{owner}/{repo}/issues/${number}/labels/${encodeURIComponent(label)}`]),
+          client.write("DELETE /repos/{owner}/{repo}/issues/{issue_number}/labels/{name}", {
+            issue_number: number,
+            name: label,
+          }),
         { concurrency: 1 }
       );
       if (diff.add)
-        yield* client.write([
-          "-X",
-          "POST",
-          `repos/{owner}/{repo}/issues/${number}/labels`,
-          "-f",
-          `labels[]=${diff.label}`,
-        ]);
+        yield* client.write("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+          issue_number: number,
+          labels: [diff.label],
+        });
       yield* Console.log(`Changed files: ${pull.changed_files}; label: ${diff.label}`);
     })
   )

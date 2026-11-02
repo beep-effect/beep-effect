@@ -39,6 +39,7 @@ const EXPECTED_TEST_TSGO_INPUTS: ReadonlyArray<string> = [
   "server/**",
   "src/**",
   "src-tauri/**",
+  "!**/src-tauri/target/**",
   "test/**",
   "tsconfig*.json",
   "$TURBO_ROOT$/tsconfig.base.json",
@@ -210,6 +211,10 @@ it.layer(NodeServices.layer)("tsgo tests Turbo inputs", (it) => {
       const baselineHash = yield* testTsgoHashFromSummary(root, turboBinary);
 
       yield* writeFixtureFile(root, "packages/test-tsgo/README.md", "# Docs-only edit\n");
+      expect(yield* testTsgoHashFromSummary(root, turboBinary)).toBe(baselineHash);
+
+      // Cargo build artifacts never reach the tests (quality audit M8).
+      yield* writeFixtureFile(root, "packages/test-tsgo/src-tauri/target/debug/build.rs", "fn main() {}\n");
       expect(yield* testTsgoHashFromSummary(root, turboBinary)).toBe(baselineHash);
 
       yield* writeFixtureFile(root, "packages/test-tsgo/test/index.test.ts", "export const expected = 2;\n");
