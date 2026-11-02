@@ -417,7 +417,7 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
         PackageVerifyStepSpec.make({ step: "check", script: "beep:check" }),
       ]
     : [
-        PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" }),
+        PackageVerifyStepSpec.make({ step: "audit", script: "audit" }),
         PackageVerifyStepSpec.make({ step: "docgen", script: "docgen" }),
       ];
 
@@ -627,25 +627,28 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
-// Both scripts typecheck against the dependencies' built declarations, which Turbo's own
-// `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
-// or missing dependency build reports errors hosted Check never sees. The step plan and the
-// inbox capsule read this one rule, so the recorded command is the command that ran.
-const buildsUpstreamClosure = (step: PackageVerifyStepName): boolean =>
-  PackageVerifyStepName.is.audit(step) || PackageVerifyStepName.is.check(step);
-
 const packageVerifyStepPlan = (
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
   spec: PackageVerifyStepSpec
 ): ReadonlyArray<QualityTaskStep> => {
+  if (PackageVerifyStepName.is.audit(spec.step)) {
+    return [
+      QualityTaskStep.make({
+        label: spec.step,
+        command: "bun",
+        args: ["run", spec.script, `--filter=${workspace.name}`],
+        cwd: repoRoot,
+      }),
+    ];
+  }
   const packageStep = QualityTaskStep.make({
     label: spec.step,
     command: "bun",
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  return buildsUpstreamClosure(spec.step)
+  return PackageVerifyStepName.is.check(spec.step)
     ? [
         QualityTaskStep.make({
           label: `${spec.step}:build-closure`,
@@ -693,7 +696,7 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
   QualityScriptCommandError,
   FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (O.isNone(R.get(workspace.scripts, spec.script))) {
+  if (!PackageVerifyStepName.is.audit(spec.step) && O.isNone(R.get(workspace.scripts, spec.script))) {
     return PackageVerifyStepResult.make({
       step: spec.step,
       script: spec.script,
@@ -840,13 +843,20 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recordInbox")(function* (
   report: PackageVerifyReport
 ) {
+  const workspace = PackageVerifyWorkspace.make({
+    name: report.packageName,
+    dir: report.packageDir,
+    scripts: R.empty<string>(),
+  });
   const recordStep = (result: PackageVerifyStepResult, shardStep: PackageVerifyStepName = result.step) =>
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: buildsUpstreamClosure(result.step)
-          ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
-          : `bun run ${result.script}`,
+        command: pipe(
+          packageVerifyStepPlan(report.repoRoot, workspace, PackageVerifyStepSpec.make(result)),
+          A.map(({ command, args }) => commandText(command, args)),
+          A.join(" && ")
+        ),
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
         headSha: report.headSha,
         shard: `package:${report.packageName}:${shardStep}`,
@@ -999,10 +1009,10 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit and check plans refresh the selected package's upstream Turbo build
- * closure without rebuilding the package itself before invoking its
- * package-local script, as Turbo's own `audit` and `check` tasks do. Lint and
- * docgen remain direct package script invocations.
+ * Audit invokes the repository's composed audit command with the selected
+ * workspace filter. That command owns build, check, test and lint ordering.
+ * Check refreshes the upstream Turbo build closure before the package script.
+ * Lint and docgen remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *
@@ -1016,9 +1026,9 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  * const plan = packageVerifyStepPlanForTesting(
  *   "/repo",
  *   PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} }),
- *   PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+ *   PackageVerifyStepSpec.make({ step: "audit", script: "audit" })
  * )
- * console.log(plan[0]?.label) // "audit:build-closure"
+ * console.log(plan[0]?.label) // "audit"
  * ```
  *
  * @category testing

@@ -9,6 +9,26 @@ Historical leads remain in the [exploration ledger](../../../explorations/turbor
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
 
+## 2026-11-02: default package verification skipped its removed audit wrapper
+
+After PR #2526 removed `beep:audit` from workspace manifests, default
+`beep quality package-verify` treated the missing script as a successful skip.
+The command could report success after docgen alone. Three regression cases
+reproduced that omission in `Quality/internal/PackageVerify.ts`.
+
+Delegate the audit to the existing root `audit` command with the selected
+workspace filter. Keep its execution plan and failure-capsule command together;
+a missing root command or a nonzero audit exit must fail verification. All 24
+focused tests pass, including real root-directory and argument forwarding.
+The actual default identity-package command now passes audit and docgen, and
+the edited CLI passes lint, type checks and bounded docgen.
+
+Default package-verification timings from the wrapper removal until this repair
+do not measure a complete audit. Exclude those samples from complete-verification
+and cache-savings claims. Earlier measurements retain their recorded command,
+source and time scope. This repair restores the existing composed audit without
+reintroducing per-package wrappers or granting task qualification.
+
 ## 2026-10-28: current population exceeds the retained handoff
 
 `cache census` observes 190 workspaces and 2,571 executable computations,
