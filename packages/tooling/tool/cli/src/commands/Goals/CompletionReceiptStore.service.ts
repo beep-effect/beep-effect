@@ -72,7 +72,7 @@ export const goalCompletionReceiptPartition = (repository: string): StateReposit
   const parts = Str.split(Str.toLowerCase(repository), "/");
   return {
     host: "github.com",
-    owner: O.getOrElse(A.head(parts), () => ""),
+    owner: A.headNonEmpty(parts),
     name: A.join(A.drop(parts, 1), "/"),
   };
 };
