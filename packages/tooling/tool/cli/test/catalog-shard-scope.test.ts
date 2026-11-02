@@ -269,9 +269,14 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
       const lanes = githubCheckCheapGateLanes("/repo");
       const lane = (id: string) => A.findFirst(lanes, (candidate) => candidate.id === id);
 
+      // The schema-catalog gate runs through the root Turbo task, whose inputs include the
+      // generated shards, so a stale shard misses the cache and the check runs and refuses.
       assertSome(
-        O.map(lane("lint:schema-catalog"), ({ tier, step }) => ({ tier, args: [step.command, ...step.args] })),
-        { tier: "cheap-gates", args: ["bun", "run", "beep", "lint", "schema-catalog"] }
+        O.map(lane("lint:schema-catalog"), ({ tier, step }) => ({
+          tier,
+          args: A.take([step.command, ...step.args], 4),
+        })),
+        { tier: "cheap-gates", args: ["bunx", "turbo", "run", "lint:schema-catalog"] }
       );
       assertSome(
         O.map(lane("observability:catalog-check"), ({ tier, step }) => ({ tier, args: [step.command, ...step.args] })),
