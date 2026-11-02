@@ -1736,3 +1736,16 @@ projection. Review caught the omitted regeneration before current-head validatio
 `bun run beep cache profile --write` regenerates it; the freshness command then
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
+
+### 2026-11-02 — generated signed worker omitted the Git service
+
+The ordinary current-source `beep cache pilot-signed` stopped during setup with
+`Service not found`. The accepted worktree refactor in PR #2593 makes
+`resolveWorktreeContext` require `@beep/git`; the generated private worker still
+provided only platform, crypto and filesystem utility services. Add the existing
+Git layer at that entrypoint. A real generated Bun child must perform a read-only
+repository query before reaching a deliberate private refusal; the control fails
+with the missing-service error before the repair. This would have caught the
+string-generated entrypoint dependency drift before a full qualification run.
+Retain the failed ordinary receipt and repeat the original full matrix without
+changing its limits, workload, isolation or acceptance conditions.

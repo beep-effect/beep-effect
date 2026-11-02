@@ -1120,3 +1120,17 @@ main adoption, actual R2 publication or production signing. The later adoption
 census has changed manifests/lock/entrypoint bindings and cannot inherit this
 execution by rehashing it. Obtain current protected source inspection, independent
 approval and bounded owned publication next; all whole-goal gates remain open.
+
+
+### Signed-worker Git startup repair, 2026-11-02
+
+The [startup checkpoint](research/worker-git-startup-checkpoint-2026-11-02.json)
+records the first full-matrix attempt at accepted task source `930758e06b`.
+It stopped during setup, before producing a complete observation. The accepted
+worktree refactor requires the Git service, which the generated child omitted.
+The existing Git layer now joins the worker platform services. A real generated
+Bun child reproduces the missing-service failure before the fix and reaches its
+read-only Git query plus deliberate private refusal afterward; all 33 supervisor
+tests pass. The parent still exposes no raw private failure cause. Repeat the
+full ordinary stable/canary matrices with the same limits and acceptance guards;
+this startup control grants no qualification, deployment or whole-goal acceptance.

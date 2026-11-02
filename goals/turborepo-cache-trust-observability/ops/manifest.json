@@ -121,7 +121,8 @@
     "research/supervisor-phase-checkpoint-2026-11-02.json",
     "research/ordinary-stable-signed-observation-2026-11-02.json",
     "research/ordinary-canary-signed-observation-2026-11-02.json",
-    "research/ordinary-native-matrix-checkpoint-2026-11-02.json"
+    "research/ordinary-native-matrix-checkpoint-2026-11-02.json",
+    "research/worker-git-startup-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

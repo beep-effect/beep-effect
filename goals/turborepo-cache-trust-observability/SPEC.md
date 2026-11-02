@@ -975,3 +975,15 @@ overlap requirement, isolation and issuer policy. Markers are untrusted diagnost
 observations: they grant no success, provenance, qualification or rollout
 authority. Reversal restores the previous capture call and removes markers;
 the existing failure gates and ordinary cache service remain unchanged.
+
+### Provide Git at the generated signed-worker entrypoint, 2026-11-02
+
+Consume the accepted worktree service boundary by providing the existing Git
+layer alongside filesystem utilities, using the same platform process layer.
+The isolated worker needs this service for its read-only worktree enumeration;
+the outer CLI's service context does not cross the process boundary. Prove the
+generated entrypoint in a real Bun child with a read-only repository query and
+an intentional private refusal. Keep that startup control separate from full
+matrix and qualification evidence. Reversal removes the entrypoint wiring and
+regression together; it does not authorize a fallback to an incomplete matrix.
+Admission, mounts, limits, task selection, issuer policy and rollout stay intact.

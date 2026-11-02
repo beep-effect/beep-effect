@@ -117,7 +117,8 @@ const renderSignedPilotWorker = Effect.fn("CachePilot.renderSignedWorker")(funct
   const execute = O.isSome(upload)
     ? `runCacheSignedPilotUploadWorker(request.sourceRoot, request.pilot, yield* S.decodeUnknownEffect(CacheConformanceTarget)(${uploadTarget}), yield* Config.Redacted("BEEP_CACHE_UPLOAD_BEARER"), yield* Config.Redacted("BEEP_CACHE_UPLOAD_SIGNING"), issuerProbe)`
     : "runCacheSignedPilotWorker(request.sourceRoot, request.pilot, issuerProbe)";
-  return `import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
+  return `import { Git } from "@beep/git/Git";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { BunRuntime } from "@effect/platform-bun";
 import * as Config from "effect/Config";
@@ -137,7 +138,7 @@ BunRuntime.runMain(Effect.gen(function* () {
   const report = yield* ${execute};
   yield* fs.writeFileString(${output}, yield* S.encodeEffect(S.fromJsonString(${reportType}))(report));
   yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:complete"]);
-}).pipe(Effect.scoped, Effect.provide(CacheQualificationLive), Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer))))));
+}).pipe(Effect.scoped, Effect.provide(CacheQualificationLive), Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Layer.mergeAll(FsUtilsLive, Git.layer).pipe(Layer.provide(NodeServices.layer))))));
 `;
 });
 

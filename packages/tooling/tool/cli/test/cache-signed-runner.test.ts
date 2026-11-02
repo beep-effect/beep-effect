@@ -36,6 +36,7 @@ import { NodeCrypto, NodeFileSystem, NodePath } from "@effect/platform-node";
 import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -490,6 +491,67 @@ it.layer(
       );
     });
   it.layer(NodeChildProcessSpawner.layer)("real folded child capture", (it) => {
+    it.effect("provides Git to the generated worker before its read-only repository query", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture("none");
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.realPath(process.cwd());
+        const searchPath = yield* Config.String("PATH");
+        const cache = path.join(root, "packages/tooling/tool/cli/src/commands/Cache");
+        const fixtureCache = path.join(f.root, "packages/tooling/tool/cli/src/commands/Cache");
+        const encodeText = S.encodeEffect(S.fromJsonString(S.String));
+        const module = yield* encodeText(path.join(cache, "index.ts"));
+        const service = yield* encodeText(path.join(cache, "Cache.service.ts"));
+        const expectedRoot = yield* encodeText(root);
+        yield* fs.makeDirectory(fixtureCache, { recursive: true });
+        yield* fs.symlink(path.join(root, "node_modules"), path.join(f.root, "node_modules"));
+        yield* fs.writeFileString(
+          path.join(fixtureCache, "index.ts"),
+          `export { CacheSignedPilotPhase, CacheSignedPilotRequest, CacheSignedPilotReceipt } from ${module};
+import { CacheCommandError } from ${module};
+import { Git } from "@beep/git/Git";
+import * as Effect from "effect/Effect";
+export const runCacheSignedPilotWorker = () => Effect.gen(function* () {
+  const git = yield* Git;
+  if ((yield* git.repoRoot(${expectedRoot})) !== ${expectedRoot})
+    return yield* CacheCommandError.new("Unexpected Git startup root.");
+  return yield* CacheCommandError.new("Signed worker Git startup reached.");
+});
+`
+        );
+        yield* fs.writeFileString(
+          path.join(fixtureCache, "Cache.service.ts"),
+          `export { CacheQualificationLive } from ${service};\n`
+        );
+        f.foldedProcess.mockImplementation((options) => {
+          const worker = O.getOrThrow(A.last(options.args ?? []));
+          return nativeFoldedStdout({
+            ...options,
+            command: "bun",
+            args: [
+              "--no-env-file",
+              "--no-install",
+              `--config=${path.join(path.dirname(worker), "bunfig.toml")}`,
+              worker,
+            ],
+            cwd: f.request.sourceRoot,
+            env: { ...options.env, PATH: searchPath },
+          }).pipe(
+            Effect.tap((captured) => {
+              expect(captured.exitCode).toBe(1);
+              const output = `${captured.value}\n${captured.stderr}`;
+              expect(output).toContain("Signed worker Git startup reached.");
+              expect(output).not.toContain("Service not found");
+              return Effect.void;
+            })
+          );
+        });
+        const error = yield* runCacheSignedPilotExperiment(f.root, f.request).pipe(Effect.flip);
+        expect(error.message).toBe("Signed pilot supervisor exited with exit code 1.");
+        expect(error.cause).toBeUndefined();
+      })
+    );
     it.effect("keeps fixed failure hints private through a real folded child capture", () =>
       Effect.gen(function* () {
         const f = yield* fixture("none");
