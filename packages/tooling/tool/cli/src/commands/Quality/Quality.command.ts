@@ -932,7 +932,7 @@ const runEvidenceOrderedGithubCheckLaneGroup = Effect.fn(
   const waveOrder = yield* WaveOrder;
   // Pre-push lanes run `prePushLanes` wide inside each run of consecutive
   // same-wave lanes; exclusive lanes (Turbo graphs, coverage, integration,
-  // codegen, Fallow snapshots) still run alone.
+  // codegen) still run alone.
   const width = githubCheckTierConcurrency("pre-push", yield* qualityConcurrencyPlan);
   yield* runQualityTaskGithubCheckLaneWaves(
     label,

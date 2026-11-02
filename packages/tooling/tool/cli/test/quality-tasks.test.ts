@@ -4000,7 +4000,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       });
       expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "12" }, idle)).toMatchObject({
         policyLint: 4,
-        notes: ["[quality] Invalid BEEP_QUALITY_CHECK_CONCURRENCY; expected 2, 3 or 4. Using 1 lane."],
+        notes: ["[quality] Invalid BEEP_QUALITY_CHECK_CONCURRENCY; expected 2, 3 or 4. Using the profile width."],
       });
       expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "2" }, idle)).toMatchObject({
         policyLint: 2,

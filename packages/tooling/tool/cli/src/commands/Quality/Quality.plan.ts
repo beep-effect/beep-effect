@@ -247,7 +247,10 @@ const overrideOutcome = (
         onNone: () => ({
           width: onMalformed,
           note: O.some(
-            `[quality] Invalid ${name}; expected ${domain}. Using ${O.getOrElse(onMalformed, () => 1)} lane.`
+            `[quality] Invalid ${name}; expected ${domain}. ${O.match(onMalformed, {
+              onNone: () => "Using the profile width.",
+              onSome: (width) => `Using ${width} lane.`,
+            })}`
           ),
         }),
         onSome: (literal) => ({ width: O.some(Number(literal)), note: O.none() }),
