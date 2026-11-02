@@ -4,7 +4,7 @@ Refs #1871. The operator ruled on 2026-11-02 (relayed verbatim by the orchestrat
 
 ## Lane
 
-`~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5`, branch `feat/residue-detectors-wave5`, PR #2227 MERGED, HEAD `a892c44f56c143da9b99141be0a47ed89c8abce6` equal to the merged head. A registered linked worktree of `beep-effect3`, clean tree, no process cwd inside it, latest session-ledger row `done` (2026-10-24T21:05Z). The newest operational `.beep` write is 2026-10-24T21:36Z (`.beep/residue-reap/` is bookkeeping and does not count), so the `CHECKOUT_LIVE_DAYS = 7` fence lapsed on 2026-10-31. The lane is otherwise untouched since the 2026-10-24 dry run (#2240): the only later writes are a `.env` refresh on 2026-10-28 and the residue-reap run records below.
+`$HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5`, branch `feat/residue-detectors-wave5`, PR #2227 MERGED, HEAD `a892c44f56c143da9b99141be0a47ed89c8abce6` equal to the merged head. A registered linked worktree of `beep-effect3`, clean tree, no process cwd inside it, latest session-ledger row `done` (2026-10-24T21:05Z). The newest operational `.beep` write is 2026-10-24T21:36Z (`.beep/residue-reap/` is bookkeeping and does not count), so the `CHECKOUT_LIVE_DAYS = 7` fence lapsed on 2026-10-31. The lane is otherwise untouched since the 2026-10-24 dry run (#2240): the only later writes are a `.env` refresh on 2026-10-28 and the residue-reap run records below.
 
 ## Defect found: the citation index failed closed on every real checkout
 
@@ -17,7 +17,7 @@ Fix (same PR as this receipt): the index asks git to search instead. One `git --
 Both runs were made from the lane as the owning checkout with the fixed CLI, over every checkout class:
 
 ```sh
-cd ~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5
+cd $HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5
 bun run <this-lane>/packages/tooling/tool/cli/src/bin.ts -- quality residue-reap \
   --classes checkout-qa --classes checkout-qualification --classes checkout-generated \
   --classes checkout-jobs --classes checkout-ledgers --classes checkout-pids \
@@ -44,10 +44,10 @@ The tool refuses `checkout-material` by class, and the operator ruling is the ow
 
 | Path (under the lane) | Files | Bytes | SHA-256 (before = after) | Archive | Restore |
 | --- | ---: | ---: | --- | --- | --- |
-| `.beep/fallow` | 2 | 11,864 | `40caff0df55fb6147eb47b0735400140f07ee47646b52c196baf2bd48b8cf0a0` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow` | `mv -nT ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow ~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow` |
-| `.beep/residue-detectors-w5-report.md` | 1 | 7,784 | `4383275ef63c61cd2c88c4caa65613b75f15669a42712a64dca51cb6e38e9b92` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md` | `mv -n ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md ~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md` |
-| `.beep/config-census-Ritn8n` | 8 | 463 | `e9d1bec8bc901ca78a04ff228781b31efa657214e7d21ee576176c9b872fec35` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n` | `mv -nT ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n ~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n` |
-| `.beep/w5-proofs.log` | 1 | 414,364 | `89bdadc468f69e362738e8ebeb35f8d0ac2c16308a2e236dd80fc8cdf73fc31c` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log` | `mv -n ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log ~/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log` |
+| `.beep/fallow` | 2 | 11,864 | `40caff0df55fb6147eb47b0735400140f07ee47646b52c196baf2bd48b8cf0a0` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow` | `mv -nT ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow $HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/fallow` |
+| `.beep/residue-detectors-w5-report.md` | 1 | 7,784 | `4383275ef63c61cd2c88c4caa65613b75f15669a42712a64dca51cb6e38e9b92` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md` | `mv -n ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md $HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/residue-detectors-w5-report.md` |
+| `.beep/config-census-Ritn8n` | 8 | 463 | `e9d1bec8bc901ca78a04ff228781b31efa657214e7d21ee576176c9b872fec35` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n` | `mv -nT ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n $HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/config-census-Ritn8n` |
+| `.beep/w5-proofs.log` | 1 | 414,364 | `89bdadc468f69e362738e8ebeb35f8d0ac2c16308a2e236dd80fc8cdf73fc31c` | `~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log` | `mv -n ~/.cache/beep/residue/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log $HOME/YeeBois/projects/beep-effect3-worktrees/rsc-residue-detectors-w5/.beep/w5-proofs.log` |
 
 Restore precheck: the original path must be absent, and the archive's digest must still equal the row's (for a directory, run the manifest command from `stage-3-a-local-residue.md` inside the archive). Moved bytes: 434,475 apparent across the four rows. Physical reclamation: **0**, under #1871's rule that archive moves alone count zero. Nothing was deleted.
 
