@@ -25,6 +25,7 @@ const isolatedSuites = [
   "test/cache-pilot-orchestration.test.ts",
   "test/cache-private-socket-controls.test.ts",
   "test/cache-runtime.test.ts",
+  "test/catalog-shard-scope.test.ts",
   "test/catalog-usage.test.ts",
   "test/check-census-command.test.ts",
   "test/ci-command.test.ts",

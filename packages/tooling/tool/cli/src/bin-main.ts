@@ -270,9 +270,12 @@ const qualityTaskInvocation =
     : O.none();
 
 if (O.isSome(qualityTaskInvocation)) {
+  // The quality-task route resolves the admission-aware concurrency plan, which
+  // reads MemAvailable through MemoryStats; the scheduler module loads only here.
+  const { MemoryStatsLive } = await import("./internal/repo-run/QualityScheduler.ts");
   runRepoCliMain(
     Effect.scoped(
-      Layer.build(BaseLayers).pipe(
+      Layer.build(Layer.provideMerge(MemoryStatsLive, BaseLayers)).pipe(
         Effect.flatMap((context) =>
           qualityTaskInvocation.value.pipe(withHostTurboCacheDefaults, Effect.provide(context))
         )

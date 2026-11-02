@@ -122,6 +122,13 @@ confirmed for that stop; P8 is stopped for an operator decision (options in
 [`PLAN.md`](./PLAN.md#p8-operator-decision-open-since-2026-11-02)). Receipts:
 [`history/`](./history/).
 
+The operator chose to measure the exposure first. In run `41452707373` the
+replayed session was held for 12 minutes and GitHub offered it no job: a
+decoy and all 32 real heavy jobs that started during the hold went to other
+runners, and the session ended
+when the original job was cancelled. The remediation choice stays with the
+operator.
+
 On 2026-11-02 run `41409672251` re-passed Gates A through J and L,
 `AMI_PIN`, live `METADATA_DISABLED`, deregistration and teardown on `main`,
 and a read-only audit matched the deployed IAM, launch template and runner

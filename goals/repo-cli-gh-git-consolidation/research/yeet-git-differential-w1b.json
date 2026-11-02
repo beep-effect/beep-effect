@@ -1,0 +1,231 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/yeet-git-differential-w1b.ts",
+  "commit": "0be0c6d7003ffe60ef9080d2bde1b6534b66e699",
+  "git": "git version 2.56.0",
+  "scenarios": 31,
+  "same": 27,
+  "classified": 4,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "refreshBaseRef",
+      "scenario": "origin base with a tag on the fetched history",
+      "verdict": "D-09: Git.fetch has no --no-tags, so a tag pointing into the fetched history is auto-followed where the frozen fetch left the clone tagless",
+      "old": "{\"ok\":{\"trackingRef\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\"},\"tags\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"\"}}}",
+      "new": "{\"ok\":{\"trackingRef\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\"},\"tags\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"v1\"}}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "origin base on an untagged branch",
+      "verdict": "same",
+      "old": "{\"ok\":{\"trackingRef\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"2ae8f1632f7c672e5019fab6c687f146050079ff\"},\"tags\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"\"}}}",
+      "new": "{\"ok\":{\"trackingRef\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"2ae8f1632f7c672e5019fab6c687f146050079ff\"},\"tags\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"\"}}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "origin base missing on the remote",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "origin base without a remote",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "plain base on a branch",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "plain base as a sha",
+      "verdict": "same",
+      "old": "{}",
+      "new": "{}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "unknown plain base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "option-like plain base",
+      "verdict": "D-09: an option-like ref is refused before any spawn (onSpawnFailure) instead of being shielded by --end-of-options",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"spawn-failure\"}}"
+    },
+    {
+      "site": "refreshBaseRef",
+      "scenario": "plain base outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "currentCommitSha",
+      "scenario": "on a branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\"}",
+      "new": "{\"ok\":\"91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\"}"
+    },
+    {
+      "site": "currentCommitSha",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"2ae8f1632f7c672e5019fab6c687f146050079ff\"}",
+      "new": "{\"ok\":\"2ae8f1632f7c672e5019fab6c687f146050079ff\"}"
+    },
+    {
+      "site": "currentCommitSha",
+      "scenario": "unborn repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "currentCommitSha",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"_tag\":\"exit\",\"exitCode\":128}}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "ancestor",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "itself",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "non-ancestor",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "unknown object",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "unknown ref",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "option-like ref",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "isAncestor",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "worktreeAdd",
+      "scenario": "fresh path",
+      "verdict": "D-09: Git.worktreeAdd surfaces no transcript on a zero exit, so the rendered block carries only its header line",
+      "old": "{\"ok\":{\"exitCode\":0,\"output\":\"Preparing worktree (detached HEAD 91d6aa6)\\nHEAD is now at 91d6aa6 c2\"}}",
+      "new": "{\"ok\":{\"exitCode\":0,\"output\":\"\"}}"
+    },
+    {
+      "site": "worktreeAdd",
+      "scenario": "path already exists",
+      "verdict": "same",
+      "old": "{\"ok\":{\"exitCode\":128,\"output\":\"Preparing worktree (detached HEAD 91d6aa6)\\nfatal: '<checkout>' already exists\"}}",
+      "new": "{\"ok\":{\"exitCode\":128,\"output\":\"Preparing worktree (detached HEAD 91d6aa6)\\nfatal: '<checkout>' already exists\"}}"
+    },
+    {
+      "site": "worktreeAdd",
+      "scenario": "unborn repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"exitCode\":128,\"output\":\"fatal: invalid reference: HEAD\"}}",
+      "new": "{\"ok\":{\"exitCode\":128,\"output\":\"fatal: invalid reference: HEAD\"}}"
+    },
+    {
+      "site": "worktreeAdd",
+      "scenario": "outside a repository",
+      "verdict": "D-09: an unknown ref or a non-repository cwd keeps exit 128 but the rendered text is the kit's typed message, not git's stderr",
+      "old": "{\"ok\":{\"exitCode\":128,\"output\":\"fatal: not a git repository (or any parent up to mount point /)\\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).\"}}",
+      "new": "{\"ok\":{\"exitCode\":128,\"output\":\"not a git repository: <tmp>/plain\"}}"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "registered dirty worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":0}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":0}}"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "unregistered directory",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "never created",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}"
+    },
+    {
+      "site": "worktreeRemove",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":128}}"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "vanished worktree directories",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"worktree <tmp>/seed\\nHEAD 91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\\nbranch refs/heads/main\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"worktree <tmp>/seed\\nHEAD 91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\\nbranch refs/heads/main\"}}"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "nothing to prune",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"worktree <tmp>/seed\\nHEAD 91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\\nbranch refs/heads/main\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"worktree <tmp>/seed\\nHEAD 91d6aa606df5bd4b2d3802dc99c902c63e5cf2e0\\nbranch refs/heads/main\"}}"
+    },
+    {
+      "site": "worktreePrune",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    }
+  ]
+}
