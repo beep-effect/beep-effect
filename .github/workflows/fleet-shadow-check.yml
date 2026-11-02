@@ -652,8 +652,11 @@ jobs:
 
       # Probe N (runner-trust-boundary P8, exception E1). It takes the attacker
       # position of a sudo-capable job: read the one-use JIT configuration,
-      # disarm the poweroff shim, stop the listener gracefully so its session
-      # is released, then replay the configuration on this host. The value
+      # disarm the poweroff shim, stop the listener, then replay the
+      # configuration on this host. replay_stop_signal=INT (default) stops it
+      # the orderly way, releasing the session; KILL kills it without release,
+      # as a root attacker can, and retries the replay every 30 s until the
+      # registration is deleted or a replay is accepted. The value
       # never reaches the job log: the same-host verdict and the configuration
       # wrapped to the operator's one-time RSA key go only to the EC2 serial
       # console, which `goals/runner-trust-boundary/ops/post-release-replay.sh`
