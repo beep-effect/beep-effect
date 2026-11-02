@@ -1112,3 +1112,19 @@ acknowledge that input without granting qualification. All other reviews,
 profile, epoch, scope and ledger bytes remain unchanged. A combined 160-case
 replay, package lint/type checks and policy audit pass. Fresh hosted proof remains
 required; no production signing, rollout or whole-goal acceptance changes.
+
+
+### Accepted coverage and input-policy integration, 2026-11-02
+
+The private-object component consumes accepted main `930758e06bf4`, including
+coverage repair #2616 and the reviewed Turbo input exclusions from #2575. The
+canonical root-only baseline writer carries the accepted settings and all
+non-root reviews, adding only the existing storage module to the quality-seal
+input closure. The [integration checkpoint](research/private-object-accepted-main-checkpoint-2026-11-02.json)
+records exactly one changed node/source, preserved global configuration and
+qualification ledger, and a policy audit with no blocking findings.
+
+Generated identity and documentation inventories are reconciled through their
+own writers. Historical native observations retain their actual source/input
+pins; none is relabeled current after this input-policy change. Current hosted
+proof, protected inspection/publication and all whole-goal criteria remain open.

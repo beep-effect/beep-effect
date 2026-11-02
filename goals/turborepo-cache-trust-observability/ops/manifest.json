@@ -120,7 +120,10 @@
     "research/supervisor-safe-hints-checkpoint-2026-11-02.json",
     "research/private-producer-object-checkpoint-2026-11-02.json",
     "research/private-object-quality-closure-review-2026-11-02.md",
-    "research/private-object-quality-closure-request-2026-11-02.json"
+    "research/private-object-quality-closure-request-2026-11-02.json",
+    "research/private-object-accepted-main-checkpoint-2026-11-02.json",
+    "research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
+    "research/private-object-accepted-coverage-baseline-request-2026-11-02.json"
   ],
   "agentLaunchers": [
     {

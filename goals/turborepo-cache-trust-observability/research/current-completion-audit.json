@@ -475,5 +475,6 @@
   "priorSpecSha256BeforePrivateObjectTransfer": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
   "privateObjectTransferCheckpoint": "research/private-producer-object-checkpoint-2026-11-02.json",
   "priorSpecSha256AtPrivateObjectHostedFollowup": "6fd3c4ab9fe16bfe95983569490705740219c29c6fddf7ceb936246fc086b9d7",
-  "privateObjectHostedFollowup": "research/private-producer-object-checkpoint-2026-11-02.json"
+  "privateObjectHostedFollowup": "research/private-producer-object-checkpoint-2026-11-02.json",
+  "privateObjectAcceptedMainCheckpoint": "research/private-object-accepted-main-checkpoint-2026-11-02.json"
 }

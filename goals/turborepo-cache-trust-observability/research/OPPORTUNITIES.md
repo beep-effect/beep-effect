@@ -1742,3 +1742,11 @@ The combined 160 tests, package lint/type checks and cache policy audit pass.
 Keep the census and generated policy input check in the focused new-module
 replay so the first hosted run can find substantive defects instead of metadata
 omissions. Failed hosted receipts remain separate from passing local controls.
+
+
+### Reconcile accepted cache-input and baseline changes (2026-11-02)
+
+- Work: accepted-main integration for PR #2611.
+- Friction: independently reviewed root baselines and generated identity/documentation inventories conflict when shared changes merge.
+- Correction: retain the exact accepted-main baseline, re-acknowledge only this branch's storage input through root-scoped CAS, and regenerate derived inventories. Preserve immutable native observations rather than reusing their older input policy as current proof.
+- Prevention: batch accepted upstream changes into one repair wave and verify non-root reviews, global configuration and qualification bytes after the canonical writers.
