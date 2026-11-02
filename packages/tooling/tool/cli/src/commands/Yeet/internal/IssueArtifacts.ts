@@ -22,6 +22,7 @@ import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -161,7 +162,7 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
 ): Effect.fn.Return<
   RepoStepRunResult,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
   return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID

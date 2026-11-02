@@ -73,6 +73,7 @@ import {
   ResidueRetentionRuling,
 } from "./ResidueReap.schemas.ts";
 import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
+import type { Git } from "@beep/git/Git";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { BoundRemovalOutcome, DirectoryHandleError } from "./DirectoryHandle.ts";
@@ -175,7 +176,8 @@ type DiscoveryRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 type Discovered = {
   readonly candidates: ReadonlyArray<ResidueReapCandidate>;
