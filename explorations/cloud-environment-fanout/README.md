@@ -4,7 +4,7 @@
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `research`
-Status: `active`
+Status: `parked`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,9 +19,13 @@ environments cost nine one-line pastes instead of nine hand-built installs.
 
 ## Next Open Question
 
-Does `bun install` succeed behind the Claude security proxy with the
-bootstrap's retry loop alone? The first smoke session on a Claude account
-answers it; the runbook names the fallback if not.
+None open here. The packet is **parked**, superseded by
+[`goals/cloud-agent-readiness`](../../goals/cloud-agent-readiness/README.md),
+which is the current execution authority for cloud environments. The three
+2026-10-05 questions are resolved or deferred in
+[`DECISIONS.md`](./DECISIONS.md). Remaining obligations live in that goal
+packet, not in this exploration queue. Re-entry conditions are in
+`DECISIONS.md`.
 
 ## Read This First
 
@@ -35,3 +39,4 @@ answers it; the runbook names the fallback if not.
 ## Trail
 
 - 2026-10-05: packet opened. Research done against vendor docs and local CLIs; `scripts/cloud/bootstrap.sh`, the thin `.cursor/install.sh`, the guarded SessionStart hook, and the runbook landed in the same lane. Stopped at: operator runs the per-account UI setups (Claude first), then the first smoke sessions settle the open questions before align.
+- 2026-11-02: parked, superseded by `goals/cloud-agent-readiness`; not graduated (there is no `BRIEF.md` or `MAP.md`). Evidence: #2486 (Claude account-1 smoke), #2487 (fleet setup receipt), #2492 (cloud notifier guard), #2498 (projection skip), #2504 (bootstrap denied-host exit), #2510 (MCP scoping and hook evidence, including the cold-resume SessionStart timeouts). Four Claude environments are set up. Public receipts show fresh smokes passing for account 1 (#2486) and account 2 (#2487, `goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md`). The orchestrator reported accounts 3 and 4 as passing on 2026-11-02, but no public receipt records them yet, so four-account qualification is not claimed. Codex setup checks run, but publishing a reusable environment failed twice without diagnostics, so Codex is not runnable. Cursor has an active snapshot and bootstrap only; its agent proof is still open. Not claimed: nine qualified environments, or a complete goal.
