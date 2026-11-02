@@ -217,8 +217,33 @@ const stagedChanges = (relative = false): GitInvocation =>
 const untrackedFiles = (relative = false): GitInvocation =>
   git(["ls-files", "--others", "--exclude-standard", "-z", ...(relative ? [] : ["--full-name"])]);
 
+/**
+ * The options {@link GitCommand.revParse} accepts: `peel` appends git's
+ * `^{commit}` peel suffix to the ref, `quiet` adds `--quiet` so an unknown
+ * ref exits 1 silently instead of printing `Needed a single revision`.
+ */
+type RevParseOptions = {
+  readonly peel?: "commit";
+  readonly quiet?: boolean;
+};
+
 // Implementation of GitCommand.revParse; the public contract lives on the static.
-const revParse = (ref: string): GitInvocation => git(["rev-parse", "--verify", ref]);
+const revParse: {
+  (ref: string, options?: RevParseOptions): GitInvocation;
+  (options?: RevParseOptions): (ref: string) => GitInvocation;
+} = dual(
+  (args) => P.isString(args[0]),
+  (ref: string, options?: RevParseOptions): GitInvocation =>
+    options === undefined
+      ? git(["rev-parse", "--verify", ref])
+      : git([
+          "rev-parse",
+          "--verify",
+          ...(options.quiet === true ? ["--quiet"] : []),
+          "--end-of-options",
+          options.peel === undefined ? ref : `${ref}^{${options.peel}}`,
+        ])
+);
 
 // Implementation of GitCommand.checkout; the public contract lives on the static.
 const checkout: {
@@ -230,11 +255,19 @@ const checkout: {
 );
 
 // Implementation of GitCommand.fetch; the public contract lives on the static.
-const fetch = (remote: string, ref: string, depth?: number, tag = false, unshallow = false): GitInvocation =>
+const fetch = (
+  remote: string,
+  ref: string,
+  depth?: number,
+  tag = false,
+  unshallow = false,
+  prune = false
+): GitInvocation =>
   git([
     "fetch",
     ...(depth !== undefined ? ["--depth", String(depth)] : []),
     ...(unshallow ? ["--unshallow"] : []),
+    ...(prune ? ["--prune"] : []),
     secretUrl(remote),
     ...(tag ? ["tag"] : []),
     ref,
@@ -340,14 +373,34 @@ const isShallow = (): GitInvocation => git(["rev-parse", "--is-shallow-repositor
 // Implementation of GitCommand.fetchUnshallow; the public contract lives on the static.
 const fetchUnshallow = (remote = "origin"): GitInvocation => git(["fetch", "--unshallow", secretUrl(remote)]);
 
+/**
+ * The detection and scoping options {@link GitCommand.nameStatus} accepts
+ * beyond the range itself. The service validates `findRenames` (an integer
+ * percent 1..100) and `diffFilter` (git's `[ACDMRTUXB*]` letters, lower-case
+ * excluding) before any spawn; the constructor renders them verbatim.
+ */
+type NameStatusOptions = {
+  readonly findRenames?: number;
+  readonly diffFilter?: string;
+  readonly pathspec?: ReadonlyArray<string>;
+};
+
 // Implementation of GitCommand.nameStatus; the public contract lives on the static.
-const nameStatus = (base: string, head: string | undefined, relative = false): GitInvocation =>
+const nameStatus = (
+  base: string,
+  head: string | undefined,
+  relative = false,
+  options: NameStatusOptions = {}
+): GitInvocation =>
   git([
     "diff",
     "--name-status",
     "-z",
     relative ? "--relative" : "--no-relative",
+    ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
+    ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
     head === undefined ? base : `${base}...${head}`,
+    ...(options.pathspec !== undefined && options.pathspec.length > 0 ? ["--", ...options.pathspec] : []),
   ]);
 
 // Implementation of GitCommand.defaultBranch; the public contract lives on the static.
@@ -447,7 +500,8 @@ const configGet = (key: string, scope?: GitConfigScope): GitInvocation =>
   git(["config", ...scopeArgs(scope), "--get", key]);
 
 // Implementation of GitCommand.remoteUrl; the public contract lives on the static.
-const remoteUrl = (remote = "origin"): GitInvocation => git(["remote", "get-url", remote]);
+const remoteUrl = (remote = "origin", push = false): GitInvocation =>
+  git(["remote", "get-url", ...(push ? ["--push"] : []), remote]);
 
 // Implementation of GitCommand.status; the public contract lives on the static.
 const status = (): GitInvocation => git(["status", "--porcelain", "-z"]);
@@ -612,16 +666,41 @@ const revList: {
 
 // Implementation of GitCommand.commit; the public contract lives on the static.
 const commit: {
-  (message: string, all?: boolean, allowEmpty?: boolean, amend?: boolean, author?: string): GitInvocation;
-  (all?: boolean, allowEmpty?: boolean, amend?: boolean, author?: string): (message: string) => GitInvocation;
+  (
+    message: string,
+    all?: boolean,
+    allowEmpty?: boolean,
+    amend?: boolean,
+    author?: string,
+    only?: boolean,
+    noVerify?: boolean
+  ): GitInvocation;
+  (
+    all?: boolean,
+    allowEmpty?: boolean,
+    amend?: boolean,
+    author?: string,
+    only?: boolean,
+    noVerify?: boolean
+  ): (message: string) => GitInvocation;
 } = dual(
   (args) => P.isString(args[0]),
-  (message: string, all?: boolean, allowEmpty?: boolean, amend?: boolean, author?: string): GitInvocation =>
+  (
+    message: string,
+    all?: boolean,
+    allowEmpty?: boolean,
+    amend?: boolean,
+    author?: string,
+    only?: boolean,
+    noVerify?: boolean
+  ): GitInvocation =>
     git([
       "commit",
       ...(all === true ? ["--all"] : []),
       ...(allowEmpty === true ? ["--allow-empty"] : []),
       ...(amend === true ? ["--amend"] : []),
+      ...(only === true ? ["--only"] : []),
+      ...(noVerify === true ? ["--no-verify"] : []),
       ...(author !== undefined ? [`--author=${author}`] : []),
       "-m",
       message,
@@ -1011,7 +1090,13 @@ export class GitCommand {
    * **Details**
    *
    * `git rev-parse --verify <ref>` — resolves `ref` to its full object id, or
-   * fails if `ref` does not resolve.
+   * fails if `ref` does not resolve. With any option present the argv becomes
+   * `rev-parse --verify [--quiet] --end-of-options <ref>[^{commit}]`:
+   * `--end-of-options` keeps a ref that begins with `-` positional,
+   * `peel: "commit"` resolves an annotated tag through to the commit it
+   * points at, and `quiet` makes an unknown ref a silent exit 1 (the `Git` service
+   * still classifies it as `UnknownRefError`). Without options the argv is
+   * exactly the two-flag form.
    *
    * **Example** (Inspect rev parse argv)
    *
@@ -1021,6 +1106,16 @@ export class GitCommand {
    * const invocation = GitCommand.revParse("HEAD");
    *
    * console.log(invocation.redactedArgs.join(" ")) // rev-parse --verify HEAD
+   * ```
+   *
+   * **Example** (Peel a tag quietly)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.revParse("v1.0.0", { peel: "commit", quiet: true });
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // rev-parse --verify --quiet --end-of-options v1.0.0^{commit}
    * ```
    *
    * @category constructors
@@ -1057,9 +1152,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git fetch [--depth <n>] [--unshallow] <remote> [tag] <ref>` —
-   * fetches the given ref from a remote, optionally with a depth limit, the
-   * `--unshallow` mode, and the `tag` keyword.
+   * Mutating: `git fetch [--depth <n>] [--unshallow] [--prune] <remote> [tag] <ref>`
+   * — fetches the given ref from a remote, optionally with a depth limit, the
+   * `--unshallow` mode, `--prune` (drop remote-tracking refs the remote no
+   * longer has), and the `tag` keyword.
    *
    * **Gotchas**
    *
@@ -1454,7 +1550,7 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-status -z (--relative | --no-relative) [<base> | <base>...<head>]`
+   * `git diff --name-status -z (--relative | --no-relative) [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head>] [-- <pathspec>...]`
    * — the changed paths WITH their one-letter status codes, NUL-terminated.
    *
    * With `head` omitted this is the single-argument diff form: the working tree
@@ -1463,6 +1559,9 @@ export class GitCommand {
    * {@link GitCommand.changedFiles}. `-z` and the explicit relative flag follow
    * the same rules as {@link GitCommand.changedFiles}. In `-z` mode a rename or
    * copy entry is THREE NUL tokens: `R<score>`, the old path, the new path.
+   * `options.findRenames` sets the similarity threshold rename detection
+   * uses, `options.diffFilter` keeps only the named status letters (lower
+   * case excludes them), and `options.pathspec` scopes the diff after `--`.
    *
    * **Example** (Inspect name status argv)
    *
@@ -1472,6 +1571,21 @@ export class GitCommand {
    * const invocation = GitCommand.nameStatus("HEAD", undefined, true);
    *
    * console.log(invocation.redactedArgs.join(" ")) // diff --name-status -z --relative HEAD
+   * ```
+   *
+   * **Example** (Detect renames at 50% within a subtree)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.nameStatus("main", "HEAD", false, {
+   *   findRenames: 50,
+   *   diffFilter: "ACMR",
+   *   pathspec: ["src"],
+   * });
+   *
+   * console.log(invocation.redactedArgs.join(" "));
+   * // diff --name-status -z --no-relative --find-renames=50% --diff-filter=ACMR main...HEAD -- src
    * ```
    *
    * @category constructors
@@ -1693,9 +1807,10 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git remote get-url <remote>` — the fetch URL of the given remote. A
-   * missing remote exits non-zero with a "No such remote" stderr shape, which
-   * the `Git` service degrades to `Option.none`, never a typed error.
+   * `git remote get-url [--push] <remote>` — the fetch URL of the given
+   * remote, or its push URL with `push`. A missing remote exits non-zero with
+   * a "No such remote" stderr shape, which the `Git` service degrades to
+   * `Option.none`, never a typed error.
    *
    * **Example** (Inspect remote url argv)
    *
@@ -1705,6 +1820,16 @@ export class GitCommand {
    * const invocation = GitCommand.remoteUrl();
    *
    * console.log(invocation.redactedArgs.join(" ")) // remote get-url origin
+   * ```
+   *
+   * **Example** (Read the push URL)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.remoteUrl("upstream", true);
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // remote get-url --push upstream
    * ```
    *
    * @category constructors
@@ -2344,12 +2469,14 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--author=<author>] -m <message>`
+   * Mutating: `git commit [--all] [--allow-empty] [--amend] [--only] [--no-verify] [--author=<author>] -m <message>`
    * — records a commit. The message always rides argv behind `-m` (git
    * consumes it as a value even when it begins with `-`); committer identity
    * comes from the caller's environment — this constructor sets no
    * `GIT_AUTHOR_*`/`GIT_COMMITTER_*` variables, and the optional `author`
-   * override is the fused `--author=` form.
+   * override is the fused `--author=` form. `only` commits exactly what is
+   * staged even when `-a` would otherwise be implied; `noVerify` skips the
+   * pre-commit and commit-msg hooks.
    *
    * **Example** (Inspect commit argv)
    *

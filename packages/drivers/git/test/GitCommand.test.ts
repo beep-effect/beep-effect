@@ -96,6 +96,36 @@ describe("GitCommand", () => {
     assertGitCommand(GitCommand.revParse("HEAD"), ["rev-parse", "--verify", "HEAD"]);
   });
 
+  it("revParse with any option adds --end-of-options, and renders --quiet and the ^{commit} peel", () => {
+    assertGitCommand(GitCommand.revParse("v1", { quiet: true }), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1",
+    ]);
+    assertGitCommand(GitCommand.revParse("v1", { peel: "commit" }), [
+      "rev-parse",
+      "--verify",
+      "--end-of-options",
+      "v1^{commit}",
+    ]);
+    assertGitCommand(GitCommand.revParse("v1", { peel: "commit", quiet: true }), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1^{commit}",
+    ]);
+    assertGitCommand(pipe("v1", GitCommand.revParse({ quiet: true })), [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      "v1",
+    ]);
+  });
+
   it("checkout without options is unchanged", () => {
     assertGitCommand(GitCommand.checkout("main"), ["checkout", "main"]);
   });
@@ -113,6 +143,24 @@ describe("GitCommand", () => {
       "origin",
       "tag",
       "v1.0.0",
+    ]);
+  });
+
+  it("fetch places --prune after --depth/--unshallow and before the remote", () => {
+    assertGitCommand(GitCommand.fetch("origin", "main", undefined, false, false, true), [
+      "fetch",
+      "--prune",
+      "origin",
+      "main",
+    ]);
+    assertGitCommand(GitCommand.fetch("origin", "v1", 1, true, false, true), [
+      "fetch",
+      "--depth",
+      "1",
+      "--prune",
+      "origin",
+      "tag",
+      "v1",
     ]);
   });
 
@@ -258,6 +306,39 @@ describe("GitCommand", () => {
     ]);
   });
 
+  it("nameStatus renders --find-renames=<n>% and --diff-filter before the range and the pathspec after --", () => {
+    assertGitCommand(
+      GitCommand.nameStatus("main", "HEAD", false, { findRenames: 50, diffFilter: "ACMR", pathspec: ["src"] }),
+      [
+        "diff",
+        "--name-status",
+        "-z",
+        "--no-relative",
+        "--find-renames=50%",
+        "--diff-filter=ACMR",
+        "main...HEAD",
+        "--",
+        "src",
+      ]
+    );
+    // An empty pathspec adds no `--`; each option is independent.
+    assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { pathspec: [] }), [
+      "diff",
+      "--name-status",
+      "-z",
+      "--no-relative",
+      "HEAD",
+    ]);
+    assertGitCommand(GitCommand.nameStatus("HEAD", undefined, false, { diffFilter: "d" }), [
+      "diff",
+      "--name-status",
+      "-z",
+      "--no-relative",
+      "--diff-filter=d",
+      "HEAD",
+    ]);
+  });
+
   it("lsTree without a pathspec is unchanged", () => {
     assertGitCommand(GitCommand.lsTree("HEAD"), ["ls-tree", "-r", "-z", "HEAD"]);
   });
@@ -361,6 +442,11 @@ describe("GitCommand", () => {
 
   it("configGet builds `git config --get <key>`", () => {
     assertGitCommand(GitCommand.configGet("user.signingkey"), ["config", "--get", "user.signingkey"]);
+  });
+
+  it("remoteUrl --push rides between the subcommand and the remote", () => {
+    assertGitCommand(GitCommand.remoteUrl("upstream", true), ["remote", "get-url", "--push", "upstream"]);
+    assertGitCommand(GitCommand.remoteUrl("origin", false), ["remote", "get-url", "origin"]);
   });
 
   it("remoteUrl builds `git remote get-url <remote>`", () => {
@@ -653,6 +739,26 @@ describe("GitCommand", () => {
   });
 
   describe("history tier", () => {
+    it("commit renders --only and --no-verify after --amend and before --author", () => {
+      assertGitCommand(GitCommand.commit("msg", false, false, false, undefined, true, true), [
+        "commit",
+        "--only",
+        "--no-verify",
+        "-m",
+        "msg",
+      ]);
+      assertGitCommand(GitCommand.commit("msg", false, true, true, "A <a@b.c>", true, true), [
+        "commit",
+        "--allow-empty",
+        "--amend",
+        "--only",
+        "--no-verify",
+        "--author=A <a@b.c>",
+        "-m",
+        "msg",
+      ]);
+    });
+
     it("commit rides the message behind -m, flags and --author= before it", () => {
       assertGitCommand(GitCommand.commit("one line"), ["commit", "-m", "one line"]);
       assertGitCommand(GitCommand.commit("msg", true, true, true, "A <a@b.c>"), [
