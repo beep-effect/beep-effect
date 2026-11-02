@@ -32358,15 +32358,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 94.06,
+          "lines": 94.05,
           "statements": 94,
           "branches": 92.21,
-          "functions": 93.4,
+          "functions": 91.75,
           "uncovered": {
-            "lines": 26,
+            "lines": 28,
             "statements": 28,
             "branches": 13,
-            "functions": 12
+            "functions": 16
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts": {
@@ -32731,14 +32731,14 @@
         },
         "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 98.95,
           "branches": 100,
-          "functions": 100,
+          "functions": 96.29,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Security.errors.ts": {
@@ -36753,12 +36753,12 @@
           "lines": 95.14,
           "statements": 95.37,
           "branches": 81.81,
-          "functions": 93.54,
+          "functions": 88.57,
           "uncovered": {
             "lines": 5,
             "statements": 5,
             "branches": 4,
-            "functions": 2
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts": {
@@ -37830,15 +37830,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts": {
-          "lines": 94.32,
-          "statements": 93.99,
+          "lines": 93.88,
+          "statements": 93.56,
           "branches": 75.67,
-          "functions": 84.05,
+          "functions": 81.69,
           "uncovered": {
-            "lines": 13,
-            "statements": 14,
+            "lines": 14,
+            "statements": 15,
             "branches": 9,
-            "functions": 11
+            "functions": 13
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/index.ts": {
@@ -37962,15 +37962,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 98.3,
+          "statements": 98.46,
           "branches": 100,
-          "functions": 100,
+          "functions": 95.83,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Session/index.ts": {
@@ -40830,15 +40830,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 75,
-          "functions": 100,
+          "lines": 96.15,
+          "statements": 96.42,
+          "branches": 50,
+          "functions": 90,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 1,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/DirectoryHandle.ts": {
@@ -41025,12 +41025,12 @@
           "lines": 91.13,
           "statements": 88.42,
           "branches": 78.93,
-          "functions": 87.78,
+          "functions": 87.42,
           "uncovered": {
             "lines": 102,
             "statements": 146,
             "branches": 130,
-            "functions": 38
+            "functions": 40
           }
         },
         "packages/tooling/tool/cli/src/internal/repo-run/RunScope.schemas.ts": {
