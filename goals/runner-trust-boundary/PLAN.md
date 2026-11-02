@@ -29,7 +29,7 @@ exception contradicts the packet's completion gate.
 | P5 Yeet publish, review, and merge gate | complete 2026-08-25 (all remediation PRs merged) | Publish through Yeet, close required checks and review threads, and merge with explicit operator authority. | Yeet reports `merge-ready: yes`, unresolved review threads are zero, and the remediation PR is merged. |
 | P6 Dashboard closure | complete 2026-08-25 (ledger retained) | Close the six exact Codex IDs only after the P5 merge gate. | All six IDs are closed as Already fixed with sanitized per-ID evidence, and the live dashboard reconciles to the allowlist. |
 | P7 Close | complete 2026-08-25 | Record final evidence, reflection, lifecycle, and packet relationships. | Closeout reflection validates and README, plan, manifest, and index update together. |
-| P8 Post-release JIT containment | pending | Remove the readable runner JIT configuration before job-controlled privilege can recover it, or prove post-release replay rejection from both the original and a second host. | Live proof records no recoverable argv/config credential after handoff and rejects replay after the original listener ends; lifecycle may then return to completed-retained. |
+| P8 Post-release JIT containment | complete 2026-11-02 (E1 accepted residual) | Remove the readable runner JIT configuration before job-controlled privilege can recover it, or prove post-release replay rejection from both the original and a second host. | Live proof records no recoverable argv/config credential after handoff and rejects replay after the original listener ends; lifecycle may then return to completed-retained. |
 
 ## P0 checklist
 
@@ -283,10 +283,10 @@ ratified in
    the registration held busy until the job timed out. The orderly stop is
    refused from both hosts (run 2), and teardown and deregistration hold in
    every run.
-4. [ ] Close exception E1 only after those checks pass; update README, plan,
+4. [x] Close exception E1 only after those checks pass, or on an operator decision (taken 2026-11-02: accepted residual); update README, plan,
    spec, manifest, reflection, and index in the same reviewed PR.
 
-### P8 operator decision (open since 2026-11-02)
+### P8 operator decision (decided 2026-11-02: accept E1 as a residual)
 
 E1 is confirmed for the SIGKILL stop, so P8 is stopped under the packet stop
 condition "a credential path reachable by job privilege". Options, cheapest

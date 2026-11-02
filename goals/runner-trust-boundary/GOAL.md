@@ -49,11 +49,12 @@ Execution:
    teardown. Post-release replay is untested: SPEC exception E1.
 6. P5-P7: complete 2026-08-25. The remediation PRs merged before the six
    exact IDs closed; `ops/closures.json` and `history/` retain the evidence.
-8. P8 Post-release JIT containment: pending. Remove the readable configuration
-   before job privilege can recover it, or prove rejection after the original
-   listener ends from both the original and a second host. Never log the value.
+8. P8 Post-release JIT containment: complete 2026-11-02. Probe N refused
+   replay after an orderly stop from both hosts and accepted it after a
+   SIGKILL until the job ended; a held session got no job. The operator
+   accepted E1 as a residual (SPEC Decision Log).
 
-The packet is active until P8 satisfies the previously unmet acceptance item.
+The closeout PR proposes completed-retained; completion is derived after merge.
 
 Acceptance requires every `SPEC.md` criterion, no usable workload credential
 path, exact-head proof, and every manifest command.
