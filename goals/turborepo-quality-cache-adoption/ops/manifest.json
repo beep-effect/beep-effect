@@ -115,7 +115,11 @@
     "research/selection-current-canary-checkpoint.json",
     "research/selection-review-source-controls.json",
     "research/selection-sibling-driver-compatibility.json",
-    "research/codegen-readonly-drift-checkpoint-2026-11-02.json"
+    "research/codegen-readonly-drift-checkpoint-2026-11-02.json",
+    "research/native-observability-default-controls.py",
+    "research/native-observability-default-controls.json",
+    "research/observability-driver-controls.json",
+    "research/observability-feature-review.json"
   ],
   "agentLaunchers": [
     {

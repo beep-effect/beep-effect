@@ -605,3 +605,18 @@ adaptation; route current selection through its separately named streaming
 helper. Test the real sibling preludes and process bounds before publishing a
 change to that shared source. Preserve historical report hashes against their
 original immutable whole-driver source, and bind new observations separately.
+
+
+### Retain absent Turbo exporter configuration, 2026-11-02
+
+- Keep the absent `experimentalObservability` flag and exporter configuration.
+  The tracked repository has no named Turbo exporter consumer; use structured
+  summaries and bounded backend events for the existing attribution work.
+- Follow the exact client behavior: disabled file settings are dropped, while
+  environment/CLI settings require the flag. The bundled prose does not describe
+  that difference. Preserve the failed first expectation and pinned-source proof.
+- Reopen for a named measured requirement after actual payload capture, synthetic
+  secret/path/content safety, separate credentials, bounded labels/volume/retention
+  and a disable path. Synthetic default controls grant no exporter safety, task
+  qualification or production benefit. Reversal reverts this decision record;
+  runtime settings remain unchanged.

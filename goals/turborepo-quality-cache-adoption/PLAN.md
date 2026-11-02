@@ -624,3 +624,21 @@ cases on the revised source, together with the existing refusal/source-race
 controls. Earlier reports remain bound to immutable commit `0dce46e6c115`.
 The five historical feature reports are unchanged; this helper check does not
 renew their native observations or grant feature/task acceptance.
+
+
+### Optional Turbo exporter review, 2026-11-02
+
+The [feature review](research/observability-feature-review.json) covers 27 tracked
+Turbo configurations, 214 selected manifests and the current runtime/workflow
+caller roots. No Turbo exporter is configured. Five application/agent/adapter
+telemetry sources remain distinct from this native Turbo feature.
+
+The pinned stable/current-canary pair passes 24 offline observations, including
+eight pre-task CLI/environment refusals, plus three real driver refusals. Exact
+tag source explains why file configuration is dropped when the flag is off; the
+first documentation-derived failure is retained. Keep the absent flag until a
+named consumer passes the separate payload and credential gates.
+
+This closes one optional feature decision: nine scoped decisions and 26 pending
+rows out of 35. Every computation review/qualification, deployed trust, measured
+value, observation window and whole-goal acceptance gate remains open.
