@@ -1114,3 +1114,37 @@ evidence, what would have prevented it). Redact for the public repo.
   ratchet's per-PR baseline attribution. Per repair decision 3 ruling 6,
   start any change only after window 4 is censused, so the governor's
   attribution stays clean.
+
+## 2026-11-02 — a serial producer loop and 44 hash-placed packages hid behind the Test Unit p95
+
+- **Doing:** attributing the window-4 preview's `Test Unit` 44m27s p95.
+- **Evidence:** job 124673581997 (unit-a) ran 86 `ci:test:<package>` steps
+  whose busy-sum equals the 26.4-minute span at a maximum concurrency of 1;
+  `runCompoundCoverageSteps` passed no `concurrency` to `Effect.forEach`
+  while the lane's own turbo shape says `--concurrency=2`. The same log's
+  `test-unit default placements` line listed 44 packages the curated table
+  never named, including the three heaviest (`@beep/markdown` 168 s,
+  `@beep/repo-workspaces` 111 s, `@beep/repo-ai-metrics` 92 s), so the
+  1,214 s weights described bins that had grown to 1,587 s and 1,355 s.
+- **Would have prevented it:** a census column for the default-placement
+  count (the lane already prints the line) and a per-package duration
+  artifact the re-bin can read instead of scraping job logs.
+
+## 2026-11-02 — the Lint breach was already fixed elsewhere the same morning
+
+- **Doing:** timing a cold `biome check .` per package to size a lint
+  re-shard.
+- **Evidence:** 31 s for 51 files on a hosted runner, 74 CPU-seconds
+  locally; the cause was the project-domain rule `noDeprecatedImports`
+  forcing a whole-repository scan per invocation. #2526 (`3ceb6833db`)
+  had removed it hours earlier under a different packet (quality speed
+  audit); the first cold `main` lint shard after it took 31 s for 92 tasks.
+  A local worktree nested under `.claude/worktrees` reproduces a separate
+  60 CPU-second crawl of the primary clone (biome resolves the VCS root
+  above the worktree's `.git` file), which misled the first hour of
+  attribution.
+- **Would have prevented it:** reading the day's merged `main` commits
+  before measuring, and a biome `files.includes` force-ignore for
+  `.claude/worktrees` that holds in nested worktrees (the primary clone's
+  negation does not apply when the worktree is the project root).
+

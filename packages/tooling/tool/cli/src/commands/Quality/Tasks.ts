@@ -66,6 +66,7 @@ import {
   formatCommandLine,
   QualityTaskStep,
   qualityStepOutputBound,
+  repoRunOutputBound,
   runCaptured,
   runToExit,
 } from "../../internal/process/index.ts";
@@ -140,7 +141,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CaptureCommandTimedOutError } from "../../internal/process/index.ts";
+import type { CaptureCommandTimedOutError, OutputBound } from "../../internal/process/index.ts";
 import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
@@ -1433,8 +1434,29 @@ type QuarantineWave = {
 // Quarantine-eligible lanes capture while teeing so a failure's output can be
 // matched against the no-location TS2589 signature; everything else keeps the
 // inherited-stdio path unchanged.
-const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQuarantine")(function* (
+const runStepCapturedForQuarantine = (
   step: QualityTaskStep
+): Effect.Effect<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> =>
+  runStepCaptured(step, flakeQuarantineOutputBound, true);
+
+// Buffered steps run beside one another, so their output is captured without teeing and replayed whole
+// once the step ends: the log stays readable per package instead of interleaving two vitest runs.
+const runStepBuffered = Effect.fn("QualityTasks.runStepBuffered")(function* (
+  step: QualityTaskStep
+): Effect.fn.Return<O.Option<QualityTaskFailed>, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const attempt = yield* runStepCaptured(step, repoRunOutputBound, false);
+  if (Str.isNonEmpty(Str.trim(attempt.output))) {
+    yield* Console.log(attempt.output);
+  }
+  return attempt.exitCode === 0
+    ? O.none()
+    : O.some(QualityTaskFailed.new(attempt.exitCode, attempt.label, attempt.command));
+});
+
+const runStepCaptured = Effect.fn("QualityTasks.runStepCaptured")(function* (
+  step: QualityTaskStep,
+  bound: OutputBound,
+  tee: boolean
 ): Effect.fn.Return<QuarantineStepAttempt, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
@@ -1451,8 +1473,8 @@ const runStepCapturedForQuarantine = Effect.fn("QualityTasks.runStepCapturedForQ
     },
     extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
     source: "all",
-    bound: flakeQuarantineOutputBound,
-    tee: true,
+    bound,
+    tee,
   }).pipe(
     Effect.catchTag("CaptureCommandTimedOutError", (error) => error.pipe(capturedTimeoutResult, Effect.succeed)),
     QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`)
@@ -1785,7 +1807,8 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
   concurrency = 1,
-  onOutcome: StreamingOutcomeObserver = ignoreStreamingOutcome
+  onOutcome: StreamingOutcomeObserver = ignoreStreamingOutcome,
+  buffered = false
 ) {
   if (A.isReadonlyArrayEmpty(steps)) {
     return A.empty<StreamingStepOutcome>();
@@ -1804,7 +1827,8 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
     steps,
     Effect.fnUntraced(function* (step, index) {
       const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-      const [elapsed, failure] = yield* runStepWithQuarantine(step, incidents).pipe(Effect.timed);
+      const attempt = buffered === true ? runStepBuffered(step) : runStepWithQuarantine(step, incidents);
+      const [elapsed, failure] = yield* Effect.timed(attempt);
       const endedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
       const durationMs = Duration.toMillis(elapsed);
       yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
@@ -1830,10 +1854,11 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
 const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingStepFailures")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
-  concurrency = 1
+  concurrency = 1,
+  buffered = false
 ) {
   return pipe(
-    yield* collectStreamingStepOutcomes(label, steps, concurrency),
+    yield* collectStreamingStepOutcomes(label, steps, concurrency, ignoreStreamingOutcome, buffered),
     A.map((outcome) => outcome.failure),
     A.getSomes
   );
@@ -2257,9 +2282,10 @@ const githubCheckLaneRunStatus = (
 const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
-  concurrency = 1
+  concurrency = 1,
+  buffered = false
 ) {
-  const failures = yield* collectStreamingStepFailures(label, steps, concurrency);
+  const failures = yield* collectStreamingStepFailures(label, steps, concurrency, buffered);
   yield* failQualityTaskFailures(label, failures);
 });
 
@@ -4083,6 +4109,38 @@ export const runQualityTaskStepGroup = runStepGroup;
  * @since 0.0.0
  */
 export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
+
+/**
+ * Run quality task subprocess steps with their output buffered and replayed
+ * whole as each step ends, then fail with all subprocess failures.
+ *
+ * **Details**
+ *
+ * Use this for steps that run beside other steps (two coverage producers on
+ * one runner): streaming both would interleave their lines, so each step's
+ * combined stdout and stderr is captured without teeing and printed in one
+ * block, bounded by `repoRunOutputBound`. Flake quarantine does not apply to
+ * a buffered step.
+ *
+ * **Example** (Run a buffered group)
+ *
+ * ```ts
+ * import { runQualityTaskBufferedStepGroup } from "@beep/repo-cli/commands/Quality"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(runQualityTaskBufferedStepGroup("test", []))) // true
+ * ```
+ *
+ * @param label - Group label rendered in CLI output.
+ * @param steps - Subprocess steps to execute.
+ * @category use-cases
+ * @since 0.1.0
+ */
+export const runQualityTaskBufferedStepGroup = Effect.fn("QualityTasks.runQualityTaskBufferedStepGroup")(function* (
+  label: string,
+  steps: ReadonlyArray<QualityTaskStep>
+) {
+  yield* runStreamingStepGroup(label, steps, 1, true);
+});
 
 /**
  * Execute GitHub-check waves without raising their collected subprocess

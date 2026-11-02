@@ -13,6 +13,17 @@ Status: `active`
 
 ## Notes
 
+- Window-4 preview and repairs (2026-11-02): a preview census over the clean
+  15-context span (`2026-10-27T10:00Z` → `2026-11-03T10:00Z`, 1,202 runs by
+  11-02T08:00Z) read `Lint` 27m32s p95, `Test Unit` 44m27s p95 (p50 32m47s)
+  and pickup 11m18s p95, with per-day peak CI-active branches of 12, 7, 4,
+  28, 10 and 13 (10-28 → 11-02). Both body breaches were attributed and
+  repaired the same day: Lint by #2526 (biome project scan, D5) and Test
+  Unit by the re-bin plus two-wide producers (D4,
+  `research/test-unit-rebin-2026-11-02.md`). Window 4 closes at
+  2026-11-03T10:00Z and is censused under the old shard layout; the first
+  complete week after the D4 merge is window 5 and the admission candidate.
+
 - Admission verdict (2026-10-01): window 3 (2026-09-23 → 2026-09-30) is
   denied; see `research/admission-week-3-p95.md`. 09-23/24 clear every gate;
   from 09-25 run volume rose 10–25× (58 branches in a day, 44
