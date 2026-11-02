@@ -2622,7 +2622,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     githubCheckTestLane(
                       "pool:slow",
                       "preflight",
-                      `await Bun.sleep(1500); process.exit((await Bun.file(${doneMarker}).exists()) ? 0 : 7)`
+                      `await Bun.sleep(3000); process.exit((await Bun.file(${doneMarker}).exists()) ? 0 : 7)`
                     ),
                     githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
                     githubCheckTestLane("pool:late", "preflight", `await Bun.write(${doneMarker}, "done")`),
@@ -2661,7 +2661,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 GithubCheckLaneWaveSpec.make({
                   wave: "preflight",
                   lanes: [
-                    githubCheckTestLane("pool:slow", "preflight", "await Bun.sleep(1500)"),
+                    githubCheckTestLane("pool:slow", "preflight", "await Bun.sleep(3000)"),
                     githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
                     githubCheckTestLane(
                       "pool:red",
