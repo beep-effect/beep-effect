@@ -1555,7 +1555,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 47,
+      "line": 48,
       "owner": "@beep/repo-ai-metrics",
       "reason": "Real loopback HTTP and SQLite regressions verify committed acknowledgment/replay, private-field and destination/epoch/route refusal, conflicts, streaming limits, incomplete bodies, concurrent admission, disabled enrollment and rollback without acknowledgment. Codecs support controlled failure fixtures and receipts. Exit: reusable codec laws move here or normalization/stream decoding gains an independently specified generated invariant; preserve malformed requests, privacy canary, rollback and timing cases. Independently reviewed by Astra; no property coverage elsewhere is claimed."
     },
