@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T13:59:17.816Z",
+  "generatedAt": "2026-11-02T14:44:45.019Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3574,
-    "publicExports": 25418,
+    "publicExports": 25419,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -448277,7 +448277,7 @@
         "srcDir": "src",
         "sourceFileCount": 501,
         "publicModuleCount": 498,
-        "publicExportCount": 4679
+        "publicExportCount": 4680
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -459096,7 +459096,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "open"
         },
         {
@@ -560151,8 +560151,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-90-fleet-surface-exclude-prefixes",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-91-fleet-surface-exclude-prefixes",
           "currentTags": [
             "@category",
             "@since"
@@ -560173,8 +560173,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-132-classifyfleetliveness",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-133-classifyfleetliveness",
           "currentTags": [
             "@param",
             "@returns",
@@ -560197,8 +560197,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-187-parsemergetreeconflictnames",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-188-parsemergetreeconflictnames",
           "currentTags": [
             "@param",
             "@returns",
@@ -560221,8 +560221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 228,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-228-transcriptprojectdirname",
+          "line": 229,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-229-transcriptprojectdirname",
           "currentTags": [
             "@param",
             "@returns",
@@ -560245,8 +560245,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 258,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-258-parseprocstatstarttime",
+          "line": 259,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-259-parseprocstatstarttime",
           "currentTags": [
             "@param",
             "@returns",
@@ -560275,8 +560275,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 316,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-316-buildcontestedindex",
+          "line": 317,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-317-buildcontestedindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -560299,8 +560299,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-334-fleetmirrorserviceshape",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-335-fleetmirrorserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -560321,9 +560321,33 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 376,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-376-fleetmirrorservice",
+          "line": 377,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-377-fleetmirrorservice",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "statusFactsFromEntries",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 920,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-920-statusfactsfromentries",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -560343,8 +560367,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 1316,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1316-fleetmirrorservicelive",
+          "line": 1346,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1346-fleetmirrorservicelive",
           "currentTags": [
             "@category",
             "@since"
