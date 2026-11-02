@@ -33,8 +33,8 @@ SessionStart hook in `.claude/settings.json` is inert on workstations.
 
 | | Claude cloud (Pro/Max) | Codex cloud (Plus/Pro) | Cursor Cloud Agent |
 | --- | --- | --- | --- |
-| Where configured | Environment dialog at claude.ai/code | Settings → Codex Cloud → Environments | `.cursor/environment.json` (committed) |
-| Scope | Personal per account; UI only, no API | Per ChatGPT account; UI only, no API | Repo-wide |
+| Where configured | Environment dialog at claude.ai/code | Settings → Codex Cloud → Environments | Saved personal/team config, else `.cursor/environment.json` (committed) |
+| Scope | Personal per account; UI only, no API | Per ChatGPT account; UI only, no API | Repo-wide default; saved personal/team configs take precedence |
 | Base image | Ubuntu 24.04, Node 20–22, bun present | codex-universal: Node 22, no bun | Ubuntu 24.04 |
 | Setup script | Cached when it finishes in ~5 min | Cached container, 12 h; maintenance script on resume | `install` in `environment.json` |
 | Agent-phase network | Trusted allowlist by default | Off by default | Sandbox allowlist |
