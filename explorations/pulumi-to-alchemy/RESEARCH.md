@@ -433,7 +433,7 @@ Deltas since the 2026-10-15 sections:
 
 | Area | 2026-10-15 | 2026-11-02 |
 | --- | --- | --- |
-| TS6 coupling | root `patches/@pulumi%2Fpulumi@3.268.0.patch` redirects the hoisted runtime to the `@typescript/typescript6` bridge; syncpack holds `@pulumi/pulumi` exact | Patch gone; `@pulumi/pulumi` is `3.273.0` in the catalog with no hold. Every infra `Pulumi.yaml` preloads `infra/pulumi-typescript6.cjs` through `runtime.options.nodeargs`, which resolves `typescript` to infra's nested `^6.0.3`. Syncpack keeps one version group for that pin (`syncpack.config.ts:153-163`). Root `postinstall` still runs `infra:prepare-gha-runners` with `infra/node_modules/typescript/bin/tsc`, so **every `bun install` in the repo compiles with TypeScript 6** |
+| TS6 coupling | root `patches/@pulumi%2Fpulumi@3.268.0.patch` redirects the hoisted runtime to the `@typescript/typescript6` bridge; syncpack holds `@pulumi/pulumi` exact | Patch gone; `@pulumi/pulumi` is `3.273.0` in the catalog with no hold. Every infra `Pulumi.yaml` preloads `infra/pulumi-typescript6.cjs` through `runtime.options.nodeargs`, which resolves `typescript` to infra's nested `^6.0.3`. Syncpack keeps one version group for that pin (`syncpack.config.ts:153-163`). Root `postinstall` still runs `infra:prepare-gha-runners` with infra's nested compiler (`<infra>/node_modules/typescript/bin/tsc`), so **every `bun install` in the repo compiles with TypeScript 6** |
 | Pulumi programs | five | **six**: `infra/turbo-cache-lab/Pulumi.yaml` (disposable conformance lab reusing `CiTurboCache`; `lab-aws.sh` wraps `pulumi stack init` and `config set`) |
 | CiTurboCache | 30 direct resources | +`aws.sns.Topic`, `aws.sns.TopicSubscription`, `aws.cloudwatch.MetricAlarm` (#2252 throttle alarm) |
 | Alchemy in the repo | none | **three live stacks**: `apps/beep-effect-web/alchemy.run.ts` (`BeepEffectWeb`, `Cloudflare.Website.Vite`, `Cloudflare.state()`, CI deploy on `main`, first green run 41244684210, site live at beep-effect.com) and `infra/r2-cache/` (`BeepTurboR2Pilot`, `BeepTurboR2SignedCredentials`, run from a frozen tool clone of Alchemy commit `95f1581` with local state under `$HOME/.local/state/beep/r2-cache/alchemy`). Catalog pins `alchemy` and `@alchemy.run/cloudflare` at `2.0.0-beta.84` |
@@ -458,7 +458,7 @@ repo gates, not to Alchemy."
   `vercel` package**; the 37 "vercel" hits in `packages/` are OIDC audience strings, Next.js
   source detection and test fixtures.
 - **TypeScript.** Workspace catalog `typescript: ^7.0.2`; a `typescript-classic: 6.0.3` catalog
-  exists only for SvelteKit and TS5 for Next.js. `packages/alchemy/package.json` has no
+  exists only for SvelteKit and TS5 for Next.js. the `alchemy` package manifest (`<checkout>/packages/alchemy/package.json`) has no
   `typescript` dependency or peer. Peer `effect ^4.0.5`; the repo catalog is `effect 4.1.1`
   and the lock already resolves it for beep-effect-web.
 - **State stores** (`alchemy/src/State/`, `aws/src/StateStore/`, `cloudflare/src/StateStore/`):
@@ -490,7 +490,7 @@ repo gates, not to Alchemy."
 
 Left column: every `new <provider>.<Resource>(` site in `infra/src/*.ts` (construction sites,
 with instance multipliers where a helper loops). Middle: the Alchemy resource in the checkout,
-as a path under `packages/aws/src/` or `packages/cloudflare/src/`, or **GAP**. A match means an
+as a path under `<checkout>/packages/aws/src/` or `<checkout>/packages/cloudflare/src/`, or **GAP**. A match means an
 implementation exists; property parity and adoption behaviour are untested. "Merge" means several
 Pulumi identities become one Alchemy identity, which matters for adoption (one `read`, one state
 row).
