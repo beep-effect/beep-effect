@@ -182,7 +182,11 @@ const spawner = (exitCode: number, output: string) =>
     expect(commandArgs(command)).toEqual(["api", "repos/{owner}/{repo}/rules/branches/main"]);
     return Effect.succeed(handle(exitCode, output));
   });
+// The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
+// answer keeps the heavy-admission verdict these fixtures were written against.
+const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
 const platform = Layer.mergeAll(
+  mergeBaseDiffGit,
   BunCrypto.layer,
   MemoryFileSystem.layer,
   NodePath.layer,
@@ -737,6 +741,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           const calls = yield* Ref.make(0);
           const closeouts = yield* Ref.make(0);
           const captures = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+          const diffs = yield* Ref.make(0);
           const criteria = (closeoutRun: boolean) =>
             YeetMergeReadyCriteria.make({
               prOpen: true,
@@ -809,7 +814,16 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
               ),
             policy: YeetUntilReadyPolicy.make({ settleTimeoutMs: 50 }),
             pollInterval: Duration.millis(100),
-          }).pipe(Effect.forkChild);
+          }).pipe(
+            Effect.provideService(
+              Git,
+              Git.makeTest({
+                changedFiles: () =>
+                  Ref.update(diffs, (n) => n + 1).pipe(Effect.as<ReadonlyArray<string>>(["packages/a/src/index.ts"])),
+              })
+            ),
+            Effect.forkChild
+          );
           // Three held polls span 200ms against a 50ms budget: a held head never times out,
           // and it sleeps the full interval instead of racing the exhausted budget.
           yield* TestClock.adjust("250 millis");
@@ -823,8 +837,10 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           expect(yield* Fiber.join(fiber)).toBe("ready");
           expect(yield* Ref.get(calls)).toBe(5);
           expect(yield* Ref.get(closeouts)).toBe(1);
-          // One merge-base diff and one push-time read per head, never per poll.
-          expect(A.map(yield* Ref.get(captures), (args) => args[0])).toEqual(["api", "diff"]);
+          // One push-time read per head through the capture, never per poll; the merge-base diff
+          // runs through `Git.changedFiles` (W2b) and is counted on the `Git` double below.
+          expect(A.map(yield* Ref.get(captures), (args) => args[0])).toEqual(["api"]);
+          expect(yield* Ref.get(diffs)).toBe(1);
           const lines = yield* ownLines;
           expect(lines).toContain("[yeet] heavy admission: hold → run");
           // The closeout runs inside the same poll, so the reason moves straight to settled.
@@ -852,6 +868,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
         const calls = yield* Ref.make(0);
         const reads = yield* Ref.make(0);
         const captures = yield* Ref.make(0);
+        const diffs = yield* Ref.make(0);
         const sweeps = yield* Ref.make(0);
         const criteria = YeetMergeReadyCriteria.make({
           prOpen: true,
@@ -887,12 +904,22 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
           onMerged: () => Ref.update(sweeps, (n) => n + 1),
           pollInterval: Duration.millis(100),
           policy: YeetUntilMergedPolicy.make({ settleTimeoutMs: 50 }),
-        }).pipe(Effect.forkChild);
+        }).pipe(
+          Effect.provideService(
+            Git,
+            Git.makeTest({
+              changedFiles: () => Ref.update(diffs, (n) => n + 1).pipe(Effect.as(A.empty<string>())),
+            })
+          ),
+          Effect.forkChild
+        );
         yield* TestClock.adjust("300 millis");
         expect(yield* Fiber.join(fiber)).toBe("merged");
         expect(yield* Ref.get(reads)).toBe(2);
-        // Two heads × (pushedAt read + merge-base diff): both are once per head.
-        expect(yield* Ref.get(captures)).toBe(4);
+        // Two heads × (pushedAt read through the capture + merge-base diff through `Git`, W2b): both
+        // are once per head.
+        expect(yield* Ref.get(captures)).toBe(2);
+        expect(yield* Ref.get(diffs)).toBe(2);
         expect(yield* Ref.get(sweeps)).toBe(1);
         const fs = yield* FileSystem.FileSystem;
         const saved = yield* fs

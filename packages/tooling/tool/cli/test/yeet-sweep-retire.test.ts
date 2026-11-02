@@ -849,6 +849,32 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         expect(error.message).toContain("git rev-parse --path-format=absolute --git-common-dir exited with");
       })
     );
+
+    it.effect("reports a git that never ran as could-not-run, naming the checkout", () =>
+      Effect.gen(function* () {
+        const context = RepoRunContext.make({
+          base: "origin/main",
+          branch: "claude/lane",
+          cwd: "/lane",
+          head: "HEAD",
+          originalArgv: [],
+          packetDir: "/lane",
+          repoRoot: "/lane",
+          turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+        });
+        // `Git` is rebuilt over a spawner that cannot start git: the kit's spawn failure (W2b).
+        const error = yield* Effect.flip(planRetire(context, O.none())).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            ChildProcessSpawner.make(() =>
+              Effect.fail(PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
+            )
+          )
+        );
+        expect(error.message).toBe("git rev-parse --path-format=absolute --git-common-dir could not run in /lane.");
+      })
+    );
   });
 
   it("appends the working form only when a holder blocked the retirement", () => {

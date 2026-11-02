@@ -38,6 +38,8 @@
     "research/git-readers-differential-w1a.json",
     "research/yeet-git-differential-w1b.json",
     "research/dirty-axis-differential-w2.json",
+    "research/yeet-remainder-differential-w2b.json",
+    "research/reviewer-ci-github-differential-w3.json",
     "research/review-thread-differential-w4.json"
   ],
   "agentLaunchers": [
@@ -106,6 +108,42 @@
     {
       "path": "ops/dirty-axis-differential-w2.ts",
       "purpose": "W2 differential: the frozen dirty-axis readers (ChangedFiles probes and base range, the lockfile pathspec, the ResidueReap, TmpfsReap and Fleet status reads, the Worktree listing parser, Fleet's origin and common-dir probes, the CiLane, ChangesetStatus, Codex Security, SessionLedger and rev-parse one-liners) compared with their Git-backed replacements over scratch repositories with a dirty worktree (staged, unstaged, untracked, a nested untracked directory, a staged rename, a non-ASCII path, a path with a space), a branched history with a rename and a deletion, diff-filter and pathspec scopes, linked and locked worktrees, a detached head, an unborn repository and a non-repository."
+    },
+    {
+      "path": "ops/yeet-remainder-differential-w2b.ts",
+      "purpose": "W2b differential: the frozen Yeet Settle/ProofShadow/Sweep/Retire/MergedPreview/ReadyGate/PullRequest/Status git bodies, the Library inventory commit read and the ai-metrics ls-files read compared with their Git-backed replacements over scratch repositories with a bare origin, a linked worktree, a detached HEAD, a dirty tree, a spaced and a non-ASCII path, a lockfile change, merged, upstream-only and unpushed branches, a non-fast-forward push, an unmerged index and a non-repository, plus the CommandProbe adapter spawn-failure case."
+    },
+    {
+      "path": "ops/reviewer-ci-github-differential-w3.ts",
+      "purpose": "W3 differential: the frozen pre-W3 Reviewer and Ci GitHub bodies (ops/frozen-w3: the gh/op secret reads and origin lookup, the gh api reader with its transient retry, the runner-loss reads and rerun, the governance client, ruleset administration and the merge gate, the HttpClient reviewer publishing service and App token cache) compared with their @beep/github and @beep/commands replacements over one recorded fixture table, served to the old bodies by a fake gh/op (jq projections applied with the real jq) and to the new ones through the transport fetch."
+    },
+    {
+      "path": "ops/frozen-w3/CiGovernance.old.ts",
+      "purpose": "Frozen pre-W3 CiGovernance body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/CiRerunRunnerLoss.old.ts",
+      "purpose": "Frozen pre-W3 CiRerunRunnerLoss body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/GitHubAppAuth.old.ts",
+      "purpose": "Frozen pre-W3 GitHubAppAuth body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/GithubIdentity.old.ts",
+      "purpose": "Frozen pre-W3 GithubIdentity body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/LaneTimings.old.ts",
+      "purpose": "Frozen pre-W3 LaneTimings body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/ReviewerRuleset.old.ts",
+      "purpose": "Frozen pre-W3 ReviewerRuleset body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/ReviewerService.old.ts",
+      "purpose": "Frozen pre-W3 ReviewerService body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
     },
     {
       "path": "ops/review-thread-differential-w4.ts",

@@ -2000,6 +2000,42 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    // The push runs through `Git.push` (W2b): a non-fast-forward rejection is the typed
+    // `NonFastForwardError`, which the re-request folds back into a warning, as git's exit 1 was.
+    it.effect("keeps the flip and the local re-request when origin rejects the push as a non-fast-forward", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const clone = yield* scratchClone();
+        const other = path.join(path.dirname(clone.work), "other");
+        yield* scratchGit(path.dirname(clone.work), ["clone", "--quiet", clone.origin, other]);
+        yield* scratchGit(other, [
+          "-c",
+          "user.email=o@example.com",
+          "-c",
+          "user.name=O",
+          "-c",
+          "commit.gpgsign=false",
+          "commit",
+          "--allow-empty",
+          "-m",
+          "elsewhere",
+        ]);
+        yield* scratchGit(other, ["push", "origin", "HEAD:refs/heads/main"]);
+        const advanced = yield* scratchGit(other, ["rev-parse", "HEAD"]);
+        const decision = yield* runYeetReadyGate(clone.context, {
+          finalCheck: passingFinalCheck,
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          read: () => Effect.succeed(prView({ headSha: O.some(clone.head) })),
+          markReady: () => Effect.void,
+          findMonitor: () => Effect.succeedNone,
+        });
+        expect(decision._tag).toBe("flip");
+        expect(yield* scratchGit(clone.origin, ["rev-parse", "main"])).toBe(advanced);
+        expect(yield* scratchGit(clone.work, ["rev-parse", "HEAD~1"])).toBe(clone.head);
+      })
+    );
+
     it.effect("pushes nothing when the checkout is not on the flipped head", () =>
       Effect.gen(function* () {
         const clone = yield* scratchClone();

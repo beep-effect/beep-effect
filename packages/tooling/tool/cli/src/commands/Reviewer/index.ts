@@ -12,7 +12,6 @@ export {
   ReviewerChangedFile,
   ReviewerCredentials,
   ReviewerInlineComment,
-  ReviewerInstallationToken,
   ReviewerResult,
   ReviewerReview,
   reviewerWire,

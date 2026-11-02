@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { PageOptions } from "@beep/github/Rest";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -11,17 +13,17 @@ import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import * as ChildProcess from "effect/process/ChildProcess";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
-import * as Str from "effect/String";
+import { GithubClientRequest, GithubIdentity, layerGithubClientFor } from "../../internal/github/GithubIdentity.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ReviewerChangedFile } from "./ReviewerModels.ts";
 
 const $I = $RepoCliId.create("commands/Reviewer/ReviewerRuleset.service");
 const ROOT = "repos/beep-effect/beep-effect";
+const REPO = { owner: "beep-effect", repo: "beep-effect" } as const;
 const UnknownJson = S.fromJsonString(S.Unknown);
-const decodeJson = S.decodeUnknownEffect(UnknownJson);
 const encodeJson = S.encodeEffect(UnknownJson);
 const ObjectRecord = S.Record(S.String, S.Unknown);
 const decodeObject = S.decodeUnknownEffect(ObjectRecord);
@@ -45,7 +47,8 @@ class RuleSummary extends S.Class<RuleSummary, { readonly brand: unique symbol }
   { id: S.Int, source_type: S.String, enforcement: S.String },
   $I.annote("RuleSummary", { description: "Ruleset source and activation." })
 ) {}
-const decodeSummaryPages = S.decodeUnknownEffect(S.Array(S.Array(RuleSummary)));
+const decodeSummaries = S.decodeUnknownEffect(S.Array(RuleSummary));
+const decodeLogin = S.decodeUnknownEffect(S.Struct({ login: S.String }));
 class BranchRule extends S.Class<BranchRule, { readonly brand: unique symbol }>($I`BranchRule`)(
   { type: S.String, ruleset_id: S.Int, parameters: S.optionalKey(ObjectRecord) },
   $I.annote("BranchRule", { description: "Effective rule with originating ruleset." })
@@ -63,11 +66,7 @@ class Check extends S.Class<Check, { readonly brand: unique symbol }>($I`Check`)
   },
   $I.annote("Check", { description: "A check's source identity and head." })
 ) {}
-class Checks extends S.Class<Checks, { readonly brand: unique symbol }>($I`Checks`)(
-  { total_count: S.Int, check_runs: S.Array(Check) },
-  $I.annote("Checks", { description: "Check-run page." })
-) {}
-const decodeChecks = S.decodeUnknownEffect(Checks);
+const decodeChecks = S.decodeUnknownEffect(S.Array(Check));
 class PrHead extends S.Class<PrHead, { readonly brand: unique symbol }>($I`PrHead`)(
   { head: S.Struct({ sha: S.String }), base: S.Struct({ ref: S.String, sha: S.String }) },
   $I.annote("PrHead", { description: "Live pull request head and target branch." })
@@ -125,44 +124,79 @@ const DocumentationPath = S.String.check(
 const isDocumentationPath = S.is(DocumentationPath);
 const fail = (message: string) => ReviewerError.make({ operation: "ruleset", message });
 
+const ghFailure = () => fail("gh request failed; no response body was retained in the error.");
+
 /**
- * Runs gh with its existing login and streams optional input without a temporary file.
+ * The operator's `gh` login as a `@beep/github` client, for ruleset administration and the merge gate.
  *
- * **Example** (Compose an authenticated read)
+ * **Details**
+ *
+ * Always the `gh-cli` identity (`gh auth token`, read through `@beep/commands`
+ * `Run`): ruleset administration must speak as the human account that holds
+ * repository administration, so neither `BEEP_GH_TOKEN_REF` nor an App
+ * identity may replace it. A token that cannot be read fails with the same
+ * sanitized `ReviewerError` a failed `gh` call reported.
+ *
+ * **Example** (Inspect the operator client layer)
  * ```ts
- * import { reviewerGh } from "@beep/repo-cli/commands/Reviewer";
- * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(reviewerGh(["api", "user"])));
+ * import { reviewerOperatorClient } from "@beep/repo-cli/commands/Reviewer";
+ * import * as Layer from "effect/Layer";
+ * console.log(Layer.isLayer(reviewerOperatorClient(process.cwd())));
  * ```
  *
- * @category adapters
+ * @param cwd - Working directory for the `gh auth token` child process.
+ * @returns A layer providing the operator's `GitHubClient`.
+ * @category layers
  * @since 0.0.0
  */
-export const reviewerGh = Effect.fn("Reviewer.gh")(function* (args: ReadonlyArray<string>, input?: string) {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const child = yield* ChildProcess.make("gh", args, {
-        stdout: "pipe",
-        stderr: "ignore",
-        ...O.getSomesStruct({
-          stdin: O.map(O.fromUndefinedOr(input), (text) => Stream.make(new TextEncoder().encode(text))),
-        }),
-      });
-      const [code, output] = yield* Effect.all(
-        [child.exitCode, child.stdout.pipe(Stream.decodeText, Stream.mkString)],
-        { concurrency: 2 }
-      );
-      if (code !== 0)
-        return yield* fail(
-          "gh request failed; verify the selected human account and repository administration permission."
-        );
-      return output;
+export const reviewerOperatorClient = (
+  cwd: string
+): Layer.Layer<GitHubClient, ReviewerError, ChildProcessSpawner.ChildProcessSpawner> =>
+  layerGithubClientFor(
+    GithubClientRequest.make({
+      identity: GithubIdentity.make({
+        kind: "gh-cli",
+        tokenRef: O.none(),
+        appId: O.none(),
+        installationId: O.none(),
+        privateKeyRef: O.none(),
+      }),
+      cwd,
     })
-  ).pipe(Effect.mapError(() => fail("gh request failed; no response body was retained in the error.")));
-});
+  ).pipe(Layer.catchTag("GithubIdentityError", () => Layer.effect(GitHubClient, Effect.fail(ghFailure()))));
+
+/**
+ * Runs a gate or ruleset program with {@link reviewerOperatorClient} built for its own scope.
+ *
+ * **Details**
+ *
+ * For callers outside the `reviewer` command tree (Yeet's merge paths), which
+ * hold no `GitHubClient` of their own for the operator login.
+ *
+ * **Example** (Gate a merge as the operator)
+ * ```ts
+ * import { enforceReviewerGate, withReviewerOperatorClient } from "@beep/repo-cli/commands/Reviewer";
+ * import * as Effect from "effect/Effect";
+ * const gated = enforceReviewerGate(123, "a".repeat(40)).pipe(withReviewerOperatorClient(process.cwd()));
+ * console.log(Effect.isEffect(gated));
+ * ```
+ *
+ * @param cwd - Working directory for the `gh auth token` child process.
+ * @returns A function providing the operator client to a program.
+ * @category layers
+ * @since 0.0.0
+ */
+export const withReviewerOperatorClient =
+  (cwd: string) =>
+  <A, E, R>(
+    program: Effect.Effect<A, E, R | GitHubClient>
+  ): Effect.Effect<A, E | ReviewerError, Exclude<R, GitHubClient> | ChildProcessSpawner.ChildProcessSpawner> =>
+    Effect.flatMap(Layer.build(reviewerOperatorClient(cwd)), (context) => Effect.provideContext(program, context)).pipe(
+      Effect.scoped
+    );
+
 const api = Effect.fn("Reviewer.ghApi")(function* (path: string) {
-  return yield* reviewerGh(["api", path]).pipe(
-    Effect.flatMap(decodeJson),
+  return yield* GitHubClient.use((client) => client.requestDecoded(`GET /${path}`, {}, S.Unknown)).pipe(
     Effect.mapError(() => fail("Cannot read GitHub administration data."))
   );
 });
@@ -242,19 +276,19 @@ const updateReviewerRuleset = Effect.fnUntraced(function* (
   apply: boolean,
   rulesetId: number | undefined
 ) {
-  const user = yield* reviewerGh(["api", "user", "--jq", ".login"]);
-  if (Str.trim(user) !== "kriegcloud")
+  const client = yield* GitHubClient;
+  const user = yield* client
+    .requestDecoded("GET /user", {}, S.Unknown)
+    .pipe(Effect.flatMap(decodeLogin), Effect.mapError(ghFailure));
+  if (user.login !== "kriegcloud")
     return yield* fail("Ruleset administration must use Benjamin Oppold's gh login (kriegcloud).");
   const repo = yield* api(ROOT).pipe(Effect.flatMap(decodeRepo));
   const branchRules = yield* api(`${ROOT}/rules/branches/${encodeURIComponent(repo.default_branch)}`).pipe(
     Effect.flatMap(decodeBranchRules)
   );
-  const listed = yield* reviewerGh([
-    "api",
-    `${ROOT}/rulesets?includes_parents=true&per_page=100`,
-    "--paginate",
-    "--slurp",
-  ]).pipe(Effect.flatMap(decodeJson), Effect.flatMap(decodeSummaryPages), Effect.map(A.flatten));
+  const listed = yield* client
+    .paginate("GET /repos/{owner}/{repo}/rulesets", { ...REPO, includes_parents: true }, PageOptions.all)
+    .pipe(Effect.mapError(ghFailure), Effect.flatMap(decodeSummaries));
   const candidates = A.filter(
     listed,
     (entry) =>
@@ -279,15 +313,24 @@ const updateReviewerRuleset = Effect.fnUntraced(function* (
   if ((yield* api(path).pipe(Effect.flatMap(encodeJson))) !== before)
     return yield* fail("Ruleset changed during preview; rerun and inspect the new diff.");
   // PUT accepts only writable fields; the complete rules and bypass actors are preserved verbatim.
-  const payload = yield* encodeJson({
-    name: updated.name,
-    target: updated.target,
-    enforcement: updated.enforcement,
-    bypass_actors: updated.bypass_actors,
-    conditions: updated.conditions,
-    rules: updated.rules,
-  });
-  yield* reviewerGh(["api", "--method", "PUT", path, "--input", "-"], payload);
+  // The PUT targets the previewed id: `Ruleset.upsert` re-resolves by name and
+  // creates when the name is gone, which a concurrent rename must not trigger.
+  yield* client
+    .requestDecoded(
+      "PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}",
+      {
+        ...REPO,
+        ruleset_id: selected.value.id,
+        name: updated.name,
+        target: updated.target,
+        enforcement: updated.enforcement,
+        bypass_actors: updated.bypass_actors,
+        conditions: updated.conditions,
+        rules: updated.rules,
+      },
+      S.Unknown
+    )
+    .pipe(Effect.mapError(ghFailure));
 });
 
 /**
@@ -417,17 +460,16 @@ const requiredReviewerApp = Effect.fn("Reviewer.requiredApp")(function* (base: s
   return O.some(id.value);
 });
 const readReviewerChecks = Effect.fn("Reviewer.readChecks")(function* (sha: string) {
-  const checks: Array<Check> = [];
-  let page = 1;
-  while (true) {
-    const batch = yield* api(
-      `${ROOT}/commits/${sha}/check-runs?check_name=beep-reviewer&filter=all&per_page=100&page=${page}`
-    ).pipe(Effect.flatMap(decodeChecks));
-    checks.push(...batch.check_runs);
-    if (A.isReadonlyArrayEmpty(batch.check_runs) || page * 100 >= batch.total_count) break;
-    page += 1;
-  }
-  return checks;
+  return yield* GitHubClient.use((client) =>
+    client.paginate(
+      "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+      { ...REPO, ref: sha, check_name: "beep-reviewer", filter: "all" },
+      PageOptions.all
+    )
+  ).pipe(
+    Effect.mapError(() => fail("Cannot read GitHub administration data.")),
+    Effect.flatMap(decodeChecks)
+  );
 });
 
 /**

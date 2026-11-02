@@ -1105,7 +1105,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         yield* applyHeavyAdmissionLabel(contextAt("/repo"), recorder, O.some(labelStep), created).pipe(
           withProcesses(
             [
-              ["diff --name-only -z origin/main...HEAD", 0, "docs/a.md\0packages/tooling/tool/cli/src/bin.ts\0"],
+              [
+                "diff --name-only -z --no-relative origin/main...HEAD",
+                0,
+                "docs/a.md\0packages/tooling/tool/cli/src/bin.ts\0",
+              ],
               [labelCommand, 0, `${PR_URL}\n`],
             ],
             commands
@@ -1166,9 +1170,9 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet retire packet 
             ["gh pr view claude/lane --json files", 1, "no pull requests found"],
             ["merge-base main HEAD", 0, "abc123\n"],
             [
-              "diff --name-only abc123 HEAD -- goals/",
+              "diff --name-only -z --no-relative abc123 HEAD -- goals/",
               0,
-              "goals/open/ops/manifest.json\ngoals/blocked/SPEC.md\ngoals/unblocked/SPEC.md\ngoals/INDEX.md\n",
+              "goals/open/ops/manifest.json\0goals/blocked/SPEC.md\0goals/unblocked/SPEC.md\0goals/INDEX.md\0",
             ],
             [manifest("open"), 0, encodeJson({ lifecycle: "active" })],
             [manifest("blocked"), 0, encodeJson({ lifecycle: "active", blockedBy: ["operator gate"] })],

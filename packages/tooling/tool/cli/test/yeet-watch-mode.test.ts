@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { HEAVY_ADMISSION_LABEL } from "@beep/repo-cli/commands/Ci";
 import {
@@ -262,7 +263,9 @@ const scriptedSpawnerLayer = (
         });
       })
     )
-  ).pipe((scripted) => Layer.provideMerge(legacyGhGithubLayer, scripted));
+    // `Git` rides over the scripted spawner: the merge-base diff runs through the kit (W2b), whose
+    // `diff --name-only` argv the router above answers by prefix.
+  ).pipe((scripted) => Layer.provideMerge(legacyGhGithubLayer, Layer.provideMerge(Git.layer, scripted)));
 
 const greenScript = (headSha: string, labels: ReadonlyArray<string> = []): PollScript => ({
   view: { exitCode: 0, output: viewJson("OPEN", headSha, "CLEAN", null, labels) },

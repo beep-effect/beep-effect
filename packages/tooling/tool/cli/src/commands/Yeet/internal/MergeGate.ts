@@ -66,7 +66,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GithubRest } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
-import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
+import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { parseYeetInheritedRedsRecord, provideYeetGhLogin, yeetGithubFailure } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
@@ -1289,6 +1289,7 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest
 > {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
+    withReviewerOperatorClient(process.cwd()),
     Effect.mapError(() =>
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
     )

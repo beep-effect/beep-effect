@@ -1,0 +1,329 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/reviewer-ci-github-differential-w3.ts",
+  "commit": "12ececd3b7bc26bbc20152fe4124b99c89ee737d",
+  "jq": "jq-1.8.2",
+  "scenarios": 45,
+  "same": 37,
+  "classified": 8,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "layerGithubClientFor",
+      "scenario": "gh auth token answers",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"login\":\"kriegcloud\"}},\"calls\":[\"GET user as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"login\":\"kriegcloud\"}},\"calls\":[\"GET user as gho_operator\"]}"
+    },
+    {
+      "site": "layerGithubClientFor",
+      "scenario": "gh auth token exits 1",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"gh did not return a gh login token (exit 1)\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"gh did not return a gh login token (exit 1)\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubClientFor",
+      "scenario": "gh auth token prints nothing",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"gh did not return a gh login token (exit 0)\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"gh did not return a gh login token (exit 0)\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubClientFor",
+      "scenario": "op read answers a token reference",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"login\":\"kriegcloud\"}},\"calls\":[\"GET user as gho_from_op\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"login\":\"kriegcloud\"}},\"calls\":[\"GET user as gho_from_op\"]}"
+    },
+    {
+      "site": "layerGithubClientFor",
+      "scenario": "op read refuses a token reference",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"op did not return the GitHub token (exit 1)\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"op did not return the GitHub token (exit 1)\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubRepoFor",
+      "scenario": "GH_REPO set",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":\"beep-effect/beep-effect\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"ok\":\"beep-effect/beep-effect\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubRepoFor",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"could not resolve the GitHub repository (set GH_REPO or an origin remote)\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"could not resolve the GitHub repository (set GH_REPO or an origin remote)\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubRepoFor",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"could not resolve the GitHub repository (set GH_REPO or an origin remote)\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"could not resolve the GitHub repository (set GH_REPO or an origin remote)\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubRepoFor",
+      "scenario": "https origin",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":\"beep-effect/beep-effect\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"ok\":\"beep-effect/beep-effect\"},\"calls\":[]}"
+    },
+    {
+      "site": "layerGithubRepoFor",
+      "scenario": "ssh origin",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":\"kriegcloud/fork\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"ok\":\"kriegcloud/fork\"},\"calls\":[]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "jobs page (jq projection vs raw payload)",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "404",
+      "verdict": "D-12 (a): a failed read names the GitHub API status and reason (`GitHub API <endpoint> failed (HTTP n): <reason>`) where the gh capture named its exit and stderr; same CiCommandError, same retry decision",
+      "old": "{\"outcome\":{\"fail\":\"gh api repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 exited 1: gh: Not Found (HTTP 404)\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub API repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 failed (HTTP 404): Not Found\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "422 carrying the rate-limit phrase",
+      "verdict": "D-12 (a): a failed read names the GitHub API status and reason (`GitHub API <endpoint> failed (HTTP n): <reason>`) where the gh capture named its exit and stderr; same CiCommandError, same retry decision",
+      "old": "{\"outcome\":{\"fail\":\"gh api repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 exited 1: gh: Validation Failed: secondary rate limit mentioned (HTTP 422)\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub API repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 failed (HTTP 422): Validation Failed: secondary rate limit mentioned\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "500 GitHub answered",
+      "verdict": "D-12 (a): a failed read names the GitHub API status and reason (`GitHub API <endpoint> failed (HTTP n): <reason>`) where the gh capture named its exit and stderr; same CiCommandError, same retry decision",
+      "old": "{\"outcome\":{\"fail\":\"gh api repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 exited 1: gh: Internal Server Error (HTTP 500)\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub API repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 failed (HTTP 500): Internal Server Error\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "502 once, then the page",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "connection reset once, then the page",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"jobs\":[{\"completed_at\":\"2026-10-01T10:10:00Z\",\"conclusion\":\"success\",\"created_at\":\"2026-10-01T10:00:00Z\",\"id\":11,\"labels\":[\"beep-ci-i\"],\"name\":\"Heavy / Job 11\",\"run_attempt\":1,\"run_id\":900,\"runner_name\":\"beep-ci-i-11\",\"started_at\":\"2026-10-01T10:00:30Z\",\"status\":\"completed\",\"steps\":[{\"completed_at\":null,\"conclusion\":\"success\",\"name\":\"Set up job\",\"started_at\":null},{\"completed_at\":null,\"conclusion\":null,\"name\":\"Run verification lane\",\"started_at\":null}]}],\"total_count\":1}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "ghApiJson",
+      "scenario": "connection reset on every attempt",
+      "verdict": "D-12 (a): a failed read names the GitHub API status and reason (`GitHub API <endpoint> failed (HTTP n): <reason>`) where the gh capture named its exit and stderr; same CiCommandError, same retry decision; octokit reports a request that never reached GitHub as status 500 carrying the network error",
+      "old": "{\"outcome\":{\"fail\":\"gh api repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 exited 1 on every one of 5 attempts (transport): error connecting to api.github.com: read: connection reset by peer\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub API repos/{owner}/{repo}/actions/runs/900/jobs?filter=all&per_page=100&page=1 failed (HTTP 500): read: connection reset by peer on every one of 5 attempts (transport)\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/jobs?filter=all as gho_operator\"]}"
+    },
+    {
+      "site": "runCiRerunRunnerLoss",
+      "scenario": "lost job on the current pull-request head",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}"
+    },
+    {
+      "site": "runCiRerunRunnerLoss",
+      "scenario": "superseded pull-request head",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":false,\"reason\":\"superseded-head\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"superseded\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"cccccccccccccccccccccccccccccccccccccccc\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":false,\"reason\":\"superseded-head\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"None\"},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"superseded\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"cccccccccccccccccccccccccccccccccccccccc\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\"]}"
+    },
+    {
+      "site": "runCiRerunRunnerLoss",
+      "scenario": "fork pull request found by its head label",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":true}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls?head=contributor%3Afeature%2Fw3&state=open as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":true}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls?head=contributor%3Afeature%2Fw3&state=open as gho_operator\"]}"
+    },
+    {
+      "site": "runCiRerunRunnerLoss",
+      "scenario": "push run against its branch tip",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/git/ref/heads/main as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"decision\":{\"rerun\":true,\"reason\":\"runner-loss\",\"runId\":900,\"attempt\":1,\"maxAttempt\":8,\"maxJobReruns\":3,\"rerunJob\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}},\"lostJobs\":[{\"id\":11,\"name\":\"Heavy / Job 11\",\"runnerName\":\"beep-ci-i-11\",\"runnerLoss\":true,\"reruns\":0}],\"otherFailedJobs\":[{\"id\":12,\"name\":\"Heavy / Job 12\",\"runnerName\":\"beep-ci-i-12\",\"runnerLoss\":false,\"reruns\":0}],\"head\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":{\"status\":\"current\",\"currentSha\":{\"_id\":\"Option\",\"_tag\":\"None\"}}}},\"dryRun\":false}},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/git/ref/heads/main as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}"
+    },
+    {
+      "site": "runCiRerunRunnerLoss",
+      "scenario": "a refused rerun",
+      "verdict": "D-12 (a): the refused rerun names the API status and reason (`GitHub API rerun of job <id> failed (HTTP n)`) where `gh run rerun --job` named its exit and stderr; the decision, the reads and the one POST are the same",
+      "old": "{\"outcome\":{\"fail\":\"gh run rerun --job 11 exited 1: gh: Resource not accessible by integration (HTTP 403)\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub API rerun of job 11 failed (HTTP 403): Resource not accessible by integration\"},\"calls\":[\"GET repos/{owner}/{repo}/actions/runs/900 as gho_operator\",\"GET repos/{owner}/{repo}/actions/runs/900/attempts/1/jobs as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/11/annotations as gho_operator\",\"GET repos/{owner}/{repo}/check-runs/12/annotations as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"POST repos/{owner}/{repo}/actions/jobs/11/rerun as gho_operator\"]}"
+    },
+    {
+      "site": "GithubPolicyClient.read",
+      "scenario": "ruleset 10240248",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"id\":10240248,\"name\":\"main\",\"enforcement\":\"active\",\"rules\":[{\"type\":\"required_status_checks\",\"parameters\":{\"strict_required_status_checks_policy\":true,\"required_status_checks\":[{\"context\":\"Lint\"}]}}]}},\"calls\":[\"GET repos/{owner}/{repo}/rulesets/10240248 as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"id\":10240248,\"name\":\"main\",\"enforcement\":\"active\",\"rules\":[{\"type\":\"required_status_checks\",\"parameters\":{\"strict_required_status_checks_policy\":true,\"required_status_checks\":[{\"context\":\"Lint\"}]}}]}},\"calls\":[\"GET repos/{owner}/{repo}/rulesets/10240248 as gho_operator\"]}"
+    },
+    {
+      "site": "GithubPolicyClient.read",
+      "scenario": "held-group runs (jq projection vs raw payload)",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"workflow_runs\":[{\"id\":5,\"status\":\"waiting\",\"created_at\":\"2026-10-01T00:00:00Z\",\"head_branch\":\"main\"}]}},\"calls\":[\"GET repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"workflow_runs\":[{\"id\":5,\"status\":\"waiting\",\"created_at\":\"2026-10-01T00:00:00Z\",\"head_branch\":\"main\"}]}},\"calls\":[\"GET repos/{owner}/{repo}/actions/workflows/check.yml/runs?branch=main&event=push as gho_operator\"]}"
+    },
+    {
+      "site": "GithubPolicyClient.read",
+      "scenario": "unknown environment",
+      "verdict": "D-12 (a): the governance failure names the HTTP status (`(HTTP 404)`) where the gh capture named `(exit 1, truncated=false)`; the message still ends `state is unknown.`",
+      "old": "{\"outcome\":{\"fail\":\"GitHub policy request failed (exit 1, truncated=false); state is unknown.\"},\"calls\":[\"GET repos/{owner}/{repo}/environments/professional-desktop-release as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"GitHub policy request failed (HTTP 404); state is unknown.\"},\"calls\":[\"GET repos/{owner}/{repo}/environments/professional-desktop-release as gho_operator\"]}"
+    },
+    {
+      "site": "GithubPolicyClient.write",
+      "scenario": "replace a size label",
+      "verdict": "same",
+      "old": "{\"outcome\":{},\"calls\":[\"DELETE repos/{owner}/{repo}/issues/7/labels/size%2FL as gho_operator\",\"POST repos/{owner}/{repo}/issues/7/labels as gho_operator {\\\"labels\\\":[\\\"size/S\\\"]}\"]}",
+      "new": "{\"outcome\":{},\"calls\":[\"DELETE repos/{owner}/{repo}/issues/7/labels/size%2FL as gho_operator\",\"POST repos/{owner}/{repo}/issues/7/labels as gho_operator {\\\"labels\\\":[\\\"size/S\\\"]}\"]}"
+    },
+    {
+      "site": "releaseReviewerRuleset",
+      "scenario": "dry run prints the diff",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":[\"--- ruleset 11\\n- {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368},{\\\"context\\\":\\\"beep-reviewer\\\",\\\"integration_id\\\":42}]}}]}\\n+ {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\"]}",
+      "new": "{\"outcome\":{\"ok\":[\"--- ruleset 11\\n- {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368},{\\\"context\\\":\\\"beep-reviewer\\\",\\\"integration_id\\\":42}]}}]}\\n+ {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\"]}"
+    },
+    {
+      "site": "releaseReviewerRuleset",
+      "scenario": "apply writes one lossless PUT",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":[\"--- ruleset 11\\n- {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368},{\\\"context\\\":\\\"beep-reviewer\\\",\\\"integration_id\\\":42}]}}]}\\n+ {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\",\"PUT repos/{owner}/{repo}/rulesets/11 as gho_operator {\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]}",
+      "new": "{\"outcome\":{\"ok\":[\"--- ruleset 11\\n- {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368},{\\\"context\\\":\\\"beep-reviewer\\\",\\\"integration_id\\\":42}]}}]}\\n+ {\\\"id\\\":11,\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"source_type\\\":\\\"Repository\\\",\\\"source\\\":\\\"beep-effect/beep-effect\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\",\"PUT repos/{owner}/{repo}/rulesets/11 as gho_operator {\\\"name\\\":\\\"main protection\\\",\\\"target\\\":\\\"branch\\\",\\\"enforcement\\\":\\\"active\\\",\\\"bypass_actors\\\":[{\\\"actor_id\\\":5,\\\"actor_type\\\":\\\"RepositoryRole\\\",\\\"bypass_mode\\\":\\\"always\\\"}],\\\"conditions\\\":{\\\"ref_name\\\":{\\\"include\\\":[\\\"~DEFAULT_BRANCH\\\"],\\\"exclude\\\":[]}},\\\"rules\\\":[{\\\"type\\\":\\\"deletion\\\"},{\\\"type\\\":\\\"required_status_checks\\\",\\\"parameters\\\":{\\\"strict_required_status_checks_policy\\\":false,\\\"required_status_checks\\\":[{\\\"context\\\":\\\"Heavy / Check\\\",\\\"integration_id\\\":15368}]}}]}\"]}"
+    },
+    {
+      "site": "releaseReviewerRuleset",
+      "scenario": "another gh login is refused",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"Ruleset administration must use Benjamin Oppold's gh login (kriegcloud).\"},\"calls\":[\"GET user as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"Ruleset administration must use Benjamin Oppold's gh login (kriegcloud).\"},\"calls\":[\"GET user as gho_operator\"]}"
+    },
+    {
+      "site": "releaseReviewerRuleset",
+      "scenario": "an unreadable ruleset",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"Cannot read GitHub administration data.\"},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"Cannot read GitHub administration data.\"},\"calls\":[\"GET repos/{owner}/{repo} as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\",\"GET repos/{owner}/{repo}/rulesets/11 as gho_operator\",\"GET repos/{owner}/{repo}/rulesets?includes_parents=true as gho_operator\",\"GET user as gho_operator\"]}"
+    },
+    {
+      "site": "enforceReviewerGate",
+      "scenario": "a successful current-head reviewer check",
+      "verdict": "same",
+      "old": "{\"outcome\":{},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\"]}",
+      "new": "{\"outcome\":{},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\"]}"
+    },
+    {
+      "site": "enforceReviewerGate",
+      "scenario": "no reviewer check yet",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"Reviewer merge gate held: require a successful current-head beep-reviewer check from the ruleset App.\"},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\"]}",
+      "new": "{\"outcome\":{\"fail\":\"Reviewer merge gate held: require a successful current-head beep-reviewer check from the ruleset App.\"},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as gho_operator\",\"GET repos/{owner}/{repo}/pulls/7 as gho_operator\",\"GET repos/{owner}/{repo}/rules/branches/main as gho_operator\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "L0 documentation-only head",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/pulls as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7/files as ghs_installation\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/pulls as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7/files as ghs_installation\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "L0 refused when another open PR shares the head",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/pulls as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7/files as ghs_installation\"]}",
+      "new": "{\"outcome\":{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/pulls as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7/files as ghs_installation\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "start reuses the in-progress check",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\"]}",
+      "new": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "start creates a check",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":44},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"POST repos/{owner}/{repo}/check-runs as ghs_installation {\\\"name\\\":\\\"beep-reviewer\\\",\\\"head_sha\\\":\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"status\\\":\\\"in_progress\\\",\\\"external_id\\\":\\\"pr-7-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\",\\\"output\\\":{\\\"title\\\":\\\"Reviewing…\\\",\\\"summary\\\":\\\"Reviewing the current PR head.\\\"}}\"]}",
+      "new": "{\"outcome\":{\"ok\":44},\"calls\":[\"GET repos/{owner}/{repo}/commits/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/check-runs?check_name=beep-reviewer&filter=all as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"POST repos/{owner}/{repo}/check-runs as ghs_installation {\\\"name\\\":\\\"beep-reviewer\\\",\\\"head_sha\\\":\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"status\\\":\\\"in_progress\\\",\\\"external_id\\\":\\\"pr-7-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\\\",\\\"output\\\":{\\\"title\\\":\\\"Reviewing…\\\",\\\"summary\\\":\\\"Reviewing the current PR head.\\\"}}\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "complete with annotations",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"output\\\":{\\\"title\\\":\\\"4/5 · L2 · P0 0 · P1 0 · P2 1\\\",\\\"summary\\\":\\\"One suggestion\\\",\\\"annotations\\\":[{\\\"path\\\":\\\"README.md\\\",\\\"start_line\\\":1,\\\"end_line\\\":1,\\\"annotation_level\\\":\\\"warning\\\",\\\"message\\\":\\\"Clarify\\\"},{\\\"path\\\":\\\"README.md\\\",\\\"start_line\\\":1,\\\"end_line\\\":1,\\\"annotation_level\\\":\\\"warning\\\",\\\"message\\\":\\\"Clarify\\\"}]}}\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"success\\\",\\\"output\\\":{\\\"title\\\":\\\"4/5 · L2 · P0 0 · P1 0 · P2 1\\\",\\\"summary\\\":\\\"One suggestion\\\"}}\"]}",
+      "new": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"output\\\":{\\\"title\\\":\\\"4/5 · L2 · P0 0 · P1 0 · P2 1\\\",\\\"summary\\\":\\\"One suggestion\\\",\\\"annotations\\\":[{\\\"path\\\":\\\"README.md\\\",\\\"start_line\\\":1,\\\"end_line\\\":1,\\\"annotation_level\\\":\\\"warning\\\",\\\"message\\\":\\\"Clarify\\\"},{\\\"path\\\":\\\"README.md\\\",\\\"start_line\\\":1,\\\"end_line\\\":1,\\\"annotation_level\\\":\\\"warning\\\",\\\"message\\\":\\\"Clarify\\\"}]}}\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"success\\\",\\\"output\\\":{\\\"title\\\":\\\"4/5 · L2 · P0 0 · P1 0 · P2 1\\\",\\\"summary\\\":\\\"One suggestion\\\"}}\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "cancel",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"cancelled\\\",\\\"output\\\":{\\\"title\\\":\\\"Review cancelled\\\",\\\"summary\\\":\\\"superseded\\\"}}\"]}",
+      "new": "{\"outcome\":{\"ok\":2},\"calls\":[\"GET repos/{owner}/{repo}/check-runs/2 as ghs_installation\",\"PATCH repos/{owner}/{repo}/check-runs/2 as ghs_installation {\\\"status\\\":\\\"completed\\\",\\\"conclusion\\\":\\\"cancelled\\\",\\\"output\\\":{\\\"title\\\":\\\"Review cancelled\\\",\\\"summary\\\":\\\"superseded\\\"}}\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "upsert edits the owned summary",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":12},\"calls\":[\"GET repos/{owner}/{repo}/issues/7/comments as ghs_installation\",\"PATCH repos/{owner}/{repo}/issues/comments/12 as ghs_installation {\\\"body\\\":\\\"<!-- beep-reviewer:summary -->\\\\nSummary\\\"}\"]}",
+      "new": "{\"outcome\":{\"ok\":12},\"calls\":[\"GET repos/{owner}/{repo}/issues/7/comments as ghs_installation\",\"PATCH repos/{owner}/{repo}/issues/comments/12 as ghs_installation {\\\"body\\\":\\\"<!-- beep-reviewer:summary -->\\\\nSummary\\\"}\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "upsert creates when only a copied marker exists",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":13},\"calls\":[\"GET repos/{owner}/{repo}/issues/7/comments as ghs_installation\",\"POST repos/{owner}/{repo}/issues/7/comments as ghs_installation {\\\"body\\\":\\\"<!-- beep-reviewer:summary -->\\\\nSummary\\\"}\"]}",
+      "new": "{\"outcome\":{\"ok\":13},\"calls\":[\"GET repos/{owner}/{repo}/issues/7/comments as ghs_installation\",\"POST repos/{owner}/{repo}/issues/7/comments as ghs_installation {\\\"body\\\":\\\"<!-- beep-reviewer:summary -->\\\\nSummary\\\"}\"]}"
+    },
+    {
+      "site": "Reviewer",
+      "scenario": "COMMENT review on the current head",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":55},\"calls\":[\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"POST repos/{owner}/{repo}/pulls/7/reviews as ghs_installation {\\\"body\\\":\\\"Notes\\\",\\\"comments\\\":[],\\\"commit_id\\\":\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"event\\\":\\\"COMMENT\\\"}\"]}",
+      "new": "{\"outcome\":{\"ok\":55},\"calls\":[\"GET repos/{owner}/{repo}/pulls/7 as ghs_installation\",\"POST repos/{owner}/{repo}/pulls/7/reviews as ghs_installation {\\\"body\\\":\\\"Notes\\\",\\\"comments\\\":[],\\\"commit_id\\\":\\\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\\\",\\\"event\\\":\\\"COMMENT\\\"}\"]}"
+    },
+    {
+      "site": "makeGitHubAppAuth",
+      "scenario": "mint, then two requests",
+      "verdict": "D-12 (b): building the layer mints a permission-check token and revokes it, then GitHubApp.clientLayer mints the client token (revoked on release); both mints send the same down-scoped body (octokit orders its keys) and every request carries the installation token",
+      "old": "{\"outcome\":{\"ok\":\"authenticated\"},\"calls\":[\"POST app/installations/77/access_tokens as <app-jwt> {\\\"repositories\\\":[\\\"beep-effect\\\"],\\\"permissions\\\":{\\\"checks\\\":\\\"write\\\",\\\"pull_requests\\\":\\\"write\\\",\\\"issues\\\":\\\"write\\\",\\\"contents\\\":\\\"read\\\",\\\"metadata\\\":\\\"read\\\"}}\"]}",
+      "new": "{\"outcome\":{\"ok\":\"authenticated\"},\"calls\":[\"DELETE installation/token as ghs_minted\",\"DELETE installation/token as ghs_minted\",\"GET user as ghs_minted\",\"GET user as ghs_minted\",\"POST app/installations/77/access_tokens as <app-jwt> {\\\"permissions\\\":{\\\"checks\\\":\\\"write\\\",\\\"pull_requests\\\":\\\"write\\\",\\\"issues\\\":\\\"write\\\",\\\"contents\\\":\\\"read\\\",\\\"metadata\\\":\\\"read\\\"},\\\"repositories\\\":[\\\"beep-effect\\\"]}\",\"POST app/installations/77/access_tokens as <app-jwt> {\\\"permissions\\\":{\\\"checks\\\":\\\"write\\\",\\\"pull_requests\\\":\\\"write\\\",\\\"issues\\\":\\\"write\\\",\\\"contents\\\":\\\"read\\\",\\\"metadata\\\":\\\"read\\\"},\\\"repositories\\\":[\\\"beep-effect\\\"]}\"]}"
+    },
+    {
+      "site": "makeGitHubAppAuth",
+      "scenario": "GitHub grants less than the reviewer asks",
+      "verdict": "D-12 (c): a grant below the reviewer permissions fails closed through assertPermissions and the refused token is revoked; the hand-rolled exchange accepted whatever GitHub granted",
+      "old": "{\"outcome\":{\"ok\":\"authenticated\"},\"calls\":[\"POST app/installations/77/access_tokens as <app-jwt> {\\\"repositories\\\":[\\\"beep-effect\\\"],\\\"permissions\\\":{\\\"checks\\\":\\\"write\\\",\\\"pull_requests\\\":\\\"write\\\",\\\"issues\\\":\\\"write\\\",\\\"contents\\\":\\\"read\\\",\\\"metadata\\\":\\\"read\\\"}}\"]}",
+      "new": "{\"outcome\":{\"fail\":\"Reviewer installation token exchange failed.\"},\"calls\":[\"DELETE installation/token as ghs_minted\",\"POST app/installations/77/access_tokens as <app-jwt> {\\\"permissions\\\":{\\\"checks\\\":\\\"write\\\",\\\"pull_requests\\\":\\\"write\\\",\\\"issues\\\":\\\"write\\\",\\\"contents\\\":\\\"read\\\",\\\"metadata\\\":\\\"read\\\"},\\\"repositories\\\":[\\\"beep-effect\\\"]}\"]}"
+    },
+    {
+      "site": "loadReviewerCredentials",
+      "scenario": "every field from op read",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"ok\":{\"appId\":42,\"clientId\":\"Iv.differential\",\"installationId\":77,\"privateKey\":\"<redacted>\"}},\"calls\":[]}",
+      "new": "{\"outcome\":{\"ok\":{\"appId\":42,\"clientId\":\"Iv.differential\",\"installationId\":77,\"privateKey\":\"<redacted>\"}},\"calls\":[]}"
+    },
+    {
+      "site": "loadReviewerCredentials",
+      "scenario": "op read refuses a field",
+      "verdict": "same",
+      "old": "{\"outcome\":{\"fail\":\"op op read field app_id failed; op-doctor ran once. Secret path stopped.\"},\"calls\":[]}",
+      "new": "{\"outcome\":{\"fail\":\"op op read field app_id failed; op-doctor ran once. Secret path stopped.\"},\"calls\":[]}"
+    }
+  ]
+}

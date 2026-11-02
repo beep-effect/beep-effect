@@ -37,14 +37,18 @@ reader's REST calls on `GithubRest`, `GitHubRepository` and `GitHubClient`, buil
 operator's gh login (SPEC D-13). `GhCall.ts` is deleted, `GithubGraphql.ts` keeps only the ready-flip document and
 `GhCommand.ts` only `ghOutput`. The current-branch `gh pr view` / `gh pr checks` reads stay (no kit member);
 `PullRequest`, `ProvenanceFooter`, `ReviewWindow`, `Merge` and `Monitor*` are deferred behind their capture seams.
-Earlier waves: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), the W4 kit (#2600) merged; W2b (#2606) and
-W3 (#2614) in review. Next: W5.
+Earlier waves merged: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), W2 (#2593, D-10), W2b (#2606, D-11),
+the W3 kit (#2556), W3 sites (#2614, D-12) and the W4 kit (#2600). Next: W5.
 
 ## Latest Evidence
 
 - 2026-11-02 W4 sites: `research/review-thread-differential-w4.json` (40 scenarios, 29 same, 11 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*` and `shared-internals` suite green (62 files, 1577 tests),
   the `@beep/github` `ReviewThread` suite green with the cursor hardening.
+- 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
+  unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
+- 2026-11-02 W3 sites: `research/reviewer-ci-github-differential-w3.json` (45 scenarios, 37 same, 8 classified,
+  0 unclassified); repo-cli typecheck and lint clean, the reviewer, ci and yeet merge-gate suites green.
 - 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
   repo-cli typecheck clean, the worktree, fleet, residue-reap, tmpfs-reap, quality-tasks, docgen, session-ledger,
   codex-security, package-verify, ci-lane, changeset-status, runners-bake, coverage-artifacts and step-git-exec

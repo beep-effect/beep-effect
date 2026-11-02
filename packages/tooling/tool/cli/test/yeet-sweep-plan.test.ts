@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitOptions } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   buildSweepPlan,
@@ -11,6 +11,7 @@ import {
   renderSweepReport,
   revalidateLocalDeletion,
   revalidateRemoteDeletion,
+  runTmpfsWorktreesStep,
   SweepGitState,
   SweepPlan,
   SweepReport,
@@ -497,9 +498,10 @@ const stubHandle = (stub: CommandStub) =>
     isRunning: Effect.succeed(false),
     kill: () => Effect.void,
     pid: ChildProcessSpawner.ProcessId(1),
-    stderr: Stream.empty,
+    // git writes a failure to stderr, which is what the kit reads; a capture reads both.
+    stderr: stub.exitCode === 0 ? Stream.empty : Stream.make(encoder.encode(stub.output)),
     stdin: Sink.drain,
-    stdout: Stream.make(encoder.encode(stub.output)),
+    stdout: stub.exitCode === 0 ? Stream.make(encoder.encode(stub.output)) : Stream.empty,
     unref: Effect.succeed(Effect.void),
   });
 
@@ -514,7 +516,7 @@ const allowedMutationCommands = [
   "git branch -d feat/merge-loop",
   "git branch -D feat/merge-loop",
   "git push origin --force-with-lease=refs/heads/feat/merge-loop:aaaa1111bbbb2222 :refs/heads/feat/merge-loop",
-  "git switch main",
+  "git checkout main",
   "bun install",
 ];
 
@@ -529,7 +531,7 @@ const stubSpawnerLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) 
           const line = A.join([command.command, ...commandArgs(command)], " ");
           const mutation =
             (command.command === "git" &&
-              A.contains(["fetch", "merge", "branch", "push", "switch"], commandArgs(command)[0])) ||
+              A.contains(["fetch", "merge", "branch", "push", "checkout"], commandArgs(command)[0])) ||
             command.command === "bun";
           if (mutation && !A.contains(allowedMutationCommands, line))
             return yield* Effect.die(`Unexpected sweep mutation: ${line}`);
@@ -550,24 +552,28 @@ const mergedSweepStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   // The session-ledger probe after a MERGED sweep; a non-GitHub origin means
   // the ledger row is skipped, so the stub never writes to the real ledger.
   ["git config --get remote.origin.url", nonzero(1)],
+  // The kit resolves the repository's SSH settings (`core.sshCommand`, `ssh.variant`) before a
+  // network fetch (W2b); none is set.
+  ["git config --get ", nonzero(1)],
   ["git rev-parse --abbrev-ref HEAD", ok("main")],
   ["git rev-parse --show-toplevel", ok("/repo")],
-  ["git rev-parse --verify --quiet refs/heads/main", ok(mainTipBeforeUpdate)],
-  ["git rev-parse --verify --quiet refs/remotes/origin/main", ok(mainTipBeforeUpdate)],
-  ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", ok(mergedTip)],
-  ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", ok(mergedTip)],
+  ["git rev-parse --verify --quiet --end-of-options refs/heads/main", ok(mainTipBeforeUpdate)],
+  ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/main", ok(mainTipBeforeUpdate)],
+  ["git rev-parse --verify --quiet --end-of-options refs/heads/feat/merge-loop", ok(mergedTip)],
+  ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/feat/merge-loop", ok(mergedTip)],
   ["git status --porcelain", ok("")],
-  ["git worktree list --porcelain", ok(`worktree /repo\nHEAD ${mergedTip}\nbranch refs/heads/main`)],
+  ["git worktree list --porcelain", ok(`worktree /repo\0HEAD ${mergedTip}\0branch refs/heads/main\0\0`)],
   ["git merge-base --is-ancestor", nonzero(1)],
   ["git diff --name-only", ok("bun.lock")],
   ["git ls-remote origin refs/heads/feat/merge-loop", ok(`${mergedTip}\trefs/heads/feat/merge-loop`)],
   ["gh pr view feat/merge-loop", ok(prViewJson)],
 ];
 
-// Longer than the 512 KiB repo-run capture bound, so the probe comes back
-// flagged truncated. Every block that survives is a detached worktree holding
-// no branch, so "the branch is held" can only come from the truncation itself.
-const truncatedWorktreeOutput = Str.repeat(40_000)("worktree /repo/detached-worktree\nHEAD aaaa1111\ndetached\n\n");
+// Longer than the 512 KiB bound the truncation fixture gives `Git` below, so the
+// kit refuses it as over the bound and the probe comes back flagged truncated.
+// Every block is a detached worktree holding no branch, so "the branch is held"
+// can only come from the truncation itself.
+const truncatedWorktreeOutput = Str.repeat(40_000)("worktree /repo/detached-worktree\0HEAD aaaa1111\0detached\0\0");
 
 const truncatedWorktreeStubs: ReadonlyArray<readonly [string, CommandStub]> = [
   ["git worktree list --porcelain", ok(truncatedWorktreeOutput)],
@@ -606,7 +612,7 @@ const cloneOn = (head: string, tip: string): ReadonlyArray<readonly [string, Com
   // the ledger row is skipped, so the stub never writes to the real ledger.
   ["git config --get remote.origin.url", nonzero(1)],
   ["git rev-parse --abbrev-ref HEAD", ok(head)],
-  ["git worktree list --porcelain", ok(`worktree /repo\nHEAD ${tip}\nbranch refs/heads/${head}`)],
+  ["git worktree list --porcelain", ok(`worktree /repo\0HEAD ${tip}\0branch refs/heads/${head}\0\0`)],
   ...mergedSweepStubs,
 ];
 
@@ -690,7 +696,7 @@ describe("executeSweep", () => {
             );
             expect(spawned).toContain("bun install");
             expect(spawned).not.toContain("git branch -d feat/merge-loop");
-            expect(spawned).not.toContain("git switch main");
+            expect(spawned).not.toContain("git checkout main");
             expect(A.map(report.steps, (step) => step.id)).toEqual([...SweepStepId.literals]);
             expect(A.map(report.steps, (step) => step.outcome.status)).toEqual(
               A.map(report.steps, (step) => (step.id === "tmpfs-worktrees" ? "skipped" : "executed"))
@@ -711,7 +717,9 @@ describe("executeSweep", () => {
         makeTempDirectory,
         (root) =>
           Effect.gen(function* () {
-            const state = yield* observeSweepGitState(sweepContext(root));
+            const state = yield* observeSweepGitState(sweepContext(root)).pipe(
+              Effect.provideServiceEffect(Git, Git.makeWith(GitOptions.make({ maxOutputBytes: 512 * 1024 })))
+            );
             expect(state.worktreeProbeUnreliable).toBe(true);
             expect(state.branchCheckedOutElsewhere).toBe(true);
             expect(state.mainCheckedOutElsewhere).toBe(true);
@@ -733,6 +741,75 @@ describe("executeSweep", () => {
             const state = yield* observeSweepGitState(sweepContext(root));
             assertSome(state.pullRequestHeadBranch, "feat/merge-loop");
             expect(blockerText(state, "delete-local-branch")).toEqual([]);
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  // The head probe runs through `Git.currentBranch` (W2b): a detached HEAD answers None, which the
+  // probe renders as the literal `HEAD` the capture printed; a failed read with no output falls back
+  // to `HEAD` too.
+  for (const [label, stub] of [
+    ["a detached HEAD", ok("HEAD")],
+    ["a failed head probe", nonzero(128)],
+  ] as const) {
+    it.layer(sweepTestLayer([["git rev-parse --abbrev-ref HEAD", stub], ...mergedSweepStubs]), {
+      timeout: "30 seconds",
+    })((it) => {
+      it.effect(`reads ${label} as the literal HEAD branch`, () =>
+        Effect.acquireUseRelease(
+          makeTempDirectory,
+          (root) =>
+            Effect.gen(function* () {
+              const state = yield* observeSweepGitState(sweepContext(root));
+              expect(state.headBranch).toBe("HEAD");
+            }),
+          removeTempDirectory
+        )
+      );
+    });
+  }
+
+  it.layer(
+    sweepTestLayer([
+      ["git merge-base --is-ancestor", ok("")],
+      [
+        "git branch -d feat/merge-loop",
+        { exitCode: 1, output: "error: the branch 'feat/merge-loop' is not fully merged" },
+      ],
+      ...mergedSweepStubs,
+    ]),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("skips a kit deletion git refused, with git's own words", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const report = yield* executeSweep(sweepContext(root));
+            const reason = skipReason(report, "delete-local-branch");
+            expect(reason).toContain("failed (exit 1)");
+            expect(reason).toContain("not fully merged");
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
+  it.layer(sweepTestLayer([["git worktree list --porcelain", nonzero(128)], ...mergedSweepStubs]), {
+    timeout: "30 seconds",
+  })((it) => {
+    it.effect("skips the tmpfs reap when the worktree list cannot be read", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const outcome = yield* runTmpfsWorktreesStep(root);
+            expect(outcome.status).toBe("skipped");
+            expect(outcome.status === "skipped" ? outcome.reason : "").toContain(
+              "git worktree list --porcelain failed or was truncated"
+            );
           }),
         removeTempDirectory
       )
@@ -782,8 +859,8 @@ describe("executeSweep", () => {
 
   it.layer(
     sweepTestLayer([
-      ["git rev-parse --verify --quiet refs/heads/feat/merge-loop", nonzero(1)],
-      ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ["git rev-parse --verify --quiet --end-of-options refs/heads/feat/merge-loop", nonzero(1)],
+      ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/feat/merge-loop", nonzero(1)],
       ["git ls-remote origin refs/heads/feat/merge-loop", ok("")],
       ...mergedSweepStubs,
     ]),
@@ -815,7 +892,7 @@ describe("executeSweep", () => {
 
   it.layer(
     sweepTestLayer([
-      ["git rev-parse --verify --quiet refs/remotes/origin/feat/merge-loop", nonzero(1)],
+      ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/feat/merge-loop", nonzero(1)],
       ...mergedSweepStubs,
     ]),
     { timeout: "30 seconds" }
@@ -868,7 +945,7 @@ describe("executeSweep", () => {
 
   it.layer(
     sweepTestLayer([
-      ["git rev-parse --verify --quiet refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
+      ["git rev-parse --verify --quiet --end-of-options refs/remotes/origin/main", ok("9999aaaa8888bbbb")],
       ...mergedSweepStubs,
     ]),
     { timeout: "30 seconds" }
@@ -892,9 +969,12 @@ describe("executeSweep", () => {
     );
   });
 
-  it.layer(sweepTestLayer([[`git diff --name-only ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    sweepTestLayer([[`git diff --name-only -z --no-relative ${mainTipBeforeUpdate}`, ok("")], ...mergedSweepStubs]),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("skips the install when the post-refresh update window shows bun.lock unchanged", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -977,7 +1057,7 @@ describe("executeSweep", () => {
           assertSome(endState.status === "executed" ? endState.detail : O.none(), "switched to main");
           expect(outcomeOf(report, "lockfile-install").status).toBe("executed");
           // The switch precedes the install, so the install resolves main's bun.lock.
-          expect(spawnIndex(spawned, "git switch main")).toBeLessThan(spawnIndex(spawned, "bun install"));
+          expect(spawnIndex(spawned, "git checkout main")).toBeLessThan(spawnIndex(spawned, "bun install"));
         })
       );
     }
@@ -994,7 +1074,7 @@ describe("executeSweep", () => {
           const { report, spawned } = yield* recordedSweep(root);
           expect(skipReason(report, "end-state")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
           expect(skipReason(report, "lockfile-install")).toBe(`blocked: ${liveCheckout("@chore/get-main-green")}`);
-          expect(spawned).not.toContain("git switch main");
+          expect(spawned).not.toContain("git checkout main");
           expect(spawned).not.toContain("bun install");
           // The ref-only steps still ran against that clone.
           expect(spawned).toContain("git fetch --prune origin");
@@ -1006,7 +1086,7 @@ describe("executeSweep", () => {
 
   it.layer(
     sweepTestLayer([
-      ["git switch main", { exitCode: 1, output: "error: your local changes would be overwritten by checkout" }],
+      ["git checkout main", { exitCode: 1, output: "error: your local changes would be overwritten by checkout" }],
       ...cloneOn("feat/merge-loop", mergedTip),
     ]),
     { timeout: "30 seconds" }
@@ -1020,7 +1100,7 @@ describe("executeSweep", () => {
         expect(skipReason(report, "end-state")).toContain("git switch 'main' failed (exit 1)");
         expect(skipReason(report, "lockfile-install")).toContain("end-state did not leave the clone on main");
         expect(skipReason(report, "lockfile-install")).toContain("skipped: git switch 'main' failed");
-        expect(spawned).toContain("git switch main");
+        expect(spawned).toContain("git checkout main");
         expect(spawned).not.toContain("bun install");
       })
     );
