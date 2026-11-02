@@ -75,6 +75,31 @@ const program = Effect.gen(function* () {
 
 `GitTag.latestSemver` walks tags and picks the newest version-shaped one in a single pass, over `@beep/semver`'s synchronous comparator — no round trip per candidate. `PullRequest.upsert` and `PullRequestComment.upsert` (a marker-tagged sticky comment) follow the same one-call-one-intent shape.
 
+## Review threads
+
+`ReviewThread` is the GraphQL-only pull-request surface: REST review comments carry no `isResolved`, so the thread list, the reply and the resolve/unresolve mutations all go through `GitHubClient.graphql`. `list(pullNumber)` walks every page of `reviewThreads(first: 100)` and reads one `comments(first: 100)` page per thread. A thread with more comments than that comes back with `commentsTruncated: true` and is named in one warning per page; its `newestComment` is read separately (`comments(last: 1)`), so the merge-gate rule still sees who spoke last. `listByNodeId` is the same read for callers that already hold the pull request's node id and have no `Repo` in scope.
+
+```ts
+import { outstanding, ReviewThread } from "@beep/github/ReviewThread";
+import * as Effect from "effect/Effect";
+
+const answerAndGate = (pullNumber: number) =>
+  Effect.gen(function* () {
+    const threads = yield* ReviewThread;
+    const read = yield* threads.list(pullNumber);
+    for (const thread of read.threads) {
+      if (!thread.isResolved && !thread.isOutdated) {
+        yield* threads.reply(thread.id, "Fixed in the latest push.");
+        yield* threads.resolve(thread.id);
+      }
+    }
+    return outstanding(yield* threads.list(pullNumber));
+  });
+// Effect<number, GitHubGraphQLError, ReviewThread | Repo>
+```
+
+`outstanding` is the merge-gate count: an unresolved thread always counts, and a resolved one counts only when the pull request author resolved it and a human other than the author has commented since (a bot's later comment is an acknowledgement, not a follow-up). `reply` refuses a blank body before any request is made.
+
 ## Issues and closing references
 
 `GitHubIssue` covers issues: read, list, create, close, comment, and the GraphQL side that answers which issues a pull request closes. `commentOnce` is the create-or-skip counterpart to `PullRequestComment.upsert` — it posts a marked comment and never edits one, which is what you want for an announcement that would read as a rewrite of history if it changed after the fact:
@@ -317,6 +342,7 @@ const TestClient = GitHubClient.layerFixture(fixtures);
 - `GitBranch` / `GitTag` — Git Database API refs, with `upsert` collapsing the create-or-reset dance to one call and `GitTag.latestSemver` picking the newest version-shaped tag in one pass.
 - `CheckRun` — `withCheckRun` concludes on every exit path; `CheckRunOutput.truncated()` cuts rendered output to GitHub's byte limits.
 - `PullRequest` / `PullRequestComment` — upserts for both, `listFiles` answering with the same full `CommitFile` records a commit read returns, `headSha`/`baseSha` on `PullRequestInfo`, plus `CommentMarker` for finding a sticky comment again.
+- `ReviewThread` — pull request review threads over GraphQL: every page of threads with their first 100 comments and a `commentsTruncated` flag, `reply`, `resolve` and `unresolve`, plus `outstanding`, the merge-gate count.
 - `GitHubIssue` — issues and their comments, including `commentOnce` for a marked comment that is posted exactly once and never edited, and `linkedIssues` for what a pull request closes.
 - `GitHubRelease` — releases and asset uploads, including the one route (`uploadAsset`, with the endpoint's optional display label) outside GitHub's generated endpoint map.
 - `RepositorySecret` / `RepositoryVariable` — repository and environment secrets and variables, with the sealed-box encryption GitHub's secrets API demands kept in one module nothing else imports.
