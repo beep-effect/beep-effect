@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "0e51a4a790fac45e0b945cd149b5fd0c85f89f9bfc4906e3fd12026c60a4a858",
+  "planSha256": "d2e7c51dd050d951da4a162b69dfef005367a3e1e36459c31eea8e07b6f631d0",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -658,6 +658,18 @@
         {
           "path": "goals/citation-extraction-engine/ops/check-cleaner-unicode.ts",
           "sha256": "c216477d690a7cc77ba425f31a670c8f5a10cbb5d9786cc461feea021475b790"
+        },
+        {
+          "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
+          "sha256": "81fc9377ea691e9596d1fdd811785614166b9c7cf5ff788cb524962fe8913298"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
+          "sha256": "f5f698e0c5e59f12f1965bf4774262442bb81141adca71f602e5f8bb0353428b"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",
+          "sha256": "c7fbef37c38c7e84ab08de17a17839ee89567a9f34b876916f959b93dbc63b36"
         }
       ],
       "workflowState": "audit",

@@ -316,6 +316,12 @@ rather than Python objects. Empty and replacement-space caches are bounded;
 text subclasses flatten without invoking host coercion. Complete source and
 identity observations are recorded in the citation engine packet.
 
+`PythonUnicode.ts` also adapts the same pinned canonical compact-string layout
+into explicit little-endian storage and a separate JavaScript text projection.
+It preserves surrogate source code points, validates native widths and lengths,
+and uses bounded, interruptible scans. Projection does not normalize the native
+source representation or issue a runtime ownership capability.
+
 Changes: the adaptation uses schema-owned TypeScript data, captured Effect
 comparison/work services, bounded probes and allocations, typed redacted
 failures, serialized operations and operation-local insertion identities.

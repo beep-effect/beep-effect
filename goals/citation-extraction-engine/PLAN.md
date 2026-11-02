@@ -198,8 +198,13 @@ The [exact Unicode composition corpus](./history/evidence/2026-11-02-cleaner-uni
 adds 2,016 source histories and 6,412 actual native-storage/identity snapshots.
 Its portable audit component and twenty corruption controls preserve the
 distinction between adjacent surrogate code points and a supplementary scalar.
-Next, retain this source state through value ownership, literal composition,
-hashing, callbacks and HTML transport; source capture does not close that work.
+The [lossless representation adapter](./history/evidence/2026-11-02-python-unicode-representation.md)
+now preserves all 6,412 source snapshots, including 1,208 whose JavaScript
+projection cannot reconstruct the source state. It validates canonical native
+layout and lengths under captured limits/timing; its data is not an issued
+capability. Next, retain this state through value ownership, literal composition,
+hashing, callbacks and HTML transport; representation proof does not close that
+integration or target parity.
 
 ## Delivery Rule
 
