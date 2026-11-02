@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
@@ -88,19 +89,22 @@ class RecordedCommands extends Context.Service<RecordedCommands, Ref.Ref<Readonl
 const RecordedCommandsLayer = Layer.effect(RecordedCommands, Ref.make<ReadonlyArray<string>>(A.empty()));
 
 const recordingSpawnerLayer = (respond: (commandLine: string) => CommandStub) =>
-  Layer.effect(
-    ChildProcessSpawner.ChildProcessSpawner,
-    Effect.map(RecordedCommands, (commandsRef) =>
-      ChildProcessSpawner.make((command) =>
-        ChildProcess.isStandardCommand(command)
-          ? Effect.map(
-              Ref.updateAndGet(commandsRef, A.append(A.join([command.command, ...commandArgs(command)], " "))),
-              (commands) => stubHandle(respond(O.getOrElse(A.last(commands), () => Str.empty)))
-            )
-          : Effect.die("the comment monitor never spawns a piped command")
+  Layer.provideMerge(
+    Git.layer,
+    Layer.effect(
+      ChildProcessSpawner.ChildProcessSpawner,
+      Effect.map(RecordedCommands, (commandsRef) =>
+        ChildProcessSpawner.make((command) =>
+          ChildProcess.isStandardCommand(command)
+            ? Effect.map(
+                Ref.updateAndGet(commandsRef, A.append(A.join([command.command, ...commandArgs(command)], " "))),
+                (commands) => stubHandle(respond(O.getOrElse(A.last(commands), () => Str.empty)))
+              )
+            : Effect.die("the comment monitor never spawns a piped command")
+        )
       )
-    )
-  ).pipe(Layer.provideMerge(RecordedCommandsLayer));
+    ).pipe(Layer.provideMerge(RecordedCommandsLayer))
+  );
 
 // `gh api --paginate --slurp` answers with one array OF PAGES, so every stub
 // here wraps its rows in a page the way the real command does.
@@ -426,10 +430,13 @@ describe("yeet monitor comment poll failures", () => {
     expect(renderYeetMonitorCommentStreamStopped(5)).toContain("yeet status --remote");
   });
 
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub)), {
-    timeout: "30 seconds",
-    excludeTestServices: true,
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(Git.layer, Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub))),
+    {
+      timeout: "30 seconds",
+      excludeTestServices: true,
+    }
+  )((it) => {
     it.effect("never cancels the check watcher it is raced against", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -458,10 +465,13 @@ describe("yeet monitor comment poll failures", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub)), {
-    timeout: "30 seconds",
-    excludeTestServices: true,
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(Git.layer, Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub))),
+    {
+      timeout: "30 seconds",
+      excludeTestServices: true,
+    }
+  )((it) => {
     it.effect("surfaces every failed poll and says so when it stops streaming", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -507,9 +517,12 @@ describe("yeet monitor comment replay", () => {
       "review-comments": { exitCode: 0, output: reviewCommentJson(43, REVIEW_COMMENT_AT) },
     })[endpointOf(commandLine)];
 
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(missedStub)), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(Git.layer, Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(missedStub))),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("replays what a stale v1 position missed, prints it, and upgrades to v2", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -574,10 +587,13 @@ describe("yeet monitor comment replay", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(missedStub)), {
-    timeout: "30 seconds",
-    excludeTestServices: true,
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(Git.layer, Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(missedStub))),
+    {
+      timeout: "30 seconds",
+      excludeTestServices: true,
+    }
+  )((it) => {
     it.effect("says so, and records a position, when the branch has none yet", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -600,9 +616,12 @@ describe("yeet monitor comment replay", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub)), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(Git.layer, Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(deniedStub))),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("keeps the saved position when the replay read fails", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
@@ -659,11 +678,14 @@ describe("yeet monitor comment truncation", () => {
     ],
   ]);
   it.layer(
-    Layer.mergeAll(
-      PlatformLayer,
-      TestConsole.layer,
-      recordingSpawnerLayer((commandLine) =>
-        endpointOf(commandLine) === "issues" ? { exitCode: 0, output: clipped } : { exitCode: 0, output: EMPTY_PAGE }
+    Layer.provideMerge(
+      Git.layer,
+      Layer.mergeAll(
+        PlatformLayer,
+        TestConsole.layer,
+        recordingSpawnerLayer((commandLine) =>
+          endpointOf(commandLine) === "issues" ? { exitCode: 0, output: clipped } : { exitCode: 0, output: EMPTY_PAGE }
+        )
       )
     ),
     { timeout: "30 seconds" }
@@ -731,9 +753,15 @@ const statusCommandStub = (commandLine: string): CommandStub =>
         : { exitCode: 0, output: Str.empty };
 
 describe("yeet status comment replay", () => {
-  it.layer(Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(statusCommandStub)), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(
+      Git.layer,
+      Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(statusCommandStub))
+    ),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("never replays the comment stream under --json", () =>
       Effect.acquireUseRelease(
         makeTempDirectory,
