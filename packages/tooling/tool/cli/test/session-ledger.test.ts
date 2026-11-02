@@ -401,6 +401,17 @@ describe("beep session", () => {
       )
     );
 
+    it.effect("records a detached lane under the literal HEAD branch", () =>
+      withScratchCheckout(({ lane }) =>
+        Effect.gen(function* () {
+          yield* runGit(lane, ["checkout", "--quiet", "--detach"]);
+          const facts = yield* sessionCheckoutFacts(lane);
+          expect(facts.lane).toBe("lane");
+          expect(facts.branch).toBe("HEAD");
+        })
+      )
+    );
+
     it.effect("rejects a bad state, an empty next step, and a non-positive pr", () =>
       withScratchCheckout(({ lane }) =>
         Effect.gen(function* () {
