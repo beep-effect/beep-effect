@@ -26,6 +26,13 @@ the guard does not guess the host from any other signal. The Codex and Cursor
 adapters exec the same writer, so the guard covers all three agent kinds.
 `HookPulseV1` has no host field, so no schema literal was added (PLAN P2).
 
+The guard skips the whole sequence-break worker, not only its desktop popup.
+Under `cloud` the ntfy transport also does not run, so no desktop or ntfy
+delivery-ledger row is written: there is no row at all, not a `skipped` row.
+Cloud lanes carry no ntfy topic or token (D5), so the only visible difference is
+that ledger absence. Readers of the sequence-break ledger must not read a
+missing row on a cloud `PermissionRequest` as a delivery failure.
+
 ## Tests
 
 `packages/tooling/library/ai-metrics/test/hook-pulse-writer.test.ts` gained
