@@ -15,6 +15,7 @@
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"CommitInfo","kind":"struct-const","owner":"@beep/git","identity":"CommitInfo","description":"The metadata of a single commit, read via `git log -1` with NUL-separated `%H` / `%G?` / `%B` placeholders."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"CommitLogEntry","kind":"struct-const","owner":"@beep/git","identity":"CommitLogEntry","description":"One commit of a `git log` listing, with the paths that commit touched."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"ConfigListEntry","kind":"struct-const","owner":"@beep/git","identity":"ConfigListEntry","description":"One configuration entry, from `git config --list`."},
+    {"file":"packages/drivers/git/src/Git.models.ts","symbol":"GitOptions","kind":"struct-const","owner":"@beep/git","identity":"GitOptions","description":"The per-run output ceiling and timeout a Git service instance applies to every spawn."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsFilesEntry","kind":"struct-const","owner":"@beep/git","identity":"LsFilesEntry","description":"One index (staging area) entry, from `git ls-files --stage`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsRemoteEntry","kind":"struct-const","owner":"@beep/git","identity":"LsRemoteEntry","description":"One ref a remote advertises, from `git ls-remote`."},
     {"file":"packages/drivers/git/src/Git.models.ts","symbol":"LsTreeEntry","kind":"struct-const","owner":"@beep/git","identity":"LsTreeEntry","description":"One entry of a `git ls-tree` listing."},
@@ -43,6 +44,7 @@
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"RawParse","kind":"struct-const","owner":"@beep/git","identity":"RawParse","description":"The scanner's result: sections in order plus every diagnostic found."},
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"RawSection","kind":"struct-const","owner":"@beep/git","identity":"RawSection","description":"One raw section: header spans plus the entries scanned under it."},
     {"file":"packages/drivers/git/src/internal/config.ts","symbol":"Splice","kind":"struct-const","owner":"@beep/git","identity":"Splice","description":"One text splice: replace `length` characters at `offset` with `content`."},
-    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"Collected","kind":"struct-const","owner":"@beep/git","identity":"Collected","description":"The stdout, stderr, and exit code of one completed run, collected separately."}
+    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"Collected","kind":"struct-const","owner":"@beep/git","identity":"Collected","description":"The stdout, stderr, and exit code of one completed run, collected separately."},
+    {"file":"packages/drivers/git/src/internal/run.ts","symbol":"OutputTooLarge","kind":"tagged-error","owner":"@beep/git","identity":"OutputTooLarge"}
   ]
 }

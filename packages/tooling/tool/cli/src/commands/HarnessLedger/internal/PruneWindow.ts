@@ -705,6 +705,7 @@ class ReconciliationTranscriptFile extends S.Opaque<ReconciliationTranscriptFile
     file: S.String,
     identity: S.String,
     hookKeys: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
+    aliasPaths: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
     canonical: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ReconciliationTranscriptFile", {
@@ -788,8 +789,16 @@ const selectTranscriptRepresentatives = Effect.fnUntraced(function* (
         A.empty<string>
       ),
     ]);
+    const aliasPaths = A.dedupe([
+      file,
+      canonical.value,
+      ...O.getOrElse(
+        O.map(prior, (old) => old.candidate.aliasPaths),
+        A.empty<string>
+      ),
+    ]);
     MutableHashMap.set(selected, canonical.value, {
-      candidate: ReconciliationTranscriptFile.make({ ...chosen, canonical, hookKeys }),
+      candidate: ReconciliationTranscriptFile.make({ ...chosen, canonical, hookKeys, aliasPaths }),
       priority: Math.max(
         priority,
         O.getOrElse(
@@ -912,19 +921,13 @@ const previousRegimeHooks = Effect.fnUntraced(function* (
   let matched = 0;
   for (const salt of previousSalts) {
     const counts = yield* hashTranscriptCounts(identities, salt.hashSalt);
-    const hookKeys = A.dedupe([
-      counts.pathHash,
-      ...(yield* O.match(file.canonical, {
-        onNone: () => Effect.succeed(A.empty<string>()),
-        onSome: (canonical) =>
-          hashPrivateIdentifier(canonical, salt.hashSalt).pipe(
-            Effect.mapBoth({
-              onSuccess: A.of,
-              onFailure: HarnessLedgerIoError.wrap("Cannot hash canonical transcript identity."),
-            })
-          ),
-      })),
-    ]);
+    const hookKeys = A.dedupe(
+      yield* Effect.forEach(file.aliasPaths, (alias) =>
+        hashPrivateIdentifier(alias, salt.hashSalt).pipe(
+          Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
+        )
+      )
+    );
     matched += matchingTranscriptHooks(counts, hookKeys, bindings);
   }
   return matched;

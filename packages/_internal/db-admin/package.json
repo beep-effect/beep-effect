@@ -6,7 +6,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
@@ -21,7 +20,6 @@
     "test:integration": "bun run beep:test:integration",
     "test:integration:parallel": "bun run beep:test:integration",
     "test:property": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsrs -p tsconfig.json && bun run babel",
     "beep:check": "tsrs -p tsconfig.check.json && tsrs -p tsconfig.drizzle.json && tsrs -p tsconfig.scripts.json --noEmit && bun run beep:check:tests && bun run migrations:check",
     "beep:docgen": "bunx --bun --no-install docgen",
