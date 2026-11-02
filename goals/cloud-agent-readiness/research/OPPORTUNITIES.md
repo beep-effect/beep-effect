@@ -401,3 +401,10 @@ be retained in the journal and copied into the stop receipt. Per-cgroup and
 device observations are needed for diagnosis; any changed stop threshold or
 measurement policy remains a separate decision. Do not silently weaken the
 agreed protection because a development workload triggers it.
+
+## 2026-11-01: Claude cloud setup ran outside the clone
+
+| Date | Friction and evidence | Prevention or proposed goal addition |
+| --- | --- | --- |
+| 2026-11-01 | The runbook's Claude setup script `bash scripts/cloud/bootstrap.sh` exited 127 at `352bac46` because the dashboard setup step does not start in the clone. SessionStart then ran the same bootstrap and the package proof passed, which masked the failed setup and the lost setup snapshot. `BEEP_CLOUD_SKIP_OP=1` as a setup prefix alone also leaves SessionStart fetching `op`. | Runbook now `cd`s to the vendor clone path before the shared bootstrap and sets `BEEP_CLOUD_SKIP_OP=1` and `BEEP_AGENT_HOST=cloud` as environment variables. A cloud smoke records setup status separately from SessionStart recovery (`history/2026-11-01-claude-cloud-smoke.md`). |
+| 2026-11-01 | The runbook said Cursor needed nothing per account, but Cursor's setup docs give saved personal/team configs precedence over the committed `.cursor/environment.json`. | Runbook now says to check saved Cursor configs per account/team. Cursor cloud still needs its own smoke before any qualification claim. |
