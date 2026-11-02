@@ -666,7 +666,6 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
 // lists files through git. Root `//#` tasks resolve globs from the root, package overlays only
 // through `$TURBO_ROOT$`.
 const turboRootPrefix = "$TURBO_ROOT$/";
-const worktreeExclusions = ["!.claude/worktrees/**", `!${turboRootPrefix}.claude/worktrees/**`];
 const TurboInputsFile = S.Struct({ tasks: S.Record(S.String, S.Struct({ inputs: Strings })) });
 const decodeTurboInputsFile = S.decodeEffect(S.fromJsonString(TurboInputsFile));
 const rootRelativeGlob = (id: string, glob: string): O.Option<string> =>
@@ -680,6 +679,10 @@ const reachesNestedLanes = (id: string) => (glob: string) =>
     rootRelativeGlob(id, glob),
     (relative) => Str.startsWith("**")(relative) || Str.startsWith(".claude/*")(relative)
   );
+// The exclusion resolves through the same scope rule: a package task's bare `!.claude/worktrees/**`
+// is package-relative and removes nothing, so only the `$TURBO_ROOT$` form counts there.
+const excludesNestedLanes = (id: string) => (glob: string) =>
+  Str.startsWith("!")(glob) && O.contains(rootRelativeGlob(id, Str.slice(1)(glob)), ".claude/worktrees/**");
 
 describe("Root-reaching task inputs", () => {
   it.layer(PlatformLayer)("tracked Turbo configurations", (it) => {
@@ -706,7 +709,7 @@ describe("Root-reaching task inputs", () => {
           Effect.fnUntraced(function* (file) {
             const { tasks } = yield* decodeTurboInputsFile(yield* fs.readFileString(path.join(repo, file)));
             return A.flatMap(R.toEntries(tasks), ([id, { inputs }]) =>
-              A.some(inputs, reachesNestedLanes(id)) && !A.some(inputs, (glob) => A.contains(worktreeExclusions, glob))
+              A.some(inputs, reachesNestedLanes(id)) && !A.some(inputs, excludesNestedLanes(id))
                 ? [`${file} ${id}`]
                 : []
             );
@@ -724,6 +727,11 @@ describe("Root-reaching task inputs", () => {
       expect(reachesNestedLanes("//#lint:typos")("!**/*")).toBe(false);
       expect(reachesNestedLanes("//#fallow:audit:check")("apps/**")).toBe(false);
       expect(reachesNestedLanes("//#fallow:audit:check")(".claude/skills/**")).toBe(false);
+      expect(excludesNestedLanes("//#lint:holds")("!.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("//#lint:holds")("!$TURBO_ROOT$/.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("lint")("!$TURBO_ROOT$/.claude/worktrees/**")).toBe(true);
+      expect(excludesNestedLanes("lint")("!.claude/worktrees/**")).toBe(false);
+      expect(excludesNestedLanes("lint")("$TURBO_ROOT$/.claude/worktrees/**")).toBe(false);
     });
   });
 });
