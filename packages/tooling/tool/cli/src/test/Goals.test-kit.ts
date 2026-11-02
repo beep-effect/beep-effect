@@ -12,6 +12,7 @@ export * from "@beep/repo-cli/commands/Goals/Completion";
 export * from "@beep/repo-cli/commands/Goals/CompletionEvidence";
 export * from "@beep/repo-cli/commands/Goals/CompletionEvidence.schemas";
 export * from "@beep/repo-cli/commands/Goals/CompletionEvidence.service";
+export * from "@beep/repo-cli/commands/Goals/CompletionReceiptStore.service";
 export * from "@beep/repo-cli/commands/Goals/Doctor";
 export * from "@beep/repo-cli/commands/Goals/Goals.command";
 export * from "@beep/repo-cli/commands/Goals/Goals.errors";
