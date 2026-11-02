@@ -274,5 +274,21 @@
     "ownedAndGeneratedHashesUnchanged": true,
     "verificationCache": "Explicit local:rw for isolated verification; no unauthenticated remote request or durable configuration change.",
     "priorFailedReceiptRetained": true
+  },
+  "sharedHealthIntegration": {
+    "acceptedMainRevision": "8d5745e33e2709e809d949c8eb9f71aaf9c4e5df",
+    "source": "PR2564 consolidated main repair for inherited Fallow/effect-vitest findings",
+    "recordedAt": "2026-11-02T11:27:49.605982+00:00",
+    "changedUpstreamPaths": [
+      "packages/drivers/git/test/integration/GitSurface.int.test.ts",
+      "packages/tooling/tool/cli/test/yeet-merge-gate.test.ts"
+    ],
+    "ownedAndGeneratedHashesUnchanged": true,
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 15.8,
+      "finishedAt": "2026-11-02T11:27:15.457689+00:00"
+    },
+    "earlierFailuresAndExecutedSourceScopesRetained": true
   }
 }

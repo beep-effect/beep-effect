@@ -1731,3 +1731,13 @@ Consuming accepted `560195af60` changes only that upstream file; the owned Cache
 source and generated artifacts remain byte-identical. The fresh quick package
 check passes with explicit local-only caching for this verification lane. Keep
 the earlier source failure and unauthenticated-request receipt as history.
+
+
+### Consume the consolidated shared-health repair, 2026-11-02
+
+Accepted main PR2564 repairs the inherited Fallow/effect-vitest findings in two
+unrelated test files. Integrate that accepted repair once; do not copy its patch
+into Cache. All six collector source/generated hashes remain unchanged, and
+fresh package quick lint/type checking passes. Retain the original focused and
+real-tree execution scopes, earlier inherited failures and subsequent main-fix
+receipts; this integration does not create protected inspection evidence.
