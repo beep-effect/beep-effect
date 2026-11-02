@@ -586,3 +586,17 @@ The ordinary adapter lifecycle and cache configuration remain unchanged.
   and byte-identical qualification ledger. No qualification or activation.
 
 Accepted-main R5b integration uses the [root-scoped review](producer-accepted-r5b-baseline-review-2026-10-31.md) and [CAS request](producer-accepted-r5b-baseline-request-2026-10-31.json). The accepted current-runtime v3 profile and all non-root reviews are preserved; no qualification or rollout is granted.
+
+
+### Protected inspection routing, 2026-11-02
+
+- [Current routing checkpoint](inspection-routing-checkpoint-2026-11-02.json):
+  actual organization runner-group access snapshot, never-assigned manual run,
+  preserved executable configuration and current/old/restored route evidence.
+- [GitHub selected-workflow runner-group access](https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/manage-runners/self-hosted-runners/manage-access):
+  runner access follows the workflow that directly defines each job.
+- [GitHub reusable workflow caller context](https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations):
+  the reusable leaf can constrain the exact calling dispatcher using `github`.
+
+These sources support routing and local guard behavior. A real post-fix hosted
+inspection and the broader trust/adoption obligations remain outstanding.
