@@ -1776,3 +1776,9 @@ The same introduced correction is required in each of this chat's five affected
 PRs; the first merge establishes the identical repository exclusion. This does
 not copy either declared shared CI unblocker or change the sealed data, mint,
 coverage floor, production cache, or whole-goal acceptance.
+
+The narrow Biome exclusion also requires its generated `biome.identity.jsonc`
+projection. Review caught the omitted regeneration before current-head validation.
+`bun run beep cache profile --write` regenerates it; the freshness command then
+passes. Both configuration files remain a projection, without a cache qualification
+or runtime activation. Keep the generated profile in the same config-edit wave.
