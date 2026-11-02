@@ -3485,15 +3485,15 @@
       "reason": "This native CLI integration runs one provision/import/revoke transaction, and the inner generated loop mutates only the acceptance reference while asserting the persisted marker is unchanged before revocation; per-case transactions would drop that shared-marker invariant and multiply subprocess work (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when EV007 recognises an Arbitrary.checkEffect property nested inside one shared transaction, or the property moves to it.effect.prop with the transaction in its layer (#1855 wave 8 register)."
     },
     {
-      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:376:checkEffect@38#1",
+      "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:381:checkEffect@38#1",
       "lens": "detector",
       "ruleId": "EV007",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
-      "line": 376,
-      "endLine": 393,
+      "line": 381,
+      "endLine": 398,
       "symbol": "checkEffect",
-      "occurrence": "v2:ad6b69003cf2934fbcada88907461f762e95046ef2b8d09dd43f723902ca2c85",
+      "occurrence": "v2:3ccd5312ae8ed918770f4eabf974d715da9e7c15ba033f86d79dfd9e3800dcff",
       "class": "direct-arbitrary-check",
       "evidence": "Arbitrary.checkEffect( Arbitrary.schema(Sha256Hex), (kernel) => Effect.gen(function* () { observedToolchain.mockReturnValue( Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel })) ); yi",
       "replacement": {
