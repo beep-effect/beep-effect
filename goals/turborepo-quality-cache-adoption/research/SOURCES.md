@@ -486,3 +486,17 @@ separate. No computation, current-canary command or production profile is promot
 ### 2026-11-02 current population and publish identity
 
 The current census was executed at accepted `68834a997e97a0504df6feee6f57d083b3258c1b`; its438 source bindings and raw digest are retained in [the source checkpoint](population-refresh-checkpoint-2026-11-02.json). The [prior population](population-before-refresh-2026-11-02.json) preserves all199 historical reviews byte-identically. The [current literal-source review](current-fresh-disposition-review-2026-11-02.json) covers198 whole commands that must execute; it grants no pure-task reuse. The [preservation controls](population-preservation-controls-2026-11-02.json) apply only to report retention. Accepted [#2478](https://github.com/beep-effect/beep-effect/commit/f69e6dd06759639279eed885665a5c564528bd7c) supplies the owned-commit resolution behavior adopted by the SPEC amendment; no new implementation or retroactive proof is asserted.
+
+
+### Native setup availability and ownership, 2026-11-02
+
+The installed stable schema and exact stable/current-canary help are compared
+against the actual [native controls](native-setup-controls.json), not treated as
+runtime proof. The [source-bound driver](native-setup-controls.py) reuses the
+existing availability collector, caps both streams during collection, clears
+ambient environment and disables networking. Real committed Bun locks, ignored
+managed storage and explicit skip policies distinguish six positive cases from
+twenty-four flag refusals and six managed prerequisites. Three driver refusals
+preserve the passing report. [The applicability review](setup-feature-review.json)
+binds current bootstrap sources and retains their ownership without changing
+production setup, task qualification, hosted statuses or performance claims.

@@ -1107,6 +1107,56 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("admits the ten-shard Test Unit layout and refuses a run that mixes the two layouts", () =>
+    Effect.gen(function* () {
+      const tenShardNames = [
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
+      ];
+      const shardJobs = (run: CiWorkflowWindowRun, names: ReadonlyArray<string>) =>
+        A.map(names, (partition, index) =>
+          job({
+            completed_at: "2026-11-05T00:12:00Z",
+            id: 300 + index,
+            name: `Test Unit (${partition})`,
+            run_id: run.id,
+            started_at: `2026-11-05T00:0${2 + (index % 3)}:00Z`,
+          })
+        );
+      const aggregator = (run: CiWorkflowWindowRun) =>
+        job({
+          completed_at: "2026-11-05T00:15:00Z",
+          id: 399,
+          name: "Test Unit",
+          run_id: run.id,
+          started_at: "2026-11-05T00:01:00Z",
+        });
+      const complete = windowRun({ id: 300 });
+      // Five repo-cli shards with unit-a, unit-c and unit-d: the old layout misses unit-b, the new one misses
+      // repo-cli-6 and unit-b, so neither is whole and the span is incomplete.
+      const mixed = windowRun({ id: 301 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(complete, [...shardJobs(complete, tenShardNames), aggregator(complete)]),
+        windowRunJobs(mixed, [
+          ...shardJobs(mixed, [...A.take(tenShardNames, 5), "unit-a", "unit-c", "unit-d"]),
+          aggregator(mixed),
+        ]),
+      ]);
+      expect(laneStat(report, "Test Unit").n).toBe(1);
+      // Earliest shard start 00:02 to aggregator completion 00:15.
+      assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
+      expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+    })
+  );
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
@@ -1362,20 +1412,30 @@ describe("ci lane timing admission window", () => {
       `{"created_at":"${createdAt}","event":"pull_request","head_branch":"lane-${id}","head_sha":"sha-${id}","id":${id},"run_attempt":1,"run_started_at":"${createdAt}","updated_at":"${createdAt}"}`;
     const firstHalf = encodeURIComponent("2026-10-28T00:00:00.000Z..2026-10-31T12:00:00.000Z");
     const secondHalf = encodeURIComponent("2026-10-31T12:00:00.000Z..2026-11-04T00:00:00.000Z");
+    // First matching route wins; the capped full-span listing is the last workflow-runs route, so the
+    // half-span listings are matched before it.
+    const routes: ReadonlyArray<{ readonly matches: (endpoint: string) => boolean; readonly body: string }> = [
+      { matches: Str.includes("/history?"), body: historyJson },
+      { matches: Str.endsWith("/history/54940515"), body: snapshot15Json },
+      { matches: Str.includes("event=push"), body: '{"total_count":0,"workflow_runs":[]}' },
+      {
+        matches: Str.includes(`created=${firstHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes(`created=${secondHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes("/actions/workflows/"),
+        body: `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`,
+      },
+    ];
     const response = (endpoint: string) =>
-      Str.includes("/history?")(endpoint)
-        ? Effect.succeed(historyJson)
-        : Str.endsWith("/history/54940515")(endpoint)
-          ? Effect.succeed(snapshot15Json)
-          : Str.includes("event=push")(endpoint)
-            ? Effect.succeed('{"total_count":0,"workflow_runs":[]}')
-            : Str.includes(`created=${firstHalf}`)(endpoint)
-              ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`)
-              : Str.includes(`created=${secondHalf}`)(endpoint)
-                ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`)
-                : Str.includes("/actions/workflows/")(endpoint)
-                  ? Effect.succeed(`{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`)
-                  : windowGithubResponse(endpoint);
+      O.match(
+        A.findFirst(routes, (route) => route.matches(endpoint)),
+        { onNone: () => windowGithubResponse(endpoint), onSome: (route) => Effect.succeed(route.body) }
+      );
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
         ".",
