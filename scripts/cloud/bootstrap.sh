@@ -14,7 +14,9 @@
 #   - Durable preparation only: toolchain + workspace dependencies + the tsgo
 #     patch. No dev servers, no secrets, no background processes.
 #   - Fail loud on the core toolchain (bun, pinned Node, dependencies, tsgo patch);
-#     best-effort on the optional tools (portless, 1Password CLI).
+#     best-effort on the optional tools (portless, 1Password CLI, and the
+#     publication hook tools typos + gitleaks, whose absence is reported as
+#     "publication tools: NOT ready" rather than hidden).
 #   - Scoped to cloud VMs: without a cloud marker the script exits 0 untouched,
 #     so a SessionStart hook can call it unconditionally. BEEP_CLOUD_FORCE=1
 #     overrides the guard for local dry runs.
@@ -142,6 +144,19 @@ persist_path() {
 # Each whole worker has a four-minute deadline, including retries and local
 # verification/extraction, with five seconds to terminate unresponsive children.
 OP_PINNED_VERSION="2.39.0"
+# Publication hook tools: lefthook pre-commit runs both, and a commit fails with
+# exit 127 when either is missing. Versions match CI (heavy.yml typos-cli,
+# check.yml gitleaks); fetch.sh holds the verified archive digests.
+TYPOS_PINNED_VERSION="1.50.3"
+GITLEAKS_PINNED_VERSION="8.30.1"
+# Last whitespace-separated token of a tool's first version line, without a
+# leading "v". A tool that is absent, hangs or prints nothing yields "".
+tool_version() {
+  local out
+  out="$({ timeout --kill-after=1s 5s "$@" 2>/dev/null || true; } | head -n 1)"
+  out="${out##* }"
+  printf '%s' "${out#v}"
+}
 
 need_bun=0
 if ! command -v bun >/dev/null 2>&1 || [ "$(timeout --kill-after=1s 5s bun --version 2>/dev/null)" != "${BUN_VERSION}" ]; then
@@ -153,6 +168,15 @@ if ! command -v node >/dev/null 2>&1 || [ "$(timeout --kill-after=1s 5s node --v
   need_node=1
 fi
 
+need_typos=0
+if ! command -v typos >/dev/null 2>&1 || [ "$(tool_version typos --version)" != "${TYPOS_PINNED_VERSION}" ]; then
+  need_typos=1
+fi
+
+need_gitleaks=0
+if ! command -v gitleaks >/dev/null 2>&1 || [ "$(tool_version gitleaks version)" != "${GITLEAKS_PINNED_VERSION}" ]; then
+  need_gitleaks=1
+fi
 
 if [ "${need_bun}" = "1" ]; then
   log "fetching bun ${BUN_VERSION}"
@@ -167,7 +191,21 @@ if [ "${BEEP_CLOUD_SKIP_OP:-0}" != "1" ]; then
   timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" op "${run_dir}" "${OP_PINNED_VERSION}" & pids+=("$!:op")
 fi
 
+if [ "${need_typos}" = "1" ]; then
+  log "fetching typos ${TYPOS_PINNED_VERSION}"
+  timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" typos "${run_dir}" "${TYPOS_PINNED_VERSION}" & pids+=("$!:typos")
+fi
+if [ "${need_gitleaks}" = "1" ]; then
+  log "fetching gitleaks ${GITLEAKS_PINNED_VERSION}"
+  timeout --kill-after=5s 240s bash "${REPO_ROOT}/scripts/cloud/fetch.sh" gitleaks "${run_dir}" "${GITLEAKS_PINNED_VERSION}" & pids+=("$!:gitleaks")
+fi
+
+# Optional workers never decide the exit status; their failures are warnings.
+is_optional() { case "$1" in op|typos|gitleaks) return 0 ;; *) return 1 ;; esac; }
+
 op_ok=1
+typos_ok=1
+gitleaks_ok=1
 node_ok=1
 denied_hosts=""
 # Stable configuration-error exit, before any toolchain or dependency change.
@@ -179,25 +217,34 @@ exit_denied() {
 bun_failed=0
 # Wait every required worker (each is bounded by its own timeout) so a Bun
 # failure cannot hide a denial another required worker reports later. Once Bun
-# has failed, the run is fatal, so the optional op worker is not awaited: the
-# EXIT trap cancels it.
+# has failed, the run is fatal, so the optional workers are not awaited: the
+# EXIT trap cancels them.
 for entry in "${pids[@]:-}"; do
   [ -n "${entry}" ] || continue
   pid="${entry%%:*}"; name="${entry##*:}"
-  [ "${bun_failed}" = 1 ] && [ "${name}" = op ] && continue
+  [ "${bun_failed}" = 1 ] && is_optional "${name}" && continue
   worker_status=0
   wait "${pid}" || worker_status=$?
   if [ "${worker_status}" -ne 0 ]; then
     # 78: fetch.sh found a required host denied by the network policy and
     # recorded the host curl was fetching in <worker>.denied.
-    if [ "${worker_status}" -eq 78 ] && [ "${name}" != "op" ] && [ -s "${run_dir}/${name}.denied" ]; then
+    if [ "${worker_status}" -eq 78 ] && ! is_optional "${name}" && [ -s "${run_dir}/${name}.denied" ]; then
       denied_hosts="${denied_hosts:+${denied_hosts} }$(cat "${run_dir}/${name}.denied")"
       continue
+    fi
+    # An optional worker's denial names its host but stays a warning.
+    optional_cause="download or checksum failed (exit ${worker_status})"
+    if [ "${worker_status}" -eq 78 ] && [ -s "${run_dir}/${name}.denied" ]; then
+      optional_cause="download host denied: $(cat "${run_dir}/${name}.denied")"
+    elif [ "${worker_status}" -eq 124 ] || [ "${worker_status}" -eq 137 ]; then
+      optional_cause="download timed out (exit ${worker_status})"
     fi
     case "${name}" in
       bun) bun_failed=1 ;;
       node) node_ok=0; warn "Node ${NODE_VERSION} provisioning failed." ;;
       op) op_ok=0; warn "1Password CLI download or signature verification failed; skipping op (op-backed secret runs unavailable)." ;;
+      typos) typos_ok=0; warn "typos ${TYPOS_PINNED_VERSION} ${optional_cause}; not installed." ;;
+      gitleaks) gitleaks_ok=0; warn "gitleaks ${GITLEAKS_PINNED_VERSION} ${optional_cause}; not installed." ;;
     esac
   fi
 done
@@ -281,6 +328,16 @@ if [ "${op_ok}" = "1" ] && [ -f "${run_dir}/op.verified" ]; then
   fi
 fi
 
+# Publication hook tools land beside bun (already on the persisted PATH).
+for tool in typos gitleaks; do
+  tool_ok_var="${tool}_ok"; need_var="need_${tool}"
+  if [ "${!need_var}" = "1" ] && [ "${!tool_ok_var}" = "1" ] && [ -f "${run_dir}/${tool}/${tool}" ]; then
+    install -d -m 0755 "${BUN_INSTALL}/bin"
+    install -m 0755 "${run_dir}/${tool}/${tool}" "${BUN_INSTALL}/bin/${tool}"
+    link_global "${BUN_INSTALL}/bin/${tool}" "${tool}"
+  fi
+done
+
 # portless: dev servers run only through portless-wrapped package scripts and it
 # is not a workspace dependency, so it has to be on PATH.
 if ! command -v portless >/dev/null 2>&1; then
@@ -341,4 +398,16 @@ op_version=missing
 if [ -n "${op_path}" ]; then
   op_version="$("${op_path}" --version 2>/dev/null || echo missing)"
 fi
-log "ready: bun $(bun --version), node $(node --version 2>/dev/null || echo missing), portless $(portless --version 2>/dev/null || echo missing), op ${op_version}"
+# Publication readiness is re-read from PATH, so a failed fetch, a refused
+# checksum or a wrong version is reported here instead of a false ready.
+typos_version="$(tool_version typos --version)"
+gitleaks_version="$(tool_version gitleaks version)"
+publish_missing=""
+[ "${typos_version}" = "${TYPOS_PINNED_VERSION}" ] || publish_missing="typos ${TYPOS_PINNED_VERSION}"
+[ "${gitleaks_version}" = "${GITLEAKS_PINNED_VERSION}" ] || publish_missing="${publish_missing:+${publish_missing}, }gitleaks ${GITLEAKS_PINNED_VERSION}"
+log "ready: bun $(bun --version), node $(node --version 2>/dev/null || echo missing), portless $(portless --version 2>/dev/null || echo missing), op ${op_version}, typos ${typos_version:-missing}, gitleaks ${gitleaks_version:-missing}"
+if [ -n "${publish_missing}" ]; then
+  warn "publication tools: NOT ready (missing ${publish_missing}); lefthook pre-commit will fail until they are on PATH."
+else
+  log "publication tools: ready (typos ${typos_version}, gitleaks ${gitleaks_version})"
+fi

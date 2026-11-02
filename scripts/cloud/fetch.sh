@@ -11,6 +11,7 @@ run_dir="$2"
 BUN_VERSION="$3"
 NODE_VERSION="$3"
 OP_PINNED_VERSION="$3"
+TOOL_VERSION="$3"
 download_limits=(--connect-timeout 15 --max-time 120 --retry-max-time 120)
 
 # Required-host download. Only a network-policy denial exits 78: the egress
@@ -97,9 +98,52 @@ fetch_op() {
   : > "${run_dir}/op.verified"
 }
 
+# Publication hook tools (lefthook pre-commit runs `typos` and `gitleaks`).
+# Each pin is a version plus the sha256 of its x86_64 Linux release archive;
+# a version without a recorded digest is refused, never fetched unverified.
+# Sources (read 2026-11-02, digests re-hashed from the downloaded archives):
+#   typos 1.50.3: taiki-e/install-action@1e29709c (the pin CI installs typos
+#     through) manifests/typos.json, key 1.50.3 / x86_64_linux_musl.
+#   gitleaks 8.30.1: the release's own gitleaks_8.30.1_checksums.txt, the
+#     version CI pins in check.yml.
+fetch_release_binary() {
+  local name="$1" url="$2" sha="$3" member="$4" work archive
+  work="${run_dir}/${name}"
+  mkdir -p "${work}"
+  archive="${work}/${name}.tar.gz"
+  fetch_required github.com "${archive}" "${url}"
+  printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
+  tar -xzf "${archive}" -C "${work}" "${member}"
+  [ -f "${work}/${name}" ]
+}
+
+fetch_typos() {
+  local sha
+  case "${TOOL_VERSION}" in
+    1.50.3) sha="aca6b5d546307092b8d0a8e0a89dd80f9da51f2f7617c5e45c5607c1684ffbf2" ;;
+    *) printf 'No verified checksum recorded for typos %s\n' "${TOOL_VERSION}" >&2; return 1 ;;
+  esac
+  fetch_release_binary typos \
+    "https://github.com/crate-ci/typos/releases/download/v${TOOL_VERSION}/typos-v${TOOL_VERSION}-x86_64-unknown-linux-musl.tar.gz" \
+    "${sha}" ./typos
+}
+
+fetch_gitleaks() {
+  local sha
+  case "${TOOL_VERSION}" in
+    8.30.1) sha="551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb" ;;
+    *) printf 'No verified checksum recorded for gitleaks %s\n' "${TOOL_VERSION}" >&2; return 1 ;;
+  esac
+  fetch_release_binary gitleaks \
+    "https://github.com/gitleaks/gitleaks/releases/download/v${TOOL_VERSION}/gitleaks_${TOOL_VERSION}_linux_x64.tar.gz" \
+    "${sha}" gitleaks
+}
+
 case "${kind}" in
   bun) fetch_bun ;;
   node) fetch_node ;;
   op) fetch_op ;;
+  typos) fetch_typos ;;
+  gitleaks) fetch_gitleaks ;;
   *) printf 'Unknown bootstrap download: %s\n' "${kind}" >&2; exit 2 ;;
 esac

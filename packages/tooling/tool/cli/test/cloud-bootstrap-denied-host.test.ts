@@ -85,6 +85,18 @@ case " $FIXTURE_MISSING " in
     : > "$FIXTURE/failed.$host"
     printf '404 000 %s' "$url"; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
 esac
+case "$url" in
+  *crate-ci/typos/*|*gitleaks/gitleaks/*)
+    tool=gitleaks; case "$url" in *crate-ci/typos/*) tool=typos ;; esac
+    printf 'fetch %s\\n' "$url" >> "$FIXTURE/events"
+    case " $FIXTURE_TOOL_404 " in
+      *" $tool "*) printf '404 000 %s' "$url"; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
+    esac
+    cp "$FIXTURE/$tool.tar.gz" "$output"
+    printf '200 200 %s' "$url"
+    exit 0
+    ;;
+esac
 version=$(cat .nvmrc)
 case "$url" in
   *index.tab) printf 'v%s\\t2026-01-01\\n' "$version" > "$output" ;;
@@ -115,6 +127,23 @@ if [ "$FIXTURE_NODE" = pinned ]; then printf 'v%s\\n' "$(cat .nvmrc)"; else prin
 printf 'ln %s\\n' "$*" >> "$FIXTURE/events"
 `,
   sudo: "#!/bin/sh\nexit 1\n",
+  // Pre-existing publication tools: pinned unless the scenario marks them stale.
+  typos: `#!/bin/sh
+v=$(cat "$FIXTURE/typos.version"); [ "\${FIXTURE_TYPOS:-pinned}" = pinned ] || v=0.0.1
+printf 'typos-cli %s\\n' "$v"
+`,
+  gitleaks: `#!/bin/sh
+v=$(cat "$FIXTURE/gitleaks.version"); [ "\${FIXTURE_GITLEAKS:-pinned}" = pinned ] || v=0.0.1
+printf '%s\\n' "$v"
+`,
+  // Delegates to the real timeout, except that a named fetch worker reports a
+  // deadline expiry (exit 124) at once, so the attribution path runs in ms.
+  timeout: `#!/bin/sh
+if [ -n "$FIXTURE_TIMEOUT_KIND" ]; then
+  case " $* " in *"fetch.sh $FIXTURE_TIMEOUT_KIND "*) exit 124 ;; esac
+fi
+exec /usr/bin/timeout "$@"
+`,
   uname: '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n',
 } as const;
 
@@ -133,6 +162,10 @@ type Scenario = {
   readonly unreachable?: string;
   readonly proxy?: string;
   readonly badSum?: "1";
+  readonly typos?: "pinned" | "stale";
+  readonly gitleaks?: "pinned" | "stale";
+  readonly tool404?: string;
+  readonly timeoutKind?: string;
 };
 
 // Each scenario field becomes one stub-facing environment variable; fields a
@@ -152,6 +185,10 @@ const scenarioEnvKeys: { readonly [K in keyof Scenario]-?: string } = {
   unreachable: "FIXTURE_UNREACHABLE",
   proxy: "HTTPS_PROXY",
   badSum: "FIXTURE_BAD_SUM",
+  typos: "FIXTURE_TYPOS",
+  gitleaks: "FIXTURE_GITLEAKS",
+  tool404: "FIXTURE_TOOL_404",
+  timeoutKind: "FIXTURE_TIMEOUT_KIND",
 };
 
 const scenarioEnv = (scenario: Scenario): Record<string, string> =>
@@ -162,7 +199,35 @@ const scenarioEnv = (scenario: Scenario): Record<string, string> =>
     )
   );
 
-const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(function* () {
+const pinnedVersion = (bootstrap: string, name: string): string => {
+  const match = new RegExp(`${name}_PINNED_VERSION="([^"]+)"`).exec(bootstrap);
+  expect(match, name).not.toBeNull();
+  return match?.[1] ?? "";
+};
+
+// Builds the fixture release archives (each holds a stub binary that reports
+// the pinned version) and, when `fixturePins` is set, rewrites only the copied
+// fetch.sh digests to those archives' hashes. The repo's fetch.sh is untouched.
+const tarballScript = `set -eu
+for tool in typos gitleaks; do
+  v=$(cat "$tool.version")
+  mkdir -p "$tool-src"
+  if [ "$tool" = typos ]; then printf '#!/bin/sh\\nprintf "typos-cli %s\\\\n"\\n' "$v" > typos-src/typos; member=./typos
+  else printf '#!/bin/sh\\nprintf "%s\\\\n"\\n' "$v" > gitleaks-src/gitleaks; member=gitleaks; fi
+  chmod 0755 "$tool-src/$tool"
+  tar -czf "$tool.tar.gz" -C "$tool-src" "$member"
+  if [ "$FIXTURE_PINS" = 1 ]; then
+    sum=$(sha256sum "$tool.tar.gz" | cut -d' ' -f1)
+    esc=$(printf '%s' "$v" | sed 's/\\./\\\\./g')
+    sed -i "s/\\($esc) sha=.\\)[0-9a-f]\\{64\\}/\\1$sum/" scripts/cloud/fetch.sh
+    grep -q "$sum" scripts/cloud/fetch.sh
+  fi
+done
+`;
+
+const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(function* (
+  options: { readonly fixturePins?: boolean } = {}
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "cloud-denied-host-" });
@@ -197,6 +262,17 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
     yield* fs.chmod(path.join(bin, name), 0o755);
   }
   yield* fs.writeFileString(path.join(root, "events"), "");
+  const bootstrap = yield* fs.readFileString(path.join(root, "scripts/cloud/bootstrap.sh"));
+  yield* fs.writeFileString(path.join(root, "typos.version"), pinnedVersion(bootstrap, "TYPOS"));
+  yield* fs.writeFileString(path.join(root, "gitleaks.version"), pinnedVersion(bootstrap, "GITLEAKS"));
+  const archives = yield* ChildProcess.make("sh", ["-c", tarballScript], {
+    cwd: root,
+    env: { FIXTURE_PINS: options.fixturePins === true ? "1" : "0", PATH: "/usr/bin:/bin" },
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "inherit",
+  });
+  expect(yield* archives.exitCode).toBe(0);
   return { root, bin, home };
 });
 
@@ -395,6 +471,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       const first = yield* runBootstrap(fixture, { bun: "pinned", node: "stale" });
       expect(first.exitCode, first.stderr).toBe(0);
       expect(first.stdout).toContain("ready: bun");
+      expect(first.stdout).toContain("publication tools: ready");
       const events = A.filter(
         Str.split("\n")(yield* fs.readFileString(path.join(fixture.root, "events"))),
         Str.isNonEmpty
@@ -412,6 +489,97 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       const rerun = yield* fs.readFileString(path.join(fixture.root, "events"));
       expect(rerun).not.toContain("curl ");
       expect(rerun).not.toContain("bun-install");
+    })
+  );
+});
+
+it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap publication hook tools", (it) => {
+  const readEvents = Effect.fn("CloudBootstrapDeniedHostTest.readEvents")(function* (root: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return yield* fs.readFileString(path.join(root, "events"));
+  });
+
+  it.effect("acquires stale typos and gitleaks from the pinned release URLs, installs them, then no-ops", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const typosVersion = Str.trim(yield* fs.readFileString(path.join(fixture.root, "typos.version")));
+      const gitleaksVersion = Str.trim(yield* fs.readFileString(path.join(fixture.root, "gitleaks.version")));
+      const first = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
+      expect(first.exitCode, first.stderr).toBe(0);
+      const events = yield* readEvents(fixture.root);
+      expect(events).toContain(
+        `fetch https://github.com/crate-ci/typos/releases/download/v${typosVersion}/typos-v${typosVersion}-x86_64-unknown-linux-musl.tar.gz`
+      );
+      expect(events).toContain(
+        `fetch https://github.com/gitleaks/gitleaks/releases/download/v${gitleaksVersion}/gitleaks_${gitleaksVersion}_linux_x64.tar.gz`
+      );
+      for (const tool of ["typos", "gitleaks"]) {
+        expect(yield* fs.exists(path.join(fixture.home, ".bun/bin", tool)), tool).toBe(true);
+      }
+      expect(first.stdout).toContain(`publication tools: ready (typos ${typosVersion}, gitleaks ${gitleaksVersion})`);
+
+      // The installed binaries now precede the stale stubs on PATH.
+      yield* fs.writeFileString(path.join(fixture.root, "events"), "");
+      const second = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
+      expect(second.exitCode, second.stderr).toBe(0);
+      expect(yield* readEvents(fixture.root)).not.toContain("fetch ");
+      expect(second.stdout).toContain("publication tools: ready");
+    })
+  );
+
+  it.effect("refuses an archive whose digest does not match the recorded pin", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // Real pins against fixture archives: both digests mismatch.
+      const fixture = yield* prepareFixture();
+      const result = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned", typos: "stale", gitleaks: "stale" });
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(result.stderr).toMatch(/typos \S+ download or checksum failed \(exit 1\); not installed\./);
+      expect(result.stderr).toMatch(/gitleaks \S+ download or checksum failed \(exit 1\); not installed\./);
+      expect(result.stderr).toContain("publication tools: NOT ready");
+      expect(result.stdout).not.toContain("publication tools: ready");
+      for (const tool of ["typos", "gitleaks"]) {
+        expect(yield* fs.exists(path.join(fixture.home, ".bun/bin", tool)), tool).toBe(false);
+      }
+    })
+  );
+
+  it.effect("names a denied host for a publication tool but keeps it a warning, not exit 78", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const result = yield* runBootstrap(fixture, {
+        bun: "pinned",
+        node: "pinned",
+        typos: "stale",
+        deny: "github.com",
+      });
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(result.stderr).toMatch(/typos \S+ download host denied: github\.com; not installed\./);
+      expect(result.stderr).not.toContain("required download host denied");
+      expect(result.stderr).toContain("publication tools: NOT ready (missing typos");
+      expect(result.stdout).toContain("ready: bun");
+    })
+  );
+
+  it.effect("attributes a 404 and a worker deadline expiry separately", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture({ fixturePins: true });
+      const result = yield* runBootstrap(fixture, {
+        bun: "pinned",
+        node: "pinned",
+        typos: "stale",
+        gitleaks: "stale",
+        tool404: "typos",
+        timeoutKind: "gitleaks",
+      });
+      expect(result.exitCode, result.stderr).toBe(0);
+      expect(result.stderr).toMatch(/typos \S+ download or checksum failed \(exit 22\); not installed\./);
+      expect(result.stderr).toMatch(/gitleaks \S+ download timed out \(exit 124\); not installed\./);
+      expect(result.stderr).toContain("publication tools: NOT ready (missing typos");
     })
   );
 });

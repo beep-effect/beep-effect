@@ -408,3 +408,16 @@ agreed protection because a development workload triggers it.
 | --- | --- | --- |
 | 2026-11-01 | The runbook's Claude setup script `bash scripts/cloud/bootstrap.sh` exited 127 at `352bac46` because the dashboard setup step does not start in the clone. SessionStart then ran the same bootstrap and the package proof passed, which masked the failed setup and the lost setup snapshot. `BEEP_CLOUD_SKIP_OP=1` as a setup prefix alone also leaves SessionStart fetching `op`. | Runbook now `cd`s to the vendor clone path before the shared bootstrap and sets `BEEP_CLOUD_SKIP_OP=1` and `BEEP_AGENT_HOST=cloud` as environment variables. A cloud smoke records setup status separately from SessionStart recovery (`history/2026-11-01-claude-cloud-smoke.md`). |
 | 2026-11-01 | The runbook said Cursor needed nothing per account, but Cursor's setup docs give saved personal/team configs precedence over the committed `.cursor/environment.json`. | Runbook now says to check saved Cursor configs per account/team. Cursor cloud still needs its own smoke before any qualification claim. |
+
+## 2026-11-02: cloud publication hook tools (typos, gitleaks)
+
+Lane `codex/cloud-publish-tools`; note `history/2026-11-02-cloud-publish-tools.md`.
+Earlier receipts from the #2531 cloud lane are consolidated in PR comment 6577187594 on
+beep-effect/beep-effect#2531 (F1–F13) and are not repeated here.
+
+| Step | Evidence (minimal) | Impact | Attribution and confidence | Workaround | Prevention | Owner and status |
+| --- | --- | --- | --- | --- | --- | --- |
+| Commit in a Claude cloud session | lefthook pre-commit: `typos: not found` and `gitleaks: not found`, exit 127 (observed in the #2531 lane) | commits blocked; that lane fell back to `LEFTHOOK_EXCLUDE=typos,gitleaks`, and one wave split into 3 pushes | bootstrap provisioned neither tool (observed, high confidence) | hook exclusion, recorded per PR | this lane: bootstrap fetches the pinned, checksum-verified releases and reports `publication tools: NOT ready` when they are absent | this PR; live vendor qualification still open |
+| Static check of the changed shell | `command -v shellcheck` finds nothing in the cloud container; no workflow runs ShellCheck | ShellCheck not run on `bootstrap.sh` or `fetch.sh` | environment and repo gap (observed) | `bash -n` plus the hermetic tests | add ShellCheck to the bootstrap or to CI | open, unowned |
+| Verify the typos digest from a primary source | release and API pages for repositories outside the session's GitHub scope return HTTP 403 (`GitHub access to this repository is not enabled for this session`); direct `releases/download/...` URLs work | no asset listing, so whether typos publishes a checksum asset is **unknown** (hypothesis: it does not) | session proxy scope (observed); asset absence not verified | used the digest from CI's pinned `taiki-e/install-action@1e29709c` `manifests/typos.json`, then re-hashed the downloaded archive (match) | re-verify on a workstation against the release's own digest view, if one exists | open, for the vendor qualifier |
+| Locate the install-action manifest | `manifests/typos-cli.json` returned 404; the file is `manifests/typos.json` | one retry | naming guess (observed) | — | none needed | closed |
