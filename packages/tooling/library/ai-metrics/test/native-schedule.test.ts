@@ -36,6 +36,7 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpServer from "effect/http/HttpServer";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -130,6 +131,9 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
   const readStatus = yield* Ref.make(200);
   const hang = yield* Ref.make(false);
   const entered = yield* Deferred.make<void>();
+  // A hung POST waits on this gate rather than on real time, so its response can never land
+  // before the test has observed what it is checking (deadline, interruption, admission).
+  const gate = yield* Latch.make();
   const sql = yield* SqlClient.SqlClient;
   yield* server.serve(
     Effect.gen(function* () {
@@ -144,15 +148,17 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
       expect((yield* sql`SELECT attempt_id FROM observation_delivery_attempts`).length).toBeGreaterThan(0);
       yield* Ref.update(posts, (n) => n + 1);
       yield* Deferred.succeed(entered, undefined);
-      // Keep the server-side request finite so graceful server shutdown can drain
-      // even when the client has deliberately interrupted its wait.
-      if (yield* Ref.get(hang)) yield* Effect.sleep(1000);
+      if (yield* Ref.get(hang)) yield* gate.await;
       return HttpServerResponse.uint8Array(new Uint8Array(), {
         status: yield* Ref.get(status),
         contentType: "application/x-protobuf",
       });
     })
   );
+  // Open the gate on scope close, before server shutdown, so a stalled request always drains,
+  // even when an assertion fails while the request is held.
+  yield* Effect.addFinalizer(() => Effect.asVoid(gate.open));
+  const release = Ref.set(hang, false).pipe(Effect.andThen(gate.open), Effect.asVoid);
   // Every tick runs under a TestClock seeded at the current time. Only the test moves its wall time
   // or fires its sleeps, so neither delay windows nor the tick deadline follow host load.
   const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
@@ -177,6 +183,7 @@ const fixture = Effect.fn("NativeScheduleTest.fixture")(function* (
     status,
     readStatus,
     hang,
+    release,
     entered,
     clock,
     pin,
@@ -309,7 +316,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect(yield* f.sender.ledger.state(f.batch.spans[0]?.eventId ?? id("0"))).toMatchObject({
         value: { state: "unresolved", attempts: 1 },
       });
-      yield* Ref.set(f.hang, false);
+      yield* f.release;
       yield* f.clock.adjust(120);
       const restarted = yield* f.reopen(policy);
       expect(yield* restarted.tick).toMatchObject({ outcomes: [{ _tag: "Sent" }] });
@@ -523,7 +530,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* f.clock.adjust(400);
       expect(yield* Fiber.join(stalled)).toEqual({ _tag: "Deadline" });
       expect(yield* Ref.get(f.posts)).toBe(1);
-      yield* Ref.set(f.hang, false);
+      yield* f.release;
       const reopened = yield* f.reopen(policy);
       const result = yield* reopened.tick;
       expect(result).toMatchObject({
@@ -553,7 +560,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       yield* Deferred.await(f.entered);
       expect(yield* scheduler.tick.pipe(Effect.flip)).toMatchObject({ reason: "busy" });
       yield* Fiber.interrupt(first);
-      yield* Ref.set(f.hang, false);
+      yield* f.release;
       expect(yield* scheduler.tick).toMatchObject({ outcomes: [{ _tag: "Sent", eventId: f.batch.spans[1]?.eventId }] });
       expect(yield* Ref.get(f.posts)).toBe(2);
     })
@@ -625,7 +632,7 @@ for (const initial of ["accepted", "interrupted"]) {
           const sending = yield* scheduler.tick.pipe(Effect.forkChild);
           yield* Deferred.await(f.entered);
           yield* Fiber.interrupt(sending);
-          yield* Ref.set(f.hang, false);
+          yield* f.release;
         } else {
           yield* scheduler.tick;
         }
