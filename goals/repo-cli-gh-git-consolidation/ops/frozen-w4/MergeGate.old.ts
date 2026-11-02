@@ -1,6 +1,6 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.ts`, verbatim from
- * main 930758e06b except for import paths and the identity namespace.
+ * main 930758e06b except for import paths and the identity namespace. The reviewer gate is wrapped in `withReviewerOperatorClient` as W3 (#2614) did on main, so the copy builds after that merge.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -16,7 +16,10 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { enforceReviewerGate } from "../../../../packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts";
+import {
+  enforceReviewerGate,
+  withReviewerOperatorClient,
+} from "../../../../packages/tooling/tool/cli/src/commands/Reviewer/ReviewerRuleset.ts";
 import { hydrateYeetReadOnlyContext } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts";
 import { MergeGateCheckRun } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/MergeGate.schemas.ts";
 import {
@@ -1377,6 +1380,7 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
   yield* enforceReviewerGate(decision.prNumber, decision.headSha).pipe(
+    withReviewerOperatorClient(process.cwd()),
     Effect.mapError(() =>
       YeetCommandError.make({ message: "beep-reviewer gate held on the current head.", exitCode: 1 })
     )

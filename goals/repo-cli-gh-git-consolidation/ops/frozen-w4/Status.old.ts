@@ -1,6 +1,6 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts`, verbatim from
- * main 930758e06b except for import paths, the identity namespace and its one fallow suppression comment.
+ * main 930758e06b except for import paths, the identity namespace and its one fallow suppression comment. `collectRemoteStatus` declares `Git`, which W2b (#2606) added to the live readers it calls.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -1525,7 +1525,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
 ): Effect.fn.Return<
   YeetStatusRemote,
   YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (!remote) {
     return skippedRemote;

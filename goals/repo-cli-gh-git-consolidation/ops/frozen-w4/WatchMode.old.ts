@@ -1,6 +1,6 @@
 /**
  * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts`, verbatim from
- * main 930758e06b except for import paths and the identity namespace.
+ * main 930758e06b except for import paths and the identity namespace. The watch stream and tick declare `Git`, which W2b (#2606) added to the live readers they call.
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
@@ -93,6 +93,7 @@ import {
 import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
 import { GhActor } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
@@ -822,7 +823,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   ) => Effect.Effect<
     YeetWatchSnapshot,
     never,
-    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+    Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >
 ) {
   const polled = yield* collectYeetWatchSnapshot(context).pipe(
@@ -987,6 +988,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   | FileSystem.FileSystem
   | Path.Path
   | Digest.Digest
+  | Git
 > {
   const untilEvent = config.untilEvent === true;
   let head = O.none<WatchSettleState>();
