@@ -39,9 +39,15 @@ is-ancestor probes -> `isAncestor`, the head-install preflight's `worktreeAdd` /
 `worktreePrune` read back through `captureGitKitExit`), `Git` lifted into the Yeet unions, and the leaf
 `Git.make` provisions dropped from `GitWorktree.ts` and `TmpfsReap.ts` (SPEC D-09); `lockfileChangedSinceBase`
 waits for the G7 pathspec. W0 merged (#2514); the W1 kit merged (#2522). Next: W2.
+W3 sites (this PR, SPEC D-12): the reviewer App token runs on `GitHubApp` (down-scoped request, fail-closed
+`assertPermissions`, `clientLayer` with a five-minute refresh skew), reviewer publishing, ruleset administration and
+the merge gate on `GitHubClient`, the `gh auth token` / `op read` reads on `@beep/commands` `Run.text`, and the Ci
+`gh api` reader, runner-loss rerun and governance client on `GitHubClient` with the transient table kept.
 
 ## Latest Evidence
 
+- 2026-11-02 W3 sites: `research/reviewer-ci-github-differential-w3.json` (45 scenarios, 37 same, 8 classified,
+  0 unclassified); repo-cli typecheck and lint clean, the reviewer, ci and yeet merge-gate suites green.
 - 2026-11-02 W1b: `research/yeet-git-differential-w1b.json` (31 scenarios, 27 same, 4 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*`, `step-git-exec`, `tmpfs-reap`, `residue-reap`,
   `git-worktree` and `git-adoption-sites` suite green (64 files, 1640 tests).

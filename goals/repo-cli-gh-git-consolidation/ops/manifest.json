@@ -36,7 +36,8 @@
     "research/p0-site-inventory-2026-11-02.md",
     "research/is-ancestor-prune-differential-w0.json",
     "research/git-readers-differential-w1a.json",
-    "research/yeet-git-differential-w1b.json"
+    "research/yeet-git-differential-w1b.json",
+    "research/reviewer-ci-github-differential-w3.json"
   ],
   "agentLaunchers": [
     {
@@ -100,6 +101,38 @@
     {
       "path": "ops/yeet-git-differential-w1b.ts",
       "purpose": "W1b differential: the frozen Yeet git bodies (base-ref refresh with and without an origin remote, current commit sha on a branch, detached and unborn, the is-ancestor probes, and the head-install preflight's worktree add, remove --force and prune) compared with their Git-backed replacements over scratch repositories with a bare origin carrying a tag, an option-like ref and a non-repository."
+    },
+    {
+      "path": "ops/reviewer-ci-github-differential-w3.ts",
+      "purpose": "W3 differential: the frozen pre-W3 Reviewer and Ci GitHub bodies (ops/frozen-w3: the gh/op secret reads and origin lookup, the gh api reader with its transient retry, the runner-loss reads and rerun, the governance client, ruleset administration and the merge gate, the HttpClient reviewer publishing service and App token cache) compared with their @beep/github and @beep/commands replacements over one recorded fixture table, served to the old bodies by a fake gh/op (jq projections applied with the real jq) and to the new ones through the transport fetch."
+    },
+    {
+      "path": "ops/frozen-w3/CiGovernance.old.ts",
+      "purpose": "Frozen pre-W3 CiGovernance body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/CiRerunRunnerLoss.old.ts",
+      "purpose": "Frozen pre-W3 CiRerunRunnerLoss body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/GitHubAppAuth.old.ts",
+      "purpose": "Frozen pre-W3 GitHubAppAuth body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/GithubIdentity.old.ts",
+      "purpose": "Frozen pre-W3 GithubIdentity body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/LaneTimings.old.ts",
+      "purpose": "Frozen pre-W3 LaneTimings body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/ReviewerRuleset.old.ts",
+      "purpose": "Frozen pre-W3 ReviewerRuleset body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
+    },
+    {
+      "path": "ops/frozen-w3/ReviewerService.old.ts",
+      "purpose": "Frozen pre-W3 ReviewerService body (main 12ececd3b7) replayed by ops/reviewer-ci-github-differential-w3.ts."
     }
   ]
 }
