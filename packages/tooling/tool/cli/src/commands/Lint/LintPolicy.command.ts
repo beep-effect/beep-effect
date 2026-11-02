@@ -21,7 +21,7 @@ import { lintBaseFlag, lintFullFlag } from "./internal/LintPackage.ts";
  * The changed scope is the local default and the pull-request shape; `--full`
  * or ambient `CI` without `--affected` runs the full sweep. A changed-scope run
  * still widens to the full sweep when the change set deletes a path, carries
- * `@deprecated`, or touches a tsconfig, dependency manifest, Turbo config, lint
+ * a JSDoc deprecation tag, or touches a tsconfig, dependency manifest, Turbo config, lint
  * config or policy implementation.
  *
  * **Example** (Show the policy lint invocation)

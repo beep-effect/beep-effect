@@ -77,33 +77,33 @@ const TurboTasks = S.Struct({ tasks: S.Record(S.String, TurboTaskCache) });
 describe("lint policy escalation classes", () => {
   it("widens tsconfig, dependency, Turbo, lint-config and policy-implementation paths", () => {
     const sealed = (path: string): boolean => path === "packages/foundation/modeling/schema/src/Schema.ts";
-    const cases: ReadonlyArray<readonly [string, O.Option<string>]> = [
-      ["tsconfig.base.json", O.some("tsconfig")],
-      ["packages/demo/tsconfig.build.json", O.some("tsconfig")],
-      ["apps/web/jsconfig.json", O.some("tsconfig")],
-      ["bun.lock", O.some("dependency-manifest")],
-      ["package.json", O.some("dependency-manifest")],
-      ["packages/demo/package.json", O.some("dependency-manifest")],
-      [".bun-version", O.some("dependency-manifest")],
-      ["patches/effect@4.0.0.patch", O.some("dependency-manifest")],
-      ["turbo.json", O.some("turbo-config")],
-      ["packages/demo/turbo.json", O.some("turbo-config")],
-      [".oxlintrc.docs.json", O.some("lint-configuration")],
-      [".oxlintrc.deprecated-apis.jsonc", O.some("lint-configuration")],
-      ["biome.jsonc", O.some("lint-configuration")],
-      ["_typos.toml", O.some("lint-configuration")],
-      ["tsdoc.json", O.some("lint-configuration")],
-      ["standards/lint-policy.sweeps.jsonc", O.some("lint-configuration")],
-      ["standards/policy-tools.fingerprint.json", O.some("lint-configuration")],
-      ["packages/tooling/policy-pack/lint-rules/src/rules/docs.ts", O.some("policy-implementation")],
-      ["packages/tooling/tool/cli/src/commands/Lint/LintPolicy.command.ts", O.some("policy-implementation")],
-      ["packages/foundation/modeling/schema/src/Schema.ts", O.some("policy-implementation")],
-      ["packages/demo/src/index.ts", O.none()],
-      ["packages/demo/.oxlintrc.json", O.none()],
-      ["docs/runbooks/turbo-cache-inputs.md", O.none()],
+    const cases: ReadonlyArray<readonly [string, string | undefined]> = [
+      ["tsconfig.base.json", "tsconfig"],
+      ["packages/demo/tsconfig.build.json", "tsconfig"],
+      ["apps/web/jsconfig.json", "tsconfig"],
+      ["bun.lock", "dependency-manifest"],
+      ["package.json", "dependency-manifest"],
+      ["packages/demo/package.json", "dependency-manifest"],
+      [".bun-version", "dependency-manifest"],
+      ["patches/effect@4.0.0.patch", "dependency-manifest"],
+      ["turbo.json", "turbo-config"],
+      ["packages/demo/turbo.json", "turbo-config"],
+      [".oxlintrc.docs.json", "lint-configuration"],
+      [".oxlintrc.deprecated-apis.jsonc", "lint-configuration"],
+      ["biome.jsonc", "lint-configuration"],
+      ["_typos.toml", "lint-configuration"],
+      ["tsdoc.json", "lint-configuration"],
+      ["standards/lint-policy.sweeps.jsonc", "lint-configuration"],
+      ["standards/policy-tools.fingerprint.json", "lint-configuration"],
+      ["packages/tooling/policy-pack/lint-rules/src/rules/docs.ts", "policy-implementation"],
+      ["packages/tooling/tool/cli/src/commands/Lint/LintPolicy.command.ts", "policy-implementation"],
+      ["packages/foundation/modeling/schema/src/Schema.ts", "policy-implementation"],
+      ["packages/demo/src/index.ts", undefined],
+      ["packages/demo/.oxlintrc.json", undefined],
+      ["docs/runbooks/turbo-cache-inputs.md", undefined],
     ];
     for (const [path, expected] of cases) {
-      expect([path, lintPolicyEscalationTriggerForPath(sealed, path)]).toEqual([path, expected]);
+      expect([path, O.getOrUndefined(lintPolicyEscalationTriggerForPath(sealed, path))]).toEqual([path, expected]);
     }
   });
 
@@ -290,12 +290,15 @@ layer(testLayer, { timeout: "60 seconds" })("lint policy change facts", (it) => 
         );
       const stages = rootLintPolicyStagesForTesting(REPO_ROOT, { base: "origin/main", hosted: true });
       const scoped = A.filter(A.flatten(stages), (step) => A.contains(step.args, "--affected"));
-      for (const task of A.flatMap(scoped, turboTaskNames)) {
-        expect([task, cached(task)]).toEqual([task, O.some(true)]);
-      }
-      for (const task of turboTaskNames(stepLabelled(stages, "lint:policy:state"))) {
-        expect([task, cached(task)]).toEqual([task, O.some(false)]);
-      }
+      const misplaced = [
+        ...A.filter(A.flatMap(scoped, turboTaskNames), (task) => !O.exists(cached(task), (isCached) => isCached)),
+        ...A.filter(
+          turboTaskNames(stepLabelled(stages, "lint:policy:state")),
+          (task) => !O.exists(cached(task), (isCached) => !isCached)
+        ),
+      ];
+      expect(A.length(A.flatMap(scoped, turboTaskNames))).toBeGreaterThan(0);
+      expect(misplaced).toEqual([]);
     })
   );
   it.effect("reads deletions and @deprecated sources from the range and the dirty tree", () =>

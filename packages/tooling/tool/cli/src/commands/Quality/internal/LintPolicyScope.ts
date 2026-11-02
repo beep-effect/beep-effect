@@ -40,7 +40,7 @@ const $I = $RepoCliId.create("commands/Quality/internal/LintPolicyScope");
  * **Details**
  *
  * - `deleted-path`: a removed or renamed path can break an unchanged importer.
- * - `deprecation-annotation`: a changed source file carries `@deprecated`, so
+ * - `deprecation-annotation`: a changed source file carries a JSDoc deprecation tag, so
  *   unchanged callers anywhere may now use a deprecated symbol.
  * - `tsconfig`: type resolution changed for every program that extends it.
  * - `dependency-manifest`: the lockfile, a workspace manifest, the runtime pin
@@ -198,7 +198,7 @@ export class LintPolicyChangeFacts extends S.Opaque<LintPolicyChangeFacts, { rea
   }).pipe(
     $I.annoteSchema("LintPolicyChangeFacts", {
       description:
-        "Changed, deleted and @deprecated-bearing paths of a change set, read by the lint policy scope planner.",
+        "Changed, deleted and deprecation-tagged paths of a change set, read by the lint policy scope planner.",
     })
   )
 ) {}
@@ -278,7 +278,7 @@ const escalationsFor = (
  * console.log(planLintPolicyScope(facts, O.some(() => false), "origin/main")._tag) // "affected"
  * ```
  *
- * @param facts - Changed, deleted and `@deprecated`-bearing paths of the change set.
+ * @param facts - Changed, deleted and deprecation-tagged paths of the change set.
  * @param seal - Fingerprint seal predicate; `None` when the fingerprint could not be read.
  * @param base - Base ref the changed scope is measured against.
  * @returns The full sweep with every escalation, or the changed scope.
@@ -365,7 +365,7 @@ const DEPRECATED_TAG = "@deprecated";
  *
  * A changed path missing from the working tree is a deletion (renames list as
  * their old and new path). A changed source file whose working-tree content
- * carries `@deprecated` is a deprecation fact: reading the head side alone is
+ * carries a JSDoc deprecation tag is a deprecation fact: reading the head side alone is
  * enough because only an added tag can create new findings in unchanged callers,
  * and it never needs merge-base blobs, which a partial clone fetches lazily.
  *
