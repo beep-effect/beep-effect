@@ -49,7 +49,7 @@
             "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
           }
         },
-        "scope": "44 synthetic cases on stable2.11.10/current canary2.11.11-canary.1; actual root/cohort review remains pending.",
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
@@ -98,7 +98,7 @@
             "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
           }
         },
-        "scope": "44 synthetic cases on stable2.11.10/current canary2.11.11-canary.1; actual root/cohort review remains pending.",
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
@@ -174,7 +174,7 @@
             "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
           }
         },
-        "scope": "44 synthetic cases on stable2.11.10/current canary2.11.11-canary.1; actual root/cohort review remains pending.",
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
@@ -1101,7 +1101,7 @@
             "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
           }
         },
-        "scope": "44 synthetic cases on stable2.11.10/current canary2.11.11-canary.1; actual root/cohort review remains pending.",
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
         "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
