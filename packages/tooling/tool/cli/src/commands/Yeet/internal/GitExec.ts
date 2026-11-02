@@ -14,6 +14,7 @@
 
 import { Git, GitOptions } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
@@ -21,6 +22,7 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   adaptGitKitError,
@@ -42,6 +44,8 @@ import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunFoldedStdoutOptions } from "../../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter, GitKitError, RepoRunContext } from "../../../internal/repo-run/index.ts";
+
+const $I = $RepoCliId.create("commands/Yeet/internal/GitExec");
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
   onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),
@@ -487,19 +491,36 @@ export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase
 /**
  * The exit a repo-run capture reported for a git mutation: its code and the text git printed.
  *
+ * **Example** (Represent a successful mutation without captured output)
+ *
+ * ```ts
+ * import { GitKitExit } from "@beep/repo-cli/test/Yeet"
+ *
+ * const exit = GitKitExit.make({ exitCode: 0, output: "" })
+ * console.log(exit.exitCode) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export type GitKitExit = {
-  readonly exitCode: number;
-  readonly output: string;
-};
+export class GitKitExit extends S.Opaque<GitKitExit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    exitCode: S.Finite,
+    output: S.String,
+  }).pipe(
+    $I.annoteSchema("GitKitExit", {
+      description: "A Git mutation's finite exit code and output, with empty output for a successful kit call.",
+    })
+  )
+) {}
 
-const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed({ exitCode: 0, output: "" });
+const exitZero: Result.Result<GitKitExit, YeetCommandError> = Result.succeed(
+  GitKitExit.make({ exitCode: 0, output: "" })
+);
 
 const kitExitAdapter = (failedToRun: string): GitCommandErrorAdapter<Result.Result<GitKitExit, YeetCommandError>> => ({
   onSpawnFailure: () => (cause) => Result.fail(YeetCommandError.new(failedToRun)(cause)),
-  onNonZeroExit: ({ exitCode, output }) => Result.succeed({ exitCode, output }),
+  onNonZeroExit: ({ exitCode, output }) => Result.succeed(GitKitExit.make({ exitCode, output })),
   onTruncated: O.none(),
 });
 
