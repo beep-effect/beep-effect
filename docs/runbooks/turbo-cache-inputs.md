@@ -11,6 +11,26 @@ For example, `**/package.json` can include installed dependency manifests and
 Next build manifests. Adding `$TURBO_DEFAULT$` does not restrict that glob to
 Git-visible files.
 
+Three ignored trees are the largest such leaks, so every task whose globs reach
+them excludes them (quality audit M8, 2026-11-02):
+
+- `!.claude/worktrees/**` (`!$TURBO_ROOT$/.claude/worktrees/**` in a package
+  overlay) on every task whose inputs glob from the repository root: a root
+  `//#` task's `**`-prefixed glob, or any `$TURBO_ROOT$/**` glob. Each nested
+  lane is a full checkout; with twelve lanes `//#lint:retired-iri-authorities`
+  hashed 624,191 inputs in 3.5-5.1 s per dry run, against 60,645 inputs in
+  0.4 s after the fix. The scanners all list files through `git ls-files`, so
+  the lanes were never read. The "Root-reaching task inputs" test in
+  `packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts` fails when a
+  tracked `turbo.json` adds such a glob without the exclusion.
+- `!**/node_modules/**` on the Fallow and typos rows. Fallow may read
+  installed manifests while it resolves dependencies, so its rows hash
+  `bun.lock`, which fixes the installed tree, instead of the tree itself.
+  Typos honors the Git ignore and never reads them.
+- `!**/src-tauri/target/**` on `coverage`, `package-test-typecheck`, the
+  `**/*` law scans and the Fallow rows. The desktop tests read `src-tauri`
+  configuration and source, never Cargo build artifacts.
+
 Match each task's inputs to its consumer. A directory named `build` inside
 source is still an input when the command scans it. Authored documentation and
 tracked generated source must remain inputs when consumed. Apply exclusions to
