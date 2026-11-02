@@ -170,7 +170,7 @@
         },
         {
           "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "sha256": "682d0ea3d00ea19ea7e7f9cb607cedb0d5b8a7494cffe3269e76f76de4c89c4d"
+          "sha256": "d627776fd93185c2acddcc55ab2bf91677649a2bfd0210bc13e08f71e4b49bfb"
         },
         {
           "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
@@ -178,7 +178,7 @@
         },
         {
           "path": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
-          "sha256": "6715b8740befe6207b1d33592413aa06f164629ea4f40a221a6ad84018ccdf48"
+          "sha256": "672cb3c6bb9a98f488c2eec641eaf76ee55ae5a4aa14eafb5a930a5081615421"
         }
       ]
     }

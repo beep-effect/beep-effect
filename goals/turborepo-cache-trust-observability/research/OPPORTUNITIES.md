@@ -1703,3 +1703,15 @@ the existing Result assertion vocabulary, and consume the shared test repair
 from accepted main. Preserve original failed receipts and all policy floors.
 The final focused replay passes 146 cases; both Fallow views and the full
 effect-vitest ratchet pass after the owned repairs.
+
+
+### Snapshot historical receipt bindings by value, 2026-11-02
+
+Review of PR2603 found that a metadata writer retained the previous binding
+array by reference and then updated its members for current source. The two
+changed historical digests therefore repeated the current values. Restore all
+four historical entries from immutable commit `3afde77309`, then independently
+compare every current entry to disk and every historical entry to that commit.
+Keep the original 136-case receipts bound to their original source; no native
+receipt, requirement or acceptance status is changed. Deep-copy retained arrays
+or reconstruct them from immutable blobs before changing current bindings.
