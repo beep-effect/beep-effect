@@ -59,7 +59,8 @@ merge. P0a through P2 are complete; P3 closes in that PR. The 2026-11-02 scan
 reports 3,104 files, 447 findings, 0 open rows and `introduced=0`; every row is
 an owned exception that names its exit, which the operator's 2026-11-02 ruling on
 #1875 made the closeout bar (D4 as amended in [SPEC.md](./SPEC.md) section 9).
-See [the closeout reflection](history/reflections/2026-11-02-claude.md).
+See [the closeout reflection](history/reflections/2026-11-02-claude.md) and
+[the timings report](history/timings-report.md).
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 
 ## Mission

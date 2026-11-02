@@ -55,7 +55,8 @@ closeout. Fix P0/P1 in every round; after round two track and resolve P2-or-lowe
 feedback without another push, under the current operator policy.
 
 Completion requires every SPEC requirement: complete inventory/lens ledger,
-zero new instances and empty final baseline, requested independent reviews,
+zero new instances and a final baseline with no open rows (owned exceptions
+retained; D4 as amended 2026-11-02), requested independent reviews,
 all named proofs and ratifications, following-week timing report, reflection,
 and same-PR lifecycle closeout. Audit each requirement against current evidence
 before marking complete. Keep the goal active while required work remains.

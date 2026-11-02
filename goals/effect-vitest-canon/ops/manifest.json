@@ -21,7 +21,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, an empty detector baseline, timings, and same-PR reflection/state closeout. The fleet orchestrator owns merges at the complete gate.",
+    "statement": "Complete only after all packet acceptance gates and Yeet merge-ready PR evidence, a detector baseline with no open rows (owned exceptions with a named exit retained; D4 as amended 2026-11-02), the timings report, and same-PR reflection/state closeout. The fleet orchestrator owns merges at the complete gate.",
     "grandfathered": false,
     "acceptanceEvidence": [
       {

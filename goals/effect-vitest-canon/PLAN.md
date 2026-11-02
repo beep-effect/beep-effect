@@ -766,6 +766,8 @@ for every package in the wave.
 - Baseline empty of open rows (D4 as amended 2026-11-02; owned exceptions with exits retained); `introduced=0` confirmed by a hosted cheap-gates run.
 - `history/timings-report.md`: per-package before/after table, slowest-file deltas, and the
   Coverage Regression p95 over the following week from `bun run beep ci lane-timings --window`.
+  Written 2026-11-02 from the packet captures and `gh api` job records (the `--window` census
+  refused; see the 2026-11-02 Decision Log row scoping the measured week).
 - Reflection via `/reflect effect-vitest-canon`; `ops/manifest.json` `proposedCloseout` in the final PR
   (same-PR packet-state rule; the derived status flips through `goals completion refresh` after merge);
   `research/OPPORTUNITIES.md` receipts folded.
