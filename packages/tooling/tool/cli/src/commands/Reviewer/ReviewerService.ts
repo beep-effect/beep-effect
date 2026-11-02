@@ -4,28 +4,31 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { PullRequest as PullRequests } from "@beep/github/PullRequest";
+import { CommentMarker, PullRequestComment } from "@beep/github/PullRequestComment";
+import { Repo, RepoRef } from "@beep/github/Repo";
+import { PageOptions } from "@beep/github/Rest";
 import { $RepoCliId } from "@beep/identity/packages";
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, identity } from "effect/Function";
-import * as HttpClient from "effect/http/HttpClient";
-import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { GitHubAppAuth } from "./GitHubAppAuth.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
 import { ReviewerChangedFile } from "./ReviewerModels.ts";
 import { ReviewerCheckExternalId, reviewerCheckExternalId, reviewerDocsOnly } from "./ReviewerRuleset.ts";
-import type * as HttpMethod from "effect/http/HttpMethod";
 import type { ReviewerResult, ReviewerReview } from "./ReviewerModels.ts";
 
 const $I = $RepoCliId.create("commands/Reviewer/Reviewer.service");
-const API = "https://api.github.com/repos/beep-effect/beep-effect";
-const MARKER = "<!-- beep-reviewer:summary -->";
+const REVIEWER_REPO = RepoRef.make({ owner: "beep-effect", repo: "beep-effect" });
+// The editable summary's identity: this hidden marker plus the App's own authorship (see isReviewerSummary).
+const SUMMARY_MARKER = CommentMarker.make({ namespace: "beep-reviewer", key: "summary" });
+// GitHub lists at most 3000 files and 100 per page; an association walk stops at the same 30 pages.
+const ASSOCIATION_PAGES = PageOptions.make({ perPage: 100, maxPages: 30 });
 class AppIdentity extends S.Class<AppIdentity, { readonly brand: unique symbol }>($I`AppIdentity`)(
   { id: S.Int },
   $I.annote("AppIdentity", { description: "The originating GitHub App id." })
@@ -41,10 +44,6 @@ class CheckRun extends S.Class<CheckRun, { readonly brand: unique symbol }>($I`C
     external_id: S.NullOr(S.String),
   },
   $I.annote("CheckRun", { description: "App-owned check run response." })
-) {}
-class CheckPage extends S.Class<CheckPage, { readonly brand: unique symbol }>($I`CheckPage`)(
-  { total_count: S.Int, check_runs: S.Array(CheckRun) },
-  $I.annote("CheckPage", { description: "Paginated check runs." })
 ) {}
 class CommentUser extends S.Class<CommentUser, { readonly brand: unique symbol }>($I`CommentUser`)(
   { login: S.String, type: S.String },
@@ -63,25 +62,13 @@ class CreatedResource extends S.Class<CreatedResource, { readonly brand: unique 
   { id: S.Int },
   $I.annote("CreatedResource", { description: "Created or edited GitHub resource id." })
 ) {}
-class PullRequest extends S.Class<PullRequest, { readonly brand: unique symbol }>($I`PullRequest`)(
-  { head: S.Struct({ sha: S.String }), base: S.Struct({ sha: S.String }) },
-  $I.annote("PullRequest", { description: "The current PR head and base commits." })
-) {}
 const decodeCheckExternalId = S.decodeUnknownEffect(ReviewerCheckExternalId);
-const decodeCheck = S.decodeUnknownEffect(CheckRun);
-const decodeChecks = S.decodeUnknownEffect(CheckPage);
+const decodeChecks = S.decodeUnknownEffect(S.Array(CheckRun));
 const decodeComments = S.decodeUnknownEffect(S.Array(SummaryComment));
-const decodeResource = S.decodeUnknownEffect(CreatedResource);
 class ClassifiedPull extends S.Class<ClassifiedPull, { readonly brand: unique symbol }>($I`ClassifiedPull`)(
-  { ...PullRequest.fields, changed_files: S.Int },
+  { head: S.Struct({ sha: S.String }), base: S.Struct({ sha: S.String }), changed_files: S.Int },
   $I.annote("ClassifiedPull", { description: "PR head with complete changed-file count for L0 classification." })
 ) {}
-const decodeClassifiedPull = S.decodeUnknownEffect(ClassifiedPull);
-const decodeFilePage = S.decodeUnknownEffect(S.Array(ReviewerChangedFile));
-const decodeAssociatedPulls = S.decodeUnknownEffect(
-  S.Array(S.Struct({ number: S.Int, state: S.Literals(["open", "closed"]), head: S.Struct({ sha: S.String }) }))
-);
-const decodePull = S.decodeUnknownEffect(PullRequest);
 const error = (message: string) => ReviewerError.make({ operation: "github", message });
 
 /**
@@ -122,7 +109,7 @@ export const isReviewerSummary: {
 } = dual(
   2,
   (comment: Pick<typeof SummaryComment.Encoded, "body" | "user" | "performed_via_github_app">, appId: number) =>
-    Str.includes(MARKER)(comment.body) &&
+    SUMMARY_MARKER.matches(comment.body) &&
     comment.user.type === "Bot" &&
     comment.user.login === "beep-reviewer[bot]" &&
     comment.performed_via_github_app?.id === appId
@@ -154,7 +141,16 @@ interface ReviewerShape {
 export class Reviewer extends Context.Service<Reviewer, ReviewerShape>()($I`Reviewer`) {}
 
 /**
- * Implements reviewer operations with an injectable Effect HTTP client and App auth service.
+ * Implements reviewer operations over the reviewer App's `@beep/github` installation client.
+ *
+ * **Details**
+ *
+ * Every call targets `beep-effect/beep-effect`. Pull request heads, file lists
+ * and commit associations come from the kit's `PullRequest`; check runs, the
+ * changed-file count, comment authorship and reviews are read through
+ * `GitHubClient` with this module's own schemas, because the kit's projections
+ * drop the fields the ownership checks compare (check `app.id` and
+ * `external_id`, comment `performed_via_github_app`, `changed_files`).
  *
  * **Example** (Inspect the publishing layer)
  * ```ts
@@ -170,47 +166,29 @@ export const ReviewerLive = Layer.effect(
   Reviewer,
   Effect.gen(function* () {
     const auth = yield* GitHubAppAuth;
-    const http = yield* HttpClient.HttpClient;
-    const request = Effect.fn("Reviewer.request")(
-      function* (method: HttpMethod.HttpMethod, path: string, body?: unknown) {
-        const token = yield* auth.token;
-        const base = HttpClientRequest.make(method)(`${API}${path}`).pipe(
-          HttpClientRequest.setHeaders({
-            authorization: `Bearer ${Redacted.value(token)}`,
-            accept: "application/vnd.github+json",
-            "x-github-api-version": "2022-11-28",
-          })
-        );
-        const req = body === undefined ? base : yield* HttpClientRequest.bodyJson(base, body);
-        const response = yield* http.execute(req);
-        if (response.status < 200 || response.status >= 300)
-          return yield* error(`GitHub ${method} returned HTTP ${response.status}.`);
-        return yield* response.json;
-      },
-      Effect.mapError(() => error("Reviewer GitHub request failed; sensitive diagnostics suppressed."))
-    );
+    const client = yield* GitHubClient;
+    const pulls = yield* PullRequests;
+    const comments = yield* PullRequestComment;
+    const at = { owner: REVIEWER_REPO.owner, repo: REVIEWER_REPO.repo };
+    const onRepo = Effect.provideService(Repo, REVIEWER_REPO);
+    const request = <A, I>(route: string, params: Record<string, unknown>, schema: S.Codec<A, I>) =>
+      client
+        .requestDecoded(route, { ...at, ...params }, schema)
+        .pipe(Effect.mapError(() => error("Reviewer GitHub request failed; sensitive diagnostics suppressed.")));
+    const write = (route: string, params: Record<string, unknown>) => request(route, params, CreatedResource);
+    const readClassifiedPull = (pr: number) =>
+      request("GET /repos/{owner}/{repo}/pulls/{pull_number}", { pull_number: pr }, ClassifiedPull);
     const currentHead = Effect.fn("Reviewer.currentHead")(function* (pr: number, sha: string) {
-      const pull = yield* request("GET", `/pulls/${pr}`).pipe(Effect.flatMap(decodePull));
-      if (pull.head.sha !== sha) return yield* error("PR head moved; refusing to publish a stale review.");
-      return pull.base.sha;
+      const pull = yield* pulls.get(pr).pipe(onRepo);
+      if (pull.headSha !== sha) return yield* error("PR head moved; refusing to publish a stale review.");
+      return pull.baseSha;
     });
     const exclusiveOpenHead = Effect.fn("Reviewer.exclusiveOpenHead")(function* (pr: number, sha: string) {
-      let ownHeadSeen = false;
-      let page = 1;
-      while (true) {
-        if (page > 30) return yield* error("PR association listing exceeded its safe page limit.");
-        const associated = yield* request("GET", `/commits/${sha}/pulls?per_page=100&page=${page}`).pipe(
-          Effect.flatMap(decodeAssociatedPulls)
-        );
-        ownHeadSeen ||= A.some(
-          associated,
-          (pull) => pull.number === pr && pull.state === "open" && pull.head.sha === sha
-        );
-        if (A.some(associated, (pull) => pull.number !== pr && pull.state === "open" && pull.head.sha === sha))
-          return false;
-        if (associated.length < 100) return ownHeadSeen;
-        page += 1;
-      }
+      const associated = yield* pulls.listAssociatedWithCommit(sha, { page: ASSOCIATION_PAGES }).pipe(onRepo);
+      if (A.some(associated, (pull) => pull.number !== pr && pull.state === "open" && pull.headSha === sha))
+        return false;
+      if (associated.length >= 3000) return yield* error("PR association listing exceeded its safe page limit.");
+      return A.some(associated, (pull) => pull.number === pr && pull.state === "open" && pull.headSha === sha);
     });
     const confirmDocsOnlyHead = Effect.fn("Reviewer.confirmDocsOnlyHead")(function* (
       pr: number,
@@ -218,26 +196,22 @@ export const ReviewerLive = Layer.effect(
       baseSha: string,
       fileCount: number
     ) {
-      const confirmed = yield* request("GET", `/pulls/${pr}`).pipe(Effect.flatMap(decodeClassifiedPull));
+      const confirmed = yield* readClassifiedPull(pr);
       if (confirmed.head.sha !== sha || confirmed.base.sha !== baseSha || confirmed.changed_files !== fileCount)
         return yield* error("PR moved during L0 association check.");
     });
     const docsOnly = Effect.fn("Reviewer.docsOnly")(
       function* (pr: number, sha: string) {
-        const before = yield* request("GET", `/pulls/${pr}`).pipe(Effect.flatMap(decodeClassifiedPull));
+        const before = yield* readClassifiedPull(pr);
         if (!A.every([before.head.sha === sha, before.changed_files < 3000], identity))
           return yield* error("Cannot classify a moved or truncated PR head as L0.");
-        const files: Array<ReviewerChangedFile> = [];
-        let page = 1;
-        while (true) {
-          const batch = yield* request("GET", `/pulls/${pr}/files?per_page=100&page=${page}`).pipe(
-            Effect.flatMap(decodeFilePage)
-          );
-          files.push(...batch);
-          if (batch.length < 100) break;
-          page += 1;
-        }
-        const after = yield* request("GET", `/pulls/${pr}`).pipe(Effect.flatMap(decodeClassifiedPull));
+        const files = A.map(yield* pulls.listFiles(pr, { page: PageOptions.all }).pipe(onRepo), (file) =>
+          ReviewerChangedFile.make({
+            filename: file.path,
+            ...O.getSomesStruct({ previous_filename: O.fromUndefinedOr(file.previousPath) }),
+          })
+        );
+        const after = yield* readClassifiedPull(pr);
         if (
           !A.every(
             [
@@ -258,7 +232,11 @@ export const ReviewerLive = Layer.effect(
       Effect.mapError(() => error("L0 classification failed closed."))
     );
     const owned = Effect.fn("Reviewer.ownedCheck")(function* (id: number) {
-      const check = yield* request("GET", `/check-runs/${id}`).pipe(Effect.flatMap(decodeCheck));
+      const check = yield* request(
+        "GET /repos/{owner}/{repo}/check-runs/{check_run_id}",
+        { check_run_id: id },
+        CheckRun
+      );
       if (check.name !== "beep-reviewer" || check.app.id !== auth.appId)
         return yield* error("Check does not belong to beep-reviewer.");
       return check;
@@ -269,31 +247,29 @@ export const ReviewerLive = Layer.effect(
         if (O.isSome(expectedBase) && expectedBase.value !== baseSha)
           return yield* error("PR base moved after L0 classification.");
         const association = reviewerCheckExternalId(pr, sha, baseSha);
-        let page = 1;
-        while (true) {
-          const runs = yield* request(
-            "GET",
-            `/commits/${sha}/check-runs?check_name=beep-reviewer&filter=all&per_page=100&page=${page}`
-          ).pipe(Effect.flatMap(decodeChecks));
-          const existing = A.findFirst(
-            runs.check_runs,
-            (run) =>
-              run.app.id === auth.appId &&
-              run.head_sha === sha &&
-              run.status === "in_progress" &&
-              run.external_id === association
-          );
-          if (O.isSome(existing)) return existing.value.id;
-          if (A.isReadonlyArrayEmpty(runs.check_runs) || page * 100 >= runs.total_count) break;
-          page += 1;
-        }
-        return (yield* request("POST", "/check-runs", {
+        const runs = yield* client
+          .paginate(
+            "GET /repos/{owner}/{repo}/commits/{ref}/check-runs",
+            { ...at, ref: sha, check_name: "beep-reviewer", filter: "all" },
+            PageOptions.all
+          )
+          .pipe(Effect.flatMap(decodeChecks));
+        const existing = A.findFirst(
+          runs,
+          (run) =>
+            run.app.id === auth.appId &&
+            run.head_sha === sha &&
+            run.status === "in_progress" &&
+            run.external_id === association
+        );
+        if (O.isSome(existing)) return existing.value.id;
+        return (yield* write("POST /repos/{owner}/{repo}/check-runs", {
           name: "beep-reviewer",
           head_sha: sha,
           status: "in_progress",
           external_id: association,
           output: { title: "Reviewing…", summary: "Reviewing the current PR head." },
-        }).pipe(Effect.flatMap(decodeResource))).id;
+        })).id;
       },
       Effect.mapError(() => error("Cannot start reviewer check; verify PR head and App access."))
     );
@@ -306,17 +282,19 @@ export const ReviewerLive = Layer.effect(
       const currentBase = yield* currentHead(pr, check.head_sha);
       if (currentBase !== associatedBase) return yield* error("PR base moved; refusing to complete a stale review.");
     });
+    const updateCheck = (id: number, body: Record<string, unknown>) =>
+      write("PATCH /repos/{owner}/{repo}/check-runs/{check_run_id}", { check_run_id: id, ...body });
     const complete = Effect.fn("Reviewer.complete")(
       function* (id: number, result: ReviewerResult) {
         yield* active(id);
         const title = `${result.score}/5 · ${result.tier} · P0 ${result.p0} · P1 ${result.p1} · P2 ${result.p2}`;
         // Append annotations before completing: a failed batch leaves an in-progress run, never false green.
         for (const annotations of A.chunksOf(result.annotations, 50)) {
-          yield* request("PATCH", `/check-runs/${id}`, { output: { title, summary: result.summary, annotations } });
+          yield* updateCheck(id, { output: { title, summary: result.summary, annotations } });
         }
         // Recheck after annotation requests so a cancellation or push during publication stays closed.
         yield* active(id);
-        yield* request("PATCH", `/check-runs/${id}`, {
+        yield* updateCheck(id, {
           status: "completed",
           conclusion: reviewerConclusion(result),
           output: { title, summary: result.summary },
@@ -329,7 +307,7 @@ export const ReviewerLive = Layer.effect(
       function* (id: number, reason: string) {
         const check = yield* owned(id);
         if (check.status !== "in_progress") return yield* error("Check is no longer active.");
-        yield* request("PATCH", `/check-runs/${id}`, {
+        yield* updateCheck(id, {
           status: "completed",
           conclusion: "cancelled",
           output: { title: "Review cancelled", summary: reason },
@@ -340,38 +318,40 @@ export const ReviewerLive = Layer.effect(
     );
     const upsert = Effect.fn("Reviewer.upsert")(
       function* (pr: number, body: string) {
-        const content = Str.includes(MARKER)(body) ? body : `${MARKER}\n${body}`;
-        let page = 1;
-        while (true) {
-          const comments = yield* request("GET", `/issues/${pr}/comments?per_page=100&page=${page}`).pipe(
-            Effect.flatMap(decodeComments)
-          );
-          const own = A.findFirst(comments, (comment) => isReviewerSummary(comment, auth.appId));
-          if (O.isSome(own))
-            return (yield* request("PATCH", `/issues/comments/${own.value.id}`, { body: content }).pipe(
-              Effect.flatMap(decodeResource)
-            )).id;
-          if (comments.length < 100) break;
-          page += 1;
-        }
-        return (yield* request("POST", `/issues/${pr}/comments`, { body: content }).pipe(
-          Effect.flatMap(decodeResource)
-        )).id;
+        // The marker leads the body, as the hand-rolled upsert wrote it; the kit's
+        // `PullRequestComment.upsert` appends it and matches any author, so the
+        // App-authorship check stays here.
+        const content = SUMMARY_MARKER.matches(body) ? body : `${SUMMARY_MARKER.html}\n${body}`;
+        const listed = yield* client
+          .paginate(
+            "GET /repos/{owner}/{repo}/issues/{issue_number}/comments",
+            { ...at, issue_number: pr },
+            PageOptions.all
+          )
+          .pipe(Effect.flatMap(decodeComments));
+        const own = A.findFirst(listed, (comment) => isReviewerSummary(comment, auth.appId));
+        if (O.isSome(own))
+          return (yield* write("PATCH /repos/{owner}/{repo}/issues/comments/{comment_id}", {
+            comment_id: own.value.id,
+            body: content,
+          })).id;
+        return (yield* comments.create(pr, content).pipe(onRepo)).id;
       },
       Effect.mapError(() => error("Cannot upsert reviewer summary."))
     );
     const review = Effect.fn("Reviewer.review")(
       function* (pr: number, sha: string, input: ReviewerReview) {
         yield* currentHead(pr, sha);
-        return (yield* request("POST", `/pulls/${pr}/reviews`, {
+        return (yield* write("POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews", {
+          pull_number: pr,
           body: input.body,
           comments: input.comments,
           commit_id: sha,
           event: "COMMENT",
-        }).pipe(Effect.flatMap(decodeResource))).id;
+        })).id;
       },
       Effect.mapError(() => error("Cannot post COMMENT review."))
     );
     return Reviewer.of({ docsOnly, start, complete, cancel, upsert, review });
   })
-);
+).pipe(Layer.provide(Layer.mergeAll(PullRequests.layer, PullRequestComment.layer)));

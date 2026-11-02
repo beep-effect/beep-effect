@@ -1,6 +1,9 @@
 import {
+  ciGovernanceCommands,
   decideHeavyAdmission,
   desktopEnvironmentApproved,
+  GithubPolicyClient,
+  GithubPolicyClientLive,
   HeavyAdmissionEvent,
   HeldRun,
   heldGroupRunIds,
@@ -10,9 +13,24 @@ import {
   setupCacheWriteDisabled,
   workflowPolicyDiagnostics,
 } from "@beep/repo-cli/commands/Ci";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+import * as TestConsole from "effect/testing/TestConsole";
+import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply } from "./support/GithubFetch.ts";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const writer = (environment: string, token = "${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}") =>
   `on: push\njobs:\n  writer:\n    environment: "${environment}"\n    steps:\n      - uses: ./.github/actions/setup-monorepo-ci\n        with:\n          turbo-token: "${token}"\n`;
@@ -148,3 +166,120 @@ describe("CI governance policy", () => {
     })
   );
 });
+
+// The live governance client reads its token through `gh auth token` and calls GitHub through the
+// `@beep/github` transport; both are faked, so no test reaches the network.
+const tokenHandle = ChildProcessSpawner.makeHandle({
+  all: Stream.make(new TextEncoder().encode("gho_fixture\n")),
+  stdout: Stream.make(new TextEncoder().encode("gho_fixture\n")),
+  stderr: Stream.empty,
+  stdin: Sink.drain,
+  exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+  getInputFd: () => Sink.drain,
+  getOutputFd: () => Stream.empty,
+  isRunning: Effect.succeed(false),
+  kill: () => Effect.void,
+  pid: ChildProcessSpawner.ProcessId(1),
+  unref: Effect.succeed(Effect.void),
+});
+const ghAuthToken = ChildProcessSpawner.make((command) =>
+  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
+    ? Effect.succeed(tokenHandle)
+    : Effect.die("the governance client spawns only gh auth token")
+);
+const callKey = (call: GithubFetchCall) => `${call.method} ${call.path}`;
+const withFakeGithub =
+  (respond: (call: GithubFetchCall) => unknown) =>
+  <A, E, R>(program: (calls: ReadonlyArray<GithubFetchCall>) => Effect.Effect<A, E, R>) => {
+    const api = githubFetch(respond);
+    return program(api.calls).pipe(
+      Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
+      )
+    );
+  };
+const REPO = "/repos/beep-effect/beep-effect";
+const governanceAnswers = (call: GithubFetchCall): unknown => {
+  const key = callKey(call);
+  if (key === `GET ${REPO}/environments/professional-desktop-release`)
+    return { protection_rules: [{ type: "required_reviewers", reviewers: [{ type: "User" }] }] };
+  if (key === `GET ${REPO}/actions/workflows/check.yml/runs?branch=main&event=push&per_page=100`)
+    return {
+      total_count: 1,
+      workflow_runs: [{ id: 5, status: "completed", created_at: "2026-10-01T00:00:00Z", head_branch: "main" }],
+    };
+  if (key === `GET ${REPO}/pulls/7`) return { changed_files: 3 };
+  if (key === `GET ${REPO}/issues/7/labels?per_page=100`) return [{ name: "size/L" }];
+  if (key === `GET ${REPO}/rulesets/10240248`)
+    return {
+      id: 10240248,
+      name: "main",
+      enforcement: "active",
+      rules: [{ type: "required_status_checks", parameters: { required_status_checks: [{ context: "Drifted" }] } }],
+    };
+  if (call.method === "DELETE" || call.method === "POST") return [];
+  return reply(404)({ message: "Not Found" });
+};
+const runGovernance = Command.runWith(Command.make("ci").pipe(Command.withSubcommands(ciGovernanceCommands)), {
+  version: "0.0.0",
+});
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, TestConsole.layer), { timeout: "30 seconds" })(
+  "governance over the live GitHub client",
+  (it) => {
+    it.effect("reads, writes, and reports an unreadable endpoint as unknown state", () =>
+      withFakeGithub(governanceAnswers)((calls) =>
+        Effect.gen(function* () {
+          const context = yield* Layer.build(GithubPolicyClientLive);
+          const client = Context.get(context, GithubPolicyClient);
+          expect(yield* client.read("repos/{owner}/{repo}/pulls/7")).toEqual({ changed_files: 3 });
+          yield* client.write("POST /repos/{owner}/{repo}/issues/{issue_number}/labels", {
+            issue_number: 7,
+            labels: ["size/S"],
+          });
+          const missing = yield* client.read("repos/{owner}/{repo}/environments/unknown").pipe(
+            Effect.as("read"),
+            Effect.catchTag("CiCommandError", (error) => Effect.succeed(error.message))
+          );
+          expect(missing).toBe("GitHub policy request failed (HTTP 404); state is unknown.");
+          expect(A.map(calls, callKey)).toEqual([
+            `GET ${REPO}/pulls/7`,
+            `POST ${REPO}/issues/7/labels`,
+            `GET ${REPO}/environments/unknown`,
+          ]);
+          expect(calls[1]?.body).toEqual({ labels: ["size/S"] });
+        })
+      )
+    );
+
+    it.effect("checks settings, the held group and PR size labels through the commands", () =>
+      withFakeGithub(governanceAnswers)((calls) =>
+        Effect.gen(function* () {
+          yield* runGovernance(["settings", "--check"]);
+          yield* runGovernance(["held-group"]);
+          yield* runGovernance(["pr-size", "7"]);
+          const logs = A.map(yield* TestConsole.logLines, String);
+          expect(logs).toContain("settings: desktop release reviewer protection present");
+          expect(logs).toContain("held-group: clean");
+          expect(logs).toContain("Changed files: 3; label: size/S");
+          expect(A.map(calls, callKey)).toContain(`DELETE ${REPO}/issues/7/labels/size%2FL`);
+          expect(A.map(calls, callKey)).toContain(`POST ${REPO}/issues/7/labels`);
+        })
+      )
+    );
+
+    it.effect("refuses ruleset drift and a missing mode", () =>
+      withFakeGithub(governanceAnswers)(() =>
+        Effect.gen(function* () {
+          const drift = yield* runGovernance(["ruleset", "--check"]).pipe(Effect.flip);
+          expect(String(drift)).toContain("Ruleset drift");
+          const mode = yield* runGovernance(["ruleset"]).pipe(Effect.flip);
+          expect(String(mode)).toContain("Use --capture or --check.");
+        })
+      )
+    );
+  }
+);

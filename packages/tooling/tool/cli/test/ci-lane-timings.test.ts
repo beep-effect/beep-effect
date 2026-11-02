@@ -1,4 +1,7 @@
 // Historical pre-retirement GitHub snapshots retain the former Knip context.
+import { GitHubClient } from "@beep/github/GitHubClient";
+import { GitHubError } from "@beep/github/GitHubError";
+import { Repo, RepoRef } from "@beep/github/Repo";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   assessCiLaneTimingWindowBounds,
@@ -24,15 +27,18 @@ import {
   collectCiLaneTimingWindow,
   collectRequiredContexts,
   decodeCiWorkflowJobsPage,
+  ghApiJson,
+  githubStatusSuffix,
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   renderCiLaneTimingWindowMarkdown,
   renderCiLaneTimingWindowSummary,
   renderCiLaneTimingWindowTsv,
+  withCiGithub,
   withCiLanePeakRss,
 } from "@beep/repo-cli/commands/Ci";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { A, Str } from "@beep/utils";
-import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -46,23 +52,27 @@ import {
   deepStrictEqual,
   strictEqual,
 } from "@effect/vitest/utils";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
-import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { githubFetch, reply, unreachable } from "./support/GithubFetch.ts";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 // The Actions jobs endpoint returns snake_case wire fields; these fixtures keep
 // them so the derivations are exercised on the shape they actually receive.
@@ -122,44 +132,53 @@ const laneTimingsResponse = (rendered: string): string =>
       ? '{"jobs":[{"completed_at":"2026-08-06T12:10:00Z","conclusion":"success","created_at":"2026-08-06T12:00:00Z","id":991,"labels":["self-hosted"],"name":"Test Unit","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:00:30Z","status":"completed","steps":[]}],"total_count":2}'
       : '{"jobs":[{"completed_at":"2026-08-06T12:11:00Z","conclusion":"success","created_at":"2026-08-06T12:01:00Z","id":992,"labels":["self-hosted"],"name":"Test Unit 2","run_attempt":1,"run_id":42,"runner_name":"runner-1","started_at":"2026-08-06T12:01:30Z","status":"completed","steps":[]}],"total_count":2}';
 
-const laneTimingsSpawner = ChildProcessSpawner.make((command) => {
-  if (!ChildProcess.isStandardCommand(command)) {
-    return Effect.die("lane timings never spawns a piped command");
-  }
-  return Effect.succeed(stubHandle(laneTimingsResponse(A.join([command.command, ...commandArgs(command)], " "))));
-});
+const decodeJsonText = flow(S.decodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+const REPO_PATH = "/repos/beep-effect/beep-effect";
+// The endpoint a call reads, spelled as the Ci readers spell it.
+const endpointOf = (call: GithubFetchCall): string =>
+  `repos/{owner}/{repo}${Str.slice(Str.length(REPO_PATH))(call.url.pathname)}${call.url.search}`;
 
-interface ScriptedGhExit {
-  readonly exitCode: number;
-  readonly output: string;
+/** One scripted failure: a status GitHub answered with, or a request that never reached it. */
+interface ScriptedGithubFailure {
+  readonly reason: string;
+  readonly status?: number;
 }
+const failureReply = (failure: ScriptedGithubFailure) =>
+  failure.status === undefined ? unreachable(failure.reason) : reply(failure.status)({ message: failure.reason });
 
 /**
- * Spawner that fails the first `exits.length` gh invocations with the scripted
- * non-zero exits, then answers like {@link laneTimingsSpawner}. `spawned`
- * counts every invocation so a test can prove how many attempts were made.
+ * A fake GitHub API that fails the first `failures.length` reads with the
+ * scripted failures, then answers like the lane-timings fixtures. `requests`
+ * counts every read so a test can prove how many attempts were made.
  */
-const scriptedGhSpawner = (exits: ReadonlyArray<ScriptedGhExit>) => {
-  const pending = A.copy(exits);
-  const state = { spawned: 0 };
-  const spawner = ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("lane timings never spawns a piped command");
-    }
-    state.spawned += 1;
+const scriptedGithub = (
+  failures: ReadonlyArray<ScriptedGithubFailure> = [],
+  respond: (path: string) => string = laneTimingsResponse
+) => {
+  const pending = A.copy(failures);
+  const state = { requests: 0 };
+  const api = githubFetch((call) => {
+    state.requests += 1;
     const scripted = pending.shift();
-    return Effect.succeed(
-      scripted === undefined
-        ? stubHandle(laneTimingsResponse(A.join([command.command, ...commandArgs(command)], " ")))
-        : stubHandle(scripted.output, scripted.exitCode)
-    );
+    return scripted === undefined ? decodeJsonText(respond(call.path)) : failureReply(scripted);
   });
-  return { spawner, state };
+  return { fetch: api.fetch, state };
 };
 
-const BAD_RECORD_MAC: ScriptedGhExit = {
-  exitCode: 1,
-  output: 'error connecting to api.github.com\nPost "https://api.github.com/graphql": local error: tls: bad record MAC',
+const githubLayer = (fetch: typeof globalThis.fetch) =>
+  Layer.mergeAll(
+    GitHubClient.layerFromToken({ token: Redacted.make("ghs_fixture"), retry: "off", fetch }),
+    Repo.layer(RepoRef.make({ owner: "beep-effect", repo: "beep-effect" }))
+  );
+const provideGithub =
+  (fetch: typeof globalThis.fetch) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    Effect.flatMap(Layer.build(githubLayer(fetch)), (context) => Effect.provideContext(program, context)).pipe(
+      Effect.scoped
+    );
+
+const BAD_RECORD_MAC: ScriptedGithubFailure = {
+  reason: 'Post "https://api.github.com/graphql": local error: tls: bad record MAC',
 };
 
 /**
@@ -167,40 +186,47 @@ const BAD_RECORD_MAC: ScriptedGhExit = {
  * every backoff sleep the retry schedule can request (250ms·2^n jittered,
  * at most ~4.5s across four retries).
  */
-const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")(
-  (spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]) =>
-    collectCiLaneTimings(".", 1).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-      Effect.provideService(SecureRandom.SecureRandom, SecureRandom.make(SecureRandom.randomBytesUnsafe)),
-      Effect.exit,
-      Effect.forkChild
-    )
+const forkCollect = Effect.fn("TestCiLaneTimings.forkCollect")((fetch: typeof globalThis.fetch) =>
+  collectCiLaneTimings(1).pipe(provideGithub(fetch), Effect.exit, Effect.forkChild)
 );
 
 /**
  * Run `collectCiLaneTimings` under the TestClock, advancing virtual time past
  * every backoff sleep the retry schedule can request: transport retries wait
  * 250ms·2^n jittered upward (≤ ~4.5s across four retries), secondary rate limits wait
- * 1m·2^n jittered upward (≤ 18m). Steps stay under the capture layer's 2-second
- * drain grace so a clock jump cannot trip its pipe-wedge watchdog.
+ * 1m·2^n jittered upward (≤ 18m).
  */
 const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(function* (
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
+  fetch: typeof globalThis.fetch
 ) {
-  const fiber = yield* forkCollect(spawner);
+  const fiber = yield* forkCollect(fetch);
   yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"));
   return yield* Fiber.join(fiber);
 });
 
-const SECONDARY_RATE_LIMIT: ScriptedGhExit = {
-  exitCode: 1,
-  output: "gh: You have exceeded a secondary rate limit. Please wait a few minutes before you try again. (HTTP 403)",
+const SECONDARY_RATE_LIMIT: ScriptedGithubFailure = {
+  status: 403,
+  reason: "You have exceeded a secondary rate limit. Please wait a few minutes before you try again.",
 };
 
-const laneTimingsSpawnerLayer = Layer.mergeAll(
-  BunCrypto.layer,
-  Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner)
+// The command builds its own client from `gh auth token` and `GH_REPO`, falling back to the global `fetch`.
+const ghAuthToken = ChildProcessSpawner.make((command) =>
+  ChildProcess.isStandardCommand(command) && A.join([command.command, ...commandArgs(command)], " ") === "gh auth token"
+    ? Effect.succeed(stubHandle("ghs_fixture\n"))
+    : Effect.die("lane timings spawns only gh auth token")
 );
+const withCommandGithub =
+  (respond: (call: GithubFetchCall) => unknown) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    program.pipe(
+      Effect.provideService(GithubTransportFetch, O.some(githubFetch(respond).fetch)),
+      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
+      )
+    );
+const withLaneTimingsCommandGithub = withCommandGithub((call) => decodeJsonText(laneTimingsResponse(call.path)));
 
 const REQUIRED_CONTEXTS = [
   "Heavy / Check",
@@ -352,20 +378,18 @@ const windowGithubClient = (
   response: (endpoint: string) => Effect.Effect<string> = windowGithubResponse
 ) =>
   CiLaneTimingGithubClient.of({
-    getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")(function* (_repoRoot, endpoint) {
+    getJson: Effect.fn("TestCiLaneTimingGithubClient.getJson")(function* (endpoint) {
       A.appendInPlace(commands, endpoint);
-      return yield* response(endpoint);
+      return decodeJsonText(yield* response(endpoint));
     }),
   });
 
-const laneTimingsWindowCliSpawner = (commands: Array<string>) =>
-  ChildProcessSpawner.make((command) => {
-    if (!ChildProcess.isStandardCommand(command)) {
-      return Effect.die("lane timings never spawns a piped command");
-    }
-    const rendered = A.join([command.command, ...commandArgs(command)], " ");
-    A.appendInPlace(commands, rendered);
-    return windowGithubResponse(commandArgs(command)[1] ?? "").pipe(Effect.map(stubHandle));
+// The window census through the CLI: every read is recorded by endpoint and answered from the fixtures.
+const withWindowCommandGithub = (commands: Array<string>) =>
+  withCommandGithub((call) => {
+    const endpoint = endpointOf(call);
+    A.appendInPlace(commands, endpoint);
+    return windowGithubResponse(endpoint).pipe(Effect.runSync, decodeJsonText);
   });
 
 const laneTimingsCommandLayer = Layer.mergeAll(
@@ -398,24 +422,26 @@ const INSIDE_CENSUS_WINDOW = "2026-09-24T22:09:00Z";
 const AFTER_CENSUS_WINDOW = "2026-09-30T00:00:00Z";
 
 describe("ci lane timings attempt filter", () => {
-  it.layer(laneTimingsSpawnerLayer)((it) => {
-    it.effect("collects every page of all-attempt jobs", () =>
-      Effect.gen(function* () {
-        const report = yield* collectCiLaneTimings(".", 1);
+  it.effect("collects every page of all-attempt jobs", () =>
+    Effect.gen(function* () {
+      const report = yield* collectCiLaneTimings(1).pipe(provideGithub(scriptedGithub().fetch));
 
-        expect(report.jobCount).toBe(2);
-        expect(A.map(report.rows, (row) => row.jobId)).toStrictEqual([991, 992]);
-      })
-    );
+      expect(report.jobCount).toBe(2);
+      expect(A.map(report.rows, (row) => row.jobId)).toStrictEqual([991, 992]);
+    })
+  );
 
-    it.effect("rejects recent-run limits outside the API bounds", () =>
-      Effect.gen(function* () {
-        const exits = yield* Effect.forEach([0, 101], (limit) => Effect.exit(collectCiLaneTimings(".", limit)));
+  it.effect("rejects recent-run limits outside the API bounds", () =>
+    Effect.gen(function* () {
+      const github = scriptedGithub();
+      const exits = yield* Effect.forEach([0, 101], (limit) =>
+        Effect.exit(collectCiLaneTimings(limit).pipe(provideGithub(github.fetch)))
+      );
 
-        pipe(exits, A.every(Exit.isFailure), assertTrue);
-      })
-    );
-  });
+      pipe(exits, A.every(Exit.isFailure), assertTrue);
+      expect(github.state.requests).toBe(0);
+    })
+  );
 
   it("reports job-level pickup latency on the first attempt", () => {
     assertSome(attemptOnePickupSeconds(job()), 30);
@@ -516,59 +542,80 @@ describe("ci lane timings attempt filter", () => {
   });
 });
 
-describe("ci lane timings gh api retry", () => {
-  it.effect("retries transport, 5xx gateway, and secondary-rate-limit exits with backoff", () =>
+describe("ci lane timings GitHub client", () => {
+  it("names the HTTP status a failure carries, and nothing when it has none", () => {
+    expect(githubStatusSuffix(GitHubError.notFound("GET /repos/{owner}/{repo}", "repository"))).toBe(" (HTTP 404)");
+    expect(
+      githubStatusSuffix(
+        GitHubError.make({ kind: "transport", operation: "GET /repos/{owner}/{repo}", reason: "Invalid URL" })
+      )
+    ).toBe("");
+  });
+
+  it.effect("reports an identity that cannot resolve as a Ci command error", () =>
     Effect.gen(function* () {
-      const scripted = scriptedGhSpawner([
+      const message = yield* ghApiJson("repos/{owner}/{repo}").pipe(
+        withCiGithub("."),
+        Effect.as("read"),
+        Effect.catchTag("CiCommandError", (error) => Effect.succeed(error.message)),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghAuthToken),
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_GH_APP_ID: "1" }))
+      );
+      expect(message).toContain("a GitHub App identity needs BEEP_GH_APP_ID");
+    })
+  );
+});
+
+describe("ci lane timings GitHub API retry", () => {
+  it.effect("retries transport, 5xx gateway, and secondary-rate-limit failures with backoff", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGithub([
         BAD_RECORD_MAC,
-        { exitCode: 1, output: "read tcp 10.0.0.2:51234->140.82.112.6:443: read: connection reset by peer" },
-        { exitCode: 1, output: "gh: Bad Gateway (HTTP 502)" },
-        { exitCode: 1, output: "gh: secondary rate limit reached, retry later (HTTP 429)" },
+        { reason: "read tcp 10.0.0.2:51234->140.82.112.6:443: read: connection reset by peer" },
+        { status: 502, reason: "Bad Gateway" },
+        { status: 429, reason: "secondary rate limit reached, retry later" },
       ]);
-      const exit = yield* collectWithRetries(scripted.spawner);
+      const exit = yield* collectWithRetries(scripted.fetch);
 
       exit.pipe(Exit.isSuccess, assertTrue);
       assertExitSuccess(exit.pipe(Exit.map((report) => report.jobCount)), 2);
-      expect(scripted.state.spawned).toBe(4 + 3);
-    })
-  );
-
-  it.effect("fails a truncated gh api capture without retrying", () =>
-    Effect.gen(function* () {
-      const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
-      const exit = yield* collectWithRetries(scripted.spawner);
-
-      assertTrue(exit._tag === "Failure");
-      {
-        const exitFailed = Exit.isFailure(exit);
-        assertTrue(exitFailed);
-        expect(exit.cause.toString()).toContain("returned a truncated response");
-      }
-      expect(scripted.state.spawned).toBe(1);
+      expect(scripted.state.requests).toBe(4 + 3);
     })
   );
 
   it.effect("fails a 404 API error immediately without retrying", () =>
     Effect.gen(function* () {
-      const scripted = scriptedGhSpawner([{ exitCode: 1, output: "gh: Not Found (HTTP 404)" }]);
-      const exit = yield* collectWithRetries(scripted.spawner);
+      const scripted = scriptedGithub([{ status: 404, reason: "Not Found" }]);
+      const exit = yield* collectWithRetries(scripted.fetch);
 
       assertTrue(exit._tag === "Failure");
       {
         const exitFailed = Exit.isFailure(exit);
         assertTrue(exitFailed);
-        expect(exit.cause.toString()).toContain("exited 1: gh: Not Found (HTTP 404)");
+        expect(exit.cause.toString()).toContain(
+          "GitHub API repos/{owner}/{repo}/actions/runs?per_page=1 failed (HTTP 404): Not Found"
+        );
       }
-      expect(scripted.state.spawned).toBe(1);
+      expect(scripted.state.requests).toBe(1);
+    })
+  );
+
+  it.effect("does not retry a 500 GitHub answered itself", () =>
+    Effect.gen(function* () {
+      const scripted = scriptedGithub([{ status: 500, reason: "Internal Server Error" }]);
+      const exit = yield* collectWithRetries(scripted.fetch);
+
+      assertTrue(exit._tag === "Failure");
+      expect(scripted.state.requests).toBe(1);
     })
   );
 
   it.effect("does not treat the rate-limit phrase as transient under any other status", () =>
     Effect.gen(function* () {
-      const scripted = scriptedGhSpawner([
-        { exitCode: 1, output: "gh: Validation Failed: secondary rate limit mentioned in a message (HTTP 422)" },
+      const scripted = scriptedGithub([
+        { status: 422, reason: "Validation Failed: secondary rate limit mentioned in a message" },
       ]);
-      const exit = yield* collectWithRetries(scripted.spawner);
+      const exit = yield* collectWithRetries(scripted.fetch);
 
       assertTrue(exit._tag === "Failure");
       {
@@ -576,54 +623,37 @@ describe("ci lane timings gh api retry", () => {
         assertTrue(exitFailed);
         expect(exit.cause.toString()).toContain("(HTTP 422)");
       }
-      expect(scripted.state.spawned).toBe(1);
+      expect(scripted.state.requests).toBe(1);
     })
   );
 
   it.effect("waits at least a minute before retrying a secondary rate limit", () =>
     Effect.gen(function* () {
-      const scripted = scriptedGhSpawner([SECONDARY_RATE_LIMIT]);
-      const fiber = yield* forkCollect(scripted.spawner);
+      const scripted = scriptedGithub([SECONDARY_RATE_LIMIT]);
+      const fiber = yield* forkCollect(scripted.fetch);
 
       yield* Effect.forEach(A.range(1, 59), () => TestClock.adjust("1 second"));
-      expect(scripted.state.spawned).toBe(1);
+      expect(scripted.state.requests).toBe(1);
       yield* Effect.forEach(A.range(1, 14), () => TestClock.adjust("1 second"));
-      expect(scripted.state.spawned).toBeGreaterThanOrEqual(2);
+      expect(scripted.state.requests).toBeGreaterThanOrEqual(2);
       yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
       const exit = yield* Fiber.join(fiber);
 
       exit.pipe(Exit.isSuccess, assertTrue);
-      expect(scripted.state.spawned).toBe(1 + 3);
+      expect(scripted.state.requests).toBe(1 + 3);
     })
   );
 
-  it.effect("gives up after five transient attempts and reports the last output", () =>
+  it.effect("gives up after five transient attempts and reports the last failure", () =>
     Effect.gen(function* () {
-      const scripted = scriptedGhSpawner(A.replicate(BAD_RECORD_MAC, 6));
-      const exit = yield* collectWithRetries(scripted.spawner);
+      const scripted = scriptedGithub(A.replicate(BAD_RECORD_MAC, 6));
+      const exit = yield* collectWithRetries(scripted.fetch);
 
       assertTrue(exit._tag === "Failure");
       const rendered = Exit.isFailure(exit) ? exit.cause.toString() : "";
       expect(rendered).toContain("on every one of 5 attempts");
       expect(rendered).toContain("bad record MAC");
-      expect(scripted.state.spawned).toBe(5);
-    })
-  );
-
-  it.effect("rejects a capture that overflowed the output bound instead of decoding it", () =>
-    Effect.gen(function* () {
-      // A zero-exit capture past the 512 KiB repo-run bound is a partial body:
-      // decoding it would read as a short run list rather than a failure.
-      const scripted = scriptedGhSpawner([{ exitCode: 0, output: Str.repeat(512 * 1024 + 1)("x") }]);
-      const exit = yield* collectWithRetries(scripted.spawner);
-
-      assertTrue(exit._tag === "Failure");
-      {
-        const exitFailed = Exit.isFailure(exit);
-        assertTrue(exitFailed);
-        expect(exit.cause.toString()).toContain("returned a truncated response");
-      }
-      expect(scripted.state.spawned).toBe(1);
+      expect(scripted.state.requests).toBe(5);
     })
   );
 });
@@ -633,16 +663,10 @@ describe("ci lane timings jobs pagination", () => {
     Effect.gen(function* () {
       // An empty page while `total_count` still promises more jobs would loop
       // forever on the next page number; the command must stop and say so.
-      const stalledSpawner = ChildProcessSpawner.make((command) => {
-        if (!ChildProcess.isStandardCommand(command)) {
-          return Effect.die("lane timings never spawns a piped command");
-        }
-        const rendered = A.join([command.command, ...commandArgs(command)], " ");
-        return Effect.succeed(
-          stubHandle(Str.includes("page=2")(rendered) ? '{"jobs":[],"total_count":2}' : laneTimingsResponse(rendered))
-        );
-      });
-      const exit = yield* collectWithRetries(stalledSpawner);
+      const stalled = scriptedGithub([], (path) =>
+        Str.includes("page=2")(path) ? '{"jobs":[],"total_count":2}' : laneTimingsResponse(path)
+      );
+      const exit = yield* collectWithRetries(stalled.fetch);
 
       assertTrue(exit._tag === "Failure");
       {
@@ -1287,7 +1311,7 @@ describe("ci lane timing admission window", () => {
   it.effect("paginates three run pages and reapplies the half-open boundary before fetching jobs", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
-      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
+      const report = yield* collectCiLaneTimingWindow(windowOptions({ headSha: O.some("included") }));
 
       expect(report.runCount).toBe(1);
       expect(report.contextCount).toBe(18);
@@ -1329,7 +1353,6 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       // The removal lands inside this window, so only a preview may read it.
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
         }),
@@ -1362,7 +1385,6 @@ describe("ci lane timing admission window", () => {
           : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           since: DateTime.makeUnsafe("2026-09-26T00:00:00Z"),
           until: DateTime.makeUnsafe("2026-10-03T00:00:00Z"),
@@ -1399,7 +1421,6 @@ describe("ci lane timing admission window", () => {
           : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           since: DateTime.makeUnsafe("2026-10-28T00:00:00Z"),
           until: DateTime.makeUnsafe("2026-11-04T00:00:00Z"),
@@ -1458,7 +1479,6 @@ describe("ci lane timing admission window", () => {
       );
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           since: DateTime.makeUnsafe("2026-10-28T00:00:00Z"),
           until: DateTime.makeUnsafe("2026-11-04T00:00:00Z"),
@@ -1596,7 +1616,6 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(
         collectCiLaneTimingWindow(
-          ".",
           windowOptions({
             until: DateTime.makeUnsafe("2026-09-12T01:46:53.355Z"),
           })
@@ -1626,7 +1645,6 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(
         collectCiLaneTimingWindow(
-          ".",
           windowOptions({
             until: DateTime.makeUnsafe("2026-09-16T00:00:00.000Z"),
           })
@@ -1657,7 +1675,7 @@ describe("ci lane timing admission window", () => {
           ? Effect.succeed(twinRunsJson)
           : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
-      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" }));
+      const report = yield* collectCiLaneTimingWindow(windowOptions({ event: "pull_request" }));
 
       expect(report.runCount).toBe(2);
       expect(A.dedupe(A.map(report.rows, (row) => row.runId))).toStrictEqual([301, 302]);
@@ -1668,7 +1686,6 @@ describe("ci lane timing admission window", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           until: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z"),
         })
@@ -1695,7 +1712,7 @@ describe("ci lane timing admission window", () => {
         ? Effect.succeed(Str.endsWith("&page=1")(endpoint) ? laterHistoryPageJson : RULESET_HISTORY_JSON)
         : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
-      const report = yield* collectCiLaneTimingWindow(".", windowOptions({ headSha: O.some("included") }));
+      const report = yield* collectCiLaneTimingWindow(windowOptions({ headSha: O.some("included") }));
 
       expect(report.contextCount).toBe(18);
       assertSome(
@@ -1713,7 +1730,6 @@ describe("ci lane timing admission window", () => {
     return Effect.gen(function* () {
       const exit = yield* Effect.exit(
         collectCiLaneTimingWindow(
-          ".",
           windowOptions({
             since: DateTime.makeUnsafe("2026-08-25T00:00:00Z"),
             until: DateTime.makeUnsafe("2026-08-26T04:16:24.765Z"),
@@ -1741,7 +1757,7 @@ describe("ci lane timing admission window", () => {
       '{"ruleset_id":10240248,"type":"required_status_checks"},' +
       '{"ruleset_id":10240248,"type":"required_status_checks","parameters":{"required_status_checks":[{"context":"Heavy / Check"},{"context":"Lint"}]}}]';
     return Effect.gen(function* () {
-      const contexts = yield* collectRequiredContexts(".");
+      const contexts = yield* collectRequiredContexts();
 
       expect(contexts).toStrictEqual(["Heavy / Check", "Lint"]);
       expect(commands).toStrictEqual(["repos/{owner}/{repo}/rules/branches/main"]);
@@ -1757,9 +1773,7 @@ describe("ci lane timing admission window", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
       const boundary = DateTime.makeUnsafe("2026-09-04T00:00:00Z");
-      const exit = yield* Effect.exit(
-        collectCiLaneTimingWindow(".", windowOptions({ since: boundary, until: boundary }))
-      );
+      const exit = yield* Effect.exit(collectCiLaneTimingWindow(windowOptions({ since: boundary, until: boundary })));
 
       assertTrue(exit._tag === "Failure");
       {
@@ -1778,7 +1792,7 @@ describe("ci lane timing admission window", () => {
         ? windowGithubResponse(endpoint)
         : Effect.succeed('{"total_count":1,"workflow_runs":[]}');
     return Effect.gen(function* () {
-      const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", windowOptions({ event: "pull_request" })));
+      const exit = yield* Effect.exit(collectCiLaneTimingWindow(windowOptions({ event: "pull_request" })));
 
       assertTrue(exit._tag === "Failure");
       {
@@ -1798,7 +1812,7 @@ describe("ci lane timing admission window", () => {
         const output = yield* testConsoleText();
         expect(output).toContain("ci lane timings");
         expect(output).toContain("runId\trunAttempt\tjobId\tjobName");
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner))
+      }).pipe(withLaneTimingsCommandGithub)
     );
   });
 
@@ -1822,7 +1836,7 @@ describe("ci lane timing admission window", () => {
           assertTrue(exitFailed);
           expect(boundsExit.cause.toString()).toContain("--since must be earlier than --until");
         }
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsSpawner))
+      }).pipe(withLaneTimingsCommandGithub)
     );
   });
 
@@ -1878,7 +1892,7 @@ describe("ci lane timing admission window", () => {
         expect(A.some(commands, Str.includes("event=pull_request&branch=feature%2Fcensus"))).toBe(true);
         expect(A.some(commands, Str.includes("event=push&branch=main"))).toBe(true);
         expect(A.some(commands, Str.includes("event=push&branch=release%2Fcensus"))).toBe(true);
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 
@@ -1903,7 +1917,7 @@ describe("ci lane timing admission window", () => {
         expect(rendered).toContain("--until 2026-09-30T00:00:00.000Z is in the future");
         expect(rendered).toContain("Pass --preview to run a preview that is never an admission census.");
         expect(commands).toStrictEqual([]);
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 
@@ -1921,7 +1935,7 @@ describe("ci lane timing admission window", () => {
         expect(rendered).toContain("window spans 6d 23h 59m 59s, under seven days");
         expect(rendered).not.toContain("is in the future");
         expect(commands).toStrictEqual([]);
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 
@@ -1971,7 +1985,7 @@ describe("ci lane timing admission window", () => {
         expect(
           Str.startsWith(`# Preview, not an admission census. ${clause}\npopulation\tlane\trunId\trunAttempt`)(tsv)
         ).toBe(true);
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 
@@ -1993,7 +2007,7 @@ describe("ci lane timing admission window", () => {
         expect(output).toContain(
           "> **Preview, not an admission census.** Window 2026-09-04T00:00:00.000Z → 2026-09-11T00:00:00.000Z: no bound breached."
         );
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 
@@ -2050,7 +2064,7 @@ describe("ci lane timing ruleset changes inside the window", () => {
   it.effect("refuses a window a required-context change lands inside before reading any workflow run", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
-      const exit = yield* Effect.exit(collectCiLaneTimingWindow(".", straddlingWindowOptions()));
+      const exit = yield* Effect.exit(collectCiLaneTimingWindow(straddlingWindowOptions()));
 
       assertTrue(exit._tag === "Failure");
       assertTrue(
@@ -2067,7 +2081,7 @@ describe("ci lane timing ruleset changes inside the window", () => {
   it.effect("stamps the change above every rendering of a straddled preview", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
-      const report = yield* collectCiLaneTimingWindow(".", straddlingWindowOptions(), true);
+      const report = yield* collectCiLaneTimingWindow(straddlingWindowOptions(), true);
       const blockquote = `> **Required contexts changed inside the window.** ${COVERAGE_REMOVAL_STAMP}`;
 
       strictEqual(report.contextCount, 17);
@@ -2096,7 +2110,6 @@ describe("ci lane timing ruleset changes inside the window", () => {
           : windowGithubResponse(endpoint);
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({ since: DateTime.makeUnsafe("2026-09-01T00:00:00Z") })
       );
 
@@ -2123,7 +2136,6 @@ describe("ci lane timing ruleset changes inside the window", () => {
     const commands = A.empty<string>();
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
-        ".",
         windowOptions({
           since: DateTime.makeUnsafe("2026-09-12T01:46:53.354Z"),
           until: DateTime.makeUnsafe("2026-09-19T01:46:53.354Z"),
@@ -2210,7 +2222,7 @@ describe("ci lane timing ruleset changes inside the window", () => {
         assertTrue(
           Str.includes(`> **Required contexts changed inside the window.** ${COVERAGE_REMOVAL_STAMP}`)(markdown)
         );
-      }).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, laneTimingsWindowCliSpawner(commands)));
+      }).pipe(withWindowCommandGithub(commands));
     });
   });
 });
