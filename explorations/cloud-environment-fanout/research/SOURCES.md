@@ -52,3 +52,7 @@ agent-pool doctrine (reuse), `scripts/cloud/bootstrap.sh` and
 - Sibling: `explorations/cursor-agent-pool` → `goals/agent-pool-doctrine`
   (pool order and Cursor lane recipe this packet's cloud lanes slot under).
 - Runbook of record: `docs/runbooks/cloud-environments.md`.
+- Superseded by (2026-11-02): `goals/cloud-agent-readiness`, the current
+  execution authority. Evidence PRs: #2486 (Claude smoke), #2487 (fleet setup
+  receipt), #2492 (notifier guard), #2498 (projection skip), #2504 (bootstrap
+  denied-host exit), #2510 (MCP scoping and hook evidence).

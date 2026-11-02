@@ -226,6 +226,21 @@ Next work to close row 4:
 - A byte comparison of hook output with the variable unset against the
   pre-guard writers.
 
+## Residual obligations taken over from the parked exploration
+
+`explorations/cloud-environment-fanout` was parked on 2026-11-02 with
+`links.supersededBy: goals/cloud-agent-readiness` (see its `DECISIONS.md`).
+These obligations now belong to this goal and are not duplicated in the
+exploration queue. Phase and lifecycle are unchanged.
+
+- **Codex:** a runnable environment. Setup checks run, but publishing the
+  reusable environment failed twice without diagnostics; no blind retry.
+  Choosing Codex lanes waits for a runnable environment.
+- **Cursor:** an agent proof beyond the active bootstrap snapshot.
+- **P2:** the cold-resume SessionStart timeouts (§2a). A separate read-only
+  diagnosis is admitted by the orchestrator.
+- **P4:** doctrine, including the D7 runbook table.
+
 ## Not investigated
 
 A separate review noted that `Bun.spawnSync` tests may be exposed when coverage

@@ -118,3 +118,25 @@ repo PRs #885 and #887.
   `.nvmrc` version itself (nvm on Cursor, official tarball elsewhere).
 - **Deadlines**: Claude credits expire 2026-11-05, Codex 2026-11-20 — Claude
   environments go first.
+
+## 2026-11-02 — superseded assumptions (historical sections above kept as written)
+
+The 2026-10-05 sections above are historical. They are **not** current
+authorization or current fact where they differ from this list:
+
+- **Graft loader.** The capability inventory lists a "graft loader" among the
+  SessionStart hooks. Graft was retired on 2026-10-28
+  (`standards/memory-architecture/04-decision-log.md`) and must not be
+  reintroduced.
+- **Manual operator setup.** "Operator runs the per-account UI setups" is
+  superseded. The four Claude environments are set up and smoke-tested under
+  `goals/cloud-agent-readiness` (#2486, #2487). Codex and Cursor status is
+  tracked there.
+- **Secret paths.** The 1Password items (the `op` CLI download allowlist and
+  the agent shim notes) describe where secrets could flow. They do not
+  authorize any secret access. Claude cloud environments run with
+  `BEEP_CLOUD_SKIP_OP=1`, and no secret path is used in the cloud.
+- **Bun behind the proxy.** The open risk is resolved for the observed runs:
+  the retry loop alone was enough (see `DECISIONS.md` 2026-11-02).
+- **Current authority** for setup, evidence and remaining work is
+  `goals/cloud-agent-readiness` and `docs/runbooks/cloud-environments.md`.
