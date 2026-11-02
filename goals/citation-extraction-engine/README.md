@@ -167,6 +167,13 @@ cleaner corpus, including 599 result/identity observations and the invalid-name
 failure. Full host traces, 504 HTML cases and 51 custom scenes remain separate
 proof obligations; this does not promote a canonical completion row.
 
+The [controlled callback replay](./history/evidence/2026-11-02-controlled-cleaner-replay.md)
+now matches 24 scenes, 25 runs and 59 exact callback input/return observations,
+including non-text values, mutable lists, subclasses, retained state and registry
+mutation. Final outputs/identity, closed failure reasons and operation cleanup
+are checked through the admitted live cleaner. The other 27 controlled scenes,
+504 HTML cases and full event/final-registry proof remain open.
+
 ## Mission
 
 Deliver an Effect-native citation engine with observable capability parity to

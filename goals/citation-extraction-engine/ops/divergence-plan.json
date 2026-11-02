@@ -228,7 +228,12 @@
       "id": "callable-source-descriptor",
       "statement": "Represent oracle callable identities with source-bound descriptors in evidence; implement callable behavior through injected services and never request functions.",
       "referencePaths": [
-        "goals/citation-extraction-engine/ops/export-operations.py"
+        "goals/citation-extraction-engine/ops/export-operations.py",
+        "packages/law-practice/server/test/CitationCleanerSource.fixtures.ts",
+        "packages/law-practice/server/test/CitationCleanerCustom.fixtures.ts",
+        "packages/law-practice/server/test/CitationCleanerCustomCorpus.test.ts",
+        "packages/law-practice/server/test/CitationCleanerNamedCorpus.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-controlled-cleaner-replay.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

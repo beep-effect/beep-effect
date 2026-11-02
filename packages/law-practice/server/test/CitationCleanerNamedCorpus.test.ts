@@ -1,14 +1,11 @@
-import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -17,6 +14,7 @@ import { CitationOperationAdmission, makeCitationOperationAdmission } from "../s
 import { makeCitationCleanerOperation } from "../src/internal/Citation/CleanerOperation.ts";
 import { CitationCleanerRuntime } from "../src/internal/Citation/CleanerPipeline.ts";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import { loadCitationCleanerSource } from "./CitationCleanerSource.fixtures.ts";
 import type { CitationCleanerObject } from "../src/internal/Citation/CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationCleanerNamedCorpus");
@@ -43,31 +41,12 @@ const NamedCase = S.Struct({
     description: "Complete named or official cleaner sequence with exact source outputs.",
   })
 );
-const CorpusJson = S.fromJsonString(
-  S.Struct({
-    oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
-    artifacts: S.Array(S.Struct({ sha256: S.String, value: S.String })),
-    cases: S.Array(S.Struct({ family: S.String, steps: S.Json, name: S.String, input: S.Json, runs: S.Array(S.Json) })),
-  })
-).pipe(
-  $I.annoteSchema("CorpusJson", {
-    description: "Sealed cleaner source corpus; controlled host scenes remain separately accounted.",
-  })
-);
-
 it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("admitted named source sequences", (it) => {
   it.effect(
     "matches all 600 non-HTML named/official cases, including identity and invalid-step failure",
     () =>
       Effect.gen(function* () {
-        const raw = yield* (yield* FileSystem.FileSystem).readFileString(
-          NodeURL.fileURLToPath(new URL("../../use-cases/test/fixtures/eyecite/cleaner-pipeline.json", import.meta.url))
-        );
-        expect(yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(raw))).toBe(
-          "814406f61958dfe9d43b32cad562378372e07fa5f32f5e5a5437457e6ea5e3ff"
-        );
-        const corpus = yield* S.decodeEffect(CorpusJson)(raw);
-        expect(corpus.cases).toHaveLength(1155);
+        const corpus = yield* loadCitationCleanerSource();
         const artifacts = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value]));
         const text = (id: string) => O.getOrThrow(HashMap.get(artifacts, id));
         const limits = (yield* defaultCitationEnginePolicy).limits;
