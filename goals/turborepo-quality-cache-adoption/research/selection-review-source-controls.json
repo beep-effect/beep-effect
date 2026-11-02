@@ -1,5 +1,5 @@
 {
-  "driverSha256": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828",
+  "driverSha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
   "controls": [
     {
       "control": "external-pin-manifest",
@@ -10,31 +10,29 @@
     {
       "control": "symlink-before-repair",
       "originalFailureReproduced": true,
-      "diagnosticSha256": "d985d97b75a428d236e8899cc3a41685d15d4877359d738d6d8dd0ba1c1e642a"
+      "diagnosticSha256": "c559494f2c243a464f2ef5eab62271122b834cd47d52b7359b7bc137e46ca5dd"
     },
     {
       "control": "symlink-after-repair",
       "cases": 44,
       "semanticProjectionEqualToCanonicalInvocation": true,
       "canonicalSourceBindingsEqual": true,
-      "rawReportSha256": "33856eac98690a6f512997f421a28788a1f9bb629484c4b38fea067ab6080b51"
+      "rawReportSha256": "04fdddae28f0d1f4a339bca5a8ca46072333e183daca3d94307f1612b84b4f82"
     },
     {
       "control": "harness-load-race",
       "capturedBytesBound": true,
       "diskChangeRefusedBeforeNativeControls": true,
       "reportAbsent": true,
-      "diagnosticSha256": "19e555adbf034fc5e6e89b99e83ca143355ba89e35d12a75e2695b31e078fe0c"
+      "diagnosticSha256": "c08be2f1d566dc2aa357e42f6f66ed0f9087bcf10155e6a04e9177d8ce9f6606"
     },
     {
       "control": "pin-parse-race",
       "capturedBytesBound": true,
       "diskChangeRefusedBeforeNativeControls": true,
       "reportAbsent": true,
-      "diagnosticSha256": "19e555adbf034fc5e6e89b99e83ca143355ba89e35d12a75e2695b31e078fe0c"
+      "diagnosticSha256": "c08be2f1d566dc2aa357e42f6f66ed0f9087bcf10155e6a04e9177d8ce9f6606"
     }
   ],
-  "mutatedOwnedSourcesRestoredByteIdentical": true,
-  "schemaVersion": "cache-selection-source-binding-controls/v1",
-  "recordedAt": "2026-11-02T18:53:56.469489+00:00"
+  "mutatedOwnedSourcesRestoredByteIdentical": true
 }

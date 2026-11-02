@@ -596,3 +596,19 @@ The current and historical pairs were replayed on the revised source; all seven
 existing refusals still pass. The earlier published proof remains bound to
 commit `1a32869a1dcd2e4ceadbae6808d3dceb2475b6ad`. No acceptance state,
 production setting or qualification changes.
+
+
+### Selection sibling-loader compatibility follow-through
+
+PR #2617 review reproduced a shared-helper contract regression in all five
+sibling evidence loaders. The original self-contained `invoke` definition is
+restored exactly; current selection calls the separate streaming
+`invoke_bounded`. Six regression methods exercise 25 actual sibling loader and
+process subcases plus the current routing guard. The Cargo applicability
+eight-MiB adaptation, stderr limit, deadlines and child cleanup remain intact.
+
+The current, historical-compatibility and alias selection replays each pass 44
+cases on the revised source, together with the existing refusal/source-race
+controls. Earlier reports remain bound to immutable commit `0dce46e6c115`.
+The five historical feature reports are unchanged; this helper check does not
+renew their native observations or grant feature/task acceptance.

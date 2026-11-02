@@ -684,3 +684,11 @@ mutations of each file now fail before native controls; both files are restored
 byte-identically. Forty-four alias-path cases match the canonical invocation.
 Outside-checkout pin manifests fail explicitly. Keep these observations separate
 from the earlier published source and preserve that proof through immutable Git.
+
+
+### Selection helper extraction compatibility (2026-11-02)
+
+- Work: current-pin selection driver review, PR #2617.
+- Friction: changing the extracted `invoke` function added globals missing from five sibling loaders. Actual loader regressions reproduced `NameError: capture` and the Cargo applicability source-adaptation assertion.
+- Correction: preserve the exact historical helper contract, name the streaming selection helper separately, and exercise all five real AST-loading preludes with process/stream/deadline controls. Keep historical report source pins immutable.
+- Prevention: search both path references and extracted-symbol consumers before changing an evidence helper; run the sibling compatibility regression with the selection replay.

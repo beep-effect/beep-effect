@@ -1,18 +1,18 @@
 {
   "schemaVersion": "cache-native-selection-controls/v1",
-  "recordedAt": "2026-11-02T18:43:46.867228+00:00",
+  "recordedAt": "2026-11-02T19:15:50.175619+00:00",
   "authority": "Asserted native synthetic selection behavior only; no repository-task qualification or production activation.",
   "driver": {
     "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
-    "sha256": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828"
+    "sha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1"
   },
   "sourceBindings": {
-    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "ccbd4f76f0434a4333f8e2574b36589920d9c7f15593297da35b1a5a48401828",
+    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
     "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d",
     "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
     ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
   },
-  "rawDirectory": ".beep/native-selection-controls/raw-0dbcv1uy",
+  "rawDirectory": ".beep/native-selection-controls/raw-aft674fr",
   "processWrapper": {
     "name": "GNU timeout",
     "sha256": "3af64f366c2422870723a787b3912c0546927d16ed07ae2059431178e5ec503f"
@@ -99,7 +99,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-real-dry.stdout",
-          "sha256": "cc2bbaa8daaa093177f091ea59f71dd248e46867699d03f7af7c3402db6e7954",
+          "sha256": "30f8dc1fff929c86240c40b474e39189e66c5e2be654e405177a1b0c977db69b",
           "bytes": 12836
         },
         "dry.stderr": {
@@ -109,7 +109,7 @@
         },
         "run.stdout": {
           "file": "stable-false-real-run.stdout",
-          "sha256": "54f1489f568c51b92c2255ca5fe3739173527f20b6cdd89d3e439b98f646266a",
+          "sha256": "45c6835ef75acbde576ff271d3eb73a9d574db4c636a43c749f4f7c74da5243f",
           "bytes": 309
         },
         "run.stderr": {
@@ -119,7 +119,7 @@
         },
         "summary": {
           "file": "stable-false-real-summary.json",
-          "sha256": "cd8e099952cb462c892fd8f0d6a9bf4e960f403ff26f470553969d3e95e16731",
+          "sha256": "93516d8d289f92a2a6dd5885d026b5e1a1d7786f6c8ca5a1d9e599215b8a7cbf",
           "bytes": 11109
         }
       }
@@ -161,7 +161,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-missing-command-dry.stdout",
-          "sha256": "23f5586e8dafc0da763470613b9b2606f26cec75fa8729e3966dae932f414130",
+          "sha256": "50fd52609afc3ea7ee7fb3b9e82c9e4038754488e36cb06304a88e31325e622d",
           "bytes": 6793
         },
         "dry.stderr": {
@@ -171,7 +171,7 @@
         },
         "run.stdout": {
           "file": "stable-false-missing-command-run.stdout",
-          "sha256": "e28aedcb978263cad9db64561f0df015e1c90568eae1d00ffc21efef36ee8fdb",
+          "sha256": "62d55378357a542ab3d69eb615623529d240024861c97b153175d7dd4950ea20",
           "bytes": 311
         },
         "run.stderr": {
@@ -181,7 +181,7 @@
         },
         "summary": {
           "file": "stable-false-missing-command-summary.json",
-          "sha256": "82d206352392bc257dceeff75cb4ebb2bf8b3f85ae4680ed6fb0b03b2ddf118e",
+          "sha256": "fc994ecf7e59ede2f3e2f8f1e8dc99efe6bfc4e1827da8aeb637c3f9a791bfa6",
           "bytes": 4351
         }
       }
@@ -223,7 +223,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-explicit-missing-command-dry.stdout",
-          "sha256": "031a0ec3a433af7f4a6bec583a91335621305454186d42fc56ec815af8c26cf3",
+          "sha256": "9fee70af73620fcfcb200dd12ac656b9d7d0e13948fb76614753831375ce97cb",
           "bytes": 6793
         },
         "dry.stderr": {
@@ -233,7 +233,7 @@
         },
         "run.stdout": {
           "file": "stable-false-explicit-missing-command-run.stdout",
-          "sha256": "f1448b1ed4628ff9608fc6fcb0c24e54f6933673f22594798999ee77cb99f1de",
+          "sha256": "96a2c8eb0c292fb1b09cce18117ba9c3b615acbb3c467e97055e46a4676af670",
           "bytes": 317
         },
         "run.stderr": {
@@ -243,7 +243,7 @@
         },
         "summary": {
           "file": "stable-false-explicit-missing-command-summary.json",
-          "sha256": "8571c6740ef818a12286036234dbb969a835aaf70f255a53dc592ece5585a6ae",
+          "sha256": "6c059b87a21b2020f843ff06abdda669985e7a9b25d0fd578c823d7c423fb6f8",
           "bytes": 4342
         }
       }
@@ -290,7 +290,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-graph-only-dry.stdout",
-          "sha256": "885a3d9f61175523ac093833f2d50598a6f1828139023bc8c310f06bd54cd3bd",
+          "sha256": "0d2253b82e47733cfccf2f5b0fec460a8202b771dfea5823973924799571d80b",
           "bytes": 8094
         },
         "dry.stderr": {
@@ -300,7 +300,7 @@
         },
         "run.stdout": {
           "file": "stable-false-graph-only-run.stdout",
-          "sha256": "d130b8feee2f076e8f198001cf45e7a4fa9f9b91dd8cad2260eaa1888790cc09",
+          "sha256": "1eaa9116b3b914f02a66d8c38ab3df8f87864d0dec73703c95f157a8b8a31833",
           "bytes": 313
         },
         "run.stderr": {
@@ -310,7 +310,7 @@
         },
         "summary": {
           "file": "stable-false-graph-only-summary.json",
-          "sha256": "1166ad6b2b531b0eaeeb1875d9f9ffa8ce1fb774d740185a61bb9c1e75abff4e",
+          "sha256": "2de765e9a7006a5f3c25bae063e478a462ec5ff19f8e0e1e3b8495df1134815d",
           "bytes": 4378
         }
       }
@@ -352,7 +352,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-only-dry.stdout",
-          "sha256": "a27f833e99302c02a753a616f96f163f6945b6e47f5824e123dc91a497a3d544",
+          "sha256": "72bc62efd48db3ceafb8ae30f43ac131571329a54c396bc7b5d8d9e7485c93fc",
           "bytes": 6955
         },
         "dry.stderr": {
@@ -362,7 +362,7 @@
         },
         "run.stdout": {
           "file": "stable-false-only-run.stdout",
-          "sha256": "1803958917399c94a2bfc67e15ba0b601a18d5e1690baf0e1793688f52ced1b1",
+          "sha256": "27366ad365067b606874d0fa0ad8f7b0213c1ba1e3d94daf311eef1b42580753",
           "bytes": 309
         },
         "run.stderr": {
@@ -372,7 +372,7 @@
         },
         "summary": {
           "file": "stable-false-only-summary.json",
-          "sha256": "04d5cb49eff2d0a4b64bc2398fc1e10c1fa67507079b6ec5a197e22ebf2a278d",
+          "sha256": "7148862e073a15a016f501d87c4923bf6d872a3841809865c445a151a27be689",
           "bytes": 6066
         }
       }
@@ -470,7 +470,7 @@
         },
         "dry.stderr": {
           "file": "stable-false-empty-glob-dry.stderr",
-          "sha256": "a8a897f84d1341be82a6aa4647d28a3a74b1f391e56936489ff45a2ab5a8ccf1",
+          "sha256": "4d7829e1d42613094e1933eed4c49f453cc4ca1ea9f325b7f62b1f7214ec3a38",
           "bytes": 140
         },
         "run.stdout": {
@@ -480,7 +480,7 @@
         },
         "run.stderr": {
           "file": "stable-false-empty-glob-run.stderr",
-          "sha256": "a8a897f84d1341be82a6aa4647d28a3a74b1f391e56936489ff45a2ab5a8ccf1",
+          "sha256": "4d7829e1d42613094e1933eed4c49f453cc4ca1ea9f325b7f62b1f7214ec3a38",
           "bytes": 140
         }
       }
@@ -501,7 +501,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-false-empty-selection-dry.stdout",
-          "sha256": "c5ce3b9d17af6ea37dc60069ab99181096a5f1480c3c6450d576dff1c0b1dfac",
+          "sha256": "10065ce04e100c88927766db42bfe4708247e46c8c103990359361856ead0bd8",
           "bytes": 690
         },
         "dry.stderr": {
@@ -511,7 +511,7 @@
         },
         "run.stdout": {
           "file": "stable-false-empty-selection-run.stdout",
-          "sha256": "e6303f7f3d4aa4e7cbe91f4bdea2ed1191e7de897ab9196a8ddf4ff81faf2995",
+          "sha256": "5effa02671ffe000a089df8f5ee61b7bdfb5202ba394f54f5b00e61ac6d78710",
           "bytes": 306
         },
         "run.stderr": {
@@ -521,7 +521,7 @@
         },
         "summary": {
           "file": "stable-false-empty-selection-summary.json",
-          "sha256": "ef2564f089903d7bec0d4b329c85c1bfce72f72ca1ab992e8d4e09cfcc823e86",
+          "sha256": "87b7105641f741d2c4187997f9a7f154a59e9543768bdccbc848a170218cf693",
           "bytes": 980
         }
       }
@@ -655,7 +655,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-real-dry.stdout",
-          "sha256": "1478dcf4c9e0862707269580c451d188c6b59e3951b252ab3ebe68240ac1d17e",
+          "sha256": "b9ef50d0a55b4c0f9a08bd0a8f2e4911dbdc9d8b3891de3527533ee35d6b3e75",
           "bytes": 12836
         },
         "dry.stderr": {
@@ -665,7 +665,7 @@
         },
         "run.stdout": {
           "file": "stable-true-real-run.stdout",
-          "sha256": "301402562a9294817592c1e048f45834e10146ff80d91dc3767fc653b8668a47",
+          "sha256": "ef68fc278175aa37f0424a13fe61e644793f4650db1cb509cf61a9bf3b0383f5",
           "bytes": 309
         },
         "run.stderr": {
@@ -675,7 +675,7 @@
         },
         "summary": {
           "file": "stable-true-real-summary.json",
-          "sha256": "cb076e537016c71e0385fbf75b6ede41bd505ae7cd1b378fea9a851dc229d07e",
+          "sha256": "beecd59bbbbdd2418f2587cb22b871b7644a596e7ce11afed09674ac569477cf",
           "bytes": 11109
         }
       }
@@ -696,7 +696,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-missing-command-dry.stdout",
-          "sha256": "05251b39004b796cbef3fb4b518949c53a2841a342ee494a42601ce5eda1f832",
+          "sha256": "6d829e9a7fa3d3122b7ef13c9320911488ec6540a7a7cd1e7e09695ea9190035",
           "bytes": 705
         },
         "dry.stderr": {
@@ -706,7 +706,7 @@
         },
         "run.stdout": {
           "file": "stable-true-missing-command-run.stdout",
-          "sha256": "733a09bf29698593ed104953e373a986e30ea1f98594b4437338d3d33415770b",
+          "sha256": "24566f39240627f0a4457ffd04418ec38c0ac9588ec6bcda37ff42f52dd9b092",
           "bytes": 310
         },
         "run.stderr": {
@@ -716,7 +716,7 @@
         },
         "summary": {
           "file": "stable-true-missing-command-summary.json",
-          "sha256": "13dbaf6156a5c7b1a8db36d7831f202b19bbdb8e160e60463ba6bbb5cd0f7b53",
+          "sha256": "d379c93f5d57ce7ddec45434cf2046197a359e9a4788476ff40d7df422ac21e3",
           "bytes": 947
         }
       }
@@ -758,7 +758,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-explicit-missing-command-dry.stdout",
-          "sha256": "8438f0e1456bb213568774962a985796c8464d3bd0b650d83e00aec9bcc87127",
+          "sha256": "6e2770a9714ee08ce6649128549be03715aae7e8dbe05ff744e555ce6d138acc",
           "bytes": 6537
         },
         "dry.stderr": {
@@ -768,7 +768,7 @@
         },
         "run.stdout": {
           "file": "stable-true-explicit-missing-command-run.stdout",
-          "sha256": "40a2c7183f41af1cdc39eed46b1d554997cc6cc337c42d50e12b08ca88a61abc",
+          "sha256": "ed1ff16096507fb5405d51df5b128c49c2684783291ffd8e23e36d13142e7edf",
           "bytes": 317
         },
         "run.stderr": {
@@ -778,7 +778,7 @@
         },
         "summary": {
           "file": "stable-true-explicit-missing-command-summary.json",
-          "sha256": "3cdba436083a5f6f58c47e9bb33a37adf8d4dca9aa5a22c08fc232e90c2c9f66",
+          "sha256": "bebb64a9212daa83538aef5a4354b24451ad6757930a59b2d45c0e934e623224",
           "bytes": 4342
         }
       }
@@ -815,7 +815,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-graph-only-dry.stdout",
-          "sha256": "33a64a7e06abe3720a51735cf326c8b4460f8fcabf241ef7db3325f099815946",
+          "sha256": "68f080dd2e93a03eff0b9a2ff446a40bf5980530639c161953c3796aef86e6ac",
           "bytes": 5399
         },
         "dry.stderr": {
@@ -825,7 +825,7 @@
         },
         "run.stdout": {
           "file": "stable-true-graph-only-run.stdout",
-          "sha256": "38250bed50725421d7e8f88987f4dcaf71df854b5da97ee7b861bd585edf6e67",
+          "sha256": "1fef2d70d951749dd9645452d5d942de8bd70bb54bf4e70fdcfc474ffe071073",
           "bytes": 313
         },
         "run.stderr": {
@@ -835,7 +835,7 @@
         },
         "summary": {
           "file": "stable-true-graph-only-summary.json",
-          "sha256": "898755f3668a12cc68ec81117343aae33077505df8453f223d584890d50d5756",
+          "sha256": "dbdfbd4fde87cef8d98569ad882326dfeb3ec378e8dd72510c3e7a05a6cc1d58",
           "bytes": 4355
         }
       }
@@ -877,7 +877,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-only-dry.stdout",
-          "sha256": "9727dc512cf3c39304574430ced4fc78a527422d3eab7533b2582a2f547acfdd",
+          "sha256": "ec9ff9e4772695e358f4bf0d90d1c0b10c12edaaee51c5e06c4c294bcf0bbb19",
           "bytes": 6955
         },
         "dry.stderr": {
@@ -887,7 +887,7 @@
         },
         "run.stdout": {
           "file": "stable-true-only-run.stdout",
-          "sha256": "fc4e8be8b3ed1192b5e931ba81fb242b1e6ff40b0e64b020c81f8233bd8c9f75",
+          "sha256": "0d2dbf7da8f057002f741749e2c47e91665095b49917071ef29cf10ca4e7272a",
           "bytes": 309
         },
         "run.stderr": {
@@ -897,7 +897,7 @@
         },
         "summary": {
           "file": "stable-true-only-summary.json",
-          "sha256": "990c3ce77b5e35c765d275a1c0241298779b546dbeb03c0c927cd9e8429f2404",
+          "sha256": "5a586f5b552f3107979a5cfafabd24f074b549c22aa3485ceeb2c0ebdad99f29",
           "bytes": 6066
         }
       }
@@ -995,7 +995,7 @@
         },
         "dry.stderr": {
           "file": "stable-true-empty-glob-dry.stderr",
-          "sha256": "a8a897f84d1341be82a6aa4647d28a3a74b1f391e56936489ff45a2ab5a8ccf1",
+          "sha256": "4d7829e1d42613094e1933eed4c49f453cc4ca1ea9f325b7f62b1f7214ec3a38",
           "bytes": 140
         },
         "run.stdout": {
@@ -1005,7 +1005,7 @@
         },
         "run.stderr": {
           "file": "stable-true-empty-glob-run.stderr",
-          "sha256": "a8a897f84d1341be82a6aa4647d28a3a74b1f391e56936489ff45a2ab5a8ccf1",
+          "sha256": "4d7829e1d42613094e1933eed4c49f453cc4ca1ea9f325b7f62b1f7214ec3a38",
           "bytes": 140
         }
       }
@@ -1026,7 +1026,7 @@
       "logs": {
         "dry.stdout": {
           "file": "stable-true-empty-selection-dry.stdout",
-          "sha256": "e883ad564446fc8cefb667d49f1d46e0d26f54332797b870b6b201e0eeb3025a",
+          "sha256": "78f5d87f2ef92b07e692075d0dae879c26ae17d0eccfb4f53a34a0f81164f627",
           "bytes": 690
         },
         "dry.stderr": {
@@ -1036,7 +1036,7 @@
         },
         "run.stdout": {
           "file": "stable-true-empty-selection-run.stdout",
-          "sha256": "07dbec201345a65aa2b25bc2c332768fc3b4217cb01e0dbdaa1f557bbff8cbda",
+          "sha256": "4089065e59f87fb3e3f9024788e3aa622f3ba9f1157cba6d6086c0cf68d2abc5",
           "bytes": 306
         },
         "run.stderr": {
@@ -1046,7 +1046,7 @@
         },
         "summary": {
           "file": "stable-true-empty-selection-summary.json",
-          "sha256": "67a89b45452ca3874b492ef73e93b6c9df40d9bcd7ab40f7578b21e5eaaab475",
+          "sha256": "cea033a8e7ee54b8153d98810af1d58bf80db4461a8180522debed5e3272236f",
           "bytes": 980
         }
       }
@@ -1180,7 +1180,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-real-dry.stdout",
-          "sha256": "9df8b93e713b677c18fd202426409aa7029fcad577991687f845b21f76b5678b",
+          "sha256": "e5a3e4ae8040214d882701214aec55ecb52e1965410f329d1e30ca7c414a3640",
           "bytes": 12845
         },
         "dry.stderr": {
@@ -1190,7 +1190,7 @@
         },
         "run.stdout": {
           "file": "canary-false-real-run.stdout",
-          "sha256": "39de7e556da201327cc8a8a4fa0445f8a5a640473ad0469450d8182b7f38290f",
+          "sha256": "24f103157256dce12d2af62da24376562f14488ac2071a93d6b5306e6116a7c5",
           "bytes": 309
         },
         "run.stderr": {
@@ -1200,7 +1200,7 @@
         },
         "summary": {
           "file": "canary-false-real-summary.json",
-          "sha256": "e67a3621ebf17b0faece789940fc80ec9de2b3be7a4a21539a725ecfab7623f8",
+          "sha256": "e427afe85b9ccea6989bc041fb2bfecdb97736d406fad870efea13cda862847a",
           "bytes": 11118
         }
       }
@@ -1242,7 +1242,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-missing-command-dry.stdout",
-          "sha256": "fd3b7f8147ad8319880c1affd97a21fa79ef5d269a8811d58b76cce74737b8af",
+          "sha256": "d24ff8ea17ad92c9466382c140e3334511532ddaf355c3a57c73e5a427f5b24e",
           "bytes": 6802
         },
         "dry.stderr": {
@@ -1252,7 +1252,7 @@
         },
         "run.stdout": {
           "file": "canary-false-missing-command-run.stdout",
-          "sha256": "7875cd8eabf473e063d5c6dbb5c929e05aca85e1d8c0646085b049be568015c8",
+          "sha256": "8346a3d10ff544ad7c7ae198c92b52206e10b1d4cf4270ff8e3198fc6d6fd2d0",
           "bytes": 311
         },
         "run.stderr": {
@@ -1262,7 +1262,7 @@
         },
         "summary": {
           "file": "canary-false-missing-command-summary.json",
-          "sha256": "7166a21500d385201fd70bb9149c80f921d1593215f4693a3d3bab3d2852905d",
+          "sha256": "2e2ec460adb9152a97e101472a98796d7d273b316cbbf62c0a976f435cc4caa3",
           "bytes": 4360
         }
       }
@@ -1304,7 +1304,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-explicit-missing-command-dry.stdout",
-          "sha256": "9a4ae1c8ffd8d23cbc14fa50c71fe02bc5b66c22bf0185d42995a55f043aee82",
+          "sha256": "dffc1a423ff97225008a488ad6c92ad4c27da6a08b4912ba405a4ad402f83a5d",
           "bytes": 6802
         },
         "dry.stderr": {
@@ -1314,7 +1314,7 @@
         },
         "run.stdout": {
           "file": "canary-false-explicit-missing-command-run.stdout",
-          "sha256": "04be93dd83f7e56f72ea4ed2b9c0842619f8e7e624025ba0a949fd2db3c9a923",
+          "sha256": "5d101c19cd9942f830e2da390bc834ecaf41d359ad4e07f0f33412abcfcc6610",
           "bytes": 317
         },
         "run.stderr": {
@@ -1324,7 +1324,7 @@
         },
         "summary": {
           "file": "canary-false-explicit-missing-command-summary.json",
-          "sha256": "b1634d2bd5a8f146e92e50a54f474eef8d74b08c1e3c8f70e5bd5e420bf8519f",
+          "sha256": "8ebc72c31bf0e2dd8a22341464c880f6b3d0c23c990a844c5ca8db57d1067550",
           "bytes": 4351
         }
       }
@@ -1371,7 +1371,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-graph-only-dry.stdout",
-          "sha256": "3a7ee7c9efc3c18a087a44296a51b00f9a31b04839bd41761eaeb8fdcbc73c96",
+          "sha256": "9b4a1fd3edb1db031f71b05cdba9ed4484910e9ed04b6ae777f8f6da7522f87b",
           "bytes": 8103
         },
         "dry.stderr": {
@@ -1381,7 +1381,7 @@
         },
         "run.stdout": {
           "file": "canary-false-graph-only-run.stdout",
-          "sha256": "97c4b24eb985e589e779d673387f413793098a4bdaba36c4116f6c86031de8ed",
+          "sha256": "130a25c45abb2255eb71780e86c8e91301961f4e7891ce8880acc15f2dbefdca",
           "bytes": 313
         },
         "run.stderr": {
@@ -1391,7 +1391,7 @@
         },
         "summary": {
           "file": "canary-false-graph-only-summary.json",
-          "sha256": "9e5f49af53d04cf6b6e569a166e14d2925a1ad456be3a8365d2858ff803391eb",
+          "sha256": "6aece763799917dc82f09822831069de5849bf782e1e0e7fa510b20e75c06fd2",
           "bytes": 4387
         }
       }
@@ -1433,7 +1433,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-only-dry.stdout",
-          "sha256": "78c5306c74a21691c9e05805e2b48a7a55e16c8552b68b0c9d3fd8b5a53fde1b",
+          "sha256": "daf75c7f255f17842edb5b9cb148d0caf1edbba132c51d46657359e1ad01e154",
           "bytes": 6964
         },
         "dry.stderr": {
@@ -1443,7 +1443,7 @@
         },
         "run.stdout": {
           "file": "canary-false-only-run.stdout",
-          "sha256": "fab6385b35e9d446d45c602beefcc82bb48284c7e11f072feeffcd65546af327",
+          "sha256": "00b325edbde110042db3d49727f19464abe01f83bf80359166bb730e5139c454",
           "bytes": 309
         },
         "run.stderr": {
@@ -1453,7 +1453,7 @@
         },
         "summary": {
           "file": "canary-false-only-summary.json",
-          "sha256": "cb745220b64fe6a6d8cbe4afa82b7488c1c469da3f893fae4cbd3f7d2d3fae77",
+          "sha256": "31455234560b78703fad1ff12d6039161d8d0aed00293454c86675a341e06f0c",
           "bytes": 6075
         }
       }
@@ -1551,7 +1551,7 @@
         },
         "dry.stderr": {
           "file": "canary-false-empty-glob-dry.stderr",
-          "sha256": "f0cacd39c2b2d19854b49087145a29e0e1e7a04d8c6c05f03e9a699bccaf92e0",
+          "sha256": "8bf1f0b872ac23ba2f8bb7aa534a1c669d866beb11dcbca18639ad70a0816bc3",
           "bytes": 140
         },
         "run.stdout": {
@@ -1561,7 +1561,7 @@
         },
         "run.stderr": {
           "file": "canary-false-empty-glob-run.stderr",
-          "sha256": "f0cacd39c2b2d19854b49087145a29e0e1e7a04d8c6c05f03e9a699bccaf92e0",
+          "sha256": "8bf1f0b872ac23ba2f8bb7aa534a1c669d866beb11dcbca18639ad70a0816bc3",
           "bytes": 140
         }
       }
@@ -1582,7 +1582,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-false-empty-selection-dry.stdout",
-          "sha256": "94846ad0a931b30dd5eb35367b6c86d0e3c1f9aec6f66ebaf5e3b1953a881756",
+          "sha256": "fc5dbae2447a91f025ac3dc6d2f9a4ce3cd66645860e383d9273f2ddbb13bf68",
           "bytes": 699
         },
         "dry.stderr": {
@@ -1592,7 +1592,7 @@
         },
         "run.stdout": {
           "file": "canary-false-empty-selection-run.stdout",
-          "sha256": "5d498d1fb42b78fa248cdcf3b2189e679202eaa53a9766a4fab3241f0ea0b0d7",
+          "sha256": "1762f66e2d67d801586afe6d55a0c7e9f33cf79bb24c26d275d0c421084834ea",
           "bytes": 306
         },
         "run.stderr": {
@@ -1602,7 +1602,7 @@
         },
         "summary": {
           "file": "canary-false-empty-selection-summary.json",
-          "sha256": "f4bdb445918f62da20d1408f570ba5c1147121b1084648bbebae156e85dd6578",
+          "sha256": "6126a0d0461e0695d2dc6c5adc35ac1bdefbb35ca72c944516c0bb850621b4ce",
           "bytes": 989
         }
       }
@@ -1736,7 +1736,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-real-dry.stdout",
-          "sha256": "4ba6e8e9110d7c2da2e508c2b36271a17031c0fddff323422a97f72e7ffa3cf4",
+          "sha256": "97608fcac0d9d82777b23803e811dc54706e1b4b14700fb9b3268611a469e66f",
           "bytes": 12845
         },
         "dry.stderr": {
@@ -1746,7 +1746,7 @@
         },
         "run.stdout": {
           "file": "canary-true-real-run.stdout",
-          "sha256": "529e67741dfe384820c8c6dd8a43b302689410eb53ce78f42ff0d51193ae52d5",
+          "sha256": "7a03ff6182d21568751efdef638c711b7860dce1331d32439822ce31a1a5b2d1",
           "bytes": 309
         },
         "run.stderr": {
@@ -1756,7 +1756,7 @@
         },
         "summary": {
           "file": "canary-true-real-summary.json",
-          "sha256": "13933509167cb6a2e2003d291991206f241a2800cab0cb9a9641a4be87ad16d6",
+          "sha256": "d7895ac4a3529402618c232e09b8c8e1cf79d1b324cec13e3a5785e13bf7b689",
           "bytes": 11118
         }
       }
@@ -1777,7 +1777,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-missing-command-dry.stdout",
-          "sha256": "1988470f74ad47bf439fcd06158233c6ed217fcdb13dd9ee54b819350effa93e",
+          "sha256": "6b65a3dc3456d093a49396c9d8e3fa1ed398d7fa2dac9a6aa9b70f574709c08b",
           "bytes": 714
         },
         "dry.stderr": {
@@ -1787,7 +1787,7 @@
         },
         "run.stdout": {
           "file": "canary-true-missing-command-run.stdout",
-          "sha256": "9aea5a1c3ee93c452597a756cf6898a58eb01ea1399879c637335b1ca23fc89c",
+          "sha256": "0fe1abfabfdec2c3acc24c5c807fbc549661aede2693da4f43e8d21bf6f55d2e",
           "bytes": 310
         },
         "run.stderr": {
@@ -1797,7 +1797,7 @@
         },
         "summary": {
           "file": "canary-true-missing-command-summary.json",
-          "sha256": "0945898a35dc28c25eb5e6f2955473e78bab26be8e01de2360ebd83e34baa5d3",
+          "sha256": "efe5509d8125e43e2467a280364e534df9269ef48238b94cd70919afe365846d",
           "bytes": 956
         }
       }
@@ -1839,7 +1839,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-explicit-missing-command-dry.stdout",
-          "sha256": "71273dcfe419761bf0eef54f16a9a37e8a9c516e7b6651df5397b3fdab9192f4",
+          "sha256": "266c9b1679f0f5117a64459236f92e248b424dd303ce315d67b5205ffce85592",
           "bytes": 6546
         },
         "dry.stderr": {
@@ -1849,7 +1849,7 @@
         },
         "run.stdout": {
           "file": "canary-true-explicit-missing-command-run.stdout",
-          "sha256": "afddb23099b0a2224f6359d119d1e68b73104ff643442d265f47cbb4f8978ce4",
+          "sha256": "f2af4824ff2c87947cd88cce635e4081a34bf6252c1c8b6b917b6ddbdb4511ff",
           "bytes": 317
         },
         "run.stderr": {
@@ -1859,7 +1859,7 @@
         },
         "summary": {
           "file": "canary-true-explicit-missing-command-summary.json",
-          "sha256": "6d8afff1327990f3618e32df755342d2232a6b1096de9fce71d69cda99b4db8c",
+          "sha256": "ba65f57524cc46adf59269f609409d09aed9fb4d2a357e0b1e2aa43735336a4b",
           "bytes": 4351
         }
       }
@@ -1896,7 +1896,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-graph-only-dry.stdout",
-          "sha256": "da5f0c61ce2954461fc4e0e1372744dd9fd0bfa26ffa3f1bcb30a65c47fb6701",
+          "sha256": "3fc365217872e38e2d912cde52b6a90ae0c7d81f2233771ac008c966362dbd14",
           "bytes": 5408
         },
         "dry.stderr": {
@@ -1906,7 +1906,7 @@
         },
         "run.stdout": {
           "file": "canary-true-graph-only-run.stdout",
-          "sha256": "86b8a7ffb70df2c9ecb373692008605dd88d50f77f5919b2ade0690a0cb911bf",
+          "sha256": "c4aa4e53b9b824170743a6b2be1bd984a57a6e105ac4ff7998e99ec99a04492e",
           "bytes": 313
         },
         "run.stderr": {
@@ -1916,7 +1916,7 @@
         },
         "summary": {
           "file": "canary-true-graph-only-summary.json",
-          "sha256": "6ed487addef75fcdd979b159bf4a6a35d080d50dcb189f952d4bdf6f4d3407c5",
+          "sha256": "f00bccd136af2a9f347d8555cdb8951bd468f92aaeeb7e958bed4ad134ba26f6",
           "bytes": 4364
         }
       }
@@ -1958,7 +1958,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-only-dry.stdout",
-          "sha256": "b97ce06ca4ac714f10308987fc9278ce5858dc0a4df042957f830e8bd7d0dc82",
+          "sha256": "a405060f39efd39e83c395bb1b74cdc6d80379fa2eae441b94e9070e923d1cc1",
           "bytes": 6964
         },
         "dry.stderr": {
@@ -1968,7 +1968,7 @@
         },
         "run.stdout": {
           "file": "canary-true-only-run.stdout",
-          "sha256": "3453ca623f85d75c8f0466bea47bd17a79c94caf366696ce10a74681f1ec9157",
+          "sha256": "7261b35754bc22e73a68310657faf6134d857c4e1530bcb8d04d5788b7626d6d",
           "bytes": 309
         },
         "run.stderr": {
@@ -1978,7 +1978,7 @@
         },
         "summary": {
           "file": "canary-true-only-summary.json",
-          "sha256": "d053c509bb9637fdca9236efbf7a6ffcc4b4bb715eebc879dd5d5b771da86580",
+          "sha256": "be32a8cd47d03f5eb1a679bc531ccf8c0a3af42a8f32fa34a921017721760124",
           "bytes": 6075
         }
       }
@@ -2076,7 +2076,7 @@
         },
         "dry.stderr": {
           "file": "canary-true-empty-glob-dry.stderr",
-          "sha256": "f0cacd39c2b2d19854b49087145a29e0e1e7a04d8c6c05f03e9a699bccaf92e0",
+          "sha256": "8bf1f0b872ac23ba2f8bb7aa534a1c669d866beb11dcbca18639ad70a0816bc3",
           "bytes": 140
         },
         "run.stdout": {
@@ -2086,7 +2086,7 @@
         },
         "run.stderr": {
           "file": "canary-true-empty-glob-run.stderr",
-          "sha256": "f0cacd39c2b2d19854b49087145a29e0e1e7a04d8c6c05f03e9a699bccaf92e0",
+          "sha256": "8bf1f0b872ac23ba2f8bb7aa534a1c669d866beb11dcbca18639ad70a0816bc3",
           "bytes": 140
         }
       }
@@ -2107,7 +2107,7 @@
       "logs": {
         "dry.stdout": {
           "file": "canary-true-empty-selection-dry.stdout",
-          "sha256": "b308813657335280b337d44488f587ac51b8fb22019246052e1cd6524f2304e7",
+          "sha256": "49c6b377b8b56d574c6e8f46f03e8137f34a2c82ed34148367357e5bf0b5313d",
           "bytes": 699
         },
         "dry.stderr": {
@@ -2117,7 +2117,7 @@
         },
         "run.stdout": {
           "file": "canary-true-empty-selection-run.stdout",
-          "sha256": "e9e61252f20b1dbf64d3c9d51eb8c5a058f1d96411bcf2ee61d0fb42d1939f2d",
+          "sha256": "14ef40439206308c8878708ed62daad6dcdd420a568d4a399e67566d11905d04",
           "bytes": 306
         },
         "run.stderr": {
@@ -2127,7 +2127,7 @@
         },
         "summary": {
           "file": "canary-true-empty-selection-summary.json",
-          "sha256": "4052850ab604c03f011e2f3f9b7febe5660e3094993b827495a4dea8675424ac",
+          "sha256": "190a75a251660a2d783c44ad04ee8a7939cfddca35da06343c03c4a9855d64b3",
           "bytes": 989
         }
       }

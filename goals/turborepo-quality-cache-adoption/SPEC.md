@@ -597,3 +597,11 @@ pin manifests. Bind parsed pin bytes and executed harness bytes from the same
 captured snapshots; verify those snapshots against disk before and after the
 controls. Retain source-change refusals and symlink-path regression evidence
 without replacing the earlier source-bound observations.
+
+Evidence helpers extracted by sibling drivers retain their explicit loading
+contract. Keep the historical self-contained `invoke` definition available to
+the five existing AST callers, including Cargo applicability's reviewed stdout
+adaptation; route current selection through its separately named streaming
+helper. Test the real sibling preludes and process bounds before publishing a
+change to that shared source. Preserve historical report hashes against their
+original immutable whole-driver source, and bind new observations separately.

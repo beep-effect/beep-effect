@@ -65,7 +65,37 @@ cache.mkdir(mode=0o700, parents=True, exist_ok=True)
 deadline = time.monotonic() + 180
 
 
+# Keep the historical extraction contract for the five sibling drivers.
+# Their AST loaders supply only time/subprocess/os/signal/deadline, including
+# Cargo applicability's reviewed eight-MiB stdout adaptation. Current selection
+# controls use invoke_bounded below; immutable historical reports keep their pins.
 def invoke(command, cwd, environment):
+    """Capture one owned process group within the remaining experiment budget."""
+    remaining = deadline - time.monotonic()
+    assert remaining > 0, "Selection controls exceeded their three-minute budget"
+    process = subprocess.Popen(
+        command,
+        cwd=cwd,
+        env=environment,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    try:
+        stdout, stderr = process.communicate(timeout=min(10, remaining))
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.communicate()
+        raise AssertionError(
+            "Owned selection process group exceeded its deadline"
+        ) from None
+    assert len(stdout) <= 1024 * 1024 and len(stderr) <= 1024 * 1024, (
+        "Native output exceeded one MiB"
+    )
+    return process.returncode, stdout, stderr
+
+
+def invoke_bounded(command, cwd, environment):
     """Capture one owned process group within the remaining experiment budget."""
     remaining = deadline - time.monotonic()
     assert remaining > 0, "Selection controls exceeded their three-minute budget"
@@ -161,7 +191,7 @@ for channel, binary in clients.items():
             "NO_COLOR": "1",
             "BUN_INSTALL_CACHE_DIR": str(root / "bun-cache"),
         }
-        code, stdout, _ = invoke(
+        code, stdout, _ = invoke_bounded(
             [str(binary), "--skip-infer", "--version"], root, environment
         )
         observed_versions[channel] = stdout.decode().strip()
@@ -204,7 +234,7 @@ for channel, binary in clients.items():
             if package == "app":
                 manifest["dependencies"]["empty"] = "workspace:*"
             (directory / "package.json").write_text(json.dumps(manifest) + "\n")
-        code, _, _ = invoke(
+        code, _, _ = invoke_bounded(
             [
                 str(bun),
                 "--no-env-file",
@@ -241,7 +271,7 @@ for channel, binary in clients.items():
             )
             for label, arguments in cases:
                 key = channel + "-" + str(strict).lower() + "-" + label
-                dry_code, dry_stdout, dry_stderr = invoke(
+                dry_code, dry_stdout, dry_stderr = invoke_bounded(
                     [str(binary), "--skip-infer", "run", *arguments, "--dry=json"],
                     root,
                     environment,
@@ -253,7 +283,7 @@ for channel, binary in clients.items():
                 ]:
                     marker.unlink()
                 summaries_before = set((root / ".turbo/runs").glob("*.json"))
-                run_code, run_stdout, run_stderr = invoke(
+                run_code, run_stdout, run_stderr = invoke_bounded(
                     [
                         str(binary),
                         "--skip-infer",

@@ -1175,6 +1175,8 @@
     "driverRefusals": 10,
     "priorReportUnchanged": true,
     "symlinkReplayCases": 44,
-    "sourceBindingReviewControls": "selection-review-source-controls.json"
+    "sourceBindingReviewControls": "selection-review-source-controls.json",
+    "siblingLoaderCompatibility": "selection-sibling-driver-compatibility.json",
+    "siblingLoaderTests": 6
   }
 }
