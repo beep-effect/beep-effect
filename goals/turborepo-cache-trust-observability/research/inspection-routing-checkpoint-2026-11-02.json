@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "cache-producer-inspection-routing/v1",
+  "recordedAt": "2026-11-02T07:49:04.011464+00:00",
+  "authority": "Live runner-group access observation, unchanged-body source comparison and controlled route tests. No post-fix protected execution, issuer approval, cache qualification, signing or complete goal acceptance.",
+  "sourceBaseRevision": "f2f3260b8a7e2dc8f038978ede985f2796559bf5",
+  "sourceSha256": {
+    ".github/workflows/cache-producer-inspect.yml": "a667dad42683b91845f4fde605872a66305eb18f4bde2b72a86c40cd01aad307",
+    ".github/workflows/heavy.yml": "370a528309885a2b2133614b1d4e29e15ee5da557acdf0c7772ea4f89db0fb05",
+    "packages/tooling/tool/cli/test/ci-runner-security.test.ts": "e829657ea8ce77f6ee48d73a0c8263ae2e885e422f80b9cbf6a4a7d14565788c"
+  },
+  "routing": {
+    "group": "beep-ec2-heavy",
+    "restrictedToSelectedWorkflows": true,
+    "selectedMainWorkflowPaths": [
+      "beep-effect/beep-effect/.github/workflows/cache-warm.yml@refs/heads/main",
+      "beep-effect/beep-effect/.github/workflows/fleet-lane-probe.yml@refs/heads/main",
+      "beep-effect/beep-effect/.github/workflows/fleet-shadow-check.yml@refs/heads/main",
+      "beep-effect/beep-effect/.github/workflows/heavy.yml@refs/heads/main"
+    ],
+    "standaloneInspectionAdmitted": false,
+    "newDispatcherUses": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+    "modeDefault": false,
+    "modeAdmission": [
+      "exact repository",
+      "manual workflow_dispatch",
+      "refs/heads/main",
+      "exact main inspection workflow_ref"
+    ],
+    "runnerGroupChanged": false
+  },
+  "failedDispatch": {
+    "runId": 41403231584,
+    "jobId": 125139442079,
+    "sourceRevision": "f063b0c242248f42f378eb1383881b958a372043",
+    "observation": "queued over thirty minutes, no assigned runner, no pending environment approval",
+    "cancellationRequested": true,
+    "executionOccurred": false
+  },
+  "sourceParity": {
+    "ordinaryMatrixBodyByteIdentical": true,
+    "ordinaryMatrixBodySha256": "ceb2422fae35de7c8fe9ded1906b04ceb10c565e8c018934cb399824661c09ee",
+    "inspectionBodyByteIdentical": true,
+    "inspectionBodySha256": "f97c9d64c451790d4a7c4b8227bb4344e60a7da24645be0b0df7c730f5918ecc"
+  },
+  "controls": {
+    "nodeSecuritySuite": {
+      "passed": 41,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 53.99,
+        "finishedAt": "2026-11-02T07:47:59.321914+00:00"
+      },
+      "exactCurrentFormattedSourceBytesVerified": true
+    },
+    "legacyWorkflowNegative": {
+      "observedAt": "2026-11-02T07:44:07.193716+00:00",
+      "legacyWorkflowControl": "failed intended admitted-reusable-route assertion",
+      "exit": 1,
+      "sourceRestoredByteIdentically": true,
+      "currentSourceSha256": {
+        ".github/workflows/cache-producer-inspect.yml": "a667dad42683b91845f4fde605872a66305eb18f4bde2b72a86c40cd01aad307",
+        ".github/workflows/heavy.yml": "370a528309885a2b2133614b1d4e29e15ee5da557acdf0c7772ea4f89db0fb05"
+      },
+      "legacySourceSha256": {
+        ".github/workflows/cache-producer-inspect.yml": "60e819ca7c6c82120de8941208a9d43cf7fed8b84ffdb416e544547c162a4ec7",
+        ".github/workflows/heavy.yml": "f9a821c2f3c3e6254c44517a32a6271ac95f58eeb950f33a5d9e80930a4970f4"
+      },
+      "authority": "Controlled old-workflow negative, not real post-fix GitHub runner execution"
+    },
+    "restoredRouteAndInventory": {
+      "passed": 2,
+      "skippedUnselected": 39,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 3.76,
+        "finishedAt": "2026-11-02T07:44:50.628389+00:00"
+      },
+      "exactCurrentSourceBytesVerified": true
+    },
+    "cachePolicyAudit": {
+      "findings": 0,
+      "unassessed": 1665,
+      "limit": "Unassessed computation rows are not qualification or adoption"
+    },
+    "packageQuick": {
+      "lint": "passed",
+      "check": "passed",
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 28.264,
+        "finishedAt": "2026-11-02T07:45:47.688782+00:00"
+      },
+      "scope": "lint and type check for touched repo-cli; full hosted component gates remain pending"
+    }
+  },
+  "preservedLimits": {
+    "executionMinutes": 10,
+    "artifactRetentionDays": 1,
+    "contentsPermission": "read",
+    "protectedEnvironment": "turbo-cache-write",
+    "cacheAndAppSecretSetup": false,
+    "newResources": 0,
+    "runnerCapacityChange": false,
+    "signingActivation": false
+  },
+  "primarySources": [
+    {
+      "title": "GitHub runner-group selected workflow access",
+      "url": "https://docs.github.com/en/enterprise-cloud@latest/actions/how-tos/manage-runners/self-hosted-runners/manage-access"
+    },
+    {
+      "title": "Reusable workflow caller context",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/reusing-workflow-configurations"
+    }
+  ],
+  "remaining": [
+    "Obtain component hosted checks and reviews, merge and retire through the owning orchestrator.",
+    "Dispatch a new exact-main inspection and retain its actual resolved reusable workflow and bounded artifact.",
+    "Complete ordinary stable/current-canary qualification in a suitable admitted environment, real protected publication, role/epoch/rollback proofs and representative windows.",
+    "Complete every whole-goal criterion and strict final same-PR closeout."
+  ],
+  "wholeGoalAcceptanceChanged": false
+}

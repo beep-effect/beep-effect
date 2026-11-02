@@ -5,7 +5,7 @@
     "title": "Turborepo cache trust and observability",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-31",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
@@ -115,7 +115,8 @@
     "research/producer-private-output-checkpoint.json",
     "research/normal-source-worker-observation.json",
     "research/producer-quality-closure-baseline-review-2026-10-31.md",
-    "research/producer-quality-closure-baseline-request-2026-10-31.json"
+    "research/producer-quality-closure-baseline-request-2026-10-31.json",
+    "research/inspection-routing-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {
