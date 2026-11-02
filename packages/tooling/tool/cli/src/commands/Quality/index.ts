@@ -46,7 +46,20 @@ export * from "./Quality.errors.ts";
  * @category configuration
  * @since 0.0.0
  */
-export { detectQualityProfileForTesting, qualityProfileConfigForTesting } from "./Quality.plan.ts";
+export {
+  detectQualityProfileForTesting,
+  liveQualityConcurrency,
+  localQualityConcurrencyPlan,
+  provideQualityConcurrency,
+  QUALITY_CHEAP_GATE_CONCURRENCY_ENV,
+  QUALITY_CHECK_CONCURRENCY_ENV,
+  QualityConcurrency,
+  qualityConcurrencyPlan,
+  qualityProfileConfigForTesting,
+  resolveLiveQualityConcurrencyPlan,
+  resolveQualityConcurrencyPlan,
+  scaleQualityWidthByAdmission,
+} from "./Quality.plan.ts";
 /**
  * Public Quality schema role exports.
  *

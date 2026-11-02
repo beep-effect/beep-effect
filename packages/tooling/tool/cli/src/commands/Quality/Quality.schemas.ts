@@ -99,6 +99,58 @@ export const QualityCheckConcurrency = LiteralKit(["2", "3"]).pipe(
 export type QualityCheckConcurrency = typeof QualityCheckConcurrency.Type;
 
 /**
+ * Concurrency values a local quality run accepts from an environment override.
+ *
+ * **Details**
+ *
+ * Local Turbo graphs, policy lint phases and GitHub-check lane waves read
+ * `BEEP_QUALITY_CHECK_CONCURRENCY` and `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY`
+ * through this domain when `CI` is unset. Hosted lanes keep the narrower
+ * {@link QualityCheckConcurrency} domain, so a value an operator exports on a
+ * workstation can never widen a hosted runner.
+ *
+ * **Example** (Inspect the local override domain)
+ *
+ * ```ts
+ * import { QualityLocalConcurrencyOverride } from "@beep/repo-cli/commands/Quality"
+ * console.log(QualityLocalConcurrencyOverride.literals.length) // 16
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const QualityLocalConcurrencyOverride = LiteralKit([
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+  "13",
+  "14",
+  "15",
+  "16",
+]).pipe(
+  $I.annoteSchema("QualityLocalConcurrencyOverride", {
+    description: "Local quality concurrency override values, one to sixteen.",
+  })
+);
+
+/**
+ * Decoded local quality concurrency override.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type QualityLocalConcurrencyOverride = typeof QualityLocalConcurrencyOverride.Type;
+
+/**
  * Output-line prefix carrying the schema-backed GitHub-check run report.
  *
  * **Example** (Recognize a report line)
@@ -429,6 +481,10 @@ export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
  * const config = QualityProfileConfig.make({
  *   profile: "current",
  *   turboConcurrency: 3,
+ *   policyLintConcurrency: 4,
+ *   cheapGateConcurrency: 4,
+ *   prePushLaneConcurrency: 1,
+ *   oxlintThreads: 4,
  *   docgenParallel: 3,
  *   fullProofSlots: 1,
  *   reviewFixSlots: 1,
@@ -437,6 +493,15 @@ export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
  * console.log(config.profile)
  * ```
  *
+ * **Details**
+ *
+ * `turboConcurrency` bounds the root `build`, `check`, `test` and `lint`
+ * Turbo graphs; `policyLintConcurrency` bounds each lint-policy phase graph;
+ * `cheapGateConcurrency` and `prePushLaneConcurrency` are the lanes one wave
+ * of the matching local proof tier runs at once; `oxlintThreads` is the
+ * type-aware deprecated-API sweep's worker count. The `ci` profile carries the
+ * hosted values verbatim.
+ *
  * @category models
  * @since 0.0.0
  */
@@ -444,6 +509,10 @@ export class QualityProfileConfig extends S.Opaque<QualityProfileConfig, { reado
   S.Struct({
     profile: QualityHardwareProfile,
     turboConcurrency: S.Finite,
+    policyLintConcurrency: S.Finite,
+    cheapGateConcurrency: S.Finite,
+    prePushLaneConcurrency: S.Finite,
+    oxlintThreads: S.Finite,
     docgenParallel: S.Finite,
     fullProofSlots: S.Finite,
     reviewFixSlots: S.Finite,
@@ -470,6 +539,10 @@ export class QualityProfileConfig extends S.Opaque<QualityProfileConfig, { reado
  *   config: {
  *     profile: "current",
  *     turboConcurrency: 3,
+ *     policyLintConcurrency: 4,
+ *     cheapGateConcurrency: 4,
+ *     prePushLaneConcurrency: 1,
+ *     oxlintThreads: 4,
  *     docgenParallel: 3,
  *     fullProofSlots: 1,
  *     reviewFixSlots: 1,
@@ -521,6 +594,80 @@ export class QualityProfileDetectionInput extends S.Opaque<
   }).pipe(
     $I.annoteSchema("QualityProfileDetectionInput", {
       description: "Host facts used when selecting a quality profile.",
+    })
+  )
+) {}
+
+/**
+ * Admission tokens observed on the host when a local concurrency plan was resolved.
+ *
+ * **Example** (Describe an idle host)
+ *
+ * ```ts
+ * import { QualityAdmissionLoad } from "@beep/repo-cli/commands/Quality"
+ *
+ * const load = QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 })
+ * console.log(load.capacityTokens) // 8
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityAdmissionLoad extends S.Opaque<QualityAdmissionLoad, { readonly brand: unique symbol }>()(
+  S.Struct({
+    activeTokens: S.Finite,
+    capacityTokens: S.Finite,
+  }).pipe(
+    $I.annoteSchema("QualityAdmissionLoad", {
+      description: "Admission tokens held by other heavy runs and the host's token capacity.",
+    })
+  )
+) {}
+
+/**
+ * Resolved concurrency widths for one local quality invocation.
+ *
+ * **Details**
+ *
+ * The plan is the single source every local quality command reads its widths
+ * from: the detected {@link QualityHardwareProfile}, the environment overrides
+ * that already applied before this plan existed, and the admission tokens
+ * other heavy runs hold on the host. `ci` plans carry the hosted values
+ * verbatim and never scale.
+ *
+ * **Example** (Describe a serial plan)
+ *
+ * ```ts
+ * import { QualityConcurrencyPlan } from "@beep/repo-cli/commands/Quality"
+ *
+ * const plan = QualityConcurrencyPlan.make({
+ *   profile: "current",
+ *   rootTurbo: 3,
+ *   policyLint: 4,
+ *   cheapGates: 4,
+ *   prePushLanes: 1,
+ *   oxlintThreads: 4,
+ *   notes: []
+ * })
+ * console.log(plan.rootTurbo) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityConcurrencyPlan extends S.Opaque<QualityConcurrencyPlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    profile: QualityHardwareProfile,
+    rootTurbo: S.Finite,
+    policyLint: S.Finite,
+    cheapGates: S.Finite,
+    prePushLanes: S.Finite,
+    oxlintThreads: S.Finite,
+    admission: QualityAdmissionLoad.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(EffectRuntime.succeedNone)),
+    notes: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("QualityConcurrencyPlan", {
+      description: "Resolved concurrency widths for one local quality invocation.",
     })
   )
 ) {}
@@ -918,6 +1065,43 @@ export const GithubCheckLaneTier = LiteralKit(["cheap-gates", "pre-push"]).pipe(
  * @since 0.0.0
  */
 export type GithubCheckLaneTier = typeof GithubCheckLaneTier.Type;
+
+/**
+ * Whether a GitHub-check lane may share its wave chunk with other lanes.
+ *
+ * **Details**
+ *
+ * `shared` lanes run beside one another up to the tier's lane width.
+ * `exclusive` lanes own mutable state another lane could touch (the Turbo task
+ * graph's `dist/` outputs, the coverage shard artifacts, the SQL integration
+ * resource, tracked files a codegen pass rewrites) and therefore run alone,
+ * whatever the width.
+ *
+ * **Example** (Identify an exclusive lane)
+ *
+ * ```ts
+ * import { GithubCheckLaneIsolation } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GithubCheckLaneIsolation.is.exclusive("exclusive")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubCheckLaneIsolation = LiteralKit(["shared", "exclusive"]).pipe(
+  $I.annoteSchema("GithubCheckLaneIsolation", {
+    description: "Whether a GitHub-check lane may share its wave chunk with other lanes.",
+  })
+);
+
+/**
+ * Decoded isolation marker for a GitHub-check lane.
+ *
+ * @see {@link GithubCheckLaneIsolation} for the runtime schema and literal helpers.
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubCheckLaneIsolation = typeof GithubCheckLaneIsolation.Type;
 
 /**
  * Confidence class controlling whether one red may stop a local proof wave.
@@ -1834,6 +2018,10 @@ export class GithubCheckLaneSpec extends S.Opaque<GithubCheckLaneSpec, { readonl
     blockedBy: S.Array(S.String),
     step: QualityTaskStep,
     orderEstimate: OptionalGateOrderSeedRow,
+    isolation: GithubCheckLaneIsolation.pipe(
+      S.withConstructorDefault(EffectRuntime.succeed(GithubCheckLaneIsolation.Enum.shared)),
+      S.withDecodingDefaultKey(EffectRuntime.succeed(GithubCheckLaneIsolation.Enum.shared))
+    ),
   }).pipe(
     $I.annoteSchema("GithubCheckLaneSpec", {
       description: "Executable lane specification for GitHub check collectors.",

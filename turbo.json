@@ -708,6 +708,7 @@
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
         "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+        "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -1255,6 +1256,7 @@
         "packages/tooling/tool/cli/src/commands/Models/Models.render.ts",
         "packages/tooling/tool/cli/src/commands/Models/Models.spans.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+        "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -1873,6 +1875,7 @@
         "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+        "packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageArtifacts.schemas.ts",
@@ -1904,6 +1907,8 @@
         "packages/tooling/tool/cli/src/internal/ratchet/index.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/ChangedFiles.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+        "packages/tooling/tool/cli/src/internal/repo-run/ProcessAttachment.ts",
+        "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.proofs.ts"
       ]
     },

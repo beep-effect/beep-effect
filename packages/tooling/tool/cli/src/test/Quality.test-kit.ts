@@ -26,6 +26,18 @@ export {
 export * from "@beep/repo-cli/commands/Quality/CheckCensus";
 export * from "@beep/repo-cli/commands/Quality/CheckCensusGate";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
+export {
+  liveQualityConcurrency,
+  localQualityConcurrencyPlan,
+  provideQualityConcurrency,
+  QUALITY_CHEAP_GATE_CONCURRENCY_ENV,
+  QUALITY_CHECK_CONCURRENCY_ENV,
+  QualityConcurrency,
+  qualityConcurrencyPlan,
+  resolveLiveQualityConcurrencyPlan,
+  resolveQualityConcurrencyPlan,
+  scaleQualityWidthByAdmission,
+} from "@beep/repo-cli/commands/Quality/Quality.plan";
 export * from "@beep/repo-cli/commands/Quality/Quality.render";
 export {
   decodeGithubChecksFallowFeatureMatrix,

@@ -1,3 +1,4 @@
+import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
@@ -10,6 +11,7 @@ import {
   LintPolicySweeps,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+  QualityAdmissionLoad,
   QualityProfileDetectionInput,
 } from "@beep/repo-cli/commands/Quality";
 import {
@@ -88,12 +90,15 @@ import {
   githubCheckLanePlan,
   githubCheckLanesForModeForTesting,
   githubCheckPrePushExternalLanesForTesting,
+  githubCheckPrePushLanes,
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
   githubCheckTierConcurrency,
+  githubCheckWaveChunks,
   LaneProofSession,
   lintFixChangedStepForTesting,
+  localQualityConcurrencyPlan,
   missingTestTsgoTaskMessageForTesting,
   parseQualityTaskInvocation,
   persistLaneProofs,
@@ -120,6 +125,7 @@ import {
   renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
   resolveLaneInputDigestForTesting,
+  resolveQualityConcurrencyPlan,
   reviewFixDocgenLocalArgsForTesting,
   rootDocsCacheKey,
   rootLintPolicyStepsForTesting,
@@ -132,6 +138,7 @@ import {
   runQualityTaskStreamingStepGroupForTesting,
   runRootLintPolicyTask,
   runSqlIntegrationTestLaneForTesting,
+  scaleQualityWidthByAdmission,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
   TURBO_LANE_LEDGER_ENV,
@@ -440,6 +447,21 @@ const isTurboConcurrencyArg = (arg: string): boolean =>
 // The retired exclusion must never return to root task command plans.
 const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
 
+const hostDetectionInput = QualityProfileDetectionInput.make({
+  ci: false,
+  cpuCount: NodeOS.cpus().length,
+  totalMemoryBytes: NodeOS.totalmem(),
+});
+const ciDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: true, cpuCount: 64, totalMemoryBytes: 128 * 1024 * 1024 * 1024 })
+);
+const currentDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: false, cpuCount: 8, totalMemoryBytes: 16 * 1024 * 1024 * 1024 })
+);
+const workstationDetection = detectQualityProfileForTesting(
+  QualityProfileDetectionInput.make({ ci: false, cpuCount: 64, totalMemoryBytes: 128 * 1024 * 1024 * 1024 })
+);
+
 const policyTurboStep = (
   label: string,
   base?: string,
@@ -475,7 +497,17 @@ const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyA
   ...expectedTurboCacheArgs(args),
   ...args,
 ];
+// The root graphs take `--concurrency` from the live concurrency plan: the `ci`
+// profile under CI, the detected local profile (`current` or `workstation`)
+// otherwise, so the expectation is derived the same way the planner derives it.
 const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  expectedTurboArgs(
+    task,
+    A.some(args, isTurboConcurrencyArg) ? args : [`--concurrency=${localQualityConcurrencyPlan().rootTurbo}`, ...args]
+  );
+// Coverage keeps its fixed caps (the shard worker topology is the ratchet's
+// baseline shape): the fleet cap under CI, three locally.
+const expectedCoverageTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
   expectedTurboArgs(
     task,
     A.some(args, isTurboConcurrencyArg)
@@ -1443,44 +1475,136 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(A.filter(HM.toEntries(idsByCommand), ([, ids]) => A.length(ids) > 1)).toEqual([]);
       expect(A.every(cheapGateLanes, (lane) => lane.tier === "cheap-gates")).toBe(true);
       expect(A.every(prePushLanes, (lane) => lane.tier === "pre-push")).toBe(true);
-      // D9: the cheap tier runs four abreast; heavy pre-push lanes stay serial.
-      expect(githubCheckTierConcurrency("cheap-gates")).toBe(4);
-      expect(githubCheckTierConcurrency("pre-push")).toBe(1);
+      // D9: the cheap tier runs four abreast and heavy pre-push lanes stay serial on
+      // the `current` and `ci` profiles; the workstation profile widens both.
+      const profile = withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", undefined, localQualityConcurrencyPlan);
+      expect(githubCheckTierConcurrency("cheap-gates", profile)).toBe(profile.cheapGates);
+      expect(githubCheckTierConcurrency("pre-push", profile)).toBe(profile.prePushLanes);
+      expect(
+        githubCheckTierConcurrency("cheap-gates", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
+      ).toBe(4);
+      expect(
+        githubCheckTierConcurrency("pre-push", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
+      ).toBe(1);
     });
 
     it("keeps cheap gates within the configured worker budget and warns on malformed settings", () => {
       const warning = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       try {
+        const profileDefault = withoutCi(() =>
+          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", undefined, () => localQualityConcurrencyPlan().cheapGates)
+        );
         for (const [value, expected, malformed] of [
-          [undefined, 4, false],
+          [undefined, profileDefault, false],
           ["1", 1, false],
           ["2", 2, false],
           ["3", 3, false],
           ["4", 4, false],
+          ["5", 5, false],
+          ["16", 16, false],
           ["0", 1, true],
-          ["5", 1, true],
+          ["17", 1, true],
           ["2.5", 1, true],
           ["01", 1, true],
           ["serial", 1, true],
           ["", 1, true],
         ] as const) {
           warning.mockClear();
-          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", value, () => {
-            expect(githubCheckTierConcurrency("cheap-gates")).toBe(expected);
-            expect(warning).toHaveBeenCalledTimes(malformed ? 1 : 0);
-            if (malformed) {
-              expect(warning).toHaveBeenCalledWith(
-                "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
-              );
-            }
-            warning.mockClear();
-            expect(githubCheckTierConcurrency("pre-push")).toBe(1);
-            expect(warning).not.toHaveBeenCalled();
-          });
+          withoutCi(() =>
+            withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", value, () => {
+              const plan = localQualityConcurrencyPlan();
+              expect(githubCheckTierConcurrency("cheap-gates", plan)).toBe(expected);
+              expect(warning).toHaveBeenCalledTimes(malformed ? 1 : 0);
+              if (malformed) {
+                expect(warning).toHaveBeenCalledWith(
+                  "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected an integer from 1 to 16. Using 1 lane."
+                );
+              }
+              expect(githubCheckTierConcurrency("pre-push", plan)).toBe(plan.prePushLanes);
+            })
+          );
         }
+        // Hosted-shaped environments keep the pre-profile domain.
+        warning.mockClear();
+        withEnvVar("CI", "true", () =>
+          withEnvVar("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY", "5", () => {
+            expect(localQualityConcurrencyPlan().cheapGates).toBe(1);
+            expect(warning).toHaveBeenCalledWith(
+              "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
+            );
+          })
+        );
       } finally {
         warning.mockRestore();
       }
+    });
+
+    it("runs shared lanes abreast and exclusive lanes alone inside one wave", () => {
+      const lane = (id: string, exclusive = false, blockedBy: ReadonlyArray<string> = []) => {
+        const spec = githubCheckLanePlan.githubCheckLane(
+          id,
+          "pre-push",
+          "repo-quality",
+          "test",
+          githubCheckLanePlan.bunRunLane("/repo", id, ["run", id]),
+          blockedBy
+        );
+        return exclusive ? githubCheckLanePlan.exclusiveGithubCheckLane(spec) : spec;
+      };
+      const ids = (chunks: ReadonlyArray<ReadonlyArray<GithubCheckLaneSpec>>) =>
+        A.map(chunks, (chunk) => A.map(chunk, (entry) => entry.id));
+
+      const lanes = [lane("a"), lane("b"), lane("c", true), lane("d"), lane("e"), lane("f"), lane("g", false, ["e"])];
+      expect(ids(githubCheckWaveChunks(lanes, 4))).toEqual([["a", "b"], ["c"], ["d", "e", "f"], ["g"]]);
+      // `g` is blocked by `e`, which already finished with the previous chunk, so it joins `f`.
+      expect(ids(githubCheckWaveChunks(lanes, 2))).toEqual([["a", "b"], ["c"], ["d", "e"], ["f", "g"]]);
+      // Width one is the serial runner's order exactly.
+      expect(ids(githubCheckWaveChunks(lanes, 1))).toEqual(A.map(lanes, (entry) => [entry.id]));
+      expect(ids(githubCheckWaveChunks(lanes, 0))).toEqual(A.map(lanes, (entry) => [entry.id]));
+      expect(githubCheckWaveChunks([], 4)).toEqual([]);
+      // Every declared exclusive pre-push lane owns shared state no neighbour may touch.
+      expect(
+        pipe(
+          githubCheckPrePushLanes("/repo", [githubCheckChangesetStatusLane("/repo")]),
+          A.filter((entry) => entry.isolation === "exclusive"),
+          A.map((entry) => entry.id)
+        )
+      ).toEqual([
+        "quality:build",
+        "quality:lint",
+        "quality:lint-policy",
+        "quality:check",
+        "quality:coverage",
+        "quality:codegen",
+        "quality:test-integration",
+      ]);
+      expect(A.every(githubCheckCheapGateLanes("/repo"), (entry) => entry.isolation === "shared")).toBe(true);
+    });
+
+    it("folds consecutive same-wave lanes of an evidence order into one wave", () => {
+      const lane = (id: string, wave: "preflight" | "heavy" | "test") =>
+        githubCheckLanePlan.githubCheckLane(
+          id,
+          "pre-push",
+          "repo-quality",
+          wave,
+          githubCheckLanePlan.bunRunLane("/repo", id, ["run", id])
+        );
+      const waves = githubCheckLanePlan.githubCheckOrderedLaneWaves([
+        lane("a", "preflight"),
+        lane("b", "preflight"),
+        lane("c", "heavy"),
+        lane("d", "preflight"),
+        lane("e", "test"),
+        lane("f", "test"),
+      ]);
+      expect(A.map(waves, (wave) => [wave.wave, A.map(wave.lanes, (entry) => entry.id)])).toEqual([
+        ["preflight", ["a", "b"]],
+        ["heavy", ["c"]],
+        ["preflight", ["d"]],
+        ["test", ["e", "f"]],
+      ]);
+      expect(githubCheckLanePlan.githubCheckOrderedLaneWaves([])).toEqual([]);
     });
 
     // ship-velocity B1: a local green must mean what a hosted green means, so the
@@ -3281,7 +3405,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ],
             "collect-all",
             undefined,
-            githubCheckTierConcurrency("cheap-gates")
+            // Four abreast, the cheap tier's `current` width.
+            githubCheckTierConcurrency("cheap-gates", resolveQualityConcurrencyPlan(currentDetection, {}, O.none()))
           )
         );
         const runOf = (id: string) => O.getOrThrow(A.findFirst(result.laneReport.lanes, (lane) => lane.id === id));
@@ -3804,6 +3929,145 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityProfileConfigForTesting("workstation")).toMatchObject({
         fullProofSlots: 1,
         turboConcurrency: 8,
+        policyLintConcurrency: 8,
+        cheapGateConcurrency: 8,
+        prePushLaneConcurrency: 4,
+        oxlintThreads: 16,
+      });
+      // `ci` carries the hosted values verbatim; `current` keeps the pre-profile local values.
+      expect(qualityProfileConfigForTesting("ci")).toMatchObject({
+        turboConcurrency: 4,
+        policyLintConcurrency: 4,
+        cheapGateConcurrency: 4,
+        prePushLaneConcurrency: 1,
+        oxlintThreads: 4,
+      });
+      expect(qualityProfileConfigForTesting("current")).toMatchObject({
+        turboConcurrency: 3,
+        policyLintConcurrency: 4,
+        cheapGateConcurrency: 4,
+        prePushLaneConcurrency: 1,
+        oxlintThreads: 4,
+      });
+    });
+
+    it("resolves the concurrency plan from the profile, the overrides and the admission load", () => {
+      const idle = O.none<QualityAdmissionLoad>();
+      expect(resolveQualityConcurrencyPlan(ciDetection, {}, idle)).toMatchObject({
+        profile: "ci",
+        rootTurbo: 4,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+        admission: O.none(),
+        notes: [],
+      });
+      expect(resolveQualityConcurrencyPlan(currentDetection, {}, idle)).toMatchObject({
+        profile: "current",
+        rootTurbo: 3,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 1,
+        oxlintThreads: 4,
+      });
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, idle)).toMatchObject({
+        profile: "workstation",
+        rootTurbo: 8,
+        policyLint: 8,
+        cheapGates: 8,
+        prePushLanes: 4,
+        oxlintThreads: 16,
+      });
+
+      // Overrides: the policy lint width honours BEEP_QUALITY_CHECK_CONCURRENCY over the
+      // local one-to-sixteen domain, the hosted profile keeps its 2/3/4 domain.
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "12" }, idle)
+      ).toMatchObject({
+        policyLint: 12,
+        rootTurbo: 8,
+      });
+      expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "12" }, idle)).toMatchObject({
+        policyLint: 4,
+        notes: ["[quality] Invalid BEEP_QUALITY_CHECK_CONCURRENCY; expected 2, 3 or 4. Using 1 lane."],
+      });
+      expect(resolveQualityConcurrencyPlan(ciDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "2" }, idle)).toMatchObject({
+        policyLint: 2,
+      });
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHEAP_GATE_CONCURRENCY: "3" }, idle)
+      ).toMatchObject({ cheapGates: 3 });
+
+      // Admission: other runs' tokens scale every width an override did not pin; `ci` never scales.
+      const half = O.some(QualityAdmissionLoad.make({ activeTokens: 4, capacityTokens: 8 }));
+      expect(resolveQualityConcurrencyPlan(workstationDetection, {}, half)).toMatchObject({
+        rootTurbo: 4,
+        policyLint: 4,
+        cheapGates: 4,
+        prePushLanes: 2,
+        oxlintThreads: 8,
+        admission: half,
+        notes: ["[quality] admission: 4/8 tokens held by other runs; local widths scaled."],
+      });
+      expect(
+        resolveQualityConcurrencyPlan(workstationDetection, { BEEP_QUALITY_CHECK_CONCURRENCY: "8" }, half)
+      ).toMatchObject({ policyLint: 8, rootTurbo: 4 });
+      expect(resolveQualityConcurrencyPlan(ciDetection, {}, half)).toMatchObject({
+        rootTurbo: 4,
+        admission: O.none(),
+        notes: [],
+      });
+      expect(
+        resolveQualityConcurrencyPlan(
+          workstationDetection,
+          {},
+          O.some(QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 }))
+        )
+      ).toMatchObject({ rootTurbo: 8, notes: [] });
+
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 }))).toBe(
+        8
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 3, capacityTokens: 8 }))).toBe(
+        5
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 8, capacityTokens: 8 }))).toBe(
+        1
+      );
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 8 }))).toBe(
+        1
+      );
+      // Hard floor engaged: capacity zero runs serially.
+      expect(scaleQualityWidthByAdmission(8, QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 0 }))).toBe(
+        1
+      );
+      expect(scaleQualityWidthByAdmission(1, QualityAdmissionLoad.make({ activeTokens: 7, capacityTokens: 8 }))).toBe(
+        1
+      );
+    });
+
+    it("bounds the root Turbo graphs by the detected profile", () => {
+      const rootArgs = (steps: ReadonlyArray<QualityTaskStep>) => O.getOrThrow(A.head(steps)).args;
+      withEnvVar("CI", "true", () => {
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check"])))).toContain("--concurrency=4");
+      });
+      withoutCi(() => {
+        const plan = localQualityConcurrencyPlan();
+        expect(plan.profile).toBe(detectQualityProfileForTesting(hostDetectionInput).profile);
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["build"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["lint"])))).toContain(
+          `--concurrency=${plan.rootTurbo}`
+        );
+        // An explicit caller width always wins.
+        expect(rootArgs(rootQualityStepsForTesting("/repo", getInvocation(["check", "--concurrency=1"])))).toContain(
+          "--concurrency=1"
+        );
       });
     });
 
@@ -4255,13 +4519,37 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it("bounds policy Turbo concurrency using Check overrides and a four-worker default", () => {
-      for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
-        withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
-          const expected = value === "2" || value === "3" ? value : "4";
-          expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
-        });
-      }
+    it("bounds policy Turbo concurrency using Check overrides over the profile's budget", () => {
+      // Hosted: Check's 2/3 overrides plus the four-worker budget, nothing wider.
+      withEnvVar("CI", "true", () => {
+        for (const value of [undefined, "2", "3", "4", "8", "invalid", ""]) {
+          withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
+            const expected = value === "2" || value === "3" ? value : "4";
+            expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
+          });
+        }
+      });
+      // Local: any width from one to sixteen, else the detected profile's budget.
+      withoutCi(() => {
+        const budget = withEnvVar(
+          "BEEP_QUALITY_CHECK_CONCURRENCY",
+          undefined,
+          () => localQualityConcurrencyPlan().policyLint
+        );
+        for (const [value, expected] of [
+          [undefined, budget],
+          ["2", 2],
+          ["8", 8],
+          ["16", 16],
+          ["17", budget],
+          ["invalid", budget],
+          ["", budget],
+        ] as const) {
+          withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", value, () => {
+            expect(policyTurboStep("lint:deprecated-apis", "origin/main").args).toContain(`--concurrency=${expected}`);
+          });
+        }
+      });
     });
 
     it("leaves changed-file selection to Turbo rather than manufacturing include arguments", () => {
@@ -4545,7 +4833,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         // The ratchet invocation carries the same Vitest topology the writer and
         // the full shards use, so all three measure the same rows.
         args: localOnlyTurboCacheArgs(
-          expectedRootTurboArgs("coverage", ["--", "--fileParallelism=true", "--maxWorkers=1"])
+          expectedCoverageTurboArgs("coverage", ["--", "--fileParallelism=true", "--maxWorkers=1"])
         ),
         env: {
           BEEP_FC_SEED: "20260708",

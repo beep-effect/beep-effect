@@ -5,24 +5,18 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import * as Config from "effect/Config";
-import * as ConfigProvider from "effect/ConfigProvider";
-import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as S from "effect/Schema";
 import { isCiSync, readTurboCacheEnvironmentSync } from "../../../internal/cli/EnvConfig.ts";
 import { resolveTurboCachePlan, turboCachePlanArgs } from "../../../internal/cli/TurboCache.ts";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import {
+  GithubCheckLaneIsolation,
   GithubCheckLaneSpec,
   GithubCheckLaneTier,
   GithubCheckLaneWave,
@@ -36,6 +30,7 @@ import type {
   GithubCheckMode,
   GithubChecksFallowFeatureMatrix,
   GithubChecksFallowFeatureMatrixRow,
+  QualityConcurrencyPlan,
 } from "../Quality.schemas.ts";
 
 /**
@@ -291,10 +286,58 @@ const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
     A.getSomes
   );
 
+// Evidence order interleaves the static waves (the seed sorts by seeded cost,
+// lane class and p50 before anything else), so the ordered runner keeps that
+// sequence and only lets neighbours that share a static wave run together:
+// consecutive lanes of one wave fold into one wave spec, a wave change starts
+// the next. Width one reproduces the serial runner exactly.
 const githubCheckOrderedLaneWaves = (
   lanes: ReadonlyArray<GithubCheckLaneSpec>
-): ReadonlyArray<GithubCheckLaneWaveSpec> =>
-  A.map(lanes, (lane) => GithubCheckLaneWaveSpec.make({ lanes: [lane], wave: lane.wave }));
+): ReadonlyArray<GithubCheckLaneWaveSpec> => {
+  const waves: Array<GithubCheckLaneWaveSpec> = [];
+  for (const lane of lanes) {
+    const open = A.last(waves);
+    if (O.isSome(open) && open.value.wave === lane.wave) {
+      waves[A.length(waves) - 1] = GithubCheckLaneWaveSpec.make({
+        lanes: A.append(open.value.lanes, lane),
+        wave: lane.wave,
+      });
+    } else {
+      waves.push(GithubCheckLaneWaveSpec.make({ lanes: [lane], wave: lane.wave }));
+    }
+  }
+  return waves;
+};
+
+/**
+ * Mark a lane as owning mutable state no other lane may touch while it runs.
+ *
+ * **Details**
+ *
+ * The wave runner gives an exclusive lane a chunk of its own, whatever the
+ * tier's width. The Turbo graph lanes (`build`, `lint`, `lint-policy`,
+ * `check`) share `dist/` outputs and the local Turbo cache; `coverage` writes
+ * the shard artifacts under its pinned worker topology; `test-integration`
+ * owns the SQL resource; `codegen` rewrites tracked files in place.
+ *
+ * **Example** (Mark a lane exclusive)
+ *
+ * ```ts
+ * import { githubCheckLanePlan } from "@beep/repo-cli/test/Quality"
+ *
+ * const lane = githubCheckLanePlan.githubCheckLane(
+ *   "quality:check", "pre-push", "repo-quality", "heavy", githubCheckLanePlan.bunRunLane("/repo", "quality:check", ["check"])
+ * )
+ * console.log(githubCheckLanePlan.exclusiveGithubCheckLane(lane).isolation) // "exclusive"
+ * ```
+ *
+ * @param lane - Lane spec declared as shared.
+ * @returns The same lane spec marked exclusive.
+ * @category utilities
+ * @since 0.0.0
+ */
+const exclusiveGithubCheckLane = (lane: GithubCheckLaneSpec): GithubCheckLaneSpec =>
+  GithubCheckLaneSpec.make({ ...lane, isolation: GithubCheckLaneIsolation.Enum.exclusive });
 
 /**
  * Command-internal GitHub check lane constructors.
@@ -312,6 +355,7 @@ const githubCheckOrderedLaneWaves = (
  */
 export const githubCheckLanePlan = {
   bunRunLane,
+  exclusiveGithubCheckLane,
   githubCheckOrderedLaneWaves,
   githubCheckLane,
   githubCheckLaneInTier,
@@ -346,29 +390,39 @@ const tsconfigSyncLane = (repoRoot: string, tier: GithubCheckLaneTier): GithubCh
  * @since 0.0.0
  */
 export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane(
-    "quality:build",
-    "pre-push",
-    "repo-quality",
-    "heavy",
-    ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:build", "build"))
+  // The four Turbo graph lanes share `dist/` outputs and the local Turbo cache
+  // (`check` and `lint` both depend on `^build`), so they never overlap.
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:build",
+      "pre-push",
+      "repo-quality",
+      "heavy",
+      ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:build", "build"))
+    )
   ),
-  githubCheckLane("quality:lint", "pre-push", "repo-quality", "heavy", ciLaneStep(repoRoot, "quality:lint", "lint")),
-  githubCheckLane(
-    "quality:lint-policy",
-    "pre-push",
-    "repo-quality",
-    "heavy",
-    ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
+  exclusiveGithubCheckLane(
+    githubCheckLane("quality:lint", "pre-push", "repo-quality", "heavy", ciLaneStep(repoRoot, "quality:lint", "lint"))
+  ),
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:lint-policy",
+      "pre-push",
+      "repo-quality",
+      "heavy",
+      ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
+    )
   ),
   // Check retains test-file types and the smoke canary; the Effect rules run
   // inside its patched tsrs typecheck.
-  githubCheckLane(
-    "quality:check",
-    "pre-push",
-    "repo-quality",
-    "heavy",
-    ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:check",
+      "pre-push",
+      "repo-quality",
+      "heavy",
+      ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
+    )
   ),
   // Replays the hosted "Shadcn Lint" context (strict @shadcn/lint over apps and packages).
   githubCheckLane(
@@ -406,19 +460,26 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "test",
     ciLaneStep(repoRoot, "quality:doctest", "doctest")
   ),
-  githubCheckLane(
-    "quality:coverage",
-    "pre-push",
-    "repo-quality",
-    "test",
-    ciLaneStep(repoRoot, "quality:coverage", "coverage")
+  // Coverage runs its own ten-shard executor under the pinned worker topology
+  // the ratchet baseline was measured with; nothing else runs beside it.
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:coverage",
+      "pre-push",
+      "repo-quality",
+      "test",
+      ciLaneStep(repoRoot, "quality:coverage", "coverage")
+    )
   ),
-  githubCheckLane(
-    "quality:codegen",
-    "pre-push",
-    "repo-quality",
-    "preflight",
-    ciLaneStep(repoRoot, "quality:codegen", "codegen")
+  // Codegen rewrites tracked files in place before comparing them.
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:codegen",
+      "pre-push",
+      "repo-quality",
+      "preflight",
+      ciLaneStep(repoRoot, "quality:codegen", "codegen")
+    )
   ),
   githubCheckLane(
     "quality:commitlint",
@@ -441,12 +502,15 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "test",
     ciLaneStep(repoRoot, "quality:test-unit", "test-unit")
   ),
-  githubCheckLane(
-    "quality:test-integration",
-    "pre-push",
-    "repo-quality",
-    "test",
-    ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
+  // The integration lane owns the shared SQL container resource.
+  exclusiveGithubCheckLane(
+    githubCheckLane(
+      "quality:test-integration",
+      "pre-push",
+      "repo-quality",
+      "test",
+      ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
+    )
   ),
   // Quality-lane audit D13: additive, non-required hosted context. The
   // pre-push plan passes the affected shape, which the lane turns into its
@@ -629,70 +693,41 @@ export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray
   githubCheckLane("quality:nix", "pre-push", "environment", "preflight", ciLaneStep(repoRoot, "quality:nix", "nix")),
 ];
 
-const CheapGateConcurrency = LiteralKit(["1", "2", "3", "4"]).pipe(
-  $RepoCliId.create("commands/Quality/internal/GithubChecks").annoteSchema("CheapGateConcurrency", {
-    description: "Explicit cheap-gate lane widths, bounded by the workstation default of four.",
-  })
-);
-const decodeCheapGateConcurrency = S.decodeUnknownOption(CheapGateConcurrency);
-
 /**
  * Lanes one local proof tier runs at once.
  *
  * **Details**
  *
- * Cheap gates default to four lanes. Constrained workers can set
- * `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY` to 1, 2, 3 or 4. Missing settings
- * retain the default; malformed settings warn and clamp to one lane.
- * Pre-push lanes stay serial. The width is read
- * at call time, and does not change wave order or which gates are required.
+ * Both widths come from the resolved concurrency plan (`Quality.plan.ts`):
+ * the detected hardware profile's cheap-gate and pre-push lane widths, with
+ * `BEEP_QUALITY_CHEAP_GATE_CONCURRENCY` still overriding the cheap tier
+ * (a malformed value warns and clamps to one lane). The width changes neither
+ * wave order nor which gates are required, and an `exclusive` lane runs
+ * alone whatever the width.
  *
  * **Example** (Read the cheap tier's width)
  *
  * ```ts
- * import { githubCheckTierConcurrency } from "@beep/repo-cli/test/Quality"
+ * import { githubCheckTierConcurrency, localQualityConcurrencyPlan } from "@beep/repo-cli/test/Quality"
  *
- * console.log(githubCheckTierConcurrency("cheap-gates")) // 4
+ * console.log(githubCheckTierConcurrency("cheap-gates", localQualityConcurrencyPlan()) >= 1) // true
  * ```
  *
  * @param tier - Local proof tier.
+ * @param plan - Resolved concurrency plan (see `localQualityConcurrencyPlan`).
  * @returns Lane concurrency for one wave of that tier.
  * @category configuration
  * @since 0.0.0
  */
-export const githubCheckTierConcurrency = (tier: GithubCheckLaneTier): number =>
+export const githubCheckTierConcurrency: {
+  (tier: GithubCheckLaneTier, plan: QualityConcurrencyPlan): number;
+  (plan: QualityConcurrencyPlan): (tier: GithubCheckLaneTier) => number;
+} = dual(2, (tier: GithubCheckLaneTier, plan: QualityConcurrencyPlan): number =>
   GithubCheckLaneTier.match(tier, {
-    "cheap-gates": () =>
-      O.match(
-        Effect.runSync(
-          Config.option(Config.String("BEEP_QUALITY_CHEAP_GATE_CONCURRENCY")).parse(
-            ConfigProvider.fromEnv({ preserveEmptyStrings: true })
-          )
-        ),
-        {
-          onNone: () => 4,
-          onSome: (value) =>
-            O.match(decodeCheapGateConcurrency(value), {
-              onNone: () => {
-                Effect.runSync(
-                  Console.warn(
-                    "[quality] Invalid BEEP_QUALITY_CHEAP_GATE_CONCURRENCY; expected 1, 2, 3 or 4. Using 1 lane."
-                  )
-                );
-                return 1;
-              },
-              onSome: (width) =>
-                CheapGateConcurrency.match(width, {
-                  "1": () => 1,
-                  "2": () => 2,
-                  "3": () => 3,
-                  "4": () => 4,
-                }),
-            }),
-        }
-      ),
-    "pre-push": () => 1,
-  });
+    "cheap-gates": () => plan.cheapGates,
+    "pre-push": () => plan.prePushLanes,
+  })
+);
 
 const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
 
@@ -717,6 +752,9 @@ const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): str
  * @since 0.0.0
  */
 export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
+  // Audit and dead-code share the base-commit snapshot under the Fallow cache
+  // root behind its own lock (docs/runbooks/fallow-audit-cache.md); the cheap
+  // tier has run them abreast since promotion, so they stay shared here too.
   githubCheckLane(
     "fallow:audit",
     "pre-push",
