@@ -1107,6 +1107,56 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("admits the ten-shard Test Unit layout and refuses a run that mixes the two layouts", () =>
+    Effect.gen(function* () {
+      const tenShardNames = [
+        "repo-cli-1",
+        "repo-cli-2",
+        "repo-cli-3",
+        "repo-cli-4",
+        "repo-cli-5",
+        "repo-cli-6",
+        "unit-a",
+        "unit-b",
+        "unit-c",
+        "unit-d",
+      ];
+      const shardJobs = (run: CiWorkflowWindowRun, names: ReadonlyArray<string>) =>
+        A.map(names, (partition, index) =>
+          job({
+            completed_at: "2026-11-05T00:12:00Z",
+            id: 300 + index,
+            name: `Test Unit (${partition})`,
+            run_id: run.id,
+            started_at: `2026-11-05T00:0${2 + (index % 3)}:00Z`,
+          })
+        );
+      const aggregator = (run: CiWorkflowWindowRun) =>
+        job({
+          completed_at: "2026-11-05T00:15:00Z",
+          id: 399,
+          name: "Test Unit",
+          run_id: run.id,
+          started_at: "2026-11-05T00:01:00Z",
+        });
+      const complete = windowRun({ id: 300 });
+      // Five repo-cli shards with unit-a, unit-c and unit-d: the old layout misses unit-b, the new one misses
+      // repo-cli-6 and unit-b, so neither is whole and the span is incomplete.
+      const mixed = windowRun({ id: 301 });
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(complete, [...shardJobs(complete, tenShardNames), aggregator(complete)]),
+        windowRunJobs(mixed, [
+          ...shardJobs(mixed, [...A.take(tenShardNames, 5), "unit-a", "unit-c", "unit-d"]),
+          aggregator(mixed),
+        ]),
+      ]);
+      expect(laneStat(report, "Test Unit").n).toBe(1);
+      // Earliest shard start 00:02 to aggregator completion 00:15.
+      assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
+      expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+    })
+  );
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
