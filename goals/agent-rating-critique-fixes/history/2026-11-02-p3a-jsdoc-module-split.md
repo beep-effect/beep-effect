@@ -12,7 +12,7 @@ the parent's ownership extension; see Validation.
 grouped by `// <category>` comment headers into 11 category unions, followed by
 the `JSDocTag` union of those 11. The category groups do not reference each
 other. Every group depends on the same three things: `JSDocTagDefinition`
-(`./models`), the file-private `JSDocTagMember<Tag>` type, and the
+(`packages/tooling/library/repo-utils/src/JSDoc/models/`), the file-private `JSDocTagMember<Tag>` type, and the
 `$RepoUtilsId.create("JSDoc/JSDocTagDb")` identity.
 
 The split follows those seams exactly:
