@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ChangesetGraphPackageReference,
@@ -92,6 +92,33 @@ const statusTestLayer = (
       gitFixtureLayer(changedFiles, addedChangesets, spawned)
     )
   );
+
+// A `Git` whose base-range diff fails with the given kit error, so the status run reaches the
+// changeset adapter's spawn-failure and non-zero-exit wordings.
+const kitFailureLayer = (failure: GitCommandError) =>
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    Path.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    gitFixtureLayer([], [], []),
+    Git.layerTest({ changedFiles: () => Effect.fail(failure) })
+  );
+
+const kitFailures = [
+  {
+    label: "a spawn failure",
+    failure: GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", stderr: "", detail: "spawn ENOENT" }),
+    expected: (message: string) =>
+      Str.startsWith("Failed to run git diff ")(message) && Str.endsWith("main...HEAD.")(message),
+  },
+  {
+    label: "a non-zero exit",
+    failure: GitCommandError.make({ kind: "failed", args: ["diff"], cwd: "/repo", exitCode: 128, stderr: "fatal" }),
+    expected: (message: string) =>
+      Str.startsWith("git diff ")(message) && Str.endsWith("main...HEAD failed with exit code 128.")(message),
+  },
+] as const;
 
 const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (
   repoRoot: string,
@@ -467,5 +494,24 @@ Patch demo.
         })
       );
     });
+  });
+
+  describe("runChangesetStatus over a failing Git diff", () => {
+    for (const { label, failure, expected } of kitFailures) {
+      it.layer(kitFailureLayer(failure), { timeout: "30 seconds" })((it) => {
+        it.effect(`reports ${label} with the changeset wording`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const tmpDir = yield* fs.makeTempDirectoryScoped();
+            yield* writeStatusFixtureRepo(tmpDir);
+
+            const error = yield* Effect.flip(runChangesetStatus(tmpDir, O.some("main")));
+
+            expect(error._tag).toBe("ChangesetStatusError");
+            expect(expected(error.message)).toBe(true);
+          })
+        );
+      });
+    }
   });
 });
