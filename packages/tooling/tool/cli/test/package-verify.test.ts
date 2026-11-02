@@ -26,7 +26,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, vi } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -140,25 +140,19 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       expect(A.map(packageVerifyStepSpecsForTesting(false), (spec) => spec.step)).toEqual(["audit", "docgen"]);
     });
 
-    it("builds upstream audit dependencies through Turbo before the package script", () => {
+    it("delegates the audit to the root command with the selected workspace filter", () => {
       const plan = packageVerifyStepPlanForTesting(
         "/repo",
         demoWorkspace,
-        PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+        PackageVerifyStepSpec.make({ step: "audit", script: "audit" })
       );
 
       expect(A.map(plan, ({ args, command, cwd, label }) => ({ args, command, cwd, label }))).toEqual([
         {
-          label: "audit:build-closure",
-          command: "bun",
-          args: ["x", "turbo", "run", "build", "--filter=@beep/demo^..."],
-          cwd: "/repo",
-        },
-        {
           label: "audit",
           command: "bun",
-          args: ["run", "beep:audit"],
-          cwd: "/repo/packages/demo",
+          args: ["run", "audit", "--filter=@beep/demo"],
+          cwd: "/repo",
         },
       ]);
     });
@@ -383,10 +377,21 @@ export const invalidCategory = 1;
       ).pipe(TestClock.withLive)
     );
 
-    it.effect("skips the dependency build when the package has no audit script", () =>
+    it.effect("runs the root audit for the selected package without a package audit wrapper", () =>
       Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
           yield* seedWorkspaceRepository(tmpDir, { docgen: "true" });
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            yield* encodeJson({
+              name: "verify-root",
+              private: true,
+              workspaces: ["packages/*"],
+              scripts: { audit: "printf '%s' \"$PWD\" > audit-cwd; printf '%s' > audit-args" },
+            })
+          );
 
           const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
             packageName: O.some("@beep/demo"),
@@ -396,11 +401,55 @@ export const invalidCategory = 1;
           expect(report.results).toHaveLength(2);
           expect(report.results[0]).toMatchObject({
             step: "audit",
-            skipped: true,
+            skipped: false,
             ok: true,
-            output: "(no beep:audit script)",
           });
+          expect(yield* fs.readFileString(path.join(tmpDir, "audit-cwd"))).toBe(tmpDir);
+          expect(yield* fs.readFileString(path.join(tmpDir, "audit-args"))).toBe("--filter=@beep/demo");
           expect(report.results[1]).toMatchObject({ step: "docgen", skipped: false, ok: true });
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("reports a root audit failure even when the package has no audit wrapper", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* seedWorkspaceRepository(tmpDir, {});
+          yield* fs.writeFileString(
+            path.join(tmpDir, "package.json"),
+            yield* encodeJson({
+              name: "verify-root",
+              private: true,
+              workspaces: ["packages/*"],
+              scripts: { audit: "sh -c 'printf audit-failed; exit 7' --" },
+            })
+          );
+          const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
+            packageName: O.some("@beep/demo"),
+            quick: false,
+          });
+          expect(report.results[0]).toMatchObject({ step: "audit", skipped: false, ok: false });
+          assertSome(
+            O.flatMap(A.head(report.results), (result) => result.exitCode),
+            7
+          );
+          expect(report.results[0]?.output).toContain("audit-failed");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+    );
+
+    it.effect("fails instead of silently skipping a missing root audit command", () =>
+      Effect.flatMap(temporaryDirectory, (tmpDir) =>
+        Effect.gen(function* () {
+          yield* seedWorkspaceRepository(tmpDir, {});
+          const report = yield* runPackageVerifyAtRootForTesting(tmpDir, {
+            packageName: O.some("@beep/demo"),
+            quick: false,
+          });
+          expect(report.results[0]).toMatchObject({ step: "audit", skipped: false, ok: false });
+          expect(report.results[0]?.output).toContain('Script not found "audit"');
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
@@ -618,7 +667,7 @@ export const invalidCategory = 1;
           const step = (name: "lint" | "check" | "audit", ok: boolean) =>
             PackageVerifyStepResult.make({
               step: name,
-              script: `beep:${name}`,
+              script: name === "audit" ? "audit" : `beep:${name}`,
               skipped: false,
               ok,
               durationMillis: 20,
@@ -645,7 +694,7 @@ export const invalidCategory = 1;
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    it.effect("records the Turbo closure build in a genuine audit failure capsule", () =>
+    it.effect("records the selected root audit command in a genuine failure capsule", () =>
       Effect.flatMap(temporaryDirectory, (tmpDir) =>
         Effect.gen(function* () {
           yield* recordPackageVerifyInboxForTesting(
@@ -658,7 +707,7 @@ export const invalidCategory = 1;
               results: [
                 PackageVerifyStepResult.make({
                   step: "audit",
-                  script: "beep:audit",
+                  script: "audit",
                   skipped: false,
                   ok: false,
                   durationMillis: 20,
@@ -674,7 +723,7 @@ export const invalidCategory = 1;
           expect(row?.kind).toBe("local-shard-failed");
           if (row?.kind === "local-shard-failed") {
             expect(row.severity).toBe("P0");
-            expect(row.capsule.command).toBe("bun x turbo run build --filter=@beep/demo^... && bun run beep:audit");
+            expect(row.capsule.command).toBe("bun run audit --filter=@beep/demo");
           }
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

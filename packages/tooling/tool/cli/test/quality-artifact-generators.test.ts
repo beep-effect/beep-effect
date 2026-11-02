@@ -6,7 +6,9 @@ import {
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
   writeJSDocDocumentationInventory,
+  zeroLegacyCorpusFiles,
 } from "@beep/repo-cli/test/Quality";
+import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
@@ -431,6 +433,37 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
       expect(yield* fs.readFileString(ciOutputJsonPath)).toBe(yield* fs.readFileString(outputJsonPath));
       expect(yield* fs.readFileString(ciOutputMarkdownPath)).toBe(yield* fs.readFileString(outputMarkdownPath));
+    })
+  );
+
+  it.effect(
+    "inventories untracked sources but not gitignored ones, matching the Turbo input set",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const sourceRoot = path.join(repoRoot, "packages", "demo", "src");
+      yield* fs.writeFileString(path.join(repoRoot, ".gitignore"), "packages/demo/src/Ignored.ts\n");
+      yield* fs.writeFileString(path.join(sourceRoot, "Untracked.ts"), "export const untracked = 1;\n");
+      yield* fs.writeFileString(path.join(sourceRoot, "Ignored.ts"), "export const ignored = 1;\n");
+      // Nothing is committed or staged: Turbo hashes every non-ignored file, so the
+      // scan must count them too or `git add` alone would reuse a stale cached inventory.
+      const init = yield* runRepoCommandCapture("git", ["init", "--quiet", "--template=", "."], repoRoot, {
+        GIT_CONFIG_NOSYSTEM: "1",
+        GIT_CONFIG_GLOBAL: "/dev/null",
+      });
+      expect(init.exitCode).toBe(0);
+
+      const inventory = yield* buildJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({ rootDir: repoRoot, generatedAt: fixedGeneratedAt })
+      );
+      const files = A.flatMap(inventory.packages, (pkg) => A.map(pkg.modules, (entry) => entry.filePath));
+      expect(files).toEqual(["src/Untracked.ts", "src/index.ts"]);
+      // The ratchet's zero-legacy corpus follows the same rule.
+      expect(yield* zeroLegacyCorpusFiles(repoRoot, false)).toEqual([
+        "packages/demo/src/Untracked.ts",
+        "packages/demo/src/index.ts",
+      ]);
     })
   );
 

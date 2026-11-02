@@ -136,6 +136,19 @@ export { RepositorySecurity, type RepositorySecurityShape } from "./RepositorySe
 export { RepositoryVariable, type RepositoryVariableShape, VariableInfo } from "./RepositoryVariable.ts";
 export { RateLimitSnapshot, RetryableFailure, RetryPolicy } from "./Resilience.ts";
 export { PageOptions, RequestExtras as RestExtras } from "./Rest.ts";
+export {
+  DiffSide,
+  isOutstanding,
+  outstanding,
+  ReviewThread,
+  ReviewThreadActor,
+  ReviewThreadComment,
+  ReviewThreadNode,
+  ReviewThreadPage,
+  ReviewThreadPageInfo,
+  type ReviewThreadShape,
+  ReviewThreads,
+} from "./ReviewThread.ts";
 export { Ruleset, RulesetInfo, RulesetPayload, type RulesetShape } from "./Ruleset.ts";
 export {
   ExtraPermission,
