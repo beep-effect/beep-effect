@@ -84,8 +84,10 @@ assigned branch, open a draft PR through the GitHub integration with
   `packages/tooling/tool/cli/test/ci-route-*.test.ts`,
   `packages/tooling/tool/cli/test/fixtures/ci-route/**`, the packet.
 - Consumer: slice 2 refinements 2 and 3.
-- Checks: each new kind gets a totality-record row that selects every lane
-  (routing stays sound); mutation fixtures per new kind; targeted ci-route
+- Checks: extend `CHANGE_ATOM_KIND_VALUES`; `ROUTE_FOOTPRINTS` has one row
+  per lane whose `kinds` already default to the full kind list, so add a
+  test that every new kind still selects every lane (routing stays sound)
+  rather than adding rows; mutation fixtures per new kind; targeted ci-route
   vitest; `package-verify @beep/repo-cli --quick`; a re-measured `unknown`
   share (if the corpus fetch cannot run in the VM, measure over local history
   and label it so).
@@ -93,8 +95,8 @@ assigned branch, open a draft PR through the GitHub integration with
   belong only to this goal).
 - Brief: "Implement census refinement 1 only from
   goals/verification-route/research/census-2026-10-31.md. Add the kinds in
-  Route.schemas.ts/RouteClassify.ts, give each new kind a footprint row that
-  selects every lane (no footprint claim), add fixtures and tests, re-measure
+  Route.schemas.ts/RouteClassify.ts, test that every lane's ROUTE_FOOTPRINTS
+  row still selects each new kind (no footprint claim), add fixtures, re-measure
   the unknown share and append it to the packet. Do not implement refinements
   2–3, layer 1 or final-check. Proof: ci-route tests; package-verify
   @beep/repo-cli --quick. End per D4."
@@ -170,8 +172,15 @@ assigned branch, open a draft PR through the GitHub integration with
   `vitest.shared.ts` sets the flag only for coverage and deep-sweep runs;
   justify keeping it.
 - Owns: `packages/tooling/tool/cli/src/internal/package-scripts/**` and its
-  tests, the regenerated manifest `scripts` blocks (via
-  `bun run beep lint package-scripts --write`), the packet.
+  tests, the migrated manifest `scripts` blocks, the packet.
+- Gotcha: `bun run beep lint package-scripts --write` alone does not update
+  existing manifests. `seedImplementation` in `PackageScriptsPolicy.ts` keeps
+  an existing implementation entry, and `diffBlock` reports only missing
+  implementations, so changed defaults never reach a manifest that already
+  has the flag. The task needs an explicit migration step: either a narrowly
+  scoped writer change that rewrites the flag where test files exist, plus a
+  drift check that compares implementation text for it, or a one-time
+  migration recorded in the PR.
 - Checks: `bun run beep lint package-scripts`; package-scripts tests;
   `package-verify @beep/repo-cli --quick`; the canary.
 - Effort 3–5 h. Conflict risk medium–high (about 140 manifests; regenerate on
@@ -179,8 +188,11 @@ assigned branch, open a draft PR through the GitHub integration with
   (for example only integration tests); identify those first.
 - Brief: "Implement only the passWithNoTests box of
   goals/agent-rating-critique-fixes P2. Change the generator to emit the flag
-  only when the package has no matching test files, per run variant;
-  regenerate; enumerate the remaining packages with reasons; add a
+  only when the package has no matching test files, per run variant. Because
+  `lint package-scripts --write` preserves existing implementation entries,
+  add an explicit, tested migration (scoped writer change plus drift check, or
+  a recorded one-time rewrite) for existing manifests; enumerate the remaining
+  packages with reasons; add a
   deleted-suite canary test. No coverage-floor or lint-promotion work. End
   per D4."
 
