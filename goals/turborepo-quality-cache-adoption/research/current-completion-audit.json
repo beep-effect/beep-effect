@@ -2,15 +2,15 @@
   "schemaVersion": "cache-goal-completion-audit/v1",
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
-  "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "285117df2068fd7568d62796fab21ef16f771e4099d9f45f16504a391bfb9725",
+  "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
+  "specSha256": "2792ea0002905d744a1d2037498a8e715e25e9cb96b514577d348d0b0862c3ff",
   "acceptance": [
     {
       "id": "AC-01",
       "source": "SPEC.md:165",
       "requirement": "Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.",
       "status": "unproven",
-      "nextProof": "Close current semantic reviews for 2571 executable computations and all applicable feature cases; consume the economics owner baseline."
+      "nextProof": "Close 2,236 current computation reviews out of the source-bound 2,434 executable population and the 27 pending feature decisions; consume the economics owner baseline. Completed feature reviews do not qualify actual computations."
     },
     {
       "id": "AC-02",
@@ -340,5 +340,13 @@
   "priorSpecSha256AtAcceptedProducerMerge": {
     "cargoBranch": "30b9232c085ccdf3c5bc545e2546eda27f9365f353fae883901714350be3562a",
     "acceptedProducer": "dac9820e8e2517f97f503a05869b5424f663978dc50cf7dd815d3a4d0648f33f"
+  },
+  "priorSpecSha256AtGlobalConfigurationReview": "285117df2068fd7568d62796fab21ef16f771e4099d9f45f16504a391bfb9725",
+  "sourceState": "working-tree-bound",
+  "reviewedAt": "2026-11-02T14:25:05.137280+00:00",
+  "globalConfigurationFeatureReview": {
+    "path": "research/global-configuration-feature-review.json",
+    "sha256": "d133ee5c02542f2ad110519ae8ed52232dc16a60a350f116bebada40fc2ea4b7",
+    "scope": "No runtime change. Exact source review plus 72 synthetic task observations, six configuration refusals, three driver refusals and one intended guard-removal failure. No whole-goal criterion is complete."
   }
 }
