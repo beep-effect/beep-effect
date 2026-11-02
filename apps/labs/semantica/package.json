@@ -12,7 +12,6 @@
     "directory": "apps/labs/semantica"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bun run beep:coverage",
@@ -22,7 +21,6 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "vite build",
     "beep:check": "tsrs -p tsconfig.check.json",
     "beep:coverage": "bunx vitest run --coverage --exclude=test/integration/**",

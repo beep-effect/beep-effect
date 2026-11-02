@@ -12,8 +12,6 @@
     "directory": "apps/practice-setup"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsrs -p tsconfig.check.json",
     "beep:check": "tsrs -p tsconfig.check.json",
     "beep:lint": "biome check .",

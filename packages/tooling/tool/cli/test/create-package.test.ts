@@ -219,10 +219,7 @@ const NoEmitTurboConfig = {
 };
 
 const ExpectedGeneratedQualityScripts = {
-  audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-  "beep:audit":
-    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
   "beep:build": "tsrs -p tsconfig.json && bun run babel",
   "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
@@ -250,9 +247,7 @@ const ExpectedGeneratedStoriesQualityScripts = {
   "beep:check:stories": "tsrs -p tsconfig.stories.json --noEmit",
 } as const;
 const ExpectedNextjsAppScripts = {
-  audit: "bun run --if-present beep:audit",
   dev: "portless marketing-web.beep next dev --turbopack",
-  "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
   "beep:check": "tsrs -p tsconfig.check.json",
   "beep:lint": "biome check .",
@@ -271,10 +266,8 @@ const ExpectedNextjsAppScripts = {
   test: "bun run beep:test",
 } as const;
 const ExpectedTauriAppScripts = {
-  audit: "bun run --if-present beep:audit",
   dev: "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
   "dev:tauri": "tauri dev",
-  "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
   "beep:check": "tsrs -p tsconfig.check.json",
   "beep:lint": "biome check .",
@@ -299,7 +292,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
         expect(CreatePackageScripts.package(kind, false)).toEqual(ExpectedGeneratedQualityScripts);
       }
       expect(CreatePackageScripts.package("tool", false)).toEqual(
-        R.remove(ExpectedGeneratedQualityScripts, "test:integration")
+        pipe(ExpectedGeneratedQualityScripts, R.remove("test:integration"), R.remove("beep:test:integration"))
       );
       expect(CreatePackageScripts.package("library", true)).toEqual(ExpectedGeneratedStoriesQualityScripts);
     });
@@ -323,9 +316,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
       expect(
         CreatePackageScripts.app("portless example.labs.beep bun src/main.ts", "tsrs -p tsconfig.check.json", true)
       ).toEqual({
-        audit: "bun run --if-present beep:audit",
         dev: "portless example.labs.beep bun src/main.ts",
-        "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
         "beep:build": "tsrs -p tsconfig.check.json",
         "beep:check": "tsrs -p tsconfig.check.json",
         "beep:coverage": "bunx vitest run --coverage --exclude=test/integration/**",
@@ -1106,7 +1097,6 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
             expect(generatedPackage.scripts).toMatchObject({
               ...ExpectedGeneratedQualityScripts,
-              "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
               "beep:build": "tsrs -p tsconfig.check.json",
               "beep:check": "tsrs -p tsconfig.check.json",
               "beep:test": "bunx --bun vitest run",
