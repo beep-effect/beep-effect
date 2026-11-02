@@ -1097,6 +1097,8 @@
         "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Graph.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.schemas.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
         "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
         "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",

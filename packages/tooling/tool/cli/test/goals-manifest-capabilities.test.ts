@@ -1,5 +1,6 @@
 import {
   buildPortfolioIndexContent,
+  buildPortfolioIndexReport,
   decodeGoalManifest,
   GoalManifest,
   isCapabilitySlug,
@@ -314,6 +315,37 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GoalManifest capabi
         },
       ]);
       expect(reversed).toEqual(forward);
+    })
+  );
+
+  it.effect(
+    "11. reports every packet's phases and status note in the JSON portfolio, sorted by slug",
+    Effect.fn("GoalsManifestCapabilitiesTest.portfolioReport")(function* () {
+      const report = yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectFile("bun.lock", "");
+          yield* writeSyntheticPacket({
+            slug: "zeta",
+            manifest: { ...(manifestFixture("zeta") as object), statusNote: "Waiting on P1." },
+          });
+          yield* writeSyntheticPacket({ slug: "alpha", manifest: manifestFixture("alpha") });
+          yield* writeProjectFile("goals/broken/ops/manifest.json", "{ not json\n");
+          return yield* buildPortfolioIndexReport();
+        })
+      );
+
+      expect(report.schemaVersion).toBe("goals-portfolio-index/v1");
+      expect(A.map(report.packets, (row) => row.slug)).toEqual(["alpha", "zeta"]);
+      expect(report.invalid).toEqual(["broken"]);
+      const zeta = report.packets[1];
+      expect(zeta?.statusNote).toBe("Waiting on P1.");
+      expect(zeta?.updated).toBe("2026-08-01");
+      expect(zeta?.phasesComplete).toBe(1);
+      expect(A.map(zeta?.phases ?? [], (phase) => `${phase.id}:${phase.status}`)).toEqual([
+        "P0:complete",
+        "P1:pending",
+      ]);
+      expect(report.packets[0]?.statusNote).toBeUndefined();
     })
   );
 });

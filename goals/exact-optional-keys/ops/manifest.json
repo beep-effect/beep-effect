@@ -6,7 +6,7 @@
     "title": "Exact optional schema keys",
     "status": "active",
     "created": "2026-10-23",
-    "updated": "2026-10-28",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/exact-optional-keys",
@@ -93,7 +93,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",

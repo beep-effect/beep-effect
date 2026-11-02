@@ -11,10 +11,10 @@
   "reviews": {
     "//": {
       "reviewer": "Claude Fable 5.1 (derived goal completion rendering, claude/hungry-torvalds-da136f)",
-      "reason": "Record the two root policy seals whose inputs shrink after PortfolioIndex.ts stops importing Completion.ts so goals/INDEX.md renders committed facts only: //#lint:policy-fingerprint:goals-index (352 -> 70 inputs) and //#lint:policy-fingerprint:lint-roadmap-refs (371 -> 91 inputs); no seal gains an input and no qualification is granted.",
+      "reason": "Record the two root policy seals whose inputs shrink after PortfolioIndex.ts stops importing Completion.ts so goals/INDEX.md renders committed facts only: //#lint:policy-fingerprint:goals-index (352 -> 72 inputs) and //#lint:policy-fingerprint:lint-roadmap-refs (371 -> 91 inputs), measured against origin/main after merging #2501; no seal gains an input and no qualification is granted.",
       "basis": {
         "path": "goals/repository-simplification-confidence/research/cache-baseline-review-2026-11-02-derived-completion.md",
-        "sha256": "9f31c0702fc8838eef26a2b44a5ef07337aa319ab990fb1b6676d09d0fbad9ee"
+        "sha256": "02689282fe7960a9108cbcb659a43c735c448bf0e8c76b78bcb596dea79733c2"
       }
     },
     "@beep/acp": {
@@ -3734,6 +3734,8 @@
             "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Graph.schemas.ts",
             "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketCore.schemas.ts",
+            "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts",
             "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
             "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
             "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
@@ -135374,7 +135376,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "fae9e9bf8728feb70e19cdb0abebe1feda8c475c4c029117979db08a0c8bd4ca"
+        "sha256": "3a11006739958d284395f82e2a5c06e17dff91b53dd75afe3f7fb5e734b79326"
       }
     ]
   }
