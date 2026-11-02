@@ -270,15 +270,43 @@ ratified in
 
 ## P8 Post-release JIT containment checklist
 
-1. [ ] Replace argv-based configuration handoff with a mechanism that does not
-   leave the one-use JIT value readable to job-controlled privilege, or prove
-   an equivalent containment boundary.
-2. [ ] Stop the original listener and attempt replay from the original host and
-   a second host without logging the credential value.
+1. [x] Decide the route. No in-VM location hides the value from a
+   sudo-capable job, so containment would need root removed from job code;
+   the server-side route was chosen (Decision Log 2026-11-02).
+2. [x] Stop the original listener and attempt replay from the original host and
+   a second host without logging the credential value. Probe N and
+   [`ops/post-release-replay.sh`](./ops/post-release-replay.sh): run 2
+   (orderly SIGINT, `41422745680`) and run 3 (SIGKILL, `41429667965`).
 3. [ ] Require server-side rejection, scoped deregistration, VM teardown, and a
-   sanitized exact-head evidence record.
+   sanitized exact-head evidence record. **Failed for the SIGKILL stop:** run 3
+   had the same-host replay accepted about three minutes after the kill, with
+   the registration held busy until the job timed out. The orderly stop is
+   refused from both hosts (run 2), and teardown and deregistration hold in
+   every run.
 4. [ ] Close exception E1 only after those checks pass; update README, plan,
    spec, manifest, reflection, and index in the same reviewed PR.
+
+### P8 operator decision (open since 2026-11-02)
+
+E1 is confirmed for the SIGKILL stop, so P8 is stopped under the packet stop
+condition "a credential path reachable by job privilege". Options, cheapest
+first; none is taken without the operator:
+
+1. **Measure the exposure.** Done 2026-11-02, run `41452707373` ([receipt](./history/2026-11-02-p8-probe-n-run4-exposure.md)): the replayed session was held 12 minutes and offered no job; a decoy and all 32 real heavy jobs that started during the hold went to other runners; the session ended when the original job was cancelled. Hold one replayed session open in a quiet,
+   operator-granted window and see whether GitHub assigns it any job other
+   than the original. If it never does, the hijack yields only the attacker's
+   own job and E1 shrinks to a residual the operator may accept.
+2. **Split trust (structural).** Give jobs that receive secrets (main pushes,
+   `cache-warm.yml`, schedules) a runner group and label that pull-request
+   jobs never use, so a credential leaked from a PR job can only reach
+   PR-grade work. Changes runner-group admission and the controller, and may
+   change fleet cost.
+3. **Take root away from heavy job code** so the JIT value stays unreadable;
+   the original containment route. Large: lanes rely on sudo.
+4. **Narrow the window** with an external fence that cancels the job and
+   deletes the runner when a fleet runner goes offline while busy and its
+   instance is still running. It races an attacker who replays at session
+   expiry, so it reduces but does not close E1.
 
 P8 progress, 2026-11-02 (receipt
 [`history/2026-11-02-p8-state-audit.md`](./history/2026-11-02-p8-state-audit.md)):

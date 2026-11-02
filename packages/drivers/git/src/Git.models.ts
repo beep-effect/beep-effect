@@ -171,7 +171,8 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
 ) {}
 
 /**
- * One commit of a `git log` listing, with the paths that commit touched.
+ * One commit of a `git log` listing, with its subject and the paths that
+ * commit touched.
  *
  * **Gotchas**
  *
@@ -190,6 +191,14 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
  * requested pathspec — most commonly a merge commit, whose diff git omits by
  * default (see `Git.log`'s `firstParentDiffMerges`).
  *
+ * `changes` is present only when the listing was read with `Git.log`'s
+ * `nameStatus: true`: each path's `--name-status` record as a
+ * {@link NameStatusEntry}, with the rename pair and similarity score a
+ * `--name-only` listing cannot carry. In that mode `paths` is derived from
+ * `changes` — the NEW path of every entry — so a consumer reading `paths`
+ * alone sees what `--name-only` would have printed. Absent `changes` means
+ * the status mode was not requested, not that the commit changed nothing.
+ *
  * **Example** (Decode a commit timestamp)
  *
  * ```ts import.meta.vitest name="Decode a commit timestamp"
@@ -200,9 +209,24 @@ export class CommitInfo extends S.Opaque<CommitInfo, { readonly brand: unique sy
  *
  * const entry = await Effect.runPromise(S.decodeEffect(CommitLogEntry)({
  *   sha: "abc", authoredAt: "2026-01-01T01:00:00+01:00", committedAt: "2026-01-01T00:00:00Z",
- *   authorName: "Ada", authorEmail: "ada@example.com", paths: ["src/index.ts"],
+ *   authorName: "Ada", authorEmail: "ada@example.com", subject: "feat: index", paths: ["src/index.ts"],
  * }));
  * DateTime.formatIso(entry.authoredAt) // => "2026-01-01T00:00:00.000Z"
+ * ```
+ *
+ * **Example** (Carry name-status changes alongside the derived paths)
+ *
+ * ```ts import.meta.vitest name="Carry name-status changes alongside the derived paths"
+ * import { CommitLogEntry, NameStatusEntry } from "@beep/git/Git";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const at = DateTime.makeUnsafe("2026-01-01T00:00:00Z");
+ * const entry = CommitLogEntry.make({
+ *   sha: "abc", authoredAt: at, committedAt: at, authorName: "Ada", authorEmail: "ada@example.com",
+ *   subject: "move it", paths: ["new.ts"],
+ *   changes: [NameStatusEntry.make({ status: "renamed", oldPath: "old.ts", path: "new.ts", score: 100 })],
+ * });
+ * entry.changes?.[0]?.oldPath // => "old.ts"
  * ```
  *
  * @public
@@ -231,10 +255,25 @@ export class CommitLogEntry extends S.Opaque<CommitLogEntry, { readonly brand: u
     authorEmail: S.String.pipe(
       $I.annoteKey("CommitLogEntry.authorEmail", { description: "The author's email address (`%ae`)." })
     ),
+    /** The commit subject (`%s`): the message's first paragraph folded onto one line. */
+    subject: S.String.pipe(
+      $I.annoteKey("CommitLogEntry.subject", {
+        description: "The commit subject (`%s`): the message's first paragraph folded onto one line.",
+      })
+    ),
     /** The paths this commit touched, root-relative and raw; empty when it touched none. */
     paths: S.Array(S.String).pipe(
       $I.annoteKey("CommitLogEntry.paths", {
         description: "The paths this commit touched, root-relative and raw; empty when it touched none.",
+      })
+    ),
+    /** The `--name-status` record of every touched path; present only when the listing was read with `nameStatus: true`. */
+    changes: NameStatusEntry.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("CommitLogEntry.changes", {
+        description:
+          "The `--name-status` record of every touched path; present only when the listing was read with `nameStatus: true`.",
       })
     ),
   }).pipe(

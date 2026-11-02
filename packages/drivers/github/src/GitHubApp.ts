@@ -544,6 +544,14 @@ export class InstallationToken extends S.Class<InstallationToken, { readonly bra
 /** Re-mint a minute before GitHub would start refusing the token. */
 const DEFAULT_SKEW = Duration.seconds(60);
 
+// Installation tokens live one hour. A skew at or past half of that would make
+// `clientLayer` re-mint (and revoke the previous token) on nearly every call,
+// which can 401 a concurrent request still holding the old client.
+const MAX_REFRESH_SKEW = Duration.minutes(30);
+
+const refreshSkewWithinCeiling = (skew: Duration.Duration): boolean =>
+  Duration.isGreaterThanOrEqualTo(skew, Duration.zero) && Duration.isLessThan(skew, MAX_REFRESH_SKEW);
+
 /**
  * Fail closed when GitHub granted less than `required`.
  *
@@ -552,8 +560,8 @@ const DEFAULT_SKEW = Duration.seconds(60);
  * A down-scoped {@link TokenRequest} is a ceiling, not a floor: GitHub silently
  * intersects what was asked with what the installation holds, and the result
  * lands in `InstallationToken.permissions`. This reads that map through
- * `TokenPermissions.fromGitHub` and fails with `TokenPermissionError
- * { kind: "insufficient" }` unless every required permission is held at least
+ * `TokenPermissions.fromGitHub` and fails with
+ * `TokenPermissionError { kind: "insufficient" }` unless every required permission is held at least
  * at the level asked for. It passes the token through on success so it
  * composes after `GitHubApp.token`. Use `TokenPermissions.assertExact` directly
  * when a broader grant is also a misconfiguration.
@@ -832,10 +840,22 @@ export class GitHubAppOptions extends S.Opaque<GitHubAppOptions, { readonly bran
     userAgent: S.optionalKey(S.String).pipe(
       $I.annoteKey("GitHubAppOptions.userAgent", { description: "Appended to octokit's user agent." })
     ),
-    /** How long before expiry `clientLayer` re-mints its token. Defaults to one minute. */
-    refreshSkew: S.optionalKey(S.Duration).pipe(
+    /** How long before expiry `clientLayer` re-mints its token. Defaults to one minute; under thirty minutes. */
+    refreshSkew: S.optionalKey(
+      S.Duration.check(
+        S.makeFilter(
+          (skew) => refreshSkewWithinCeiling(skew),
+          $I.annote("GitHubAppOptionsRefreshSkewCheck", {
+            title: "Refresh skew ceiling",
+            description: "Installation tokens live one hour; the skew must stay under thirty minutes.",
+            message: "refreshSkew must be at least zero and under thirty minutes",
+          })
+        )
+      )
+    ).pipe(
       $I.annoteKey("GitHubAppOptions.refreshSkew", {
-        description: "How long before expiry `clientLayer` re-mints its token. Defaults to one minute.",
+        description:
+          "How long before expiry `clientLayer` re-mints its token. Defaults to one minute; must stay under thirty minutes.",
       })
     ),
   }).pipe($I.annoteSchema("GitHubAppOptions", { description: "Transport settings for the app's own API calls." }))
@@ -1388,6 +1408,13 @@ const makeRotatingClient: {
     const closed = yield* Ref.make(false);
     const rotation = yield* Semaphore.make(1);
     const skew = options.refreshSkew ?? DEFAULT_SKEW;
+    // The options arrive encoded, so the schema's ceiling check is re-applied here.
+    if (!refreshSkewWithinCeiling(skew)) {
+      return yield* GitHubAppError.of(
+        "request",
+        `refreshSkew must be at least zero and under thirty minutes, got ${Duration.format(skew)}`
+      );
+    }
 
     const revokeHeld = Effect.flatMap(Ref.get(owned), (current) =>
       O.isSome(current) ? Effect.ignore(app.revoke(current.value)) : Effect.void

@@ -40,7 +40,9 @@
     "goals/turborepo-quality-cache-adoption/research/base-ref-feature-review.json",
     "goals/turborepo-quality-cache-adoption/research/refresh-current-population.py",
     "goals/turborepo-quality-cache-adoption/research/population-refresh-checkpoint-2026-11-02.json",
-    "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json"
+    "goals/turborepo-quality-cache-adoption/research/current-fresh-disposition-review-2026-11-02.json",
+    "goals/turborepo-quality-cache-adoption/research/native-setup-controls.py",
+    "goals/turborepo-quality-cache-adoption/research/native-signature-key-controls.py"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -95,7 +97,14 @@
     "research/population-preservation-controls-2026-11-02.json",
     "research/population-refresh-checkpoint-2026-11-02.json",
     "research/current-fresh-disposition-review-2026-11-02.json",
-    "research/population-before-refresh-2026-11-02.json"
+    "research/population-before-refresh-2026-11-02.json",
+    "research/native-setup-controls.json",
+    "research/setup-feature-review.json",
+    "research/population-before-source-refresh-2026-11-02.json",
+    "research/current-source-fresh-disposition-review-2026-11-02.json",
+    "research/population-current-source-checkpoint-2026-11-02.json",
+    "research/native-signature-key-controls.json",
+    "research/signature-key-feature-observation.json"
   ],
   "agentLaunchers": [
     {
@@ -157,5 +166,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The census at accepted source68834a997e contains 2,621 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The changed external advisory and 2,422 other current dispositions remain pending. Six of 35 feature decisions are accepted; 29 remain pending. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
+  "statusNote": "Active. The census at accepted source e274d3e619 contains 2,434 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The current source leaves 2,236 computation reviews pending. 7 of 35 feature decisions are accepted; 28 remain pending. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
 }

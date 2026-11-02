@@ -516,3 +516,71 @@ defect. Publish/prove the new source and answer the review before acceptance.
   and re-execute the corrected source rather than relabeling the old run.
 
 - 2026-11-02: The existing population refresh would replace199 reviewed dispositions with pending rows without retaining their evidence. Require an exclusive sibling archive, verify the bounded prior-history digest chain, and keep changed-source review separate from historical facts. Eleven isolated controls include the reproduced old replacement and altered-ancestor refusal. The actual199-row archive is byte-identical; the qualification ledger remains unchanged.
+
+
+### Native setup metadata and runtime front door, 2026-11-02
+
+The exact stable and current canary help/schema describe setup as parsing-only,
+but isolated invocations reach managed storage, lockfile and offline resolution
+checks; explicit schema-defined skip policies execute successfully. Do not mark
+the feature unavailable from descriptive text alone. The new setup control
+driver reuses the existing bounded capture and freezes actual native binaries.
+An initial disposable fixture accidentally mounted the Vite-plus front door,
+which tried to fetch CLI metadata and was denied by the empty network namespace.
+Use the already installed Bun runtime reported by `process.execPath`, check its
+version inside the sandbox, and retain the failed fixture receipt separately.
+No production setup flag, bootstrap owner or cache policy changed.
+
+The first portable replay stopped at its flag-refusal assertion: one multiline
+case assignment still targeted the old collector namespace, so it repeated
+fixture lock preparation instead of invoking Turbo setup. The intended negative
+control rejected that false success. Bind every invocation to the shared
+collector's command slot, commit the correction and replay the complete matrix;
+the failed attempt is not setup evidence.
+
+### Revalidate population source before batching semantic reviews, 2026-11-02
+
+The retained census still described 2,621 executable computations, while 231 of
+its 438 bound files had changed in the later phase-runner checkout, including
+189 manifests. Accepted PR2526 had removed 188 package audit wrappers and added
+one root check. A fresh census finds 2,434 executable computations. Preserve the
+reviewed snapshot byte-identically and verify its history before refreshing;
+do not relabel historical counts or reviews as current-source evidence.
+
+An initial private prioritization grouped `commandDigest` values as if they
+represented individual commands. Source inspection shows that digest covers the
+whole workspace script map. Correct the private analysis before using it: group
+by the actual task and resolved literal operation, then review source, env,
+outputs and profile per member. All 198 retained fresh-operation rows have new
+workspace-map digests after the audit-wrapper removal, but their exact literal
+operation and disabled-cache policy still match. The new review proves only that
+whole-task freshness; all pure counterparts and 2,236 other reviews remain open.
+
+
+### Keep summary views synchronized with refreshed evidence, 2026-11-02
+
+PR2572 refreshed the source census and report index but left the manifest status
+note and README on older counts. The review caught the stale summary. Derive the
+source revision, executable/review counts and accepted/pending feature totals
+from the current population and feature rows, and check both entry views before
+publication. Preserve versioned native evidence rather than calling an older
+shared pin observation current. No acceptance or qualification is inferred from
+this documentation repair.
+
+### Signature-key safeguard calibration, 2026-11-02
+
+The first synthetic native invocation combined mutually exclusive `--force`
+and `--cache` options and was refused before task execution. Preserve that
+receipt as an argument failure, not signature evidence. Use an empty cache per
+case instead. A local-only calibration then correctly performed no remote key
+validation; explicitly enable synthetic remote settings inside denied networking
+to exercise the native minimum. The full 168-case matrix confirms a supplied
+short key is rejected, but an absent key may execute and warn later. Retain the
+separate Beep role policy and actual transport/provenance proof requirements.
+
+The normal commit hook rejected a non-secret driver checksum because its
+filename was a JSON map property containing `signature-key`. Use the existing
+source-binding representation with named `path` and `sha256` fields rather than
+filenames as property names. Preserve the failed hook and original report,
+re-execute the same cases against the revised driver, and keep scanner rules
+unchanged. Checksums are provenance metadata, not credentials.

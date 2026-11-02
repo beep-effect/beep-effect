@@ -891,6 +891,26 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  it.effect("does not admit complete green shards with a missing or duplicate aggregate", () =>
+    Effect.gen(function* () {
+      const missing = windowRun({ id: 210 });
+      const duplicate = windowRun({ id: 220 });
+      const shards = (run: CiWorkflowWindowRun) =>
+        A.map(["Lint (lint-a)", "Lint (lint-b)"], (name, index) => job({ id: run.id + index, name, run_id: run.id }));
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+        windowRunJobs(missing, shards(missing)),
+        windowRunJobs(duplicate, [
+          ...shards(duplicate),
+          job({ id: 222, name: "Lint", run_id: duplicate.id }),
+          job({ id: 223, name: "Lint", run_id: duplicate.id }),
+        ]),
+      ]);
+
+      expect(laneStat(report, "Lint").n).toBe(0);
+      expect(attributionStat(report, "Lint").incompleteEffectiveSpans).toBe(2);
+    })
+  );
+
   it.effect("attributes a cancelled effective lane without admitting its span", () =>
     Effect.gen(function* () {
       const run = windowRun({ id: 160 });
@@ -1412,20 +1432,30 @@ describe("ci lane timing admission window", () => {
       `{"created_at":"${createdAt}","event":"pull_request","head_branch":"lane-${id}","head_sha":"sha-${id}","id":${id},"run_attempt":1,"run_started_at":"${createdAt}","updated_at":"${createdAt}"}`;
     const firstHalf = encodeURIComponent("2026-10-28T00:00:00.000Z..2026-10-31T12:00:00.000Z");
     const secondHalf = encodeURIComponent("2026-10-31T12:00:00.000Z..2026-11-04T00:00:00.000Z");
+    // First matching route wins; the capped full-span listing is the last workflow-runs route, so the
+    // half-span listings are matched before it.
+    const routes: ReadonlyArray<{ readonly matches: (endpoint: string) => boolean; readonly body: string }> = [
+      { matches: Str.includes("/history?"), body: historyJson },
+      { matches: Str.endsWith("/history/54940515"), body: snapshot15Json },
+      { matches: Str.includes("event=push"), body: '{"total_count":0,"workflow_runs":[]}' },
+      {
+        matches: Str.includes(`created=${firstHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes(`created=${secondHalf}`),
+        body: `{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`,
+      },
+      {
+        matches: Str.includes("/actions/workflows/"),
+        body: `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`,
+      },
+    ];
     const response = (endpoint: string) =>
-      Str.includes("/history?")(endpoint)
-        ? Effect.succeed(historyJson)
-        : Str.endsWith("/history/54940515")(endpoint)
-          ? Effect.succeed(snapshot15Json)
-          : Str.includes("event=push")(endpoint)
-            ? Effect.succeed('{"total_count":0,"workflow_runs":[]}')
-            : Str.includes(`created=${firstHalf}`)(endpoint)
-              ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`)
-              : Str.includes(`created=${secondHalf}`)(endpoint)
-                ? Effect.succeed(`{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`)
-                : Str.includes("/actions/workflows/")(endpoint)
-                  ? Effect.succeed(`{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`)
-                  : windowGithubResponse(endpoint);
+      O.match(
+        A.findFirst(routes, (route) => route.matches(endpoint)),
+        { onNone: () => windowGithubResponse(endpoint), onSome: (route) => Effect.succeed(route.body) }
+      );
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
         ".",
@@ -1450,6 +1480,23 @@ describe("ci lane timing admission window", () => {
         ]
       );
     }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands, response)));
+  });
+
+  it("uses the head SHA as one branch identity when branch names are missing or empty", () => {
+    const bounds = {
+      head_sha: "same-head",
+      run_started_at: O.some(DateTime.makeUnsafe("2026-10-28T10:00:00Z")),
+      updated_at: O.some(DateTime.makeUnsafe("2026-10-28T10:20:00Z")),
+    };
+    const peaks = ciLaneTimingDayPeaks([
+      windowRun({ ...bounds, id: 701, head_branch: O.none() }),
+      windowRun({ ...bounds, id: 702, head_branch: O.some("") }),
+    ]);
+
+    deepStrictEqual(
+      A.map(peaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
+      [["2026-10-28", 2, 1]]
+    );
   });
 
   it("sweeps per-day peak CI-active runs and branches, carrying load across midnight", () => {
@@ -2088,6 +2135,25 @@ describe("ci lane timing ruleset changes inside the window", () => {
       assertFalse(A.some(commands, Str.endsWith("/history/48600030")));
     }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands)));
   });
+
+  it.effect("renders an added context in the first known ruleset version without inventing a predecessor", () =>
+    Effect.gen(function* () {
+      const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
+      const change = CiRulesetPopulationChange.make({
+        addedContexts: ["Lint Policy"],
+        previousVersion: O.none(),
+        removedContexts: [],
+        version: historyVersion(49000001, "2026-09-09T00:00:00Z"),
+      });
+      const changed = { ...report, populationChanges: [change] };
+      const clause = "version 49000001 effective 2026-09-09T00:00:00.000Z (no earlier version) added Lint Policy";
+
+      expect(renderCiLaneTimingWindowMarkdown(changed)).toContain(clause);
+      expect(renderCiLaneTimingWindowSummary(changed)).toContain(clause);
+      expect(renderCiLaneTimingWindowTsv(changed)).toContain(clause);
+      deepStrictEqual(assessCiLaneTimingWindowPopulation(changed.populationChanges), ["population-change"]);
+    })
+  );
 
   it("judges only a version that added or removed a required context as a population change", () => {
     const edit = CiRulesetPopulationChange.make({

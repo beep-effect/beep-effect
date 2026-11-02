@@ -1101,6 +1101,241 @@ describe("Git", () => {
     );
   });
 
+  describe("dirty-axis options (G7)", () => {
+    const neverSpawn = (): ScriptResult => {
+      throw new Error("spawned — a dirty-axis option guard did not fire");
+    };
+    const withGit = <A, E>(invoke: (git: Git["Service"]) => Effect.Effect<A, E>) => Effect.flatMap(Git, invoke);
+
+    it.effect("changedFiles renders diffFilter, noRenames, twoDot and the pathspec, and still NUL-splits", () =>
+      Effect.gen(function* () {
+        const result = yield* run(
+          withGit((git) =>
+            git.changedFiles(cwd, {
+              base: "main",
+              head: "HEAD",
+              diffFilter: "ACMR",
+              noRenames: true,
+              twoDot: true,
+              pathspec: ["src", "docs/a b.md"],
+            })
+          ),
+          (args) => {
+            assert.deepStrictEqual(args, [
+              "diff",
+              "--name-only",
+              "-z",
+              "--no-relative",
+              "--no-renames",
+              "--diff-filter=ACMR",
+              "main",
+              "HEAD",
+              "--",
+              "src",
+              "docs/a b.md",
+            ]);
+            return { stdout: "src/a.ts\0docs/a b.md\0", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(result, ["src/a.ts", "docs/a b.md"]);
+      })
+    );
+
+    it.effect("changedFiles without the new options spawns the argv it always did", () =>
+      run(
+        withGit((git) => git.changedFiles(cwd, { base: "main", head: "HEAD" })),
+        (args) => {
+          assert.deepStrictEqual(args, ["diff", "--name-only", "-z", "--no-relative", "main...HEAD"]);
+          return { stdout: "", exit: 0 };
+        }
+      )
+    );
+
+    it.effect("changedFiles refuses a bad diffFilter and an option-like pathspec through the shared guards", () =>
+      Effect.gen(function* () {
+        const filter = yield* Effect.flip(
+          run(
+            withGit((git) => git.changedFiles(cwd, { base: "main", head: "HEAD", diffFilter: "Q" })),
+            neverSpawn
+          )
+        );
+        assert.strictEqual(S.is(GitCommandError)(filter) ? filter.kind : undefined, "refused");
+        assert.include(S.is(GitCommandError)(filter) ? filter.detail : "", "diff filter");
+        const pathspec = yield* Effect.flip(
+          run(
+            withGit((git) => git.changedFiles(cwd, { base: "main", head: "HEAD", pathspec: ["--output=/tmp/x"] })),
+            neverSpawn
+          )
+        );
+        assert.strictEqual(S.is(GitCommandError)(pathspec) ? pathspec.kind : undefined, "refused");
+        assert.deepStrictEqual(S.is(GitCommandError)(pathspec) ? pathspec.args : [], ["--output=/tmp/x"]);
+      })
+    );
+
+    it.effect("unstagedChanges and stagedChanges render head, the flags and the pathspec", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        yield* run(
+          Effect.gen(function* () {
+            const git = yield* Git;
+            yield* git.unstagedChanges(cwd, { head: "HEAD", diffFilter: "ACMR", pathspec: ["src"] });
+            yield* git.stagedChanges(cwd, { noRenames: true, diffFilter: "A", relative: true });
+            yield* git.untrackedFiles(cwd, { pathspec: ["pkg"] });
+          }),
+          (args) => {
+            seen.push(args);
+            return { stdout: "", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(seen, [
+          ["diff", "--name-only", "-z", "--no-relative", "--diff-filter=ACMR", "HEAD", "--", "src"],
+          ["diff", "--name-only", "-z", "--relative", "--cached", "--no-renames", "--diff-filter=A"],
+          ["ls-files", "--others", "--exclude-standard", "-z", "--full-name", "--", "pkg"],
+        ]);
+      })
+    );
+
+    it.effect("the working-tree trio refuses an option-like head or pathspec entry before spawning", () =>
+      Effect.gen(function* () {
+        for (const program of [
+          withGit((git) => git.unstagedChanges(cwd, { head: "--output=/tmp/x" })),
+          withGit((git) => git.stagedChanges(cwd, { pathspec: ["-z"] })),
+          withGit((git) => git.untrackedFiles(cwd, { pathspec: ["--", "-x"] })),
+          withGit((git) => git.stagedChanges(cwd, { diffFilter: "A-M" })),
+        ]) {
+          const failure = yield* Effect.flip(run(program, neverSpawn));
+          assert.strictEqual(S.is(GitCommandError)(failure) ? failure.kind : undefined, "refused");
+        }
+      })
+    );
+
+    it.effect("workingChanges still unions the three primitives with no extra flags", () =>
+      Effect.gen(function* () {
+        const seen: Array<ReadonlyArray<string>> = [];
+        yield* run(
+          withGit((git) => git.workingChanges(cwd)),
+          (args) => {
+            seen.push(args);
+            return { stdout: "", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(seen, [
+          ["diff", "--name-only", "-z", "--no-relative"],
+          ["diff", "--name-only", "-z", "--no-relative", "--cached"],
+          ["ls-files", "--others", "--exclude-standard", "-z", "--full-name"],
+        ]);
+      })
+    );
+
+    it.effect("status renders the global --no-optional-locks first and every status flag after -z", () =>
+      Effect.gen(function* () {
+        const result = yield* run(
+          withGit((git) =>
+            git.status(cwd, {
+              noOptionalLocks: true,
+              untrackedFiles: "all",
+              ignoreSubmodules: "none",
+              noRenames: true,
+              pathspec: ["packages"],
+            })
+          ),
+          (args) => {
+            assert.deepStrictEqual(args, [
+              "--no-optional-locks",
+              "status",
+              "--porcelain",
+              "-z",
+              "--untracked-files=all",
+              "--ignore-submodules=none",
+              "--no-renames",
+              "--",
+              "packages",
+            ]);
+            // --no-renames: a staged rename arrives as D + A, two ordinary records.
+            return { stdout: "D  packages/old.ts\0A  packages/new.ts\0?? packages/loose/inner.txt\0", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(result, [
+          StatusEntry.make({ x: "D", y: " ", path: "packages/old.ts" }),
+          StatusEntry.make({ x: "A", y: " ", path: "packages/new.ts" }),
+          StatusEntry.make({ x: "?", y: "?", path: "packages/loose/inner.txt" }),
+        ]);
+      })
+    );
+
+    it.effect("status answers the data-last form and refuses an option-like pathspec entry", () =>
+      Effect.gen(function* () {
+        const result = yield* run(
+          Effect.flatMap(Git, (git) => git.status({ untrackedFiles: "no" })(cwd)),
+          (args) => {
+            assert.deepStrictEqual(args, ["status", "--porcelain", "-z", "--untracked-files=no"]);
+            return { stdout: "", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(result, []);
+        const failure = yield* Effect.flip(
+          run(
+            withGit((git) => git.status(cwd, { pathspec: ["-x"] })),
+            neverSpawn
+          )
+        );
+        assert.strictEqual(S.is(GitCommandError)(failure) ? failure.kind : undefined, "refused");
+      })
+    );
+
+    it.effect("nameStatus twoDot emits the plain pair, and names it in the unknown-ref error", () =>
+      Effect.gen(function* () {
+        yield* run(
+          withGit((git) => git.nameStatus(cwd, { base: "main", head: "HEAD", twoDot: true })),
+          (args) => {
+            assert.deepStrictEqual(args, ["diff", "--name-status", "-z", "--no-relative", "main", "HEAD"]);
+            return { stdout: "", exit: 0 };
+          }
+        );
+        const failure = yield* Effect.flip(
+          run(
+            withGit((git) => git.nameStatus(cwd, { base: "main", head: "nope", twoDot: true })),
+            () => ({ stderr: "fatal: bad revision 'nope'\n", exit: 128 })
+          )
+        );
+        assert.isTrue(S.is(UnknownRefError)(failure));
+        assert.strictEqual(S.is(UnknownRefError)(failure) ? failure.ref : "", "main..nope");
+      })
+    );
+
+    it.effect("lsTree fullTree places --full-tree before the ref", () =>
+      Effect.gen(function* () {
+        const entry = "100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\tpackages/a.md";
+        const result = yield* run(
+          withGit((git) => git.lsTree(cwd, "HEAD", { fullTree: true, pathspec: ["packages"] })),
+          (args) => {
+            assert.deepStrictEqual(args, ["ls-tree", "-r", "-z", "--full-tree", "HEAD", "--", "packages"]);
+            return { stdout: `${entry}\0`, exit: 0 };
+          }
+        );
+        assert.strictEqual(result[0]?.path, "packages/a.md");
+      })
+    );
+
+    it.effect("currentBranch show-current runs branch --show-current and reads an empty line as none", () =>
+      Effect.gen(function* () {
+        const detached = yield* run(
+          withGit((git) => git.currentBranch(cwd, { mode: "show-current" })),
+          (args) => {
+            assert.deepStrictEqual(args, ["branch", "--show-current"]);
+            return { stdout: "\n", exit: 0 };
+          }
+        );
+        assert.deepStrictEqual(detached, O.none());
+        const attached = yield* run(
+          Effect.flatMap(Git, (git) => git.currentBranch({ mode: "show-current" })(cwd)),
+          () => ({ stdout: "main\n", exit: 0 })
+        );
+        assert.deepStrictEqual(attached, O.some("main"));
+      })
+    );
+  });
+
   describe("revParse options (G10)", () => {
     it.effect("without options the argv is the unchanged two-flag form", () =>
       Effect.gen(function* () {

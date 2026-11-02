@@ -44,6 +44,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#knowledge:semantic-delta",
   "//#knowledge:refs-check",
   "//#lint:schema-first",
+  "//#lint:schema-catalog",
   "//#lint:identity-registry",
   "//#lint:effect-imports",
   "//#lint:tsgo-rules",

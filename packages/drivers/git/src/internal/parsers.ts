@@ -8,7 +8,7 @@
  * NUL. These parsers intentionally retain separate wire-format contracts.
  *
  * The entry parsers (`parseNameStatus`, `parseStatus`, `parseWorktreeList`,
- * `parseLsTree`, `parseLsFiles`, `parseLog`) FAIL CLOSED: they answer a
+ * `parseLsTree`, `parseLsFiles`, `parseLog`, `parseLogNameStatus`) FAIL CLOSED: they answer a
  * `Result` whose failure names the offending record, and the service maps
  * that to a `GitCommandError` instead of inventing a plausible-looking entry.
  * The plain path-list parsers (`parseNulSeparated`, `parseConfigGetAll`) have
@@ -88,11 +88,12 @@ const QUOTED_RECORD_LIMIT = 80;
 /**
  * Quotes a record for a failure message: JSON-escaped (so NUL, tab and
  * newline bytes stay visible) and truncated so one huge token cannot bloat
- * an error. Encoding a string as JSON cannot fail; the fallback is unreachable.
+ * an error. Encoding a string as JSON cannot fail; the plain-quoted fallback
+ * is unreachable, so it is a `constant` rather than a closure of its own.
  */
 const quoteRecord = (record: string): string => {
   const shown = record.length > QUOTED_RECORD_LIMIT ? `${Str.slice(0, QUOTED_RECORD_LIMIT)(record)}…` : record;
-  return O.getOrElse(encodeJsonString(shown), () => `"${shown}"`);
+  return O.getOrElse(encodeJsonString(shown), constant(`"${shown}"`));
 };
 
 /**
@@ -241,6 +242,21 @@ const parseNameStatusEntryAt = (
   return Result.succeed({ entry, next: index + 1 + pathTokens });
 };
 
+/** Parses a whole token list as consecutive name-status entries — the body of a `-z` listing, already split. */
+const parseNameStatusTokens = (
+  tokens: ReadonlyArray<string>
+): Result.Result<ReadonlyArray<NameStatusEntry>, string> => {
+  const entries: Array<NameStatusEntry> = [];
+  let index = 0;
+  while (index < tokens.length) {
+    const record = parseNameStatusEntryAt(tokens, index);
+    if (Result.isFailure(record)) return Result.fail(record.failure);
+    entries.push(record.success.entry);
+    index = record.success.next;
+  }
+  return Result.succeed(entries);
+};
+
 /**
  * Parses `git diff --name-status -z` output. A plain entry is two NUL tokens
  * (`<code>`, `<path>`); a rename/copy entry is three (`<R|C><score>`,
@@ -271,56 +287,65 @@ const parseNameStatusEntryAt = (
  * @since 0.0.0
  */
 export const parseNameStatus = (output: string): Result.Result<ReadonlyArray<NameStatusEntry>, string> =>
-  Result.flatMap(nulRecords(output, "name-status"), (tokens) => {
-    const entries: Array<NameStatusEntry> = [];
-    let index = 0;
-    while (index < tokens.length) {
-      const record = parseNameStatusEntryAt(tokens, index);
-      if (Result.isFailure(record)) return Result.fail(record.failure);
-      entries.push(record.success.entry);
-      index = record.success.next;
-    }
-    return Result.succeed(entries);
-  });
+  Result.flatMap(nulRecords(output, "name-status"), parseNameStatusTokens);
 
 /** A record opens with an empty NUL token, which cannot be a pathname. */
 const LOG_RECORD_SEPARATOR = "\0";
 
+/** The number of NUL-terminated header fields `GitCommand.log`'s format emits after the record opener. */
+const LOG_HEADER_FIELDS = 6;
+
 /**
- * Reads a log record's NUL-terminated paths starting at `from`. Only the first
- * path loses git's one separator newline. `next` also consumes the next
- * record's opener or the final terminator token.
+ * Reads a log record's NUL-terminated body tokens starting at `from`. Only
+ * the first token loses git's one separator newline. `next` also consumes the
+ * next record's opener or the final terminator token.
  */
-const readLogPaths = (
+const readLogBody = (
   tokens: ReadonlyArray<string>,
   from: number
-): { readonly next: number; readonly paths: Array<string> } => {
-  const paths: Array<string> = [];
+): { readonly next: number; readonly body: Array<string> } => {
+  const body: Array<string> = [];
   let index = from;
   while (index < tokens.length) {
-    const path = A.getUnsafe(tokens, index);
-    if (path === "") break;
-    paths.push(paths.length === 0 && Str.startsWith("\n")(path) ? Str.slice(1)(path) : path);
+    const token = A.getUnsafe(tokens, index);
+    if (token === "") break;
+    body.push(body.length === 0 && Str.startsWith("\n")(token) ? Str.slice(1)(token) : token);
     index += 1;
   }
-  return { paths, next: index + 1 };
+  return { body, next: index + 1 };
 };
+
+/** The `paths` and, when the body carried status codes, `changes` of one commit. */
+type LogBody = Pick<CommitLogEntry, "paths" | "changes">;
+
+/** Reads a `--name-only` body: every token is a path. */
+const nameOnlyBody = (body: ReadonlyArray<string>): Result.Result<LogBody, string> => Result.succeed({ paths: body });
+
+/** Reads a `--name-status` body through the diff parser; `paths` is each entry's NEW path. */
+const nameStatusBody = (body: ReadonlyArray<string>): Result.Result<LogBody, string> =>
+  Result.map(parseNameStatusTokens(body), (changes) => ({
+    paths: A.map(changes, (change) => change.path),
+    changes,
+  }));
 
 /** Parses the log record whose sha token sits at `index`, plus the index of the record after it. */
 const parseLogRecord = (
   tokens: ReadonlyArray<string>,
-  index: number
+  index: number,
+  readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>
 ): Result.Result<{ readonly entry: CommitLogEntry; readonly next: number }, string> => {
   const sha = A.getUnsafe(tokens, index);
   const authoredAtIso = tokens[index + 1];
   const committedAtIso = tokens[index + 2];
   const authorName = tokens[index + 3];
   const authorEmail = tokens[index + 4];
+  const subject = tokens[index + 5];
   if (
     authoredAtIso === undefined ||
     committedAtIso === undefined ||
     authorName === undefined ||
-    authorEmail === undefined
+    authorEmail === undefined ||
+    subject === undefined
   ) {
     return Result.fail("a log record carried fewer fields than the format declares");
   }
@@ -329,32 +354,55 @@ const parseLogRecord = (
   if (O.isNone(authoredAt) || O.isNone(committedAt)) {
     return Result.fail(`a log record carried an undecodable date ("${authoredAtIso}", "${committedAtIso}")`);
   }
-  const { next, paths } = readLogPaths(tokens, index + 5);
-  return Result.succeed({
+  const { next, body } = readLogBody(tokens, index + LOG_HEADER_FIELDS);
+  return Result.map(readBody(body), (read) => ({
     entry: CommitLogEntry.make({
       sha,
       authoredAt: authoredAt.value,
       committedAt: committedAt.value,
       authorName,
       authorEmail,
-      paths,
+      subject,
+      ...read,
     }),
     next,
-  });
+  }));
 };
 
+/** The record walk both log modes share; `readBody` decodes each record's body tokens. */
+const parseLogWith =
+  (readBody: (body: ReadonlyArray<string>) => Result.Result<LogBody, string>) =>
+  (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, string> => {
+    if (output === "") return Result.succeed([]);
+    if (!Str.startsWith(LOG_RECORD_SEPARATOR)(output)) {
+      return Result.fail("log output did not open with a record separator");
+    }
+    const tokens = Str.split(output, "\0");
+    const entries: Array<CommitLogEntry> = [];
+    let index = 1;
+    while (index < tokens.length) {
+      const record = parseLogRecord(tokens, index, readBody);
+      if (Result.isFailure(record)) return Result.fail(record.failure);
+      entries.push(record.success.entry);
+      index = record.success.next;
+    }
+    return Result.succeed(entries);
+  };
+
 /**
- * Parses `GitCommand.log`'s output. Like the other entry parsers this one
- * FAILS CLOSED: the two dates have to decode, and a header that does not
- * carry its five fields cannot be answered with a plausible-looking entry.
+ * Parses `GitCommand.log`'s `--name-only` output. Like the other entry
+ * parsers this one FAILS CLOSED: the two dates have to decode, and a header
+ * that does not carry its six fields cannot be answered with a
+ * plausible-looking entry.
  *
  * **Details**
  *
- * Each record opens with NUL, followed by five NUL-terminated header fields.
- * Only when the commit touched something, git adds `\n` and one
- * NUL-terminated path each. The next empty token opens the next record;
- * pathnames cannot be empty or contain NUL. Header fields are read by position
- * so empty author fields are preserved. Only the first path loses git's one
+ * Each record opens with NUL, followed by six NUL-terminated header fields
+ * (sha, both dates, author name and email, subject). Only when the commit
+ * touched something, git adds `\n` and one NUL-terminated path each. The
+ * next empty token opens the next record; pathnames cannot be empty or
+ * contain NUL. Header fields are read by position so empty author fields and
+ * an empty subject are preserved. Only the first path loses git's one
  * separator newline; every other pathname byte, including `\x1e`, survives.
  * Empty stdout is an empty log, as for a pathspec no commit touched.
  *
@@ -370,22 +418,35 @@ const parseLogRecord = (
  * @category parsing
  * @since 0.0.0
  */
-export const parseLog = (output: string): Result.Result<ReadonlyArray<CommitLogEntry>, string> => {
-  if (output === "") return Result.succeed([]);
-  if (!Str.startsWith(LOG_RECORD_SEPARATOR)(output)) {
-    return Result.fail("log output did not open with a record separator");
-  }
-  const tokens = Str.split(output, "\0");
-  const entries: Array<CommitLogEntry> = [];
-  let index = 1;
-  while (index < tokens.length) {
-    const record = parseLogRecord(tokens, index);
-    if (Result.isFailure(record)) return Result.fail(record.failure);
-    entries.push(record.success.entry);
-    index = record.success.next;
-  }
-  return Result.succeed(entries);
-};
+export const parseLog: (output: string) => Result.Result<ReadonlyArray<CommitLogEntry>, string> =
+  parseLogWith(nameOnlyBody);
+
+/**
+ * Parses `GitCommand.log`'s `--name-status` output: the same six-field
+ * header walk as {@link parseLog}, with each record's body read as the
+ * `<code>\0<path>\0` / `R<score>\0<old>\0<new>\0` tokens
+ * {@link parseNameStatus} decodes. Every entry carries `changes`, and its
+ * `paths` is the NEW path of each change. A code git does not emit or a
+ * record short of its path tokens fails the whole parse.
+ *
+ * **Example** (Read a commit that renamed a file)
+ *
+ * ```ts import.meta.vitest name="Read a commit that renamed a file"
+ * import { parseLogNameStatus } from "@beep/git/internal/parsers";
+ * import * as Result from "effect/Result";
+ *
+ * // `\u0000` rather than `\0`: a NUL escape followed by a digit would read as an octal escape.
+ * const header = "\u0000abc\u00002026-01-01T00:00:00Z\u00002026-01-01T00:00:00Z\u0000Ada\u0000ada@example.com\u0000move\u0000";
+ * const output = `${header}\nR100\u0000old.ts\u0000new.ts\u0000`;
+ * const entry = Result.getOrThrow(parseLogNameStatus(output))[0];
+ * [entry?.subject, entry?.paths, entry?.changes?.[0]?.oldPath] // => ["move", ["new.ts"], "old.ts"]
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseLogNameStatus: (output: string) => Result.Result<ReadonlyArray<CommitLogEntry>, string> =
+  parseLogWith(nameStatusBody);
 
 const commitInfoInput = S.Struct(CommitInfo.fields);
 

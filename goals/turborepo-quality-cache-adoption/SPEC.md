@@ -529,3 +529,33 @@ this documentation join deploys nothing and satisfies no whole-goal criterion.
   target, source, lockfile, vendored ABI patch, C/sidecar and external inputs.
   Reverse this decision by returning its matrix row to pending and removing the
   report links together. Runtime settings and qualification state are unchanged.
+
+
+### Retain current setup ownership, 2026-11-02
+
+Keep `experimentalSetup` and the root `setup` policy absent. Exact stable and
+current-canary controls show real native skip-policy behavior despite stale
+parsing-only help/schema text. Managed setup still requires its lock/resolution
+prerequisites; it is not classified as unimplemented. The current cloud, CI and
+worktree preparation owners already provide the named consumers, and no measured
+quality critical-path benefit justifies another toolchain/lock owner. Reopen for
+a concrete owner-proposed consumer, evidence of benefit, compatible frozen
+profiles and rollback. This no-change feature decision removes no eligible task
+obligation and grants no task qualification or production rollout.
+
+### Refresh after accepted audit-script removal, 2026-11-02
+
+Accepted main PR2526 removed the 188 per-package audit wrappers and added the
+root deprecated-import check. The retained census is historical: 231 of its
+438 source bindings differ from the later phase-runner source. Use the canonical
+census and preservation recipe against a separate fixed accepted-main checkout;
+do not alter the source of a running qualification experiment.
+
+Archive the entire reviewed population byte-identically before replacement and
+verify its bounded history chain. Re-establish whole-task freshness only where
+the literal fixer wrapper and source-writing implementation, or persistent
+service command and declaration, remain unchanged and caching is disabled.
+The census command digest binds the complete workspace script map; it does not
+prove command equivalence. Keep pure counterparts and all other computations
+pending. Returning to the retained population is the data-only reversal; preserve
+the newer evidence and change no runtime cache policy or qualification record.

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-11-02T09:54:23.463014+00:00",
+  "kind": "Explicit-pin API/refusal guard applicability bridge",
+  "reviewHead": "94ccf096a0c5a75af1302141d81d1ab4e2a845a4",
+  "helperMethodBodiesAstIdentical": ["__init__", "verify", "configure", "plan"],
+  "verifierRemainingTryBodyAndCleanupAstIdentical": true,
+  "successfulArgumentForwarding": "Both recorded stages used the same explicit nonempty pair. The new missing-both guard is false for those invocations; direct kwargs supply exactly the previous dictionary values.",
+  "sourceSets": {
+    "preparation": {
+      "inputCount": 84,
+      "identicalInputCount": 84,
+      "changedProofGuardInputs": {}
+    },
+    "disposable": {
+      "inputCount": 90,
+      "identicalInputCount": 88,
+      "changedProofGuardInputs": {
+        "goals/agent-observability-foundation/ops/verify-observation-deployment.py": {
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "currentSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        "goals/agent-observability-foundation/ops/declared_canary_support.py": {
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "currentSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        }
+      },
+      "recordedSuccessfulPathSuppliedBothNonemptyPins": true
+    },
+    "live": {
+      "inputCount": 89,
+      "identicalInputCount": 87,
+      "changedProofGuardInputs": {
+        "goals/agent-observability-foundation/ops/verify-observation-deployment.py": {
+          "executedSha256": "162c54e11d9b5c01041559c9262d787ab8edd4d9d779e2ffb178b47c1d20ec19",
+          "currentSha256": "dbba5256eef94dcb90e7fd52a5bd076b30fdb0c71332a8aeb25f8b971fac9b8c"
+        },
+        "goals/agent-observability-foundation/ops/declared_canary_support.py": {
+          "executedSha256": "e57b2a75307e02c9ac3110e7af09edae8f1882e76fd4a526bacc4de9b39b3036",
+          "currentSha256": "fb81d90bf370b7c89daec86a83fd0772bb40e56da32bc00cfd3bcb5581513ece"
+        }
+      },
+      "recordedSuccessfulPathSuppliedBothNonemptyPins": true
+    }
+  },
+  "focusedTests": {
+    "unittestMethodsPassed": 6,
+    "pinRefusalControlsPassed": 22,
+    "positiveRetainedRootAccepted": true,
+    "backendRequests": 0,
+    "unitLogSha256": "466b356e5af093285f133fc5efa2b03480822a32c7e20b46e1211c1fb2c5f073",
+    "controlsOriginalSha256": "8d85875d00a7b7e45c1f42e1b04675c665cfcd7fbcae11dc44f8555f10b2698c"
+  },
+  "originalStageEvidencePreserved": true,
+  "newCanaryExecution": false,
+  "independentReview": "Named Astra seat independently accepted the complete AST delta, actual explicit pins in retained plans, unchanged successful verification/deployment/cleanup paths, exact84 preparation inputs,88/90 and87/89 stage comparisons, package245+4 script-only bridge, and six/22 recorded controls. No new backend execution or all-current-helper-hash claim.",
+  "limits": "Only the valid explicit-pin path is carried forward. Historical execution hashes remain original; changed helper inputs are not byte-identical or fresh stage executions. No complete transitive dependency closure, hosted readiness or completion claim.",
+  "comparisonSourceParent": "cf5aab330fcbae6acb3081dbb6390a74b840bf06",
+  "comparisonScope": "Comparison parent identifies helper bytes before this fix, not a new execution attribution. Original stage receipts and source hashes retain their recorded executions.",
+  "privateOriginalSha256": "80d0cae5b038588af38598888373a9d385704a50dd32e3a38e2dad027a51b831"
+}

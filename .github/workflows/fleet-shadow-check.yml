@@ -23,6 +23,19 @@ on:
         required: false
         type: string
         default: ""
+      replay_stop_signal:
+        description: How Probe N ends the original listener. INT releases the session the way an orderly exit does; KILL leaves it held, as a root attacker can, and retries the same-host replay every 30 s until the registration is gone
+        required: false
+        type: choice
+        options:
+          - INT
+          - KILL
+        default: INT
+      replay_hold_minutes:
+        description: KILL mode only. Once a replay is accepted, keep that session open this many minutes (0 to 15) with Runner.Worker removed, and record whether GitHub offers it any job
+        required: false
+        type: string
+        default: "0"
 
 permissions: {}
 
@@ -644,8 +657,11 @@ jobs:
 
       # Probe N (runner-trust-boundary P8, exception E1). It takes the attacker
       # position of a sudo-capable job: read the one-use JIT configuration,
-      # disarm the poweroff shim, stop the listener gracefully so its session
-      # is released, then replay the configuration on this host. The value
+      # disarm the poweroff shim, stop the listener, then replay the
+      # configuration on this host. replay_stop_signal=INT (default) stops it
+      # the orderly way, releasing the session; KILL kills it without release,
+      # as a root attacker can, and retries the replay every 30 s until the
+      # registration is deleted or a replay is accepted. The value
       # never reaches the job log: the same-host verdict and the configuration
       # wrapped to the operator's one-time RSA key go only to the EC2 serial
       # console, which `goals/runner-trust-boundary/ops/post-release-replay.sh`
@@ -657,10 +673,22 @@ jobs:
         shell: bash
         env:
           REPLAY_RECIPIENT_KEY: ${{ inputs.replay_recipient_key }}
+          REPLAY_STOP_SIGNAL: ${{ inputs.replay_stop_signal }}
+          REPLAY_HOLD_MINUTES: ${{ inputs.replay_hold_minutes }}
         run: |
           set -euo pipefail
           probe_dir=/run/rtb-replay
           sudo install -d -o root -g root -m 0700 "${probe_dir}"
+          case "${REPLAY_STOP_SIGNAL:-INT}" in
+            INT | KILL) printf '%s\n' "${REPLAY_STOP_SIGNAL:-INT}" | sudo tee "${probe_dir}/stop-signal" > /dev/null ;;
+            *) echo "Probe N: replay_stop_signal must be INT or KILL"; exit 1 ;;
+          esac
+          # Base 10 explicitly: bash reads 08 and 09 as invalid octal.
+          if [[ ! "${REPLAY_HOLD_MINUTES:-0}" =~ ^[0-9]{1,2}$ ]] || (( 10#${REPLAY_HOLD_MINUTES:-0} > 15 )); then
+            echo "Probe N: replay_hold_minutes must be 0 to 15"
+            exit 1
+          fi
+          printf '%s\n' "$(( 10#${REPLAY_HOLD_MINUTES:-0} * 60 ))" | sudo tee "${probe_dir}/hold-seconds" > /dev/null
           if [[ -z "${REPLAY_RECIPIENT_KEY}" ]]; then
             echo "Probe N: replay_recipient_key is required"
             exit 1
@@ -724,68 +752,132 @@ jobs:
             note "could not shadow the self-poweroff helper"; con "VERDICT same-host inconclusive (poweroff not disarmed)"; exit 1
           fi
 
-          # Release the session the way an orderly listener exit does.
-          kill -INT "${listener}" 2>/dev/null || true
-          stop_mode=SIGINT
-          for _ in $(seq 1 60); do
-            pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null || break
-            sleep 1
-          done
-          if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
-            pkill -TERM -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGTERM; sleep 15
-          fi
-          if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
-            pkill -KILL -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGKILL; sleep 2
+          stop_signal="$(cat "${dir}/stop-signal" 2>/dev/null || echo INT)"
+          if [[ "${stop_signal}" == KILL ]]; then
+            # A root attacker's stop: no session release, VM kept alive.
+            pkill -KILL -x 'Runner.Listener|Runner.Worker' || true
+            stop_mode=SIGKILL
+            sleep 2
+          else
+            # Release the session the way an orderly listener exit does.
+            kill -INT "${listener}" 2>/dev/null || true
+            stop_mode=SIGINT
+            for _ in $(seq 1 60); do
+              pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null || break
+              sleep 1
+            done
+            if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
+              pkill -TERM -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGTERM; sleep 15
+            fi
+            if pgrep -x 'Runner.Listener|Runner.Worker' > /dev/null; then
+              pkill -KILL -x 'Runner.Listener|Runner.Worker' || true; stop_mode=SIGKILL-fallback; sleep 2
+            fi
           fi
           note "original listener ended (${stop_mode})"
           con "LISTENER-ENDED $(date -u +%FT%TZ) ${stop_mode}"
-          sleep 45
 
           mkdir -p "${scratch}"
           cp -a /opt/actions-runner/bin "${scratch}/bin"
           cp -a /opt/actions-runner/externals "${scratch}/externals"
           (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 "${scratch}/bin/Runner.Listener" --help > /dev/null 2>&1 || true)
-          (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 exec timeout 120 "${scratch}/bin/Runner.Listener" run \
-            --jitconfig "${jit}" > "${dir}/listener.log" 2>&1) &
-          replay=$!
-          note "same-host replay started"
-          verdict=""
-          for _ in $(seq 1 125); do
-            if grep -Eq 'Listening for Jobs' "${dir}/listener.log"; then
-              pkill -KILL -f "${scratch}/bin/Runner" || true
-              verdict="accepted"; break
-            fi
-            line="$(grep -Em1 \
-              -e 'A session for this runner already exists' \
-              -e 'Failed to create (a )?session' \
-              -e 'already (been )?(registered|used|configured|exists)' \
-              -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
-              -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
-              -e 'registration (has been )?deleted|deleted from the server' \
-              -e '\bUnauthorized\b|\bForbidden\b' \
-              -e '[Rr]unner (was )?not found' \
-              -e '(access|permission) denied' \
-              "${dir}/listener.log" | tr -d '\r' || true)"
-            if [[ -n "${line}" ]]; then
-              pkill -KILL -f "${scratch}/bin/Runner" || true
-              line="${line//${jit}/[redacted]}"
-              line="$(printf '%s' "${line}" | sed -E 's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-200)"
-              if [[ "${line}" == *'A session for this runner already exists'* ]]; then
-                verdict="session-held (${line})"
-              else
-                verdict="rejected (${line})"
+
+          # One replay attempt; sets verdict. Acceptance is only the line the
+          # runner prints after the server grants a session.
+          # Hold an accepted session open with no worker binary, so a job
+          # GitHub offers it is recorded by name and can never execute.
+          hold_session() {
+            local replay="$1" hold="$2" t=0 job last
+            con "HOLD-START $(date -u +%FT%TZ) up to ${hold}s with Runner.Worker removed"
+            hold_end="hold elapsed with no job offered"
+            while (( t < hold )); do
+              if grep -q 'Running job: ' "${dir}/listener.log"; then
+                pkill -KILL -f "${scratch}/bin/Runner" || true
+                job="$(grep -m1 'Running job: ' "${dir}/listener.log" | tr -d '\r' | sed -E 's/^.*Running job: //' | tr -cd 'A-Za-z0-9 ._()/:-' | cut -c1-120)"
+                hold_end="job offered (${job})"
+                break
               fi
-              break
+              if ! kill -0 "${replay}" 2>/dev/null; then
+                last="$(grep -v '^[[:space:]]*$' "${dir}/listener.log" | tail -1 | tr -d '\r' | cut -c1-160)"
+                last="${last//${jit}/[redacted]}"
+                hold_end="listener exited (${last})"
+                break
+              fi
+              sleep 1
+              t=$(( t + 1 ))
+            done
+            con "HOLD-END $(date -u +%FT%TZ) ${hold_end}"
+          }
+
+          replay_once() {
+            local budget="$1" hold="${2:-0}" replay line first
+            rm -f -- "${scratch}/.runner" "${scratch}/.credentials" "${scratch}/.credentials_rsaparams"
+            : > "${dir}/listener.log"
+            (cd "${scratch}" && RUNNER_ALLOW_RUNASROOT=1 exec timeout "$(( budget + hold ))" "${scratch}/bin/Runner.Listener" run \
+              --jitconfig "${jit}" > "${dir}/listener.log" 2>&1) &
+            replay=$!
+            verdict=""
+            for _ in $(seq 1 $(( budget + 5 ))); do
+              if grep -Eq 'Listening for Jobs' "${dir}/listener.log"; then
+                (( hold > 0 )) && hold_session "${replay}" "${hold}"
+                pkill -KILL -f "${scratch}/bin/Runner" || true
+                verdict="accepted"; break
+              fi
+              line="$(grep -Em1 \
+                -e 'A session for this runner already exists' \
+                -e 'Failed to create (a )?session' \
+                -e 'already (been )?(registered|used|configured|exists)' \
+                -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
+                -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
+                -e 'registration (has been )?deleted|deleted from the server' \
+                -e '\bUnauthorized\b|\bForbidden\b' \
+                -e '[Rr]unner (was )?not found' \
+                -e '(access|permission) denied' \
+                "${dir}/listener.log" | tr -d '\r' || true)"
+              if [[ -n "${line}" ]]; then
+                pkill -KILL -f "${scratch}/bin/Runner" || true
+                line="${line//${jit}/[redacted]}"
+                line="$(printf '%s' "${line}" | sed -E 's/--jitconfig[ =]+[A-Za-z0-9+\/_=-]+/--jitconfig [redacted]/g' | cut -c1-200)"
+                if [[ "${line}" == *'A session for this runner already exists'* ]]; then
+                  verdict="session-held (${line})"
+                else
+                  verdict="rejected (${line})"
+                fi
+                break
+              fi
+              kill -0 "${replay}" 2>/dev/null || break
+              sleep 1
+            done
+            pkill -KILL -f "${scratch}/bin/Runner" || true
+            wait "${replay}" 2>/dev/null || true
+            if [[ -z "${verdict}" ]]; then
+              first="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${dir}/listener.log" | cut -c1-200)"
+              first="${first//${jit}/[redacted]}"
+              verdict="inconclusive (${first:-no listener output})"
             fi
-            kill -0 "${replay}" 2>/dev/null || break
-            sleep 1
-          done
-          pkill -KILL -f "${scratch}/bin/Runner" || true
-          wait "${replay}" 2>/dev/null || true
-          if [[ -z "${verdict}" ]]; then
-            first="$(sed -n '/[^[:space:]]/{s/\r$//;p;q;}' "${dir}/listener.log" | cut -c1-200)"
-            first="${first//${jit}/[redacted]}"
-            verdict="inconclusive (${first:-no listener output})"
+          }
+
+          if [[ "${stop_mode}" == SIGKILL ]]; then
+            # Walk the window between the dead listener and the deletion of its
+            # registration (the job's timeout or GitHub's lost-runner sweep).
+            hold_seconds="$(cat "${dir}/hold-seconds" 2>/dev/null || echo 0)"
+            if (( hold_seconds > 0 )); then
+              rm -f -- "${scratch}/bin/Runner.Worker"
+              note "Runner.Worker removed from the replay copy; accepted sessions are held ${hold_seconds}s"
+            fi
+            attempts=0
+            while (( attempts < 28 )); do
+              attempts=$(( attempts + 1 ))
+              replay_once 45 "${hold_seconds}"
+              con "ATTEMPT ${attempts} $(date -u +%FT%TZ) ${verdict}"
+              case "${verdict}" in
+                accepted | rejected*) break ;;
+              esac
+              sleep 30
+            done
+          else
+            sleep 45
+            note "same-host replay started"
+            replay_once 120
           fi
           con "VERDICT same-host ${verdict}"
           RTB_PROBE

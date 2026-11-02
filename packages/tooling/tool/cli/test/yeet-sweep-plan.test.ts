@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   buildSweepPlan,
@@ -590,8 +591,13 @@ const removeTempDirectory = Effect.fn("removeTempDirectory")((root: string) =>
   FileSystem.FileSystem.use((fs) => fs.remove(root, { recursive: true }))
 );
 
+// `Git` rides over the scripted spawner: the sweep's is-ancestor probe and the tmpfs worktree
+// removals run through the kit, whose argv the stubs above answer (W1b).
 const sweepTestLayer = (stubs: ReadonlyArray<readonly [string, CommandStub]>) =>
-  Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs));
+  Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(BunCrypto.layer, MemoryFileSystem.layer, NodePath.layer, stubSpawnerLayer(stubs))
+  );
 
 // The same clone as `mergedSweepStubs`, parked on `head` instead of main; the
 // sweeping worktree is the one holding that branch.
@@ -616,7 +622,9 @@ const recordedSweep = Effect.fnUntraced(function* (root: string) {
       return yield* spawner.spawn(command);
     })
   );
+  // `Git` is rebuilt over the recording spawner so the kit's spawns are recorded too.
   const report = yield* executeSweep(sweepContext(root)).pipe(
+    Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recording)
   );
   return { report, spawned: yield* Ref.get(spawned) };
@@ -652,6 +660,7 @@ describe("executeSweep", () => {
             })
           );
           const report = yield* executeSweep(sweepContext(root)).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, recordingSpawner)
           );
           expect(yield* Ref.get(spawned)).toContain("git branch -d feat/merge-loop");

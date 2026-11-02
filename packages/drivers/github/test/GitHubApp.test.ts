@@ -1,4 +1,11 @@
-import { AppIdentity, assertPermissions, BotIdentity, GitHubApp, InstallationToken } from "@beep/github/GitHubApp";
+import {
+  AppIdentity,
+  assertPermissions,
+  BotIdentity,
+  GitHubApp,
+  GitHubAppOptions,
+  InstallationToken,
+} from "@beep/github/GitHubApp";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
@@ -880,6 +887,24 @@ describe("GitHubApp.clientLayer down-scope and refresh", () => {
     },
     30_000
   );
+
+  it.effect("refuses a refresh skew at or past thirty minutes before any request", () => {
+    const script = scriptedFetch([]);
+    return Effect.gen(function* () {
+      const failure = yield* GitHubApp.clientLayer(
+        { ...CREDENTIALS, installationId: 42 },
+        { fetch: script.fetch, retry: NO_RETRY, refreshSkew: Duration.minutes(30) }
+      ).pipe(Layer.build, Effect.flip);
+      assert.strictEqual(failure.kind, "request");
+      assert.lengthOf(script.calls, 0);
+    });
+  });
+
+  it("bounds the refresh skew in the options schema", () => {
+    const isOptions = S.is(GitHubAppOptions);
+    assert.isTrue(isOptions(GitHubAppOptions.make({ refreshSkew: Duration.minutes(5) })));
+    assert.isFalse(isOptions({ refreshSkew: Duration.hours(1) }));
+  });
 
   it.effect("keeps the one-minute default skew when refreshSkew is omitted", () => {
     const script = scriptedFetch([
