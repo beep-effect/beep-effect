@@ -49,14 +49,15 @@ Execution:
    teardown. Post-release replay is untested: SPEC exception E1.
 6. P5-P7: complete 2026-08-25. The remediation PRs merged before the six
    exact IDs closed; `ops/closures.json` and `history/` retain the evidence.
-8. P8 Post-release JIT containment: pending. Remove the readable configuration
-   before job privilege can recover it, or prove rejection after the original
-   listener ends from both the original and a second host. Never log the value.
+8. P8 Post-release JIT containment: complete 2026-11-02. Replay was refused
+   after an orderly stop and accepted after a SIGKILL until the job ended;
+   the operator accepted E1 as a residual (SPEC Decision Log).
 
-The packet is active until P8 satisfies the previously unmet acceptance item.
+The closeout PR proposes completed-retained.
 
 Acceptance requires every `SPEC.md` criterion, no usable workload credential
-path, exact-head proof, and every manifest command.
+path other than the operator-accepted E1 residual, exact-head proof, and every
+manifest command.
 
 On rollout failure, stop new admission, drain, and terminate candidates. Heavy
 lanes queue. Do not reroute to hosted runners. Prior launch-template and AMI
@@ -64,8 +65,8 @@ pins support mechanical rollback only. Restoring IMDS-enabled status quo needs
 an explicit operator command and is not a successful security rollback.
 
 Stop on missing authority, failed integrity or security proof, a credential
-path reachable by job privilege, a hosted-heavy-lane proposal, or fleet-packet
-ownership collision.
+path reachable by job privilege other than the accepted E1 residual, a
+hosted-heavy-lane proposal, or fleet-packet ownership collision.
 
-Done: P8 live proof, green checks, zero review threads, merge, updated
-lifecycle, and a valid closeout reflection are retained.
+Done: P8 live proof and the operator's E1 decision, green checks, zero
+threads, merge, lifecycle update, and a valid reflection, all retained.
