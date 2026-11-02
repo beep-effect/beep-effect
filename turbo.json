@@ -4391,6 +4391,10 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!test/**",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
         "!.beep/**",
         "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
@@ -4453,6 +4457,9 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
         "!.beep/**",
         "!.fallow/**",
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
@@ -4471,6 +4478,9 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
@@ -4510,6 +4520,9 @@
       "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
@@ -4594,7 +4607,14 @@
       "inputs": ["$TURBO_DEFAULT$", "!.beep/**", "!.fallow/**"]
     },
     "transit": {
-      "dependsOn": ["^transit"]
+      "dependsOn": ["^transit"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!test/**",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE"
+      ]
     },
     "docgen": {
       "cache": true,
