@@ -37,6 +37,12 @@ commands do not invoke the changed script keys.
 
 All 51 HarnessLedger tests passed on 7f91b189 in actual hosted
 [job 125381842309](https://github.com/beep-effect/beep-effect/actions/runs/41475655834/job/125381842309).
+The later [PR2612 hosted receipt](../ops/history/pr2612-hosted-harness-ledger-e2213fed.json)
+records another actual 51-test execution at
+`e2213fedece9211801a17db607f4c4a3e95d5f94` in successful
+[job 125450950519](https://github.com/beep-effect/beep-effect/actions/runs/41494645039/job/125450950519).
+The successful unit-b, unit-c and unit-d jobs at that head explicitly selected
+no tasks. They did not rerun the AI-metrics, provider or Phoenix package suites.
 The original 870 AI-metrics, 40 Phoenix, 73 provider and 44 HarnessLedger executions
 retain their original source and execution boundaries. This comparison is not
 a fresh execution or a complete transitive dependency proof.
@@ -57,10 +63,11 @@ residue preserved. This is source qualification rather than final goal acceptanc
 ## Delivery boundary
 
 The operator reserved the next final merge for this chat and directed other
-merge activity for that PR to stop. Preparation is published as a draft, which
-GitHub blocks from merging. Only this owner may release that boundary. Do not
-treat a draft monitor's `ready-pending-flip` result as final readiness. The
-normal review window begins when the draft is made ready; it must still elapse.
+merge activity for that PR to stop. This owner initially published preparation
+as a draft, then marked PR2612 ready for review. That review state does not
+establish merge readiness. Only this owner may merge the final PR. Do not treat
+a draft monitor's `ready-pending-flip` result as final readiness. The normal
+review window must elapse after the latest ready event or push, whichever is later.
 
 Finish the current-head checks and review under that ownership reservation.
 Retain terminal readiness and a positive exact-head canonical verdict before
