@@ -26,14 +26,14 @@
     "grandfathered": false,
     "pullRequests": [
       {
-        "number": 2513,
+        "number": 2577,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_claim-element-final-receipt-d8db717617c1/verdict.json",
+        "ref": ".beep/yeet/runs/docs_claim-element-premerge-final-b1b9a65c660b/verdict.json",
         "gating": true
       },
       {
@@ -112,9 +112,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Final PR #2513 requires strict pre-merge readiness. Accepted coverage repairs #2548 and #2553 are integrated on main; fresh positive/allowed replays reproduce the full v26 result bytes and all 251 report bytes exactly. All 29 v26 source/environment pins remain exact: 37/538, all 34 protected and all 37 previous matches retained. All 631 original pins and 1,103 prior history/public-fixture files remain exact. The unblocker focused proof is scoped; its exception merge does not supply final-head green proof. Historical automated review identity carries forward; no fresh or attorney review claimed. Operative lifecycle remains active pending current hosted readiness and merge proof; no local verify/publish queue.",
+  "statusNote": "Final PR #2577 is ready for review and binds prospective pre-merge proof after #2513 merged without retained readiness. Accepted main includes the #2568 hosted coverage repair. v27 archives all 29 source/environment files before prediction; only root package.json differs from v26. Both full result values match v26 except the digest, and all 251 reports remain byte-identical: 37/538 with all 34 protected and all 37 prior matches retained. All 631 original pins and 1,126 accepted history/fixture files are exact. Historical automated review identity carries forward; no fresh or attorney review claimed. Operative lifecycle stays active until current-head hosted verification, genuine pre-merge readiness and merge proof pass. Accepted main #2580 fixes the inherited repo-utils effect-vitest failure; all 29 v27 frozen files remain exact. The strict owner merge hold remains; no completion-verifier weakening or local full verify/publish queue.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2513
+    "finalPullRequest": 2577
   }
 }
