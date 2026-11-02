@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { ReviewThread } from "@beep/github/ReviewThread";
 import {
   deriveYeetMergeReady,
   GateUnproven,
@@ -42,6 +43,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { recordedGithub } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const decodePrCloseoutReport = S.decodeEffect(PrCloseoutReport);
@@ -244,12 +246,18 @@ describe("yeet unresolved-thread listing", () => {
   });
 });
 
-// The GraphQL payload shape `gh api graphql` prints for one page of the status
-// thread query, built from the fields the state rule actually reads.
+// The GraphQL page `ReviewThread.listByNodeId` reads, built from the fields
+// the state rule actually reads; the rest are the kit selection's fill.
 const threadComment = (login: string, body: string, typename = "User", databaseId = 2412551122) => ({
+  id: `PRRC_${databaseId}`,
   author: { __typename: typename, login },
   body,
   databaseId,
+  path: "src/commands/Yeet/internal/MonitorLoop.ts",
+  line: 88,
+  originalLine: 88,
+  createdAt: "2026-09-22T05:32:19Z",
+  url: `https://github.com/beep-effect/beep-effect/pull/1184#discussion_r${databaseId}`,
 });
 
 const threadNode = (fields: {
@@ -263,32 +271,42 @@ const threadNode = (fields: {
   id: fields.id,
   isResolved: fields.isResolved,
   isOutdated: false,
+  isCollapsed: false,
   path: "src/commands/Yeet/internal/MonitorLoop.ts",
   line: 88,
+  startLine: null,
+  diffSide: "RIGHT",
   resolvedBy: fields.resolvedBy === undefined ? null : { login: fields.resolvedBy },
   comments: {
     nodes: [fields.opening ?? threadComment("greptile-apps[bot]", greptileBody, "Bot")],
-    // Selected by the real query only as `first: 1`; a thread with more
-    // comments than that is exactly the case `latest` exists to classify.
-    pageInfo: { hasNextPage: fields.openingHasMorePages ?? false },
+    // A thread with more comments than the first page is exactly the case
+    // `latest` exists to classify.
+    pageInfo: { hasNextPage: fields.openingHasMorePages ?? false, endCursor: null },
   },
   latest: { nodes: fields.latest === undefined ? [] : [fields.latest] },
 });
 
-const threadsPayload = (nodes: ReadonlyArray<ReturnType<typeof threadNode>>, author: string | null = "kriegcloud") =>
-  JSON.stringify({
-    data: {
-      node: {
-        author: author === null ? null : { login: author },
-        reviewThreads: { nodes, pageInfo: { hasNextPage: false, endCursor: null } },
-      },
+const threadsPayload = (nodes: ReadonlyArray<unknown>, author: string | null = "kriegcloud") => ({
+  data: {
+    node: {
+      __typename: "PullRequest",
+      author: author === null ? null : { login: author },
+      reviewThreads: { nodes, pageInfo: { hasNextPage: false, endCursor: null } },
     },
-  });
+  },
+});
+
+// One page decoded by the real `ReviewThread` client, then classified.
+const triageOf = (payload: unknown) =>
+  ReviewThread.use((threads) => threads.listByNodeId("PR_kwDOAbC1")).pipe(
+    Effect.map(yeetStatusThreadTriageForTesting),
+    recordedGithub(() => ({ body: payload })).provide
+  );
 
 describe("yeet review-thread classification", () => {
   it.effect("counts a resolved thread whose newest comment is a reviewer's as an outstanding follow-up", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
+      const triage = yield* triageOf(
         threadsPayload([
           threadNode({
             id: "PRRT_kwDOAbC1",
@@ -323,7 +341,7 @@ describe("yeet review-thread classification", () => {
 
   it.effect("stops counting the same thread once the author has replied on it", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
+      const triage = yield* triageOf(
         threadsPayload([
           threadNode({
             id: "PRRT_kwDOAbC1",
@@ -342,7 +360,7 @@ describe("yeet review-thread classification", () => {
 
   it.effect("classifies a thread with more comments than the opening page from its newest comment", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
+      const triage = yield* triageOf(
         threadsPayload([
           threadNode({
             id: "PRRT_kwDOAbC1",
@@ -361,7 +379,7 @@ describe("yeet review-thread classification", () => {
 
   it.effect("reports a review bot's last word as an acknowledgement that does not gate", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
+      const triage = yield* triageOf(
         threadsPayload([
           threadNode({
             id: "PRRT_kwDOAbC1",
@@ -393,7 +411,7 @@ describe("yeet review-thread classification", () => {
 
   it.effect("treats a thread resolved by somebody other than the author as answered", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
+      const triage = yield* triageOf(
         threadsPayload([
           threadNode({
             id: "PRRT_kwDOAbC1",
@@ -411,9 +429,7 @@ describe("yeet review-thread classification", () => {
 
   it.effect("triages an unresolved thread from its opening comment", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(
-        threadsPayload([threadNode({ id: "PRRT_kwDOAbC1", isResolved: false })])
-      );
+      const triage = yield* triageOf(threadsPayload([threadNode({ id: "PRRT_kwDOAbC1", isResolved: false })]));
 
       expect(triage.counts.unresolved).toBe(1);
       expect(A.map(triage.unresolvedThreads, (thread) => thread.author)).toEqual(["greptile-apps[bot]"]);
@@ -425,10 +441,10 @@ describe("yeet review-thread classification", () => {
 // 2026-09-22, kept verbatim in `test/fixtures/`. Two adaptations, neither
 // touching a fact the rule reads: the capture was taken through the
 // repository-rooted query, so its `data.repository.pullRequest` is moved under
-// the `data.node` root the status query selects, and its comment selection
-// asked only for authors, so the two display-only fields the status query also
-// selects are filled in as absent. Logins, actor typenames, `resolvedBy` and
-// resolution state are the file's own.
+// the `data.node` root `ReviewThread.listByNodeId` selects, and its comment
+// selection asked only for authors (and the newest comment's instant), so the
+// display-only fields the kit selection also reads are filled in. Logins,
+// actor typenames, `resolvedBy` and resolution state are the file's own.
 const readCapturedThreads = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.readFileString(
@@ -443,7 +459,7 @@ const capturedThreadsText = await NodeServices.layer.pipe(
   Effect.runPromise
 );
 
-const capturedThreadsPayload = (): string => {
+const capturedThreadsPayload = () => {
   const captured = JSON.parse(capturedThreadsText) as {
     readonly data: {
       readonly repository: {
@@ -456,33 +472,36 @@ const capturedThreadsPayload = (): string => {
   };
   const pullRequest = captured.data.repository.pullRequest;
   const displayable = (connection: unknown) => ({
-    nodes: A.map((connection as { readonly nodes: ReadonlyArray<Record<string, unknown>> }).nodes, (node) => ({
-      body: null,
+    pageInfo: { hasNextPage: false, endCursor: null },
+    nodes: A.map((connection as { readonly nodes: ReadonlyArray<Record<string, unknown>> }).nodes, (node, index) => ({
+      id: `PRRC_captured_${index}`,
+      body: "",
       databaseId: null,
+      path: "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofShadow.ts",
+      line: null,
+      originalLine: null,
+      createdAt: "2026-09-22T00:00:00Z",
+      url: "https://github.com/beep-effect/beep-effect/pull/1184",
       ...node,
     })),
   });
-  return JSON.stringify({
-    data: {
-      node: {
-        author: pullRequest.author,
-        reviewThreads: {
-          nodes: A.map(pullRequest.reviewThreads.nodes, (thread) => ({
-            ...thread,
-            comments: displayable(thread.comments),
-            latest: displayable(thread.latest),
-          })),
-          pageInfo: { hasNextPage: false, endCursor: null },
-        },
-      },
-    },
-  });
+  return threadsPayload(
+    A.map(pullRequest.reviewThreads.nodes, (thread) => ({
+      isCollapsed: false,
+      startLine: null,
+      diffSide: "RIGHT",
+      ...thread,
+      comments: displayable(thread.comments),
+      latest: displayable(thread.latest),
+    })),
+    pullRequest.author.login
+  );
 };
 
 describe("yeet review-thread classification against a captured pull request", () => {
   it.effect("reads PR #1184's eight threads as six answered and two bot acknowledgements", () =>
     Effect.gen(function* () {
-      const triage = yield* yeetStatusThreadTriageForTesting(capturedThreadsPayload());
+      const triage = yield* triageOf(capturedThreadsPayload());
 
       // Nothing is owed on that pull request: five threads a reviewer closed
       // themselves or the author had the last word on, one the author closed

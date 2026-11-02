@@ -11,7 +11,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { normalizedTokens } from "../../../internal/cli/Flags.ts";
-import { GhComment } from "../../../internal/github/index.ts";
+import { GhComment, GithubRest } from "../../../internal/github/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { PrCloseoutOptions, PrCloseoutReport, PrCloseoutReportJson } from "./closeout/Closeout.schemas.ts";
@@ -23,7 +23,7 @@ import {
   reviewFollowUpThreadIssue,
   reviewThreadIssue,
 } from "./closeout/Gates.ts";
-import { closeoutGhOutput, collectPrCloseoutPayload, performCloseoutWriteActions } from "./closeout/GhCollect.ts";
+import { closeoutGithubFailure, collectPrCloseoutPayload, performCloseoutWriteActions } from "./closeout/GhCollect.ts";
 import {
   greptileAuthoredReviewThreadCount,
   inferGreptileIssueCount,
@@ -31,6 +31,7 @@ import {
   latestGreptileSummary,
 } from "./closeout/GreptileSignal.ts";
 import { closeoutWritePlan } from "./closeout/WritePlan.ts";
+import { provideYeetGhLogin } from "./GhOps.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -83,6 +84,10 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > {
+  return yield* runPrCloseoutAsGhLogin(context, options).pipe(provideYeetGhLogin(context.repoRoot));
+});
+
+const runPrCloseoutAsGhLogin = Effect.fnUntraced(function* (context: RepoRunContext, options: PrCloseoutOptions) {
   let { pullRequest, pr } = yield* collectPrCloseoutPayload(context);
   const writeRequested =
     Str.isNonEmpty(Str.trim(options.replyThread)) ||
@@ -102,7 +107,7 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
     if (O.isSome(plan.error)) {
       return yield* YeetCommandError.make({ message: plan.error.value, exitCode: 1 });
     }
-    writeActions = yield* performCloseoutWriteActions(context, plan.intents);
+    writeActions = yield* performCloseoutWriteActions(plan.intents);
     const refreshed = yield* collectPrCloseoutPayload(context);
     pullRequest = refreshed.pullRequest;
     pr = refreshed.pr;
@@ -173,19 +178,9 @@ export const runPrCloseout = Effect.fn("YeetCloseout.runPrCloseout")(function* (
   });
 
   if (options.retriggerGreptile) {
-    yield* closeoutGhOutput(
-      context,
-      // REST issue comment: `gh pr comment` spends the shared GraphQL budget.
-      [
-        "api",
-        "-X",
-        "POST",
-        `repos/{owner}/{repo}/issues/${pr.number}/comments`,
-        "--silent",
-        "-f",
-        `body=${GREPTILE_RETRIGGER_COMMENT}`,
-      ],
-      "gh api issues comments"
+    // REST issue comment: `gh pr comment` spends the shared GraphQL budget.
+    yield* GithubRest.use((rest) => rest.createIssueComment(pr.number, GREPTILE_RETRIGGER_COMMENT)).pipe(
+      Effect.mapError(closeoutGithubFailure("gh api issues comments"))
     );
   }
 

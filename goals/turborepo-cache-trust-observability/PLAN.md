@@ -1072,6 +1072,80 @@ unchanged. No native run has yet used this implementation, and no qualification,
 protected producer or whole-goal acceptance is granted.
 
 
+### Private complete-observation transfer component, 2026-11-02
+
+The opt-in publisher now uploads a previously saved issued observation without
+rerunning the native matrices. The authenticated fetch and exact-object cleanup
+reuse the existing approved private R2 destination and immutable hosted-report
+join. A shared destination check keeps executor validation intact while a new
+storage-only capability excludes artifact signing and all four adapter bearers.
+The [checkpoint](research/private-producer-object-checkpoint-2026-11-02.json)
+records actual focused, native and package evidence with their source bindings.
+
+Local native Bun controls prove one canonical upload, one six-MiB request using
+the selected native options and cancellation of a stalled response after
+interruption. All storage is synthetic loopback; no Cloudflare request, signing
+activation, protected execution or tuple qualification occurred. Real protected
+source/runtime approval, private material transfer, workflow publication wiring,
+aggregate trial accounting, R2 replay and authenticated acceptance remain next.
+All whole-goal criteria and representative observation windows remain open.
+
+
+The private-object draft now also proves three concurrent-change refusals with
+real private files. The fixture pauses GET body delivery after the target and
+capabilities are selected, then revokes the issuer or changes the execution
+profile or independent hosted approval. Every case fails closed when delivery
+resumes. These complete local race controls; native protected execution and
+real R2 acceptance remain unproven. The accepted reusable Heavy verifier and
+shared main repair remain prerequisites for the live workflow.
+
+
+### Private observation hosted follow-up, 2026-11-02
+
+The private-object checkpoint retains two real hosted unit failures and the
+matching Property Laws failure. The pure fetch factory now uses a declaration
+that the conservative isolation census recognizes correctly. Canonical policy
+regeneration adds only the new storage module to the quality seal; the
+[source-bound review](research/private-object-quality-closure-review-2026-11-02.md)
+and [root-only request](research/private-object-quality-closure-request-2026-11-02.json)
+acknowledge that input without granting qualification. All other reviews,
+profile, epoch, scope and ledger bytes remain unchanged. A combined 160-case
+replay, package lint/type checks and policy audit pass. Fresh hosted proof remains
+required; no production signing, rollout or whole-goal acceptance changes.
+
+
+### Accepted coverage and input-policy integration, 2026-11-02
+
+The private-object component consumes accepted main `930758e06bf4`, including
+coverage repair #2616 and the reviewed Turbo input exclusions from #2575. The
+canonical root-only baseline writer carries the accepted settings and all
+non-root reviews, adding only the existing storage module to the quality-seal
+input closure. The [integration checkpoint](research/private-object-accepted-main-checkpoint-2026-11-02.json)
+records exactly one changed node/source, preserved global configuration and
+qualification ledger, and a policy audit with no blocking findings.
+
+Generated identity and documentation inventories are reconciled through their
+own writers. Historical native observations retain their actual source/input
+pins; none is relabeled current after this input-policy change. Current hosted
+proof, protected inspection/publication and all whole-goal criteria remain open.
+
+
+### Private-object policy and coverage repair, 2026-11-02
+
+The [repair checkpoint](research/private-object-policy-coverage-repair-2026-11-02.json)
+records the introduced policy and coverage failures on PR #2611. Three encoders
+are hoisted. New approval, storage, credential, HTTP-status and archive-bound
+controls pass in the 90-test focused Bun/Istanbul replay. Workflow functions,
+statements and branches reach 100%; storage branches reach 80.43%, with all
+production source and coverage floors unchanged. Fresh exact-head hosted checks
+and accepted-main integration remain required; this is no rollout or qualification.
+
+
+### Accepted-main a88d baseline conflict resolution, 2026-11-02
+
+The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.
+
+
 ### Contained source directory aliases, 2026-11-02
 
 Protected inspection run `41413340460`, job `125171205116`, reached its admitted

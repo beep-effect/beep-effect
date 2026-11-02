@@ -283,13 +283,16 @@ export interface GithubRestShape {
   readonly hasReviewComments: (number: number) => Effect.Effect<boolean, GitHubError>;
   /** First GitHub check-suite receipt for the head, unknown when none exists. */
   readonly headFirstReceivedAt: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>, GitHubError>;
-  /** Squash-merge (or another method) pinned to a head sha. */
+  /**
+   * Squash-merge (or another method) pinned to a head sha. Without a
+   * `commitMessage` GitHub writes the body its squash settings prescribe.
+   */
   readonly mergePullRequest: (
     number: number,
     options: {
       readonly sha: string;
       readonly commitTitle: string;
-      readonly commitMessage: string;
+      readonly commitMessage?: string | undefined;
       readonly method: "merge" | "squash" | "rebase";
     }
   ) => Effect.Effect<GithubMergeRecord, GitHubError>;
@@ -499,7 +502,7 @@ const makeGithubRest = Effect.gen(function* () {
     options: {
       readonly sha: string;
       readonly commitTitle: string;
-      readonly commitMessage: string;
+      readonly commitMessage?: string | undefined;
       readonly method: "merge" | "squash" | "rebase";
     }
   ) =>
@@ -512,7 +515,7 @@ const makeGithubRest = Effect.gen(function* () {
           sha: options.sha,
           merge_method: options.method,
           commit_title: options.commitTitle,
-          commit_message: options.commitMessage,
+          ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(options.commitMessage) }),
         },
         MergeWire
       )

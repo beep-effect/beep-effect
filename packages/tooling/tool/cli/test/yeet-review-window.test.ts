@@ -44,6 +44,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 
 const headSha = "abc1234def";
@@ -474,6 +475,7 @@ const writeBoundCloseout = Effect.gen(function* () {
 const statusWith = Effect.fn("statusWith")(function* (answers: Answers, bucket: "pass" | "pending" = "pass") {
   const restCalls = yield* Ref.make<ReadonlyArray<string>>([]);
   const snapshot = yield* collectYeetStatus(context, true).pipe(
+    provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
     Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, ghRunner(answers, bucket, restCalls))
   );

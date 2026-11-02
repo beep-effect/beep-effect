@@ -46,6 +46,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor } from "../../../internal/github/index.ts";
+import type { ReviewThreadActor, ReviewThreadNode } from "@beep/github/ReviewThread";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewThreadState");
 
@@ -308,6 +309,104 @@ export const yeetReviewThreadStateInput: {
         O.map((actor) => actor.login)
       ),
       newestComment,
+    })
+);
+
+/**
+ * The `gh`-shaped actor for a `@beep/github` review-thread actor: the login,
+ * and `__typename: "Bot"` only for a bot (the one typename a Yeet surface reads).
+ *
+ * **Example** (A bot keeps its typename)
+ *
+ * ```ts
+ * import { ReviewThreadActor } from "@beep/github/ReviewThread"
+ * import { ghActorFromReviewThread } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(ghActorFromReviewThread(ReviewThreadActor.make({ login: "greptile-apps", isBot: true })).__typename) // "Bot"
+ * ```
+ *
+ * @param actor - The kit's actor.
+ * @returns The actor every Yeet thread schema carries.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ghActorFromReviewThread = (actor: ReviewThreadActor): GhActor =>
+  GhActor.make(actor.isBot ? { __typename: "Bot", login: actor.login } : { login: actor.login });
+
+/**
+ * A kit review thread's newest comment reduced to what the thread-state rule
+ * reads; a comment whose author GitHub no longer names yields `None`.
+ *
+ * **Example** (A thread with no comments)
+ *
+ * ```ts
+ * import { ReviewThreadNode } from "@beep/github/ReviewThread"
+ * import { yeetReviewThreadNewestComment } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReviewThreadNode.make({
+ *   id: "PRRT_1", isResolved: false, isOutdated: false, isCollapsed: false, path: "a.ts", line: O.none(),
+ *   startLine: O.none(), diffSide: "RIGHT", resolvedBy: O.none(), comments: [], commentsTruncated: false,
+ *   newestComment: O.none(),
+ * })
+ * console.log(O.isNone(yeetReviewThreadNewestComment(thread))) // true
+ * ```
+ *
+ * @param thread - One thread from `ReviewThread.list` / `listByNodeId`.
+ * @returns The newest comment's author, author kind and instant.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetReviewThreadNewestComment = (thread: ReviewThreadNode): O.Option<YeetReviewThreadNewestComment> =>
+  O.flatMap(thread.newestComment, (comment) =>
+    O.map(comment.author, (actor) =>
+      YeetReviewThreadNewestComment.make({
+        authorLogin: actor.login,
+        authorKind: actor.isBot ? YeetReviewCommentAuthorKind.Enum.bot : YeetReviewCommentAuthorKind.Enum.user,
+        createdAt: O.some(comment.createdAt),
+      })
+    )
+  );
+
+/**
+ * Build the thread-state rule's input from a kit review thread.
+ *
+ * **Example** (An unresolved thread)
+ *
+ * ```ts
+ * import { ReviewThreadNode } from "@beep/github/ReviewThread"
+ * import { yeetReviewThreadStateInputFromNode } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReviewThreadNode.make({
+ *   id: "PRRT_1", isResolved: false, isOutdated: false, isCollapsed: false, path: "a.ts", line: O.some(3),
+ *   startLine: O.none(), diffSide: "RIGHT", resolvedBy: O.none(), comments: [], commentsTruncated: false,
+ *   newestComment: O.none(),
+ * })
+ * console.log(yeetReviewThreadStateInputFromNode(thread, O.some("octocat")).threadId) // "PRRT_1"
+ * ```
+ *
+ * @param thread - One thread from `ReviewThread.list` / `listByNodeId`.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @returns The input the thread-state rule classifies.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetReviewThreadStateInputFromNode: {
+  (pullRequestAuthor: O.Option<string>): (thread: ReviewThreadNode) => YeetReviewThreadStateInput;
+  (thread: ReviewThreadNode, pullRequestAuthor: O.Option<string>): YeetReviewThreadStateInput;
+} = dual(
+  2,
+  (thread: ReviewThreadNode, pullRequestAuthor: O.Option<string>): YeetReviewThreadStateInput =>
+    YeetReviewThreadStateInput.make({
+      threadId: thread.id,
+      isResolved: thread.isResolved,
+      isOutdated: thread.isOutdated,
+      path: O.some(thread.path),
+      line: thread.line,
+      pullRequestAuthor,
+      resolvedBy: thread.resolvedBy,
+      newestComment: yeetReviewThreadNewestComment(thread),
     })
 );
 

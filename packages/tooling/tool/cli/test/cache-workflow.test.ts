@@ -659,8 +659,11 @@ it.layer(
   );
   it.effect("issues only the supervised bundle after all three identity checks", () =>
     Effect.gen(function* () {
-      const { run, directory, bundle, signed, protocol, admission, root, path, tools } = yield* supervisedFixture();
-      const result = yield* run;
+      const { directory, bundle, signed, protocol, admission, root, path, tools, request, binding, observedFs } =
+        yield* supervisedFixture();
+      const result = yield* runCacheProducerWorkflow(root, request, directory, binding).pipe(
+        Effect.provideService(FileSystem.FileSystem, observedFs)
+      );
       expect(result.observation).toEqual(bundle);
       expect(signed).toHaveBeenCalledOnce();
       expect(protocol).toHaveBeenCalledOnce();

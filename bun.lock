@@ -3631,6 +3631,23 @@
         "esbuild": "catalog:",
       },
     },
+    "packages/party/domain": {
+      "name": "@beep/party-domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+        "libphonenumber-js": "catalog:",
+        "tr46": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/shared/domain": {
       "name": "@beep/shared-domain",
       "version": "0.0.2",
@@ -4558,6 +4575,7 @@
     "tar": "^7.5.22",
     "testcontainers": "^12.2.1",
     "three": "^0.187.0",
+    "tr46": "7.0.0",
     "ts-morph": "^28.0.0",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "turbo": "^2.11.10",
@@ -4949,6 +4967,8 @@
     "@beep/palantiri": ["@beep/palantiri@workspace:packages/tooling/library/palantiri"],
 
     "@beep/pandoc-ast": ["@beep/pandoc-ast@workspace:packages/foundation/modeling/pandoc-ast"],
+
+    "@beep/party-domain": ["@beep/party-domain@workspace:packages/party/domain"],
 
     "@beep/pdf-tools": ["@beep/pdf-tools@workspace:packages/drivers/pdf-tools"],
 
