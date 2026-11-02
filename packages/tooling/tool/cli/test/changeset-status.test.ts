@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ChangesetGraphPackageReference,
@@ -92,6 +92,19 @@ const statusTestLayer = (
       gitFixtureLayer(changedFiles, addedChangesets, spawned)
     )
   );
+
+// The kit's `changedFiles` fails before any workspace read, so only `Git` needs scripting.
+const failingDiffLayer = (error: GitCommandError) =>
+  Layer.mergeAll(
+    Git.layerTest({ changedFiles: () => Effect.fail(error) }),
+    MemoryFileSystem.layer,
+    Path.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    gitFixtureLayer([], [], [])
+  );
+const diffArgs = ["diff", "--name-only", "-z"];
+const sinceDiffCommandLine = "git diff --name-only -z --no-relative --no-renames --diff-filter=ACMRTUXBD main...HEAD";
 
 const writeRepoFile = Effect.fn("ChangesetStatusTest.writeRepoFile")(function* (
   repoRoot: string,
@@ -301,6 +314,46 @@ describe("changeset status wrapper", () => {
       expect(lane.step.label).toBe("quality:changeset-status");
       expect(lane.step.command).toBe("bun");
       expect([...lane.step.args]).toEqual(["run", "beep", "quality", "changeset-status", "--since", "origin/main"]);
+    });
+  });
+
+  describe("runChangesetStatus when the changed-file diff fails", () => {
+    it.layer(
+      failingDiffLayer(
+        GitCommandError.make({ kind: "failed", args: diffArgs, cwd: REPO_ROOT, stderr: "", detail: "spawn git ENOENT" })
+      ),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("reports a git that never ran with the kit's command line", () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(runChangesetStatus(REPO_ROOT, O.some("main")));
+
+          expect(error._tag).toBe("ChangesetStatusError");
+          expect(error.message).toBe(`Failed to run ${sinceDiffCommandLine}.`);
+        })
+      );
+    });
+
+    it.layer(
+      failingDiffLayer(
+        GitCommandError.make({
+          kind: "failed",
+          args: diffArgs,
+          cwd: REPO_ROOT,
+          exitCode: 3,
+          stderr: "fatal: bad range",
+        })
+      ),
+      { timeout: "30 seconds" }
+    )((it) => {
+      it.effect("reports a refused diff with its exit code", () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(runChangesetStatus(REPO_ROOT, O.some("main")));
+
+          expect(error._tag).toBe("ChangesetStatusError");
+          expect(error.message).toBe(`${sinceDiffCommandLine} failed with exit code 3.`);
+        })
+      );
     });
   });
 

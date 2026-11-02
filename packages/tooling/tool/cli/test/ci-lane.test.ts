@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
@@ -17,6 +17,7 @@ import {
   docgenLaneModeForChangedPaths,
   proveCiLanePartition,
   runCiLane,
+  runCiLocal,
   withCiLaneDefaultPlacements,
 } from "@beep/repo-cli/commands/Ci";
 import * as CiCoverage from "@beep/repo-cli/commands/Ci/CiCoverage";
@@ -108,12 +109,15 @@ const ciExecutionLayer = (
   changedFiles: ReadonlyArray<string>,
   sources: ReadonlyArray<readonly [string, string]>,
   spawned: Array<string>,
-  failedTask?: string
+  failedTask?: string,
+  gitLayer: Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> = Git.layer
 ) => {
   const fileSystemLayer = FileSystem.layerNoop({
     exists: (file) =>
       Effect.succeed(Str.endsWith("/.git")(file) || A.some(sources, ([suffix]) => Str.endsWith(suffix)(file))),
     makeDirectory: () => Effect.void,
+    makeTempDirectory: (options) => Effect.succeed(`${options?.directory ?? "/tmp"}/${options?.prefix ?? ""}fixture`),
+    remove: () => Effect.void,
     readFileString: (file) => {
       const source = A.findFirst(sources, ([suffix]) => Str.endsWith(suffix)(file));
       return O.match(source, {
@@ -147,7 +151,7 @@ const ciExecutionLayer = (
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
   return Layer.provideMerge(
-    Git.layer,
+    gitLayer,
     Layer.mergeAll(
       BunCrypto.layer,
       fileSystemAndPath,
@@ -2071,6 +2075,88 @@ it.layer(ciExecutionLayer(["scripts/release.sh"], [], inertDocgenCommands), { ti
     );
   }
 );
+
+// A spawn failure carries a `detail` and no exit code; a git refusal carries the exit code (SPEC D-10).
+const gitSpawnFailure = (args: ReadonlyArray<string>) =>
+  GitCommandError.make({ kind: "failed", args, cwd: REPO_ROOT, stderr: "", detail: "spawn git ENOENT" });
+const gitExitFailure = (args: ReadonlyArray<string>) =>
+  GitCommandError.make({ kind: "failed", args, cwd: REPO_ROOT, exitCode: 128, stderr: "fatal: bad revision" });
+
+const autoDocgenGitFailure = (error: GitCommandError) =>
+  ciExecutionLayer([], [], [], undefined, Git.layerTest({ changedFiles: () => Effect.fail(error) }));
+
+it.layer(autoDocgenGitFailure(gitSpawnFailure(["diff"])), { timeout: "10 seconds" })(
+  "automatic Docgen CI lane when git cannot run",
+  (it) => {
+    it.effect("reports the unresolved Docgen scope", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" })));
+
+        expect(error._tag).toBe("CiCommandError");
+        expect(error.message).toBe("Failed to resolve automatic Docgen scope.");
+      })
+    );
+  }
+);
+
+it.layer(autoDocgenGitFailure(gitExitFailure(["diff"])), { timeout: "10 seconds" })(
+  "automatic Docgen CI lane when git refuses the diff",
+  (it) => {
+    it.effect("reports the diff exit code", () =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(runCiLane("docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "auto" })));
+
+        expect(error._tag).toBe("CiCommandError");
+        expect(error.message).toBe("git diff for automatic Docgen scope failed with exit code 128.");
+      })
+    );
+  }
+);
+
+const localBranchLayer = (currentBranch: Parameters<typeof Git.layerTest>[0], spawned: Array<string> = []) =>
+  ciExecutionLayer([], [], spawned, undefined, Git.layerTest(currentBranch));
+const repoSanityLocalOptions = { affected: false, base: "origin/main", fast: false, lanes: O.some("repo-sanity") };
+
+it.layer(localBranchLayer({ currentBranch: () => Effect.fail(gitSpawnFailure(["branch", "--show-current"])) }), {
+  timeout: "10 seconds",
+})("local CI battery when git cannot run", (it) => {
+  it.effect("reports the unresolved current branch", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(runCiLocal(repoSanityLocalOptions));
+
+      expect(error._tag).toBe("CiCommandError");
+      expect(error.message).toBe("Failed to resolve the current git branch.");
+    })
+  );
+});
+
+it.layer(localBranchLayer({ currentBranch: () => Effect.fail(gitExitFailure(["branch", "--show-current"])) }), {
+  timeout: "10 seconds",
+})("local CI battery when git refuses the branch read", (it) => {
+  it.effect("reports the branch read exit code", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(runCiLocal(repoSanityLocalOptions));
+
+      expect(error._tag).toBe("CiCommandError");
+      expect(error.message).toBe("git branch --show-current failed with exit code 128.");
+    })
+  );
+});
+
+const detachedLocalCommands = A.empty<string>();
+it.layer(localBranchLayer({ currentBranch: () => Effect.succeedNone }, detachedLocalCommands), {
+  timeout: "10 seconds",
+})("local CI battery on a detached HEAD", (it) => {
+  it.effect("reads the detached HEAD as a non-main branch and keeps the changeset status gate", () =>
+    Effect.gen(function* () {
+      yield* runCiLocal(repoSanityLocalOptions);
+
+      expect(
+        A.some(detachedLocalCommands, (command) => Str.includes("ci lane repo-sanity --changeset-status")(command))
+      ).toBe(true);
+    })
+  );
+});
 
 const fullDoctestCommands = A.empty<string>();
 

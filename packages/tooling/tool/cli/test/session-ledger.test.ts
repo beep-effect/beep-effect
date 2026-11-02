@@ -350,6 +350,18 @@ describe("session ledger service", () => {
 
 describe("beep session", () => {
   it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
+    it.effect("reads a detached lane HEAD as the literal HEAD branch", () =>
+      withScratchCheckout(({ lane }) =>
+        Effect.gen(function* () {
+          yield* runGit(lane, ["checkout", "--quiet", "--detach"]);
+
+          const facts = yield* sessionCheckoutFacts(lane);
+          expect(facts.lane).toBe("lane");
+          expect(facts.branch).toBe("HEAD");
+        })
+      )
+    );
+
     it.effect("notes a lane, lists it, supersedes it, and retires it on sweep-done", () =>
       withScratchCheckout(({ clone, lane, stateRoot }) =>
         Effect.gen(function* () {

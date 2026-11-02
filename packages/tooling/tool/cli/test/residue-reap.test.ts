@@ -337,6 +337,65 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
     )
   );
 
+  it.effect("treats residue roots whose existence cannot be probed as absent", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makeFixture(root);
+          const checkoutBeep = path.join(fixture.repoRoot, ".beep");
+          const archiveRoot = path.join(checkoutBeep, "residue-reap");
+          yield* fs.makeDirectory(checkoutBeep, { recursive: true });
+          // Each class root's `exists` probe fails, so it degrades to "not there" instead of failing the run.
+          // The run's archive preparation keeps real answers, except a stale "absent" for the checkout's
+          // existing `.beep`, whose `AlreadyExists` on creation is tolerated.
+          const unprobeable = FileSystem.makeNoop({
+            ...fs,
+            exists: (target) =>
+              Str.Equivalence(target, checkoutBeep)
+                ? Effect.succeed(false)
+                : Str.startsWith(archiveRoot)(target)
+                  ? fs.exists(target)
+                  : Effect.fail(
+                      PlatformError.badArgument({
+                        description: "simulated residue exists failure",
+                        method: "exists",
+                        module: "FileSystem",
+                      })
+                    ),
+          });
+          // Codex sessions fail closed on an unprobeable root by design, so they stay out of this run.
+          const options = {
+            classes: [
+              "codex-worktrees",
+              "turbo-cache",
+              "turbo-runs",
+              "merged-preview",
+              "beep-cache-disposable",
+              "shared-turbo-cache",
+              "qualification-views",
+              "checkout-qa",
+            ],
+            homeRoot: fixture.homeRoot,
+            nowMillis: FIXTURE_NOW_MILLIS,
+            probeLiveCwd: noLiveCwd,
+            repoRoot: fixture.repoRoot,
+          } as const;
+          const probed = yield* runResidueReap(options);
+          expect(candidateByPath(probed, fixture.oldWorktree).action).toBe("remove-dir");
+          expect(candidateByPath(probed, fixture.disposable).action).toBe("remove-dir");
+
+          const unprobed = yield* runResidueReap(options).pipe(
+            Effect.provideService(FileSystem.FileSystem, unprobeable)
+          );
+          expect(unprobed.candidates).toEqual([]);
+        }),
+      removeTempDirectory
+    )
+  );
+
   it.effect("preserves dirty embedded git checkouts and reaps clean ones", () =>
     Effect.acquireUseRelease(
       makeTempDirectory,
@@ -374,6 +433,40 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           expect(clean.action).toBe("remove-dir");
           expect(clean.skipReason).toBeUndefined();
           expect(yield* fs.exists(cleanWorktree)).toBe(false);
+        }),
+      removeTempDirectory
+    )
+  );
+
+  it.effect("keeps an embedded checkout whose git status probe fails", () =>
+    Effect.acquireUseRelease(
+      makeTempDirectory,
+      (root) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const fixture = yield* makeFixture(root);
+          const brokenWorktree = path.join(fixture.homeRoot, ".codex", "worktrees", "broken-worktree");
+          const brokenRepo = path.join(brokenWorktree, "repo");
+          yield* fs.makeDirectory(brokenRepo, { recursive: true });
+          // A gitfile naming a missing git directory makes `git status` fail instead of reading a tree.
+          yield* fs.writeFileString(path.join(brokenRepo, ".git"), `gitdir: ${path.join(root, "missing-gitdir")}\n`);
+          yield* fs.writeFileString(path.join(brokenRepo, "work.txt"), "unverifiable work\n");
+          yield* touchTreeDaysAgo(root, brokenWorktree, 45);
+
+          const report = yield* runResidueReap({
+            apply: true,
+            classes: ["codex-worktrees"],
+            homeRoot: fixture.homeRoot,
+            nowMillis: FIXTURE_NOW_MILLIS,
+            probeLiveCwd: noLiveCwd,
+            repoRoot: fixture.repoRoot,
+          });
+
+          const broken = candidateByPath(report, brokenWorktree);
+          expect(broken.action).toBe("skip");
+          expect(broken.skipReason).toBe("git-probe-failed");
+          expect(yield* fs.exists(path.join(brokenRepo, "work.txt"))).toBe(true);
         }),
       removeTempDirectory
     )

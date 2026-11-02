@@ -41,7 +41,7 @@ const runCommand = Command.runWith(securityCommand, { version: "test", renderErr
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeReceipt = S.decodeEffect(S.fromJsonString(SecuritySourceReceipt));
 const revision = Str.repeat(40)("a");
-const handle = (output: string, exitCode = Effect.succeed(ChildProcessSpawner.ExitCode(0))) =>
+const handle = (output: string, exitCode = Effect.succeed(ChildProcessSpawner.ExitCode(0)), stderr = "") =>
   ChildProcessSpawner.makeHandle({
     pid: ChildProcessSpawner.ProcessId(1),
     exitCode,
@@ -49,7 +49,7 @@ const handle = (output: string, exitCode = Effect.succeed(ChildProcessSpawner.Ex
     kill: () => Effect.void,
     stdin: Sink.drain,
     stdout: Stream.make(new TextEncoder().encode(output)),
-    stderr: Stream.empty,
+    stderr: Stream.make(new TextEncoder().encode(stderr)),
     all: Stream.empty,
     getInputFd: () => Sink.drain,
     getOutputFd: () => Stream.empty,
@@ -62,6 +62,7 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
     readonly exitCode?: number;
     readonly swapOutput?: boolean;
     readonly remote?: string | undefined;
+    readonly missingOrigin?: boolean;
   } = {}
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -96,7 +97,11 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
         const key = A.join(commandArgs(command), " ");
         return yield* Match.value(key).pipe(
           Match.when("remote get-url origin", () =>
-            Effect.succeed(handle(options.remote ?? "git@github.com:example/project.git\n"))
+            Effect.succeed(
+              options.missingOrigin === true
+                ? handle("", Effect.succeed(ChildProcessSpawner.ExitCode(2)), "error: No such remote 'origin'\n")
+                : handle(options.remote ?? "git@github.com:example/project.git\n")
+            )
           ),
           Match.when("rev-parse --verify HEAD", () => Effect.succeed(handle(`${revision}\n`))),
           Match.when("status --porcelain -z", () =>
@@ -244,6 +249,7 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
       "existing",
       "missing-parent",
       "bad-remote",
+      "missing-origin",
       "missing-runtime",
       "bad-metadata",
       "swapped",
@@ -254,6 +260,7 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
             dirty: scenario === "dirty",
             swapOutput: scenario === "swapped",
             remote: scenario === "bad-remote" ? "https://example.com/private/repo" : undefined,
+            missingOrigin: scenario === "missing-origin",
           });
           yield* Match.value(scenario).pipe(
             Match.when("missing-runtime", () => f.fs.remove(f.cli)),
@@ -275,6 +282,8 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
             existing: "new output directory",
             "missing-parent": "Security setup failed",
             "bad-remote": "credential-free GitHub slug",
+            // A checkout without `origin` reads as the empty remote the slug parser refuses.
+            "missing-origin": "credential-free GitHub slug",
             "missing-runtime": "Install the pinned runtime",
             "bad-metadata": "metadata failed validation",
             swapped: "replaced or linked",

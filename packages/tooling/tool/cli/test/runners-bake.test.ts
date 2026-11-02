@@ -1,5 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   BakeCheckReport,
   BakeConfig,
@@ -794,6 +794,59 @@ describe("runner bake planning and argv", () => {
       expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
     })
   );
+
+  for (const [scenario, failure, expected] of [
+    [
+      "git cannot run",
+      GitCommandError.make({
+        kind: "failed",
+        args: ["rev-parse", "--verify", "HEAD"],
+        cwd: "/repo",
+        stderr: "",
+        detail: "spawn git ENOENT",
+      }),
+      { message: "Failed to inspect the current Git revision." },
+    ],
+    [
+      "git refuses HEAD",
+      GitCommandError.make({
+        kind: "failed",
+        args: ["rev-parse", "--verify", "HEAD"],
+        cwd: "/repo",
+        exitCode: 128,
+        stderr: "fatal: Needed a single revision",
+      }),
+      { message: "Failed to resolve the current Git revision.", exitCode: 128 },
+    ],
+  ] as const) {
+    it.effect(`reports the bake revision read when ${scenario}`, () =>
+      Effect.gen(function* () {
+        // Clean bake inputs reach the revision read; only `Git.revParse` is scripted to fail.
+        const spawner = ChildProcessSpawner.make(() => Effect.succeed(stubHandle("")));
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Git.layerTest({ revParse: () => Effect.fail(failure) }),
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              PlatformLayer
+            )
+          )
+        );
+        const error = yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          return yield* Effect.flip(service.plan);
+        }).pipe(
+          Effect.provideServiceEffect(
+            RunnersService,
+            testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
+          )
+        );
+
+        expect(error).toBeInstanceOf(RunnersCommandError);
+        expect(error).toMatchObject(expected);
+      })
+    );
+  }
 
   it("renders a strict, secret-free user-data script", () => {
     const script = makeBakeScriptForTesting(
