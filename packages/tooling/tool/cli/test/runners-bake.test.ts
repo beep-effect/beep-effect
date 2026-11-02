@@ -1,5 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   BakeCheckReport,
   BakeConfig,
@@ -479,6 +479,64 @@ describe("runner bake planning and argv", () => {
       })
     );
   });
+
+  // The `HEAD` read fails before git answers (no exit code) or after git refuses (exit 128); the
+  // clean-input probe still runs through the scripted spawner and reports a clean tree.
+  const revisionFailures = [
+    {
+      label: "an unspawnable HEAD read",
+      failure: GitCommandError.make({
+        kind: "failed",
+        args: ["rev-parse"],
+        cwd: "/repo",
+        stderr: "",
+        detail: "ENOENT",
+      }),
+      message: "Failed to inspect the current Git revision.",
+      exitCode: undefined,
+    },
+    {
+      label: "a refused HEAD read",
+      failure: GitCommandError.make({
+        kind: "failed",
+        args: ["rev-parse"],
+        cwd: "/repo",
+        exitCode: 128,
+        stderr: "fatal",
+      }),
+      message: "Failed to resolve the current Git revision.",
+      exitCode: 128,
+    },
+  ] as const;
+
+  for (const { label, failure, message, exitCode } of revisionFailures) {
+    it.effect(`folds ${label} into the runner revision wording`, () =>
+      Effect.gen(function* () {
+        const spawner = ChildProcessSpawner.make((command) =>
+          ChildProcess.isStandardCommand(command) && command.command === "git"
+            ? Effect.succeed(stubHandle(""))
+            : Effect.die("the revision probe never reaches AWS")
+        );
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.provideMerge(
+              Git.layerTest({ revParse: () => Effect.fail(failure) }),
+              Layer.merge(Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner), PlatformLayer)
+            )
+          )
+        );
+        const error = yield* RunnersService.use((service) => service.plan).pipe(
+          Effect.provideServiceEffect(
+            RunnersService,
+            testLayer.pipe(Layer.fresh, Layer.build, Effect.map(Context.get(RunnersService)))
+          ),
+          Effect.flip
+        );
+        expect(error.message).toBe(message);
+        expect(error.exitCode).toBe(exitCode);
+      })
+    );
+  }
 
   it.effect("plans and checks freshness through the live service with a scripted spawner", () =>
     Effect.gen(function* () {
