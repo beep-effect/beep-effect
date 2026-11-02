@@ -35,6 +35,22 @@
         "report": "native-selection-controls.json",
         "scope": "Commandless transit dependency retained in the real-task fixture; graph-only behavior compared with strict selection false/true.",
         "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      },
+      "currentCanarySelectionObservation": {
+        "checkpoint": "selection-current-canary-checkpoint.json",
+        "report": "native-selection-current-canary-controls.json",
+        "clients": {
+          "stable": {
+            "reportedVersion": "2.11.10",
+            "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+          },
+          "canary": {
+            "reportedVersion": "2.11.11-canary.1",
+            "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+          }
+        },
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
+        "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
     {
@@ -68,6 +84,22 @@
         "report": "native-selection-controls.json",
         "scope": "Package-filtered missing command, explicit missing command, graph-only requests and actual selected execution records.",
         "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      },
+      "currentCanarySelectionObservation": {
+        "checkpoint": "selection-current-canary-checkpoint.json",
+        "report": "native-selection-current-canary-controls.json",
+        "clients": {
+          "stable": {
+            "reportedVersion": "2.11.10",
+            "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+          },
+          "canary": {
+            "reportedVersion": "2.11.11-canary.1",
+            "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+          }
+        },
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
+        "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
     {
@@ -128,6 +160,22 @@
         "report": "native-selection-controls.json",
         "scope": "Positive package filter, complete negation, missing package/path, unresolved selector and malformed regex refusals.",
         "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      },
+      "currentCanarySelectionObservation": {
+        "checkpoint": "selection-current-canary-checkpoint.json",
+        "report": "native-selection-current-canary-controls.json",
+        "clients": {
+          "stable": {
+            "reportedVersion": "2.11.10",
+            "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+          },
+          "canary": {
+            "reportedVersion": "2.11.11-canary.1",
+            "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+          }
+        },
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
+        "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
     {
@@ -1039,6 +1087,22 @@
         "report": "native-selection-controls.json",
         "scope": "Only this flag varies across the44 cases; all three observed current root flags stay fixed. Real repository adoption remains pending.",
         "authority": "Synthetic semantics only; acceptanceStatus stays pending."
+      },
+      "currentCanarySelectionObservation": {
+        "checkpoint": "selection-current-canary-checkpoint.json",
+        "report": "native-selection-current-canary-controls.json",
+        "clients": {
+          "stable": {
+            "reportedVersion": "2.11.10",
+            "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+          },
+          "canary": {
+            "reportedVersion": "2.11.11-canary.1",
+            "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+          }
+        },
+        "scope": "44 synthetic cases on stable 2.11.10 and current canary 2.11.11-canary.1; actual root/cohort review remains pending.",
+        "authority": "No feature acceptance, real computation qualification or activation."
       }
     },
     {
@@ -1103,5 +1167,16 @@
     "semanticFlagsQualifiedForRepository": 0,
     "checkpoint": "selection-semantics-checkpoint.json",
     "clientChannels": 2
+  },
+  "currentCanarySelectionEvidence": {
+    "checkpoint": "selection-current-canary-checkpoint.json",
+    "currentPairCases": 44,
+    "historicalCompatibilityCases": 44,
+    "driverRefusals": 10,
+    "priorReportUnchanged": true,
+    "symlinkReplayCases": 44,
+    "sourceBindingReviewControls": "selection-review-source-controls.json",
+    "siblingLoaderCompatibility": "selection-sibling-driver-compatibility.json",
+    "siblingLoaderTests": 6
   }
 }

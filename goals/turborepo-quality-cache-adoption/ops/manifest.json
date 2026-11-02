@@ -109,11 +109,17 @@
     "research/native-global-configuration-controls.py",
     "research/native-global-configuration-controls.json",
     "research/global-configuration-feature-review.json",
+    "research/native-selection-current-canary-controls.json",
+    "research/native-selection-historical-compatibility-controls.json",
+    "research/selection-current-driver-controls.json",
+    "research/selection-current-canary-checkpoint.json",
+    "research/selection-review-source-controls.json",
+    "research/selection-sibling-driver-compatibility.json",
+    "research/codegen-readonly-drift-checkpoint-2026-11-02.json",
     "research/native-filter-composition-controls.py",
     "research/native-filter-composition-controls.json",
     "research/filter-composition-driver-controls.json",
-    "research/filter-composition-source-review.json",
-    "research/codegen-readonly-drift-checkpoint-2026-11-02.json"
+    "research/filter-composition-source-review.json"
   ],
   "agentLaunchers": [
     {
@@ -167,7 +173,8 @@
     "bun run beep goals doctor",
     "bun run beep explore --check",
     "git diff --check -- goals/turborepo-quality-cache-adoption",
-    "bun run beep lint reflection-artifacts"
+    "bun run beep lint reflection-artifacts",
+    "python3 -m unittest goals/turborepo-quality-cache-adoption/research/test_selection_invoke_compatibility.py"
   ],
   "stopConditions": [
     "Semantic divergence, failed invalidation, sensitive output, or unauthorized read/write/tenant crossing stops affected reuse.",
