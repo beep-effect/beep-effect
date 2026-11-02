@@ -907,9 +907,9 @@ describe("runner bake planning and argv", () => {
         expect(O.getOrElse(constant(-1))(Str.indexOf("sha256sum --check --strict -")(worker))).toBeLessThan(
           O.getOrElse(constant(-1))(Str.indexOf('unzip -oq "${archive}"')(worker))
         );
-        expect(script).toContain('if ! wait "${pid}"; then');
-        expect(script).toContain('bun) die "bun ${BUN_VERSION} download or checksum failed."');
-        expect(O.getOrElse(constant(-1))(Str.indexOf('if ! wait "${pid}"; then')(script))).toBeLessThan(
+        expect(script).toContain('wait "${pid}" || worker_status=$?');
+        expect(script).toContain("bun) bun_failed=1 ;;");
+        expect(O.getOrElse(constant(-1))(Str.indexOf('wait "${pid}" || worker_status=$?')(script))).toBeLessThan(
           O.getOrElse(constant(-1))(Str.indexOf('install -m 0755 "${run_dir}/bun/bun-linux-x64/bun"')(script))
         );
         expect(worker).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');

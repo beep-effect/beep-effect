@@ -3,7 +3,9 @@ import {
   buildPortfolioIndexReport,
   decodeGoalManifest,
   GoalManifest,
+  goalsIndexCommand,
   isCapabilitySlug,
+  PortfolioIndexReport,
   parseGoalManifestText,
   runGoalsDoctor,
 } from "@beep/repo-cli/commands/Goals";
@@ -14,6 +16,7 @@ import { expect, layer } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -21,15 +24,18 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
+import { expectReportedExit, withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const encodeGoalManifest = S.encodeUnknownEffect(GoalManifest);
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodePortfolioIndexReportJson = S.decodeUnknownEffect(S.fromJsonString(PortfolioIndexReport));
+const runGoalsIndex = Command.runWith(goalsIndexCommand, { version: "0.0.0" });
 
 const COMPLETION_GATE = {
   operator: "yeet",
@@ -346,6 +352,48 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("GoalManifest capabi
         "P1:pending",
       ]);
       expect(report.packets[0]?.statusNote).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "12. prints the JSON portfolio and the plain index, and rejects combined output modes",
+    Effect.fn("GoalsManifestCapabilitiesTest.indexCommand")(function* () {
+      const result = yield* withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectFile("bun.lock", "");
+          yield* writeSyntheticPacket({ slug: "alpha", manifest: manifestFixture("alpha") });
+          // Parses as JSON but does not decode as a GoalManifest.
+          yield* writeProjectFile("goals/undecodable/ops/manifest.json", '{ "initiative": {} }\n');
+
+          const json = yield* Effect.andThen(runGoalsIndex(["--json"]), TestConsole.logLines).pipe(
+            provideScopedLayer(Layer.fresh(TestConsole.layer))
+          );
+          const plain = yield* Effect.andThen(runGoalsIndex([]), TestConsole.logLines).pipe(
+            provideScopedLayer(Layer.fresh(TestConsole.layer))
+          );
+          const conflict = yield* Effect.gen(function* () {
+            const exit = yield* Effect.exit(runGoalsIndex(["--write", "--json"]));
+            return { exit, errors: yield* TestConsole.errorLines };
+          }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
+
+          return { json, plain, conflict, content: yield* buildPortfolioIndexContent() };
+        })
+      );
+
+      const jsonText = A.filter(result.json, P.isString);
+      expect(A.length(jsonText)).toBe(1);
+      const report = yield* decodePortfolioIndexReportJson(jsonText[0]);
+      expect(A.map(report.packets, (row) => row.slug)).toEqual(["alpha"]);
+      expect(report.invalid).toEqual(["undecodable"]);
+
+      expect(A.filter(result.plain, P.isString)).toEqual([result.content]);
+      expect(result.content).toContain("## Invalid or missing manifests (1)");
+      expect(result.content).toContain("- `undecodable` — manifest missing or does not decode as GoalManifest");
+
+      expectReportedExit(result.conflict.exit);
+      expect(A.filter(result.conflict.errors, P.isString)).toEqual([
+        "[goals:index] --write, --check and --json are mutually exclusive.",
+      ]);
     })
   );
 });
