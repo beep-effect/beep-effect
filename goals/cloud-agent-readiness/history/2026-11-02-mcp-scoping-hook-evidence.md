@@ -67,8 +67,13 @@ are documented behavior:
 
 Server names and transports come from `.mcp.json`; approval lists from
 `.claude/settings.json`. No value, command or credential was resolved. The
-"Observed" column is this session's start report: a real Anthropic-hosted
-session with ambient `BEEP_AGENT_HOST=cloud` and `CLAUDE_CODE_REMOTE=true`.
+"Observed" columns are this session's start reports: a real Anthropic-hosted
+session with one repository, outside a project thread, with ambient
+`BEEP_AGENT_HOST=cloud` and `CLAUDE_CODE_REMOTE=true`. The table applies only
+to that scope. A cloud project thread applies none of the repo's
+`.claude/settings.json`, so the "Committed approval" column does not hold
+there. Whether `.mcp.json` loads in project threads was not checked (the
+`claude-projects` page was not read).
 
 Two starts are recorded. **Startup** ran on a VM whose toolchain already
 matched. **Resume** came later in the same session on a replaced VM, where the
@@ -257,7 +262,9 @@ chmod +x "$S"/stubbin/* "$S/proj/.claude/hooks/sequence-break-notifier.sh"
 git -C "$S/proj" init -q
 git -C "$S/proj" remote add origin https://github.com/beep-effect/beep-effect.git
 jq -c '.hooks' "$repo/.claude/settings.json" > "$S/hooks.json"
-P="$S/stubbin:/usr/bin:/bin:$(dirname "$(command -v jq)"):$(dirname "$(command -v bun)")"
+jq_dir="$(command -v jq >/dev/null && dirname "$(command -v jq)")"
+bun_dir="$(command -v bun >/dev/null && dirname "$(command -v bun)")"
+P="$S/stubbin:/usr/bin:/bin${jq_dir:+:$jq_dir}${bun_dir:+:$bun_dir}"
 hook_env() { env -i PATH="$P" HOME="$S/home" XDG_STATE_HOME="$S/state" \
   CLAUDE_PROJECT_DIR="$S/proj" BEEP_SEQUENCE_BREAK_FOREGROUND=1 ${1:+BEEP_AGENT_HOST=$1} "${@:2}"; }
 run() { # host event payload
