@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   capabilityPacketFindings,
   goalPacketFindings,
@@ -32,7 +33,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const testLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const REMOVER = "3333333333333333333333333333333333333333";
 const OLDER = "4444444444444444444444444444444444444444";

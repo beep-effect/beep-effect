@@ -15,9 +15,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import { runRepoCommandCapture } from "./RepoRun.executor.ts";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const resolvedPath = Effect.fnUntraced(function* (
   candidate: string
@@ -80,10 +77,9 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
  * `--force` is the designed teardown for synthetic preview worktrees: their
  * commit exists only to be checked out, so local changes inside them are never
  * work to preserve. The removal goes through `@beep/git`'s `Git.worktreeRemove`,
- * which refuses an option-like path before spawning. `worktree prune` always
- * runs afterwards so a registration whose directory already vanished is
- * dropped too; it stays a single repo-run capture because `Git` has no prune
- * member. Every failure, spawn failures included, is absorbed.
+ * which refuses an option-like path before spawning. `Git.worktreePrune`
+ * always runs afterwards so a registration whose directory already vanished
+ * is dropped too. Every failure, spawn failures included, is absorbed.
  *
  * **Example** (Tear down a preview worktree)
  *
@@ -102,13 +98,10 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
  * @since 0.0.0
  */
 export const removeGitWorktree = Effect.fn("GitWorktree.removeGitWorktree")(
-  function* (
-    repoRoot: string,
-    worktreePath: string
-  ): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner | Git | SecureRandom.SecureRandom> {
+  function* (repoRoot: string, worktreePath: string): Effect.fn.Return<boolean, never, Git> {
     const git = yield* Git;
     const removed = yield* git.worktreeRemove(repoRoot, worktreePath, { force: true }).pipe(Effect.isSuccess);
-    yield* runRepoCommandCapture("git", ["worktree", "prune"], repoRoot).pipe(Effect.ignore);
+    yield* git.worktreePrune(repoRoot).pipe(Effect.ignore);
     return removed;
   },
   Effect.provideServiceEffect(Git, Git.make)

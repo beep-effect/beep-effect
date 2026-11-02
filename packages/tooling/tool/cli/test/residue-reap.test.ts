@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { WorktreeMergedPullRequest } from "@beep/repo-cli/commands/Worktree";
 import { makeResidueTerminalLaneProbe, renderResidueReportLinesForTesting } from "@beep/repo-cli/test/Quality";
 import {
@@ -49,7 +50,7 @@ const noLivePid = pidAlive(HashSet.empty());
 
 // Every suite runs without a terminal-lane authority unless a test provides one.
 const ResidueReapTestLayer = Layer.merge(
-  Layer.mergeAll(NodeServices.layer, NodeCrypto.layer),
+  Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)),
   layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)
 );
 
