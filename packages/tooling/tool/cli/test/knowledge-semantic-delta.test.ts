@@ -1984,6 +1984,17 @@ describe("knowledge clone-local attributes guard", () => {
   });
 
   it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails typed through the live refsTree service when the requested revision cannot resolve", () =>
+      Effect.gen(function* () {
+        const knowledge = yield* KnowledgeService;
+        const failure = yield* Effect.flip(knowledge.refsTree("refs/beep/definitely-missing-tree"));
+        assert.strictEqual(failure._tag, "KnowledgeOperationalError");
+        assert.include(failure.message, "fetch-depth: 0");
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
     it.effect("runs the guard on the live semantic-delta path before failing typed on an unresolvable base ref", () =>
       Effect.gen(function* () {
         const knowledge = yield* KnowledgeService;
