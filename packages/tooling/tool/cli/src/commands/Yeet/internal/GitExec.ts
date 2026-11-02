@@ -324,9 +324,9 @@ export const patientGit: Effect.Effect<GitShape, never, ChildProcessSpawner.Chil
  *
  * **Details**
  *
- * An `origin/<branch>` base runs `Git.fetch(repoRoot, { remote: "origin", ref:
- * "refs/heads/<branch>:refs/remotes/origin/<branch>" })`, the explicit refspec that materializes
- * `origin/<branch>` under a single-branch clone too. Any other base is verified in place with
+ * An `origin/<branch>` base runs `Git.fetch` against remote `origin` with the explicit refspec
+ * `refs/heads/<branch>:refs/remotes/origin/<branch>`, which materializes `origin/<branch>` under a
+ * single-branch clone too. Any other base is verified in place with
  * `Git.revParse(repoRoot, base)`; a base git would read as an option is refused before any spawn
  * and reaches Yeet as the spawn-failure wording.
  *
@@ -449,9 +449,9 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  *
  * **Details**
  *
- * KEEP (W1b): this reader stays on the bounded capture because `Git.changedFiles` takes no
- * pathspec yet; it moves onto the kit with the G7 dirty-axis flags in W2
- * (repo-cli-gh-git-consolidation PLAN "Waves").
+ * Runs `Git.changedFiles(repoRoot, { base, head, pathspec: ["bun.lock"] })` (the G7 pathspec,
+ * repo-cli-gh-git-consolidation W2, SPEC D-10); any failure reads as "unchanged", as the tolerant
+ * capture it replaces did.
  *
  * **Example** (Detect bun.lock changes)
  *
@@ -476,16 +476,12 @@ export const currentCommitSha = Effect.fn("Yeet.currentCommitSha")(function* (
  */
 export const lockfileChangedSinceBase = Effect.fn("Yeet.lockfileChangedSinceBase")(function* (
   context: RepoRunContext
-): Effect.fn.Return<boolean, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
-  const changed = yield* runGitPathList(context.repoRoot, [
-    "diff",
-    "--name-only",
-    "-z",
-    `${context.base}...${context.head}`,
-    "--",
-    "bun.lock",
-  ]).pipe(Effect.orElseSucceed(A.empty<string>));
-  return !A.isReadonlyArrayEmpty(changed);
+): Effect.fn.Return<boolean, YeetCommandError, Git> {
+  const git = yield* Git;
+  const changed = yield* git
+    .changedFiles(context.repoRoot, { base: context.base, head: context.head, pathspec: ["bun.lock"] })
+    .pipe(Effect.orElseSucceed(A.empty<string>));
+  return A.isReadonlyArrayNonEmpty(changed);
 });
 
 /**

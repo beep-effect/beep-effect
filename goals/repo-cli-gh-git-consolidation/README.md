@@ -31,17 +31,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W1 in review in two halves. W1a (#2539): the typed readers of `internal/repo-run/GitExec.ts`
-run through `Git` behind one adapter fold, with `Git` widened into the Knowledge, Quality, Ci, Worktree and Yeet
-requirement unions that reach them (SPEC D-08). W1b (this PR): Yeet's own git spawns run through `Git`
-(`refreshBaseRef` -> `fetch` / `revParse`, `currentCommitSha` -> `revParse`, the `FinalCheckRefresh` and `Sweep`
-is-ancestor probes -> `isAncestor`, the head-install preflight's `worktreeAdd` / `worktreeRemove` /
-`worktreePrune` read back through `captureGitKitExit`), `Git` lifted into the Yeet unions, and the leaf
-`Git.make` provisions dropped from `GitWorktree.ts` and `TmpfsReap.ts` (SPEC D-09); `lockfileChangedSinceBase`
-waits for the G7 pathspec. W0 merged (#2514); the W1 kit merged (#2522). Next: W2.
+P1 Implement, W2 in review (this PR). The G7 dirty-axis readers run through `Git`: `internal/repo-run/ChangedFiles.ts`
+(`unstagedChanges` / `stagedChanges` / `untrackedFiles` with `diffFilter`, `noRenames` and pathspecs; `changedFiles`
+for the base range, through the new `collectBaseRangeChangedFiles`), Yeet's `lockfileChangedSinceBase`, the `status`
+probes of `ResidueReap`, `TmpfsReap` and the fleet mirror, the Worktree listing (`Git.worktreeList` mapped by
+`worktreeListEntriesFromGit`; `parseWorktreePorcelain` and `parseStatusPorcelainZ` retired), Fleet's origin and
+common-dir probes, and the one-liners of `Codex/Security`, `Session/SessionLedger`, `Runners`, `Ci/CiLane`,
+`Quality/ChangesetStatus`, `PackageVerify`, `CoverageRegression` and `CoverageArtifacts` (SPEC D-10). The Knowledge
+path-removal log (#110) stays: `Git.log` has no starting ref. W2b carries the Yeet `Settle`/`ProofShadow` and
+probe-seam git halves, `Library.inventory.ts` and ai-metrics #107. W0 merged (#2514); the W1 kit merged (#2522);
+W1a (#2539) and W1b (#2546) in review. Next: W2b, then W3.
 
 ## Latest Evidence
 
+- 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
+  repo-cli typecheck clean, the worktree, fleet, residue-reap, tmpfs-reap, quality-tasks, docgen, session-ledger,
+  codex-security, package-verify, ci-lane, changeset-status, runners-bake, coverage-artifacts and step-git-exec
+  suites green (23 files, 1137 tests); `lint policy-fingerprint --write` leaves the seals byte-identical.
 - 2026-11-02 W1b: `research/yeet-git-differential-w1b.json` (31 scenarios, 27 same, 4 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*`, `step-git-exec`, `tmpfs-reap`, `residue-reap`,
   `git-worktree` and `git-adoption-sites` suite green (64 files, 1640 tests).

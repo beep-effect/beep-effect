@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { DomainError } from "@beep/repo-utils";
@@ -30,11 +32,16 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { messageWithCause } from "../../../internal/cli/CommandErrorFields.ts";
 import { configStringOption } from "../../../internal/cli/EnvConfig.ts";
-import { runCaptured } from "../../../internal/process/index.ts";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
-import { resolveGitCommit, resolveGitMergeBase, runGitRawOutput } from "../../../internal/repo-run/GitExec.ts";
+import {
+  adaptGitKitError,
+  resolveGitCommit,
+  resolveGitMergeBase,
+  runGitRawOutput,
+} from "../../../internal/repo-run/GitExec.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
 import {
   CoverageBaselineRowDelta,
@@ -49,7 +56,6 @@ import {
   workspaceCoverageScopeOwners,
 } from "./CoverageScope.ts";
 import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
-import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
@@ -1303,18 +1309,18 @@ const readGitSha = Effect.fn("CoverageRegression.readGitSha")(function* (
   QualityTaskConfigurationError,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
-  const result = yield* runCaptured({
-    command: "git",
-    args: ["rev-parse", "HEAD"],
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(QualityTaskConfigurationError.mapError("Failed to read git revision."));
-
-  if (result.exitCode !== 0) {
-    return yield* QualityTaskConfigurationError.new(`git rev-parse HEAD failed with exit code ${result.exitCode}.`);
-  }
-
-  return Str.trim(result.output);
+  const git = yield* Git;
+  return yield* git.revParse(repoRoot, "HEAD").pipe(
+    Effect.mapError(
+      adaptGitKitError(GitCommand.revParse("HEAD"), {
+        onSpawnFailure: () => (cause) =>
+          QualityTaskConfigurationError.new(messageWithCause("Failed to read git revision.", cause)),
+        onNonZeroExit: ({ commandLine, exitCode }) =>
+          QualityTaskConfigurationError.new(`${commandLine} failed with exit code ${exitCode}.`),
+        onTruncated: O.none(),
+      })
+    )
+  );
 });
 
 const workspaceCoveragePackages = Effect.fn("CoverageRegression.workspaceCoveragePackages")(function* (
@@ -2076,7 +2082,7 @@ const collectCoverageBaselineChangeSet = Effect.fn("CoverageRegression.collectCo
 
   yield* Console.log("[coverage-ratchet] no comparison base resolved; using dirty-worktree files only");
   const changedFiles = yield* collectDirtyWorktreeFiles(repoRoot, {
-    diffArgs: ["--no-renames"],
+    noRenames: true,
     pathspecs: A.empty(),
     onProbeFailure: "fail",
   }).pipe(

@@ -21,6 +21,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, P, Str } from "@beep/utils";
@@ -55,8 +56,9 @@ import {
   FleetScanOptions,
   FleetSessionRegistryEntry,
   FleetSnapshot,
-  parseWorktreePorcelain,
+  worktreeListEntriesFromGit,
 } from "./Worktree.schemas.ts";
+import type { StatusEntry } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -158,76 +160,6 @@ export const classifyFleetLiveness: {
     return FleetLivenessVerdict.make({ status: "unknown", evidence: [] });
   }
 );
-
-const RENAME_OR_COPY_STATUS = /[RC]/;
-
-/** One decoded `-z` status record: the paths it claims, whether it counts as an entry, and how many NUL fields it consumed. */
-type StatusRecord = {
-  readonly paths: ReadonlyArray<string>;
-  readonly counted: boolean;
-  readonly stride: number;
-};
-
-const SKIPPED_STATUS_RECORD: StatusRecord = { paths: A.empty(), counted: false, stride: 1 };
-
-const statusRecordAt = (records: ReadonlyArray<string>, index: number): StatusRecord => {
-  const record = records[index];
-  if (record === undefined || Str.isEmpty(record)) {
-    return SKIPPED_STATUS_RECORD;
-  }
-  const target = Str.slice(3)(record);
-  if (!RENAME_OR_COPY_STATUS.test(Str.slice(0, 2)(record))) {
-    return { paths: [target], counted: true, stride: 1 };
-  }
-  const origin = O.filter(O.fromUndefinedOr(records[index + 1]), Str.isNonEmpty);
-  return {
-    paths: O.match(origin, { onNone: () => [target], onSome: (value) => [target, value] }),
-    counted: true,
-    stride: 2,
-  };
-};
-
-/**
- * Parse `git status --porcelain=v1 -z -uall` output into entry count and the
- * full set of involved paths.
- *
- * **Details**
- *
- * `-z` records are NUL-delimited and unquoted, so C-quoted paths never appear.
- * Rename and copy records carry the origin path as the following NUL field;
- * both sides enter the path set, because both sides are contested by the
- * change.
- *
- * **Example** (Parse a rename record)
- *
- * ```ts
- * import { parseStatusPorcelainZ } from "@beep/repo-cli/commands/Worktree"
- *
- * const parsed = parseStatusPorcelainZ("R  new.ts\0old.ts\0?? fresh.ts\0")
- * console.log(parsed.entryCount) // 2
- * console.log(parsed.paths) // ["new.ts", "old.ts", "fresh.ts"]
- * ```
- *
- * @param output - Raw stdout from `git status --porcelain=v1 -z -uall`.
- * @returns The entry count and every path the records claim, rename origins included.
- * @category parsing
- * @since 0.0.0
- */
-export const parseStatusPorcelainZ = (
-  output: string
-): { readonly entryCount: number; readonly paths: ReadonlyArray<string> } => {
-  const records = Str.split(output, "\0");
-  const paths: Array<string> = [];
-  let entryCount = 0;
-  let index = 0;
-  while (index < records.length) {
-    const parsed = statusRecordAt(records, index);
-    paths.push(...parsed.paths);
-    entryCount = parsed.counted ? entryCount + 1 : entryCount;
-    index = index + parsed.stride;
-  }
-  return { entryCount, paths };
-};
 
 /**
  * Parse conflicted file names from `git merge-tree --write-tree --name-only`
@@ -424,7 +356,8 @@ type FleetMirrorServiceRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 /**
  * Service tag for the fleet-mirror derivation scan.
@@ -508,6 +441,11 @@ const runGitProbe = Effect.fn("Fleet.runGitProbe")(function* (
 const gitStdout = (probe: O.Option<GitProbeResult>): O.Option<string> =>
   O.flatMap(probe, (result) => (result.exitCode === 0 ? O.some(result.stdout) : O.none()));
 
+// The `Git`-backed probes keep the same fail-silent contract: any kit failure (a non-repository, a
+// refused parse, a truncated or timed-out run) is `O.none()`. The reads that need the scanner's
+// per-call `env` stay on `runGitProbe`: the kit reads its environment once at `make` (SPEC D-10).
+const gitProbe = <A, E>(read: Effect.Effect<A, E>): Effect.Effect<O.Option<A>> => Effect.option(read);
+
 const nulPaths = (stdout: string): ReadonlyArray<string> => A.filter(Str.split(stdout, "\0"), Str.isNonEmpty);
 
 /** A sibling directory counts as a fleet clone only when it holds a `.git` directory whose origin normalizes to ours. */
@@ -521,7 +459,8 @@ const cloneMatchesOrigin = Effect.fn("Fleet.cloneMatchesOrigin")(function* (
   if (O.isNone(gitInfo) || gitInfo.value.type !== "Directory") {
     return false;
   }
-  const originOutput = gitStdout(yield* runGitProbe(candidate, ["remote", "get-url", "origin"]));
+  const git = yield* Git;
+  const originOutput = O.flatten(yield* gitProbe(git.remoteUrl(candidate)));
   return O.match(originOutput, {
     onNone: () => false,
     onSome: (output) => normalizeOriginUrl(output) === normalizedOrigin,
@@ -553,19 +492,15 @@ const discoverClones = Effect.fn("Fleet.discoverClones")(function* (
 const cloneStubs = Effect.fn("Fleet.cloneStubs")(function* (
   clone: string
 ): Effect.fn.Return<ReadonlyArray<CheckoutStub>, never, FleetMirrorServiceRequirements> {
-  const porcelain = gitStdout(yield* runGitProbe(clone, ["worktree", "list", "--porcelain", "-z"]));
-  if (O.isNone(porcelain)) {
-    const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
-    return [unlisted];
-  }
-  const entries = yield* Effect.result(parseWorktreePorcelain(porcelain.value));
-  if (Result.isFailure(entries)) {
-    yield* Effect.logWarning("Git worktree listing must use NUL delimiters; retaining the clone as unlisted.");
+  const git = yield* Git;
+  // A listing the kit refuses (not `-z` output, truncated) is a failed probe like any other.
+  const listed = yield* gitProbe(git.worktreeList(clone));
+  if (O.isNone(listed)) {
     const unlisted: CheckoutStub = { path: clone, kind: "clone", entry: null };
     return [unlisted];
   }
   return A.map(
-    entries.success,
+    worktreeListEntriesFromGit(listed.value),
     (entry, index): CheckoutStub => ({
       path: entry.path,
       kind: index === 0 ? "clone" : "linked-worktree",
@@ -957,14 +892,48 @@ type StatusFacts = {
   readonly dirtyPaths: ReadonlyArray<string>;
 };
 
+/**
+ * Reduce `Git.status` entries to the fleet's dirty count and contested paths.
+ *
+ * **Details**
+ *
+ * Each entry counts once, and a rename or copy contributes both its new path
+ * and its `origPath`, because a sibling checkout editing either side contests
+ * the change. Untracked files inside an untracked directory arrive as separate
+ * entries because the probe asks for `--untracked-files=all`.
+ *
+ * **Example** (Count a rename once with both paths)
+ *
+ * ```ts
+ * import { StatusEntry } from "@beep/git/Git"
+ * import { statusFactsFromEntries } from "@beep/repo-cli/commands/Worktree"
+ *
+ * const facts = statusFactsFromEntries([StatusEntry.make({ x: "R", y: " ", path: "new.ts", origPath: "old.ts" })])
+ * console.log(facts.entryCount, facts.paths) // 1 [ "new.ts", "old.ts" ]
+ * ```
+ *
+ * @param entries - The checkout's status entries.
+ * @returns The entry count and every path the entries touch, in status order.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const statusFactsFromEntries = (
+  entries: ReadonlyArray<StatusEntry>
+): { readonly entryCount: number; readonly paths: ReadonlyArray<string> } => ({
+  entryCount: A.length(entries),
+  paths: A.flatMap(entries, (entry) => [entry.path, ...A.fromOption(O.fromUndefinedOr(entry.origPath))]),
+});
+
 const statusFacts = Effect.fn("Fleet.statusFacts")(function* (
   checkoutPath: string
 ): Effect.fn.Return<StatusFacts, never, FleetMirrorServiceRequirements> {
-  const statusOutput = gitStdout(yield* runGitProbe(checkoutPath, ["status", "--porcelain=v1", "-z", "-uall"]));
-  const status = O.map(statusOutput, parseStatusPorcelainZ);
+  const git = yield* Git;
+  // Every untracked file inside an untracked directory is its own entry (`--untracked-files=all`);
+  // a rename or copy contributes both of its paths, because both are contested by the change.
+  const status = O.map(yield* gitProbe(git.status(checkoutPath, { untrackedFiles: "all" })), statusFactsFromEntries);
   return {
-    dirtyCount: O.match(status, { onNone: () => null, onSome: (parsed) => parsed.entryCount }),
-    dirtyPaths: O.match(status, { onNone: A.empty<string>, onSome: (parsed) => parsed.paths }),
+    dirtyCount: O.match(status, { onNone: () => null, onSome: (facts) => facts.entryCount }),
+    dirtyPaths: O.match(status, { onNone: A.empty<string>, onSome: (facts) => facts.paths }),
   };
 });
 
@@ -1266,7 +1235,8 @@ const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
     Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
   );
 
-  const originProbe = gitStdout(yield* runGitProbe(currentRoot, ["remote", "get-url", "origin"]));
+  const git = yield* Git;
+  const originProbe = O.flatten(yield* gitProbe(git.remoteUrl(currentRoot)));
   const originUrl = options.originUrl ?? (O.isSome(originProbe) ? Str.trim(originProbe.value) : null);
   if (originUrl === null || Str.isEmpty(originUrl)) {
     return yield* WorktreeCommandError.make({
@@ -1279,9 +1249,9 @@ const resolveFleetScope = Effect.fn("Fleet.resolveFleetScope")(function* (
   const fleetRoot = yield* O.match(O.fromUndefinedOr(options.fleetRoot), {
     onSome: Effect.succeed,
     onNone: () =>
-      Effect.map(runGitProbe(currentRoot, ["rev-parse", "--git-common-dir"]), (probe): string =>
+      Effect.map(gitProbe(git.commonDir(currentRoot)), (probe): string =>
         pipe(
-          gitStdout(probe),
+          probe,
           O.map((output) => path.dirname(path.dirname(path.resolve(currentRoot, Str.trim(output))))),
           O.getOrElse(() => path.dirname(currentRoot))
         )
