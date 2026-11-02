@@ -3096,12 +3096,11 @@ const policyLintTurboStep = (
   plan: QualityConcurrencyPlan = localQualityConcurrencyPlan(),
   width: number = plan.policyLint
 ): QualityTaskStep => {
-  const concurrency = width;
   // Scope is the caller's decision: a base means a scoped local run, no base means full scope
   // (the policy task folds CI into full scope before building the plan).
   const affected = !P.isUndefined(base);
   const step = turboStep(repoRoot, label, tasks, [
-    `--concurrency=${concurrency}`,
+    `--concurrency=${width}`,
     "--continue=dependencies-successful",
     "--summarize",
     ...(affected ? ["--affected"] : []),
@@ -3505,10 +3504,7 @@ const runPolicyStages = Effect.fn("QualityTasks.runPolicyStages")(function* (
 });
 
 const runPolicySteps = (steps: ReadonlyArray<QualityTaskStep>, full: boolean) =>
-  runPolicyStages(
-    A.map(steps, (step) => A.of(step)),
-    full
-  );
+  runPolicyStages(A.map(steps, A.of), full);
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
