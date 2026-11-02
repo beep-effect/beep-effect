@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "kind": "Fresh synthetic root preparation and proof-helper refusal controls",
+  "sourceParent": "7ae3f01401d20f7962a9d89bb2a5cbcd745ede34",
+  "qualificationSha256": "51e58759c44d20597f5fb5db6fa7595a702bf17b4645daac277daaa6ba4653cd",
+  "rootProbeSha256": "dede38250d9b6066304babfce3413ad3c5c5d64922020c18faf7b12302358e3c",
+  "rootSourceHashesIndependentlyVerified": 82,
+  "sourceSha256": {
+    "goals/agent-observability-foundation/ops/declared_canary_support.py": "ef88947496cd6eef5dbc3402b42bcc706a275a6e7fbfe0354ecb903e7d1b11c2",
+    "goals/agent-observability-foundation/ops/verify-observation-deployment.py": "8a77f6b178ecf059ed4fcc515b74fc6e1ba7ebed016d32c9ea9885d8ab72a075"
+  },
+  "negativeControls": [
+    {
+      "control": "historical-default-cannot-accept-fresh-root",
+      "refused": true
+    },
+    {
+      "control": "wrong-qualification",
+      "refused": true
+    },
+    {
+      "control": "wrong-probe",
+      "refused": true
+    },
+    {
+      "control": "invalid-qualification-0",
+      "refused": true
+    },
+    {
+      "control": "invalid-probe-0",
+      "refused": true
+    },
+    {
+      "control": "invalid-qualification-63",
+      "refused": true
+    },
+    {
+      "control": "invalid-probe-63",
+      "refused": true
+    },
+    {
+      "control": "invalid-qualification-64",
+      "refused": true
+    },
+    {
+      "control": "invalid-probe-64",
+      "refused": true
+    },
+    {
+      "control": "invalid-qualification-65",
+      "refused": true
+    },
+    {
+      "control": "invalid-probe-65",
+      "refused": true
+    },
+    {
+      "control": "invalid-qualification-10",
+      "refused": true
+    },
+    {
+      "control": "invalid-probe-10",
+      "refused": true
+    },
+    {
+      "control": "modified-probe-with-same-pins",
+      "refused": true
+    },
+    {
+      "control": "qualification-without-probe",
+      "refused": true,
+      "refusalBoundary": "Supply both declared-root digests together"
+    },
+    {
+      "control": "probe-without-qualification",
+      "refused": true,
+      "refusalBoundary": "Supply both declared-root digests together"
+    },
+    {
+      "control": "pair-without-root",
+      "refused": true,
+      "refusalBoundary": "Explicit digests require a declared root"
+    },
+    {
+      "control": "optimized-verifier",
+      "refused": true
+    },
+    {
+      "control": "optimized-helper",
+      "refused": true
+    }
+  ],
+  "positiveFreshRootAccepted": true,
+  "rootBytesRestored": true,
+  "controlReceiptSha256": "82c5c5a94572d94ebfd21b909a8ba85b23eb2379e1a002ce6193151e4d401e0e",
+  "independentNamedFoundationReview": "Accepted exact root, paired pins, private ownership/modes, all 82 source inputs, exact synthetic Git/host/root/namespace identities, Unknown populations and corrected refusal controls.",
+  "retainedHistoricalDefaults": true,
+  "historicalEvidenceRewritten": false,
+  "realHarnessPopulations": "Unknown",
+  "backendRequestsAtPreparation": 0,
+  "routeStageScope": "Preparation only; route execution receipts are separate.",
+  "recoveryHoldReleased": false
+}

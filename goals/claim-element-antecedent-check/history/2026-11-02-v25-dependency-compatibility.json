@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "claim-v25-dependency-compatibility/v1",
+  "date": "2026-11-02",
+  "acceptedMain": "74f77b44923ae8b30d1d4b78950df6a4f1f4ef9b",
+  "integrationMerge": "eb042b2fd4aaa545c3fd39e2443a5040c7a6566a",
+  "mainChanges": "Accepted PortfolioIndex coverage unblocker #2517 and dependency bump #2507; claim-check algorithm sources unchanged.",
+  "algorithmVersion": "v24",
+  "algorithmDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "implementationDigest": "ff71219ed967ed5b5fbedb7512f77f736cded1e990dc047a0af4e4280f0d8846",
+  "prePredictionSnapshotFiles": 24,
+  "algorithmSourceFilesUnchanged": 21,
+  "toolchain": {
+    "bun": "1.4.4",
+    "effect": "4.1.1"
+  },
+  "frozenInstall": {
+    "exitCode": 0,
+    "packagesInstalled": 12,
+    "seconds": 4.5,
+    "logSha256": "f64568b1b8c8fb3a3f49bfe96b64bae0781281b78ca0382a74692e976eb3e268"
+  },
+  "comparison": [
+    {
+      "lane": "positive",
+      "fullResultValuesIdenticalExcept": ["implementationDigest"],
+      "predictionReportsByteIdentical": 55,
+      "priorRawResultsSha256": "c5e17de5c001958fbbbd97c3a45150c28202ebf73c3e1d499bc4fbf9d22d704f",
+      "currentRawResultsSha256": "ad38d2550c9c8051978aa6467c44c1635dd62e0a4aead455d5651fb395102d1d"
+    },
+    {
+      "lane": "allowed",
+      "fullResultValuesIdenticalExcept": ["implementationDigest"],
+      "predictionReportsByteIdentical": 196,
+      "priorRawResultsSha256": "f0624a631983c8ce32ae6849f9ef90aceeee8d1ecbe6d7c924b6cd16608a2d6a",
+      "currentRawResultsSha256": "58ecf1b40a47d9b62e0658cdf6be589719b7d6024bebcee209f00965133e6f61"
+    }
+  ],
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "protectedRetained": 34,
+  "allPrevious37Retained": 37,
+  "lost": [],
+  "referenceAndHistoryPinsExact": 631,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "historicalReviewIdentity": "All 251 predictions and input-failure outcomes match v24. The v24 115-question/605-quote historical review identity therefore carries forward; no fresh review claimed.",
+  "freshIndependentReviewClaimed": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "iprallySmoke": {
+    "result": {
+      "status": "checked",
+      "basis": "non-US-non-gold",
+      "sourceId": "KR-100380121-B1",
+      "country": "KR",
+      "ipcCodes": "F15",
+      "tokens": 523,
+      "sourceCommit": "51ba1e69b471021f225fe6787100b0f69d78da24",
+      "archiveSha256": "35307451747a8ae65d4d359aed23cff2f0d8ce02dfc8b8e3bfe6db7cbdadab0a",
+      "claims": 1,
+      "trees": 1,
+      "findings": 78,
+      "undecomposed": 0,
+      "manualReviewPatterns": 16
+    },
+    "identicalToV24": true,
+    "rawDataCommitted": false
+  },
+  "hostedCoverageFailure": {
+    "jobId": 125137146190,
+    "base": "186214ce22d8e9ed4fbb3af3a70e829f3fa8facb",
+    "reportedPaths": [
+      "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "packages/tooling/tool/cli/src/commands/HarnessLedger/internal/PruneWindow.ts"
+    ],
+    "PortfolioIndexFixMergedOnMain": 2517,
+    "remainingPruneWindowStatus": "New hosted comparison after main synchronization is pending; no floor lowered or failed row counted as passing."
+  },
+  "hostedReadiness": "Pending exact final-head strict verification; draft merge hold retained."
+}
