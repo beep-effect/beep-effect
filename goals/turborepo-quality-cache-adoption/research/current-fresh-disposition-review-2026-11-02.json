@@ -1,0 +1,3791 @@
+{
+  "schemaVersion": "cache-current-fresh-disposition-review/v1",
+  "recordedAt": "2026-11-02T06:40:11.519041+00:00",
+  "authority": "Current literal-source review of whole commands that must execute; no runtime success, pure counterpart eligibility or cache qualification is asserted.",
+  "sourceBaseRevision": "68834a997e97a0504df6feee6f57d083b3258c1b",
+  "priorPopulation": {
+    "path": "research/population-before-refresh-2026-11-02.json",
+    "sha256": "bf8b51d82b29a0b010fb500bb6bb27cf2743313aac34bcc2d5a0c697718ea853"
+  },
+  "censusSha256": "1e0f54fe9a3169b0e4d01a80475896cf6e146a4e1ab1272ec7e002880a15e9de",
+  "rules": [
+    "Every fixer retains the same literal wrapper and resolved source-writing implementation, and effective caching is disabled.",
+    "Every persistent service retains its literal command, persistent declaration and disabled cache.",
+    "Changed expanded command digests are recorded; this review proves the required fresh operation only, not all expanded behavior or any pure counterpart.",
+    "The changed external-advisory command remains pending separate current-source review."
+  ],
+  "counts": {
+    "sourceMutatingFixers": 186,
+    "persistentServices": 12,
+    "reviewedWholeTaskFreshDispositions": 198,
+    "remainingCurrentSourceReviews": 2423,
+    "changedCommandDigests": 4
+  },
+  "rows": [
+    {
+      "computation": "@beep/acp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/acp/package.json",
+        "sha256": "2f402463d9f4fa91ced4af77d91140976e1e7268acbacd3c577dd8d0be25f0a2"
+      },
+      "scriptMapSha256": "d1e69195dae47064a78c6283dca6b91795562b8ab85c7bfd5119ebe8dd2d0ecd",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/agents-client#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/agents/client/package.json",
+        "sha256": "8e1d2d76b2ed9570cbaee4be39ba58b049a87898b6a59792c3a3305ab05e24a9"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/agents-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/agents/domain/package.json",
+        "sha256": "539c77263cedc740ae0f7f54dcff2a76fefb88745d0ed5bbc8c479cb04a1fdc9"
+      },
+      "scriptMapSha256": "f30e58acacc6151428ec272f96c151041ce9c6c89fe9cc30bcad8504dd1f5910",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/agents-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/agents/server/package.json",
+        "sha256": "2fa4e64d759df1d743695cfaff2a0b506d12ea068d24f69c8d2b3a9d96532606"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/agents-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/agents/tables/package.json",
+        "sha256": "340c7f7111950fb58ea629234279df14fcad75c04a9c842e6a1932818c0d11a0"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/agents-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/agents/use-cases/package.json",
+        "sha256": "2978b2de47c533f217462e49511cb7defffabc67fb00d040915b19b5349f2f9a"
+      },
+      "scriptMapSha256": "f30e58acacc6151428ec272f96c151041ce9c6c89fe9cc30bcad8504dd1f5910",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ai-provider-cli#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/ai-provider-cli/package.json",
+        "sha256": "e1df2ab464009f332c467795019fa4cd1c37edb5e061d69eee85ab2253ce9b73"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ai-sync#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/ai-sync/package.json",
+        "sha256": "c2e0aeae6410bb6d93aa8bd9ba0c40ae205d22882edc6e3c71b2d9001c42e276"
+      },
+      "scriptMapSha256": "38afbc086e0b470d17375e0e0750b37210e3f1266872c06f167e5c57eb00f523",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/anthropic#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/anthropic/package.json",
+        "sha256": "5dbe3abe198b64813c3191f9e1edbbb68ecd767f05e9c9551d5f19944307b89c"
+      },
+      "scriptMapSha256": "fd8fb199bdd627044b74d336288863b2b907eda2431016b8d707e9a79036475d",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/api-docs#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/labs/api-docs/package.json",
+        "sha256": "3c92e30964fe824a188170712fd94c400755a48f02a418afa66107370ee9bf24"
+      },
+      "scriptMapSha256": "f7a44c008bd80a7e5f9e802e5ed0556193a3093e270283aa944402d4da2f88db",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/api-transport#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/api-transport/package.json",
+        "sha256": "9db8ec0c0197ee28a08ac5f2decac48baaacb9fd8dcb71475ea7fe9bff25d188"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-client#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/client/package.json",
+        "sha256": "c1cc1a240d8adeb0a26b0f2e2f041806a54bfcccae946a24ec8b7cb8298b72f4"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-config#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/config/package.json",
+        "sha256": "9d014c71744084dd3d87c54c291142f2213f9b3adbe378d6caf68bfccd69d011"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/domain/package.json",
+        "sha256": "e8c70e397d6a20496190534042380364cf5e390ebc1846725eb6558d9900eb33"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-proof#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/architecture-lab-proof/package.json",
+        "sha256": "13251f1b205e0290375839bf8b07a93d290e7b393bd36c727d5ec26e131e4462"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/server/package.json",
+        "sha256": "f3fe1a7845356b9e87b7ef1ff6d2b243b4f3109685f6f0aae7c9765b78846cc8"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/tables/package.json",
+        "sha256": "ebed1e6d17c4b7fbe21c8162f79e54a3dd6cea9976a687ad4dd83feb8325e98e"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-ui#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/ui/package.json",
+        "sha256": "1a8433929ca5ac21297194cf52fbc388aa1449bb8c58937f0d55905c18eb824d"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/architecture-lab-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/architecture-lab/use-cases/package.json",
+        "sha256": "4560b41a6675cd7e62dbd08e4199bf51378378d938af355c9e69c009ae4a4b57"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/box#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/box/package.json",
+        "sha256": "f0230012bf9dbfd40b9ed3f5883b204c586a1b89b7a67e4905d8457f0b0c336b"
+      },
+      "scriptMapSha256": "d0318809daa19557e60b4be31a326f53ffc7662959faf446b14972608091542f",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/box-provisioning#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/box-provisioning/package.json",
+        "sha256": "cfa8726e63af234d948d431ba5eb4c7f44801d773a7a1eb88667da33d0a6a0cd"
+      },
+      "scriptMapSha256": "199da8a5b606b31de644b177d5ad131577d1ab5cf8899476f8563b7af7e4d413",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/brand#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/ui-system/brand/package.json",
+        "sha256": "2e3c34244e3cc92cd08309fdff43f92a282e26bef946433d20d0ce81b5c80487"
+      },
+      "scriptMapSha256": "cb5600c9923969dd7263f07c1aa42e2c9f34f939af527aab491dff73a337dd22",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/chalk#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/chalk/package.json",
+        "sha256": "e5f9c7124b6e20411de7a9ff018e321e064e2dfb98e8fefe3a638b98f610c2b1"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ciops#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/labs/ciops/package.json",
+        "sha256": "93977ccf6af0133b8d6a6827b805be775ce63c6ebd73036c336053afa01935aa"
+      },
+      "scriptMapSha256": "33f9f818b5317ccf66cf413573b723e8645f36e340c42954bdbe36c244d79b44",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/codegen-kit#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/codegen-kit/package.json",
+        "sha256": "aae4aa7d5df1be0610f98a9d815e1ed0c048d0fd7f29223cb18b0be2d75df4ee"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/colors#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/colors/package.json",
+        "sha256": "6742256117546b3113177b6b499641eb9cf2fe41fc463ff45c6e597feb33d4a2"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/cosmos#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/cosmos/package.json",
+        "sha256": "8e19b6e9e14439f91c0eb2838569fbbe8c4728a11555dc816ee961171c0457be"
+      },
+      "scriptMapSha256": "1e77a2e6b9085176cd9bddebdfc23cf5be9c3722917f3f99057b8cabd74cd707",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/data#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/primitive/data/package.json",
+        "sha256": "99fa5a5bba290b23c6e3447c22ebbf2d40cd909138212ba1e3d9102e6510af53"
+      },
+      "scriptMapSha256": "db17e07b6dc1e52e712bd218ccd6b55dd40ebb67ff66c89c1057cb3e780977c2",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/db-admin#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/_internal/db-admin/package.json",
+        "sha256": "e68a7f0c7787a05dbc90c08241b0c2053459d44ef62042c27b79c4ed194fcfe9"
+      },
+      "scriptMapSha256": "06bf938cee668fdd32bbff95ca27fdf7bf175f3b39ba73fd8b62688a1281ef53",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/discord#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/discord/package.json",
+        "sha256": "270d0a47269c32fb5d1b1a757bdfaf85ee8b300b68be8fb610a301e94b9b4b57"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/doc-text#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/doc-text/package.json",
+        "sha256": "d7eb1a7752f484de1907ab23b32f2cc2624e7ce0d6782363ad97f3bce9c60a31"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/dock#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/ui-system/dock/package.json",
+        "sha256": "03989f5f3385def1b66d58b2fd9680918cf51488c755223980db615f27331077"
+      },
+      "scriptMapSha256": "7b53f288074ff66ff46f88091da18cb2df142e1707409e21913e82cdafedc91f",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/dock-react#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/ui-system/dock-react/package.json",
+        "sha256": "4f61bd029fe95a10706c303d412e5bc2233fd593000393b938d2e8e6100ffce7"
+      },
+      "scriptMapSha256": "ab2699d5dbf7a1e2f3650df0a9d66f54ace1a954a62f8750b8a06f6c96737e1e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/documents-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/documents/domain/package.json",
+        "sha256": "e6cf45c4373591275b92ff444fba691a843d98fd6adf0e0489a8c3770d9454d2"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/documents-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/documents/server/package.json",
+        "sha256": "a6cb474356e27cd7a38538c1e63e423d58e53346a8964b0488594aa6eadb7c05"
+      },
+      "scriptMapSha256": "731c6decac19e1f9da331c150a0df7a2c7b002667a91e91e975d12e09131a71e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/documents-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/documents/tables/package.json",
+        "sha256": "791d565b8a9b8870ceaedcd0be62c79e7f7f3c4e68e936d6d2f8e33bed546dc6"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/documents-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/documents/use-cases/package.json",
+        "sha256": "301c5750181be9b826269e4861cf7314064faf3823929d9fe024ffe815cc2bd9"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/drizzle#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/drizzle/package.json",
+        "sha256": "458e50b34beed29025610480ca126fa372e21f7383df6abb9df97d400db9fd70"
+      },
+      "scriptMapSha256": "59f84fc1c94b4e8fa3137a9f235beab6e7d01a883eb5a89088d50795e0e8ed91",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/duckdb#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/duckdb/package.json",
+        "sha256": "88430ac84484cb2607ffc90d81013a808f7c42671e3c18985a36f589c80f46ea"
+      },
+      "scriptMapSha256": "fd8fb199bdd627044b74d336288863b2b907eda2431016b8d707e9a79036475d",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ecfr#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/ecfr/package.json",
+        "sha256": "16e2dc800818444a9768d63c6ff527232cb0f8c3ec1b6b4af8d23a787b16eab8"
+      },
+      "scriptMapSha256": "5589401d3c15893955cde95848fef047a4e754acb1df0dcacff728ea94cc7149",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/editor#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/ui-system/editor/package.json",
+        "sha256": "aa10d90534e87abc23bff38b2e97b12d4e1777bc30f948125f1042abed4bc5b2"
+      },
+      "scriptMapSha256": "9d27539c1eccb8b9943daf31227e2183d97ed1c433413f68b9d36cf17593aec4",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-client#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/client/package.json",
+        "sha256": "7ea040ed248ca0f6002abf488b68c8218ed0a7e58df5feb5d9805010547489fc"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-config#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/config/package.json",
+        "sha256": "e86e764692fca85e3fcf6c81422d3a4c65d654bc113b72466595ceb87f9c3871"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/domain/package.json",
+        "sha256": "a67ff7a7e178d06501a7bc24e319b06343033fb14201e90c5dba27aa7616f024"
+      },
+      "scriptMapSha256": "44cccb3830cd5fd1e63277582b1394e52ec9d45e6060b3f1cad990bd1bd0e632",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/server/package.json",
+        "sha256": "792756c587f2ca1d7d7feecc267bb966b98fd2ac1f2e70fe98d2d157cde16833"
+      },
+      "scriptMapSha256": "336ad85be67d726450644e56a48685182d2c0c65adf6928a08eee7c9594de8c4",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/tables/package.json",
+        "sha256": "15aa745d66d0b6d46da3c635c3c4e8a54f9d014975c0ac81c9cf2448732bee8f"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-ui#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/ui/package.json",
+        "sha256": "4e0c5e70af12b7842dc830f87963c6ffad370cbece6649e0f0a1ac65e1aebd2b"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemic-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/epistemic/use-cases/package.json",
+        "sha256": "3a2f4b4759989c9e7435fa9b012e6cfca79977ac9cfa7e3cdd9f98ebc877b2ea"
+      },
+      "scriptMapSha256": "44cccb3830cd5fd1e63277582b1394e52ec9d45e6060b3f1cad990bd1bd0e632",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/exiftool#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/exiftool/package.json",
+        "sha256": "eeabf3c340c7c78de40bb91f9d0a065ab4ae508d4ca0e1943004c7beff95fa27"
+      },
+      "scriptMapSha256": "731c6decac19e1f9da331c150a0df7a2c7b002667a91e91e975d12e09131a71e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/fc-runs#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/test-kit/fc-runs/package.json",
+        "sha256": "5cd60c0b2224c033ecb4ddc33b44eef577fa8c83c724220b70fe6da83fc86268"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ffmpeg#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/ffmpeg/package.json",
+        "sha256": "bcc534440f3f0deaea6800e80edd8a115f5a077f10641a916d00740328eb52c8"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/file-processing#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/file-processing/package.json",
+        "sha256": "0bfbe94c5a6e45db73d0ce129ce87bfb1960aff66638423e2adefab3a5945a46"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/freshbooks#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/freshbooks/package.json",
+        "sha256": "5eb8391dbd85900804d3ffc99e1345db94b3e96021d249dcd31f8ebc9f6c8fa4"
+      },
+      "scriptMapSha256": "199da8a5b606b31de644b177d5ad131577d1ab5cf8899476f8563b7af7e4d413",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/gov-legal-mcp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/gov-legal-mcp/package.json",
+        "sha256": "6e65ab5690724cfb7df024e7596a4a479abb815b6e20e1c9dadcdd65ba8ce48c"
+      },
+      "scriptMapSha256": "df1cb1a58d1c8f57709134112c60bd0c05d1f93deaaa36ca3690d62046523753",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/govinfo#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/govinfo/package.json",
+        "sha256": "daa3adbd6a9ff548972465a43d04392b8e9ccedae5296ce7948737f589bb0d55"
+      },
+      "scriptMapSha256": "5589401d3c15893955cde95848fef047a4e754acb1df0dcacff728ea94cc7149",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/graph-3d#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/graph-3d/package.json",
+        "sha256": "f4e21af34a5e50a6957d35a9c1efa59537172ec92b57994851bd12e559ee4dea"
+      },
+      "scriptMapSha256": "04cf4bae727813a8fa5a84eba139a2a223cb1e4a527e09701917ac52df161370",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/html#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/html/package.json",
+        "sha256": "115d64e2171e818bed3029c7ed9e00a0161d8e1c58573415313f8794717f6ffe"
+      },
+      "scriptMapSha256": "6d2a12c8f380ec889a3489a3221d09c2205d9f826de821764c1e631d02f86dfb",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/hubspot#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/hubspot/package.json",
+        "sha256": "4fc82190bd45198160bbc77b34fc93e33990102d750b7ffe768b3a77fc82a4f0"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/identity#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/identity/package.json",
+        "sha256": "a874bd2cd6311956727b3db0117212eabcd9538521552da79af3cdcec9c05d5c"
+      },
+      "scriptMapSha256": "c762d08c0519da32fa4082eabfa111c07de61632ce665219ce27294a9f2104e8",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/infra#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "infra/package.json",
+        "sha256": "6704a392d6e9b89e7dfd66e4634b03cf784b8afa4ba1878722e302eeca571796"
+      },
+      "scriptMapSha256": "771329cc5e597276de299b6a78e1031057626ca2a78a3892ba47362990629d86",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "062b7caa24c2ae82e8a4de98c66c795ea949108dc3a49365dd09f6c21e8392ed",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check src/ test/ --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/langextract#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/langextract/package.json",
+        "sha256": "0f54d2763f60ac1c4b031ad2e4e175a08b2c419c14ed599eff5a298a830763f0"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/law-practice-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/law-practice/domain/package.json",
+        "sha256": "bcd60a64b2b62a45eaf34173f23e974199d849cff4ca8b77975c9855851bfd2d"
+      },
+      "scriptMapSha256": "f30e58acacc6151428ec272f96c151041ce9c6c89fe9cc30bcad8504dd1f5910",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/law-practice-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/law-practice/server/package.json",
+        "sha256": "583ecc3fdade0c91cadabf2ee8a6db31f00c24b784f91dd7c519b6cdb6110a5c"
+      },
+      "scriptMapSha256": "97649469db78ac910268f0b706c8b3f35930e8eab394eea362fc60c70959f44b",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/law-practice-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/law-practice/tables/package.json",
+        "sha256": "2441f3953e235e49825e5f9124604242d49eed6fdf1dce8a98d9aed5438cf4a9"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/law-practice-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/law-practice/use-cases/package.json",
+        "sha256": "7c7efdffbb9194e740d0bbefe5ecb8527c74968a6c41a1b39fc633bb0876a083"
+      },
+      "scriptMapSha256": "5460f0a87bf71291198c3ace8964b6daab216241199f9968bba54ac94e3b1a90",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/labs/lejeune-bolt-workbench/package.json",
+        "sha256": "d2acf5cb2abc24902941b7f8345d4af90ffceced1af6dc29c800f2c297226aec"
+      },
+      "scriptMapSha256": "30cf034ce84ff894882d0e725c8bd37a6350e9e18036ffac1084158be48cec3c",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/lexical-schema#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/lexical/package.json",
+        "sha256": "0915004dfff174364505b0491539edd74ff2968c506ed9342445110f92e1960d"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/libpff#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/libpff/package.json",
+        "sha256": "1e2ff6d039e8f716fab31fc37a1c75db9f19e3d83d510ddefe50c481439ee2b3"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/lint-rules#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/policy-pack/lint-rules/package.json",
+        "sha256": "f32484db7cf42ae062d5a7a75cb3073600d764495c66d1008920eee7c53be274"
+      },
+      "scriptMapSha256": "37249c8fb0ba1e172e57e92a1ac7e1610f27b7226f76f6f13ba5a01bfad3e12c",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/m365#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/m365/package.json",
+        "sha256": "5fd6546747ff3b741eeaa5535c3ade56a530ad9dea84dfb45013a3e892a666d7"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/m365-mcp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/m365-mcp/package.json",
+        "sha256": "bf7040f29c4dc02741db449c315039839d07f430a27f29aa9f3c19e01eba0d14"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/mcp-kit#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/mcp-kit/package.json",
+        "sha256": "50d2601ffeb4eb4139309f44b0dcb926e751f53261821df5210584ba532661a2"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/md#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/md/package.json",
+        "sha256": "6d07a1f990dce9e0a7bd35cdf534b87da5e2cb3b79e899021aa805b891537581"
+      },
+      "scriptMapSha256": "ecf2ada6b2f59badf52ba50928ac8a9ec37c838dd93ec28e937ca8e32bc9cc03",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/n3#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/n3/package.json",
+        "sha256": "1c02bc02caf2d264f8b872c507d719313c584ba1f6f1242576f2d7c1a804d841"
+      },
+      "scriptMapSha256": "1e77a2e6b9085176cd9bddebdfc23cf5be9c3722917f3f99057b8cabd74cd707",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/nlp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/nlp/package.json",
+        "sha256": "0771dfbd89f633bce30ad8878b350aaacafcc40d07011b114538b9115cadf115"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/nlp-mcp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/nlp-mcp/package.json",
+        "sha256": "ec4334acaa8fe578dac75e5e0a399d9cb08fc04b5833ac71eb4825b7da0ff708"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/nlp-processing#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/nlp-processing/package.json",
+        "sha256": "430d2eac4a936bf40446bc787f2c3819251731a4cb2b5d337b04132ea069af4e"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/obs#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/obs/package.json",
+        "sha256": "70fda992b15f9edde5e3ecff0dc3dd3d4e16128c66e76082c83edef523a9987f"
+      },
+      "scriptMapSha256": "731c6decac19e1f9da331c150a0df7a2c7b002667a91e91e975d12e09131a71e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/observability#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/observability/package.json",
+        "sha256": "2caba6995f5f62f0022b4b5252dd2cfb89679bfbcabb550dda7fb61549f4c333"
+      },
+      "scriptMapSha256": "496cb3e22b18060f80f6081a6793a911941a48fd2449639b2ad3f3350a7a1462",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/oip-web#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/oip-web/package.json",
+        "sha256": "6ede713dab8b4c6d3f69521d7a4f36d8e44b081e52c3ab799189e0af34ed0dc4"
+      },
+      "scriptMapSha256": "387bcfa2652e82382f43ee2c154d4bbe16eacd4e8d3c07428fe0048d3a25e9f8",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/onepassword-cli#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/onepassword-cli/package.json",
+        "sha256": "643e7cb684d96ed8523c27f729ed94509772a7babf72afa9c8e46bd87df3cded"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/ontology/package.json",
+        "sha256": "752f262a5f9e51bd13bcd7065f391ed0bf08988c1287169ed9c22236598726f9"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-client#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/client/package.json",
+        "sha256": "01c865f9d2b0fca041f47eb3a94658e231d6edae26d274f9ab33f47d7f35716d"
+      },
+      "scriptMapSha256": "2bbe486cc8fe938babcf6a5518d183a72454ea2320eac695a047aae15cd699ae",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-config#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/config/package.json",
+        "sha256": "64367d2679629e535269d0b0467589848f14ecee5e82bcf2854d7c6cceb81ba5"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/domain/package.json",
+        "sha256": "b5fadd8765e6b570175ae45c9656732d7944d740f671ac42f1002a791ad3e727"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/server/package.json",
+        "sha256": "3313b6f4f6f67eb08b966e5ec799ee60358af76d9af8011dc8521e8350d7db74"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-ui#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/ui/package.json",
+        "sha256": "d20da05fad2342523cfa53c3c8c150d345a3e33da8aaeb89b4bdf87c6de6934a"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ontology-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/ontology/use-cases/package.json",
+        "sha256": "b558b9aa5a271b076e9f258120c8f9324a79ffb820b665b966ea9844917b2b82"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/openai#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/openai/package.json",
+        "sha256": "21a1c8d5dde228aa636289d6aef41344bacbded4157dd1e048c3aaf9553ab51c"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/openai-compat#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/openai-compat/package.json",
+        "sha256": "750c223566670e92a4acbe8ce4f6099a51a641c885e40c5f9388f707538bfbc1"
+      },
+      "scriptMapSha256": "412085c92ae25d3884e2ecf63e4ca128ec8bf075ec158be6cfbb29acbbd70226",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/openclaw#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/openclaw/package.json",
+        "sha256": "7b111d1e5f20b32592a8e470cb66f0404e29996e31b6cb5d0689ec71767cac34"
+      },
+      "scriptMapSha256": "731c6decac19e1f9da331c150a0df7a2c7b002667a91e91e975d12e09131a71e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/oxigraph#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/oxigraph/package.json",
+        "sha256": "9c31d2477b35280dc96dcd3fa8daf480dd1fc28047e0009dd952b42eb1041a40"
+      },
+      "scriptMapSha256": "1e77a2e6b9085176cd9bddebdfc23cf5be9c3722917f3f99057b8cabd74cd707",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/pacer#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/pacer/package.json",
+        "sha256": "2a58b4194013da80800acab9a22c694dd79d07e1d9c0a01cf222fcd65fba7005"
+      },
+      "scriptMapSha256": "c9b9632e386947adc89b797955fc30fadf97070d5b02afa6c18a5896341e52b4",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/pandoc-ast#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/pandoc-ast/package.json",
+        "sha256": "af87cb587e2dab19055ae6e136c849fcffc956ab6db2cf5679bda7e7ff258844"
+      },
+      "scriptMapSha256": "ac1b48050da68802fea38c13fb6d9fb030c4b040f01455a8dae14d1916335627",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/pglite#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/pglite/package.json",
+        "sha256": "f312c3f3059a686d26b46c99b088db1b80c67b3a6bd941afaef5c36315a22190"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/phoenix#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/phoenix/package.json",
+        "sha256": "71a2a657e9be5e9ebea96882b15466265b3ddbaac854176c7aad9931890c2a71"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/postgres#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/postgres/package.json",
+        "sha256": "aa213141bd64c4fa856c609cfb7b094e0c817f789e3245135b4bfdd4e948552d"
+      },
+      "scriptMapSha256": "59f84fc1c94b4e8fa3137a9f235beab6e7d01a883eb5a89088d50795e0e8ed91",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-kg-mcp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-kg-mcp/package.json",
+        "sha256": "c98f687ba01e0d01385a3e489b7d46b6da06501afae56c26f237b46008c91f32"
+      },
+      "scriptMapSha256": "ce31646cfddf00d8a266aaa18cf9065201938b16076791642aa50869c2fd7e6e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/pretext#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/pretext/package.json",
+        "sha256": "ae64dc6caa8b6a34348fda3cf145785c822b321a722da663d31bdf08d152d31e"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/professional-desktop#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/professional-desktop/package.json",
+        "sha256": "05cffe9aa228fe7c6c9dd56db79192b306c61b001c6f0634099a3114208a411c"
+      },
+      "scriptMapSha256": "2979898dd4a338359de31bc2e6e4fd8caed7954447dec44bd6746240c6a684d5",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check package.json postcss.config.mjs tsconfig.json vite.config.ts vitest.config.ts vitest.coverage.config.ts vitest.integration.config.ts index.html public src server scripts test src-tauri/tauri.conf.json src-tauri/capabilities/default.json --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/provenance#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/provenance/package.json",
+        "sha256": "c62c27048085d699224f6fa2d8c63e178f46e1e60770af639f20cd3e640061b6"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/qa-capture#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/qa-capture/package.json",
+        "sha256": "69a34bd54caf21334003745489e04c74281e272ddd65ce23df8fbae88af555b3"
+      },
+      "scriptMapSha256": "019f6a6ae7e9dbd900dc31eac1ad63bbb739040eebf051f8c18c9be88d6cb23a",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/rdf#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/rdf/package.json",
+        "sha256": "520eda11110d1e89b368f886cbd2017d5252d625d720d8bc254627c3498564e4"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/rdf-canonize#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/rdf-canonize/package.json",
+        "sha256": "a83e1b658d962f8e6f22524b7d33cae1c19d2215bd7ab95b0ca154ad163a0235"
+      },
+      "scriptMapSha256": "a9d9e6a83d3c11ed05bf481ef3652bd79b4ea224ac55d59815db0ddb744a112c",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/repo-ai-metrics#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/ai-metrics/package.json",
+        "sha256": "0e028a518bcae45ab6100065cb0771f3f1107d4e56f08e610555cf0a784ce3d9"
+      },
+      "scriptMapSha256": "a9d9e6a83d3c11ed05bf481ef3652bd79b4ea224ac55d59815db0ddb744a112c",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/repo-cli#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/tool/cli/package.json",
+        "sha256": "1a8d00798fc7d914e18976460d9a84253733522dca8878e4fdbd648a71f9e748"
+      },
+      "scriptMapSha256": "ec9a7150a04d25b1d39900ae1d8293c0c54e105ac93bd64e640e3d4529b6194a",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": true
+    },
+    {
+      "computation": "@beep/repo-configs#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/policy-pack/repo-configs/package.json",
+        "sha256": "cba2adef0f0925e3f0a413a0fbd9b7489afae73ea457ebb2e5d97797a7a72da4"
+      },
+      "scriptMapSha256": "af6d6e45f47cf18f55e35e74f0fdd8b3e48ab96486dd4a365ac5a7f95a7f69bf",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/repo-docgen#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/tool/docgen/package.json",
+        "sha256": "897d1a49f9641334efbb60f023d9fdc810c4e8a91eb31bba51da32407807d6a2"
+      },
+      "scriptMapSha256": "c5532e1f5e6f5e5381cf445cfd5c5813d67acce6d56a15c2ad92199b7ffb93e5",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": true
+    },
+    {
+      "computation": "@beep/repo-utils#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/repo-utils/package.json",
+        "sha256": "a9d4a94d04e8623f2734d37ded217e5f43dbb850e511d67360364792798f3517"
+      },
+      "scriptMapSha256": "ec7a11f8384fe5aafccc6e2b8d8e72a7692d8a03f272b5ad94aea2d153141290",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/runpod#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/runpod/package.json",
+        "sha256": "6b13ff1a57fff77f3efc44be5d63d097b93ae3b56f26fa2bfa6e60be45337cbb"
+      },
+      "scriptMapSha256": "8e23dfe70a92ab1f6f4bd2130d34feb924cf10b3f01ce52ab071fcf1fe4e2460",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/sanity#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/sanity/package.json",
+        "sha256": "fc72cd09926b0d55356e506decade5b4548036bc9e0552ea90f919895f9cb33c"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/schema#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/schema/package.json",
+        "sha256": "efc4b019a7e94a7b4a03642c59e09a61cb27aeecb1193383268c8cfb23c61cd6"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/semantic-web#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/semantic-web/package.json",
+        "sha256": "2c1640b79dcc44e75eb77c0f48a7d69f5a6747b6ad8eb33b7e591a9b7769db36"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/semantica#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/labs/semantica/package.json",
+        "sha256": "eda0f46800dde5476001783507cfa01c536ca7b2579c191f2a43c73e5e756155"
+      },
+      "scriptMapSha256": "74b360cebc17ed7fe6bf768f96030473603853040eb0b814ae7fa22d174cd560",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/shacl#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/shacl/package.json",
+        "sha256": "8ec5cd880a553450bb51ea64c14c952f51c963307cba8a8541102dec6f1ef139"
+      },
+      "scriptMapSha256": "1e77a2e6b9085176cd9bddebdfc23cf5be9c3722917f3f99057b8cabd74cd707",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/shared-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/shared/domain/package.json",
+        "sha256": "fe221272594848e509ab9fd0165a11d1756b78a238a209b73ffc185fdfa398b9"
+      },
+      "scriptMapSha256": "a9d9e6a83d3c11ed05bf481ef3652bd79b4ea224ac55d59815db0ddb744a112c",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/shared-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/shared/tables/package.json",
+        "sha256": "ca318ae1c8a3060564523a9ccafd6c05cfd6eb9ac363230494d66be2e27529d7"
+      },
+      "scriptMapSha256": "1e77a2e6b9085176cd9bddebdfc23cf5be9c3722917f3f99057b8cabd74cd707",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/shared-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/shared/use-cases/package.json",
+        "sha256": "0582420edaa3aef396ddac153796200474e8586a263d794ea6c1073faad47a9f"
+      },
+      "scriptMapSha256": "731c6decac19e1f9da331c150a0df7a2c7b002667a91e91e975d12e09131a71e",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/skill-contract#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/skill-contract/package.json",
+        "sha256": "96ed015ecac5d7e2556bf91d85e3764672f9d7959a55030cb4bdeef3e2213204"
+      },
+      "scriptMapSha256": "7b53f288074ff66ff46f88091da18cb2df142e1707409e21913e82cdafedc91f",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/tailscale#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/tailscale/package.json",
+        "sha256": "f5ed76efdaa810e8a818eccde75304fa5b93cb3785b99940c3d530dc9fdf0392"
+      },
+      "scriptMapSha256": "19f4e41560849a0af844a4671342af06ff13c7ba56568f9f61645312d32aab14",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/test-runner#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/test-kit/test-runner/package.json",
+        "sha256": "fe78451870df36870ba136e1814b191ae43704ed0c6c698445e7be18c7cdb4ef"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/test-utils#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/test-kit/test-utils/package.json",
+        "sha256": "b657693663bf9c3630b8eae7acddf5166d32cee00373837858758d1cedcf5158"
+      },
+      "scriptMapSha256": "811dc1d90cca2aa413dcd60f497295f9852f8735d9657655813d5f02feb5cfb3",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/tika#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/tika/package.json",
+        "sha256": "2929b9e34353e4ee5bfa542da9c2add8b3d5c105201c82f998b9db7c35257216"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/todox#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/todox/package.json",
+        "sha256": "39c6157f07249aa14334f714e7aa68fdbdad3294c31d24f133d5cede0bf81110"
+      },
+      "scriptMapSha256": "b9ab5ad01ccef9030f7e243a68715c6f69d36d7d22f302ae41de80f295420e49",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/labs/trustgraph-workbench/package.json",
+        "sha256": "aa3ef6c44154c29f524bfacb8d0417b99df3bbc99ddfe7c98d8593f38104a6ad"
+      },
+      "scriptMapSha256": "04760a0865ecb2965f41f3df855ac170e0f30bf75b87ea76c5975a411dffe379",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/types#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/primitive/types/package.json",
+        "sha256": "5f73b96b2bc75b49b530419bf5015d4f94692c0b0467f253c8d3152c6dbb907b"
+      },
+      "scriptMapSha256": "43e2803c8f851414d76b25577005f23a111ad9cacfb202dce25315200f7bb1f1",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ui#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/ui-system/ui/package.json",
+        "sha256": "78de6bb01fc8f26cabfa2a35e914da3cff4fc2441475e282100c6939599cc7b9"
+      },
+      "scriptMapSha256": "7e938f2e063a3b9c72ce30131e88d80ed7eae90e22102423f228ca8dc242458b",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check src/ --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/uspto#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/uspto/package.json",
+        "sha256": "a67cef19eb9274a45be8e1a8b8f616190d7edb43699041963a08ccaa093336c1"
+      },
+      "scriptMapSha256": "4aba1d8f27461258c23d424daccb5e57c3240032cc1fc6f3e5dc5087247d7738",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": true
+    },
+    {
+      "computation": "@beep/uspto-mcp#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/uspto-mcp/package.json",
+        "sha256": "3e6739ddc202955ba2f0059eabb1c5db2c93084d0306a925456333318140e61b"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/utils#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/utils/package.json",
+        "sha256": "9313f88537e375a48cea1a40ba0e70a64df3f4cd6adce9df6f59de8c396ff62f"
+      },
+      "scriptMapSha256": "c86c787b04c87c7b49f969fbd7503570996c43c25f32e7a57df92c053485e321",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/wink#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/wink/package.json",
+        "sha256": "a8dacfa8ada201980ce3f2abc4f65d8ea5252cd38e6abf877ea5be7e09ffa794"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/workspace-domain#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/workspace/domain/package.json",
+        "sha256": "c6351bac7b417fdd5fc69c0359608018650bb1887a76bcb19f65c98b25157596"
+      },
+      "scriptMapSha256": "f30e58acacc6151428ec272f96c151041ce9c6c89fe9cc30bcad8504dd1f5910",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/workspace-server#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/workspace/server/package.json",
+        "sha256": "929ad6c3681d8090ed9b7a03f5bca97278a568b71189273b43b2b47781e80b67"
+      },
+      "scriptMapSha256": "bce71ccc89a7f2dd0520525e8647f0e6eb546b263af78bf48473178cbf9ef478",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/workspace-tables#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/workspace/tables/package.json",
+        "sha256": "5e1d71b864df63a5677128b2fbe54b1b436e200931c4853f2ddcb24e278383f9"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/workspace-use-cases#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/workspace/use-cases/package.json",
+        "sha256": "446c4b8a43fc9cacf547f2345107fc925631a4956293456ec73732f4afc561ec"
+      },
+      "scriptMapSha256": "3eb9efb94b0c6fa68853e302bc6325ef13c52148819efcb99f223e2ebbfe4d94",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/xstate#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/xstate/package.json",
+        "sha256": "d8d5cfc7c3d059e29ad4c0caf9d85a554e4ba38a1b58679253254a6f54795488"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/mutating-fixer-disposition-review.json",
+        "sha256": "46b40f1f76719c11410dd9723f592c79ed50481d00b5faed5c62dd6407cccfa5"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/cli-kit#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/cli-kit/package.json",
+        "sha256": "7a4d37ad4d8fae076c42f642316cdbdb76f227acb09ca797a39f2e0966b2bd2b"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/commands#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/commands/package.json",
+        "sha256": "ab6b2670c5b7fe08d4d0e34cef6f52ad483a879a2bc4fbbb61c2769d4831a729"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/config-file#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/config-file/package.json",
+        "sha256": "f99c2d30bf155764e7f89204c8ebe7811c0057f8ab9c22fd40f3fd27d079797e"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/docket-intake#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/docket-intake/package.json",
+        "sha256": "ee927960be4f3012ec6ebe3d785a41653a3fbb4a44d6111078224fbbfad9c9b3"
+      },
+      "scriptMapSha256": "ac49ad9d131de34afb30a99d5c22588d65c1152b14f3f4c4511296fdf2e08cde",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/epistemics#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/epistemics/package.json",
+        "sha256": "7e6fec12c9217fd72ede495b0935a72052f9e4f62b990f53f4b27e558f4f5681"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/git#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/git/package.json",
+        "sha256": "2a20ab60cec0505e2766810cd5be2c8de8bbf871f32b9a038e8c409bdd64c103"
+      },
+      "scriptMapSha256": "d4ea2b4f08bcd2d99e7a4a63af17b02f8dcf6fa9f0c38667661f577b32f09aaf",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": true
+    },
+    {
+      "computation": "@beep/github#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/github/package.json",
+        "sha256": "a68b5e41725f2c5b849b390b8caacde88b048a0b9f98d92dfcd0bc67b196cf20"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/github-actions#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/github-actions/package.json",
+        "sha256": "cde48cc034bc9bc6158fc661207f8d68ea707cd9b76a601bdf9cd594ef8c4c02"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/github-commands#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/github-commands/package.json",
+        "sha256": "42a94160d60cf9fe4f59caa8853bef2db132f2ec33cedb67bcf3e1b5bafcf75b"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/github-references#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/github-references/package.json",
+        "sha256": "cedd97d96d6dc2926fcf661bf54947f708bdccd7d7a4995c01facd8049d9516c"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/github-reporting#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/github-reporting/package.json",
+        "sha256": "a2c6b05539ae03b0068688058eaedea6dd4ed45123baa8a0f4c703df3385ab08"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/glob#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/glob/package.json",
+        "sha256": "5fb6e89dee7d251d8c859befe4cb6a67ae9b3653121670279ed9492434db01f2"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/jsonc#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/jsonc/package.json",
+        "sha256": "c8594bdc397816e5f52ff8211a432439a50614d45c7b6faccac717f44bb45e93"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/jsonl#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/jsonl/package.json",
+        "sha256": "b3d4d6444abddb9d67ea95ea32f35e77e12654a6ce7c11b093561314a28cfedc"
+      },
+      "scriptMapSha256": "d4ea2b4f08bcd2d99e7a4a63af17b02f8dcf6fa9f0c38667661f577b32f09aaf",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/lockfiles#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/lockfiles/package.json",
+        "sha256": "1b4d13894c96f57ba48e2d4ac286048c68c913b22dfb822d8b6507249479c899"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/managed-section#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/managed-section/package.json",
+        "sha256": "4f747d4f3af5cda26b46dc06b5535a3bbe6927d4e7fdc254ca25ff36ae5ea7e7"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/markdown#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/markdown/package.json",
+        "sha256": "44b3aca32f5eaca416e5f90d60e07b771aa0e8604750d6a8748f796926ada687"
+      },
+      "scriptMapSha256": "c194424b782f6ae5cd7ee512a6d5c8a5755e3d79bacbfe2d15280b9f220a05ff",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/mcpb-kit#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/mcpb-kit/package.json",
+        "sha256": "c806ba666628a14c7d8e981f0e821766e00e157668aef19c29ed7360737348a8"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/memfs#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/test-kit/memfs/package.json",
+        "sha256": "30550231ffc724bab031905ec09802deebef94ab8bfdb58bb82465491582da87"
+      },
+      "scriptMapSha256": "8791b3aef782decc74e8cf5c6524d2baa016548381176505e697e0f2e2678c4d",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/npm-spec#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/npm-spec/package.json",
+        "sha256": "d45be5cace3ba23eda35f2be695533720410ce9821410220ddc1ef27901fb56f"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/occt#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/occt/package.json",
+        "sha256": "1dab0f8cd289640da2f2f0d70bb8870e1746311c6117d5c371ff2383fbbdc7ac"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/package-json#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/package-json/package.json",
+        "sha256": "d119a58c098fd73bae2805a8115da291eb41a02ae6e24f319838656693108267"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/palantiri#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/palantiri/package.json",
+        "sha256": "1faa0ef7453a6b27d8a9a800645b07fb09af5b516c1b80a4ea93061f5f90938d"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/pdf-tools#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/pdf-tools/package.json",
+        "sha256": "10720143fe0df59d921686dbee106815f3df4b95e7af721b2424c6001203e06c"
+      },
+      "scriptMapSha256": "6a643adca9ae41267684ae12869d4547ca3dbeace22bc7fb4fab8135f5b495e9",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/poppler#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/poppler/package.json",
+        "sha256": "ab8d9a22a42db0a9b5d5632a95ec613ae64a1b2cf864625aec34d6309c040f81"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-claude-mod#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-claude-mod/package.json",
+        "sha256": "1b3f027edc578340785415108de73987e93d82bb8a8098dc7b69965829ad89e8"
+      },
+      "scriptMapSha256": "7ce23c4c4105f14367d0896ab53605e09d515872ecac6087b9b5fe240964c0ba",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-gateway#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-gateway/package.json",
+        "sha256": "25a609f22ef550218760e3e24126c2cf58854ced38ea3d990f4a6be43f27484c"
+      },
+      "scriptMapSha256": "60880b58406d8e1e68ff43a1a09f5ae49e91f1c3312cfad5cad457a38d8b4fce",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-identify#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-identify/package.json",
+        "sha256": "0501c3a53b7f72ca3ebe7a79df18ee24009474a83b80486e0a6d185fd75cea29"
+      },
+      "scriptMapSha256": "1aa7a4b94a10d8af7ff53ae27dae5e49be9a5fadf080d1ef6a993d11d457efb3",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-m365-contacts#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-m365-contacts/package.json",
+        "sha256": "f1822c79cd741cb9cc2195c180f32494cbbd2a9c3b2b5c406b4d06573f52f7ea"
+      },
+      "scriptMapSha256": "975a821c7906d4ee0a1aac69495ab4d8f78ab713d062d831cd478b4efe15e015",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-mail-tagging#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-mail-tagging/package.json",
+        "sha256": "647a6cc0e2b3ae196ab86e9b97b8f5cd602c5508493d551effec2d3c215430d2"
+      },
+      "scriptMapSha256": "1aa7a4b94a10d8af7ff53ae27dae5e49be9a5fadf080d1ef6a993d11d457efb3",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-review-hub#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-review-hub/package.json",
+        "sha256": "7cd0a149963554fffb409802cc47486a3492d1bf9d777e451d4b0da50896bb9f"
+      },
+      "scriptMapSha256": "2ef533c4d4b088ca5c8bd5114f856ca78ea816a4b89ad6cfa1adc1ac8903d171",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-setup#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/practice-setup/package.json",
+        "sha256": "cc776713eaf5cc35cce35b8c5d64b551a08200a444dc19f8e44867193c689287"
+      },
+      "scriptMapSha256": "37353f10424a6580102ae7ab6ca16d280c41843be3818ceb8136e7563d470619",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/public-site#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/public-site/package.json",
+        "sha256": "f34afae9eb5300589bbd7062c88106e17a02f1867b0799736a70e0ada1edf7b1"
+      },
+      "scriptMapSha256": "d4ea2b4f08bcd2d99e7a4a63af17b02f8dcf6fa9f0c38667661f577b32f09aaf",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/repo-tsconfig#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/repo-tsconfig/package.json",
+        "sha256": "4ed044c27d665f2d5d45344095a570eecb845e8a8566014d7387921de36912a7"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/repo-workspaces#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/tooling/library/repo-workspaces/package.json",
+        "sha256": "3a7c1ac7711fa6b9634c434e51e117140630cc103f099b383fcbd95c27b9f019"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/runtime-env#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/runtime-env/package.json",
+        "sha256": "4f75c1414610c966b6a567007586968bc92711a5225cb336ad493127d2e4488b"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/sbom#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/sbom/package.json",
+        "sha256": "82976c29878baff41e8c3e672e3d310e2cada04b1d407168ae5c4c5f83084378"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/schema-org#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/schema-org/package.json",
+        "sha256": "0f8417683d56f68f28cf5c14c89b93149a4f51365dbd23b7c3888f9dc9061314"
+      },
+      "scriptMapSha256": "d4ea2b4f08bcd2d99e7a4a63af17b02f8dcf6fa9f0c38667661f577b32f09aaf",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/semver#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/semver/package.json",
+        "sha256": "e04b7b5481eda12625cfea7336d73ef4ecf1730e3f9aef5b6fe5bc4688c1aa4f"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/spdx#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/spdx/package.json",
+        "sha256": "e47b3794ef45c373c19ebbae0334772cfbad99fcdd014aec453627f73d236437"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/storybook#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "apps/storybook/package.json",
+        "sha256": "3fdb437b8bd01d9439ba337756f968164edd297f495e9b325b59f69c610e0d76"
+      },
+      "scriptMapSha256": "f5214a53e0f00db353d928eb66923427b70bbece18f8926ac8e0513d3cf8b475",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "8345f9dadc3f03f83ead61da0ed83adabf486cce80628e7298b1a7bcfb7f12ea",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "sh -c 'biome check package.json postcss.config.mjs tsconfig.json tsconfig.stories.json vitest.config.ts vitest.storybook.config.ts vitest.storybook.setup.ts .storybook/ scripts/ \"$(git rev-parse --show-toplevel)\"/packages/foundation/ui-system/*/stories/ --write'",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/t3-code#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/t3-code/package.json",
+        "sha256": "b24c3d065076119b52e136c514d045002366066c3c23171b3a8ad9d4b009c402"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/technical-drawing#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/technical-drawing/package.json",
+        "sha256": "38a985bf122bb92f266f2d46ecfaafece3bf5a9e3418931199444b0de26de1b9"
+      },
+      "scriptMapSha256": "d60513782d1b88cfd4453f754b065159f9dcc346723318b776535499683ca5b8",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/tesseract#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/tesseract/package.json",
+        "sha256": "736b3ad87619cb744d96a26b40e0e9bf3dde212b320f505d07d54c99d3cb063d"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/toml#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/toml/package.json",
+        "sha256": "8a883534107472357a67f0b644e7c352ba972078e1bb283c5b53d7870f8f6ace"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/tsconfig#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/tsconfig/package.json",
+        "sha256": "2db0a5c1b09f26a61e4bb25c6a45102880ec88037eff49d6e5d08f5da7b0e2cd"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/walker#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/walker/package.json",
+        "sha256": "0ffd2b88da2c53968dd4a345775ec35f920e66a1e12c99c00d1feb65d0087c31"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/windows-secrets#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/drivers/windows-secrets/package.json",
+        "sha256": "3e9dbc865b25e5c6ceb21d68e2ae968751bbb0c386b8adcd7440c1b5ee036e12"
+      },
+      "scriptMapSha256": "6c8ca54b0de7f669993771e61222c21e13bd308a770fa04911a6569437a0fb22",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "918a953232fe61b7ac1ee1b0499bf0a8993eba2a7f36f89ddec73e24634e7f2e",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/xdg#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/capability/xdg/package.json",
+        "sha256": "9aca2fc54988c5d7a30f678ae7e24f4dc3da568a1f21704c844742f51488331b"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/yaml#lint:fix",
+      "reason": "source-mutating-fixer",
+      "manifest": {
+        "path": "packages/foundation/modeling/yaml/package.json",
+        "sha256": "3af27498abb54ea584310e9fcef72258c8ae30ccdaa823daef86c8c160f35d8e"
+      },
+      "scriptMapSha256": "846fe1c842e5bb88be4abd2e5fab4469fb876a6c465fcfd5bed6372e7c9949c7",
+      "command": "bun run beep:lint:fix",
+      "configurationId": "25c418a006877be82db519f4f8b9cc2600ef973dab82b180358dc0c348b48d2a",
+      "priorReview": {
+        "path": "research/remaining-mutating-fixer-disposition-review.json",
+        "sha256": "95babc5b9021182b2ccf993dd8440a5d0df439ef5ab2716e5fb05053315c5c17"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "implementation": "biome check . --write",
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/oip-web#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/oip-web/package.json",
+        "sha256": "6ede713dab8b4c6d3f69521d7a4f36d8e44b081e52c3ab799189e0af34ed0dc4"
+      },
+      "scriptMapSha256": "387bcfa2652e82382f43ee2c154d4bbe16eacd4e8d3c07428fe0048d3a25e9f8",
+      "command": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "priorReview": {
+        "path": "research/persistent-service-disposition-review.json",
+        "sha256": "911f9f89c8e57f7148e627d513612c476e4722458f62bf6edad6fd0a6ca3d9ff"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/todox#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/todox/package.json",
+        "sha256": "39c6157f07249aa14334f714e7aa68fdbdad3294c31d24f133d5cede0bf81110"
+      },
+      "scriptMapSha256": "b9ab5ad01ccef9030f7e243a68715c6f69d36d7d22f302ae41de80f295420e49",
+      "command": "portless todox.beep next dev --turbopack",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "priorReview": {
+        "path": "research/persistent-service-disposition-review.json",
+        "sha256": "911f9f89c8e57f7148e627d513612c476e4722458f62bf6edad6fd0a6ca3d9ff"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/api-docs#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/labs/api-docs/package.json",
+        "sha256": "3c92e30964fe824a188170712fd94c400755a48f02a418afa66107370ee9bf24"
+      },
+      "scriptMapSha256": "f7a44c008bd80a7e5f9e802e5ed0556193a3093e270283aa944402d4da2f88db",
+      "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/ciops#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/labs/ciops/package.json",
+        "sha256": "93977ccf6af0133b8d6a6827b805be775ce63c6ebd73036c336053afa01935aa"
+      },
+      "scriptMapSha256": "33f9f818b5317ccf66cf413573b723e8645f36e340c42954bdbe36c244d79b44",
+      "command": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/lejeune-bolt-workbench#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/labs/lejeune-bolt-workbench/package.json",
+        "sha256": "d2acf5cb2abc24902941b7f8345d4af90ffceced1af6dc29c800f2c297226aec"
+      },
+      "scriptMapSha256": "30cf034ce84ff894882d0e725c8bd37a6350e9e18036ffac1084158be48cec3c",
+      "command": "portless lejeune-bolt-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-m365-contacts#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/practice-m365-contacts/package.json",
+        "sha256": "f1822c79cd741cb9cc2195c180f32494cbbd2a9c3b2b5c406b4d06573f52f7ea"
+      },
+      "scriptMapSha256": "975a821c7906d4ee0a1aac69495ab4d8f78ab713d062d831cd478b4efe15e015",
+      "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/practice-review-hub#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/practice-review-hub/package.json",
+        "sha256": "7cd0a149963554fffb409802cc47486a3492d1bf9d777e451d4b0da50896bb9f"
+      },
+      "scriptMapSha256": "2ef533c4d4b088ca5c8bd5114f856ca78ea816a4b89ad6cfa1adc1ac8903d171",
+      "command": "portless practice-review-hub.beep sh -c 'bun --watch src/main.ts'",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/professional-desktop#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/professional-desktop/package.json",
+        "sha256": "05cffe9aa228fe7c6c9dd56db79192b306c61b001c6f0634099a3114208a411c"
+      },
+      "scriptMapSha256": "2979898dd4a338359de31bc2e6e4fd8caed7954447dec44bd6746240c6a684d5",
+      "command": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
+      "configurationId": "daf795440b81eb5fcf6e465a0af3d6129ac24b24d7166a74cfad89dd0bdafa1c",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/semantica#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/labs/semantica/package.json",
+        "sha256": "eda0f46800dde5476001783507cfa01c536ca7b2579c191f2a43c73e5e756155"
+      },
+      "scriptMapSha256": "74b360cebc17ed7fe6bf768f96030473603853040eb0b814ae7fa22d174cd560",
+      "command": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/storybook#storybook",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/storybook/package.json",
+        "sha256": "3fdb437b8bd01d9439ba337756f968164edd297f495e9b325b59f69c610e0d76"
+      },
+      "scriptMapSha256": "f5214a53e0f00db353d928eb66923427b70bbece18f8926ac8e0513d3cf8b475",
+      "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
+      "configurationId": "2bd888ded0452816da4bd1bba6ade44de62d309fad000d4620811a9b6203adf3",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/storybook#storybook:start",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/storybook/package.json",
+        "sha256": "3fdb437b8bd01d9439ba337756f968164edd297f495e9b325b59f69c610e0d76"
+      },
+      "scriptMapSha256": "f5214a53e0f00db353d928eb66923427b70bbece18f8926ac8e0513d3cf8b475",
+      "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
+      "configurationId": "8b6c633cc81294d82d08dfe90f263a696830ea4246224c19edebdf8b62f34cab",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    },
+    {
+      "computation": "@beep/trustgraph-workbench#dev",
+      "reason": "persistent-development-service",
+      "manifest": {
+        "path": "apps/labs/trustgraph-workbench/package.json",
+        "sha256": "aa3ef6c44154c29f524bfacb8d0417b99df3bbc99ddfe7c98d8593f38104a6ad"
+      },
+      "scriptMapSha256": "04760a0865ecb2965f41f3df855ac170e0f30bf75b87ea76c5975a411dffe379",
+      "command": "portless trustgraph-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
+      "configurationId": "a6b8411893bf7ca3beda5e57abd8b17bb39b759c12879e5bfa0341e4506c8937",
+      "priorReview": {
+        "path": "research/remaining-persistent-service-disposition-review.json",
+        "sha256": "b9f941986f6819bb3b6d36210a81376007c7a592a018ab27d5a1ff39708d2225"
+      },
+      "wholeTaskDisposition": "keep-fresh",
+      "pureCounterpartQualificationGranted": false,
+      "persistent": true,
+      "changedCommandDigest": false
+    }
+  ],
+  "qualificationLedgerChanged": false,
+  "productionChanges": false,
+  "fullGoalAcceptanceChanged": false
+}

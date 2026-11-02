@@ -463,3 +463,30 @@ Accepted-main #2386 integration changes the bound Quality command only by its
 producer-verifier import and cache-policy layer provision. Exhaustive byte
 comparison preserves every explicit-base helper. The source-applicability hash
 is refreshed after that review; native driver and execution receipts are unchanged.
+
+
+### Current population and evidence preservation, 2026-11-02
+
+The [fresh source checkpoint](research/population-refresh-checkpoint-2026-11-02.json)
+records 191 workspaces, 4,646 graph nodes and 2,621 executable computations at
+accepted source `68834a997e`. All 438 census source bindings were verified.
+The refresh requires a fresh, byte-identical archive before replacing reviewed
+population evidence; later refreshes verify the bounded history chain. Eleven
+isolated controls pass, including an actual reproduction of the old writer's
+loss of reviewed dispositions and refusal of altered history.
+
+All 199 older reviews remain in the
+[retained population](research/population-before-refresh-2026-11-02.json).
+The [current source review](research/current-fresh-disposition-review-2026-11-02.json)
+re-establishes 186 literal source-writing fixers and 12 declared persistent
+services as whole-command keep-fresh. Their pure counterparts remain separate,
+unqualified obligations. Four expanded command digests changed; the limited
+review verifies the retained required fresh operation, not all expanded behavior.
+The changed external-advisory command remains pending current-source review,
+alongside the other 2,422 current dispositions.
+
+The attempt-identity decision now explicitly adopts accepted #2478: an owned
+commit advances subsequent resolved-source facts, while starting identity and
+diff fingerprint remain unchanged. This documentation amendment adds no new
+writer, qualification, workflow status or production activation. All 29 remaining
+feature reviews and both full goals' acceptance gates remain open.
