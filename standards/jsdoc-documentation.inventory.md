@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-02T09:01:34.325Z
+Generated: 2026-11-02T10:08:19.963Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3573 |
-| publicExports | 25381 |
+| publicExports | 25388 |
 | openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -105,7 +105,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 47 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 48 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 13 | 73 | 1 | 8 |
 | 49 | `@beep/exiftool` | `packages/drivers/exiftool` | clean | 5 | 55 | 0 | 0 |
-| 50 | `@beep/github` | `packages/drivers/github` | clean | 29 | 192 | 0 | 0 |
+| 50 | `@beep/github` | `packages/drivers/github` | clean | 29 | 197 | 0 | 0 |
 | 51 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 52 | `@beep/hubspot` | `packages/drivers/hubspot` | clean | 4 | 23 | 0 | 0 |
 | 53 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
@@ -197,7 +197,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 139 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | clean | 9 | 123 | 0 | 0 |
 | 140 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 141 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 23 | 217 | 0 | 0 |
-| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 497 | 4648 | 46 | 35 |
+| 142 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 497 | 4650 | 46 | 35 |
 | 143 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 144 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 58 | 0 | 0 |
 | 145 | `@beep/agents-tables` | `packages/agents/tables` | clean | 7 | 15 | 0 | 0 |
