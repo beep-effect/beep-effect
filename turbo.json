@@ -72,6 +72,7 @@
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "$TURBO_ROOT$/packages/foundation/modeling/utils/src/**",
         "!node_modules/**",
+        "!**/node_modules/**",
         "$TURBO_ROOT$/packages/tooling/tool/cli/test/global-cleanup.ts",
         ".env",
         ".env.*"
