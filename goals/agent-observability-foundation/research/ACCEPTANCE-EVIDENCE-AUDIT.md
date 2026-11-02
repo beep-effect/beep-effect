@@ -21,6 +21,10 @@ The later explicit-pin repair removes obsolete execution defaults and requires b
 | 12 | Fresh same-root disposable then live pair independently binds expected IDs to native/local/backend/visibility sets with privacy and rollback. Real enrollment is unqualified. |
 | 13 | Current ownership/compatibility tests and fresh rollback retain queues, journals, backend evidence and historical IDs/archives. Off-device recovery and production generation management remain deployment obligations. |
 
+## Main integration — November 2, d240a7da
+
+The shared main repairs are integrated and published. The [current comparison](../ops/history/shared-main-applicability-20261102.json) retains 244 exact selected package inputs, the same four uninvoked script-only manifest changes, and one additional test-file delta: main added HarnessLedger diagnostic cases without changing the original tests. The recorded 44-test execution does not include those additions. Final-head hosted tests must verify the integrated tree; no local rerun is claimed. Preparation remains 84/84 exact; stages remain 88/90 and 87/89 exact with only the already reviewed explicit-pin guard changes. Original executions, hashes and limitations remain unchanged. No production enrollment or recovery-hold release occurred.
+
 ## Historical source refresh — October 31
 
 The October 29 assessments below retain their historical execution scope. The
