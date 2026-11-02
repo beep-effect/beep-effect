@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 kit, feat/gh-git-w3-github-kit)",
-      "reason": "Record the W3 kit root re-seal: GitHubApp.ts imports TokenPermissions.ts for assertPermissions, so that module enters the goals-doctor, knowledge and quality policy closures; no manifest or dependency changes; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
+      "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad glob to .tsx and dropped its test/fixtures exclusion, and //#jsdoc:ratchet:check dropped every directory exclusion but node_modules, so both follow the files their scanners read. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-kit.md",
-        "sha256": "58cc1d9ee7a6c287e1129676ed3af4ad9b70a6825554d766b77c8b6656e0d737"
+        "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
+        "sha256": "91f4bc09115cfc630dfb97300d2345d156e95c299604915429feba1d37b98c63"
       }
     },
     "@beep/acp": {
@@ -2153,7 +2153,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "!.claude/worktrees/**",
             "!scratchpad/.jsdoc-loop/**",
             "!scratchpad/docs/**",
@@ -2165,7 +2164,7 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "scratchpad/**/*.ts",
+            "scratchpad/**/*.{ts,tsx}",
             "tools/**/*.{ts,tsx}",
             "tsdoc.json",
             "{packages,apps,infra}/**/*.{ts,tsx}"
@@ -2195,14 +2194,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
             "!**/node_modules/**",
-            "!**/storybook-static/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -121743,7 +121735,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "6752d1b732291201c5669d9879cdcb71a8347fed85a9f1e44638fa1c75b13fab"
+        "sha256": "ca51beab147fd0adde9ac64f1f0e6b73815b7f3c91df8edce8b79b990c648bf1"
       }
     ]
   }
