@@ -71,6 +71,7 @@ import {
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, observeSweepGitState, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Duration from "effect/Duration";
@@ -392,6 +393,7 @@ export const runYeetSweep = Effect.fn("Yeet.runSweepCommand")(function* (
   | ChildProcessSpawner.ChildProcessSpawner
   | WorktreeRemovalService
   | Digest.Digest
+  | Git
 > {
   const hydrated = yield* hydrateYeetReadOnlyContext(options);
   if (options.retire === true) {
@@ -428,7 +430,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const outcome = yield* mergePr(yield* hydrateYeetReadOnlyContext(options));
   yield* Console.log(`[yeet] pull request #${outcome.pullRequestNumber} is ${outcome.state}`);
@@ -476,7 +478,7 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
 ): Effect.fn.Return<
   void,
   YeetCommandError | CliReportedExit,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const context = yield* hydrateYeetReadOnlyContext(options);
   const report = yield* runYeetReply(context);
@@ -593,6 +595,7 @@ export const runYeetMergeLoop: {
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
     | Digest.Digest
+    | Git
   > {
     const policy =
       dependencies.policy ??
@@ -691,6 +694,7 @@ export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* 
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const context = yield* hydrateMonitoredContext(options, dependencies, true);
   const ended = yield* (dependencies.watchStream ?? runYeetWatchStream)(context, {
