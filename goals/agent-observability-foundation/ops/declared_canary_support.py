@@ -17,8 +17,6 @@ if not __debug__:
     raise RuntimeError('Declared canary verification requires Python assertions to remain enabled')
 
 SALT = 'synthetic-launch-proof-salt'
-QUALIFICATION_SHA = '30e49630d28c7b72ed89e17dead852d7eea7fedf7c8c70d357762d7808cec631'
-PROBE_SHA = 'ad227f12771ae17d0298334260d825ee393c1db7346444fa6aa5a6c8d0c0856c'
 
 
 def sha(data):
@@ -30,7 +28,7 @@ def private_hash(value):
 
 
 class DeclaredCanary:
-    def __init__(self, directory, workspace, *, qualification_sha=QUALIFICATION_SHA, probe_sha=PROBE_SHA):
+    def __init__(self, directory, workspace, *, qualification_sha, probe_sha):
         assert isinstance(qualification_sha, str) and re.fullmatch(r'[0-9a-f]{64}', qualification_sha), 'An exact qualification digest is required'
         assert isinstance(probe_sha, str) and re.fullmatch(r'[0-9a-f]{64}', probe_sha), 'An exact root-probe digest is required'
         self.qualification_sha = qualification_sha

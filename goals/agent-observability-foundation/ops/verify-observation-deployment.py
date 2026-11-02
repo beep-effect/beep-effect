@@ -26,11 +26,13 @@ parser.add_argument('--caddy', required=True, type=Path)
 parser.add_argument('--live-canary', action='store_true', help='Explicitly send two synthetic metadata records to the tailnet Phoenix through an isolated collector')
 parser.add_argument('--dankserver', type=Path)
 parser.add_argument('--disposable-canary', action='store_true', help='Run the same synthetic route against owned disposable Phoenix')
-parser.add_argument('--declared-root', type=Path, help='Exact retained reviewed synthetic root for both canary stages')
-parser.add_argument('--declared-qualification-sha256', help='Explicit reviewed digest for a freshly qualified synthetic root; requires the paired probe digest')
-parser.add_argument('--declared-probe-sha256', help='Explicit reviewed root-probe digest; requires the paired qualification digest')
+parser.add_argument('--declared-root', type=Path, help='Exact retained reviewed synthetic root for both canary stages; requires both explicit digest flags')
+parser.add_argument('--declared-qualification-sha256', help='Required with --declared-root: explicit reviewed qualification digest; requires the paired probe digest')
+parser.add_argument('--declared-probe-sha256', help='Required with --declared-root: explicit reviewed root-probe digest; requires the paired qualification digest')
 parser.add_argument('--health-proof', action='store_true', help='Independently scrape actual worker metrics and receive its stopped-worker alert locally')
 args = parser.parse_args()
+if args.declared_root is not None and args.declared_qualification_sha256 is None and args.declared_probe_sha256 is None:
+    parser.error('--declared-root requires both --declared-qualification-sha256 and --declared-probe-sha256')
 assert not (args.live_canary and args.disposable_canary), 'Choose one backend per bounded proof'
 assert not args.declared_root or args.live_canary or args.disposable_canary
 assert (args.declared_qualification_sha256 is None) == (args.declared_probe_sha256 is None), 'Supply both declared-root digests together'
@@ -110,9 +112,9 @@ initial_source_hashes = source_hashes()
 try:
     if args.declared_root:
         from declared_canary_support import DeclaredCanary
-        pins = ({'qualification_sha': args.declared_qualification_sha256, 'probe_sha': args.declared_probe_sha256}
-                if args.declared_qualification_sha256 is not None else {})
-        declared = DeclaredCanary(args.declared_root, workspace, **pins)
+        declared = DeclaredCanary(args.declared_root, workspace,
+                                  qualification_sha=args.declared_qualification_sha256,
+                                  probe_sha=args.declared_probe_sha256)
     if args.live_canary or args.disposable_canary:
         assert args.dankserver is not None
         from live_canary_support import LiveCanary, request as canary_request
