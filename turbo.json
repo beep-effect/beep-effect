@@ -3177,6 +3177,7 @@
         "packages/foundation/modeling/skill-contract/src/EvidenceLadder.ts",
         "packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts",
         "packages/foundation/modeling/skill-contract/src/Gate.ts",
+        "packages/foundation/modeling/skill-contract/src/GateCertificate.ts",
         "packages/foundation/modeling/skill-contract/src/Recovery.ts",
         "packages/foundation/modeling/skill-contract/src/SchemaReference.ts",
         "packages/foundation/modeling/skill-contract/src/SkillCompletion.ts",
