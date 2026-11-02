@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
@@ -57,6 +58,10 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
 const REPO_ROOT = "/repo";
 const coverageDispatchIdentity = CoverageProducerIdentity.make({
@@ -140,12 +145,15 @@ const ciExecutionLayer = (
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
-  return Layer.mergeAll(
-    BunCrypto.layer,
-    fileSystemAndPath,
-    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
-    processLayer,
-    TestConsole.layer
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
   );
 };
 
@@ -190,10 +198,13 @@ const branchProtectionContextSnapshotUrl = new URL(
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
-const LiveRepoLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const LiveRepoLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 const PartitionLaneLayer = Layer.merge(LiveRepoLayer, TestConsole.layer);
 
@@ -456,12 +467,16 @@ describe("CI lane partitions", () => {
     ).toEqual([
       { id: "lint-a", packages: 72, weightSeconds: 1132 },
       { id: "lint-b", packages: 67, weightSeconds: 1134 },
-      { id: "repo-cli-1", packages: 1, weightSeconds: 603 },
-      { id: "repo-cli-2", packages: 1, weightSeconds: 603 },
-      { id: "repo-cli-3", packages: 1, weightSeconds: 603 },
-      { id: "repo-cli-4", packages: 1, weightSeconds: 603 },
-      { id: "unit-a", packages: 71, weightSeconds: 1214 },
-      { id: "unit-b", packages: 67, weightSeconds: 1214 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 402 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 402 },
+      { id: "repo-cli-3", packages: 1, weightSeconds: 402 },
+      { id: "repo-cli-4", packages: 1, weightSeconds: 402 },
+      { id: "repo-cli-5", packages: 1, weightSeconds: 402 },
+      { id: "repo-cli-6", packages: 1, weightSeconds: 402 },
+      { id: "unit-a", packages: 45, weightSeconds: 749 },
+      { id: "unit-b", packages: 45, weightSeconds: 750 },
+      { id: "unit-c", packages: 46, weightSeconds: 749 },
+      { id: "unit-d", packages: 46, weightSeconds: 749 },
     ]);
   });
 
@@ -469,17 +484,20 @@ describe("CI lane partitions", () => {
     expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
       { id: "lint-a", shard: undefined },
       { id: "lint-b", shard: undefined },
-      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 4 }) },
-      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 4 }) },
-      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 4 }) },
-      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 4 }) },
+      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 6 }) },
+      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 6 }) },
+      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 6 }) },
+      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 6 }) },
+      { id: "repo-cli-5", shard: CiLanePartitionShard.make({ index: 5, total: 6 }) },
+      { id: "repo-cli-6", shard: CiLanePartitionShard.make({ index: 6, total: 6 }) },
       { id: "unit-a", shard: undefined },
       { id: "unit-b", shard: undefined },
+      { id: "unit-c", shard: undefined },
+      { id: "unit-d", shard: undefined },
     ]);
-    expect(partitionPackages("repo-cli-1")).toEqual(["@beep/repo-cli"]);
-    expect(partitionPackages("repo-cli-2")).toEqual(["@beep/repo-cli"]);
-    expect(partitionPackages("repo-cli-3")).toEqual(["@beep/repo-cli"]);
-    expect(partitionPackages("repo-cli-4")).toEqual(["@beep/repo-cli"]);
+    for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
+      expect(partitionPackages(id)).toEqual(["@beep/repo-cli"]);
+    }
   });
 
   it("rejects a shard whose index exceeds its total or whose total is below two", () => {
@@ -547,7 +565,7 @@ describe("CI lane partitions", () => {
       "--filter=@beep/repo-cli",
       "--summarize",
       "--",
-      "--shard=1/4",
+      "--shard=1/6",
     ];
     expect([...sharded.execution]).toEqual([
       "turbo",
@@ -556,8 +574,8 @@ describe("CI lane partitions", () => {
       ...expectedTurboCacheArgs(shardedShape),
       ...shardedShape,
     ]);
-    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/4"]);
-    expect(sharded.selection).not.toContain("--shard=1/4");
+    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/6"]);
+    expect(sharded.selection).not.toContain("--shard=1/6");
 
     const unitA = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-a"));
     const unsharded = ciLanePartitionArgsForTesting(
@@ -622,7 +640,7 @@ describe("CI lane partitions", () => {
       A.map(ciLaneDefaultPlacements(unitPartitions, names), (placement) => placement.partition)
     );
 
-    expect(A.sort(partitions, Order.String)).toEqual(["unit-a", "unit-b"]);
+    expect(A.sort(partitions, Order.String)).toEqual(["unit-a", "unit-b", "unit-c", "unit-d"]);
     expect(
       ciLaneDefaultPlacements(
         A.filter(unitPartitions, (partition) => partition.shard !== undefined),
@@ -1065,7 +1083,7 @@ describe("partitioned CI lane execution", () => {
             expect(commands).toHaveLength(1);
             const output = A.join(A.filter(yield* TestConsole.logLines, P.isString), "\n");
             expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
-            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/4");
+            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/6");
             expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
           })
         )
@@ -1641,7 +1659,7 @@ describe("ciLaneStepsForTesting", () => {
 
   // The workflow gates only on goals_only and hands the affected decision to
   // the lane (Turbo dry-run probe); no path profile survives anywhere.
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "10 seconds" })((it) => {
+  it.layer(gitPlatform, { timeout: "10 seconds" })((it) => {
     it.effect("leaves the storybook affected decision to the lane instead of a workflow path profile", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -1701,12 +1719,15 @@ const storybookCiLayer = (dryRunOutput: string, spawned: Array<StorybookSpawn>, 
     })
   );
   const fileSystemAndPath = Layer.merge(fileSystemLayer, Path.layer);
-  return Layer.mergeAll(
-    BunCrypto.layer,
-    fileSystemAndPath,
-    FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
-    processLayer,
-    TestConsole.layer
+  return Layer.provideMerge(
+    Git.layer,
+    Layer.mergeAll(
+      BunCrypto.layer,
+      fileSystemAndPath,
+      FsUtilsLive.pipe(Layer.provide(fileSystemAndPath)),
+      processLayer,
+      TestConsole.layer
+    )
   );
 };
 

@@ -18,6 +18,9 @@ set -euo pipefail
 # otherwise it falls back to all controller runners observed during the run.
 
 readonly repo="beep-effect/beep-effect"
+# Runners register in the organization group since the P3 cutover; the
+# repository roster never lists them, so every roster read is org-scoped.
+readonly org="${repo%%/*}"
 readonly workflow="fleet-shadow-check.yml"
 readonly poll_seconds=20
 readonly max_run_polls=60
@@ -89,7 +92,7 @@ record_controller_runners() {
       printf '%s\t%s\t%s\n' "${runner}" "${now_epoch}" "${now_iso}" >> "${runner_records}"
       echo "runner first seen: ${runner} at ${now_iso}"
     fi
-  done < <(gh api --paginate "repos/${repo}/actions/runners?per_page=100" \
+  done < <(gh api --paginate "orgs/${org}/actions/runners?per_page=100" \
     --jq '.runners[] | select(.name | startswith("beep-ci-")) | .name')
 }
 
@@ -382,7 +385,7 @@ if [[ ! -s "${seen_names}" ]]; then
   teardown_failed=1
 fi
 while true; do
-  roster="$(gh api --paginate "repos/${repo}/actions/runners?per_page=100" \
+  roster="$(gh api --paginate "orgs/${org}/actions/runners?per_page=100" \
     --jq '.runners[].name')"
   remaining=0
   while IFS= read -r runner; do

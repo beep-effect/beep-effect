@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli";
 import {
   diffSchemaFirstParity,
@@ -32,16 +33,23 @@ import { Project, SyntaxKind } from "ts-morph";
 import { expectReportedExit } from "./support/CommandTest.ts";
 import type { SourceFile } from "ts-morph";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
+
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const fixtureFile = "packages/example/src/Example.ts";
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    TestConsole.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 
 const parityEntriesIn = (project: Project, sourceLines: ReadonlyArray<string>) =>
@@ -174,7 +182,7 @@ const unionSource = (arms: ReadonlyArray<string>) => [
   "});",
 ];
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "SFV4-default-wrapper",
   (it) => {
     it.effect("flags SchemaUtils default wrappers through namespace and named imports", () =>
@@ -379,7 +387,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   }
 );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("SFV4-codec-static", (it) => {
+it.layer(gitPlatform, { timeout: "30 seconds" })("SFV4-codec-static", (it) => {
   it.effect("flags withCodecStatics and codec facades attached through withStatics, not other statics", () =>
     Effect.gen(function* () {
       expect(
@@ -874,7 +882,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   );
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "SFV4-opaque-wrapper",
   (it) => {
     it.effect("flags Defect and OpaqueUnknown imported from @beep/schema but not native S.Defect", () =>
@@ -926,7 +934,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
   }
 );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
   "parity occurrence identity",
   (it) => {
     it.effect("keeps every anchor and membership key across line shifts and reformatting", () =>

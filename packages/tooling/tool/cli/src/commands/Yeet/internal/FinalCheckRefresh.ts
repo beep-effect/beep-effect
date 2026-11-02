@@ -63,6 +63,7 @@ import {
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
 import { runGitFoldedStdout, runGitOutput, runGitPathList } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -207,7 +208,7 @@ export const decideFinalCheckRefresh = (facts: FinalCheckRefreshFacts): FinalChe
   return FinalCheckRefreshPass.make({ receipt: facts.receipt, finalHead: facts.finalHead, ownChanges });
 };
 
-type GitServices = Digest.Digest | ChildProcessSpawner.ChildProcessSpawner;
+type GitServices = Digest.Digest | ChildProcessSpawner.ChildProcessSpawner | Git;
 
 const gitLine = (repoRoot: string, args: ReadonlyArray<string>) =>
   runGitOutput(repoRoot, args).pipe(Effect.map(Str.trim));

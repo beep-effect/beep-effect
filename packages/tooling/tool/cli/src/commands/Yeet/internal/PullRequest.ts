@@ -35,6 +35,7 @@ import {
   YeetPullRequestTitleSyncStatus,
 } from "./PullRequestTitle.ts";
 import { YeetExecutedStep } from "./Verdict.ts";
+import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -326,6 +327,7 @@ export const buildPrBody = Effect.fn("Yeet.buildPrBody")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const range = yield* branchCommitRange(context);
   const commitLog = yield* runGitOutput(context.repoRoot, ["log", "--reverse", "--pretty=format:## %s%n%n%b", range]);
@@ -515,6 +517,7 @@ const stampPullRequestProvenance = Effect.fn("Yeet.stampPullRequestProvenance")(
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const recording = yield* recordCurrentPrSession(context, number, url, state, registry);
   const outcome = O.isSome(recording)
@@ -664,6 +667,7 @@ const createPullRequest = Effect.fn("Yeet.createPullRequest")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const resolved = yield* resolvePullRequestTitle(context, message, yield* branchCommitRange(context));
   const title = resolved.title;
@@ -878,6 +882,7 @@ export const ensurePullRequest = Effect.fn("Yeet.ensurePullRequest")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const capture = dependencies.capture ?? runRepoCommandCapture;
   const existing = yield* (dependencies.findOpen ?? findOpenPullRequest)(context);

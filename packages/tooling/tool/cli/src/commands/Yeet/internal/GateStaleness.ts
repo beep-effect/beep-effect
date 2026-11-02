@@ -65,6 +65,7 @@ import {
   collectUntrackedPaths,
   runGitPathList,
 } from "./GitExec.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -622,7 +623,7 @@ export const collectYeetGateInputPaths = Effect.fn("Yeet.collectYeetGateInputPat
 ): Effect.fn.Return<
   ReadonlyArray<string>,
   YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const committed = yield* runGitPathList(context.repoRoot, [
     "diff",
@@ -684,7 +685,7 @@ export const collectYeetGateStaleness = Effect.fn("Yeet.collectYeetGateStaleness
 ): Effect.fn.Return<
   ReadonlyArray<GateStalenessVerdict>,
   YeetCommandError,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
   const artifactPaths = [
     ...A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (descriptor) => descriptor.artifactPath),

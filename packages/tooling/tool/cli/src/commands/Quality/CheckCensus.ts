@@ -52,6 +52,7 @@ import {
 import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
 import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
+import type { Git } from "@beep/git/Git";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -369,7 +370,8 @@ type CensusEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | SecureRandom.SecureRandom
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
   tsgoPath: string,
@@ -952,7 +954,7 @@ const checkCensusBaselineProvenance = Effect.fn("CheckCensus.baselineProvenance"
 ): Effect.fn.Return<
   CheckCensusBaselineProvenance,
   QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const commit = yield* resolveGitCommit(repoRoot, "HEAD", jsdocGitErrorAdapter);
   const status = yield* runGitLines(repoRoot, ["status", "--porcelain"], jsdocGitErrorAdapter);
