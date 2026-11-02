@@ -1227,7 +1227,7 @@ const collectExistingWorkingTreeChangedFiles = Effect.fn("QualityTasks.collectEx
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const changedFiles = yield* collectDirtyWorktreeFiles(repoRoot, {
-      diffArgs: [`--diff-filter=${CHANGED_PATH_DIFF_FILTER}`],
+      diffFilter: CHANGED_PATH_DIFF_FILTER,
       pathspecs: A.empty(),
       onProbeFailure: "ignore",
     }).pipe(Effect.orElseSucceed(A.empty<string>));

@@ -1,0 +1,476 @@
+{
+  "tool": "goals/repo-cli-gh-git-consolidation/ops/dirty-axis-differential-w2.ts",
+  "commit": "cec0fb723810092ff6554434ba1dba168fa8bc6e",
+  "git": "git version 2.56.0",
+  "scenarios": 66,
+  "same": 61,
+  "classified": 5,
+  "unclassified": 0,
+  "gates": {
+    "unclassified": true
+  },
+  "rows": [
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "ACMR TypeScript pathspecs",
+      "verdict": "D-10: the kit reads -z output, so a path with a non-ASCII or special character arrives raw where the line capture received git's C-quoted form",
+      "old": "{\"ok\":[\"\\\"src/caf/303/251.ts\\\"\",\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}",
+      "new": "{\"ok\":[\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/café.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "no renames",
+      "verdict": "D-10: the kit reads -z output, so a path with a non-ASCII or special character arrives raw where the line capture received git's C-quoted form",
+      "old": "{\"ok\":[\"\\\"src/caf/303/251.ts\\\"\",\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/a.ts\",\"src/a.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}",
+      "new": "{\"ok\":[\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/a.ts\",\"src/a.ts\",\"src/café.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "whole tree",
+      "verdict": "D-10: the kit reads -z output, so a path with a non-ASCII or special character arrives raw where the line capture received git's C-quoted form",
+      "old": "{\"ok\":[\"\\\"src/caf/303/251.ts\\\"\",\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}",
+      "new": "{\"ok\":[\"src/a-moved.ts\",\"src/a-moved.ts\",\"src/café.ts\",\"src/staged.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "unborn repository tolerated",
+      "verdict": "same",
+      "old": "{\"ok\":[]}",
+      "new": "{\"ok\":[]}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "unborn repository strict",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"DomainError\"}}",
+      "new": "{\"failed\":{\"tag\":\"DomainError\"}}"
+    },
+    {
+      "site": "collectDirtyWorktreeFiles",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"DomainError\"}}",
+      "new": "{\"failed\":{\"tag\":\"DomainError\"}}"
+    },
+    {
+      "site": "collectChangedFiles",
+      "scenario": "branched history with renames and a deletion",
+      "verdict": "D-10: the kit reads -z output, so a path with a non-ASCII or special character arrives raw where the line capture received git's C-quoted form",
+      "old": "{\"ok\":[\"\\\"src/caf/303/251.ts\\\"\",\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/a-moved.ts\",\"src/a.ts\",\"src/gone.ts\",\"src/new.ts\",\"src/old.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}",
+      "new": "{\"ok\":[\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/a-moved.ts\",\"src/a.ts\",\"src/café.ts\",\"src/gone.ts\",\"src/new.ts\",\"src/old.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}"
+    },
+    {
+      "site": "collectChangedFiles",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"DomainError\"}}",
+      "new": "{\"failed\":{\"tag\":\"DomainError\"}}"
+    },
+    {
+      "site": "collectChangedFiles",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"DomainError\"}}",
+      "new": "{\"failed\":{\"tag\":\"DomainError\"}}"
+    },
+    {
+      "site": "collectBaseRangeChangedFiles",
+      "scenario": "ACMR TypeScript pathspecs",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/new.ts\"]}",
+      "new": "{\"ok\":[\"src/new.ts\"]}"
+    },
+    {
+      "site": "collectBaseRangeChangedFiles",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":[\"src/new.ts\"]}",
+      "new": "{\"ok\":[\"src/new.ts\"]}"
+    },
+    {
+      "site": "lockfileChangedSinceBase",
+      "scenario": "changed on the branch",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "lockfileChangedSinceBase",
+      "scenario": "unchanged",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "lockfileChangedSinceBase",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "gitCleanSkip",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"dirty-tree\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"dirty-tree\"}}"
+    },
+    {
+      "site": "gitCleanSkip",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "gitCleanSkip",
+      "scenario": "clean and dirty",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"dirty-tree\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"dirty-tree\"}}"
+    },
+    {
+      "site": "gitCleanSkip",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"git-probe-failed\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"git-probe-failed\"}}"
+    },
+    {
+      "site": "gitCleanSkip",
+      "scenario": "unborn repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "worktreeIsDirty",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "worktreeIsDirty",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "worktreeIsDirty",
+      "scenario": "staged rename alone",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "worktreeIsDirty",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "statusFacts",
+      "scenario": "dirty tree with a rename and a nested untracked directory",
+      "verdict": "same",
+      "old": "{\"ok\":{\"dirtyCount\":5,\"dirtyPaths\":[\"src/a-moved.ts\",\"src/a.ts\",\"src/café.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}}",
+      "new": "{\"ok\":{\"dirtyCount\":5,\"dirtyPaths\":[\"src/a-moved.ts\",\"src/a.ts\",\"src/café.ts\",\"src/staged.ts\",\"untracked/dir/deep.ts\",\"with space.ts\"]}}"
+    },
+    {
+      "site": "statusFacts",
+      "scenario": "staged rename alone",
+      "verdict": "same",
+      "old": "{\"ok\":{\"dirtyCount\":1,\"dirtyPaths\":[\"README-renamed.md\",\"README.md\"]}}",
+      "new": "{\"ok\":{\"dirtyCount\":1,\"dirtyPaths\":[\"README-renamed.md\",\"README.md\"]}}"
+    },
+    {
+      "site": "statusFacts",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":{\"dirtyCount\":0,\"dirtyPaths\":[]}}",
+      "new": "{\"ok\":{\"dirtyCount\":0,\"dirtyPaths\":[]}}"
+    },
+    {
+      "site": "statusFacts",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"dirtyCount\":null,\"dirtyPaths\":[]}}",
+      "new": "{\"ok\":{\"dirtyCount\":null,\"dirtyPaths\":[]}}"
+    },
+    {
+      "site": "fleetWorktreeList",
+      "scenario": "clone with a detached and a locked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"path\":\"<tmp>/clean\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"feature\",\"detached\":false,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/linked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":null,\"detached\":true,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/locked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"pinned\",\"detached\":false,\"locked\":true,\"prunable\":false}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"path\":\"<tmp>/clean\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"feature\",\"detached\":false,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/linked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":null,\"detached\":true,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/locked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"pinned\",\"detached\":false,\"locked\":true,\"prunable\":false}]}}"
+    },
+    {
+      "site": "fleetWorktreeList",
+      "scenario": "from the linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"path\":\"<tmp>/clean\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"feature\",\"detached\":false,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/linked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":null,\"detached\":true,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/locked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"pinned\",\"detached\":false,\"locked\":true,\"prunable\":false}]}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":[{\"path\":\"<tmp>/clean\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"feature\",\"detached\":false,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/linked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":null,\"detached\":true,\"locked\":false,\"prunable\":false},{\"path\":\"<tmp>/locked\",\"head\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\",\"branch\":\"pinned\",\"detached\":false,\"locked\":true,\"prunable\":false}]}}"
+    },
+    {
+      "site": "fleetWorktreeList",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "fleetOrigin",
+      "scenario": "origin configured",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"git@github.com:acme/demo.git\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"git@github.com:acme/demo.git\"}}"
+    },
+    {
+      "site": "fleetOrigin",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "fleetOrigin",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "fleetCommonDir",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/clean/.git\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/clean/.git\"}}"
+    },
+    {
+      "site": "fleetCommonDir",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/clean/.git\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"Some\",\"value\":\"<tmp>/clean/.git\"}}"
+    },
+    {
+      "site": "fleetCommonDir",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}",
+      "new": "{\"ok\":{\"_id\":\"Option\",\"_tag\":\"None\"}}"
+    },
+    {
+      "site": "ciChangedPaths",
+      "scenario": "branched history with renames and a deletion",
+      "verdict": "same",
+      "old": "{\"ok\":[\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/gone.ts\",\"src/new.ts\"]}",
+      "new": "{\"ok\":[\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/gone.ts\",\"src/new.ts\"]}"
+    },
+    {
+      "site": "ciChangedPaths",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"CiCommandError\"}}",
+      "new": "{\"failed\":{\"tag\":\"CiCommandError\"}}"
+    },
+    {
+      "site": "ciChangedPaths",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"CiCommandError\"}}",
+      "new": "{\"failed\":{\"tag\":\"CiCommandError\"}}"
+    },
+    {
+      "site": "ciCurrentBranch",
+      "scenario": "on a branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"feature\"}",
+      "new": "{\"ok\":\"feature\"}"
+    },
+    {
+      "site": "ciCurrentBranch",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "ciCurrentBranch",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"CiCommandError\"}}",
+      "new": "{\"failed\":{\"tag\":\"CiCommandError\"}}"
+    },
+    {
+      "site": "changesetChanged",
+      "scenario": "branch since origin/main",
+      "verdict": "same",
+      "old": "{\"ok\":[\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/gone.ts\",\"src/new.ts\",\"src/old.ts\"]}",
+      "new": "{\"ok\":[\".changeset/note.md\",\"bun.lock\",\"docs/guide.md\",\"src/gone.ts\",\"src/new.ts\",\"src/old.ts\"]}"
+    },
+    {
+      "site": "changesetAdded",
+      "scenario": "branch since origin/main",
+      "verdict": "same",
+      "old": "{\"ok\":[\".changeset/note.md\"]}",
+      "new": "{\"ok\":[\".changeset/note.md\"]}"
+    },
+    {
+      "site": "changesetChanged",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}",
+      "new": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}"
+    },
+    {
+      "site": "changesetAdded",
+      "scenario": "unknown base",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}",
+      "new": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}"
+    },
+    {
+      "site": "changesetChanged",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}",
+      "new": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}"
+    },
+    {
+      "site": "changesetAdded",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}",
+      "new": "{\"failed\":{\"tag\":\"ChangesetStatusError\"}}"
+    },
+    {
+      "site": "securityRemote",
+      "scenario": "origin configured",
+      "verdict": "same",
+      "old": "{\"ok\":\"git@github.com:acme/demo.git\"}",
+      "new": "{\"ok\":\"git@github.com:acme/demo.git\"}"
+    },
+    {
+      "site": "securityRemote",
+      "scenario": "no origin remote",
+      "verdict": "same",
+      "old": "{\"ok\":\"\"}",
+      "new": "{\"ok\":\"\"}"
+    },
+    {
+      "site": "securityRevision",
+      "scenario": "on a branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}",
+      "new": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}"
+    },
+    {
+      "site": "securityRevision",
+      "scenario": "unborn repository",
+      "verdict": "D-10: Git.revParse fails with the typed UnknownRefError on an unborn repository where the unbounded string read ignored the exit code and returned git's literal `HEAD` echo",
+      "old": "{\"ok\":\"HEAD\"}",
+      "new": "{\"failed\":{\"tag\":\"UnknownRefError\"}}"
+    },
+    {
+      "site": "securityClean",
+      "scenario": "dirty tree",
+      "verdict": "same",
+      "old": "{\"ok\":false}",
+      "new": "{\"ok\":false}"
+    },
+    {
+      "site": "securityClean",
+      "scenario": "clean clone",
+      "verdict": "same",
+      "old": "{\"ok\":true}",
+      "new": "{\"ok\":true}"
+    },
+    {
+      "site": "sessionCheckoutFacts",
+      "scenario": "main checkout",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/clean\",\"checkout\":\"<tmp>/clean\",\"lane\":\"clean\",\"branch\":\"feature\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/clean\",\"checkout\":\"<tmp>/clean\",\"lane\":\"clean\",\"branch\":\"feature\"}}"
+    },
+    {
+      "site": "sessionCheckoutFacts",
+      "scenario": "linked worktree",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/clean\",\"checkout\":\"<tmp>/linked\",\"lane\":\"linked\",\"branch\":\"HEAD\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/clean\",\"checkout\":\"<tmp>/linked\",\"lane\":\"linked\",\"branch\":\"HEAD\"}}"
+    },
+    {
+      "site": "sessionCheckoutFacts",
+      "scenario": "detached HEAD",
+      "verdict": "same",
+      "old": "{\"ok\":{\"clone\":\"<tmp>/detached\",\"checkout\":\"<tmp>/detached\",\"lane\":\"detached\",\"branch\":\"HEAD\"}}",
+      "new": "{\"ok\":{\"clone\":\"<tmp>/detached\",\"checkout\":\"<tmp>/detached\",\"lane\":\"detached\",\"branch\":\"HEAD\"}}"
+    },
+    {
+      "site": "sessionCheckoutFacts",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"SessionLedgerError\"}}",
+      "new": "{\"failed\":{\"tag\":\"SessionLedgerError\"}}"
+    },
+    {
+      "site": "revParseHead",
+      "scenario": "on a branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}",
+      "new": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}"
+    },
+    {
+      "site": "revParseHead",
+      "scenario": "unborn repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"CommandError\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"tag\":\"CommandError\",\"exitCode\":128}}"
+    },
+    {
+      "site": "revParseHead",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"CommandError\",\"exitCode\":128}}",
+      "new": "{\"failed\":{\"tag\":\"CommandError\",\"exitCode\":128}}"
+    },
+    {
+      "site": "revParsePeel",
+      "scenario": "branch",
+      "verdict": "same",
+      "old": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}",
+      "new": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}"
+    },
+    {
+      "site": "revParsePeel",
+      "scenario": "sha",
+      "verdict": "same",
+      "old": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}",
+      "new": "{\"ok\":\"40bc9a6d826acbc448937dd1ff920f7c68087168\"}"
+    },
+    {
+      "site": "revParsePeel",
+      "scenario": "unknown ref",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"QualityTaskConfigurationError\"}}",
+      "new": "{\"failed\":{\"tag\":\"QualityTaskConfigurationError\"}}"
+    },
+    {
+      "site": "revParsePeel",
+      "scenario": "outside a repository",
+      "verdict": "same",
+      "old": "{\"failed\":{\"tag\":\"QualityTaskConfigurationError\"}}",
+      "new": "{\"failed\":{\"tag\":\"QualityTaskConfigurationError\"}}"
+    }
+  ]
+}
