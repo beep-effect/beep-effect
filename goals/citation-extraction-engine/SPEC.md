@@ -1252,6 +1252,16 @@ width. Preserving this state through the owner, literal stages and native
 transport remains required; no normalization or new divergence is approved.
 See [Unicode source evidence](./history/evidence/2026-11-02-cleaner-unicode.md).
 
+- **2026-11-02 coordinated integration direction:** the operator assigns shared
+  repository-wide green checks to the Claude orchestrator. Merge main regularly,
+  continue engine implementation with focused checks, and publish ready work
+  without waiting for unrelated reds. Final acceptance requirements are retained.
+  Shared operation admission now captures one policy/Clock/Scope owner and the
+  cleaner operation adapter uses it; nested plans retain the outer permit and
+  ledger. See [operation admission](./history/evidence/2026-11-02-operation-admission.md).
+  Reversal removes these private adapters and their integration tests; it does
+  not alter oracle observations or public contracts.
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from

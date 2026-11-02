@@ -156,6 +156,11 @@ Current evidence:
 - [Default resolution](./history/evidence/2026-10-28-default-resolution.md)
 - [Operation context coverage](./history/evidence/2026-10-28-resolution-operation-contexts.md)
 
+The [shared operation admission](./history/evidence/2026-11-02-operation-admission.md)
+now bounds top-level work and queues across cleaner instances, with captured
+Clock/policy, cancellation cleanup and scope shutdown. Nested plans reuse their
+outer permit and ledger. Public engine composition and full parity remain open.
+
 ## Mission
 
 Deliver an Effect-native citation engine with observable capability parity to

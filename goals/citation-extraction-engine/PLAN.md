@@ -219,6 +219,16 @@ All 6,412 snapshots pass local preparation/framing checks. The full 2,016-histor
 worker replay is routed to hosted integration and remains pending; these proofs
 do not close target parity.
 
+The [shared operation admission](./history/evidence/2026-11-02-operation-admission.md)
+now captures one bounded policy/Clock/Scope owner for all operation kinds. The
+private cleaner operation adapter shares its capacity across instances and
+nested cleaning reuses the original permit and output ledger. Fifteen focused
+admission/cleaner/registry tests pass. Public Layer composition must still supply
+this owner across every engine adapter; native-process admission, exhaustive
+source-event replay and remaining engine work stay open. The operator assigns
+repository-wide green checks to the Claude orchestrator; merge main regularly
+and continue implementation without treating unrelated reds as a work hold.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use
