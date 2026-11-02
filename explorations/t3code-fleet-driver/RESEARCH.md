@@ -46,7 +46,7 @@ points this packet picks up.
   ([capabilities §3](research/t3code-capabilities.md#3-remote-and-multi-environment))
 - **Headless Linux server.** Run `t3 up --lan` plus `t3 service install`: a
   systemd user service with linger. It needs Node `^22.16 || ^23.11 || >=24.10`,
-  and keeps state in `~/.t3/userdata`. Provider CLIs must be on the service's
+  and keeps state in the T3 home's `userdata` directory. Provider CLIs must be on the service's
   PATH or set as per-provider binary paths (mise installs need this).
   ([capabilities §2](research/t3code-capabilities.md#2-headless--server-deployment))
 - **One client drives many environments.** The desktop app saves remote

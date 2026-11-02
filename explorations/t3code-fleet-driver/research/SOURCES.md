@@ -20,8 +20,8 @@ as an installed product and through its documented CLI and MCP surfaces, so
 
 - Theo - t3.gg, "T3 Code broke me", YouTube, uploaded 2026-10-29,
   https://www.youtube.com/watch?v=uLGxb4F3SyI. The operator supplied the
-  auto-caption transcript out of repo at
-  `~/YeeBois/ContextPackets/T3CODE/T3 Code broke me/transcript.md`. Only
+  auto-caption transcript out of repo in
+  the operator's local context-packet folder. Only
   paraphrased with timestamps, in
   [t3code-capabilities.md](t3code-capabilities.md).
 - T3 Code installer, https://t3.codes/install.sh, cited in

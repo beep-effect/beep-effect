@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Start by re-verifying the removal map against current `main` and reading the installed T3 server's `tools/list`.
+P0 Research — not started. Start by re-verifying the removal map against current `main` and reading the installed T3 server's MCP tool listing.
 
 ## Latest Evidence
 

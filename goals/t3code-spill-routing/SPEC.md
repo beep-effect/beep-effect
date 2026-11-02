@@ -33,7 +33,7 @@ signal and baseline are in
 
 - `.claude/skills/orchestrate/SKILL.md`: a "Where to launch" rule and its
   threshold table.
-- `docs/runbooks/t3code-fleet.md`: the spill order and how to read the
+- a new `t3code-fleet` runbook under the runbooks docs: the spill order and how to read the
   signal.
 - Read-only analysis of the live PSI recorder output, at the path given in
   fleet-hosts.md.

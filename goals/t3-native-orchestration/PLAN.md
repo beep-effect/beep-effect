@@ -8,7 +8,7 @@ Status: `pending`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-verify the removal map against current `main`; capture the installed T3 server's `tools/list` (names and arguments). | Required facts and blockers are recorded. |
+| P0 Research | pending | Re-verify the removal map against current `main`; capture the installed T3 server's MCP tool listing (names and arguments). | Required facts and blockers are recorded. |
 | P1 Implement | pending | Delete in removal-map §0 order (CLI, session adapters, `@beep/t3-code`, unused observation-launch modules, docs, packets); rewrite skills and runbooks for T3; run the §6 regeneration commands. | Acceptance criteria are met. |
 | P2 Verify | pending | Cheap gates, goals doctor, atlas check, semantic-delta, skills relock; live Codex↔Claude round trip through T3 recorded in `history/`. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |

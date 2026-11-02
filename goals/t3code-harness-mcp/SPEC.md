@@ -41,7 +41,7 @@ Per-harness facts are in
   - Junie: edit its JSON config. OAuth support is unverified; prove it or
     record it as unsupported.
 - The per-harness recipe, how to verify it, and how to renew it go in the
-  fleet runbook (`docs/runbooks/t3code-fleet.md`), or in
+  fleet runbook (a new `t3code-fleet` runbook under the runbooks docs), or in
   `docs/runbooks/agent-pools.md` if the fleet runbook has not landed yet.
 - A renewal reminder for the 30-day OAuth grants and Linked-environment
   links, using the existing reminder-timer pattern

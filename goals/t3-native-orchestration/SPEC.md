@@ -92,7 +92,7 @@ Reference edits only: the kept packets in removal map §5c,
   `t3_thread_send`, `t3_thread_read`, `t3_thread_wait`, `t3_thread_interrupt`,
   `delegate_task`, and the scheduled-task tools. Each tool's argument names,
   `environmentId` included, are verified against the installed T3 server's
-  `tools/list` before they are written.
+  MCP tool listing before they are written.
 - Repository authority does not move with messages. The registered
   orchestrator, briefs, ownership, model routing and Yeet gates all stay.
 - Skills change only under `.claude/skills`. Then run `bun run beep skills
@@ -143,7 +143,7 @@ Reference edits only: the kept packets in removal map §5c,
 
 - A deletion breaks an importer outside the removal map, and the fix would
   change product behavior.
-- The installed T3 server's `tools/list` contradicts the tool names or
+- The installed T3 server's MCP tool listing contradicts the tool names or
   arguments this spec relies on.
 - Any spend: purchases, paid services, quota top-ups or plan changes.
 - The same blocker repeats after reasonable investigation.

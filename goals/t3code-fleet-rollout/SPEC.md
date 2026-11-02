@@ -38,7 +38,7 @@ T3 product facts:
 
 ## Target Surfaces
 
-- DankStation, out of repo: `~/.local/bin/update-t3code-source` gains a
+- DankStation, out of repo: the `update-t3code-source` script gains a
   step that runs after a successful build. It packs the fork's server bundle
   together with a metadata file (fork commit, version, Node range, arch,
   SHA-256) and publishes both on a tailnet-only endpoint. Tailscale Serve on
@@ -61,7 +61,7 @@ T3 product facts:
 - Every host: Tailscale HTTPS for T3's listener, and hub-and-spoke
   `t3 environment link` from DankStation with full access, with Labs
   "Linked environments" enabled at both ends.
-- In repo: `docs/runbooks/t3code-fleet.md`, covering publish and pull,
+- In repo: a new `t3code-fleet` runbook under the runbooks docs, covering publish and pull,
   per-host install, link and renewal, and rollback to the previous bundle.
   Also the host profiles in `.claude/skills/remote-development-agents/`.
 

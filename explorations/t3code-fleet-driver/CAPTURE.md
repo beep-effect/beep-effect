@@ -17,7 +17,7 @@ Operator ask, verbatim:
 >
 > I've just extracted the transcript from theo's youtube channel talking about
 > all of the features of t3code in
-> /home/elpresidank/YeeBois/ContextPackets/T3CODE/T3 Code broke me/transcript.md
+> [the transcript file in the operator's local context-packet folder]
 >
 > I want to setup the MCP Server on all of my harnesses, Modify the ORCHESTRATOR
 > related skills & documentation for messaging sessions cross provider using
@@ -47,7 +47,7 @@ Operator ask, verbatim:
 Source material (outside the repo, operator context packet): YouTube
 transcript "T3 Code broke me" (Theo - t3.gg, uploaded 2026-10-29,
 https://www.youtube.com/watch?v=uLGxb4F3SyI), auto-generated captions, at
-`~/YeeBois/ContextPackets/T3CODE/T3 Code broke me/transcript.md`. Not copied
+the operator's local context-packet folder. Not copied
 here; RESEARCH.md summarizes the features it names.
 
 Same-session context (2026-11-01, before this packet opened):
@@ -57,7 +57,7 @@ Same-session context (2026-11-01, before this packet opened):
   (`t3code-source-update.timer`: 4 min after login + daily 08:00) syncs with
   `pingdotgg/t3code`; conflicts and gate failures go to a headless Opus 5.5
   medium agent with Codex `gpt-6.1-sol` medium fallback. Script:
-  `~/.local/bin/update-t3code-source`. Fork customizations therefore ship to
+  `update-t3code-source` in the operator's local bin directory. Fork customizations therefore ship to
   the workstation install; other hosts have no equivalent yet.
 - Prior art in this repo: `explorations/cross-provider-agent-communication`
   (graduated 2026-10-09) qualified a T3-owned desktop host for autonomous
