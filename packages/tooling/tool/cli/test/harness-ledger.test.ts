@@ -6,6 +6,7 @@ import {
   HarnessFingerprintInput,
   HarnessLedgerRow,
   HookPulseAgentKind,
+  HookPulseDisarmSentinel,
   HookPulseDisarmWindow,
   HookPulseV1,
   hashPrivateIdentifier,
@@ -1592,3 +1593,266 @@ layer(EqualNamespaceLayer, { timeout: "30 seconds" })("harness-ledger service wi
     })
   );
 });
+
+// Session-window diagnostics the prune scan reports without qualifying any
+// session: operator disarm sentinels, start-less disarm windows, non-production
+// rows, refusals from clients the schema does not name, and a repo whose
+// `.mcp.json` is absent.
+const disarmSentinel = (disarmedAt: string) =>
+  HookPulseDisarmSentinel.encodeJsonEffect(
+    HookPulseDisarmSentinel.make({ disarmedAt, evidenceTier: "unknown", reason: "operator switch" })
+  );
+
+const activeSessionFixture = Effect.fn("test.activeSessionFixture")(function* (prefix: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* makeRepo();
+  const current = yield* repoHarnessHash(root);
+  const evidenceRoot = yield* fs.makeTempDirectoryScoped({ prefix });
+  const stateDir = path.join(evidenceRoot, "hook-events");
+  yield* fs.makeDirectory(stateDir);
+  yield* writeShard(stateDir, "2026-10-09", sessionA, [
+    yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
+    yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
+  ]);
+  const options = HarnessLedgerPruneOptions.make({ repoRoot: root, stateDir, windowSessions: 1 });
+  return { root, evidenceRoot, stateDir, options };
+});
+
+const withAgentKind = Effect.fnUntraced(function* (encoded: string, agentKind: HookPulseAgentKind, file: string) {
+  const row = yield* HookPulseV1.decodeJsonEffect(encoded);
+  const transcriptPath = Sha256Hex.make(yield* hashPrivateIdentifier(file, yield* hookPulseHashSalt));
+  return yield* HookPulseV1.encodeJsonEffect(
+    HookPulseV1.make({ ...row, agentKind, transcriptPath: O.some(transcriptPath) })
+  );
+});
+
+layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnostics", (it) => {
+  it.effect("an open disarm sentinel marks every client disabled and excludes the session", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { evidenceRoot, options } = yield* activeSessionFixture("harness-sentinel-");
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse.disarmed"),
+        yield* disarmSentinel("2026-10-09T10:00:30Z")
+      );
+      const ledger = yield* HarnessLedgerService;
+      const report = yield* ledger.pruneProposals(options);
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedDisarmed).toBe(1);
+      assertSome(report.clientCoverage["claude-code"], "disabled");
+      assertSome(report.clientCoverage["codex-cli"], "disabled");
+      assertSome(report.clientCoverage["cursor-cli"], "disabled");
+      expect(report.nonUseQualified).toBe(false);
+      // A sentinel that cannot be decoded still disarms: the switch is present.
+      yield* fs.writeFileString(path.join(evidenceRoot, "hook-pulse.disarmed"), "{not json");
+      const undecodable = yield* ledger.pruneProposals(options);
+      expect(undecodable.sessionsSkippedDisarmed).toBe(1);
+      assertSome(undecodable.clientCoverage["claude-code"], "disabled");
+    })
+  );
+
+  it.effect("a disarm window without a recorded start covers every session up to its rearm", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { evidenceRoot, options } = yield* activeSessionFixture("harness-startless-gap-");
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-disarm-windows.ndjson"),
+        yield* HookPulseDisarmWindow.encodeJsonEffect(
+          HookPulseDisarmWindow.make({
+            schemaVersion: "hook-pulse-disarm-window/v1",
+            disarmedAt: O.none(),
+            rearmedAt: "2026-10-09T10:00:40Z",
+            reason: O.none(),
+            evidenceTier: "unknown",
+          })
+        )
+      );
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(options);
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedDisarmed).toBe(1);
+      assertNone(report.clientCoverage["claude-code"]);
+    })
+  );
+
+  it.effect("non-production rows and unknown-client refusals are counted without qualifying a session", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, evidenceRoot, stateDir, options } = yield* activeSessionFixture("harness-spike-rows-");
+      // Without `.mcp.json` only the skills are prunable surfaces.
+      yield* fs.remove(path.join(root, ".mcp.json"));
+      const spike = yield* HookPulseV1.decodeJsonEffect(yield* pulse(sessionB, "2026-10-09T11:00:00Z", O.none()));
+      yield* writeShard(stateDir, "2026-10-09", sessionB, [
+        yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...spike, instrumentClass: "spike" })),
+      ]);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse-refusals-2026-10-09.ndjson"),
+        '{"ts":"2026-10-09T10:00:30Z","agentKind":"unknown","reason":"unknown-agent-kind"}\n'
+      );
+      const report = yield* (yield* HarnessLedgerService).pruneProposals(options);
+      expect(report.candidates).toBe(2);
+      expect(report.shardsRead).toBe(2);
+      expect(report.undecodableLines).toBe(0);
+      expect(report.writerRefusalsTotal).toBe(1);
+      expect(report.refusalsByAgentKind).toEqual({ "claude-code": 0, "codex-cli": 0, "cursor-cli": 0 });
+      expect(report.sessionsSkippedRefused).toBe(1);
+      expect(report.sessionsObserved).toBe(0);
+      expect(report.sessionsSkippedRole).toBe(0);
+    })
+  );
+
+  it.effect("reconciliation attributes structural transcript rows and tolerates foreign hook rows", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-structural-" });
+      const stateDir = yield* makeHookStateDir("harness-reconcile-structural-hooks-");
+      const encode = encodeUnknownTranscript;
+      const attributed = path.join(root, "attributed.jsonl");
+      yield* fs.writeFileString(
+        attributed,
+        A.join(
+          [
+            "{not json",
+            yield* encode({ type: "session_meta", payload: { id: "first" } }),
+            yield* encode({ sessionId: "first", message: { content: "plain text reply" } }),
+            yield* encode({ sessionId: "first", message: { content: [{ type: "tool_use", id: "one" }] } }),
+            yield* encode({ type: "response_item", payload: { type: "function_call" } }),
+          ],
+          "\n"
+        )
+      );
+      yield* fs.writeFileString(path.join(root, "notes.txt"), "not a transcript\n");
+      yield* fs.writeFileString(path.join(root, "quiet.jsonl"), yield* encode({ sessionId: "second", type: "user" }));
+      yield* fs.writeFileString(
+        path.join(root, "anonymous.jsonl"),
+        yield* encode({ message: { content: [{ type: "tool_use", id: "two" }] } })
+      );
+      const identity = Sha256Hex.make(yield* hashPrivateIdentifier("first", yield* hookPulseHashSalt));
+      const terminal = yield* pulse(identity, "2026-10-09T10:00:00Z", O.none());
+      const opening = yield* HookPulseV1.decodeJsonEffect(terminal);
+      yield* writeShard(stateDir, "2026-10-09", identity, [
+        "{not json",
+        yield* withAgentKind(
+          yield* HookPulseV1.encodeJsonEffect(HookPulseV1.make({ ...opening, hookEvent: "PreToolUse" })),
+          "claude-code",
+          attributed
+        ),
+        yield* withAgentKind(terminal, "claude-code", attributed),
+        yield* withAgentKind(terminal, "claude-code", attributed),
+        yield* withAgentKind(terminal, "codex-cli", attributed),
+      ]);
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "claude-code");
+      expect(report.transcriptFiles).toBe(3);
+      expect(report.transcriptToolEvents).toBe(3);
+      expect(report.hookedToolEvents).toBe(2);
+      expect(report.sessionsWithoutHooks).toBe(1);
+      expect(report.undecodableLines).toBe(2);
+      assertSome(report.ratio, 2 / 3);
+      expect(report.qualifiedForNonUse).toBe(false);
+    })
+  );
+
+  it.effect("codex reconciliation keys transcripts by path and counts custom tool calls", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "harness-reconcile-codex-" });
+      const stateDir = yield* makeHookStateDir("harness-reconcile-codex-hooks-");
+      const rollout = path.join(root, "rollout.jsonl");
+      yield* fs.writeFileString(
+        rollout,
+        A.join(
+          [
+            yield* encodeUnknownTranscript({ type: "session_meta", payload: { id: "codex-thread" } }),
+            yield* encodeUnknownTranscript({ type: "response_item", payload: { type: "custom_tool_call" } }),
+            yield* encodeUnknownTranscript({ type: "response_item", payload: { type: "message" } }),
+          ],
+          "\n"
+        )
+      );
+      const identity = Sha256Hex.make(yield* hashPrivateIdentifier("codex-thread", yield* hookPulseHashSalt));
+      yield* writeShard(stateDir, "2026-10-09", identity, [
+        yield* withAgentKind(yield* pulse(identity, "2026-10-09T10:00:00Z", O.none()), "codex-cli", rollout),
+      ]);
+      const report = yield* (yield* HarnessLedgerService).reconcile(stateDir, root, "codex-cli");
+      expect(report.agentKind).toBe("codex-cli");
+      expect(report.transcriptFiles).toBe(1);
+      expect(report.transcriptToolEvents).toBe(1);
+      expect(report.hookedToolEvents).toBe(1);
+      expect(report.sessionsWithoutHooks).toBe(0);
+      expect(report.undecodableLines).toBe(0);
+      expect(report.basis).toContain("failed-or-interrupted");
+    })
+  );
+});
+
+// The disarm sentinel path is configuration. An empty value falls back to the
+// evidence root; a path that cannot be inspected at all is unproven in both
+// directions: the window treats it as disarmed without claiming the switch.
+const sentinelLayer = <E, R>(sentinel: Effect.Effect<string, E, R>) =>
+  Layer.unwrap(
+    Effect.map(sentinel, (value) =>
+      HarnessLedgerServiceLive.pipe(
+        Layer.provideMerge(NodeServices.layer),
+        Layer.provideMerge(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_DISARM_SENTINEL: value }, { preserveEmptyStrings: true })
+          )
+        )
+      )
+    )
+  ).pipe(Layer.provide(NodeServices.layer));
+
+const EmptySentinelLayer = sentinelLayer(Effect.succeed(""));
+
+const UninspectableSentinelLayer = sentinelLayer(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dir = yield* fs.makeTempDirectoryScoped({ prefix: "harness-sentinel-blocker-" });
+    const blocker = path.join(dir, "blocker");
+    yield* fs.writeFileString(blocker, "");
+    return path.join(blocker, "hook-pulse.disarmed");
+  })
+);
+
+layer(EmptySentinelLayer, { timeout: "30 seconds" })("harness-ledger service with an empty sentinel path", (it) => {
+  it.effect("an empty sentinel setting reads the sentinel beside the hook-events directory", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { evidenceRoot, options } = yield* activeSessionFixture("harness-empty-sentinel-");
+      const ledger = yield* HarnessLedgerService;
+      const armed = yield* ledger.pruneProposals(options);
+      expect(armed.sessionsObserved).toBe(1);
+      yield* fs.writeFileString(
+        path.join(evidenceRoot, "hook-pulse.disarmed"),
+        yield* disarmSentinel("2026-10-09T10:00:30Z")
+      );
+      const disarmed = yield* ledger.pruneProposals(options);
+      expect(disarmed.sessionsObserved).toBe(0);
+      expect(disarmed.sessionsSkippedDisarmed).toBe(1);
+      assertSome(disarmed.clientCoverage["claude-code"], "disabled");
+    })
+  );
+});
+
+layer(UninspectableSentinelLayer, { timeout: "30 seconds" })(
+  "harness-ledger service with an uninspectable sentinel path",
+  (it) => {
+    it.effect("a sentinel that cannot be inspected disarms the window without claiming the switch", () =>
+      Effect.gen(function* () {
+        const { options } = yield* activeSessionFixture("harness-uninspectable-sentinel-");
+        const report = yield* (yield* HarnessLedgerService).pruneProposals(options);
+        expect(report.sessionsObserved).toBe(0);
+        expect(report.sessionsSkippedDisarmed).toBe(1);
+        assertNone(report.clientCoverage["claude-code"]);
+        expect(report.nonUseQualified).toBe(false);
+      })
+    );
+  }
+);

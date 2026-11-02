@@ -30,11 +30,19 @@
  * attribution is echoed in the merge line so the hand-off log carries it.
  *
  * `--relaxed` is the S11 merge (operator ruling 2026-10-09, AGENTS.md
- * "Mergeable"): no red or pending check holds, required ones included, but the
- * structural, ruleset, window and thread holds stay, and a head on which not
- * one required context has run still holds. Every check that was not green is
- * recorded with its attribution in the merge line and in a PR comment, and the
- * merged head's leftover workflow runs are cancelled.
+ * "Mergeable"): no pending check holds and no inherited red holds, required
+ * ones included, but the structural, ruleset, window and thread holds stay,
+ * and a head on which not one required context has run still holds. Since
+ * 2026-11-02 a red the PR introduced holds as `own-red`: the same required
+ * check is a completed success on the merge-base commit or on the base tip
+ * (`compare/base...head`, then each commit's check runs) and nothing
+ * attributes it (`--tolerate`, the body's "Inherited reds (S11)" section
+ * stamped with this head, the `unblocks-main` label). On
+ * 2026-11-02 #2522 (a stale schema-catalog shard, Repo Sanity) and #2526
+ * (repo-cli-3 package-scripts expectations) merged over their own reds and
+ * each cost an unblocker. Every check that was not green is recorded with its
+ * attribution in the merge line and in a PR comment, and the merged head's
+ * leftover workflow runs are cancelled.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -57,6 +65,7 @@ import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { decodeYeetGhOutput, yeetGh } from "./GhCall.ts";
+import { parseYeetInheritedRedsRecord } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import {
@@ -291,6 +300,85 @@ export class MergeGateCheckAtMerge extends S.Opaque<MergeGateCheckAtMerge, { rea
 export const MERGE_GATE_S11_DEFAULT_ATTRIBUTION = "S11: unattributed at merge; the same-day fix PR burns it down";
 
 /**
+ * The label that marks a pull request as the one fix for a red `main`: under
+ * S11 every red on it is inherited by definition, so the gate merges over them.
+ *
+ * **Example** (Read the label)
+ *
+ * ```ts
+ * import { MERGE_GATE_UNBLOCKS_MAIN_LABEL } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MERGE_GATE_UNBLOCKS_MAIN_LABEL) // "unblocks-main"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MERGE_GATE_UNBLOCKS_MAIN_LABEL = "unblocks-main";
+
+/**
+ * The check runs on one commit of the pull request's base branch, reduced to
+ * the latest per name by the gate.
+ *
+ * **Example** (A green base)
+ *
+ * ```ts
+ * import { MergeGateBaseRuns, MergeGateCheckRun } from "@beep/repo-cli/test/Yeet"
+ *
+ * const base = MergeGateBaseRuns.make({
+ *   sha: "2c1cb448ba0000000000000000000000000000ab",
+ *   checkRuns: [MergeGateCheckRun.make({ id: 1, name: "Lint", status: "completed", conclusion: "success" })],
+ * })
+ * console.log(base.checkRuns.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MergeGateBaseRuns extends S.Opaque<MergeGateBaseRuns, { readonly brand: unique symbol }>()(
+  S.Struct({ sha: S.NonEmptyString, checkRuns: S.Array(MergeGateCheckRun) }).pipe(
+    $I.annoteSchema("MergeGateBaseRuns", {
+      description: "The check runs on one base-branch commit, half of the inherited-red evidence.",
+    })
+  )
+) {}
+
+/**
+ * The evidence that tells a red the PR inherited from one it introduced: the
+ * check runs on the merge-base commit and on the base branch tip.
+ *
+ * **Details**
+ *
+ * Both come from one `compare/<base>...<head>` read (`merge_base_commit` and
+ * `base_commit`). Hosted CI tests `refs/pull/N/merge`, the head on the base
+ * tip at run time, so neither commit alone is what CI saw: a `main` red at
+ * the merge-base that was fixed later would excuse a red the PR now causes, and
+ * a `main` red introduced after the merge-base would read as the PR's own. A
+ * red is inherited only when the check is not a completed success on both
+ * commits; green on either makes it the PR's own. When the PR is up to date
+ * with its base the two are the same commit.
+ *
+ * **Example** (An up-to-date PR)
+ *
+ * ```ts
+ * import { MergeGateBaseEvidence, MergeGateBaseRuns } from "@beep/repo-cli/test/Yeet"
+ *
+ * const base = MergeGateBaseRuns.make({ sha: "2c1cb448ba0000000000000000000000000000ab", checkRuns: [] })
+ * console.log(MergeGateBaseEvidence.make({ mergeBase: base, baseTip: base }).baseTip.sha === base.sha) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MergeGateBaseEvidence extends S.Opaque<MergeGateBaseEvidence, { readonly brand: unique symbol }>()(
+  S.Struct({ mergeBase: MergeGateBaseRuns, baseTip: MergeGateBaseRuns }).pipe(
+    $I.annoteSchema("MergeGateBaseEvidence", {
+      description: "Check runs on the merge-base commit and the base tip: the inherited-red evidence.",
+    })
+  )
+) {}
+
+/**
  * Everything the gate decides on, read once from GitHub at a point in time.
  *
  * **Details**
@@ -299,8 +387,13 @@ export const MERGE_GATE_S11_DEFAULT_ATTRIBUTION = "S11: unattributed at merge; t
  * `unresolvedThreads` is `None` when the GraphQL thread read failed or was
  * truncated; `window` is `unknown` when the review-window reads failed;
  * `squashCommitlint` carries an `unavailable` verdict when commitlint could not
- * judge the predicted squash message. Each unknown holds the gate rather than
- * reading as "nothing to worry about".
+ * judge the predicted squash message; `baseRuns` is `None` when the merge-base
+ * commit, the base tip or their check runs could not be read. Each unknown
+ * holds the gate rather than reading as "nothing to worry about". `labels` are
+ * the PR's label names and `attributedChecks` the check names its body
+ * attributes in the "Inherited reds (S11)" section, counted only when that
+ * section is stamped with this head; both feed the relaxed gate's
+ * inherited-versus-own distinction.
  *
  * **Example** (Build a read)
  *
@@ -315,8 +408,11 @@ export const MERGE_GATE_S11_DEFAULT_ATTRIBUTION = "S11: unattributed at merge; t
  *   headSha: "212fe39b4f0000000000000000000000000000ab",
  *   draft: false,
  *   mergeableState: "clean",
+ *   labels: [],
+ *   attributedChecks: [],
  *   requiredContexts: O.some(["Lint"]),
  *   checkRuns: [],
+ *   baseRuns: O.none(),
  *   window: { _tag: "elapsed", anchor: "ready-for-review", anchoredAt: "2026-10-06T08:00:52Z", windowMs: 1200000 },
  *   unresolvedThreads: O.some(0),
  *   squashCommitlint: {
@@ -338,8 +434,11 @@ export class MergeGateRead extends S.Opaque<MergeGateRead, { readonly brand: uni
     headSha: S.NonEmptyString,
     draft: S.Boolean,
     mergeableState: S.String,
+    labels: S.Array(S.String),
+    attributedChecks: S.Array(S.NonEmptyString),
     requiredContexts: S.NonEmptyString.pipe(S.Array, S.Option),
     checkRuns: S.Array(MergeGateCheckRun),
+    baseRuns: S.Option(MergeGateBaseEvidence),
     window: YeetReviewWindow,
     unresolvedThreads: S.Option(S.Finite),
     squashCommitlint: SquashCommitlintReport,
@@ -369,6 +468,8 @@ export const MergeGateHoldReason = LiteralKit([
   "required-contexts-unknown",
   "required-pending",
   "required-red",
+  "own-red",
+  "base-runs-unknown",
   "pending",
   "red",
   "review-window-unknown",
@@ -672,17 +773,129 @@ const relaxedEvidenceHold = (
     `no required context has run on the head (${A.join(contexts, ", ")}); S11 merges over failing jobs, never without CI evidence`
   );
 
+const baseRunIsGreen = (run: MergeGateCheckRun): boolean => !isPending(run) && !isRed(run);
+
+const isUnblocksMain = (read: MergeGateRead): boolean => A.contains(read.labels, MERGE_GATE_UNBLOCKS_MAIN_LABEL);
+
+// A red the PR attributes: --tolerate names it, or the body's "Inherited reds
+// (S11)" section (written by `yeet ready --inherited`) does.
+const isAttributed = ({ read, options }: MergeGateInput, check: string): boolean =>
+  A.contains(read.attributedChecks, check) || A.some(options.tolerate, (tolerance) => tolerance.check === check);
+
+const latestBaseRun = (base: MergeGateBaseRuns, check: string): O.Option<MergeGateCheckRun> =>
+  HashMap.get(latestRunPerName(base.checkRuns), check);
+
+const describeBaseRun = (run: MergeGateCheckRun): string =>
+  `run ${run.id} ${isPending(run) ? run.status : (run.conclusion ?? "without conclusion")}`;
+
+const sha10 = Str.slice(0, 10);
+
+// The two base commits, once when the PR is up to date with its base.
+const evidenceCommits = (evidence: MergeGateBaseEvidence): ReadonlyArray<readonly [string, MergeGateBaseRuns]> =>
+  evidence.mergeBase.sha === evidence.baseTip.sha
+    ? [["merge-base", evidence.mergeBase]]
+    : [
+        ["merge-base", evidence.mergeBase],
+        ["base tip", evidence.baseTip],
+      ];
+
+// The first base commit on which the check completed green: proof the PR owns the red.
+const greenBaseRun = (
+  evidence: MergeGateBaseEvidence,
+  check: string
+): O.Option<readonly [string, MergeGateBaseRuns, MergeGateCheckRun]> =>
+  A.findFirst(
+    A.getSomes(
+      A.map(evidenceCommits(evidence), ([label, base]) =>
+        O.map(latestBaseRun(base, check), (run) => [label, base, run] as const)
+      )
+    ),
+    ([, , run]) => baseRunIsGreen(run)
+  );
+
+// S11 as amended 2026-11-02: a relaxed merge still holds on a red required
+// check the PR introduced. A red is inherited when the same check is not a
+// completed success on the merge-base commit nor on the base tip (red, pending
+// or absent on both), when the PR attributes it, or when the PR carries the
+// unblocks-main label; every other red is the PR's own and holds as `own-red`.
+// An unattributed red with no readable base holds too: an unknown base never
+// proves a red inherited.
+const ownRedHold = (
+  input: MergeGateInput,
+  latest: HashMap.HashMap<string, MergeGateCheckRun>,
+  contexts: ReadonlyArray<string>
+): O.Option<MergeGateHold> => {
+  const { read } = input;
+  if (isUnblocksMain(read)) return O.none();
+  const required = HashSet.fromIterable(contexts);
+  const unattributedReds = latest.pipe(
+    HashMap.values,
+    A.fromIterable,
+    A.filter(
+      (run) => HashSet.has(required, run.name) && !isPending(run) && isRed(run) && !isAttributed(input, run.name)
+    )
+  );
+  if (!A.isReadonlyArrayNonEmpty(unattributedReds)) return O.none();
+  return O.match(read.baseRuns, {
+    onNone: () =>
+      O.some(
+        hold(
+          read.prNumber,
+          "base-runs-unknown",
+          `base check runs unreadable for ${names(unattributedReds)}; an unknown base never proves a red inherited`
+        )
+      ),
+    onSome: (evidence) => {
+      const own = A.getSomes(
+        A.map(unattributedReds, (run) =>
+          O.map(
+            greenBaseRun(evidence, run.name),
+            ([label, base, baseRun]) => `${run.name} (base run ${baseRun.id} green at ${label} ${sha10(base.sha)})`
+          )
+        )
+      );
+      return holdWhen(A.isReadonlyArrayNonEmpty(own), read.prNumber, "own-red", A.join(own, ", "));
+    },
+  });
+};
+
+// Describe the check on each base commit, for the attribution of an inherited red.
+const baseEvidenceText = (evidence: MergeGateBaseEvidence, check: string): string =>
+  A.join(
+    A.map(evidenceCommits(evidence), ([label, base]) =>
+      O.match(latestBaseRun(base, check), {
+        onNone: () => `no run on ${label} ${sha10(base.sha)}`,
+        onSome: (run) => `${describeBaseRun(run)} on ${label} ${sha10(base.sha)}`,
+      })
+    ),
+    "; "
+  );
+
+// The attribution a relaxed merge records for a red no --tolerate named: the
+// label, the body record, or the merge-base evidence, else the S11 default.
+const inheritedAttribution = (read: MergeGateRead, check: string): O.Option<string> =>
+  isUnblocksMain(read)
+    ? O.some(`inherited: ${MERGE_GATE_UNBLOCKS_MAIN_LABEL} PR, the fix for a red main`)
+    : A.contains(read.attributedChecks, check)
+      ? O.some('inherited: attributed in the PR body ("Inherited reds (S11)")')
+      : read.baseRuns.pipe(
+          O.filter((evidence) => O.isNone(greenBaseRun(evidence, check))),
+          O.filter((evidence) => A.some(evidenceCommits(evidence), ([, base]) => O.isSome(latestBaseRun(base, check)))),
+          O.map((evidence) => `inherited: ${baseEvidenceText(evidence, check)}`)
+        );
+
 const atMergeOrder = Order.combine(
   Order.mapInput(Order.flip(Order.Boolean), (entry: MergeGateCheckAtMerge) => entry.required),
   Order.mapInput(Order.String, (entry: MergeGateCheckAtMerge) => entry.check)
 );
 
-// S11: nothing about the checks holds, so record every one that is not green.
-// An unregistered required context and a run still going are pending; a
-// completed run with a bad conclusion is red. --tolerate supplies the
-// attribution for required and optional checks alike.
+// S11: no inherited check holds, so record every one that is not green. An
+// unregistered required context and a run still going are pending; a completed
+// run with a bad conclusion is red. --tolerate supplies the attribution for
+// required and optional checks alike; a red without one carries the evidence
+// that made it inherited when the gate has any.
 const checksAtMerge = (
-  { options }: MergeGateInput,
+  { read, options }: MergeGateInput,
   latest: HashMap.HashMap<string, MergeGateCheckRun>,
   contexts: ReadonlyArray<string>
 ): ReadonlyArray<MergeGateCheckAtMerge> => {
@@ -694,6 +907,7 @@ const checksAtMerge = (
       required: HashSet.has(required, check),
       attribution: A.findFirst(options.tolerate, (tolerance) => tolerance.check === check).pipe(
         O.map((tolerance) => tolerance.attribution),
+        O.orElse(() => (state === "red" ? inheritedAttribution(read, check) : O.none())),
         O.getOrElse(() => MERGE_GATE_S11_DEFAULT_ATTRIBUTION)
       ),
     });
@@ -757,11 +971,15 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  * the cheap structural refusals first and the two judgment calls (window,
  * threads) last, matching the hand-run gate.
  *
- * With `relaxed` (S11) a red or pending check never holds; every check that
- * is not green is recorded in `atMerge` instead. Relaxed mode still holds when
- * not one required context has registered a run on the head (no CI evidence).
- * Every other criterion, the ruleset included, holds exactly as it does
- * without it.
+ * With `relaxed` (S11) a pending check never holds, and a red one holds only
+ * when the PR introduced it: a required red whose check is a completed success
+ * on the merge-base commit or on the base tip, that neither `--tolerate` nor
+ * the PR body (on this head) attributes, on a PR without the `unblocks-main`
+ * label (`own-red`, amendment of 2026-11-02). An unattributed red with no readable merge-base runs holds
+ * as `base-runs-unknown`. Every other check that is not green is recorded in
+ * `atMerge` instead. Relaxed mode still holds when not one required context
+ * has registered a run on the head (no CI evidence). Every other criterion,
+ * the ruleset included, holds exactly as it does without it.
  *
  * **Example** (A draft never merges)
  *
@@ -776,8 +994,11 @@ const threadsHold = (read: MergeGateRead): O.Option<MergeGateHold> =>
  *   headSha: "abc",
  *   draft: true,
  *   mergeableState: "clean",
+ *   labels: [],
+ *   attributedChecks: [],
  *   requiredContexts: O.some([]),
  *   checkRuns: [],
+ *   baseRuns: O.none(),
  *   window: { _tag: "unknown", reason: "not read" },
  *   unresolvedThreads: O.some(0),
  *   squashCommitlint: {
@@ -810,7 +1031,9 @@ export const decideMergeGate = (input: MergeGateInput): MergeGateDecision => {
     Result.match(contexts, {
       onFailure: O.some,
       onSuccess: (required) =>
-        options.relaxed ? relaxedEvidenceHold(input, latest, required) : checksHold(input, latest, required),
+        options.relaxed
+          ? O.orElse(relaxedEvidenceHold(input, latest, required), () => ownRedHold(input, latest, required))
+          : checksHold(input, latest, required),
     }),
     Result.getFailure(window),
     threadsHold(read),
@@ -907,6 +1130,11 @@ const GhPull = S.Struct({
   head: S.Struct({ sha: S.String }),
   base: S.Struct({ ref: S.String }),
   user: S.NullOr(S.Struct({ login: S.String })),
+  labels: S.Array(S.Struct({ name: S.String })).pipe(S.optionalKey),
+});
+const GhCompare = S.Struct({
+  merge_base_commit: S.Struct({ sha: S.String }),
+  base_commit: S.Struct({ sha: S.String }),
 });
 const GhCheckRuns = S.Struct({
   check_runs: S.Array(S.Struct({ id: S.Finite, name: S.String, status: S.String, conclusion: S.NullOr(S.String) })),
@@ -940,6 +1168,7 @@ const GhWorkflowRuns = S.Struct({
 });
 
 const decodePull = S.decodeUnknownEffect(S.fromJsonString(GhPull));
+const decodeCompare = S.decodeUnknownEffect(S.fromJsonString(GhCompare));
 const decodeCheckRunPages = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhCheckRuns)));
 const decodeThreads = S.decodeUnknownEffect(S.fromJsonString(GhThreads));
 const decodeMergeResult = S.decodeUnknownEffect(S.fromJsonString(GhMergeResult));
@@ -978,6 +1207,61 @@ const outstandingThreadCount = (
       )
     )
   );
+
+const toMergeGateCheckRun = (run: (typeof GhCheckRuns.Type)["check_runs"][number]): MergeGateCheckRun =>
+  MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion });
+
+const readBaseCommitRuns = (context: RepoRunContext, sha: string) =>
+  yeetGh(context, `gh api base check-runs ${sha10(sha)}`, [
+    "api",
+    `repos/{owner}/{repo}/commits/${sha}/check-runs?per_page=100`,
+    "--paginate",
+    "--slurp",
+  ]).pipe(
+    Effect.flatMap((output) => decodeYeetGhOutput("the base check runs", decodeCheckRunPages, output)),
+    Effect.map((pages) =>
+      MergeGateBaseRuns.make({
+        sha,
+        checkRuns: A.map(
+          A.flatMap(pages, (page) => page.check_runs),
+          toMergeGateCheckRun
+        ),
+      })
+    )
+  );
+
+// The inherited-red evidence: one compare of base...head names the merge-base
+// commit and the base tip; then every check run on each (one read when they
+// are the same commit). Any read failing yields None, which holds an
+// unattributed relaxed red (an unknown base is never green) and nothing else.
+const readMergeBaseRuns = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  baseRef: string,
+  headSha: string
+): Effect.fn.Return<
+  O.Option<MergeGateBaseEvidence>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
+  return yield* yeetGh(context, "gh api compare base...head", [
+    "api",
+    `repos/{owner}/{repo}/compare/${baseRef}...${headSha}`,
+  ]).pipe(
+    Effect.flatMap((output) => decodeYeetGhOutput("the merge base", decodeCompare, output)),
+    Effect.flatMap((compare) =>
+      readBaseCommitRuns(context, compare.merge_base_commit.sha).pipe(
+        Effect.flatMap((mergeBase) =>
+          (compare.base_commit.sha === mergeBase.sha
+            ? Effect.succeed(mergeBase)
+            : readBaseCommitRuns(context, compare.base_commit.sha)
+          ).pipe(Effect.map((baseTip) => MergeGateBaseEvidence.make({ mergeBase, baseTip })))
+        )
+      )
+    ),
+    Effect.asSome,
+    Effect.orElseSucceed(O.none<MergeGateBaseEvidence>)
+  );
+});
 
 const THREADS_QUERY =
   "query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){pullRequest(number:$number){reviewThreads(first:100){totalCount nodes{id isResolved isOutdated resolvedBy{login} comments(last:1){nodes{createdAt author{__typename login}}}}}}}}";
@@ -1061,16 +1345,23 @@ export const readMergeGate = Effect.fn("Yeet.readMergeGate")(function* (
     context,
     SquashPullRequestFacts.make({ number: pull.number, title: pull.title, body: O.fromNullishOr(pull.body) })
   );
+  const baseRuns = yield* readMergeBaseRuns(context, pull.base.ref, pull.head.sha);
   return MergeGateRead.make({
     prNumber: pull.number,
     title: pull.title,
     headSha: pull.head.sha,
     draft: pull.draft,
     mergeableState: pull.mergeable_state ?? "unknown",
-    requiredContexts: O.map(ruleset, (rules) => rules.contexts),
-    checkRuns: A.map(checkRuns, (run) =>
-      MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion })
+    labels: A.map(pull.labels ?? [], (label) => label.name),
+    // The body record counts only on the head it was stamped for; a later push falls back to the base evidence.
+    attributedChecks: parseYeetInheritedRedsRecord(pull.body ?? "").pipe(
+      O.filter((record) => Str.startsWith(record.head)(pull.head.sha)),
+      O.map((record) => record.checks),
+      O.getOrElse(() => A.empty<string>())
     ),
+    requiredContexts: O.map(ruleset, (rules) => rules.contexts),
+    checkRuns: A.map(checkRuns, toMergeGateCheckRun),
+    baseRuns,
     window: yield* readYeetReviewWindow(context, { prNumber: pull.number, headSha: pull.head.sha }),
     unresolvedThreads,
     squashCommitlint,
