@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   BoundedOutput,
@@ -38,6 +39,10 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type * as ChildProcess from "effect/process/ChildProcess";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -193,7 +198,7 @@ describe("StepExec capture pipe lifecycle", () => {
     })
   );
 
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
+  it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("tees captured chunks to the parent stdout while still capturing them", () =>
       Effect.gen(function* () {
         const stdout = yield* Effect.acquireRelease(
@@ -214,7 +219,7 @@ describe("StepExec capture pipe lifecycle", () => {
 
   // Teeing and bounding are independent: a bounded capture still echoes every
   // chunk to the parent stdout while the fold enforces the cap.
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
+  it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("tees a bounded capture while the bound still clips the output", () =>
       Effect.gen(function* () {
         const stdout = yield* Effect.acquireRelease(
@@ -236,7 +241,7 @@ describe("StepExec capture pipe lifecycle", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
+  it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("fails a deadline-hit capture even when the child traps the signal, flushes, and exits zero", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(
@@ -489,7 +494,7 @@ describe("StepExec capture pipe lifecycle", () => {
     }
   );
 
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestServices: true })((it) => {
+  it.layer(gitPlatform, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect(
       "keeps a cross-process nested StepExec child in the registered outer process group",
       () =>
@@ -565,7 +570,10 @@ BunRuntime.runMain(
               cwd: process.cwd(),
               captureTimeoutMillis: PosInt.make(60_000),
             })
-          ).pipe(Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner))
+          ).pipe(
+            Effect.provideServiceEffect(Git, Git.make),
+            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
+          )
         );
 
         yield* TestClock.adjust("1 minute");

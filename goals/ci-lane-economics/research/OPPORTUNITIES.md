@@ -1114,3 +1114,23 @@ evidence, what would have prevented it). Redact for the public repo.
   ratchet's per-PR baseline attribution. Per repair decision 3 ruling 6,
   start any change only after window 4 is censused, so the governor's
   attribution stays clean.
+
+## 2026-11-02 — eight unratified ruleset versions and a 1000-run listing cap
+
+- **Doing:** restarting P3 after a month idle: re-measuring the newest
+  seven-day window with the canonical `beep ci lane-timings --window` command.
+- **Evidence:** `gh api repos/beep-effect/beep-effect/rulesets/10240248/history`
+  lists eight versions after the ratified `50918272`, four of which changed
+  the required population (`Knip` out 10-14, `beep-reviewer` in 10-14 and out
+  10-27, `Heavy / Effect Diagnostics` in 10-15 and out 10-27). None has a
+  packet, ledger or PR entry; the census would have failed closed by name on
+  the first run, as it did on 2026-10-01. Separately, `gh api --paginate
+  .../actions/workflows/check.yml/runs?created=2026-10-27T10:00:00Z..2026-11-03T10:00:00Z`
+  returned 1,000 of a reported 1,202 runs: the Actions listing stops at 1,000
+  regardless of paging, and the census pager would have ended with
+  `pagination ended after 1000 of N runs`.
+- **Would have prevented it:** the ruleset-change hook asked for on
+  2026-10-01 (still absent); the census now halves any span whose listing
+  exceeds 1,000 runs (same PR as the 15-context ratification), so the cap
+  cannot stop a busy week again.
+

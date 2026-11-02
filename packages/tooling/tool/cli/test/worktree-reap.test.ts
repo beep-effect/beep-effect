@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   FleetLivenessVerdict,
   probeWorktreeLiveness,
@@ -24,10 +25,12 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
-const removalLayer = WorktreeRemovalServiceLive.pipe(
-  Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
-);
-const testLayer = Layer.merge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), removalLayer);
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
+const platformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
+const removalLayer = WorktreeRemovalServiceLive.pipe(Layer.provide(platformLayer));
+const testLayer = Layer.merge(platformLayer, removalLayer);
 const FIXTURE_NOW_MILLIS = 2_000_000_000_000;
 
 const verdictProber =

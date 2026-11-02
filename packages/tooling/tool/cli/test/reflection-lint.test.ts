@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli";
 import { reflectionFrontmatterIsValid } from "@beep/repo-cli/commands/Lint/ReflectionArtifact";
 import { TSMorphServiceLive } from "@beep/repo-utils";
@@ -22,6 +23,9 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
@@ -33,11 +37,14 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
   }
 };
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 
 const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired?: boolean) {

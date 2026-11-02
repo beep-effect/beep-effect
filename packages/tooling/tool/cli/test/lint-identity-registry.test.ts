@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli";
 import {
   LAB_COMPOSERS_END_MARKER,
@@ -25,14 +26,20 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
-  TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+const testLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))),
+    TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer)))
+  )
 );
 
 const IDENTITY_REGISTRY_PATH = "packages/identity/src/packages.ts";

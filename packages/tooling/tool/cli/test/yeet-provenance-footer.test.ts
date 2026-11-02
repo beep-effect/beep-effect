@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   BuildYeetVerdictInput,
@@ -53,13 +54,16 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeRecord, PlatformLayer, repository } from "./yeet-pr-fixtures.ts";
 
-const MemoryLayer = Layer.mergeAll(
-  BunCrypto.layer,
-  MemoryFileSystem.layer,
-  NodePath.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.die("Empty provenance registry must not spawn a process"))
+const MemoryLayer = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    BunCrypto.layer,
+    MemoryFileSystem.layer,
+    NodePath.layer,
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.die("Empty provenance registry must not spawn a process"))
+    )
   )
 );
 
