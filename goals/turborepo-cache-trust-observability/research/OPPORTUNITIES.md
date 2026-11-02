@@ -1848,3 +1848,15 @@ Keep the original red receipts and all baseline floors. Run the root policy
 scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
+
+
+### 2026-11-02 — process double retained a root-policy verdict
+
+PR #2569 job 125603695913 failed four orchestration cases because the process
+double still rejected a deprecated dependency import after the native package
+lint correction established that this verdict belongs to root policy. A local
+Node 24 replay reproduced the same four failures. Model the package verdict in
+the double, retain dependency-byte/hash invalidation, and assert the successful
+seed and changed key explicitly. A process-boundary replay alongside the native
+correction would have caught the mismatch before the first push. Preserve the
+failed hosted/local receipts; this fixture repair grants no qualification.

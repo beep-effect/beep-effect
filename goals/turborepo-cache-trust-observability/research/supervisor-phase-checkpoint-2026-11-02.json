@@ -284,5 +284,45 @@
     "stableAndCurrentCanaryPassed": true,
     "originalRemainingListScope": "Retained historical state from the component implementation checkpoint; subsequent proof is explicitly bound in the followup.",
     "qualificationOrProductionActivationGranted": false
+  },
+  "processFixtureRegressionFollowup": {
+    "sourceRevisionBeforeRepair": "c6efd0e5417b1fc67190dac997b56e98ab47940f",
+    "testPath": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
+    "testSha256": "944fc0ff9bfd9730772d041dca1368c23051612922f2f32bda67617727f7132d",
+    "hostedFailure": {
+      "runId": 41540669315,
+      "jobId": 125603695913,
+      "failed": 4,
+      "cause": "The process double retained a root-policy deprecated-import failure after the native package-lint correction."
+    },
+    "localBefore": {
+      "tests": 32,
+      "failed": 4,
+      "exit": 1,
+      "elapsedSeconds": 26.678,
+      "finishedAt": "2026-11-02T23:04:11.723041+00:00"
+    },
+    "localAfter": {
+      "command": "node node_modules/vitest/vitest.mjs run --config vitest.config.ts test/cache-pilot-orchestration.test.ts test/cache-signed-pilot.test.ts test/cache-signed-runner.test.ts --fileParallelism=false --maxWorkers=1",
+      "workingDirectory": "packages/tooling/tool/cli",
+      "runtime": "Node 24.22.1",
+      "tests": 90,
+      "files": 3,
+      "exit": 0,
+      "elapsedSeconds": 23.3,
+      "finishedAt": "2026-11-02T23:05:29.029321+00:00"
+    },
+    "retainedContracts": [
+      "A dependency-byte mutation still changes the key and requires fresh comparison and authenticated replay.",
+      "The dependency mutation seed succeeds at the package-lint boundary; root-policy failure is tested separately.",
+      "No production implementation, native report, signing, timeout, capture bound or acceptance state changed."
+    ],
+    "authority": "Current process-double regression evidence only. Historical checkpoint fields and native observation bindings remain unchanged.",
+    "packageQuick": {
+      "command": "bun run beep quality package-verify @beep/repo-cli --quick",
+      "exit": 0,
+      "elapsedSeconds": 13.16,
+      "finishedAt": "2026-11-02T23:06:04.741607+00:00"
+    }
   }
 }
