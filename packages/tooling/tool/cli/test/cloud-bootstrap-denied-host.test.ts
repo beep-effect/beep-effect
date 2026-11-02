@@ -5,8 +5,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
