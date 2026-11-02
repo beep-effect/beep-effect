@@ -136,9 +136,12 @@ Known gotchas:
 - A denied required download host (`github.com` for Bun, `nodejs.org` for
   Node) exits `78` before anything is placed or installed, with one line
   naming each denied host and the remedy: add it to the environment's allowed
-  domains. "Denied" means a proxy `403` (tunnel or response) or a host that
-  does not resolve or connect; a timeout, `404`, `5xx` or checksum mismatch
-  stays a plain exit `1`. The optional 1Password CLI host only warns. Install
+  domains. "Denied" means the egress proxy refused the CONNECT tunnel
+  (`403`), or, with no proxy configured, the host does not resolve or
+  connect. The host named is the one curl was fetching when it stopped, so a
+  refused redirect hop (for example a release-asset host) is named instead of
+  `github.com`. An unreachable proxy, an origin `403`, a timeout, `404`, `5xx`
+  or checksum mismatch stays a plain exit `1`. The optional 1Password CLI host only warns. Install
   registries (`registry.npmjs.org`, `buf.build`) are not classified yet: their
   denial still surfaces as the `bun install` failure above.
 - The `enabledPlugins` and `extraKnownMarketplaces` blocks in

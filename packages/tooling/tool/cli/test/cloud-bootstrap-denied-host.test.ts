@@ -33,13 +33,30 @@ host=\${url#https://}; host=\${host%%/*}
 printf 'curl %s\\n' "$host" >> "$FIXTURE/events"
 case " $FIXTURE_DENY " in
   *" $host "*)
-    printf '000 403'
+    printf '000 403 %s' "$url"
     echo 'curl: (56) CONNECT tunnel failed, response 403' >&2
     exit 56
     ;;
 esac
+case " $FIXTURE_REDIRECT_DENY " in
+  *" $host "*)
+    # The caller's host answered with a redirect; the proxy refused the hop.
+    printf '000 403 https://release-assets.fixture.test/asset'
+    echo 'curl: (56) CONNECT tunnel failed, response 403' >&2
+    exit 56
+    ;;
+esac
+case " $FIXTURE_PROXY_DOWN " in
+  *" $host "*) printf '000 000 %s' "$url"; echo 'curl: (5) Could not resolve proxy' >&2; exit 5 ;;
+esac
+case " $FIXTURE_ORIGIN_403 " in
+  *" $host "*) printf '403 200 %s' "$url"; echo 'curl: (22) The requested URL returned error: 403' >&2; exit 22 ;;
+esac
 case " $FIXTURE_UNRESOLVED " in
-  *" $host "*) printf '000 000'; echo "curl: (6) Could not resolve host: $host" >&2; exit 6 ;;
+  *" $host "*) printf '000 000 %s' "$url"; echo "curl: (6) Could not resolve host: $host" >&2; exit 6 ;;
+esac
+case " $FIXTURE_UNREACHABLE " in
+  *" $host "*) printf '000 000 %s' "$url"; echo 'curl: (7) Failed to connect' >&2; exit 7 ;;
 esac
 case " $FIXTURE_MISSING " in
   *" $host "*)
@@ -51,7 +68,7 @@ case " $FIXTURE_MISSING " in
         tries=$((tries + 1)); [ "$tries" -ge 500 ] && break; sleep 0.01
       done
     fi
-    printf '404 000'; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
+    printf '404 000 %s' "$url"; echo 'curl: (22) The requested URL returned error: 404' >&2; exit 22 ;;
 esac
 version=$(cat .nvmrc)
 case "$url" in
@@ -66,7 +83,7 @@ case "$url" in
     ;;
   *) exit 22 ;;
 esac
-printf '200 200'
+printf '200 200 %s' "$url"
 `,
   bun: `#!/bin/sh
 case "$1" in
@@ -93,6 +110,11 @@ type Scenario = {
   readonly unresolved?: string;
   readonly missing?: string;
   readonly failAfterDenial?: string;
+  readonly redirectDeny?: string;
+  readonly proxyDown?: string;
+  readonly origin403?: string;
+  readonly unreachable?: string;
+  readonly proxy?: string;
   readonly badSum?: boolean;
 };
 
@@ -149,6 +171,11 @@ const runBootstrap = Effect.fn("CloudBootstrapDeniedHostTest.runBootstrap")(func
       FIXTURE_BUN: scenario.bun,
       FIXTURE_DENY: scenario.deny ?? "",
       FIXTURE_FAIL_AFTER_DENIAL: scenario.failAfterDenial ?? "",
+      FIXTURE_ORIGIN_403: scenario.origin403 ?? "",
+      FIXTURE_PROXY_DOWN: scenario.proxyDown ?? "",
+      FIXTURE_REDIRECT_DENY: scenario.redirectDeny ?? "",
+      FIXTURE_UNREACHABLE: scenario.unreachable ?? "",
+      HTTPS_PROXY: scenario.proxy,
       FIXTURE_MISSING: scenario.missing ?? "",
       FIXTURE_NODE: scenario.node,
       FIXTURE_UNRESOLVED: scenario.unresolved ?? "",
@@ -272,6 +299,37 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
       yield* expectUntouched(fixture, result.stderr);
     })
   );
+
+  it.effect("names the denied redirect hop, not the caller's already allowed host", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepareFixture();
+      const result = yield* runBootstrap(fixture, { bun: "stale", node: "pinned", redirectDeny: "github.com" });
+      expect(result.exitCode, result.stderr).toBe(78);
+      expect(result.stderr).toContain(remedy("release-assets.fixture.test"));
+      expect(result.stderr).not.toContain("add github.com");
+      yield* expectUntouched(fixture, result.stderr);
+    })
+  );
+
+  for (const [name, scenario] of [
+    ["an unresolvable egress proxy (curl 5)", { bun: "stale", node: "pinned", proxyDown: "github.com" }],
+    ["an origin 403 through an open tunnel", { bun: "stale", node: "pinned", origin403: "github.com" }],
+    [
+      "a connect failure through a configured proxy (curl 7)",
+      { bun: "stale", node: "pinned", unreachable: "github.com", proxy: "http://proxy.fixture.test:3128" },
+    ],
+  ] as const) {
+    it.effect(`does not call ${name} a host denial`, () =>
+      Effect.gen(function* () {
+        const fixture = yield* prepareFixture();
+        const result = yield* runBootstrap(fixture, scenario);
+        expect(result.exitCode, result.stderr).toBe(1);
+        expect(result.stderr).toContain("download or checksum failed");
+        expect(result.stderr).not.toContain("required download host denied");
+        yield* expectUntouched(fixture, result.stderr);
+      })
+    );
+  }
 
   it.effect("continues through install on an allowed host and is a no-op on re-run", () =>
     Effect.gen(function* () {

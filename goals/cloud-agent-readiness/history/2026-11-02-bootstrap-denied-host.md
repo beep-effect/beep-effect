@@ -30,14 +30,19 @@ Base: `origin/main` at `7ae3f014`, in a Claude cloud session.
 ## Fix
 
 - `fetch.sh` gains `fetch_required <host> <output> <url>`, used for every
-  Bun and Node download. The host is the caller's literal, never parsed from
-  curl output. Curl keeps its bounds and `--retry 3`. On failure, curl exit
-  `5`/`6`/`7` (proxy or host does not resolve or connect) or a `403` in
-  `%{http_code}` or `%{http_connect}` writes the host to `<kind>.denied` and
-  exits `78`. Every other failure keeps its previous non-zero exit.
+  Bun and Node download. Curl keeps its bounds and `--retry 3`. As narrowed
+  after review R2, only two shapes count as a denial: the proxy refusing the
+  CONNECT tunnel (`%{http_connect}` = `403`), or, with no proxy configured,
+  curl exit `6`/`7`. Proxy faults (curl `5`, or `6`/`7` through a proxy) and an
+  origin `403` behind an open tunnel are not denials. The recorded host is the
+  host of curl's `%{url_effective}` (the transfer that stopped, so a refused
+  redirect hop is named), falling back to the caller's literal. It is never
+  parsed from curl's error text. A denial writes `<kind>.denied` and exits
+  `78`. Every other failure keeps its previous non-zero exit.
 - `bootstrap.sh` collects `78` exits from the required workers (`bun`,
-  `node`, not `op`), and after all downloads settle prints one line and exits
-  `78`, before step 2 places anything:
+  `node`, not `op`). When no Bun non-denial failure stops the loop early, all
+  required downloads settle, then it prints one line and exits `78`, before
+  step 2 places anything:
   `ERROR: required download host denied: <hosts>; remedy: add <hosts> to the
   environment's allowed domains (docs/runbooks/cloud-environments.md).`
   The parallel workers, their cleanup, the checksum and GPG checks, the frozen
@@ -78,14 +83,22 @@ request leaves the host.
 | Allowed host, then re-run | exit 0: pass | exit 0; install runs once, re-run skips |
 | Bun 404 + Node 403 recorded (`ebc5a1f6` scripts) | exit 1, no `nodejs.org`: **fail** | exit 78 naming `nodejs.org` |
 | Bun 403 + Node 404 | exit 78: pass | exit 78 naming `github.com` |
+| Redirect hop refused (`github.com` → release-asset host) | exit 78 naming `github.com`: **fail** | exit 78 naming the hop's host |
+| curl `5` (proxy does not resolve) | exit 78: **fail** | exit 1, no denial line |
+| Origin `403` through an open tunnel | exit 78: **fail** | exit 1, no denial line |
+| curl `7` with `HTTPS_PROXY` set | exit 78: **fail** | exit 1, no denial line |
 
 Every denial case also asserts no `bun install`, `bun add`, `bun run prepare`
 or `ln` call, and that no `~/.bun`, `~/.local`, `~/.bashrc` or `node_modules`
 was created, and that the run directory under the cache was removed. The
 failure-before column comes from running the same test file with the
 `7ae3f014` copies of both scripts swapped in (3 failed, 3 passed). After the
-fix, the new file plus `retained-script-adapters.test.ts` give 28/28 passing
-(26/26 before the two mixed cases were added).
+fix, the new file plus `retained-script-adapters.test.ts` give 32/32 passing.
+The R2 rows were checked against the `989df624` `fetch.sh`, where 8 of 12
+failed. The four R2 rows are the intended failures. The other four (the
+earlier denial and mixed cases) failed only because the stub now reports a
+third write-out field that the old match pattern did not expect, so they are
+not counted as evidence.
 The real `/usr/local/bin` links still carry their session-start timestamps.
 
 ## Checks and limits

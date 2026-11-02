@@ -13,23 +13,26 @@ NODE_VERSION="$3"
 OP_PINNED_VERSION="$3"
 download_limits=(--connect-timeout 15 --max-time 120 --retry-max-time 120)
 
-# Required-host download. A network-policy denial (the egress proxy refusing the
-# CONNECT tunnel, an HTTP 403, or the host not resolving/connecting) records the
-# host named by the caller in <kind>.denied and exits 78 so bootstrap.sh can
-# name it with the allowlist remedy. Every other failure (timeout, 404, 5xx) keeps
-# its plain non-zero exit. The host is the caller's literal, never parsed from
-# curl output.
+# Required-host download. Only a network-policy denial exits 78: the egress
+# proxy refusing the CONNECT tunnel (%{http_connect} 403) or, with no proxy
+# configured, the target not resolving or connecting (curl 6/7). Proxy faults
+# (curl 5, or 6/7 through a proxy), an origin 403, timeouts, 404 and 5xx keep
+# their plain non-zero exit. The recorded host is the one curl reports it was
+# fetching when it stopped (%{url_effective}, so a denied redirect hop is named
+# rather than the caller's host), falling back to the caller's literal; it is
+# never parsed from curl's error text.
 fetch_required() {
-  local host="$1" output="$2" url="$3" codes rc=0
-  codes="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --write-out '%{http_code} %{http_connect}' --output "${output}" "${url}")" || rc=$?
+  local host="$1" output="$2" url="$3" report http_connect effective proxy rc=0
+  report="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+    --write-out '%{http_code} %{http_connect} %{url_effective}' --output "${output}" "${url}")" || rc=$?
   [ "${rc}" -eq 0 ] && return 0
-  case "${rc}:${codes}" in
-    5:*|6:*|7:*|*:403\ *|*\ 403)
-      printf '%s\n' "${host}" > "${run_dir}/${kind}.denied"
-      exit 78
-      ;;
-  esac
+  read -r _ http_connect effective <<< "${report}"
+  proxy="${HTTPS_PROXY:-${https_proxy:-${ALL_PROXY:-${all_proxy:-}}}}"
+  if [ "${http_connect:-}" = 403 ] || { [ -z "${proxy}" ] && { [ "${rc}" -eq 6 ] || [ "${rc}" -eq 7 ]; }; }; then
+    effective="${effective#*://}"; effective="${effective%%/*}"; effective="${effective##*@}"; effective="${effective%%:*}"
+    printf '%s\n' "${effective:-${host}}" > "${run_dir}/${kind}.denied"
+    exit 78
+  fi
   return "${rc}"
 }
 
