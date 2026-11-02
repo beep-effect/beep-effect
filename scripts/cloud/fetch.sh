@@ -13,6 +13,26 @@ NODE_VERSION="$3"
 OP_PINNED_VERSION="$3"
 download_limits=(--connect-timeout 15 --max-time 120 --retry-max-time 120)
 
+# Required-host download. A network-policy denial (the egress proxy refusing the
+# CONNECT tunnel, an HTTP 403, or the host not resolving/connecting) records the
+# host named by the caller in <kind>.denied and exits 78 so bootstrap.sh can
+# name it with the allowlist remedy. Every other failure (timeout, 404, 5xx) keeps
+# its plain non-zero exit. The host is the caller's literal, never parsed from
+# curl output.
+fetch_required() {
+  local host="$1" output="$2" url="$3" codes rc=0
+  codes="$(curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
+    --write-out '%{http_code} %{http_connect}' --output "${output}" "${url}")" || rc=$?
+  [ "${rc}" -eq 0 ] && return 0
+  case "${rc}:${codes}" in
+    5:*|6:*|7:*|*:403\ *|*\ 403)
+      printf '%s\n' "${host}" > "${run_dir}/${kind}.denied"
+      exit 78
+      ;;
+  esac
+  return "${rc}"
+}
+
 fetch_bun() {
   local sha work archive
   IFS= read -r sha < .bun-linux-x64.sha256 || [ -n "${sha}" ]
@@ -20,8 +40,7 @@ fetch_bun() {
   work="${run_dir}/bun"
   mkdir -p "${work}"
   archive="${work}/bun-linux-x64.zip"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${archive}" \
+  fetch_required github.com "${archive}" \
     "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-x64.zip"
   printf '%s  %s\n' "${sha}" "${archive}" | sha256sum --check --strict - >/dev/null
   unzip -oq "${archive}" -d "${work}"
@@ -37,16 +56,13 @@ fetch_node() {
   local version work
   work="${run_dir}/node"
   mkdir -p "${work}"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/index.tab" "https://nodejs.org/dist/index.tab" || return 1
+  fetch_required nodejs.org "${work}/index.tab" "https://nodejs.org/dist/index.tab" || return 1
   awk -v requested="v${NODE_VERSION}" '$1 == requested { print $1; exit }' "${work}/index.tab" > "${work}/version"
   IFS= read -r version < "${work}/version" || return 1
   [ -n "${version}" ] || return 1
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/node.tar.xz" \
+  fetch_required nodejs.org "${work}/node.tar.xz" \
     "https://nodejs.org/dist/${version}/node-${version}-linux-x64.tar.xz"
-  curl "${download_limits[@]}" --proto '=https' --tlsv1.2 --fail --silent --show-error --location --retry 3 \
-    --output "${work}/SHASUMS256.txt" \
+  fetch_required nodejs.org "${work}/SHASUMS256.txt" \
     "https://nodejs.org/dist/${version}/SHASUMS256.txt"
   pushd "${work}" >/dev/null
   grep " node-${version}-linux-x64.tar.xz\$" SHASUMS256.txt | sed 's# .*# node.tar.xz#' | sha256sum --check --strict - >/dev/null

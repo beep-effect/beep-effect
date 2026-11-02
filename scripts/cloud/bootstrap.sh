@@ -169,10 +169,19 @@ fi
 
 op_ok=1
 node_ok=1
+denied_hosts=""
 for entry in "${pids[@]:-}"; do
   [ -n "${entry}" ] || continue
   pid="${entry%%:*}"; name="${entry##*:}"
-  if ! wait "${pid}"; then
+  worker_status=0
+  wait "${pid}" || worker_status=$?
+  if [ "${worker_status}" -ne 0 ]; then
+    # 78: fetch.sh found a required host denied by the network policy and
+    # recorded the host it was asked to download from in <worker>.denied.
+    if [ "${worker_status}" -eq 78 ] && [ "${name}" != "op" ] && [ -s "${run_dir}/${name}.denied" ]; then
+      denied_hosts="${denied_hosts:+${denied_hosts} }$(cat "${run_dir}/${name}.denied")"
+      continue
+    fi
     case "${name}" in
       bun) die "bun ${BUN_VERSION} download or checksum failed." ;;
       node) node_ok=0; warn "Node ${NODE_VERSION} provisioning failed." ;;
@@ -180,6 +189,12 @@ for entry in "${pids[@]:-}"; do
     esac
   fi
 done
+if [ -n "${denied_hosts}" ]; then
+  # Stable configuration-error exit, before any toolchain or dependency change.
+  printf "[beep-cloud:%s] ERROR: required download host denied: %s; remedy: add %s to the environment's allowed domains (docs/runbooks/cloud-environments.md).\n" \
+    "${VENDOR}" "${denied_hosts}" "${denied_hosts}" >&2
+  exit 78
+fi
 
 # ---------------------------------------------------------------------------
 # 2. Place the toolchain
