@@ -15,7 +15,6 @@
     "family": "drivers"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "codegen": "bun run generate",
@@ -31,7 +30,6 @@
     "test:integration": "bun run beep:test:integration",
     "test:integration:parallel": "bun run beep:test:integration",
     "test:property": "bun run beep:test",
-    "beep:audit": "bun run generate && bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsrs -p tsconfig.json && bun run babel",
     "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:scripts && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",

@@ -6,7 +6,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage",
@@ -19,7 +18,6 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsrs -p tsconfig.json && bun run babel",
     "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
