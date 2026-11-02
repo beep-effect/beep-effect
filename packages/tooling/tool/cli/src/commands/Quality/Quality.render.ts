@@ -28,6 +28,10 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
  *     QualityProfileConfig.make({
  *       profile: "current",
  *       turboConcurrency: 3,
+ *       policyLintConcurrency: 4,
+ *       cheapGateConcurrency: 4,
+ *       prePushLaneConcurrency: 1,
+ *       oxlintThreads: 4,
  *       docgenParallel: 3,
  *       fullProofSlots: 1,
  *       reviewFixSlots: 1,
@@ -45,6 +49,10 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
 export const renderQualityProfileConfigLines = (config: QualityProfileConfig): ReadonlyArray<string> => [
   `profile=${config.profile}`,
   `turbo_concurrency=${config.turboConcurrency}`,
+  `policy_lint_concurrency=${config.policyLintConcurrency}`,
+  `cheap_gate_concurrency=${config.cheapGateConcurrency}`,
+  `pre_push_lane_concurrency=${config.prePushLaneConcurrency}`,
+  `oxlint_threads=${config.oxlintThreads}`,
   `docgen_parallel=${config.docgenParallel}`,
   `full_proof_slots=${config.fullProofSlots}`,
   `review_fix_slots=${config.reviewFixSlots}`,
@@ -62,9 +70,13 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
  * import * as Effect from "effect/Effect";
  * const program = printQualityProfileConfig(
  *   QualityProfileConfig.make({
+ *     cheapGateConcurrency: 4,
  *     docgenParallel: 3,
  *     fullProofSlots: 1,
  *     notes: ["local laptop"],
+ *     oxlintThreads: 4,
+ *     policyLintConcurrency: 4,
+ *     prePushLaneConcurrency: 1,
  *     profile: "current",
  *     reviewFixSlots: 1,
  *     turboConcurrency: 3
@@ -103,9 +115,13 @@ export const printQualityProfileConfig: {
  * const program = printQualityProfileDetection(
  *   QualityProfileDetection.make({
  *     config: QualityProfileConfig.make({
+ *       cheapGateConcurrency: 4,
  *       docgenParallel: 3,
  *       fullProofSlots: 1,
  *       notes: [],
+ *       oxlintThreads: 4,
+ *       policyLintConcurrency: 4,
+ *       prePushLaneConcurrency: 1,
  *       profile: "current",
  *       reviewFixSlots: 1,
  *       turboConcurrency: 3
