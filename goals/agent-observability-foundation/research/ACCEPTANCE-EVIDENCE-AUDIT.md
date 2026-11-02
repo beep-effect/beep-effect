@@ -1,5 +1,7 @@
 # Acceptance evidence audit
 
+The [qualified-final applicability summary](../ops/history/qualified-final-applicability-20261102.json) also records the added root schema-catalog lint keys. All four manifest deltas remain script-only and outside the direct historical test commands; the source/test/stage limitations remain unchanged.
+
 The domain evidence below remains scoped to its original executions and reviewed applicability bridges. PR2508's externally initiated merge did not complete this goal: its [canonical historical receipt](../ops/history/pr2508-completion-unsatisfied-20261102.json) is unsatisfied despite fifteen verified required contexts, because the declared verdict is stale. Final follow-up PR2578 must qualify current-head readiness before merge.
 
 ## Current qualification — November 2 UTC
