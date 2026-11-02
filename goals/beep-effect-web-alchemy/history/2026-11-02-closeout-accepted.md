@@ -21,8 +21,17 @@ Operator ruling, relayed by the orchestrator: **"Accept as closed"**. The goal c
 residual instead of a fourth re-final. The required-check evidence, which #2444 and #2447 failed, is
 verified.
 
+## Packet state
+
+On the ruling, `ops/manifest.json` drops `proposedCloseout` and the packet is flipped with
+`goals set-status beep-effect-web-alchemy completed-retained`, which writes the manifest status and
+lifecycle and the README `Lifecycle:` line. Without a proposal, `readGoalLifecycle` reports the
+declared `completed-retained` instead of the unverified receipt. `completionGate` still names #2583 as
+the final PR and keeps its evidence refs, so the residual stays inspectable.
+
 ## Reversal
 
-Ship a verdict-backed re-final: a final PR whose `yeet monitor --until-ready` job prints
+Restore `proposedCloseout`, set the status back to `active` with `goals set-status`, then ship a
+verdict-backed re-final: a final PR whose `yeet monitor --until-ready` job prints
 `merge-ready: yes` before an unbypassed merge, then run
 `goals completion refresh --slug beep-effect-web-alchemy --readiness-job <job>`.

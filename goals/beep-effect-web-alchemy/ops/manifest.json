@@ -4,13 +4,13 @@
     "id": "beep-effect-web-alchemy",
     "packetId": "goal-packet/v1:90548beaf27d1f069b2ccca7d805bc0af01a74700ca38c037bfef67e3f85d7fd",
     "title": "beep-effect.com web app on Alchemy",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-28",
     "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-effect-web-alchemy",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Default TanStack Start app at apps/beep-effect-web served at https://beep-effect.com via an Alchemy v2 per-package stack on Cloudflare",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -124,9 +124,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 2583
-  },
   "statusNote": "P0 through P5 complete; beep-effect.com deploys from CI (run 41244684210). Closeout final PR #2583 merged as f21859a6f0 (2026-11-02T17:09:53Z): hosted-required-checks VERIFIED (15 green, rule suite pass); yeet-verdict UNKNOWN because no until-ready job reached merge-ready before the merge (monitors b8a861fc and ea2235a4 died on GraphQL RATE_LIMIT). The operator accepted the closeout with that residual (\"Accept as closed\", Decision Log 2026-11-02)."
 }
