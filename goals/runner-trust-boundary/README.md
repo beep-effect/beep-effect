@@ -111,6 +111,14 @@ Evidence: [`research/P4-EVIDENCE.md`](./research/P4-EVIDENCE.md).
 
 ## Latest Evidence
 
+On 2026-11-02 run `41409672251` re-passed Gates A through J and L,
+`AMI_PIN`, live `METADATA_DISABLED`, deregistration and teardown on `main`,
+and a read-only audit matched the deployed IAM, launch template and runner
+group to source. The red-team verifier's roster reads were moved to the
+organization list. P8 now waits only on the operator-granted post-release
+replay window. See
+[`history/2026-11-02-p8-state-audit.md`](./history/2026-11-02-p8-state-audit.md).
+
 On 2026-08-25 at `20:03Z`, red-team run `32893112867` passed Gates A through
 J, L, and M exactly once, `AMI_PIN (ami-0738c1b69711969bc)`, live
 `METADATA_DISABLED (disabled applied)`, scoped deregistration, and EC2
