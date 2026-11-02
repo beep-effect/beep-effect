@@ -290,5 +290,26 @@
       "finishedAt": "2026-11-02T11:27:15.457689+00:00"
     },
     "earlierFailuresAndExecutedSourceScopesRetained": true
+  },
+  "reviewModePortabilityRepair": {
+    "recordedAt": "2026-11-02T13:12:57.068912+00:00",
+    "thread": "https://github.com/beep-effect/beep-effect/pull/2562#discussion_r4442693739",
+    "change": "Set the nested directory to0755 before collecting its baseline, then change it to0700. The assertion no longer depends on the process umask.",
+    "before": {
+      "umask": "077",
+      "exit": 1,
+      "failed": 1,
+      "skipped": 44,
+      "elapsedSeconds": 3.133
+    },
+    "after": {
+      "umask": "077",
+      "exit": 0,
+      "passed": 45,
+      "elapsedSeconds": 8.27
+    },
+    "testSourceSha256": "401b8bd485f04f858b11a3c058984a2256c0f4daf3e15342c9bc4cb438969b28",
+    "runtimeCollectorSourceUnchanged": true,
+    "priorObservationsRetainOriginalScope": true
   }
 }

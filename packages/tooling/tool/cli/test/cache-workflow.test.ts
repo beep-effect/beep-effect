@@ -848,8 +848,10 @@ it.layer(
       yield* fs.writeFileString(path.join(root, "packages/fixture/src/nested/new.txt"), "new member\n");
       const changed = yield* collectCacheProducerWorkflowFiles(root);
       expect(A.findFirst(changed, (file) => file.path === "packages/fixture/alias")).not.toEqual(directory);
-      const beforeMode = changed;
-      yield* fs.chmod(path.join(root, "packages/fixture/src/nested"), 0o700);
+      const nested = path.join(root, "packages/fixture/src/nested");
+      yield* fs.chmod(nested, 0o755);
+      const beforeMode = yield* collectCacheProducerWorkflowFiles(root);
+      yield* fs.chmod(nested, 0o700);
       expect(yield* collectCacheProducerWorkflowFiles(root)).not.toEqual(beforeMode);
     })
   );
