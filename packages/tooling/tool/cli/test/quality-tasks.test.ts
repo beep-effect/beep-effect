@@ -859,6 +859,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
             const spawned: Array<string> = [];
             yield* runBunAudit(repoRoot).pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -930,10 +931,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\n${changed}\n` : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${ignored}\0${changed}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -962,6 +964,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           return Effect.succeed(qualityCommandHandle("", 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideServiceEffect(Console.Console, TestConsole.make),
           TestClock.withLive
@@ -1012,10 +1015,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             return Effect.die("SAST test requires a standard command");
           }
           A.appendInPlace(commands, [command.command, ...commandArgs(command)]);
-          const output = A.contains(commandArgs(command), "--name-only") ? A.join(changed, "\n") : "";
+          const output = A.contains(commandArgs(command), "--name-only") ? `${A.join(changed, "\0")}\0` : "";
           return Effect.succeed(qualityCommandHandle(output, 0));
         });
         yield* runGithubChecks("sast").pipe(
+          Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
           Effect.provideService(FileSystem.FileSystem, {
             ...fs,
@@ -1050,6 +1054,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           function* () {
             const spawned: Array<string> = [];
             yield* runGithubChecks("review-fix").pipe(
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, cheapGatesSpawner(spawned, A.empty()))
             );
 
@@ -3387,6 +3392,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3438,6 +3444,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   })
                 ),
                 Effect.provideService(Console.Console, testConsole),
+                Effect.provideServiceEffect(Git, Git.make),
                 Effect.provideService(
                   ChildProcessSpawner.ChildProcessSpawner,
                   cheapGatesSpawner(spawned, A.empty(), policyCommandKey)
@@ -3497,6 +3504,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               })
             ).pipe(
               Effect.provideService(Console.Console, testConsole),
+              Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(
                 ChildProcessSpawner.ChildProcessSpawner,
                 cheapGatesSpawner(spawned, failedCommands, policyCommandKey)
@@ -4342,6 +4350,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     );
                     const spawned = A.empty<string>();
                     const exit = yield* runRootLintPolicyTask(full, "review-base").pipe(
+                      Effect.provideServiceEffect(Git, Git.make),
                       Effect.provideService(
                         ChildProcessSpawner.ChildProcessSpawner,
                         cheapGatesSpawner(spawned, [policyStepCommand(failed)], policyCommandKey)

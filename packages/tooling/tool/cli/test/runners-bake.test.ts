@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { Git } from "@beep/git/Git";
 import {
   BakeCheckReport,
   BakeConfig,
@@ -54,6 +55,10 @@ const decodeBakeConfig = S.decodeEffect(BakeConfig);
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
 const PlatformLayer = Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer);
+
+// `Git` is built over the scripted spawner, so the kit's `HEAD` read reaches the stub's answer (W2).
+const withGit = <ROut, E, RIn>(...layers: ReadonlyArray<Layer.Layer<ROut, E, RIn>>) =>
+  Layer.provideMerge(Git.layer, Layer.mergeAll(...layers));
 const encoder = new TextEncoder();
 
 const stubHandle = (output: string, exitCode = 0) =>
@@ -276,7 +281,7 @@ describe("runner image manifest checks", () => {
           });
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
-              Layer.mergeAll(
+              withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 Layer.succeed(FileSystem.FileSystem, {
                   ...fs,
@@ -517,7 +522,7 @@ describe("runner bake planning and argv", () => {
       });
       const testLayer = RunnersServiceLive.pipe(
         Layer.provide(
-          Layer.mergeAll(
+          withGit(
             Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
             NodeFileSystem.layer,
             NodePath.layer,
@@ -567,7 +572,7 @@ describe("runner bake planning and argv", () => {
           const spawner = makeBakeSpawner(commands, consoleOutput);
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
-              Layer.mergeAll(
+              withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 NodeFileSystem.layer,
                 NodePath.layer,
@@ -696,7 +701,7 @@ describe("runner bake planning and argv", () => {
           });
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
-              Layer.mergeAll(
+              withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 NodeFileSystem.layer,
                 NodePath.layer,
@@ -730,7 +735,7 @@ describe("runner bake planning and argv", () => {
           const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
-              Layer.mergeAll(
+              withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 NodeFileSystem.layer,
                 NodePath.layer,
@@ -764,7 +769,7 @@ describe("runner bake planning and argv", () => {
           const spawner = makeBakeSpawner(commands, consoleOutput);
           const testLayer = RunnersServiceLive.pipe(
             Layer.provide(
-              Layer.mergeAll(
+              withGit(
                 Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
                 NodeFileSystem.layer,
                 NodePath.layer,
@@ -803,7 +808,7 @@ describe("runner bake planning and argv", () => {
       });
       const testLayer = RunnersServiceLive.pipe(
         Layer.provide(
-          Layer.mergeAll(
+          withGit(
             Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
             NodeFileSystem.layer,
             NodePath.layer,

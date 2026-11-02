@@ -2222,6 +2222,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
                 const path = yield* Path.Path;
                 const encoded = yield* S.encodeEffect(ResidueInvocationJson)(fixture);
                 const script = `
+            import { Git } from "@beep/git/Git";
             import { layerResidueTerminalLaneProbeTest, runResidueReap } from "@beep/repo-cli/test/RepoRun";
             import { NodeCrypto, NodeServices } from "@effect/platform-node";
             import * as Effect from "effect/Effect";
@@ -2230,7 +2231,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("archive interruption 
             await Effect.runPromise(runResidueReap({ ...options, classes: ["checkout-generated"], apply: true,
               probeLiveCwd: () => Effect.succeedSome(false), probePidAlive: () => Effect.succeedSome(false),
               archiveCheckpoint: (at) => Effect.sync(() => { if (at === "${phase}") process.kill(process.pid, "SIGKILL"); }),
-            }).pipe(Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone)))));
+            }).pipe(Effect.provide(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, layerResidueTerminalLaneProbeTest(() => Effect.succeedNone))))));
           `;
                 const killed = yield* runRepoCommandCapture("bun", ["--eval", script], process.cwd()).pipe(
                   Effect.match({ onFailure: () => true, onSuccess: (capture) => !N.Equivalence(capture.exitCode, 0) })

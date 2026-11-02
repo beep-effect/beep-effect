@@ -9,7 +9,6 @@ import {
   linkReferences,
   parseMergeTreeConflictNames,
   parseProcStatStartTime,
-  parseStatusPorcelainZ,
   rankContestedPaths,
   transcriptProjectDirName,
 } from "@beep/repo-cli/commands/Worktree";
@@ -128,37 +127,6 @@ describe("classifyFleetLiveness", () => {
   it("treats an explicit undefined window as the curried default form", () => {
     const oneMinuteOld = readings({ worktreeMtime: { _tag: "measured", ageSeconds: 60 } });
     expect(classifyFleetLiveness(undefined)(oneMinuteOld)).toEqual(classifyFleetLiveness(oneMinuteOld));
-  });
-});
-
-describe("parseStatusPorcelainZ", () => {
-  it("counts a rename as one entry and keeps both of its paths", () => {
-    expect(parseStatusPorcelainZ("R  new.ts\0old.ts\0")).toEqual({
-      entryCount: 1,
-      paths: ["new.ts", "old.ts"],
-    });
-  });
-
-  it("counts a copy as one entry and keeps both of its paths", () => {
-    expect(parseStatusPorcelainZ("C  copy.ts\0source.ts\0")).toEqual({
-      entryCount: 1,
-      paths: ["copy.ts", "source.ts"],
-    });
-  });
-
-  it("keeps spaces in untracked paths, because -z records are never C-quoted", () => {
-    expect(parseStatusPorcelainZ("?? a b.txt\0")).toEqual({ entryCount: 1, paths: ["a b.txt"] });
-  });
-
-  it("reads an empty status as zero entries", () => {
-    expect(parseStatusPorcelainZ("")).toEqual({ entryCount: 0, paths: [] });
-  });
-
-  it("resumes normal records after a rename's origin field", () => {
-    expect(parseStatusPorcelainZ("R  new.ts\0old.ts\0?? fresh.ts\0 M tracked.ts\0")).toEqual({
-      entryCount: 3,
-      paths: ["new.ts", "old.ts", "fresh.ts", "tracked.ts"],
-    });
   });
 });
 
