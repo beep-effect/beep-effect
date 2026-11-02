@@ -236,6 +236,9 @@ describe("ReviewThread.list pagination", () => {
   );
 });
 
+/** Read one element a preceding `assert.lengthOf` already proved present. */
+const at = <X>(items: ReadonlyArray<X>, index: number): X => O.getOrThrow(A.get(items, index));
+
 // --- Projection, truncation and the warning -----------------------------------------
 
 describe("ReviewThread.list projection", () => {
@@ -254,34 +257,34 @@ describe("ReviewThread.list projection", () => {
       assert.lengthOf(read.threads, 3);
       assertSome(read.pullRequestAuthor, "octocat");
 
-      const [truncated, resolved, outdated] = read.threads;
-      assert.strictEqual(truncated?.id, "PRRT_trunc");
-      assert.isTrue(truncated?.commentsTruncated);
-      assert.lengthOf(truncated?.comments ?? [], 1);
-      assertSome(truncated?.comments[0]?.databaseId ?? O.none(), 1001);
-      assertSome(
-        truncated?.comments[0]?.author ?? O.none(),
-        ReviewThreadActor.make({ login: "reviewer", isBot: false })
-      );
-      const newest = O.getOrThrow(truncated?.newestComment ?? O.none());
+      const truncated = at(read.threads, 0);
+      const resolved = at(read.threads, 1);
+      const outdated = at(read.threads, 2);
+      assert.strictEqual(truncated.id, "PRRT_trunc");
+      assert.isTrue(truncated.commentsTruncated);
+      assert.lengthOf(truncated.comments, 1);
+      const first = at(truncated.comments, 0);
+      assertSome(first.databaseId, 1001);
+      assertSome(first.author, ReviewThreadActor.make({ login: "reviewer", isBot: false }));
+      const newest = O.getOrThrow(truncated.newestComment);
       assert.strictEqual(newest.id, "PRRC_newest");
       assertNone(newest.author);
       assertNone(newest.databaseId);
       assertNone(newest.line);
       assert.strictEqual(newest.url, "https://github.com/acme/widget/pull/7#discussion_r1001");
 
-      assert.isTrue(resolved?.isResolved);
-      assert.isFalse(resolved?.commentsTruncated);
-      assertSome(resolved?.resolvedBy ?? O.none(), "octocat");
+      assert.isTrue(resolved.isResolved);
+      assert.isFalse(resolved.commentsTruncated);
+      assertSome(resolved.resolvedBy, "octocat");
       assertSome(
-        O.flatMap(resolved?.newestComment ?? O.none(), (c) => c.author),
+        O.flatMap(resolved.newestComment, (c) => c.author),
         ReviewThreadActor.make({ login: "greptile-apps", isBot: true })
       );
 
-      assert.isTrue(outdated?.isOutdated);
-      assertNone(outdated?.line ?? O.some(0));
-      assertSome(outdated?.startLine ?? O.none(), 10);
-      assert.strictEqual(outdated?.diffSide, "RIGHT");
+      assert.isTrue(outdated.isOutdated);
+      assertNone(outdated.line);
+      assertSome(outdated.startLine, 10);
+      assert.strictEqual(outdated.diffSide, "RIGHT");
 
       assert.deepStrictEqual(requested, [
         RecordedCall.make({
@@ -292,11 +295,12 @@ describe("ReviewThread.list projection", () => {
       ]);
 
       assert.lengthOf(warnings, 1);
-      const text = messageText(warnings[0]?.message);
+      const warning = at(warnings, 0);
+      const text = messageText(warning.message);
       assert.isTrue(Str.includes("PRRT_trunc")(text));
       assert.isTrue(Str.includes("more than 100 comments")(text));
       assert.isFalse(Str.includes("PRRT_resolved")(text));
-      assert.deepStrictEqual(warnings[0]?.annotations.truncatedThreadIds, ["PRRT_trunc"]);
+      assert.deepStrictEqual(warning.annotations.truncatedThreadIds, ["PRRT_trunc"]);
     })
   );
 
