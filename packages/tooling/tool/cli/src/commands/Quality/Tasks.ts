@@ -3540,7 +3540,10 @@ const coverageFullSteps = (
     packageNames,
     coverageFullPassthroughArgs(args),
     A.some(args, isCoverageWriteBaselineArg),
-    A.empty<string>()
+    // Build only the coverage owners (turbo adds their `^build` closure). An
+    // unfiltered prebuild also built @beep/storybook, which owns no coverage
+    // task and sits in no owner's build closure (quality audit A2, 2026-11-02).
+    packageFilterArgs(packageNames)
   );
 
 const packageFilterArgs: (packageNames: ReadonlyArray<string>) => ReadonlyArray<string> = A.map(

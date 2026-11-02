@@ -398,7 +398,10 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
   // Hosted `Heavy / Doctest` is required; before this lane the local proof
   // reached it only through `beep ci local` during publish, so a branch could
   // be verify-green and red on a required context (quality-lane audit
-  // 2026-09-09, C1 / D8). Affected mode matches the hosted PR shape.
+  // 2026-09-09, C1 / D8). Like heavy.yml, the lane runs the full doctest fleet
+  // with no `--affected --base` narrowing; unchanged packages replay from the
+  // Turbo cache, so the doctest inputs exclude every nested `node_modules`
+  // (Vitest result caches under `test/fixtures/*/node_modules/.vite`).
   githubCheckLane(
     "quality:doctest",
     "pre-push",
