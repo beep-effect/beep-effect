@@ -24,7 +24,7 @@ recorded in its `attempts.ndjson`). The completion gate still cannot derive
 
 ## What this re-final does
 
-- Rebinds the manifest to this pull request as `proposedCloseout.finalPullRequest`
+- Rebinds the manifest to this pull request, #2586, as `proposedCloseout.finalPullRequest`
   and the `completionGate.pullRequests` final entry. #2493 and #2532 remain
   `supporting`. The gating `yeet-verdict` reference moves to this branch's run
   (`.beep/yeet/runs/claude_effect-vitest-canon-refinal-2-4132ebea04f9/verdict.json`).
