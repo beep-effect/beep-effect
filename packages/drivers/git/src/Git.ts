@@ -37,6 +37,7 @@ import {
   parseConfigList,
   parseForEachRef,
   parseLog,
+  parseLogNameStatus,
   parseLsFiles,
   parseLsRemote,
   parseLsTree,
@@ -63,7 +64,13 @@ import type {
   SubmoduleStatusEntry,
   WorktreeEntry,
 } from "./Git.models.ts";
-import type { GitConfigScope, GitInvocation } from "./GitCommand.ts";
+import type {
+  CurrentBranchMode,
+  GitConfigScope,
+  GitInvocation,
+  StatusIgnoreSubmodules,
+  StatusUntrackedFiles,
+} from "./GitCommand.ts";
 import type { Execution } from "./internal/execution.ts";
 
 /**
@@ -241,6 +248,61 @@ const rejectNonNaturalNumber: {
         )
 );
 
+/**
+ * Refuse a `--find-renames` threshold outside git's domain (a whole percent
+ * 1..100) before any spawn. Shared by every member that renders the flag.
+ */
+const rejectRenameScore = (cwd: string, findRenames: number | undefined): Effect.Effect<void, GitCommandError> =>
+  findRenames === undefined || isRenameScorePercent(findRenames)
+    ? Effect.void
+    : Effect.fail(
+        GitCommandError.make({
+          kind: "refused",
+          args: [String(findRenames)],
+          cwd,
+          stderr: "",
+          detail: `refused a rename score: expected a whole percent 1..100, received ${findRenames}`,
+        })
+      );
+
+/**
+ * Refuse a `--diff-filter` letter set git does not accept (`[ACDMRTUXB*]`,
+ * lower case excluding, never empty) before any spawn. Shared by every member
+ * that renders the flag; the rejected value is JSON-quoted in `detail` so
+ * whitespace and an empty string stay visible.
+ */
+const rejectDiffFilter = (cwd: string, diffFilter: string | undefined): Effect.Effect<void, GitCommandError> =>
+  diffFilter === undefined || isDiffFilter(diffFilter)
+    ? Effect.void
+    : encodeJsonString(diffFilter).pipe(
+        Effect.orDie,
+        Effect.flatMap((encoded) =>
+          Effect.fail(
+            GitCommandError.make({
+              kind: "refused",
+              args: [encoded],
+              cwd,
+              stderr: "",
+              detail: `refused a diff filter: expected letters from [ACDMRTUXB*] (lower case excludes), received ${encoded}`,
+            })
+          )
+        )
+      );
+
+/**
+ * The change-selection options the `--name-only` diff members share:
+ * `diffFilter` keeps only the named status letters, `noRenames` turns rename
+ * detection off, `pathspec` scopes the diff behind `--`.
+ */
+type DiffListOptions = {
+  readonly diffFilter?: string;
+  readonly noRenames?: boolean;
+  readonly pathspec?: ReadonlyArray<string>;
+};
+
+/** {@link DiffListOptions} plus `head`, a commit to diff against instead of the member's default. */
+type WorkingDiffOptions = DiffListOptions & { readonly head?: string };
+
 /** The `{ index }` option the stash pop/apply/drop members accept. */
 type StashIndexOptions = { readonly index?: number };
 
@@ -312,11 +374,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.lsTree")(function* (
       cwd: string,
       ref: string,
-      options?: { readonly pathspec?: ReadonlyArray<string> }
+      options?: { readonly pathspec?: ReadonlyArray<string>; readonly fullTree?: boolean }
     ) {
-      yield* Effect.annotateCurrentSpan({ cwd, ref });
+      const fullTree = options?.fullTree ?? false;
+      yield* Effect.annotateCurrentSpan({ cwd, ref, fullTree });
       yield* rejectOptionLikeRefs(cwd, [ref]);
-      const invocation = GitCommand.lsTree(ref, options?.pathspec ?? []);
+      const invocation = GitCommand.lsTree(ref, options?.pathspec ?? [], fullTree);
       const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: (classified) => failClosed(invocation, cwd, "ls-tree")(parseLsTree(classified.output)),
@@ -396,24 +459,38 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     2,
     Effect.fn("Git.changedFiles")(function* (
       cwd: string,
-      options: {
+      options: DiffListOptions & {
         readonly base: string;
         readonly head: string;
         readonly relative?: boolean;
+        readonly twoDot?: boolean;
       }
     ) {
+      const { diffFilter, noRenames = false, pathspec = [], twoDot = false } = options;
       const relative = options.relative ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
         base: options.base,
         head: options.head,
         relative,
+        twoDot,
+        pathspec: pathspec.length,
       });
-      yield* rejectOptionLikeRefs(cwd, [options.base, options.head]);
-      const classified = yield* runFor(GitCommand.changedFiles(options.base, options.head, relative), cwd, "generic");
+      yield* rejectOptionLikeRefs(cwd, [options.base, options.head, ...pathspec]);
+      yield* rejectDiffFilter(cwd, diffFilter);
+      const classified = yield* runFor(
+        GitCommand.changedFiles(options.base, options.head, relative, {
+          ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter) }),
+          noRenames,
+          pathspec,
+          twoDot,
+        }),
+        cwd,
+        "generic"
+      );
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeed(parseNulSeparated(classified.output)),
-        ...refFailureArms(cwd, `${options.base}...${options.head}`),
+        ...refFailureArms(cwd, twoDot ? `${options.base}..${options.head}` : `${options.base}...${options.head}`),
       });
     })
   );
@@ -445,30 +522,59 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  /**
+   * The pre-spawn guards and constructor options the two working-tree diffs
+   * share: `head` and the pathspec through the option-like guard, the filter
+   * through its domain check, and the validated options in constructor shape.
+   */
+  const workingDiffOptions = Effect.fnUntraced(function* (cwd: string, options: WorkingDiffOptions) {
+    const { diffFilter, head, noRenames = false, pathspec = [] } = options;
+    yield* rejectOptionLikeRefs(cwd, [...withDefined([], head), ...pathspec]);
+    yield* rejectDiffFilter(cwd, diffFilter);
+    return {
+      ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter), head: O.fromUndefinedOr(head) }),
+      noRenames,
+      pathspec,
+    };
+  });
+
   const unstagedChanges: GitShape["unstagedChanges"] = dual(
     hasStringSubject,
-    Effect.fn("Git.unstagedChanges")(function* (cwd: string, options?: { readonly relative?: boolean }) {
+    Effect.fn("Git.unstagedChanges")(function* (
+      cwd: string,
+      options?: WorkingDiffOptions & { readonly relative?: boolean }
+    ) {
       const relative = options?.relative ?? false;
-      yield* Effect.annotateCurrentSpan({ cwd, relative });
-      return yield* collectPaths("Git.unstagedChanges", GitCommand.unstagedChanges(relative), cwd);
+      yield* Effect.annotateCurrentSpan({ cwd, relative, head: options?.head ?? "(index)" });
+      const rendered = yield* workingDiffOptions(cwd, options ?? {});
+      return yield* collectPaths("Git.unstagedChanges", GitCommand.unstagedChanges(relative, rendered), cwd);
     })
   );
 
   const stagedChanges: GitShape["stagedChanges"] = dual(
     hasStringSubject,
-    Effect.fn("Git.stagedChanges")(function* (cwd: string, options?: { readonly relative?: boolean }) {
+    Effect.fn("Git.stagedChanges")(function* (
+      cwd: string,
+      options?: WorkingDiffOptions & { readonly relative?: boolean }
+    ) {
       const relative = options?.relative ?? false;
-      yield* Effect.annotateCurrentSpan({ cwd, relative });
-      return yield* collectPaths("Git.stagedChanges", GitCommand.stagedChanges(relative), cwd);
+      yield* Effect.annotateCurrentSpan({ cwd, relative, head: options?.head ?? "HEAD" });
+      const rendered = yield* workingDiffOptions(cwd, options ?? {});
+      return yield* collectPaths("Git.stagedChanges", GitCommand.stagedChanges(relative, rendered), cwd);
     })
   );
 
   const untrackedFiles: GitShape["untrackedFiles"] = dual(
     hasStringSubject,
-    Effect.fn("Git.untrackedFiles")(function* (cwd: string, options?: { readonly relative?: boolean }) {
+    Effect.fn("Git.untrackedFiles")(function* (
+      cwd: string,
+      options?: { readonly relative?: boolean; readonly pathspec?: ReadonlyArray<string> }
+    ) {
       const relative = options?.relative ?? false;
-      yield* Effect.annotateCurrentSpan({ cwd, relative });
-      return yield* collectPaths("Git.untrackedFiles", GitCommand.untrackedFiles(relative), cwd);
+      const pathspec = options?.pathspec ?? [];
+      yield* Effect.annotateCurrentSpan({ cwd, relative, pathspec: pathspec.length });
+      yield* rejectOptionLikeRefs(cwd, pathspec);
+      return yield* collectPaths("Git.untrackedFiles", GitCommand.untrackedFiles(relative, pathspec), cwd);
     })
   );
 
@@ -497,50 +603,39 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly findRenames?: number;
         readonly diffFilter?: string;
         readonly pathspec?: ReadonlyArray<string>;
+        readonly twoDot?: boolean;
       }
     ) {
-      const { diffFilter, findRenames, pathspec = [] } = options;
+      const { diffFilter, findRenames, pathspec = [], twoDot = false } = options;
       const relative = options.relative ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
         base: options.base,
         head: options.head ?? "(working tree)",
         relative,
+        twoDot,
         pathspec: pathspec.length,
       });
       yield* rejectOptionLikeRefs(cwd, [...withDefined([options.base], options.head), ...pathspec]);
-      if (findRenames !== undefined && !isRenameScorePercent(findRenames)) {
-        return yield* GitCommandError.make({
-          kind: "refused",
-          args: [String(findRenames)],
-          cwd,
-          stderr: "",
-          detail: `refused a rename score: expected a whole percent 1..100, received ${findRenames}`,
-        });
-      }
-      if (diffFilter !== undefined && !isDiffFilter(diffFilter)) {
-        return yield* encodeJsonString(diffFilter).pipe(
-          Effect.orDie,
-          Effect.flatMap((encoded) =>
-            GitCommandError.make({
-              kind: "refused",
-              args: [encoded],
-              cwd,
-              stderr: "",
-              detail: `refused a diff filter: expected letters from [ACDMRTUXB*] (lower case excludes), received ${encoded}`,
-            })
-          )
-        );
-      }
+      yield* rejectRenameScore(cwd, findRenames);
+      yield* rejectDiffFilter(cwd, diffFilter);
       const invocation = GitCommand.nameStatus(options.base, options.head, relative, {
         ...O.getSomesStruct({ findRenames: O.fromUndefinedOr(findRenames) }),
         ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter) }),
         pathspec,
+        twoDot,
       });
       const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
         success: (classified) => failClosed(invocation, cwd, "name-status")(parseNameStatus(classified.output)),
-        ...refFailureArms(cwd, options.head === undefined ? options.base : `${options.base}...${options.head}`),
+        ...refFailureArms(
+          cwd,
+          options.head === undefined
+            ? options.base
+            : twoDot
+              ? `${options.base}..${options.head}`
+              : `${options.base}...${options.head}`
+        ),
       });
     })
   );
@@ -947,19 +1042,25 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  const currentBranch = Effect.fn("Git.currentBranch")(function* (cwd: string) {
-    yield* Effect.annotateCurrentSpan({ cwd });
-    const classified = yield* runFor(GitCommand.currentBranch(), cwd, "generic");
-    return yield* Match.valueTags(classified, {
-      success: (classified) => {
-        const name = Str.trim(classified.output);
-        // A detached HEAD answers with the literal string "HEAD" (exit 0) —
-        // "no current branch" is the honest typed answer, not a fake name.
-        return Effect.succeed(name === "HEAD" ? O.none() : O.some(name));
-      },
-      ...refFailureArms(cwd, "HEAD"),
-    });
-  });
+  const currentBranch: GitShape["currentBranch"] = dual(
+    hasStringSubject,
+    Effect.fn("Git.currentBranch")(function* (cwd: string, options?: { readonly mode?: CurrentBranchMode }) {
+      const mode = options?.mode ?? "abbrev-ref";
+      yield* Effect.annotateCurrentSpan({ cwd, mode });
+      const classified = yield* runFor(GitCommand.currentBranch(mode), cwd, "generic");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => {
+          const name = Str.trim(classified.output);
+          // A detached HEAD answers with the literal string "HEAD" under
+          // --abbrev-ref and with an EMPTY line under --show-current (both
+          // exit 0) — "no current branch" is the honest typed answer either
+          // way, not a fake name.
+          return Effect.succeed(name === "HEAD" || name === "" ? O.none() : O.some(name));
+        },
+        ...refFailureArms(cwd, "HEAD"),
+      });
+    })
+  );
 
   const repoRoot = Effect.fn("Git.repoRoot")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
@@ -1067,14 +1168,37 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly follow?: boolean;
         readonly limit?: number;
         readonly firstParentDiffMerges?: boolean;
+        readonly nameStatus?: boolean;
+        readonly diffFilter?: string;
+        readonly findRenames?: number;
+        readonly quotePath?: false;
       }
     ) {
-      const { firstParentDiffMerges = false, follow = false, limit, paths = [] } = options ?? {};
+      const {
+        diffFilter,
+        findRenames,
+        firstParentDiffMerges = false,
+        follow = false,
+        limit,
+        nameStatus = false,
+        paths = [],
+        quotePath,
+      } = options ?? {};
       // Path VALUES are stable identifiers, but a pathspec can be long and is
       // caller-controlled; the count is what a trace needs to correlate.
-      yield* Effect.annotateCurrentSpan({ cwd, paths: paths.length, follow });
+      yield* Effect.annotateCurrentSpan({ cwd, paths: paths.length, follow, nameStatus });
       yield* rejectNonNaturalNumber(cwd, "a log limit", limit);
-      const invocation = GitCommand.log(paths, follow, limit, firstParentDiffMerges);
+      yield* rejectRenameScore(cwd, findRenames);
+      yield* rejectDiffFilter(cwd, diffFilter);
+      const invocation = GitCommand.log(paths, follow, limit, firstParentDiffMerges, {
+        ...O.getSomesStruct({
+          diffFilter: O.fromUndefinedOr(diffFilter),
+          findRenames: O.fromUndefinedOr(findRenames),
+          quotePath: O.fromUndefinedOr(quotePath),
+        }),
+        nameStatus,
+      });
+      const parse = nameStatus ? parseLogNameStatus : parseLog;
       if (follow && paths.length !== 1) {
         // git's own restriction, refused pre-spawn: `--follow` walks ONE
         // path's history, and git's own diagnostic for the violation is an
@@ -1089,7 +1213,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       }
       const classified = yield* runFor(invocation, cwd, "log");
       return yield* Match.valueTags(classified, {
-        success: (classified) => failClosed(invocation, cwd, "log")(parseLog(classified.output)),
+        success: (classified) => failClosed(invocation, cwd, "log")(parse(classified.output)),
         absent: () => {
           // An unborn HEAD — however this git spells it — has no history,
           // which is the empty log, never a failure. `Git.log` takes no ref,
@@ -1111,15 +1235,50 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
-  const status = Effect.fn("Git.status")(function* (cwd: string) {
-    yield* Effect.annotateCurrentSpan({ cwd });
-    const invocation = GitCommand.status();
-    const classified = yield* runFor(invocation, cwd, "generic");
-    return yield* Match.valueTags(classified, {
-      success: (classified) => failClosed(invocation, cwd, "status")(parseStatus(classified.output)),
-      ...refFailureArms(cwd, "working tree"),
-    });
-  });
+  const status: GitShape["status"] = dual(
+    hasStringSubject,
+    Effect.fn("Git.status")(function* (
+      cwd: string,
+      options?: {
+        readonly ignoreSubmodules?: StatusIgnoreSubmodules;
+        readonly noOptionalLocks?: boolean;
+        readonly noRenames?: boolean;
+        readonly pathspec?: ReadonlyArray<string>;
+        readonly untrackedFiles?: StatusUntrackedFiles;
+      }
+    ) {
+      const {
+        ignoreSubmodules,
+        noOptionalLocks = false,
+        noRenames = false,
+        pathspec = [],
+        untrackedFiles,
+      } = options ?? {};
+      yield* Effect.annotateCurrentSpan({
+        cwd,
+        untrackedFiles: untrackedFiles ?? "(default)",
+        ignoreSubmodules: ignoreSubmodules ?? "(default)",
+        noRenames,
+        noOptionalLocks,
+        pathspec: pathspec.length,
+      });
+      yield* rejectOptionLikeRefs(cwd, pathspec);
+      const invocation = GitCommand.status({
+        ...O.getSomesStruct({
+          ignoreSubmodules: O.fromUndefinedOr(ignoreSubmodules),
+          untrackedFiles: O.fromUndefinedOr(untrackedFiles),
+        }),
+        noOptionalLocks,
+        noRenames,
+        pathspec,
+      });
+      const classified = yield* runFor(invocation, cwd, "generic");
+      return yield* Match.valueTags(classified, {
+        success: (classified) => failClosed(invocation, cwd, "status")(parseStatus(classified.output)),
+        ...refFailureArms(cwd, "working tree"),
+      });
+    })
+  );
 
   const submoduleStatus: GitShape["submoduleStatus"] = dual(
     hasStringSubject,
@@ -2107,9 +2266,20 @@ export interface GitShape {
     ) => Effect.Effect<ReadonlyArray<BranchEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git diff --name-only -z [--relative] <base>...<head>` — the paths that
-   * differ. Pass `relative: true` to report paths relative to `cwd` and
-   * exclude changes outside it (a workspace nested in a larger repository).
+   * `git diff --name-only -z [--relative] [--no-renames] [--diff-filter=<letters>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
+   * — the paths that differ. Pass `relative: true` to report paths relative
+   * to `cwd` and exclude changes outside it (a workspace nested in a larger
+   * repository).
+   *
+   * **Details**
+   *
+   * `diffFilter` keeps only the named status letters (`[ACDMRTUXB*]`, lower
+   * case excludes them) and is refused typed outside that domain; `noRenames`
+   * turns rename detection off so a moved file lists as both its old and new
+   * path; `pathspec` scopes the diff behind `--`, each entry passing the same
+   * option-like guard as the refs; `twoDot` compares the two trees directly
+   * (`<base> <head>`) instead of `head` against the merge base (`...`). With
+   * no option passed the argv is unchanged from the range-only form.
    */
   readonly changedFiles: {
     (
@@ -2118,12 +2288,20 @@ export interface GitShape {
         readonly base: string;
         readonly head: string;
         readonly relative?: boolean;
+        readonly diffFilter?: string;
+        readonly noRenames?: boolean;
+        readonly pathspec?: ReadonlyArray<string>;
+        readonly twoDot?: boolean;
       }
     ): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
       readonly base: string;
       readonly head: string;
       readonly relative?: boolean;
+      readonly diffFilter?: string;
+      readonly noRenames?: boolean;
+      readonly pathspec?: ReadonlyArray<string>;
+      readonly twoDot?: boolean;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2416,13 +2594,28 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git rev-parse --abbrev-ref HEAD` — the current branch name, or
-   * `Option.none` when `HEAD` is detached (the literal answer `"HEAD"`
-   * degrades to the typed absence rather than a fake branch name).
+   * `git rev-parse --abbrev-ref HEAD` (the default `mode`, `"abbrev-ref"`) or
+   * `git branch --show-current` (`"show-current"`) — the current branch name,
+   * or `Option.none` when `HEAD` is detached (the literal answer `"HEAD"` and
+   * `--show-current`'s empty line both degrade to the typed absence rather
+   * than a fake branch name).
+   *
+   * **Details**
+   *
+   * The two modes differ on an unborn branch: `rev-parse` fails there (a
+   * `GitCommandError`) while `branch --show-current` names the branch `HEAD`
+   * points at, commits or not. Pick `"show-current"` when a freshly
+   * initialised repository is a legitimate input.
    */
-  readonly currentBranch: (
-    cwd: string
-  ) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  readonly currentBranch: {
+    (
+      cwd: string,
+      options?: { readonly mode?: CurrentBranchMode }
+    ): Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (options?: {
+      readonly mode?: CurrentBranchMode;
+    }): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
   /**
    * `git symbolic-ref --quiet --short refs/remotes/<remote>/HEAD` — the
    * bare branch name, remote prefix stripped, or `Option.none` when the
@@ -2620,6 +2813,17 @@ export interface GitShape {
    * is the one read whose result depends on the ORDER of history rather than
    * a single tree, and the one that decodes dates: see `CommitLogEntry` for
    * what the UTC decoding does and does not preserve.
+   *
+   * With `nameStatus: true` the body is read as `--name-status` instead of
+   * `--name-only`: every entry then carries `changes`, each touched path's
+   * {@link NameStatusEntry} (status, rename pair, similarity score), and its
+   * `paths` is the NEW path of every change. `diffFilter` and `findRenames`
+   * apply in either mode and are validated pre-spawn exactly as `nameStatus`
+   * validates them; a commit whose diff the filter empties is dropped from
+   * the walk by git itself. `quotePath: false` prepends the global
+   * `-c core.quotePath=false` for a consumer whose argv contract names it;
+   * under `-z` the paths are already raw. Every entry carries `subject` in
+   * both modes.
    */
   readonly log: {
     (
@@ -2633,6 +2837,14 @@ export interface GitShape {
         readonly limit?: number;
         /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
         readonly firstParentDiffMerges?: boolean;
+        /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
+        readonly nameStatus?: boolean;
+        /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
+        readonly diffFilter?: string;
+        /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
+        readonly findRenames?: number;
+        /** `false` prepends the global `-c core.quotePath=false`. */
+        readonly quotePath?: false;
       }
     ): Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError>;
     (options?: {
@@ -2644,6 +2856,14 @@ export interface GitShape {
       readonly limit?: number;
       /** `--diff-merges=first-parent`: give merge commits a path listing. Default `false`. */
       readonly firstParentDiffMerges?: boolean;
+      /** `--name-status` instead of `--name-only`: populate each entry's `changes`. Default `false`. */
+      readonly nameStatus?: boolean;
+      /** `--diff-filter=<letters>`: keep only the named status letters (lower case excludes). */
+      readonly diffFilter?: string;
+      /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
+      readonly findRenames?: number;
+      /** `false` prepends the global `-c core.quotePath=false`. */
+      readonly quotePath?: false;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<CommitLogEntry>, GitCommandError | NotARepositoryError>;
   };
   /**
@@ -2706,18 +2926,20 @@ export interface GitShape {
     ) => Effect.Effect<ReadonlyArray<LsRemoteEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git ls-tree -r -z <ref> [-- <pathspec>...]` — every path in the tree at
-   * `ref`, recursively, optionally scoped to `pathspec`.
+   * `git ls-tree -r -z [--full-tree] <ref> [-- <pathspec>...]` — every path in
+   * the tree at `ref`, recursively, optionally scoped to `pathspec`.
+   * `fullTree: true` lists the whole tree with root-anchored paths whatever
+   * the `cwd`, so a reader need not resolve `repoRoot` first.
    */
   readonly lsTree: {
     (
       cwd: string,
       ref: string,
-      options?: { readonly pathspec?: ReadonlyArray<string> }
+      options?: { readonly pathspec?: ReadonlyArray<string>; readonly fullTree?: boolean }
     ): Effect.Effect<ReadonlyArray<LsTreeEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
       ref: string,
-      options?: { readonly pathspec?: ReadonlyArray<string> }
+      options?: { readonly pathspec?: ReadonlyArray<string>; readonly fullTree?: boolean }
     ): (
       cwd: string
     ) => Effect.Effect<ReadonlyArray<LsTreeEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
@@ -2781,17 +3003,19 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git diff --name-status -z [--relative] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head>] [-- <pathspec>...]`
+   * `git diff --name-status -z [--relative] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head> | <base> <head>] [-- <pathspec>...]`
    * — the changed paths with their status codes. `head` omitted diffs the
-   * working tree against `base`; `head` present diffs the merge-base range.
+   * working tree against `base`; `head` present diffs the merge-base range,
+   * or the two trees directly when `twoDot` is set.
    *
    * **Details**
    *
    * `findRenames` is the similarity threshold rename detection uses, a whole
    * percent 1..100; `diffFilter` keeps only the named status letters
-   * (`[ACDMRTUXB*]`, lower case excludes them); `pathspec` scopes the diff.
-   * Either option outside its domain, or a pathspec entry git would read as
-   * an option, is refused typed before any spawn. Each rename or copy entry
+   * (`[ACDMRTUXB*]`, lower case excludes them); `pathspec` scopes the diff;
+   * `twoDot` emits `<base> <head>` in place of `<base>...<head>`. Either
+   * option outside its domain, or a pathspec entry git would read as an
+   * option, is refused typed before any spawn. Each rename or copy entry
    * carries git's similarity percent as {@link NameStatusEntry}'s `score`.
    * Output the parser cannot read fails as `GitCommandError` with an
    * `unparseable name-status output` detail — never as an invented entry.
@@ -2806,6 +3030,7 @@ export interface GitShape {
         readonly findRenames?: number;
         readonly diffFilter?: string;
         readonly pathspec?: ReadonlyArray<string>;
+        readonly twoDot?: boolean;
       }
     ): Effect.Effect<ReadonlyArray<NameStatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
@@ -2815,6 +3040,7 @@ export interface GitShape {
       readonly findRenames?: number;
       readonly diffFilter?: string;
       readonly pathspec?: ReadonlyArray<string>;
+      readonly twoDot?: boolean;
     }): (
       cwd: string
     ) => Effect.Effect<ReadonlyArray<NameStatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
@@ -3120,14 +3346,29 @@ export interface GitShape {
       options: { readonly cone: boolean }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git diff --name-only -z [--relative] --cached` — the staged paths. */
+  /**
+   * `git diff --name-only -z [--relative] --cached [--no-renames] [--diff-filter=<letters>] [<head>] [-- <pathspec>...]`
+   * — the staged paths: the index against `HEAD`, or against `head` when one
+   * is named. `diffFilter`, `noRenames` and `pathspec` behave as they do for
+   * `changedFiles`, guards included.
+   */
   readonly stagedChanges: {
     (
       cwd: string,
-      options?: { readonly relative?: boolean }
+      options?: {
+        readonly relative?: boolean;
+        readonly diffFilter?: string;
+        readonly head?: string;
+        readonly noRenames?: boolean;
+        readonly pathspec?: ReadonlyArray<string>;
+      }
     ): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly relative?: boolean;
+      readonly diffFilter?: string;
+      readonly head?: string;
+      readonly noRenames?: boolean;
+      readonly pathspec?: ReadonlyArray<string>;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -3224,10 +3465,43 @@ export interface GitShape {
       readonly paths?: ReadonlyArray<string>;
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git status --porcelain -z` — the working tree's porcelain status listing. */
-  readonly status: (
-    cwd: string
-  ) => Effect.Effect<ReadonlyArray<StatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  /**
+   * `git [--no-optional-locks] status --porcelain -z [--untracked-files=<mode>] [--ignore-submodules=<when>] [--no-renames] [-- <pathspec>...]`
+   * — the working tree's porcelain status listing.
+   *
+   * **Details**
+   *
+   * `untrackedFiles: "all"` names every file inside an untracked directory
+   * where git's default collapses it to one `dir/` entry (`"no"` drops
+   * untracked paths); `ignoreSubmodules` picks which submodule changes are
+   * hidden; `noRenames` reports a staged rename as a `D` and an `A` entry
+   * instead of one `R` entry carrying `origPath`; `noOptionalLocks` is the
+   * GLOBAL flag that keeps git from refreshing the index on disk, for a
+   * reader polling a tree another process is working in; `pathspec` scopes
+   * the report behind `--`, each entry passing the option-like guard. With no
+   * option passed the argv is unchanged.
+   */
+  readonly status: {
+    (
+      cwd: string,
+      options?: {
+        readonly ignoreSubmodules?: StatusIgnoreSubmodules;
+        readonly noOptionalLocks?: boolean;
+        readonly noRenames?: boolean;
+        readonly pathspec?: ReadonlyArray<string>;
+        readonly untrackedFiles?: StatusUntrackedFiles;
+      }
+    ): Effect.Effect<ReadonlyArray<StatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (options?: {
+      readonly ignoreSubmodules?: StatusIgnoreSubmodules;
+      readonly noOptionalLocks?: boolean;
+      readonly noRenames?: boolean;
+      readonly pathspec?: ReadonlyArray<string>;
+      readonly untrackedFiles?: StatusUntrackedFiles;
+    }): (
+      cwd: string
+    ) => Effect.Effect<ReadonlyArray<StatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
+  };
   /**
    * Mutating: `git submodule absorbgitdirs [-- <paths>...]` — moves each
    * submodule's embedded `.git` directory into the superproject's
@@ -3485,24 +3759,45 @@ export interface GitShape {
       readonly pattern?: string;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git diff --name-only -z [--relative]` — the unstaged working-tree paths. */
+  /**
+   * `git diff --name-only -z [--relative] [--no-renames] [--diff-filter=<letters>] [<head>] [-- <pathspec>...]`
+   * — the unstaged working-tree paths: the working tree against the index,
+   * or against the commit `head` when one is named (staged and unstaged
+   * changes alike, then). `diffFilter`, `noRenames` and `pathspec` behave as
+   * they do for `changedFiles`, guards included.
+   */
   readonly unstagedChanges: {
     (
       cwd: string,
-      options?: { readonly relative?: boolean }
+      options?: {
+        readonly relative?: boolean;
+        readonly diffFilter?: string;
+        readonly head?: string;
+        readonly noRenames?: boolean;
+        readonly pathspec?: ReadonlyArray<string>;
+      }
     ): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly relative?: boolean;
+      readonly diffFilter?: string;
+      readonly head?: string;
+      readonly noRenames?: boolean;
+      readonly pathspec?: ReadonlyArray<string>;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git ls-files --others --exclude-standard -z [--full-name]` — the untracked paths. */
+  /**
+   * `git ls-files --others --exclude-standard -z [--full-name] [-- <pathspec>...]`
+   * — the untracked paths, optionally scoped to `pathspec` (each entry passing
+   * the option-like guard).
+   */
   readonly untrackedFiles: {
     (
       cwd: string,
-      options?: { readonly relative?: boolean }
+      options?: { readonly relative?: boolean; readonly pathspec?: ReadonlyArray<string> }
     ): Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly relative?: boolean;
+      readonly pathspec?: ReadonlyArray<string>;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -3885,14 +4180,14 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     stagedChanges: dual(hasStringSubject, stubOf(overrides, "stagedChanges")),
     untrackedFiles: dual(hasStringSubject, stubOf(overrides, "untrackedFiles")),
     defaultBranch: dual(hasStringSubject, stubOf(overrides, "defaultBranch")),
-    currentBranch: stubOf(overrides, "currentBranch"),
+    currentBranch: dual(hasStringSubject, stubOf(overrides, "currentBranch")),
     repoRoot: stubOf(overrides, "repoRoot"),
     commonDir: stubOf(overrides, "commonDir"),
     configGet: dual(stringAt(1), stubOf(overrides, "configGet")),
     remoteUrl: dual(hasStringSubject, stubOf(overrides, "remoteUrl")),
     commitInfo: stubOf(overrides, "commitInfo"),
     log: dual(hasStringSubject, stubOf(overrides, "log")),
-    status: stubOf(overrides, "status"),
+    status: dual(hasStringSubject, stubOf(overrides, "status")),
     lsRemote: dual(stringAt(1), stubOf(overrides, "lsRemote")),
     remoteAdd: dual(3, stubOf(overrides, "remoteAdd")),
     remoteRemove: dual(2, stubOf(overrides, "remoteRemove")),

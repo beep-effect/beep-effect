@@ -1412,38 +1412,29 @@ describe("ci lane timing admission window", () => {
       `{"created_at":"${createdAt}","event":"pull_request","head_branch":"lane-${id}","head_sha":"sha-${id}","id":${id},"run_attempt":1,"run_started_at":"${createdAt}","updated_at":"${createdAt}"}`;
     const firstHalf = encodeURIComponent("2026-10-28T00:00:00.000Z..2026-10-31T12:00:00.000Z");
     const secondHalf = encodeURIComponent("2026-10-31T12:00:00.000Z..2026-11-04T00:00:00.000Z");
-    // Same route-table shape as `windowGithubRoutes`: first match wins, the shared
-    // window client answers anything the peak-branch probe does not override.
-    const peakRoutes = [
-      { matches: Str.includes("/history?"), respond: staticWindowGithubResponse(historyJson) },
-      { matches: Str.endsWith("/history/54940515"), respond: staticWindowGithubResponse(snapshot15Json) },
-      {
-        matches: Str.includes("event=push"),
-        respond: staticWindowGithubResponse('{"total_count":0,"workflow_runs":[]}'),
-      },
+    // First matching route wins; the capped full-span listing is the last workflow-runs route, so the
+    // half-span listings are matched before it.
+    const routes: ReadonlyArray<{ readonly matches: (endpoint: string) => boolean; readonly body: string }> = [
+      { matches: Str.includes("/history?"), body: historyJson },
+      { matches: Str.endsWith("/history/54940515"), body: snapshot15Json },
+      { matches: Str.includes("event=push"), body: '{"total_count":0,"workflow_runs":[]}' },
       {
         matches: Str.includes(`created=${firstHalf}`),
-        respond: staticWindowGithubResponse(`{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`),
+        body: `{"total_count":1,"workflow_runs":[${run(201, "2026-10-29T10:00:00Z")}]}`,
       },
       {
         matches: Str.includes(`created=${secondHalf}`),
-        respond: staticWindowGithubResponse(`{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`),
+        body: `{"total_count":1,"workflow_runs":[${run(202, "2026-11-01T10:00:00Z")}]}`,
       },
       {
         matches: Str.includes("/actions/workflows/"),
-        respond: staticWindowGithubResponse(
-          `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`
-        ),
+        body: `{"total_count":1500,"workflow_runs":[${run(200, "2026-10-28T10:00:00Z")}]}`,
       },
     ];
     const response = (endpoint: string) =>
-      pipe(
-        peakRoutes,
-        A.findFirst((route) => route.matches(endpoint)),
-        O.match({
-          onNone: () => windowGithubResponse(endpoint),
-          onSome: (route) => route.respond(endpoint),
-        })
+      O.match(
+        A.findFirst(routes, (route) => route.matches(endpoint)),
+        { onNone: () => windowGithubResponse(endpoint), onSome: (route) => Effect.succeed(route.body) }
       );
     return Effect.gen(function* () {
       const report = yield* collectCiLaneTimingWindow(
