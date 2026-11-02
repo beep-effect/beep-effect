@@ -26,6 +26,7 @@ import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import { expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
@@ -42,6 +43,7 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as TestClock from "effect/testing/TestClock";
 import * as Protobuf from "protobufjs";
 import type { NativeEncodedBatch } from "@beep/repo-ai-metrics/native-export";
 
@@ -235,21 +237,28 @@ const fixture = Effect.fn("TranscriptExportTest.fixture")(function* () {
     offset: 0,
     limit: 512,
   });
+  // Ticks run under a TestClock seeded at the current time, so only the test moves the delay
+  // windows and the tick deadline, never host load.
+  const clock = yield* TestClock.make({ warningDelay: "30 seconds" });
+  yield* clock.setTime(yield* Clock.currentTimeMillis);
   const reopen = () =>
-    makeNativeDeliveryScheduler(
-      intake,
-      config,
-      NativeSchedulePolicy.make({
-        maxEvents: 1,
-        retryDelayMillis: 100,
-        maxRetryDelayMillis: 200,
-        reconcileDelayMillis: 100,
-        tickTimeoutMillis: 2000,
-      }),
-      sender,
-      reader
+    Effect.map(
+      makeNativeDeliveryScheduler(
+        intake,
+        config,
+        NativeSchedulePolicy.make({
+          maxEvents: 1,
+          retryDelayMillis: 100,
+          maxRetryDelayMillis: 200,
+          reconcileDelayMillis: 100,
+          tickTimeoutMillis: 2000,
+        }),
+        sender,
+        reader
+      ),
+      (scheduler) => ({ tick: Effect.provideService(scheduler.tick, Clock.Clock, clock) })
     );
-  return { input, page, frames, receipt, sender, reader, selection, posts, mode, sql, reopen };
+  return { input, page, frames, receipt, sender, reader, selection, posts, mode, sql, clock, reopen };
 });
 
 it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
@@ -335,7 +344,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
           });
         }
         expect(yield* Ref.get(f.posts)).toBe(2);
-        yield* Effect.sleep(120);
+        yield* f.clock.adjust(120);
         yield* Ref.set(f.mode, "missing");
         const scheduler = yield* f.reopen();
         for (let n = 0; n < 3; n++) yield* scheduler.tick;
