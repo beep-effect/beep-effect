@@ -1,4 +1,4 @@
-import { available, Collected, runCollected } from "@beep/git/internal/run";
+import { available, Collected, OutputTooLarge, runCollected } from "@beep/git/internal/run";
 import { assert, describe, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -7,6 +7,10 @@ import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
+import * as Sink from "effect/Sink";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { scripted } from "./fixtures.ts";
 
 const command = ChildProcess.make("git", ["rev-parse", "--verify", "HEAD"], {});
@@ -36,6 +40,60 @@ describe("runCollected", () => {
       assert.strictEqual(collected.stdout, "out-line\n");
       assert.strictEqual(collected.stderr, "err-line\n");
       assert.strictEqual(collected.exitCode, 0);
+    })
+  );
+
+  it.effect("fails OutputTooLarge naming the stream once a stream passes the byte ceiling, and kills the child", () =>
+    Effect.gen(function* () {
+      let killed = 0;
+      const chunky = Layer.succeed(
+        ChildProcessSpawner.ChildProcessSpawner,
+        ChildProcessSpawner.make(() =>
+          Effect.succeed(
+            ChildProcessSpawner.makeHandle({
+              pid: ChildProcessSpawner.ProcessId(1),
+              exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(0)),
+              isRunning: Effect.succeed(true),
+              kill: () =>
+                Effect.sync(() => {
+                  killed += 1;
+                }),
+              stdin: Sink.drain,
+              stdout: Stream.make(new TextEncoder().encode("ok\n")),
+              // Three 4-byte chunks: the ceiling is crossed mid-stream, not on a finished string.
+              stderr: Stream.make(
+                new TextEncoder().encode("eeee"),
+                new TextEncoder().encode("eeee"),
+                new TextEncoder().encode("eeee")
+              ),
+              all: Stream.empty,
+              getInputFd: () => Sink.drain,
+              getOutputFd: () => Stream.empty,
+              unref: Effect.succeed(Effect.void),
+            })
+          )
+        )
+      );
+      const failure = yield* runCollected(command, 10).pipe(provideSpawner(chunky), Effect.flip);
+      assert.isTrue(S.is(OutputTooLarge)(failure));
+      if (S.is(OutputTooLarge)(failure)) {
+        assert.strictEqual(failure.stream, "stderr");
+        assert.strictEqual(failure.limit, 10);
+      }
+      assert.strictEqual(killed, 1);
+    })
+  );
+
+  it.effect("collects a stream exactly at the ceiling, and defaults the ceiling to 16 MiB", () =>
+    Effect.gen(function* () {
+      const exact = yield* runCollected(command, 8).pipe(
+        provideSpawner(scripted(() => ({ stdout: Str.repeat(8)("a"), exit: 0 })))
+      );
+      assert.strictEqual(exact.stdout, Str.repeat(8)("a"));
+      const large = yield* runCollected(command).pipe(
+        provideSpawner(scripted(() => ({ stdout: Str.repeat(100_000)("a"), exit: 0 })))
+      );
+      assert.strictEqual(large.stdout.length, 100_000);
     })
   );
 

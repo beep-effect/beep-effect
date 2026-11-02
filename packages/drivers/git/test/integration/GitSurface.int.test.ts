@@ -234,13 +234,39 @@ it.layer(TestLayer, { timeout: "30 seconds" })("Git surface — introspection re
       })
     );
 
-    it.effect("remoteUrl is none before a remote exists and some after", () =>
+    it.effect("nameStatus honors findRenames, diffFilter and a pathspec against the real tree", () =>
+      Effect.gen(function* () {
+        const git = yield* Git;
+        // Only renames, detected at 50%, and only under the paths the rename touches.
+        const renames = yield* git.nameStatus(dirA, {
+          base: "HEAD",
+          findRenames: 50,
+          diffFilter: "R",
+          pathspec: ["renamed.txt", "sub"],
+        });
+        assert.deepStrictEqual(
+          A.map(renames, (entry) => [entry.status, entry.oldPath, entry.path]),
+          [["renamed", "sub/c.txt", "renamed.txt"]]
+        );
+        // Lower case excludes: everything BUT renames, scoped to a.txt.
+        const notRenames = yield* git.nameStatus(dirA, { base: "HEAD", diffFilter: "r", pathspec: ["a.txt"] });
+        assert.deepStrictEqual(
+          A.map(notRenames, (entry) => [entry.status, entry.path]),
+          [["modified", "a.txt"]]
+        );
+      })
+    );
+
+    it.effect("remoteUrl is none before a remote exists and some after; push reads the push URL", () =>
       Effect.gen(function* () {
         const git = yield* Git;
         assertNone(yield* git.remoteUrl(dirA));
+        assertNone(yield* git.remoteUrl(dirA, { push: true }));
 
         yield* runFixtureGit(dirA, ["remote", "add", "origin", "https://example.com/o/r.git"]);
+        yield* runFixtureGit(dirA, ["remote", "set-url", "--push", "origin", "git@example.com:o/r.git"]);
         assertSome(yield* git.remoteUrl(dirA), "https://example.com/o/r.git");
+        assertSome(yield* git.remoteUrl(dirA, { push: true }), "git@example.com:o/r.git");
       })
     );
 
@@ -764,6 +790,26 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
           const git = yield* Git;
           const failure = yield* Effect.flip(git.commonDir(outside));
           assert.instanceOf(failure, NotARepositoryError);
+        })
+      );
+
+      // Last in the block on purpose: it removes the linked worktree's
+      // directory, which the commonDir cases above still read.
+      it.effect("worktreeList reports prunable once a linked worktree's directory is gone", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          const fs = yield* FileSystem.FileSystem;
+          const before = yield* git.worktreeList(main);
+          assert.deepStrictEqual(
+            A.map(before, (entry) => entry.prunable),
+            [false, false]
+          );
+          yield* fs.remove(worktree, { recursive: true });
+          const after = yield* git.worktreeList(main);
+          assert.strictEqual(after.length, 2);
+          assert.strictEqual(after[0]?.prunable, false);
+          assert.strictEqual(after[1]?.prunable, true);
+          assert.strictEqual(after[1]?.branch, "refs/heads/side");
         })
       );
     });

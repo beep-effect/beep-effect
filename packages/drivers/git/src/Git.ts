@@ -27,8 +27,9 @@ import {
   NotStubbedError,
   UnknownRefError,
 } from "./Git.errors.ts";
+import { GitOptions } from "./Git.models.ts";
 import { GitCommand } from "./GitCommand.ts";
-import { make as makeExecution } from "./internal/execution.ts";
+import { makeWith as makeExecution } from "./internal/execution.ts";
 import {
   parseBranchList,
   parseCommitInfo,
@@ -91,6 +92,7 @@ export {
   CommitInfo,
   CommitLogEntry,
   ConfigListEntry,
+  GitOptions,
   LsFilesEntry,
   LsRemoteEntry,
   LsTreeEntry,
@@ -112,6 +114,16 @@ const NonNegativeInteger = S.Finite.check(S.isMultipleOf(1), S.isGreaterThanOrEq
   })
 );
 const isNonNegativeInteger = S.is(NonNegativeInteger);
+/** `--find-renames=<n>%`'s domain: a whole percent, 1..100. */
+const RenameScorePercent = S.Finite.check(S.isInt(), S.isBetween({ minimum: 1, maximum: 100 })).pipe(
+  $I.annoteSchema("RenameScorePercent", { description: "A rename-detection similarity threshold as a whole percent." })
+);
+const isRenameScorePercent = S.is(RenameScorePercent);
+/** `--diff-filter=<letters>`'s domain: git's status letters (lower case excludes), or `*`. */
+const DiffFilter = S.String.check(S.isPattern(/^[ACDMRTUXB*]+$/i)).pipe(
+  $I.annoteSchema("DiffFilter", { description: "A non-empty `--diff-filter` letter set, lower case excluding." })
+);
+const isDiffFilter = S.is(DiffFilter);
 
 /**
  * `dual` dispatch for a member whose subject is a string (`cwd`, or a
@@ -258,6 +270,27 @@ const refFailureArms = (cwd: string, ref: string) => ({
   unknownRef: () => Effect.fail(UnknownRefError.make({ ref, cwd })),
 });
 
+/**
+ * Lifts a parser's `Result` into the member's error channel: a failure
+ * becomes a `GitCommandError` of kind `"failed"` whose `detail` reads
+ * `unparseable <what> output: <reason>`, carrying the invocation's redacted
+ * argv. Every entry parser fails closed through this one helper.
+ */
+const failClosed =
+  (invocation: GitInvocation, cwd: string, what: string) =>
+  <A>(parsed: Result.Result<A, string>): Effect.Effect<A, GitCommandError> =>
+    Result.isFailure(parsed)
+      ? Effect.fail(
+          GitCommandError.make({
+            kind: "failed",
+            args: invocation.redactedArgs,
+            cwd,
+            stderr: "",
+            detail: `unparseable ${what} output: ${parsed.failure}`,
+          })
+        )
+      : Effect.succeed(parsed.success);
+
 /** Builds repository operations over bound local and network execution capabilities. */
 const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
   const show: GitShape["show"] = dual(
@@ -283,9 +316,10 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     ) {
       yield* Effect.annotateCurrentSpan({ cwd, ref });
       yield* rejectOptionLikeRefs(cwd, [ref]);
-      const classified = yield* runFor(GitCommand.lsTree(ref, options?.pathspec ?? []), cwd, "generic");
+      const invocation = GitCommand.lsTree(ref, options?.pathspec ?? []);
+      const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
-        success: (classified) => Effect.succeed(parseLsTree(classified.output)),
+        success: (classified) => failClosed(invocation, cwd, "ls-tree")(parseLsTree(classified.output)),
         ...refFailureArms(cwd, ref),
       });
     })
@@ -460,30 +494,69 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly base: string;
         readonly head?: string;
         readonly relative?: boolean;
+        readonly findRenames?: number;
+        readonly diffFilter?: string;
+        readonly pathspec?: ReadonlyArray<string>;
       }
     ) {
+      const { diffFilter, findRenames, pathspec = [] } = options;
       const relative = options.relative ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
         base: options.base,
         head: options.head ?? "(working tree)",
         relative,
+        pathspec: pathspec.length,
       });
-      yield* rejectOptionLikeRefs(cwd, options.head === undefined ? [options.base] : [options.base, options.head]);
-      const classified = yield* runFor(GitCommand.nameStatus(options.base, options.head, relative), cwd, "generic");
+      yield* rejectOptionLikeRefs(cwd, [...withDefined([options.base], options.head), ...pathspec]);
+      if (findRenames !== undefined && !isRenameScorePercent(findRenames)) {
+        return yield* GitCommandError.make({
+          kind: "refused",
+          args: [String(findRenames)],
+          cwd,
+          stderr: "",
+          detail: `refused a rename score: expected a whole percent 1..100, received ${findRenames}`,
+        });
+      }
+      if (diffFilter !== undefined && !isDiffFilter(diffFilter)) {
+        return yield* encodeJsonString(diffFilter).pipe(
+          Effect.orDie,
+          Effect.flatMap((encoded) =>
+            GitCommandError.make({
+              kind: "refused",
+              args: [encoded],
+              cwd,
+              stderr: "",
+              detail: `refused a diff filter: expected letters from [ACDMRTUXB*] (lower case excludes), received ${encoded}`,
+            })
+          )
+        );
+      }
+      const invocation = GitCommand.nameStatus(options.base, options.head, relative, {
+        ...O.getSomesStruct({ findRenames: O.fromUndefinedOr(findRenames) }),
+        ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter) }),
+        pathspec,
+      });
+      const classified = yield* runFor(invocation, cwd, "generic");
       return yield* Match.valueTags(classified, {
-        success: (classified) => Effect.succeed(parseNameStatus(classified.output)),
+        success: (classified) => failClosed(invocation, cwd, "name-status")(parseNameStatus(classified.output)),
         ...refFailureArms(cwd, options.head === undefined ? options.base : `${options.base}...${options.head}`),
       });
     })
   );
 
   const revParse: GitShape["revParse"] = dual(
-    2,
-    Effect.fn("Git.revParse")(function* (cwd: string, ref: string) {
-      yield* Effect.annotateCurrentSpan({ cwd, ref });
+    stringAt(1),
+    Effect.fn("Git.revParse")(function* (
+      cwd: string,
+      ref: string,
+      options?: { readonly peel?: "commit"; readonly quiet?: boolean }
+    ) {
+      yield* Effect.annotateCurrentSpan({ cwd, ref, quiet: options?.quiet ?? false });
       yield* rejectOptionLikeRefs(cwd, [ref]);
-      const classified = yield* runFor(GitCommand.revParse(ref), cwd, "generic");
+      // The "revParse" kind reads `--verify`'s own unknown-ref shapes: the
+      // `Needed a single revision` diagnostic, and `--quiet`'s silent exit 1.
+      const classified = yield* runFor(GitCommand.revParse(ref, options), cwd, "revParse");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeed(Str.trim(classified.output)),
         ...refFailureArms(cwd, ref),
@@ -651,16 +724,19 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly depth?: number;
         readonly tag?: boolean;
         readonly unshallow?: boolean;
+        readonly prune?: boolean;
       }
     ) {
       const remote = options.remote ?? "origin";
       const tag = options.tag ?? false;
       const unshallow = options.unshallow ?? false;
+      const prune = options.prune ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
         ref: options.ref,
         tag,
         unshallow,
+        prune,
       });
       yield* rejectOptionLikeRefs(cwd, [remote, options.ref]);
       yield* rejectNonNaturalNumber(cwd, "a fetch depth", options.depth);
@@ -677,7 +753,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         });
       }
       const classified = yield* runForNetwork(
-        GitCommand.fetch(remote, options.ref, options.depth, tag, unshallow),
+        GitCommand.fetch(remote, options.ref, options.depth, tag, unshallow, prune),
         cwd,
         "generic"
       );
@@ -696,6 +772,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly ref: string;
         readonly remote?: string;
         readonly depth?: number;
+        readonly prune?: boolean;
       }
     ) {
       yield* Effect.annotateCurrentSpan({ cwd, ref: options.ref });
@@ -944,12 +1021,14 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       cwd: string,
       options?: {
         readonly remote?: string;
+        readonly push?: boolean;
       }
     ) {
       const remote = options?.remote ?? "origin";
-      yield* Effect.annotateCurrentSpan({ cwd, remote });
+      const push = options?.push ?? false;
+      yield* Effect.annotateCurrentSpan({ cwd, remote, push });
       yield* rejectOptionLikeRefs(cwd, [remote]);
-      const classified = yield* runFor(GitCommand.remoteUrl(remote), cwd, "noSuchRemote");
+      const classified = yield* runFor(GitCommand.remoteUrl(remote, push), cwd, "noSuchRemote");
       return yield* Match.valueTags(classified, {
         success: (classified) => Effect.succeedSome(Str.trim(classified.output)),
         absent: () => Effect.succeedNone,
@@ -1010,19 +1089,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       }
       const classified = yield* runFor(invocation, cwd, "log");
       return yield* Match.valueTags(classified, {
-        success: Effect.fnUntraced(function* (classified) {
-          const parsed = parseLog(classified.output);
-          if (Result.isFailure(parsed)) {
-            return yield* GitCommandError.make({
-              kind: "failed",
-              args: invocation.redactedArgs,
-              cwd,
-              stderr: "",
-              detail: `unparseable log output: ${parsed.failure}`,
-            });
-          }
-          return parsed.success;
-        }),
+        success: (classified) => failClosed(invocation, cwd, "log")(parseLog(classified.output)),
         absent: () => {
           // An unborn HEAD — however this git spells it — has no history,
           // which is the empty log, never a failure. `Git.log` takes no ref,
@@ -1046,9 +1113,10 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
 
   const status = Effect.fn("Git.status")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
-    const classified = yield* runFor(GitCommand.status(), cwd, "generic");
+    const invocation = GitCommand.status();
+    const classified = yield* runFor(invocation, cwd, "generic");
     return yield* Match.valueTags(classified, {
-      success: (classified) => Effect.succeed(parseStatus(classified.output)),
+      success: (classified) => failClosed(invocation, cwd, "status")(parseStatus(classified.output)),
       ...refFailureArms(cwd, "working tree"),
     });
   });
@@ -1289,6 +1357,20 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       });
     })
   );
+
+  // `runParsed` for a parser that can FAIL: `what` names the output in the
+  // `unparseable <what> output: …` detail the failure is mapped to.
+  const runParsedChecked = Effect.fnUntraced(function* <A>(
+    method: string,
+    invocation: GitInvocation,
+    cwd: string,
+    refLabel: string,
+    what: string,
+    parse: (output: string) => Result.Result<A, string>
+  ) {
+    const parsed = yield* runParsed(method, invocation, cwd, refLabel, "generic", parse);
+    return yield* failClosed(invocation, cwd, what)(parsed);
+  });
 
   const lsRemote: GitShape["lsRemote"] = dual(
     stringAt(1),
@@ -1537,11 +1619,18 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly allowEmpty?: boolean;
         readonly amend?: boolean;
         readonly author?: string;
+        readonly only?: boolean;
+        readonly noVerify?: boolean;
       }
     ) {
-      const { all = false, allowEmpty = false, amend = false, author } = options ?? {};
-      yield* Effect.annotateCurrentSpan({ cwd, amend });
-      return yield* runVoid("Git.commit", GitCommand.commit(message, all, allowEmpty, amend, author), cwd, "HEAD");
+      const { all = false, allowEmpty = false, amend = false, author, noVerify = false, only = false } = options ?? {};
+      yield* Effect.annotateCurrentSpan({ cwd, amend, only, noVerify });
+      return yield* runVoid(
+        "Git.commit",
+        GitCommand.commit(message, all, allowEmpty, amend, author, only, noVerify),
+        cwd,
+        "HEAD"
+      );
     })
   );
 
@@ -1794,12 +1883,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
 
   const worktreeList = Effect.fn("Git.worktreeList")(function* (cwd: string) {
     yield* Effect.annotateCurrentSpan({ cwd });
-    return yield* runParsed(
+    return yield* runParsedChecked(
       "Git.worktreeList",
       GitCommand.worktreeList(),
       cwd,
       "worktrees",
-      "generic",
+      "worktree list",
       parseWorktreeList
     );
   });
@@ -1825,12 +1914,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         cwd,
         patterns: (options?.pathspec ?? []).length,
       });
-      return yield* runParsed(
+      return yield* runParsedChecked(
         "Git.lsFiles",
         GitCommand.lsFiles(options?.pathspec ?? []),
         cwd,
         "index",
-        "generic",
+        "ls-files",
         parseLsFiles
       );
     })
@@ -2118,6 +2207,8 @@ export interface GitShape {
         readonly allowEmpty?: boolean;
         readonly amend?: boolean;
         readonly author?: string;
+        readonly only?: boolean;
+        readonly noVerify?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
@@ -2127,6 +2218,8 @@ export interface GitShape {
         readonly allowEmpty?: boolean;
         readonly amend?: boolean;
         readonly author?: string;
+        readonly only?: boolean;
+        readonly noVerify?: boolean;
       }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
@@ -2377,6 +2470,7 @@ export interface GitShape {
         readonly depth?: number;
         readonly tag?: boolean;
         readonly unshallow?: boolean;
+        readonly prune?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
@@ -2385,6 +2479,7 @@ export interface GitShape {
       readonly depth?: number;
       readonly tag?: boolean;
       readonly unshallow?: boolean;
+      readonly prune?: boolean;
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2408,12 +2503,14 @@ export interface GitShape {
         readonly ref: string;
         readonly remote?: string;
         readonly depth?: number;
+        readonly prune?: boolean;
       }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
       readonly ref: string;
       readonly remote?: string;
       readonly depth?: number;
+      readonly prune?: boolean;
     }): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2684,9 +2781,20 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git diff --name-status -z [--relative] [<base> | <base>...<head>]` —
-   * the changed paths with their status codes. `head` omitted diffs the
+   * `git diff --name-status -z [--relative] [--find-renames=<n>%] [--diff-filter=<letters>] [<base> | <base>...<head>] [-- <pathspec>...]`
+   * — the changed paths with their status codes. `head` omitted diffs the
    * working tree against `base`; `head` present diffs the merge-base range.
+   *
+   * **Details**
+   *
+   * `findRenames` is the similarity threshold rename detection uses, a whole
+   * percent 1..100; `diffFilter` keeps only the named status letters
+   * (`[ACDMRTUXB*]`, lower case excludes them); `pathspec` scopes the diff.
+   * Either option outside its domain, or a pathspec entry git would read as
+   * an option, is refused typed before any spawn. The per-entry similarity
+   * score git prints is not surfaced (see {@link NameStatusEntry}). Output
+   * the parser cannot read fails as `GitCommandError` with an
+   * `unparseable name-status output` detail — never as an invented entry.
    */
   readonly nameStatus: {
     (
@@ -2695,12 +2803,18 @@ export interface GitShape {
         readonly base: string;
         readonly head?: string;
         readonly relative?: boolean;
+        readonly findRenames?: number;
+        readonly diffFilter?: string;
+        readonly pathspec?: ReadonlyArray<string>;
       }
     ): Effect.Effect<ReadonlyArray<NameStatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options: {
       readonly base: string;
       readonly head?: string;
       readonly relative?: boolean;
+      readonly findRenames?: number;
+      readonly diffFilter?: string;
+      readonly pathspec?: ReadonlyArray<string>;
     }): (
       cwd: string
     ) => Effect.Effect<ReadonlyArray<NameStatusEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
@@ -2826,14 +2940,19 @@ export interface GitShape {
       url: string
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git remote get-url <remote>` — the trimmed URL, or `Option.none` when the remote does not exist. */
+  /**
+   * `git remote get-url [--push] <remote>` — the trimmed fetch URL (or, with
+   * `options.push`, the push URL), or `Option.none` when the remote does not
+   * exist.
+   */
   readonly remoteUrl: {
     (
       cwd: string,
-      options?: { readonly remote?: string }
+      options?: { readonly remote?: string; readonly push?: boolean }
     ): Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
     (options?: {
       readonly remote?: string;
+      readonly push?: boolean;
     }): (cwd: string) => Effect.Effect<O.Option<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
@@ -2928,10 +3047,25 @@ export interface GitShape {
       options?: { readonly limit?: number; readonly firstParent?: boolean }
     ): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
-  /** `git rev-parse --verify <ref>` — resolves `ref` to its full object id, trimmed. */
+  /**
+   * `git rev-parse --verify <ref>` — resolves `ref` to its full object id,
+   * trimmed. With any option the argv is
+   * `rev-parse --verify [--quiet] --end-of-options <ref>[^{commit}]`:
+   * `peel: "commit"` resolves an annotated tag through to its commit, and
+   * `quiet` keeps git's unknown-ref diagnostic off stderr. An unknown ref is
+   * `UnknownRefError` either way — with `quiet` git signals it as a silent
+   * exit 1, which this member alone reads as unknown-ref.
+   */
   readonly revParse: {
-    (cwd: string, ref: string): Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
-    (ref: string): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      cwd: string,
+      ref: string,
+      options?: { readonly peel?: "commit"; readonly quiet?: boolean }
+    ): Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
+    (
+      ref: string,
+      options?: { readonly peel?: "commit"; readonly quiet?: boolean }
+    ): (cwd: string) => Effect.Effect<string, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
    * Mutating: `git rm [--cached] [-r] [--force] -- <paths...>` — removes
@@ -3415,7 +3549,8 @@ export interface GitShape {
   };
   /**
    * `git worktree list --porcelain -z` — every working tree (the main one
-   * first) as a {@link WorktreeEntry}.
+   * first) as a {@link WorktreeEntry}; `prunable` reports whether
+   * `worktree prune` would remove the entry.
    */
   readonly worktreeList: (
     cwd: string
@@ -3526,10 +3661,15 @@ const stubOf = <K extends keyof GitStubs>(
  * that — a caller running two mutating calls (or a mutating call alongside a
  * read) against one `cwd` at once owns the race.
  *
- * **Every spawn already runs under the classification module's 30 s timeout**: a command that has not answered in time fails as a
- * {@link GitCommandError} with `detail` set to `"timed out after 30s"`.
+ * **Every spawn already runs under the instance's {@link GitOptions}**: a
+ * command that has not answered within `timeout` (default 30 s) fails as a
+ * {@link GitCommandError} with `detail` set to `"timed out after 30s"`, and a
+ * stream that outgrows `maxOutputBytes` (default 16 MiB) kills the child and
+ * fails as kind `"truncated"`. Parsed members fail closed too: output the
+ * parser cannot read is a `GitCommandError` whose `detail` opens
+ * `unparseable <what> output:`, never an invented entry.
  *
- * That ceiling is per run, not per member call. The network-touching members
+ * That timeout is per run, not per member call. The network-touching members
  * (`lsRemote`, `fetch`, `fetchUnshallow`, `push`, `pull`, `submoduleAdd`,
  * `submoduleUpdate`) first resolve their ssh command with up to two concurrent
  * local `git config` reads, each bounded separately, so their worst case is
@@ -3567,16 +3707,40 @@ const stubOf = <K extends keyof GitStubs>(
  */
 export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
   /**
-   * Builds the live service shape: resolves `ChildProcessSpawner` and reads the
-   * ambient ssh environment once — every method's `R` is `never`.
+   * Builds the live service shape under explicit {@link GitOptions}: resolves
+   * `ChildProcessSpawner` and reads the ambient ssh environment once — every
+   * method's `R` is `never`.
    *
    * **Details**
    *
-   * The same construction {@link Git.layer} runs, as a plain effect. A caller
-   * that adopts one or two `Git` reads inside a module whose own requirements
-   * already include `ChildProcessSpawner` provides it with
-   * `Effect.provideServiceEffect(Git, Git.make)` instead of providing a layer
-   * below the application edge.
+   * The same construction {@link Git.layerWith} runs, as a plain effect. A
+   * caller that adopts one or two `Git` reads inside a module whose own
+   * requirements already include `ChildProcessSpawner` provides it with
+   * `Effect.provideServiceEffect(Git, Git.makeWith(options))` instead of
+   * providing a layer below the application edge.
+   *
+   * **Example** (Provide a tightly bounded service for one read)
+   *
+   * ```ts
+   * import { Git, GitOptions } from "@beep/git/Git";
+   * import * as Effect from "effect/Effect";
+   *
+   * const options = GitOptions.make({ maxOutputBytes: 64 * 1024 });
+   * const root = Git.use((git) => git.repoRoot("/repo")).pipe(Effect.provideServiceEffect(Git, Git.makeWith(options)));
+   * console.log(Effect.isEffect(root)); // true
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly makeWith = (
+    options: GitOptions
+  ): Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> =>
+    Effect.map(makeExecution(options), makeShape);
+
+  /**
+   * {@link Git.makeWith} under the default {@link GitOptions}: a 16 MiB
+   * per-stream output ceiling and a 30 s per-run timeout.
    *
    * **Example** (Provide the service for one read)
    *
@@ -3591,13 +3755,35 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
    * @category constructors
    * @since 0.0.0
    */
-  static readonly make: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> = Effect.map(
-    makeExecution,
-    makeShape
+  static readonly make: Effect.Effect<GitShape, never, ChildProcessSpawner.ChildProcessSpawner> = Git.makeWith(
+    GitOptions.make({})
   );
 
   /**
-   * Resolves `ChildProcessSpawner` once, at construction — every method's `R` is `never`.
+   * {@link Git.layer} with explicit {@link GitOptions}: the per-stream output
+   * ceiling and per-run timeout every member of this instance runs under.
+   *
+   * **Example** (Bound a scanner's git reads)
+   *
+   * ```ts
+   * import { Git, GitOptions } from "@beep/git/Git";
+   * import * as Duration from "effect/Duration";
+   * import * as Layer from "effect/Layer";
+   *
+   * const ScannerGit = Git.layerWith(GitOptions.make({ maxOutputBytes: 64 * 1024, timeout: Duration.seconds(5) }));
+   * console.log(Layer.isLayer(ScannerGit)); // true
+   * ```
+   *
+   * @category layers
+   * @since 0.0.0
+   */
+  static readonly layerWith = (options: GitOptions): Layer.Layer<Git, never, ChildProcessSpawner.ChildProcessSpawner> =>
+    Layer.effect(Git, Git.makeWith(options));
+
+  /**
+   * Resolves `ChildProcessSpawner` once, at construction — every method's `R`
+   * is `never`. Runs under the default {@link GitOptions}; {@link Git.layerWith}
+   * takes explicit ones.
    *
    * **Example** (Compose a live repository query)
    *
@@ -3670,7 +3856,7 @@ export class Git extends Context.Service<Git, GitShape>()($I`Git`) {
     isAncestor: dual(3, stubOf(overrides, "isAncestor")),
     changedFiles: dual(2, stubOf(overrides, "changedFiles")),
     workingChanges: dual(hasStringSubject, stubOf(overrides, "workingChanges")),
-    revParse: dual(2, stubOf(overrides, "revParse")),
+    revParse: dual(stringAt(1), stubOf(overrides, "revParse")),
     checkout: dual(stringAt(1), stubOf(overrides, "checkout")),
     fetch: dual(2, stubOf(overrides, "fetch")),
     fetchAny: dual(2, stubOf(overrides, "fetchAny")),

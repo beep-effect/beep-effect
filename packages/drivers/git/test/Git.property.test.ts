@@ -84,6 +84,8 @@ const lineField = (text: string): boolean =>
   noNul(text) && Str.includes("\n")(text) === false && Str.includes("\r")(text) === false;
 const atom = (text: string): boolean =>
   lineField(text) && Str.includes(" ")(text) === false && Str.includes("\t")(text) === false;
+const nonEmpty = (text: string): boolean => noNul(text) && text.length > 0;
+const nonEmptyAtom = (text: string): boolean => atom(text) && text.length > 0;
 const nulStrings = S.String.pipe(
   S.Array,
   Arbitrary.schema,
@@ -117,6 +119,7 @@ describe("Git exported schema property floor", () => {
   roundTrips("ConfigListEntry", G.ConfigListEntry);
   roundTrips("WorktreeEntry", G.WorktreeEntry);
   roundTrips("LsFilesEntry", G.LsFilesEntry);
+  roundTrips("GitOptions", G.GitOptions);
   roundTrips("NotStubbedError", G.NotStubbedError);
 });
 
@@ -142,8 +145,10 @@ describe("Git parser and formatter property floor", () => {
     "lsTree preserves raw path bytes",
     trees,
     Arbitrary.schema(trees).pipe(
+      // Fail-closed parsers (G4) reject empty header fields and empty paths,
+      // which git never emits, so the wire-format arbitrary excludes them.
       Arbitrary.filter((entries) =>
-        A.every(entries, (entry) => atom(entry.mode) && atom(entry.oid) && noNul(entry.path))
+        A.every(entries, (entry) => nonEmptyAtom(entry.mode) && nonEmptyAtom(entry.oid) && nonEmpty(entry.path))
       )
     ),
     (entries) => nulJoin(A.map(entries, (entry) => `${entry.mode} ${entry.type} ${entry.oid}\t${entry.path}`)),
@@ -158,7 +163,15 @@ describe("Git parser and formatter property floor", () => {
       Arbitrary.filter((entries) =>
         A.every(
           entries,
-          (entry) => atom(entry.mode) && atom(entry.oid) && noNul(entry.path) && Object.is(entry.stage, -0) === false
+          (entry) =>
+            nonEmptyAtom(entry.mode) &&
+            nonEmptyAtom(entry.oid) &&
+            nonEmpty(entry.path) &&
+            // git prints an index stage as one of 0..3; the parser refuses anything else.
+            Number.isInteger(entry.stage) &&
+            entry.stage >= 0 &&
+            entry.stage <= 3 &&
+            Object.is(entry.stage, -0) === false
         )
       )
     ),
@@ -186,9 +199,9 @@ describe("Git parser and formatter property floor", () => {
         A.every(
           entries,
           (entry) =>
-            noNul(entry.path) &&
+            nonEmpty(entry.path) &&
             (entry.status === "renamed" || entry.status === "copied"
-              ? entry.oldPath !== undefined && noNul(entry.oldPath)
+              ? entry.oldPath !== undefined && nonEmpty(entry.oldPath)
               : entry.oldPath === undefined)
         )
       )
@@ -215,8 +228,8 @@ describe("Git parser and formatter property floor", () => {
         A.every(
           entries,
           (entry) =>
-            noNul(entry.path) &&
-            (rename(entry) ? entry.origPath !== undefined && noNul(entry.origPath) : entry.origPath === undefined)
+            nonEmpty(entry.path) &&
+            (rename(entry) ? entry.origPath !== undefined && nonEmpty(entry.origPath) : entry.origPath === undefined)
         )
       )
     ),
@@ -343,11 +356,11 @@ describe("Git parser and formatter property floor", () => {
     worktrees,
     Arbitrary.schema(worktrees).pipe(
       Arbitrary.filter((entries) =>
-        A.every(entries, (entry) =>
-          A.every(
-            [entry.path, entry.head, entry.branch, entry.locked, entry.prunable],
-            (value) => value === undefined || noNul(value)
-          )
+        A.every(
+          entries,
+          (entry) =>
+            nonEmpty(entry.path) &&
+            A.every([entry.head, entry.branch, entry.locked], (value) => value === undefined || noNul(value))
         )
       )
     ),
@@ -362,7 +375,7 @@ describe("Git parser and formatter property floor", () => {
               ...(entry.detached ? ["detached"] : []),
               ...(entry.bare ? ["bare"] : []),
               ...(entry.locked === undefined ? [] : [`locked ${entry.locked}`]),
-              ...(entry.prunable === undefined ? [] : [`prunable ${entry.prunable}`]),
+              ...(entry.prunable ? ["prunable gitdir file points to non-existent location"] : []),
               "",
               "",
             ],
@@ -437,14 +450,22 @@ describe("Git parser and formatter property floor", () => {
         S.Array,
         Arbitrary.schema,
         Arbitrary.filter((entries) =>
-          A.every(entries, (entry) => rename(entry) === false && entry.origPath === undefined && lineField(entry.path))
+          A.every(
+            entries,
+            (entry) =>
+              rename(entry) === false && entry.origPath === undefined && lineField(entry.path) && nonEmpty(entry.path)
+          )
         )
       ),
     ],
     ([entries]) =>
       Effect.gen(function* () {
         const rendered = G.StatusEntry.format(entries);
-        const parsed = yield* parseWith((git) => git.status(cwd), A.join(Str.split("\n")(rendered), "\0"));
+        // A clean tree renders as "" and is the empty -z stream, not one empty record.
+        const parsed = yield* parseWith(
+          (git) => git.status(cwd),
+          rendered === "" ? "" : nulJoin(Str.split("\n")(rendered))
+        );
         assert.strictEqual(G.StatusEntry.format(parsed), rendered);
         assert.strictEqual(S.toEquivalence(status)(parsed, entries), true);
       }),
