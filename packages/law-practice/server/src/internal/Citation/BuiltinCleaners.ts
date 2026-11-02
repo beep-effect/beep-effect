@@ -5,13 +5,12 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCleanerFailure, CitationCleanerProduced } from "./CleanerPipeline.ts";
-import { CitationCleanerValues } from "./CleanerValues.ts";
+import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationHtmlWorker } from "./HtmlWorker.ts";
 import { makeCitationLiteralCleaners } from "./LiteralCleaners.ts";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -23,20 +22,6 @@ import type { CitationHtmlWorkerFailure } from "./HtmlWorkerProtocol.ts";
 import type { CitationLiteralCleanerFailure } from "./LiteralCleaners.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/BuiltinCleaners");
-/** @internal @category models @since 0.0.0 */
-export const CitationBuiltinCleanerName = LiteralKit([
-  "html",
-  "inline_whitespace",
-  "all_whitespace",
-  "underscores",
-  "xml",
-]).pipe(
-  $I.annoteSchema("CitationBuiltinCleanerName", {
-    description: "Pinned builtin function selection, not the live clean_text step/registry domain.",
-  })
-);
-/** @internal @category models @since 0.0.0 */
-export type CitationBuiltinCleanerName = typeof CitationBuiltinCleanerName.Type;
 /**
  * Builtin function invocation after source membership/get/callability dispatch.
  * Values must already be issued by the captured owner. No host coercion or

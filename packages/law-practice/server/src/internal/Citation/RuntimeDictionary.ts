@@ -16,8 +16,11 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import * as Str from "effect/String";
+import type { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RuntimeDictionary");
 const Hash = S.BigIntFromString.check(
@@ -127,10 +130,13 @@ export class CitationRuntimeDictionaryComparison extends Context.Service<
   CitationRuntimeDictionaryComparison,
   {
     /** Captured exact-string content; must not invoke hooks or mutate the table.
+     * Native storage preserves source points that have the same JS projection.
      * Providing this capability starts a combined Unicode table. Subclasses
      * return None and use ordinary reflected rich comparison through equal.
      */
-    readonly exactUnicode?: (objectId: number) => Effect.Effect<O.Option<string>, CitationRuntimeDictionaryFailure>;
+    readonly exactUnicode?: (
+      objectId: number
+    ) => Effect.Effect<O.Option<string | CitationPythonUnicodeStorage>, CitationRuntimeDictionaryFailure>;
     readonly beforeSet?: (
       entries: ReadonlyArray<CitationRuntimeDictionaryEntry>,
       previous: O.Option<CitationRuntimeDictionaryEntry>,
@@ -226,9 +232,37 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
   let unicode = comparison.exactUnicode !== undefined;
   const exactText = Effect.fn("Citation.runtimeDictionaryExactText")((objectId: number) =>
     comparison.exactUnicode === undefined
-      ? Effect.succeed(O.none<string>())
+      ? Effect.succeed(O.none<string | CitationPythonUnicodeStorage>())
       : comparison.exactUnicode(objectId).pipe(Effect.mapError(freshFailure))
   );
+  const equalText = Effect.fn("Citation.runtimeDictionaryUnicodeEqual")(function* (
+    left: string | CitationPythonUnicodeStorage,
+    right: string | CitationPythonUnicodeStorage
+  ) {
+    const length = (value: string | CitationPythonUnicodeStorage) =>
+      P.isString(value) ? Str.length(value) : value.bytes.byteLength / value.width;
+    const point = (value: string | CitationPythonUnicodeStorage, index: number) => {
+      if (P.isString(value)) return O.getOrElse(Str.codePointAt(value, index), () => -1);
+      let result = 0;
+      for (let part = 0; part < value.width; part++)
+        result += O.getOrElse(O.fromUndefinedOr(value.bytes[index * value.width + part]), () => 0) * 2 ** (8 * part);
+      return result;
+    };
+    let a = 0;
+    let b = 0;
+    let iterations = 0;
+    while (a < length(left) && b < length(right)) {
+      if (iterations++ % 4096 === 0) {
+        yield* comparison.step;
+        yield* Effect.yieldNow;
+      }
+      const current = point(left, a);
+      if (current !== point(right, b)) return false;
+      a += P.isString(left) && current > 65535 ? 2 : 1;
+      b += P.isString(right) && current > 65535 ? 2 : 1;
+    }
+    return a === length(left) && b === length(right);
+  });
   let keysEpoch = 0;
   let capacity = 0;
   let usable = 0;
@@ -265,7 +299,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
             const equal = yield* unicode && O.isSome(text)
               ? exactText(entry.objectId).pipe(
                   Effect.flatMap((stored) =>
-                    O.isSome(stored) ? Effect.succeed(stored.value === text.value) : Effect.fail(invalid())
+                    O.isSome(stored) ? equalText(stored.value, text.value) : Effect.fail(invalid())
                   )
                 )
               : comparison.equal(entry.objectId, key.objectId).pipe(Effect.mapError(freshFailure));

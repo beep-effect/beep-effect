@@ -6,6 +6,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { LiteralKit } from "@beep/schema";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -28,6 +29,20 @@ type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerValues");
+/** @internal @category models @since 0.0.0 */
+export const CitationBuiltinCleanerName = LiteralKit([
+  "html",
+  "inline_whitespace",
+  "all_whitespace",
+  "underscores",
+  "xml",
+]).pipe(
+  $I.annoteSchema("CitationBuiltinCleanerName", {
+    description: "Pinned builtin function selection, not the live clean_text step/registry domain.",
+  })
+);
+/** @internal @category models @since 0.0.0 */
+export type CitationBuiltinCleanerName = typeof CitationBuiltinCleanerName.Type;
 /** @internal @category models @since 0.0.0 */
 export class CitationCleanerValueSnapshot extends S.Opaque<
   CitationCleanerValueSnapshot,
@@ -55,6 +70,7 @@ export class CitationCleanerValueSnapshot extends S.Opaque<
 export class CitationCleanerValues extends Context.Service<
   CitationCleanerValues,
   {
+    readonly builtinName: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly sourceText: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly sourceUnicode: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly text: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
@@ -123,6 +139,9 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       ? fail("invalid-input")
       : safety(error.reason === "limit-exceeded" ? "producedTextUtf16" : timeLimit);
   const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(translate));
+  // Five fixed server names are configuration constants, not request source
+  // or callback output. The enum gate precedes this 17-unit representation.
+  const names = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: 17 }).pipe(Effect.mapError(translate));
   const sourceCeiling = limits.sourceUtf16;
   const sourceUnicode = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: sourceCeiling }).pipe(
     Effect.mapError(translate)
@@ -247,6 +266,13 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     );
   });
   return CitationCleanerValues.of({
+    builtinName: Effect.fn("Citation.issueBuiltinCleanerName")(function* (input) {
+      if (closed) return yield* fail("closed-owner");
+      const name = yield* S.decodeUnknownEffect(CitationBuiltinCleanerName)(input).pipe(
+        Effect.mapError(() => fail("invalid-input"))
+      );
+      return yield* names.fromText(name).pipe(Effect.mapError(translate), Effect.flatMap(freshUnicode));
+    }),
     sourceText: Effect.fn("Citation.issueSourceCleanerText")(function* (input) {
       if (closed) return yield* fail("closed-owner");
       if (P.isString(input) && Str.length(input) > sourceCeiling) return yield* safety("sourceUtf16");

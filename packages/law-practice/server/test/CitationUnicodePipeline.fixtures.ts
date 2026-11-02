@@ -13,13 +13,13 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
-import { makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
+import { CitationBuiltinCleaners, makeCitationBuiltinCleaners } from "../src/internal/Citation/BuiltinCleaners.ts";
 import {
   CitationCleanerFailure,
   CitationCleanerRuntime,
   makeCitationCleanerPipeline,
 } from "../src/internal/Citation/CleanerPipeline.ts";
+import { CitationCleanerProtocols, makeCitationCleanerRegistry } from "../src/internal/Citation/CleanerRegistry.ts";
 import { CitationCleanerValues, makeCitationCleanerValues } from "../src/internal/Citation/CleanerValues.ts";
 import { CitationPythonUnicodeStorage } from "../src/internal/Citation/PythonHash.ts";
 import type { CitationCleanerObject, CitationCleanerWork } from "../src/internal/Citation/CleanerPipeline.ts";
@@ -110,39 +110,48 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
   let steps = A.empty<string>();
   let retained = A.empty<CitationCleanerObject>();
   let lastWork = O.none<CitationCleanerWork>();
+  const registry = yield* makeCitationCleanerRegistry(limits).pipe(
+    Effect.provideService(CitationCleanerValues, values),
+    Effect.provideService(CitationBuiltinCleaners, builtins),
+    Effect.provideService(CitationCleanerProtocols, {
+      hash: Effect.fn("UnicodePipelineTest.unexpectedHash")(() =>
+        Effect.fail(CitationCleanerFailure.make({ reason: "callback-failed" }))
+      ),
+      equal: Effect.fn("UnicodePipelineTest.unexpectedEqual")(() =>
+        Effect.fail(CitationCleanerFailure.make({ reason: "callback-failed" }))
+      ),
+      callable: Effect.fn("UnicodePipelineTest.notCallable")(() => Effect.succeed(false)),
+      invoke: Effect.fn("UnicodePipelineTest.unexpectedInvoke")(() =>
+        Effect.fail(CitationCleanerFailure.make({ reason: "callback-failed" }))
+      ),
+      open: Effect.fn("UnicodePipelineTest.open")(function* (_plan, _initial, work) {
+        lastWork = O.some(work);
+        let cursor = 0;
+        return {
+          next: Effect.suspend(() => {
+            const name = A.get(steps, cursor++);
+            return O.isSome(name) ? values.builtinName(name.value).pipe(Effect.asSome) : Effect.succeedNone;
+          }),
+        };
+      }),
+    })
+  );
   const runtime = CitationCleanerRuntime.of({
-    fromText: Effect.fn("LiteralUnicodeTest.captureSource")(function* (text: string) {
+    ...registry.runtime,
+    fromText: Effect.fn("UnicodePipelineTest.captureSource")(function* (text: string) {
       const value = yield* useText ? values.sourceText(text) : values.sourceUnicode(initial);
       retained = [value];
       return value;
     }),
-    assertOwned: values.assertOwned,
-    textUnits: Effect.fn("LiteralUnicodeTest.units")((value) =>
-      values.getText(value).pipe(Effect.map(O.map((text) => Str.length(text.text))))
+    invoke: Effect.fn("UnicodePipelineTest.observeInvoke")((callable, input, work) =>
+      registry.runtime.invoke(callable, input, work).pipe(
+        Effect.tap((produced) =>
+          Effect.sync(() => {
+            retained = A.append(retained, produced.value);
+          })
+        )
+      )
     ),
-    open: Effect.fn("LiteralUnicodeTest.open")(function* (_plan, _initial, work) {
-      lastWork = O.some(work);
-      const callables = yield* Effect.forEach(steps, values.retainHost, { concurrency: 1 });
-      let cursor = 0;
-      return { next: Effect.sync(() => A.get(callables, cursor++)) };
-    }),
-    contains: Effect.fn("LiteralUnicodeTest.contains")(() => Effect.succeed(false)),
-    get: Effect.fn("LiteralUnicodeTest.get")(() =>
-      Effect.fail(CitationCleanerFailure.make({ reason: "lookup-key-missing" }))
-    ),
-    callable: Effect.fn("LiteralUnicodeTest.callable")(() => Effect.succeed(true)),
-    invoke: Effect.fn("LiteralUnicodeTest.invoke")(function* (callable, input, work) {
-      lastWork = O.some(work);
-      const produced = yield* builtins.invoke(
-        yield* Effect.fromOption(yield* values.getHost(callable), () =>
-          CitationCleanerFailure.make({ reason: "invalid-input" })
-        ),
-        input,
-        work
-      );
-      retained = A.append(retained, produced.value);
-      return produced;
-    }),
   });
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
     Effect.provideService(CitationCleanerRuntime, runtime)

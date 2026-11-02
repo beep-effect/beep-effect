@@ -204,3 +204,20 @@ it.effect("admits original source independently from a smaller produced-value ce
     expect((yield* values.snapshot).issued).toBe(2);
   })
 );
+
+it.effect("admits only fixed server names independently of request/output ceilings", () =>
+  Effect.gen(function* () {
+    const values = yield* makeCitationCleanerValues({
+      ...(yield* defaultCitationEnginePolicy).limits,
+      sourceUtf16: 1,
+      producedTextUtf16: 1,
+    });
+    const name = yield* values.builtinName("inline_whitespace");
+    expect((yield* Effect.fromOption(yield* values.getUnicode(name))).utf16Units).toBe(17);
+    expect(yield* Effect.flip(values.builtinName("arbitrary callback output"))).toMatchObject({
+      reason: "invalid-input",
+    });
+    expect(yield* Effect.flip(values.text("inline_whitespace"))).toMatchObject({ limit: "producedTextUtf16" });
+    expect((yield* values.snapshot).issued).toBe(1);
+  })
+);

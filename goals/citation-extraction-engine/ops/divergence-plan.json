@@ -210,7 +210,10 @@
         "packages/law-practice/server/test/CitationHtmlNativeInput.test.ts",
         "packages/law-practice/server/test/CitationUnicodePipeline.fixtures.ts",
         "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",
+        "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts",
+        "packages/law-practice/server/test/CitationCleanerRegistry.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-cleaner-registry-integration.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

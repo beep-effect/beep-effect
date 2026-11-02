@@ -207,8 +207,12 @@ now retains native state, returns detached storage reads and rejects an
 unchanged allocation that substitutes another native value with equal projected
 text. [Native literal composition](./history/evidence/2026-11-02-native-literal-composition.md)
 now carries it through the four primitive builtins and the real reservation
-ledger, matching all 1,068 non-HTML histories and 2,784 transitions. Hash/callback
-protocol dispatch and full registry semantics still need their integration.
+ledger, matching all 1,068 non-HTML histories and 2,784 transitions. The new
+[live registry integration](./history/evidence/2026-11-02-cleaner-registry-integration.md)
+now runs these histories through production native hashing and separate named
+membership/value lookups. Captured callback controls preserve mutation, lazy
+steps, host identity and retained state. Full protocol/source-event replay and
+public ownership/admission remain open.
 [Native HTML transport](./history/evidence/2026-11-02-native-html-transport.md)
 now preserves source points through preparation and complete-frame preflight.
 All 6,412 snapshots pass local preparation/framing checks. The full 2,016-history
