@@ -1145,7 +1145,7 @@ const outstandingThreadCount = (
     )
   );
 
-const toMergeGateCheckRun = (run: typeof GhCheckRuns.Type["check_runs"][number]): MergeGateCheckRun =>
+const toMergeGateCheckRun = (run: (typeof GhCheckRuns.Type)["check_runs"][number]): MergeGateCheckRun =>
   MergeGateCheckRun.make({ id: run.id, name: run.name, status: run.status, conclusion: run.conclusion });
 
 // The inherited-red evidence: the merge-base commit of base...head and every

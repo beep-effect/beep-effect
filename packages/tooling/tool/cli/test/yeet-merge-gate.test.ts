@@ -121,8 +121,7 @@ const baseRedOn = (...names: ReadonlyArray<string>) =>
       ),
     })
   );
-const baseRunIdOf = (name: string) =>
-  baseRunId(O.getOrThrow(A.findFirst(fixtureRuns, (run) => run.name === name)).id);
+const baseRunIdOf = (name: string) => baseRunId(O.getOrThrow(A.findFirst(fixtureRuns, (run) => run.name === name)).id);
 
 const read = (overrides: Partial<Parameters<typeof MergeGateRead.make>[0]> = {}) =>
   MergeGateRead.make({
@@ -493,7 +492,10 @@ describe("yeet merge-gate --relaxed decision (S11)", () => {
       run.name === "Lint" ? MergeGateCheckRun.make({ ...run, conclusion: "failure" }) : run
     );
     const decision = decideMergeGate(
-      MergeGateInput.make({ read: read({ checkRuns: runs, baseRuns: baseRedOn("Lint", coverage) }), options: relaxed() })
+      MergeGateInput.make({
+        read: read({ checkRuns: runs, baseRuns: baseRedOn("Lint", coverage) }),
+        options: relaxed(),
+      })
     );
     expect(A.map(atMergeOf(decision), (entry) => [entry.check, entry.required])).toEqual([
       ["Lint", true],
@@ -560,7 +562,9 @@ describe("yeet merge-gate --relaxed decision (S11)", () => {
       )
     );
     expect(line).toMatch(/^#1459 GATE-MET \(S11\) at 212fe39b4f \(window \d+s\)/u);
-    expect(line).toContain(` reds at merge: Lint [inherited: run ${baseRunIdOf("Lint")} failure on merge-base 2c1cb448ba]`);
+    expect(line).toContain(
+      ` reds at merge: Lint [inherited: run ${baseRunIdOf("Lint")} failure on merge-base 2c1cb448ba]`
+    );
     expect(line).toContain(
       ` pending at merge: Codegen Drift [${MERGE_GATE_S11_DEFAULT_ATTRIBUTION}]; ${coverage} [rate limited]`
     );
@@ -578,7 +582,9 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     decision._tag === "merge" ? decision.atMerge : [];
 
   it("holds on own-red when the required check is green on the merge-base commit", () => {
-    const decision = decideMergeGate(MergeGateInput.make({ read: read({ checkRuns: repoSanityRed }), options: relaxed() }));
+    const decision = decideMergeGate(
+      MergeGateInput.make({ read: read({ checkRuns: repoSanityRed }), options: relaxed() })
+    );
     expect(holdReason(decision)).toBe("own-red");
     expect(renderMergeGateDecision(decision)).toBe(
       `#1459 HOLD own-red: Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green); merge-base 2c1cb448ba`
@@ -589,7 +595,10 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
 
   it("merges over a red inherited from main: red, pending or absent on the merge-base commit", () => {
     const red = decideMergeGate(
-      MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: baseRedOn("Repo Sanity") }), options: relaxed() })
+      MergeGateInput.make({
+        read: read({ checkRuns: repoSanityRed, baseRuns: baseRedOn("Repo Sanity") }),
+        options: relaxed(),
+      })
     );
     expect(red._tag).toBe("merge");
     expect(A.map(atMergeOf(red), (entry) => [entry.check, entry.attribution])).toEqual([
@@ -602,7 +611,10 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
       ),
     });
     const pending = decideMergeGate(
-      MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: O.some(pendingBase) }), options: relaxed() })
+      MergeGateInput.make({
+        read: read({ checkRuns: repoSanityRed, baseRuns: O.some(pendingBase) }),
+        options: relaxed(),
+      })
     );
     expect(A.map(atMergeOf(pending), (entry) => entry.attribution)).toEqual([
       `inherited: run ${baseRunIdOf("Repo Sanity")} in_progress on merge-base 2c1cb448ba`,
@@ -613,7 +625,10 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     });
     expect(
       decideMergeGate(
-        MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: O.some(absentBase) }), options: relaxed() })
+        MergeGateInput.make({
+          read: read({ checkRuns: repoSanityRed, baseRuns: O.some(absentBase) }),
+          options: relaxed(),
+        })
       )._tag
     ).toBe("merge");
   });
@@ -635,12 +650,17 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     const tolerated = decideMergeGate(
       MergeGateInput.make({
         read: read({ checkRuns: repoSanityRed }),
-        options: relaxed({ tolerate: [MergeGateTolerance.make({ check: "Repo Sanity", attribution: "fix in #2530" })] }),
+        options: relaxed({
+          tolerate: [MergeGateTolerance.make({ check: "Repo Sanity", attribution: "fix in #2530" })],
+        }),
       })
     );
     expect(A.map(atMergeOf(tolerated), (entry) => entry.attribution)).toEqual(["fix in #2530"]);
     const recorded = decideMergeGate(
-      MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, attributedChecks: ["Repo Sanity"] }), options: relaxed() })
+      MergeGateInput.make({
+        read: read({ checkRuns: repoSanityRed, attributedChecks: ["Repo Sanity"] }),
+        options: relaxed(),
+      })
     );
     expect(A.map(atMergeOf(recorded), (entry) => entry.attribution)).toEqual([
       'inherited: attributed in the PR body ("Inherited reds (S11)")',
@@ -656,7 +676,10 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     // Attributed reds, and green heads, never need the base.
     expect(
       decideMergeGate(
-        MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: O.none(), attributedChecks: ["Repo Sanity"] }), options: relaxed() })
+        MergeGateInput.make({
+          read: read({ checkRuns: repoSanityRed, baseRuns: O.none(), attributedChecks: ["Repo Sanity"] }),
+          options: relaxed(),
+        })
       )._tag
     ).toBe("merge");
     expect(decideMergeGate(MergeGateInput.make({ read: read({ baseRuns: O.none() }), options: relaxed() }))._tag).toBe(
@@ -677,9 +700,7 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     );
     expect(holdReason(decision)).toBe("own-red");
     if (decision._tag === "hold") {
-      expect(decision.detail).toBe(
-        `Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green); merge-base 2c1cb448ba`
-      );
+      expect(decision.detail).toBe(`Repo Sanity (base run ${baseRunIdOf("Repo Sanity")} green); merge-base 2c1cb448ba`);
     }
   });
 
@@ -687,7 +708,10 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
     expect(
       holdReason(
         decideMergeGate(
-          MergeGateInput.make({ read: read({ checkRuns: repoSanityRed, baseRuns: baseRedOn("Repo Sanity") }), options: options() })
+          MergeGateInput.make({
+            read: read({ checkRuns: repoSanityRed, baseRuns: baseRedOn("Repo Sanity") }),
+            options: options(),
+          })
         )
       )
     ).toBe("required-red");
@@ -723,10 +747,10 @@ interface GhScript {
   readonly baseCheckRuns?: unknown;
   readonly cancelFailId?: number;
   readonly checkRuns?: unknown;
-  readonly compareExit?: number;
   readonly commentExit?: number;
   readonly commitlint?: ScriptedAnswer;
   readonly commits?: ReadonlyArray<string>;
+  readonly compareExit?: number;
   readonly mergeResponse: string;
   readonly pull?: unknown;
   readonly queuedExit?: number;
