@@ -1,5 +1,7 @@
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { CitationCleanerObject, CitationCleanerProduced } from "../src/internal/Citation/CleanerPipeline.ts";
@@ -174,6 +176,49 @@ describe("live cleaner registry", () => {
       expect((yield* h.pipeline.run({ text: "first", plan: "retained-state" })).value).toBe(output);
       expect((yield* h.pipeline.run({ text: "second", plan: "retained-state" })).value).toBe(output);
       expect(invokes).toBe(2);
+    })
+  );
+  it.effect(
+    "reads original insertion identities without calling hash/equality and returns detached binding lists",
+    () =>
+      Effect.gen(function* () {
+        const h = yield* setup();
+        const key = yield* h.values.retainHost("original key");
+        const equivalent = yield* h.values.retainHost("equivalent key");
+        const first = yield* h.values.retainHost("first value");
+        const replacement = yield* h.values.retainHost("replacement value");
+        h.hooks({ hash: () => Effect.succeed(BigInt(42)), equal: () => Effect.succeed(true) });
+        yield* h.registry.set(key, first);
+        yield* h.registry.set(equivalent, replacement);
+        const before = yield* h.calls;
+        const bindings = yield* h.registry.read;
+        expect(yield* h.calls).toEqual(before);
+        expect(bindings).toHaveLength(6);
+        const binding = A.getUnsafe(bindings, 5);
+        expect(binding[0]).toBe(key);
+        expect(binding[1]).toBe(replacement);
+        binding[2].pipe(assertNone);
+        assertSome(A.getUnsafe(bindings, 0)[2], "html");
+        yield* h.values.assertOwned(binding[0]);
+        yield* h.values.assertOwned(binding[1]);
+        yield* h.registry.remove(equivalent);
+        expect(yield* h.registry.read).toHaveLength(5);
+        expect(bindings).toHaveLength(6);
+      })
+  );
+  it.effect("bounds registry inspection by captured lifetime work and rejects closed ownership", () =>
+    Effect.gen(function* () {
+      const h = yield* setup(200);
+      const exhaust = Effect.gen(function* () {
+        for (let index = 0; index < 200; index++) yield* h.registry.read;
+        return yield* Effect.die("Registry inspection did not consume its lifetime work ceiling");
+      });
+      expect(yield* Effect.flip(exhaust)).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        limit: "resolutionIterations",
+      });
+      const closed = yield* Effect.scoped(setup());
+      expect(yield* Effect.flip(closed.registry.read)).toMatchObject({ reason: "closed-owner" });
     })
   );
 });

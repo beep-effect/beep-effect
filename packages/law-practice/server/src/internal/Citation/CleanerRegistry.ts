@@ -7,6 +7,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
+import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -16,7 +17,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationBuiltinCleaners } from "./BuiltinCleaners.ts";
-import { CitationCleanerFailure, CitationCleanerRuntime } from "./CleanerPipeline.ts";
+import { CitationCleanerFailure, CitationCleanerObject, CitationCleanerRuntime } from "./CleanerPipeline.ts";
 import { CitationBuiltinCleanerName, CitationCleanerValues } from "./CleanerValues.ts";
 import { makeCitationPythonHash } from "./PythonHash.ts";
 import {
@@ -25,16 +26,24 @@ import {
   CitationRuntimeDictionaryKey,
   makeCitationRuntimeDictionary,
 } from "./RuntimeDictionary.ts";
-import type {
-  CitationCleanerCursor,
-  CitationCleanerObject,
-  CitationCleanerProduced,
-  CitationCleanerWork,
-} from "./CleanerPipeline.ts";
+import type { CitationCleanerCursor, CitationCleanerProduced, CitationCleanerWork } from "./CleanerPipeline.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerRegistry");
 const Limits = S.toType(CitationEngineLimits);
 const Hash = S.toType(CitationRuntimeDictionaryKey.fields.hash);
+const LiveObject = CitationCleanerObject.pipe(
+  S.is,
+  S.declare<CitationCleanerObject>,
+  $I.annoteSchema("LiveObject", {
+    description: "Retain an issued runtime handle without reconstructing its identity during a structural decode.",
+  })
+);
+const RegistryEntry = S.Tuple([LiveObject, LiveObject, S.Option(CitationBuiltinCleanerName)]).pipe(
+  $I.annoteSchema("RegistryEntry", {
+    description:
+      "Ordered live key/value handles and the owner's builtin-function classification; not a persisted registry record.",
+  })
+);
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailure.make({ reason });
 const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "clean", limit: "resolutionIterations" });
@@ -342,6 +351,22 @@ export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegist
   });
   return {
     runtime,
+    /** Bounded insertion-order inspection retains actual key/value identities and invokes no host hash/equality hooks. */
+    read: serial(
+      Effect.gen(function* () {
+        yield* ensureOpen;
+        yield* step;
+        const entries = yield* table.read;
+        let result = Chunk.empty<typeof RegistryEntry.Type>();
+        for (const entry of entries) {
+          yield* step;
+          const key = yield* lookup(entry.objectId);
+          const value = yield* lookup(entry.value);
+          result = Chunk.append(result, RegistryEntry.make([key, value, HashMap.get(functions, value.slot)]));
+        }
+        return A.fromIterable(result);
+      })
+    ),
     set,
     remove: (key: CitationCleanerObject) =>
       withKey(key, (hashed) =>

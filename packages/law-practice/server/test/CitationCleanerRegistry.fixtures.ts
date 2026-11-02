@@ -22,7 +22,10 @@ const fail = () => CitationCleanerFailure.make({ reason: "callback-failed" });
  */
 export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest.setup")(function* (
   iterations?: number,
-  authorities?: number
+  authorities?: number,
+  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"] = ChildProcessSpawner.make(() =>
+    Effect.die("Registry unit tests must not start native workers")
+  )
 ) {
   const base = (yield* defaultCitationEnginePolicy).limits;
   const limits = {
@@ -37,10 +40,7 @@ export const makeCitationCleanerRegistryHarness = Effect.fn("CleanerRegistryTest
     workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/HtmlWorker.entry.ts", import.meta.url)),
   }).pipe(
     Effect.provideService(CitationCleanerValues, values),
-    Effect.provideService(
-      ChildProcessSpawner.ChildProcessSpawner,
-      ChildProcessSpawner.make(() => Effect.die("Registry unit tests must not start native workers"))
-    )
+    Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
   );
   let steps = A.empty<CitationCleanerObject>();
   let work = O.none<CitationCleanerWork>();

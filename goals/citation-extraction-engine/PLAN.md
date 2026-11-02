@@ -249,6 +249,14 @@ separate membership/get hashes and lookup failure after key deletion. Eleven
 native HTML/builtin-function scenes and the remaining full event/registry proof
 remain open; canonical parity rows are not promoted by this focused evidence.
 
+The [native controlled cleaner wiring and registry inspection](./history/evidence/2026-11-02-native-controlled-cleaners.md)
+now account for all 51 custom scenes across unit and hosted partitions. Unit
+proof covers 40 protocol scenes plus the actual builtin-function registry key;
+all final registry snapshots are checked through bounded, identity-preserving
+inspection. The eleven-scene hosted replay requires twelve runs, 59 selected
+target events, one already-approved resource divergence and ten confirmed child
+exits. It is wired/type-checked and pending hosted execution, not target parity.
+
 ## Delivery Rule
 
 This is one all-in implementation PR to control hosted CI cost. Work may use

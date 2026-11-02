@@ -1262,6 +1262,16 @@ See [Unicode source evidence](./history/evidence/2026-11-02-cleaner-unicode.md).
   Reversal removes these private adapters and their integration tests; it does
   not alter oracle observations or public contracts.
 
+- **2026-11-02 registry inspection:** captured callbacks need bounded access to
+  the source registry's ordered live bindings. The private registry now exposes
+  a serialized R-never inspection effect with original key/value handles and
+  owner-derived builtin classification. It charges lifetime work, rejects
+  closed owners and calls no hash/equality hooks. It is not a wire/persistence
+  model. All controlled source replays compare their final registry snapshots;
+  native execution remains hosted. Reversal removes the read capability and
+  its dependent snapshot assertions without changing the frozen source corpus.
+  See [native controlled cleaners](./history/evidence/2026-11-02-native-controlled-cleaners.md).
+
 ## Exception Ledger
 
 The generated oracle evidence fixtures are excluded by exact path from
