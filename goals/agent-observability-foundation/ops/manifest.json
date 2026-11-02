@@ -29,6 +29,10 @@
         "role": "supporting"
       },
       {
+        "number": 2519,
+        "role": "supporting"
+      },
+      {
         "number": 2508,
         "role": "final"
       }
@@ -106,7 +110,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "PR2364 is supporting merged delivery with an unsatisfied historical completion receipt. PR2508 is final follow-up; fresh current-source Node package and declared disposable/live synthetic proofs passed and were independently accepted. Local publication verification was cancelled at operator direction so hosted CI can run immediately. Operative lifecycle remains active until genuine readiness, merge-time checks and canonical completion verify. Recovery hold intact.",
+  "statusNote": "PR2364 is supporting historical delivery with an unsatisfied completion receipt. PR2508 is final follow-up; PR2519 repairs incoming namespace writer/reader and historical-alias defects. Main coverage repair2517 has merged. Root membership hardening has seven passing focused controls. Earlier855/40/73 package and88/87 route receipts remain bound to7ae source; incoming expanded membership and namespace source require fresh qualification after immediate publication/integration. Lifecycle stays active; recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],

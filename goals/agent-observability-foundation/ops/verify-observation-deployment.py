@@ -96,7 +96,9 @@ def source_hashes():
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationDeployment.ts',
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/ObservationWorker.ts',
                     workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts', Path(__file__).resolve()]
-    if args.declared_root: source_files.append(Path(__file__).with_name('declared_canary_support.py').resolve())
+    if args.declared_root:
+        source_files.extend(Path(__file__).with_name(name).resolve()
+                            for name in ('declared_canary_support.py', 'declared_root_inputs.py'))
     if args.disposable_canary: source_files.append(Path(__file__).with_name('disposable_canary_support.py').resolve())
     if args.live_canary or args.disposable_canary: source_files.append(Path(__file__).with_name('live_canary_support.py').resolve())
     if args.health_proof: source_files.append(Path(__file__).with_name('observation_health_support.py').resolve())

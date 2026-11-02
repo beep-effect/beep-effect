@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+from declared_root_inputs import declared_root_source_hashes
 
 
 def main():
@@ -31,14 +32,8 @@ def main():
     host_key = 'synthetic-declared-canary-host'
     bun = shutil.which('bun')
     assert bun is not None, 'Bun is required for the actual root-probe command'
-    source_files = [Path(__file__).resolve(),
-                    workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/internal/Inventory.ts',
-                    workspace/'packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts']
-    source_files.extend(sorted((workspace/'packages/tooling/library/ai-metrics/src').rglob('*.ts')))
-
     def source_hashes():
-        return {str(p.relative_to(workspace)): hashlib.sha256(p.read_bytes()).hexdigest()
-                for p in source_files}
+        return declared_root_source_hashes(workspace)
 
     initial_source_hashes = source_hashes()
     env = {

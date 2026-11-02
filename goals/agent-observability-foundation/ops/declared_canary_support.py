@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import stat
 import subprocess
+from declared_root_inputs import verify_declared_root_sources
 
 if not __debug__:
     raise RuntimeError('Declared canary verification requires Python assertions to remain enabled')
@@ -55,8 +56,7 @@ class DeclaredCanary:
         assert probe['inventory']['roots'] == [q['root']]
         assert all(r['knownLaunches']['_tag'] == r['expectedEvents']['_tag'] == 'Unknown'
                    for r in probe['inventory']['routes'])
-        for relative, expected in q['sourceSha256'].items():
-            assert sha((self.workspace/relative).read_bytes()) == expected, relative
+        verify_declared_root_sources(self.workspace, q['sourceSha256'])
         git_env = {'PATH': os.environ['PATH'], 'HOME': str(self.directory/'home'),
                    'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_CONFIG_NOSYSTEM': '1'}
         def git(*args):

@@ -8,7 +8,15 @@ PR2364 delivered source at accepted head `e18ba3e780ff7bee84887e8b44b95229073bf0
 
 The canonical [historical receipt content](../ops/history/pr2364-completion-unsatisfied-20261102.json) is retained in a public formatted copy (SHA256 `bad4aecce9d0a6c7dc0b86bb810f77841a7957bb3b73c8f466a25e210fb12329`). The exact private original remains unchanged (SHA256 `9cb7fb0333c7a98f2b60f5f72fc749aa90119a8889ee16fa843f0bf4123073be`). Later check completion or a new local pass cannot make that old merge ready retroactively. PR2364 remains supporting source delivery; a new final PR must earn its own head-bound readiness and merge-time proof. PR2508 is now the final follow-up; its final role, prospective closeout and verdict reference were updated together, with PR2364 supporting. This is a follow-up qualification of the same objective, not a waiver or a smaller success criterion.
 
-## Current source and runtime evidence
+## Active incoming-source refresh
+
+The first November 2 checkpoint below remains bound to `7ae3f01401d20f7962a9d89bb2a5cbcd745ede34`; it is not proof of later source additions. Main subsequently added `hook-pulse-namespace.ts` and changed the hook-pulse model/barrel, writer and reconciliation. Independent review found projection/salt/precedence parity, lost historical aliases and equal-effective-salt double counting. Supporting [PR2519](https://github.com/beep-effect/beep-effect/pull/2519) publishes those source/test repairs before focused verification, with no home projection or recovery-service change. Fresh expanded-membership qualification is pending.
+
+The root proof also checked only recorded entries. Preparation and verification now share one canonical input selector; verification requires exact key membership and bytes, and preparation re-enumerates at completion. The deployment verifier binds the shared selector too. Seven isolated filesystem controls pass, including added/removed/omitted sources, changed bytes, unexpected qualification entries and optimized-Python refusal. Historical qualification defaults and original evidence are retained; they are not relabeled as new runs.
+
+The first hosted run passed all fifteen required checks plus Lint Policy, but Coverage Regression exposed the inherited `PortfolioIndex.ts` deficit from main PR2501. Shared repair PR2517 merged as `74f77b44923ae8b30d1d4b78950df6a4f1f4ef9b`; no floor was lowered and no duplicate repair was copied into this lane. The old monitor is stopped for source integration, not counted as ready. Main integration and this source hardening are pushed immediately, without waiting for local repository verification. Required final-head hosted readiness and canonical completion remain mandatory.
+
+## Historical first November 2 source checkpoint
 
 The follow-up starts at current main `7ae3f01401d20f7962a9d89bb2a5cbcd745ede34`. Runtime changes after the earlier source canary include fair scheduling of attempted transcript sources, re-offering interrupted discovery pages, unreadable-child traversal and per-pass verified-page reuse. These are examples, not an exhaustive delta: twelve AI-metrics source files changed after the earlier published source, including native trace AnyValue presence handling for protobuf8, Digest migration and Crypto/API/YAML adaptations. The old source hashes do not bind those changes.
 

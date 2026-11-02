@@ -28,6 +28,13 @@ Only on an explicit implementation launch, use:
 
 ## Current phase
 
+Incoming main changes require an expanded source refresh. Supporting
+[PR2519](https://github.com/beep-effect/beep-effect/pull/2519) repairs independently
+identified namespace parity and historical-alias defects. The proof helper now
+checks complete canonical membership, with seven passing filesystem controls.
+Earlier package/canary receipts retain their `7ae3f01401` checkpoint scope; fresh
+qualification follows source integration. See the [active refresh](./research/POST-MERGE-QUALIFICATION.md).
+
 The foundation remains **active**. [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
 merged before its readiness gates completed. Canonical completion refresh records
 that historical result as unsatisfied; a merge alone cannot complete this packet.
