@@ -546,6 +546,27 @@ const initializeLaneProofRepository = Effect.fn("QualityTasksTest.initializeLane
   yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
 });
 
+// Prepends a `git` shim to PATH: the shim runs `prelude` (which may exit to
+// fail the call) and then the real git, so a test can count or break the
+// lane-proof virtual-tree calls without touching the lanes themselves.
+const withGitShim = Effect.fnUntraced(function* <Out, E, R>(
+  root: string,
+  prelude: string,
+  use: Effect.Effect<Out, E, R>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const shimDirectory = path.join(root, ".beep", "git-shim");
+  yield* fs.makeDirectory(shimDirectory, { recursive: true });
+  // Dropping the shim's own PATH entry lets the final exec resolve the real git.
+  yield* fs.writeFileString(
+    path.join(shimDirectory, "git"),
+    `#!/bin/sh\n${prelude}\nPATH="\${PATH#*:}" exec git "$@"\n`
+  );
+  yield* fs.chmod(path.join(shimDirectory, "git"), 0o755);
+  return yield* withEnvVarEffect("PATH", `${shimDirectory}:${Bun.env.PATH ?? ""}`, use);
+});
+
 const laneProofTestLane = (
   repoRoot: string,
   id: string,
@@ -2452,6 +2473,102 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
+    it.effect(
+      "starts a waiting lane as soon as a pool slot frees and folds results in declaration order",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-" });
+            const doneMarker = JSON.stringify(path.join(tempRoot, "late.done"));
+            const { laneReport, report } = yield* collectGithubCheckLaneWavesForTesting(
+              "pool",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    // Passes only if the third lane finished while it slept, which a
+                    // chunked runner (third lane waits for this chunk) never allows.
+                    githubCheckTestLane(
+                      "pool:slow",
+                      "preflight",
+                      `await Bun.sleep(1500); process.exit((await Bun.file(${doneMarker}).exists()) ? 0 : 7)`
+                    ),
+                    githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
+                    githubCheckTestLane("pool:late", "preflight", `await Bun.write(${doneMarker}, "done")`),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              undefined,
+              2
+            );
+            expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+              ["pool:slow", "passed"],
+              ["pool:fast", "passed"],
+              ["pool:late", "passed"],
+            ]);
+            expect(A.map(laneReport.lanes, (lane) => lane.id)).toEqual(["pool:slow", "pool:fast", "pool:late"]);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        TestClock.withLive
+      )
+    );
+
+    it.effect(
+      "stops a pooled wave at lane granularity while running lanes finish",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "github-check-pool-fail-fast-" });
+            const tailMarker = path.join(tempRoot, "tail.ran");
+            const { failures, report } = yield* collectGithubCheckLaneWavesForTesting(
+              "pool-fail-fast",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    githubCheckTestLane("pool:slow", "preflight", "await Bun.sleep(1500)"),
+                    githubCheckTestLane("pool:fast", "preflight", "process.exit(0)"),
+                    githubCheckTestLane(
+                      "pool:red",
+                      "preflight",
+                      "process.exit(2)",
+                      O.some(githubCheckTestEstimate("pool:red", 1))
+                    ),
+                    githubCheckTestLane(
+                      "pool:tail",
+                      "preflight",
+                      `await Bun.write(${JSON.stringify(tailMarker)}, "ran")`
+                    ),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              undefined,
+              2
+            );
+            // Chunks of two would have launched the tail beside the red; the pool
+            // reads the stop before launching it, and the slow lane still finishes.
+            expect(A.map(report.lanes, (lane) => [lane.id, lane.status])).toEqual([
+              ["pool:slow", "passed"],
+              ["pool:fast", "passed"],
+              ["pool:red", "failed"],
+              ["pool:tail", "not-run-early-stop"],
+            ]);
+            expect(A.map(failures, (failure) => failure.label)).toEqual(["pool:red"]);
+            expect(yield* fs.exists(tailMarker)).toBe(false);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        TestClock.withLive
+      )
+    );
+
     it.effect("continues after an imprecise red under fail-fast", () =>
       collectGithubCheckLaneWavesForTesting(
         "pre-push",
@@ -2652,23 +2769,145 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* initializeLaneProofRepository(tempRoot);
 
             const lane = laneProofTestLane(tempRoot, "proof:tree-failure", "preflight", "process.exit(0)");
-            const originalSpawnSync = Bun.spawnSync;
-            const spawnSync = vi.spyOn(Bun, "spawnSync").mockImplementation(((
-              command: ReadonlyArray<string>,
-              options: unknown
-            ) => {
-              if (A.contains(command, "write-tree")) {
-                throw new Error("simulated write-tree failure");
-              }
-              return originalSpawnSync(command as never, options as never);
-            }) as never);
+            const session = yield* withGitShim(
+              tempRoot,
+              'if [ "$1" = write-tree ]; then echo "simulated write-tree failure" >&2; exit 1; fi',
+              prepareLaneProofSession([lane], "active")
+            );
+            session.pipe(assertNone);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
 
-            try {
-              const session = yield* prepareLaneProofSession([lane], "active");
-              session.pipe(assertNone);
-            } finally {
-              spawnSync.mockRestore();
-            }
+    it.effect(
+      "hashes the virtual tree once up front and once per wave, never per lane",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-single-hash-" });
+            const hashLog = path.join(tempRoot, ".beep", "write-tree.log");
+            yield* initializeLaneProofRepository(tempRoot);
+            yield* fs.makeDirectory(path.dirname(hashLog), { recursive: true });
+
+            const lanes = (wave: GithubCheckLaneWave) =>
+              A.map(["a", "b", "c"], (suffix) =>
+                laneProofTestLane(tempRoot, `proof:${wave}:${suffix}`, wave, `echo ${suffix} >> .beep/${wave}.txt`)
+              );
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-single-hash",
+              [
+                GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: lanes("preflight") }),
+                GithubCheckLaneWaveSpec.make({ wave: "heavy", lanes: lanes("heavy") }),
+              ],
+              "fail-fast",
+              "active",
+              3
+            );
+            const counted = withGitShim(tempRoot, `if [ "$1" = write-tree ]; then echo hash >> '${hashLog}'; fi`, run);
+
+            const first = yield* counted;
+            expect(A.map(first.report.lanes, (result) => result.status)).toEqual(A.replicate("passed", 6));
+            // One hash before the first wave plus one fence per wave: 3, where
+            // the per-lane start and persist hashes cost 12.
+            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(3);
+
+            const second = yield* counted;
+            expect(A.map(second.report.lanes, (result) => result.status)).toEqual(A.replicate("reused", 6));
+            // All reused: the up-front hash plus the preflight refresh the heavy
+            // wave reads; the last wave persists nothing and skips its fence.
+            expect(Str.split(Str.trim(yield* fs.readFileString(hashLog)), "\n")).toHaveLength(5);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "never hashes the tree for a battery of non-reusable lanes",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-non-reusable-hash-" });
+            const hashLog = path.join(tempRoot, ".beep", "write-tree.log");
+            yield* initializeLaneProofRepository(tempRoot);
+            yield* fs.makeDirectory(path.dirname(hashLog), { recursive: true });
+
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-non-reusable-hash",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    laneProofTestLane(tempRoot, "quality:security", "preflight", "true"),
+                    laneProofTestLane(tempRoot, "repo-sanity:bun-audit", "preflight", "true"),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              "active",
+              2
+            );
+            const result = yield* withGitShim(
+              tempRoot,
+              `if [ "$1" = write-tree ]; then echo hash >> '${hashLog}'; fi`,
+              run
+            );
+
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            expect(yield* fs.exists(hashLog)).toBe(false);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "fences a concurrent wave when any of its lanes moves the tree",
+      flow(
+        Effect.fnUntraced(
+          function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "lane-proof-concurrent-mutation-" });
+            yield* initializeLaneProofRepository(tempRoot);
+
+            const run = collectGithubCheckLaneWavesForTesting(
+              "proof-concurrent-mutation",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    laneProofTestLane(tempRoot, "proof:quiet", "preflight", "echo quiet >> .beep/quiet.txt"),
+                    laneProofTestLane(
+                      tempRoot,
+                      "proof:mutator",
+                      "preflight",
+                      'echo run >> .beep/mutator.txt; echo "# moved $(cat .beep/mutator.txt | wc -l)" > README.md'
+                    ),
+                  ],
+                }),
+              ],
+              "fail-fast",
+              "active",
+              2
+            );
+
+            const first = yield* run;
+            const second = yield* run;
+            expect(A.map(first.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            // The mutator moved the tree inside the wave, so the quiet lane's
+            // proof is fenced out too, and nothing is reused on the rerun.
+            expect(A.map(second.report.lanes, (lane) => lane.status)).toEqual(["passed", "passed"]);
+            expect(yield* fs.readFileString(path.join(tempRoot, ".beep", "quiet.txt"))).toBe("quiet\nquiet\n");
           },
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         ),
@@ -3096,7 +3335,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               tempRoot,
               "quality:security",
               "preflight",
-              "echo security >> .beep/security.txt"
+              "mkdir -p .beep && echo security >> .beep/security.txt"
             );
             const run = collectGithubCheckLaneWavesForTesting(
               "proof-security",
