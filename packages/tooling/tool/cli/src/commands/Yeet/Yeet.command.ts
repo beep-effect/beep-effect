@@ -1148,7 +1148,7 @@ const mergeGateTolerateFlag = Flag.String("tolerate").pipe(
 const mergeGateRelaxedFlag = Flag.Boolean("relaxed").pipe(
   Flag.withDefault(false),
   Flag.withDescription(
-    'S11 merge (AGENTS.md "Mergeable"): required and optional reds or pending checks do not hold; each is recorded with its --tolerate attribution (or the S11 default) in the merge line and a PR comment'
+    'S11 merge (AGENTS.md "Mergeable"): pending checks and reds inherited from main (red or pending on the merge-base commit, attributed by --tolerate or the PR body, or on an unblocks-main PR) do not hold and are recorded with their attribution in the merge line and a PR comment; a red the PR introduced holds as own-red'
   )
 );
 const mergeGateForceWindowFlag = Flag.Boolean("force-window").pipe(

@@ -659,6 +659,56 @@ const inheritedRedsEnd = "<!-- yeet-inherited-reds:end -->";
 
 const markerCount = (marker: string, body: string): number => A.length(Str.split(marker)(body)) - 1;
 
+const inheritedRedLine = /^- `([^`]+)`:/u;
+
+/**
+ * Read the check names a pull request body attributes in its marked
+ * "Inherited reds (S11)" section, as `yeet ready --inherited` wrote them.
+ *
+ * **Details**
+ *
+ * Only the text between the first `yeet-inherited-reds` start marker and the
+ * first end marker after it is read, one `- \`<check>\`: <attribution>` line
+ * per entry; the explicit None record and any other line yield nothing. A body
+ * without the section, or with malformed markers, yields an empty list: the
+ * merge gate then falls back to the merge-base evidence for each red.
+ *
+ * **Example** (Read the attributed checks)
+ *
+ * ```ts
+ * import { parseYeetInheritedRedChecks, spliceYeetInheritedRedsSection, YeetReadyInheritedRed } from "@beep/repo-cli/test/Yeet"
+ *
+ * import * as O from "effect/Option"
+ *
+ * const body = spliceYeetInheritedRedsSection("Summary", [
+ *   YeetReadyInheritedRed.make({ check: "Lint", attribution: "red on main since 2c1cb448ba" }),
+ * ], "abc1234def")
+ * console.log(parseYeetInheritedRedChecks(O.getOrElse(body, () => ""))) // ["Lint"]
+ * ```
+ *
+ * @param body - The pull request body.
+ * @returns The attributed check names, in body order.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const parseYeetInheritedRedChecks = (body: string): ReadonlyArray<string> =>
+  Str.indexOf(inheritedRedsStart)(body).pipe(
+    O.flatMap((start) =>
+      O.map(
+        O.filter(Str.indexOf(inheritedRedsEnd)(body), (end) => end > start),
+        (end) => Str.slice(start + Str.length(inheritedRedsStart), end)(body)
+      )
+    ),
+    O.map((section) =>
+      A.getSomes(
+        A.map(Str.split("\n")(section), (line) =>
+          O.flatMap(O.fromNullishOr(inheritedRedLine.exec(Str.trim(line))), (match) => O.fromNullishOr(match[1]))
+        )
+      )
+    ),
+    O.getOrElse(() => A.empty<string>())
+  );
+
 /**
  * Upsert the marked "Inherited reds (S11)" section of a pull request body.
  *
