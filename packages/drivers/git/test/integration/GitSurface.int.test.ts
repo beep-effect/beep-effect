@@ -988,27 +988,26 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
       it.effect("log --name-status types c2's rename, delete, modify and add, with the subject and derived paths", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          // One head lookup per log keeps the optional chains out of the assertions below.
           const c2 = O.getOrThrow(A.head(yield* git.log(dirD, { nameStatus: true, limit: 1 })));
           assert.strictEqual(c2.sha, c2Sha);
           assert.strictEqual(c2.subject, "c2: rename, delete, modify, add");
           const changes = c2.changes ?? [];
-          const byPath = (path: string) => A.findFirst(changes, (change) => change.path === path);
-          const statusOf = (path: string) => O.map(byPath(path), (change) => change.status);
-          assertSome(
+          const byPath = (path: string) => O.getOrThrow(A.findFirst(changes, (change) => change.path === path));
+          assert.deepStrictEqual(
             byPath("src/new.ts"),
             NameStatusEntry.make({ status: "renamed", oldPath: "src/old.ts", path: "src/new.ts", score: 100 })
           );
-          assertSome(statusOf("docs/gone.md"), "deleted");
-          assertSome(statusOf("README.md"), "modified");
-          assertSome(statusOf("src/added.ts"), "added");
-          const sortedPaths = [...c2.paths].sort();
+          assert.deepStrictEqual(
+            A.map(["docs/gone.md", "README.md", "src/added.ts"], (path) => byPath(path).status),
+            ["deleted", "modified", "added"]
+          );
+          const sortedPaths = A.sort(c2.paths, Str.Order);
           assert.deepStrictEqual(sortedPaths, ["README.md", "docs/gone.md", "src/added.ts", "src/new.ts"]);
           // The same commit through --name-only: subject present, changes absent, the same paths.
           const nameOnly = O.getOrThrow(A.head(yield* git.log(dirD, { limit: 1 })));
           assert.strictEqual(nameOnly.subject, "c2: rename, delete, modify, add");
           assert.isUndefined(nameOnly.changes);
-          assert.deepStrictEqual([...nameOnly.paths].sort(), sortedPaths);
+          assert.deepStrictEqual(A.sort(nameOnly.paths, Str.Order), sortedPaths);
         })
       );
 
