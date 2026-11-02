@@ -109,7 +109,8 @@ const lane = (
   status: QualityTaskLaneRun["status"],
   inputDigest: O.Option<string>,
   durationMs = 1_000,
-  inputPackages: ReadonlyArray<string> = []
+  inputPackages: ReadonlyArray<string> = [],
+  inputsCacheable = true
 ): QualityTaskLaneRun =>
   QualityTaskLaneRun.make({
     id,
@@ -121,6 +122,7 @@ const lane = (
     exitCode: O.some(status === "failed" ? 1 : 0),
     inputDigest,
     inputPackages,
+    inputsCacheable,
     commandText: O.some(`bun run beep ci lane ${id}`),
   });
 
@@ -482,6 +484,80 @@ describe("proof shadow mode", () => {
           changedKnown(["@beep/x"], 4)
         );
         expect(second).toMatchObject({ recorded: 1, wouldReuse: 1, tripped: 0 });
+      })
+    );
+
+    // Ruling 69's lock, must-fail fixture: a root-level input in no workspace (a `standards/`
+    // baseline) changes no package and moves no digest of a lane that reads it undeclared.
+    // A lane whose Turbo tasks are not all cacheable has no contract that its digest spans
+    // what it reads, so any changed path refuses it; the cacheable control with the same
+    // digest and the same changed set still hits, and a clean tree serves the uncacheable lane.
+    it.effect("must fail: an unmapped root input refuses an uncacheable lane while a cacheable one still hits", () =>
+      Effect.gen(function* () {
+        const root = yield* tempCheckout;
+        const lanes = [
+          lane("fallow:dead-code", "passed", O.some("d-fallow"), 60_000, [], false),
+          lane("cheap-gates:lint-policy", "passed", O.some("d-root"), 5_000),
+        ];
+        yield* recordProofShadowForAttempt(root, facts(), [report(lanes)], changedNone());
+
+        // `standards/fallow.dead-code.regression-baseline.jsonc` maps to no package.
+        const tripped = yield* recordProofShadowForAttempt(
+          root,
+          facts({ attemptId: "attempt-2" }),
+          [report(lanes)],
+          changedKnown([], 1)
+        );
+        expect(tripped).toMatchObject({ recorded: 2, wouldReuse: 1, disagreements: 0, tripped: 1 });
+
+        const clean = yield* recordProofShadowForAttempt(
+          root,
+          facts({ attemptId: "attempt-3" }),
+          [report(lanes)],
+          changedNone()
+        );
+        expect(clean).toMatchObject({ recorded: 2, wouldReuse: 2, tripped: 0 });
+
+        // An unreadable changed set refuses the uncacheable lane too.
+        const unavailable = yield* recordProofShadowForAttempt(
+          root,
+          facts({ attemptId: "attempt-4" }),
+          [report(lanes)],
+          changedUnavailable("git status exited with code 128")
+        );
+        expect(unavailable).toMatchObject({ recorded: 2, wouldReuse: 1, tripped: 1 });
+
+        const rows = yield* (yield* ProofLedger.make(root)).shadowRows;
+        expect(
+          A.map(rows, (row) => [
+            row.laneId,
+            row.decision.kind === "miss" ? row.decision.reason : row.decision.kind,
+          ])
+        ).toStrictEqual([
+          ["fallow:dead-code", "no-fact"],
+          ["cheap-gates:lint-policy", "no-fact"],
+          ["fallow:dead-code", "changed-package-tripwire"],
+          ["cheap-gates:lint-policy", "hit"],
+          ["fallow:dead-code", "hit"],
+          ["cheap-gates:lint-policy", "hit"],
+          ["fallow:dead-code", "changed-package-tripwire"],
+          ["cheap-gates:lint-policy", "hit"],
+        ]);
+      })
+    );
+
+    // A lane report written before `inputsCacheable` existed decodes as uncacheable, so an
+    // older journal can only make the tripwire fire more, never less.
+    it.effect("reads a lane report without the cacheability field as uncacheable", () =>
+      Effect.gen(function* () {
+        const legacy = yield* S.decodeEffect(QualityTaskLaneRun)({
+          id: "quality:check",
+          label: "quality:check",
+          status: "passed",
+          inputDigest: "d1",
+          inputPackages: [],
+        });
+        expect(legacy.inputsCacheable).toBe(false);
       })
     );
 

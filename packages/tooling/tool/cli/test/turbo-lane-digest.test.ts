@@ -14,6 +14,7 @@ import {
   TurboLaneTaskHash,
   TurboRunSummary,
   TurboSummaryTask,
+  turboLaneDigestCacheable,
   turboLaneDigestFromSummary,
   turboLaneDigestPackages,
 } from "@beep/repo-cli/test/Quality";
@@ -469,6 +470,80 @@ describe("Turbo lane digests", () => {
         );
         assertSome(failed.inputDigest, yield* Effect.fromOption(direct.inputDigest));
         expect(failed.inputPackages).toStrictEqual(["@beep/x", "@beep/y"]);
+      })
+    );
+  });
+
+  // TTC ruling 69's lock: a lane is cacheable only when Turbo's resolved definition caches every
+  // task it folds; an uncacheable task, or a row Turbo wrote without a definition, makes it not.
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("cacheability", (it) => {
+    it.effect(
+      "carries Turbo's cache flag from the run summary onto the lane's inputs",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "turbo-lane-cacheable-" });
+        const runs = path.join(root, ".turbo", "runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        const startedAtIso = "2026-11-02T04:00:00.000Z";
+        const startedAt = DateTime.toEpochMillis(DateTime.makeUnsafe(startedAtIso));
+        const defined = (taskId: string, hash: string, cache: boolean) =>
+          TurboSummaryTask.make({ ...task(taskId, hash, "MISS"), resolvedTaskDefinition: { cache } });
+        yield* Effect.flatMap(
+          encodeSummary(
+            summary("cacheable", startedAt + 1_000, [
+              defined("@beep/x#check", "hx1", true),
+              defined("//#lint:schema-first", "hr1", true),
+              defined("//#fallow:audit:check", "hf1", false),
+              task("//#lint:typos", "ht1", "MISS"),
+            ])
+          ),
+          (text) => fs.writeFileString(path.join(runs, "cacheable.json"), text)
+        );
+        const resolve = (args: ReadonlyArray<string>) =>
+          resolveLaneInputDigestForTesting(
+            {
+              durationMs: 1,
+              startedAt: startedAtIso,
+              endedAt: "2026-11-02T04:00:05.000Z",
+              failure: O.none(),
+              step: QualityTaskStep.make({
+                label: "ci:lane",
+                command: "bunx",
+                args: ["turbo", "run", ...args, "--summarize"],
+                cwd: root,
+              }),
+            },
+            O.none()
+          );
+
+        expect((yield* resolve(["check", "lint:schema-first"])).inputsCacheable).toBe(true);
+        // One uncacheable task decides the lane.
+        expect((yield* resolve(["check", "fallow:audit:check"])).inputsCacheable).toBe(false);
+        // A row with no resolved definition is read as uncacheable, the conservative side.
+        expect((yield* resolve(["lint:typos"])).inputsCacheable).toBe(false);
+        // A declared digest has no Turbo definition behind it.
+        expect((yield* resolveLaneInputDigestForTesting(
+          {
+            durationMs: 1,
+            startedAt: startedAtIso,
+            endedAt: "2026-11-02T04:00:05.000Z",
+            failure: O.none(),
+            step: QualityTaskStep.make({ label: "ci:declared", command: "true", args: [], cwd: root }),
+          },
+          O.some("declared")
+        )).inputsCacheable).toBe(false);
+
+        // The flag survives the wrapper lane ledger's encode and decode.
+        const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "lint:schema-first"]);
+        assertSome(O.map(folded, turboLaneDigestCacheable), true);
+        const ledger = path.join(root, "lane-cacheable", "ledger.jsonl");
+        yield* appendTurboLaneLedger(ledger, yield* Effect.fromOption(folded));
+        yield* closeTurboLaneLedger(ledger, 1);
+        assertSome(O.map(yield* readTurboLaneLedger(ledger), turboLaneDigestCacheable), true);
+
+        // A digest with no tasks names nothing Turbo caches.
+        expect(turboLaneDigestCacheable(TurboLaneDigest.make({ digest: "e", summaryIds: [], tasks: [] }))).toBe(false);
       })
     );
   });
