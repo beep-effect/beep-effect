@@ -1705,3 +1705,12 @@ its twenty-minute execution limit.` Capture interruption still discards phase
 attribution. Stop automatic retries; inspect the existing streaming-fold capture
 route for bounded fixed phase observations without raw output, injected hooks,
 a new capture subsystem or a weaker execution deadline.
+
+Canonical repository-wide JSDoc inventory refreshes took 437.135, 411.720 and
+400.697 seconds across this edit/integration loop. The last refresh followed
+accepted-main generated-file conflicts; both prior versions were preserved.
+A package-scoped canonical refresh that reuses proven unchanged package analysis,
+with one owner for final global serialization, would avoid reanalyzing unrelated
+packages. Preserve the fresh mutating aggregate and every semantic input; do not
+cache the whole writer or relax its finding totals. These are command elapsed
+times, not a measured production cache saving.
