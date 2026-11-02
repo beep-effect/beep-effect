@@ -700,8 +700,9 @@ const firstMatch = (pattern: RegExp, lines: ReadonlyArray<string>): O.Option<str
  *
  * Only the text between the first `yeet-inherited-reds` start marker and the
  * first end marker after it is read: the `## Inherited reds (S11) at <head>`
- * heading supplies `head`, and each `- \`<check>\`: <attribution>` line one
- * check; the explicit None record and any other line add nothing. A body
+ * heading supplies `head`, and each entry line (a dash, the check name in
+ * backticks, a colon, the attribution) one check; the explicit None record
+ * and any other line add nothing. A body
  * without the section, with malformed markers, or whose section has no stamped
  * heading yields `None`. The merge gate honours the record only on the head it
  * was written for: a check attributed on an earlier head is not attributed on
