@@ -53,10 +53,13 @@
 
 ## Status
 
-Lifecycle: `active`. P0a through P0g are complete. PR1067 is merged and
-Benjamin ratified continuation on 2026-09-11. P1 inventory and P2 remediation
-waves are both in progress. See
-[the ratification receipt](history/2026-09-11-p0g-ratification-p1-start.md).
+Lifecycle: `active`, with `proposedCloseout` to `completed-retained` in the
+closeout PR; `goals completion refresh` flips the derived status after the
+merge. P0a through P2 are complete; P3 closes in that PR. The 2026-11-02 scan
+reports 3,104 files, 447 findings, 0 open rows and `introduced=0`; every row is
+an owned exception that names its exit, which the operator's 2026-11-02 ruling on
+#1875 made the closeout bar (D4 as amended in [SPEC.md](./SPEC.md) section 9).
+See [the closeout reflection](history/reflections/2026-11-02-claude.md).
 The machine-readable state is in [ops/manifest.json](./ops/manifest.json).
 
 ## Mission

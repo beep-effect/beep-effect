@@ -292,9 +292,9 @@ lens rows (1,120 resource, 1,112 flake, 1,131 property, 1,119 observability;
 | P0.5 | complete | MemoryFileSystem promotion | Node/Bun/Memory conformance and test-utils proof green; PR1047 merged by Benjamin after acceptance at 0fce23f. |
 | P0f | complete | Adversarial review | Three Grok rounds; no open blockers; majors fixed or waived. |
 | P0g | complete | Initial PR and ratification | PR1067 merged; Benjamin ratified continuation on 2026-09-11. |
-| P1 | in-progress | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. |
-| P2 | in-progress | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. |
-| P3 | pending | Close | Empty baseline; hosted proof; following-week p95; reflection and state flip in final PR. |
+| P1 | complete | Inventory | All four lenses cover every file; timing evidence; Benjamin acknowledges before P2. Closed 2026-11-02 with the register at 0 open rows. |
+| P2 | complete | Remediation waves | Each topological wave passes package proof and shrinks baseline exactly. Waves 1–21 on #1875 (#1908 to #2463) closed 2026-11-02. |
+| P3 | in-progress | Close | Baseline empty of open rows (D4 as amended 2026-11-02); hosted proof; reflection and `proposedCloseout` in the final PR; `goals completion refresh` flips the status after merge. |
 
 P0a research and P0b packet setup overlap as authorized by the first-actions
 contract. Every subsequent phase waits for its predecessor's gate.
@@ -763,11 +763,12 @@ for every package in the wave.
 
 ### P3 — Close
 
-- Baseline empty; lint zero-tolerance confirmed by a hosted cheap-gates run.
+- Baseline empty of open rows (D4 as amended 2026-11-02; owned exceptions with exits retained); `introduced=0` confirmed by a hosted cheap-gates run.
 - `history/timings-report.md`: per-package before/after table, slowest-file deltas, and the
   Coverage Regression p95 over the following week from `bun run beep ci lane-timings --window`.
-- Reflection via `/reflect effect-vitest-canon`; `ops/manifest.json` status flip in the final PR
-  (same-PR packet-state rule); `research/OPPORTUNITIES.md` receipts folded.
+- Reflection via `/reflect effect-vitest-canon`; `ops/manifest.json` `proposedCloseout` in the final PR
+  (same-PR packet-state rule; the derived status flips through `goals completion refresh` after merge);
+  `research/OPPORTUNITIES.md` receipts folded.
 - Stop: if a wave cannot close without deleting tests or weakening schemas, stop and ask.
 
 ## Resume contract

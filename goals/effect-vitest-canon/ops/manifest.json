@@ -5,12 +5,12 @@
     "title": "Canonical Effect Vitest idioms",
     "status": "active",
     "created": "2026-09-08",
-    "updated": "2026-10-09",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/effect-vitest-canon",
   "lifecycle": "active",
-  "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by an empty-baseline lint ratchet.",
+  "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by a lint ratchet whose baseline holds no open rows and no new exceptions.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -90,17 +90,17 @@
     {
       "id": "P1",
       "name": "Inventory",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Remediation waves",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -117,5 +117,5 @@
     "The fleet orchestrator owns merges at the complete gate; lane workers never merge.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Resumed by rsc-v-vitest-canon under Effect/Vitest 4.0.2. CLI-only integration PR #1575 is published and ready. The 16 unpublished continuation commits and detector-resources WIP are preserved and reconciled after #1506; 46 source worktrees remain untouched. Final-main inventory is 1,853 findings, 716 open and 1,137 exceptions, with all 15,513 historical IDs retained. Full repo-cli verification passes at 4be0599a18 (781.746 s), every local parity stage passes, independent source review is terminal zero, and both actionable hosted threads are resolved. Main document-only merge 7ef36e8020 preserves every reviewed source hash; owner inventory and linkage regenerated. Hosted readiness and fleet merge are separate pending gates. R105 RDF/Pacer repair preview requires its separate qualified PR after integration lands. R102 continues until the open baseline is empty, timing/reference evidence is complete and same-PR reflection/state closeout meets completed-retained acceptance. The fleet orchestrator owns conditional archive and retirement; no source lane was removed."
+  "statusNote": "Closeout 2026-11-02: the operator amended D4 (#1875 ruling) so the closeout bar is a baseline with no open rows, owned exceptions with a named exit retained, and the ratchet forbidding new rows. The 2026-11-02 scan reports 3,104 files, 447 findings, 0 open, introduced=0; every row names an owner and an exit. Waves 1-21 on #1875 (#1908 to #2463) are merged. The closeout PR carries the reflection, this state and proposedCloseout to completed-retained; goals completion refresh derives the status after the fleet orchestrator merges. The 447 exceptions are handed to a successor burn-down goal. Earlier status notes are retained in README.md and PLAN.md banners."
 }
