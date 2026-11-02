@@ -238,6 +238,8 @@ them and record each in the Decision Log.
 
 ### 2026-11-01 — post-merge evidence and lifecycle closeout
 
+Final follow-up PR #2502 uses the current canonical Yeet publish/readiness and goal-completion receipt workflow. The earlier hosted-first exception belonged to the now-retired source takeover lane; it does not supply a publish verdict for this new final PR. All 1,103 pre-handover history/public-fixture files are byte-identical after restoring v11, as recorded in the new full-history preservation receipt.
+
 The designated orchestrator merged PR #2411 under the higher-priority repository S11 exception, with a forced review window and pending jobs recorded. This is source-delivery evidence, not CLEAN/all-green hosted proof or a passing canonical completion receipt; operative lifecycle remains active until the final follow-up earns current readiness and merge proof. After takeover, freeze and measure the exact merged implementation as v24 before claiming current accuracy. Preserve all earlier measurements, including the corrected nested-feature summaries. Restore the v11 result's original bytes after unrelated formatting-only drift and protect frozen result formatting without disabling lint. Carry historical automated judgments only with exact sampled question/source/evidence identity; disclose four changed segmentation records and claim no fresh review or attorney authority. Reversal: reopen the packet with a new authority revision and additional measurements; retain every prior artifact and this S11 receipt.
 
 Seeded from
