@@ -206,3 +206,36 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   in the same script-removal change. Reproduce the failing inner assertion and
   distinguish a missing coverage artifact caused by test failure from an
   independent coverage regression.
+
+## 2026-11-02 — Current hosted comparison exposes eight shared coverage floors
+
+- **Doing:** qualifying PR #2513 at `00df3c4673` after all unit-test groups and
+  their aggregate passed.
+- **Evidence:** Coverage Regression job `125196400218` in run `41418121455`
+  downloaded producer evidence and failed its comparison on eight rows:
+  `Ci/RouteCensus.ts` branches 91.11 < 93.02, functions 94.53 < 95.23,
+  lines 95.86 < 96.25 and statements 96.37 < 96.7;
+  `Goals/Graph.ts` branches 90.9 < 100; and
+  `PackageScripts.schemas.ts` branches 88.46 < 96.15, lines 98.3 < 100 and
+  statements 98.5 < 100. These are shared repo-cli source paths; the claim
+  algorithm remains unchanged. The earlier PruneWindow row is absent from
+  this completed comparison.
+- **Accepted repairs:** retain the failed log and all eight rows. Main #2548
+  supplies the RouteCensus/Graph/PruneWindow repair; separate #2553 supplies the
+  PackageScripts repair. The latter removes an obsolete audit backfill,
+  preserves the defensive rule cases through a documented testing export,
+  passes 22 focused tests with 100% file coverage, and preserves all 33
+  canonical scaffold configurations byte for byte. Both repairs are merged;
+  a fresh hosted comparison remains authoritative. No floor is lowered and
+  no failed row is counted as passing. The exact claim result remains 37/538.
+- **Verification scope:** #2553 merged under the standing exception with
+  cancelled hosted jobs, not an all-green proof. Its Fallow health report names
+  `health-not-applicable-complexity-findings-1`, with zero introduced findings
+  and one not-applicable finding; that shared main-health issue has a separate
+  owner. An optional local documentation inventory scan was stopped in favor
+  of hosted verification after the PR was already published. Its incomplete
+  result is retained, not reported as a pass.
+- **Prevention:** route the complete paginated run and inner comparison to
+  the owner, including additional failing paths beyond the first reported
+  upstream regression. Validate all affected rows before declaring the shared
+  repair complete.
