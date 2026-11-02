@@ -517,7 +517,8 @@ const warnTruncated = (page: ReviewThreadPage): Effect.Effect<void> =>
 
 /**
  * Walk every page, warning per page about truncated threads, until GitHub
- * reports no next page. A next page without a cursor is a malformed answer.
+ * reports no next page. A next page without a (non-empty) cursor, or one naming
+ * the cursor the page was read from, is a malformed answer.
  */
 const collectPages = Effect.fn("ReviewThread.collectPages")(function* <E>(
   operation: string,
@@ -532,10 +533,17 @@ const collectPages = Effect.fn("ReviewThread.collectPages")(function* <E>(
     if (!page.pageInfo.hasNextPage) {
       return ReviewThreads.make({ pullRequestAuthor: page.pullRequestAuthor, threads });
     }
-    if (O.isNone(page.pageInfo.endCursor)) {
+    // An empty cursor names no position, so it is as missing as a null one.
+    const endCursor = O.filter(page.pageInfo.endCursor, Str.isNonEmpty);
+    if (O.isNone(endCursor)) {
       return yield* GitHubGraphQLError.decode(operation, "another page was reported without an end cursor");
     }
-    after = page.pageInfo.endCursor;
+    // A page naming its own cursor as the next one would re-read the same
+    // hundred threads forever and count each of them once per lap.
+    if (O.contains(after, endCursor.value)) {
+      return yield* GitHubGraphQLError.decode(operation, "the same end cursor was reported twice");
+    }
+    after = endCursor;
   }
 });
 
