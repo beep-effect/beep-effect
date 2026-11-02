@@ -12,7 +12,6 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
-import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
@@ -111,11 +110,13 @@ import {
   turboLaneDigestPackages,
 } from "./internal/TurboLaneDigest.ts";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
+import { localQualityConcurrencyPlan, provideQualityConcurrency, qualityConcurrencyPlan } from "./Quality.plan.ts";
 import {
   GatePrecisionClass,
   GateRedSchedulingDecision,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
+  GithubCheckLaneIsolation,
   GithubCheckLaneRun,
   GithubCheckLaneRunStatus,
   GithubCheckMode,
@@ -126,7 +127,6 @@ import {
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
-  QualityCheckConcurrency,
   QualityTaskBypassArgName,
   QualityTaskInvocation,
   QualityTaskLaneRun,
@@ -148,7 +148,7 @@ import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { TurboLaneDigest } from "./internal/TurboLaneDigest.ts";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
-import type { GithubCheckLaneWaveSpec } from "./Quality.schemas.ts";
+import type { GithubCheckLaneSpec, GithubCheckLaneWaveSpec, QualityConcurrencyPlan } from "./Quality.schemas.ts";
 
 export { QualityTaskStep } from "../../internal/process/index.ts";
 /**
@@ -168,7 +168,10 @@ const CHANGED_PATH_DIFF_FILTER = A.join(["A", "C", "M", "R", "T", "U", "X", "B"]
 const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
 const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
-const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+// The root build/check/test/lint graphs take their width from the resolved
+// concurrency plan (`Quality.plan.ts`): the `ci` profile is the heavy-fleet cap,
+// local profiles widen with the detected hardware. Coverage keeps its own fixed
+// caps below because its worker topology is the ratchet's baseline shape.
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
 // goals/quality-speedup/research/instantiation-census.md §5. The heavy lanes now
@@ -1203,12 +1206,10 @@ const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>)
   return ["turbo", "run", ...tasks, ...turboCacheArgsFor(tasks, args), ...executionArgs, ...passthroughArgs];
 };
 
-const boundedRootTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
-  A.some(args, isTurboConcurrencyArg)
-    ? args
-    : isCiSync()
-      ? [CI_TURBO_CONCURRENCY_ARG, ...args]
-      : [ROOT_TURBO_CONCURRENCY_ARG, ...args];
+const boundedRootTurboArgs = (
+  args: ReadonlyArray<string>,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+): ReadonlyArray<string> => (A.some(args, isTurboConcurrencyArg) ? args : [`--concurrency=${plan.rootTurbo}`, ...args]);
 
 const includesTurboCoverageTask = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): boolean =>
   A.some(tasks, (task) => task === "coverage") || A.some(args, (arg) => arg === "coverage");
@@ -2211,6 +2212,73 @@ const persistGithubCheckLaneProof = Effect.fn("QualityTasks.persistGithubCheckLa
 });
 
 /**
+ * Split one wave's lanes into the chunks that run together.
+ *
+ * **Details**
+ *
+ * Shared lanes fill a chunk up to `concurrency` in declaration order. An
+ * `exclusive` lane (one that owns mutable state another lane could touch) and
+ * a lane blocked by a lane still in the open chunk each close the open chunk
+ * first; an exclusive lane then runs in a chunk of its own. Width one yields
+ * one lane per chunk, the serial runner's order exactly.
+ *
+ * **Example** (An exclusive lane splits its neighbours)
+ *
+ * ```ts
+ * import { githubCheckLanePlan } from "@beep/repo-cli/test/Quality"
+ * import { githubCheckWaveChunksForTesting } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import * as A from "effect/Array"
+ *
+ * const lane = (id: string) =>
+ *   githubCheckLanePlan.githubCheckLane(id, "pre-push", "repo-quality", "test", githubCheckLanePlan.bunRunLane("/repo", id, ["x"]))
+ * const lanes = [lane("a"), githubCheckLanePlan.exclusiveGithubCheckLane(lane("b")), lane("c")]
+ * console.log(A.map(githubCheckWaveChunksForTesting(lanes, 4), A.length)) // [1, 1, 1]
+ * ```
+ *
+ * @param lanes - Lanes of one wave in execution order.
+ * @param concurrency - Shared lanes one chunk may hold.
+ * @returns Chunks in execution order; every lane appears exactly once.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const githubCheckWaveChunks: {
+  (lanes: ReadonlyArray<GithubCheckLaneSpec>, concurrency: number): ReadonlyArray<ReadonlyArray<GithubCheckLaneSpec>>;
+  (
+    concurrency: number
+  ): (lanes: ReadonlyArray<GithubCheckLaneSpec>) => ReadonlyArray<ReadonlyArray<GithubCheckLaneSpec>>;
+} = dual(
+  2,
+  (
+    lanes: ReadonlyArray<GithubCheckLaneSpec>,
+    concurrency: number
+  ): ReadonlyArray<ReadonlyArray<GithubCheckLaneSpec>> => {
+    const width = Math.max(1, concurrency);
+    const chunks: Array<ReadonlyArray<GithubCheckLaneSpec>> = [];
+    let open: Array<GithubCheckLaneSpec> = [];
+    const flush = (): void => {
+      if (A.isReadonlyArrayNonEmpty(open)) {
+        chunks.push(open);
+        open = [];
+      }
+    };
+    for (const lane of lanes) {
+      const blockedByOpen = A.some(open, (held) => A.contains(lane.blockedBy, held.id));
+      if (GithubCheckLaneIsolation.is.exclusive(lane.isolation)) {
+        flush();
+        chunks.push([lane]);
+        continue;
+      }
+      if (blockedByOpen || A.length(open) >= width) {
+        flush();
+      }
+      open.push(lane);
+    }
+    flush();
+    return chunks;
+  }
+);
+
+/**
  * Run one wave's lanes in chunks of `concurrency`, journaling in wave order.
  *
  * **Details**
@@ -2235,7 +2303,7 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   let skippedLaneIds = A.empty<string>();
   let stoppedAfterRed = false;
   const failFast = GithubCheckFailurePolicy.is["fail-fast"](failurePolicy);
-  for (const chunk of A.chunksOf(wave.lanes, Math.max(1, concurrency))) {
+  for (const chunk of githubCheckWaveChunks(wave.lanes, concurrency)) {
     if (stoppedAfterRed) {
       for (const lane of chunk) {
         skippedLaneIds = A.append(skippedLaneIds, lane.id);
@@ -2899,49 +2967,49 @@ export const sqlIntegrationConnectionUriFromEnvForTesting = sqlIntegrationConnec
 const optionalQualityTaskStep = ({ enabled, step }: OptionalQualityTaskStep): ReadonlyArray<QualityTaskStep> =>
   enabled ? A.of(step()) : A.empty();
 
-const rootBuildSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
+const rootBuildSteps = (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+) => [
   QualityTaskStep.make({
-    ...turboStep(repoRoot, "build", ["build"], boundedRootTurboArgs(args)),
+    ...turboStep(repoRoot, "build", ["build"], boundedRootTurboArgs(args, plan)),
     flakeQuarantine: "ts2589-no-location",
   }),
 ];
 
-const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
+const rootCheckSteps = (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+) => [
   QualityTaskStep.make({
-    ...turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
+    ...turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args, plan)),
     flakeQuarantine: "ts2589-no-location",
   }),
   // `tsgo-rules` keeps its single owner in lint-policy (`lint:tsgo-rules`);
-  // standalone rule diagnostics have their own parallel heavy lane; Check owns test-file types and the smoke canary.
-  ...optionalQualityTaskStep({
-    enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
-  }),
+  // standalone rule diagnostics have their own parallel heavy lane. Test-file
+  // typecheck (`quality test-tsgo`) also has one owner, the lint-policy plan:
+  // its Turbo task is uncached, so a second copy here made `audit packages`
+  // and a check-then-lint session walk the test files twice (perf audit G8,
+  // 2026-11-02). Check owns only the smoke canary; run
+  // `bun run beep quality test-tsgo` directly for a check-only session.
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "quality:tsgo-smoke", ["quality", "tsgo-smoke"]),
   }),
 ];
 
-// Policy lint retains Check's accepted overrides and adds its four-worker budget.
-const PolicyLintConcurrency = LiteralKit([...QualityCheckConcurrency.literals, "4"]).pipe(
-  $RepoCliId.create("commands/Quality/Tasks").annoteSchema("PolicyLintConcurrency", {
-    description: "Bounded policy lint workers, defaulting to four with Check lane overrides.",
-  })
-);
-const decodePolicyLintConcurrencyOption = S.decodeUnknownOption(PolicyLintConcurrency);
-
+// Policy lint takes its width from the concurrency plan: Check's accepted overrides
+// (`BEEP_QUALITY_CHECK_CONCURRENCY`) over the profile's policy lint budget.
 const policyLintTurboStep = (
   repoRoot: string,
   label: string,
   tasks: ReadonlyArray<string>,
-  base?: string
+  base?: string,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
 ): QualityTaskStep => {
-  const concurrency = pipe(
-    // biome-ignore lint/suspicious/noUndeclaredEnvVars: Same declared boundary as the hosted Check lane: BEEP_QUALITY_CHECK_CONCURRENCY is in turbo.json global.passThroughEnv, which Biome cannot read. Owner: @beep/repo-cli. Exit: Biome reads turbo global.* declarations, or the name joins allowedEnvVars (#1855).
-    decodePolicyLintConcurrencyOption(Bun.env.BEEP_QUALITY_CHECK_CONCURRENCY),
-    O.getOrElse(() => "4")
-  );
+  const concurrency = plan.policyLint;
   // Scope is the caller's decision: a base means a scoped local run, no base means full scope
   // (the policy task folds CI into full scope before building the plan).
   const affected = !P.isUndefined(base);
@@ -2957,8 +3025,11 @@ const policyLintTurboStep = (
   });
 };
 
-const deprecatedApisTurboStep = (repoRoot: string, base?: string): QualityTaskStep =>
-  policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base);
+const deprecatedApisTurboStep = (
+  repoRoot: string,
+  base?: string,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+): QualityTaskStep => policyLintTurboStep(repoRoot, "lint:deprecated-apis", ["lint:deprecated-apis"], base, plan);
 
 const decodeLintPolicySweeps = Jsonc.bind(LintPolicySweeps).decode;
 const oxlintPolicySweeps = LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "oxlint" });
@@ -3135,26 +3206,28 @@ const rootRepoLintPolicySteps = (
   base: string | undefined,
   sweeps: LintPolicySweeps,
   hosted: boolean,
-  docsCacheKey: string
+  docsCacheKey: string,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
 ): ReadonlyArray<QualityTaskStep> => {
   const full = P.isUndefined(base);
   return A.map(
     [
-      policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base),
+      policyLintTurboStep(repoRoot, "lint:policy:cheap", policyCheapTasks, base, plan),
       policyLintTurboStep(
         repoRoot,
         "lint:policy:medium",
         [...policyMediumTasks, ...(full ? fullScopeStateTasks(hosted) : ["lint:jsdoc", "lint:jsdoc:root"])],
-        base
+        base,
+        plan
       ),
-      ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks)]),
+      ...(full ? [] : [policyLintTurboStep(repoRoot, "lint:policy:state", policyStateTasks, undefined, plan)]),
       ...knowledgeDoctorPolicySteps(repoRoot, base, hosted),
       // Ruling 31 retains the hosted root docs program independently of the
       // deprecated-API sweep switch. It has no Turbo summary of its own.
       ...(full ? [bunxStep(repoRoot, "lint:jsdoc", rootDocsArgs(docsCacheKey))] : []),
       full && sweeps.deprecatedApis === "oxlint"
         ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
-        : deprecatedApisTurboStep(repoRoot, base),
+        : deprecatedApisTurboStep(repoRoot, base, plan),
       // The test lane's own Turbo task is `package-test-typecheck` (uncached by tripwire
       // ruling); the orchestrating command stays a repo-cli step.
       repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
@@ -3282,8 +3355,9 @@ const runRootLintPolicyTaskInternal = Effect.fn("QualityTasks.runRootLintPolicyT
 
   yield* Console.log(`[beep-cli] lint:policy: scope=${runFull ? "full" : `changed (${changedFileCount} files)`}`);
   const docsCacheKey = yield* rootDocsCacheKey(repoRoot);
+  const plan = yield* qualityConcurrencyPlan;
   yield* runPolicySteps(
-    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCiSync(), docsCacheKey),
+    rootRepoLintPolicySteps(repoRoot, files, runFull ? undefined : base, sweeps, isCiSync(), docsCacheKey, plan),
     runFull
   );
 });
@@ -3334,20 +3408,21 @@ export const runRootLintPolicyTask: {
  */
 export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecatedApisTask")(function* (base?: string) {
   const repoRoot = yield* findRepoRoot();
-  yield* runStep(deprecatedApisTurboStep(repoRoot, base));
+  yield* runStep(deprecatedApisTurboStep(repoRoot, base, yield* qualityConcurrencyPlan));
 });
 
 const rootLintPolicySteps = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   fix: boolean,
-  docsCacheKey: string
+  docsCacheKey: string,
+  plan: QualityConcurrencyPlan
 ): ReadonlyArray<QualityTaskStep> => {
   if (fix || !shouldRunLintRepoWideSteps(args)) {
     return A.empty<QualityTaskStep>();
   }
 
-  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, oxlintPolicySweeps, isCiSync(), docsCacheKey);
+  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, oxlintPolicySweeps, isCiSync(), docsCacheKey, plan);
 };
 
 // The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by
@@ -3357,12 +3432,13 @@ const rootLintSteps = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   fix: boolean,
-  docsCacheKey: string = UNKEYED_ROOT_DOCS_CACHE
+  docsCacheKey: string = UNKEYED_ROOT_DOCS_CACHE,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
-  const lintArgs = boundedRootTurboArgs(fix ? stripLintFixAggregateArgs(args) : args);
+  const lintArgs = boundedRootTurboArgs(fix ? stripLintFixAggregateArgs(args) : args, plan);
   return [
     fix ? turboStep(repoRoot, "lint:fix", ["lint:fix"], lintArgs) : turboStep(repoRoot, "lint", ["lint"], lintArgs),
-    ...rootLintPolicySteps(repoRoot, lintArgs, fix, docsCacheKey),
+    ...rootLintPolicySteps(repoRoot, lintArgs, fix, docsCacheKey, plan),
   ];
 };
 
@@ -3383,7 +3459,7 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  const steps = rootLintSteps(repoRoot, args, fix, yield* rootDocsCacheKey(repoRoot));
+  const steps = rootLintSteps(repoRoot, args, fix, yield* rootDocsCacheKey(repoRoot), yield* qualityConcurrencyPlan);
   if (A.length(steps) === 1) {
     yield* runStep(A.headNonEmpty(steps));
     return;
@@ -3404,18 +3480,23 @@ const rootAuditPackagesArgs = (args: ReadonlyArray<string>): ReadonlyArray<strin
 // lane between the check and lint steps listed here.
 const rootAuditPackagesStaticSteps = (
   repoRoot: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
 ): ReadonlyArray<QualityTaskStep> => [
-  ...rootBuildSteps(repoRoot, args),
-  ...rootCheckSteps(repoRoot, args),
-  ...rootLintSteps(repoRoot, args, false),
+  ...rootBuildSteps(repoRoot, args, plan),
+  ...rootCheckSteps(repoRoot, args, plan),
+  ...rootLintSteps(repoRoot, args, false, undefined, plan),
 ];
 
-const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
+const rootAuditSteps = (
+  repoRoot: string,
+  args: ReadonlyArray<string>,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+) => {
   const selection = parseRootAuditSelection(args);
 
   if (selection.mode === "packages") {
-    return rootAuditPackagesStaticSteps(repoRoot, rootAuditPackagesArgs(selection.args));
+    return rootAuditPackagesStaticSteps(repoRoot, rootAuditPackagesArgs(selection.args), plan);
   }
 
   const auditArgs = selection.args;
@@ -3436,9 +3517,10 @@ const runRootAuditPackagesTask = Effect.fn("QualityTasks.runRootAuditPackagesTas
   args: ReadonlyArray<string>
 ) {
   const graphArgs = rootAuditPackagesArgs(args);
+  const plan = yield* qualityConcurrencyPlan;
   yield* runStreamingStepGroup("audit", [
-    ...rootBuildSteps(repoRoot, graphArgs),
-    ...rootCheckSteps(repoRoot, graphArgs),
+    ...rootBuildSteps(repoRoot, graphArgs, plan),
+    ...rootCheckSteps(repoRoot, graphArgs, plan),
   ]);
   yield* runRootTestTask(repoRoot, graphArgs);
   yield* runRootLintTask(repoRoot, graphArgs, false);
@@ -3448,13 +3530,19 @@ const invocationArgs = (invocation: QualityTaskInvocation): ReadonlyArray<string
   invocation.args ?? A.empty<string>();
 const invocationFix = (invocation: QualityTaskInvocation): boolean => invocation.fix ?? false;
 
-const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): ReadonlyArray<QualityTaskStep> =>
+const rootStepsFor = (
+  repoRoot: string,
+  invocation: QualityTaskInvocation,
+  plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
+): ReadonlyArray<QualityTaskStep> =>
   pipe(invocation, (current) =>
     Match.type<QualityTaskName>().pipe(
-      Match.when("build", () => rootBuildSteps(repoRoot, invocationArgs(current))),
-      Match.when("check", () => rootCheckSteps(repoRoot, invocationArgs(current))),
-      Match.when("lint", () => rootLintSteps(repoRoot, invocationArgs(current), invocationFix(current))),
-      Match.when("audit", () => rootAuditSteps(repoRoot, invocationArgs(current))),
+      Match.when("build", () => rootBuildSteps(repoRoot, invocationArgs(current), plan)),
+      Match.when("check", () => rootCheckSteps(repoRoot, invocationArgs(current), plan)),
+      Match.when("lint", () =>
+        rootLintSteps(repoRoot, invocationArgs(current), invocationFix(current), undefined, plan)
+      ),
+      Match.when("audit", () => rootAuditSteps(repoRoot, invocationArgs(current), plan)),
       // `test` and `coverage` have no static plan: `runRootTask` hands them to
       // runners that resolve lane selection, the SQL container resource, and
       // the coverage scope at run time. The shadow builders that used to sit
@@ -3540,7 +3628,10 @@ const coverageFullSteps = (
     packageNames,
     coverageFullPassthroughArgs(args),
     A.some(args, isCoverageWriteBaselineArg),
-    A.empty<string>()
+    // Build only the coverage owners (turbo adds their `^build` closure). An
+    // unfiltered prebuild also built @beep/storybook, which owns no coverage
+    // task and sits in no owner's build closure (quality audit A2, 2026-11-02).
+    packageFilterArgs(packageNames)
   );
 
 const packageFilterArgs: (packageNames: ReadonlyArray<string>) => ReadonlyArray<string> = A.map(
@@ -3852,9 +3943,10 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   args: ReadonlyArray<string>
 ) {
   const lanes = parseTestLaneSelection(args);
+  const plan = yield* qualityConcurrencyPlan;
   const unitSteps = optionalQualityTaskStep({
     enabled: lanes.unit,
-    step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args)),
+    step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args, plan)),
   });
   const unitFailures = yield* collectStreamingStepFailures("test", unitSteps);
   let integrationFailures = A.empty<QualityTaskFailed>();
@@ -3868,7 +3960,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
         repoRoot,
         "test:integration:parallel",
         ["test:integration:parallel"],
-        boundedRootTurboArgs(parallelArgs)
+        boundedRootTurboArgs(parallelArgs, plan)
       ),
       ...optionalQualityTaskStep({
         enabled: A.isReadonlyArrayNonEmpty(unsplitFilters),
@@ -3877,7 +3969,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
             repoRoot,
             "test:integration",
             ["test:integration"],
-            boundedRootTurboArgs([...unsplitFilters, ...lanes.args])
+            boundedRootTurboArgs([...unsplitFilters, ...lanes.args], plan)
           ),
       }),
     ]);
@@ -3923,7 +4015,7 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
     }
   }
 
-  const steps = rootStepsFor(repoRoot, invocation);
+  const steps = rootStepsFor(repoRoot, invocation, yield* qualityConcurrencyPlan);
   const step = A.head(steps);
   if (A.length(steps) === 1 && O.isSome(step) && step.value.flakeQuarantine === undefined) {
     yield* runStep(step.value);
@@ -4005,22 +4097,44 @@ export const parseQualityTaskInvocation = (argv: ReadonlyArray<string>): O.Optio
  * @category use-cases
  * @since 0.0.0
  */
-export const runQualityTask: (
-  invocation: QualityTaskInvocation
-) => Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> = Effect.fn("QualityTasks.runQualityTask")(
-  function* (invocation: QualityTaskInvocation) {
-    const path = yield* Path.Path;
-    const cwd = path.resolve(process.cwd());
-    const repoRoot = yield* findRepoRoot(cwd);
-    const packageDir = yield* resolvePackageDir(repoRoot, cwd);
+const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function* (invocation: QualityTaskInvocation) {
+  const path = yield* Path.Path;
+  const cwd = path.resolve(process.cwd());
+  const repoRoot = yield* findRepoRoot(cwd);
+  const packageDir = yield* resolvePackageDir(repoRoot, cwd);
 
-    yield* pipe(
-      packageDir,
-      O.map((dir) => runPackageTask(dir, invocation)),
-      O.getOrElse(() => runRootTask(repoRoot, invocation))
-    );
-  }
-);
+  yield* pipe(
+    packageDir,
+    O.map((dir) => runPackageTask(dir, invocation)),
+    O.getOrElse(() => runRootTask(repoRoot, invocation))
+  );
+});
+
+/**
+ * Run a quality task under one admission-aware concurrency plan.
+ *
+ * **Details**
+ *
+ * The plan is resolved once per invocation; the planners fall back to the
+ * unscaled local plan wherever the service is not provided (tests).
+ *
+ * **Example** (Run a quality task)
+ *
+ * ```ts
+ * import { runQualityTask } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality"
+ * const program = runQualityTask(QualityTaskInvocation.make({ task: "check", args: [], fix: false }))
+ * ```
+ *
+ * @param invocation - Parsed quality task invocation.
+ * @returns The task run under the live concurrency plan.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runQualityTask = (
+  invocation: QualityTaskInvocation
+): Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> =>
+  provideQualityConcurrency(runQualityTaskInternal(invocation));
 
 /**
  * Run a quality task directly from a raw argv vector.

@@ -4,7 +4,7 @@
 
 Lifecycle: `active`
 
-Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). Source implementation and bounded synthetic proof are supported; repository delivery remains in progress in the dedicated foundation worktree. The original forwarder service and timer remain masked and inactive.
+Explicitly launched by the operator on 2026-10-27. Source: [manifest](./ops/manifest.json). PR2364 has merged, but canonical completion remains unsatisfied. Current-source qualification and a genuinely verified follow-up delivery are in progress; see the [post-merge audit](./research/POST-MERGE-QUALIFICATION.md). The original forwarder service and timer remain masked and inactive.
 
 ## Mission
 
@@ -28,15 +28,39 @@ Only on an explicit implementation launch, use:
 
 ## Current phase
 
-The foundation remains **active** until final [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
-has exact-head hosted readiness and merge evidence. The manifest declares a
-prospective `completed-retained` closeout; that proposal is not achievement.
-After merge, the canonical `beep goals completion refresh` writer must revalidate
-the accepted head, retained Yeet verdict and complete merge-time required checks.
-Do not close the goal or external execution ledger from a local pass or proposal.
+The namespace repair [PR2519](https://github.com/beep-effect/beep-effect/pull/2519)
+is merged and integrated. Fresh qualification passed 870 AI-metrics,40 Phoenix,
+73 managed-provider and all 44 reconciliation tests, with 249 selected inputs stable.
+Independent review accepted the 84-input root and same-root90/89-input disposable/live
+pair. All thirteen domain criteria retain support at their explicit scopes.
+See the [active qualification](./research/POST-MERGE-QUALIFICATION.md).
+Required final-head hosted/review/merge proof and canonical completion remain open;
+one scanner false positive in a public test-file digest is being corrected through
+the base-reviewed policy lane.
+
+Current declared-root proof commands require both `--declared-qualification-sha256`
+and `--declared-probe-sha256`; there is no implicit historical pair. The
+[explicit-pin review](./ops/history/explicit-pin-proof-applicability-20261102.json)
+records six passing boundary tests,22 refusal controls,84 exact preparation inputs,
+and the two reviewed guard-only changes relative to the retained90/89 stage inputs.
+Those earlier executions retain their original hashes and dates.
+
+The foundation remains **active**. [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
+merged before its readiness gates completed. Canonical completion refresh records
+that historical result as unsatisfied; a merge alone cannot complete this packet.
+The [post-merge qualification](./research/POST-MERGE-QUALIFICATION.md) preserves
+that history and refreshes current source, package and synthetic-route evidence.
+
+[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) is the final
+follow-up and must retain its own exact-head readiness and complete merge-time
+required-check evidence. The manifest now records PR2364 as supporting delivery
+and synchronizes PR2508's final role, prospective closeout and verdict reference.
+The existing prospective declaration is not achievement. The canonical
+`beep goals completion refresh` writer remains the only completion derivation;
+local passes and synthetic proof do not replace it.
 
 The [acceptance audit](./research/ACCEPTANCE-EVIDENCE-AUDIT.md) separates historical
-proof from the current source refresh. The fresh declared-root pair records
+proof from the current source refresh. The historical October31 declared-root pair records
 88 disposable and 87 live source bindings, independently computed CLI/desktop
 fixture identities, two actual visibility receipts per stage, private metadata,
 local health/alert proof and rollback. The Node 22.23.4 runs passed all 834 AI-metrics tests, five Phoenix
@@ -65,6 +89,14 @@ The original relocation index describes its historical operation; it does not cl
 that later public derivatives retain the original bytes.
 
 ## Current verification
+
+- [November2 integrated qualification](./research/POST-MERGE-QUALIFICATION.md):
+  fresh suites passed 870/40/73/44 tests with 249 selected inputs stable. Independent
+  review accepted 84 preparation inputs and 90/89 disposable/live stage inputs,
+  two exact event/attempt/visibility sets per stage, privacy, backup/queue digests,
+  actual local alert proof and owned rollback. See the [integrated stage receipt](./ops/history/integrated-declared-stages-20261102.json).
+  The first November2 checkpoint and declined/stopped attempts remain historical;
+  neither narrower passes nor source merges replace final repository gates.
 
 - [October 31 PR repair](./research/PR2364-REPAIR.md): current-main integration,
   documentation and fixture-ownership corrections, passing package audit/docgen,
@@ -109,9 +141,9 @@ opt-in. See [memory investigation](./research/MEMORY-NOTIFICATION-INVESTIGATION.
 Preserve resource admission limits and unrelated applications. A declined or stopped
 check is not a pass and must not be retried as if an uncertain mutation never ran.
 
-The landed corrective fix is integrated and AC12 is independently accepted.
-Land the exact-value correction, publish the consolidated hosted repair,
-and finish current-source policy/catalog and panel checks, hosted readiness, merge
-and reflection. Reconcile every SPEC
-criterion against current evidence before the canonical lifecycle transition.
+The source repairs are merged. Preserve their historical receipts and the unsatisfied
+PR2364 completion result. Finish current-source qualification and its final follow-up
+PR, including review, required hosted checks, merge-time readiness and reflection.
+Reconcile every SPEC criterion against current evidence before the canonical
+lifecycle transition.
 Source delivery and production enrollment remain separate decisions.

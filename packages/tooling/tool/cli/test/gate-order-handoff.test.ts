@@ -216,17 +216,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           `gate-order seed does not cover the pre-push plan (unseeded: ${idsOfKind(findings, "unseeded-lane")}; orphan: ${idsOfKind(findings, "orphan-seed-row")}). Add a DEFAULT_GATE_ORDER_SEED row and a DEFAULT_GATE_ORDER_COST_SOURCES entry in packages/tooling/tool/cli/src/commands/Yeet/internal/WaveOrder.ts under the ruling 76 seeding rule (goals/time-to-certainty/research/decisions.md, round 24), then rerun this file once with vitest -u, which writes packages/tooling/tool/cli/test/fixtures/gate-order-handoff-knip-retired.json when the run ends, and once without -u, which must pass; review the handoff diff.`
         ).toEqual([]);
 
-        // Must-fail: the pre-D1 seed leaves quality:cache-policy unseeded.
+        // Must-fail: a seed without a declared lane's row reports exactly that lane as
+        // unseeded (the pre-D1 shape, which left `quality:cache-policy` unseeded while it
+        // was still a pre-push lane).
         const preD1Seed = GateOrderSeed.make({
           ...DEFAULT_GATE_ORDER_SEED,
-          lanes: A.filter(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId !== "quality:cache-policy"),
+          lanes: A.filter(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId !== "repo-sanity:bun-audit"),
         });
         const preD1Costs = A.filter(
           DEFAULT_GATE_ORDER_COST_SOURCES,
-          (entry) => entry.laneId !== "quality:cache-policy"
+          (entry) => entry.laneId !== "repo-sanity:bun-audit"
         );
         expect(findingSummary(gateOrderSeedFindings(preD1Seed, preD1Costs, declaredLanes, view))).toEqual([
-          { kind: "unseeded-lane", laneId: "quality:cache-policy" },
+          { kind: "unseeded-lane", laneId: "repo-sanity:bun-audit" },
         ]);
 
         // Must-fail: a seed row naming no declared lane is one orphan and nothing else.
@@ -519,9 +521,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const decided = A.getSomes(A.map(handoff.lanes, (lane) => lane.decidedBy));
 
         expect(countBy(decided, (key) => key)).toEqual({
-          "cost-p50": 19,
+          "cost-p50": 18,
           "first-red-share": 6,
-          "declaration-index": 6,
+          "declaration-index": 5,
           "lane-class": 1,
         });
         expect(
@@ -533,7 +535,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             Order.String
           )
         ).toEqual(["quality:coverage", "quality:nix", "quality:sast", "quality:security"]);
-        expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(29);
+        expect(A.filter(handoff.lanes, (lane) => lane.redScheduling === "stop-after-red").length).toBe(27);
         expect(
           A.every(handoff.lanes, (lane) =>
             O.exists(
@@ -542,9 +544,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             )
           )
         ).toBe(true);
-        // One cost source per seed row: 33 unique lane ids, exactly the seed's.
+        // One cost source per seed row: 31 unique lane ids, exactly the seed's
+        // (`quality:cache-policy` and `quality:shadcn-lint` left the pre-push plan 2026-11-02).
         const costIds = A.map(DEFAULT_GATE_ORDER_COST_SOURCES, (entry) => entry.laneId);
-        expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(33);
+        expect(HashSet.size(HashSet.fromIterable(costIds))).toBe(31);
         expect(A.sort(costIds, Order.String)).toEqual(
           A.sort(
             A.map(DEFAULT_GATE_ORDER_SEED.lanes, (row) => row.laneId),
@@ -553,8 +556,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         );
         expect(countBy(handoff.lanes, (lane) => lane.costBasis)).toEqual({
           "a1-lane-row": 15,
-          "a1-proxy-row": 16,
-          "external-run": 2,
+          "a1-proxy-row": 15,
+          "external-run": 1,
         });
         expect(
           A.sort(
@@ -566,9 +569,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           )
         ).toEqual([
           "fallow:health",
-          "quality:cache-policy",
           "quality:doctest",
-          "quality:shadcn-lint",
           "quality:storybook",
           "repo-sanity:config-typecheck",
           "repo-sanity:goals-ops-typecheck",
