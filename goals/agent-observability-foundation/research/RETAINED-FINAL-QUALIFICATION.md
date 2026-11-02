@@ -1,6 +1,6 @@
 # Retained final qualification
 
-The foundation remains active. This draft prepares a new delivery checkpoint;
+The foundation remains active. [Draft PR2612](https://github.com/beep-effect/beep-effect/pull/2612) prepares a new delivery checkpoint;
 it does not establish readiness, canonical completion or real-harness enrollment.
 The final delivery role is selected by the [manifest](../ops/manifest.json).
 

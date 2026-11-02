@@ -1,5 +1,7 @@
 # Post-merge qualification and closeout
 
+Current final delivery is operator-reserved draft PR2612. PR2578 merged without positive readiness and retains canonical unknown; see [retained final qualification](RETAINED-FINAL-QUALIFICATION.md). Original executions and historical conclusions below retain their recorded scopes.
+
 Recorded on November 2 UTC (November 1 in America/Chicago). The operative lifecycle remains active.
 
 ## Historical PR2508 delivery and current follow-up
@@ -74,6 +76,6 @@ The [current comparison](../ops/history/qualified-final-applicability-20261102.j
 
 ## Remaining delivery gate
 
-Retain every historical original and negative result. The retained route review remains scoped to its recorded source. PR2578 is the owner-held final delivery. The operator explicitly requested immediate publication rather than waiting for workstation verification; owned local cheap-gates job `6a6c655b-e685-4900-a692-43884b2b6348` was cancelled and is not a passing gate. Hosted CI now supplies the repository proof. Answer reviews, retain genuine current-head readiness before merge, and run canonical completion refresh after the qualified final merge. Until that writer verifies completion, the packet and execution goal remain active.
+Retain every historical original and negative result. The retained route review remains scoped to its recorded source. PR2612 is the operator-reserved final delivery. PR2578's subsequent unknown result is retained separately. The operator explicitly requested immediate publication rather than waiting for workstation verification; owned local cheap-gates job `6a6c655b-e685-4900-a692-43884b2b6348` was cancelled and is not a passing gate. Hosted CI now supplies the repository proof. Answer reviews, retain genuine current-head readiness before merge, and run canonical completion refresh after the qualified final merge. Until that writer verifies completion, the packet and execution goal remain active.
 
 The historical forwarder service and timer remain masked and inactive. No production collector deployment, real-harness enrollment, archive reingestion, data deletion, human notification qualification or recovery-hold release is authorized by this refresh. All seven real-harness populations remain Unknown. Existing projects are not deleted because the original conditional deletion criterion was not established.

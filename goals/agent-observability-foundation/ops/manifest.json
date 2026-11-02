@@ -42,13 +42,21 @@
       },
       {
         "number": 2578,
+        "role": "supporting"
+      },
+      {
+        "number": 2595,
+        "role": "supporting"
+      },
+      {
+        "number": 2612,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/fix_agent-observability-qualified-final-b110fe798213/verdict.json",
+        "ref": ".beep/yeet/runs/fix_agent-observability-retained-final-6992b5095ab2/verdict.json",
         "gating": true
       },
       {
@@ -118,13 +126,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Lifecycle active. Historical PR2364 and PR2508 completion results remain unsatisfied;2519/2534 are supporting source delivery. FinalPR2578 is the owner-held follow-up on main including coverage repair2568. Original870/40/73/44 executions remain historical; hosted51-test HarnessLedger proof covers appended cases at4afad5c6. Selected package comparison is244exact plus four script-only manifests and that test file. Root84/84 and stage88/90,87/89 applicability retain the reviewed two-helper explicit-pin bridge. New final-head hosted/review/readiness/merge and canonical completion pending; recovery hold intact.",
+  "statusNote": "Lifecycle active. PR2364 and PR2508 retain unsatisfied historical results; PR2578 retains canonical unknown after external merge without positive pre-merge readiness. PR2595 has post-merge source qualification (37 passed/1 skipped), not pre-merge readiness. Operator-reserved draft final PR2612 is the sole final. Original870/40/73/44 executions retain scope; all51 HarnessLedger tests passed at7f91b189. Current selected-input comparison remains244/249 plus four script-only manifests and appended tests; root84/84 and stages88/90,87/89 retain the reviewed two-helper bridge. Terminal current-head readiness, positive canonical verdict before strict merge, all non-Vercel hosted checks, review/window and canonical completion remain required. Recovery hold intact.",
   "resumeConditions": [
     "Explicit launch of this packet after dependency proof; refresh live state before changes."
   ],
   "dependencies": [],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2578
+    "finalPullRequest": 2612
   }
 }

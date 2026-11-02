@@ -1,6 +1,6 @@
 # Trustworthy agent observability foundation
 
-Current delivery: owner-held final PR2578. Historical PR2364 and PR2508 completion receipts remain unsatisfied; the active goal requires verified pre-merge readiness and canonical closeout for the new final head. The recovery hold remains intact.
+Current delivery: operator-reserved draft final [PR2612](https://github.com/beep-effect/beep-effect/pull/2612). Historical PR2364/2508 results remain unsatisfied; PR2578 is canonical **unknown** after external merge without positive readiness. The goal remains active and the recovery hold stays intact.
 
 ## Status
 
@@ -36,9 +36,10 @@ is merged and integrated. Fresh qualification passed 870 AI-metrics,40 Phoenix,
 Independent review accepted the 84-input root and same-root90/89-input disposable/live
 pair. All thirteen domain criteria retain support at their explicit scopes.
 See the [active qualification](./research/POST-MERGE-QUALIFICATION.md).
-Required final-head hosted/review/merge proof and canonical completion remain open;
-one scanner false positive in a public test-file digest is being corrected through
-the base-reviewed policy lane.
+Required final-head hosted/review/merge proof and canonical completion remain open.
+The narrowly scoped scanner correction is merged. The [retained qualification](./research/RETAINED-FINAL-QUALIFICATION.md)
+records PR2578's unknown result, current input applicability, 51 hosted reconciliation
+tests and the operator's exclusive reservation of the next final merge.
 
 Current declared-root proof commands require both `--declared-qualification-sha256`
 and `--declared-probe-sha256`; there is no implicit historical pair. The
@@ -53,7 +54,7 @@ that historical result as unsatisfied; a merge alone cannot complete this packet
 The [post-merge qualification](./research/POST-MERGE-QUALIFICATION.md) preserves
 that history and refreshes current source, package and synthetic-route evidence.
 
-[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) was the previous final follow-up. Its canonical result remains unsatisfied because its declared readiness verdict was stale, despite fifteen green required contexts at merge. PR2364 and PR2508 are now supporting historical delivery. [PR2578](https://github.com/beep-effect/beep-effect/pull/2578) synchronizes the new final role, prospective closeout and verdict reference; it must qualify readiness before merge.
+[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) was the previous final follow-up. Its canonical result remains unsatisfied because its declared readiness verdict was stale, despite fifteen green required contexts at merge. PR2364 and PR2508 are now supporting historical delivery. [PR2578](https://github.com/beep-effect/beep-effect/pull/2578) also merged before positive readiness was retained. Its [canonical observation](./ops/history/pr2578-completion-unknown-20261102.json) remains unknown despite fifteen verified required contexts. PR2612 is now the sole final, with a new verdict reference and unchanged completion policy. The operator reserved its ready/merge transition for this chat. Supporting [PR2595](https://github.com/beep-effect/beep-effect/pull/2595) passed all 37 hosted jobs with one skip after merge; its [source qualification](./ops/history/pr2595-postmerge-source-qualification-20261102.json) preserves that timing.
 The existing prospective declaration is not achievement. The canonical
 `beep goals completion refresh` writer remains the only completion derivation;
 local passes and synthetic proof do not replace it.
@@ -88,6 +89,8 @@ The original relocation index describes its historical operation; it does not cl
 that later public derivatives retain the original bytes.
 
 ## Current verification
+
+- [Retained final qualification](./research/RETAINED-FINAL-QUALIFICATION.md): current main selected-input comparison, retained unknown completion, actual hosted 51-test reconciliation result and post-merge compatibility proof. These do not establish new final-head readiness. The [new reflection](./history/reflections/2026-11-02-codex-retained-final.md) preserves the earlier reflection unchanged.
 
 - [November2 integrated qualification](./research/POST-MERGE-QUALIFICATION.md):
   fresh suites passed 870/40/73/44 tests with 249 selected inputs stable. Independent
