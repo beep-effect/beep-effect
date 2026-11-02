@@ -523,16 +523,18 @@ describe("Turbo lane digests", () => {
         // A row with no resolved definition is read as uncacheable, the conservative side.
         expect((yield* resolve(["lint:typos"])).inputsCacheable).toBe(false);
         // A declared digest has no Turbo definition behind it.
-        expect((yield* resolveLaneInputDigestForTesting(
-          {
-            durationMs: 1,
-            startedAt: startedAtIso,
-            endedAt: "2026-11-02T04:00:05.000Z",
-            failure: O.none(),
-            step: QualityTaskStep.make({ label: "ci:declared", command: "true", args: [], cwd: root }),
-          },
-          O.some("declared")
-        )).inputsCacheable).toBe(false);
+        expect(
+          (yield* resolveLaneInputDigestForTesting(
+            {
+              durationMs: 1,
+              startedAt: startedAtIso,
+              endedAt: "2026-11-02T04:00:05.000Z",
+              failure: O.none(),
+              step: QualityTaskStep.make({ label: "ci:declared", command: "true", args: [], cwd: root }),
+            },
+            O.some("declared")
+          )).inputsCacheable
+        ).toBe(false);
 
         // The flag survives the wrapper lane ledger's encode and decode.
         const folded = yield* readTurboLaneDigest(root, startedAtIso, ["check", "lint:schema-first"]);

@@ -529,10 +529,7 @@ describe("proof shadow mode", () => {
 
         const rows = yield* (yield* ProofLedger.make(root)).shadowRows;
         expect(
-          A.map(rows, (row) => [
-            row.laneId,
-            row.decision.kind === "miss" ? row.decision.reason : row.decision.kind,
-          ])
+          A.map(rows, (row) => [row.laneId, row.decision.kind === "miss" ? row.decision.reason : row.decision.kind])
         ).toStrictEqual([
           ["fallow:dead-code", "no-fact"],
           ["cheap-gates:lint-policy", "no-fact"],
