@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "turbo-setup-feature-review/v1",
+  "recordedAt": "2026-11-02T08:51:55.190922+00:00",
+  "feature": "futureFlag:experimentalSetup",
+  "decision": "retain-current-absence",
+  "authority": "Final no-change feature applicability decision, source review and synthetic native controls. No actual computation qualification, hosted acceptance, toolchain migration or measured production speedup.",
+  "sourceBaseRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
+  "nativeEvidence": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-setup-controls.json",
+    "sha256": "c91a68707898748aec9e3928bcc88fbf60d798fb0f75a9a1f745762a464793cc",
+    "executionSourceRevision": "efd5be79d0f5f216e27b3ea2d3e070a966f02a02",
+    "driverSha256": "3d1bace02fd76dca80b95eb1efd33bf5cced788e5de42fc67eb2cf3e280be5f8",
+    "cases": 36,
+    "counts": {
+      "flagRequired": 24,
+      "managedPrerequisites": 6,
+      "explicitSkipPolicySuccess": 6
+    },
+    "noTaskExecution": true,
+    "allFixtureFileBytesUnchanged": true,
+    "driverRefusals": {
+      "driverSha256": "3d1bace02fd76dca80b95eb1efd33bf5cced788e5de42fc67eb2cf3e280be5f8",
+      "rows": [
+        {
+          "case": "optimized-python",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "ed9329da4ff06f87cd467b811c6dc64917c9978bd71c184a66aab145e19bedab"
+        },
+        {
+          "case": "existing-report",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "99e075b61a517b86508e9ca7188cc7247df77f64c7a65c31c7868addb7f5fe81"
+        },
+        {
+          "case": "wrong-native-pin",
+          "exit": 1,
+          "expectedReasonObserved": true,
+          "stderrSha256": "7e4b6320eb7a8c52d6d564a87f19c6e806d1678b6cdc24c0fefc463c25787b2e"
+        }
+      ],
+      "passingReportUnchanged": true,
+      "wrongPinTracebackBoundToExactDigestAssertion": true
+    },
+    "publicProjection": "Decoded values are identical to the current private source-bound execution; formatting only. Failed exploratory and first-port receipts are retained privately and do not qualify these cases."
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.11-canary.1",
+      "sha256": "e5638086bb627e9f3d58bd1364f02a1decb60bf23cac2faacd0eece770ab5dc2"
+    }
+  },
+  "stableSchemaSha256": "e3042f9184a5e53260af50b724cbcbbb375f23d53bc1abdc6a3894216f10efaa",
+  "nativeAvailability": {
+    "enabledSkipPolicies": "Both native clients return0 for plan/check/provision with a real committed Bun lock, ignored managed storage, explicit tools=skip/dependencies=skip, and no network.",
+    "disabled": "Absent/false flag refuses the command or refuses the setup key.",
+    "managedPolicy": "With default managed tools and empty offline caches, the clients require resolution metadata/turbo.lock; these are prerequisites rather than an unimplemented-feature verdict.",
+    "descriptionDiscrepancy": "Current stable schema and both native help texts claim parsing/help only, but the observed native paths implement additional policy, storage, lock and successful skip behavior. Do not infer semantics from that stale description alone.",
+    "limits": "No online provisioning, binary download, managed activation or installation benefit has been proven."
+  },
+  "currentOwnership": {
+    "cloud": "AGENTS.md and scripts/cloud/bootstrap.sh designate the cloud bootstrap owner, including pinned Bun/Node and dependencies.",
+    "protectedCi": ".github/actions/setup-monorepo-ci/action.yml already verifies baked Bun/lock/binary identity or uses the pinned setup action, then frozen-lockfile installation.",
+    "worktrees": "The Worktree command owns new-checkout bootstrap; this review does not replace it.",
+    "qualityTasks": "Generated package scripts and tuple-specific task qualification stay with their existing owners. Turbo setup is not a cache-hit or quality-proof mechanism."
+  },
+  "disposition": "Retain absent experimentalSetup and absent setup policy. There is no named current consumer or measured quality critical-path benefit that justifies adding a parallel repository toolchain/lock owner. Existing eligible task obligations are not removed by this feature decision.",
+  "sourceBindings": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "c9421fd8e19c18f3aab31dc3499de3abcec1468f5421e282a310527aa3cf5ab5"
+    },
+    {
+      "path": "scripts/cloud/bootstrap.sh",
+      "sha256": "38e50e99d9ac68e0c14f1b21096193cd1851958b16399ab1e45750871770c522"
+    },
+    {
+      "path": ".github/actions/setup-monorepo-ci/action.yml",
+      "sha256": "9f6b5079ebc23827568f8a2267c419fccaa25385f31a7c651630257facc09214"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
+      "sha256": "e492be2f380c8edff0ac7ed1e12231b46429739dc90ae6d3b357a4d706a11bee"
+    },
+    {
+      "path": "turbo.json",
+      "sha256": "4c3fb38c3654a76d158f9ad0abdcdf26de53252e3173525519842bf00d39f188"
+    },
+    {
+      "path": ".bun-version",
+      "sha256": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+    },
+    {
+      "path": ".nvmrc",
+      "sha256": "d9f318747a126ce2247661af67852b185def7789492eabfad7bba322be087c33"
+    },
+    {
+      "path": "package.json",
+      "sha256": "bdb73cf27f6c7879c6da15284ada121985772149e98e6444cfd050d213659b91"
+    }
+  ],
+  "reopenWhen": [
+    "A named bootstrap/CI/worktree owner proposes a concrete setup consumer with measurable preparation or reliability benefit.",
+    "A pinned native update changes setup policy, activation, offline or lock semantics.",
+    "The existing toolchain owner is deliberately replaced with a reviewed migration, compatible secret/grant boundaries and rollback."
+  ],
+  "wholeGoalAcceptanceChanged": false,
+  "productionConfigurationChanged": false
+}
