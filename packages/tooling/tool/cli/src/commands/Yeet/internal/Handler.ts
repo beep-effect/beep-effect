@@ -204,6 +204,7 @@ const recordLocalShardOutcome = Effect.fn("Yeet.recordLocalShardOutcome")(functi
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (!isNamedLocalProofShard(step)) {
     return;
@@ -425,6 +426,7 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   let results = A.empty<RepoStepRunResult>();
   for (const step of steps) {
@@ -608,6 +610,7 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   return yield* Effect.forEach(steps, (step) => runPhaseStep(context, step, recorder), { concurrency: 1 });
 });
@@ -625,6 +628,7 @@ const runVerifyMode = Effect.fn("Yeet.runVerifyMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const verifyResults = yield* runProofPhase(context, fullSteps, recorder);
   if (A.some(verifyResults, (result) => result.exitCode !== 0)) {
@@ -649,6 +653,7 @@ const runRequiredPhase = Effect.fn("Yeet.runRequiredPhase")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const results = yield* runPhase(context, steps, recorder);
   if (A.some(results, (result) => result.exitCode !== 0)) {
@@ -1010,6 +1015,7 @@ const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(functi
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   return yield* listJobs(context).pipe(
     Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
@@ -1168,6 +1174,7 @@ const submitDetachedReadyMonitor = Effect.fn("Yeet.submitDetachedReadyMonitor")(
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const results = yield* runPhase(context, submitSteps, recorder);
   if (A.some(results, (result) => result.exitCode !== 0)) {
@@ -1510,6 +1517,7 @@ const retryPendingMonitorChecks = Effect.fn("Yeet.retryPendingMonitorChecks")(fu
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
@@ -1519,6 +1527,7 @@ const retryPendingMonitorChecks = Effect.fn("Yeet.retryPendingMonitorChecks")(fu
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const remaining = deadline - (yield* Clock.currentTimeMillis);
   if (remaining <= 0) return MonitorCheckReconciliation.cases.timeout.make({ names });
@@ -1548,6 +1557,7 @@ const reconcileMonitorCheckCensus = Effect.fn("Yeet.reconcileMonitorCheckCensus"
     | FileSystem.FileSystem
     | Path.Path
     | ChildProcessSpawner.ChildProcessSpawner
+    | Git
   >
 ): Effect.fn.Return<
   MonitorCheckReconciliation,
@@ -1557,6 +1567,7 @@ const reconcileMonitorCheckCensus = Effect.fn("Yeet.reconcileMonitorCheckCensus"
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (isAwaitingYeetCheckRegistration(results)) return MonitorCheckReconciliation.cases.unreadable.make({});
   const required = yield* collectRemoteChecks(context, true);
@@ -1622,6 +1633,7 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   // `runPhase` appends to the recorder, and the recorder is what the verdict,
   // the PR body, and `yeet status` all read. A retried attempt must therefore
@@ -2040,6 +2052,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2322,6 +2335,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   const startedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const resolvedHeadSha = yield* currentCommitSha(context);

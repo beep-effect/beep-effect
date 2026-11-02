@@ -487,6 +487,8 @@ describe("plain monitor required census", () => {
             "watch failed",
             []
           ).pipe(
+            // `Git` is rebuilt over the scripted spawner: the monitor phase's `currentCommitSha` runs through the kit (W1b).
+            Effect.provideServiceEffect(Git, Git.make),
             Effect.provideService(
               ChildProcessSpawner.ChildProcessSpawner,
               censusSpawner(calls, [requiredPending, requiredGreen])

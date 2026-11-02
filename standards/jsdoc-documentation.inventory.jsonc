@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T10:39:56.809Z",
+  "generatedAt": "2026-11-02T13:43:38.644Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -523326,8 +523326,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-64-schemacatalogentrykind",
+          "line": 67,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-67-schemacatalogentrykind",
           "currentTags": [
             "@category",
             "@since"
@@ -523348,8 +523348,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 98,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-98-schemacatalogentrykind",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-101-schemacatalogentrykind",
           "currentTags": [
             "@category",
             "@since"
@@ -523370,8 +523370,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-116-schemacatalogentry",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-119-schemacatalogentry",
           "currentTags": [
             "@category",
             "@since"
@@ -523392,8 +523392,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-153-schemacatalogdocument",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-156-schemacatalogdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -523414,8 +523414,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 181,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-181-schemacatalogowner",
+          "line": 184,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-184-schemacatalogowner",
           "currentTags": [
             "@category",
             "@since"
@@ -523436,8 +523436,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 219,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-219-schemacatalogshard",
+          "line": 222,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-222-schemacatalogshard",
           "currentTags": [
             "@category",
             "@since"
@@ -523458,8 +523458,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 248,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-248-schemacatalogoptions",
+          "line": 258,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-258-schemacatalogoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -523480,8 +523480,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 277,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-277-schemacatalogsummary",
+          "line": 295,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-295-schemacatalogsummary",
           "currentTags": [
             "@category",
             "@since"
@@ -523502,8 +523502,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 720,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-720-generateschemacatalogdocument",
+          "line": 748,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-748-generateschemacatalogdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -523524,8 +523524,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 779,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-779-schemacatalogshardpath",
+          "line": 812,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-812-schemacatalogshardpath",
           "currentTags": [
             "@param",
             "@returns",
@@ -523548,8 +523548,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 808,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-808-shardschemacatalogdocument",
+          "line": 841,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-841-shardschemacatalogdocument",
           "currentTags": [
             "@category",
             "@since"
@@ -523570,8 +523570,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 837,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-837-renderschemacatalogshard",
+          "line": 870,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-870-renderschemacatalogshard",
           "currentTags": [
             "@category",
             "@since"
@@ -523592,8 +523592,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 877,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-877-generateschemacatalogshards",
+          "line": 910,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-910-generateschemacatalogshards",
           "currentTags": [
             "@category",
             "@since"
@@ -523614,8 +523614,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 972,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-972-runschemacatalog",
+          "line": 1077,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-1077-runschemacatalog",
           "currentTags": [
             "@category",
             "@since"
@@ -523636,8 +523636,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 1011,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-1011-lintschemacatalogcommand",
+          "line": 1112,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-1112-lintschemacatalogcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -529811,8 +529811,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.command.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-command-ts-99-observabilitycommand",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-command-ts-128-observabilitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -530639,8 +530639,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Observability/Observability.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.schemas.ts",
-          "line": 542,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-542-generatedfilestatus",
+          "line": 550,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-550-generatedfilestatus",
           "currentTags": [
             "@category",
             "@since"
@@ -530661,8 +530661,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Observability/Observability.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.schemas.ts",
-          "line": 563,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-563-generatedfile",
+          "line": 571,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-571-generatedfile",
           "currentTags": [
             "@category",
             "@since"
@@ -530683,8 +530683,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Observability/Observability.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.schemas.ts",
-          "line": 613,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-613-catalogrunreport",
+          "line": 621,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-schemas-ts-621-catalogrunreport",
           "currentTags": [
             "@category",
             "@since"
@@ -530705,8 +530705,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Observability/Observability.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.service.ts",
-          "line": 75,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-75-instrumentationcatalogshape",
+          "line": 76,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-76-instrumentationcatalogshape",
           "currentTags": [
             "@category",
             "@since"
@@ -530727,8 +530727,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Observability/Observability.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.service.ts",
-          "line": 100,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-100-instrumentationcatalog",
+          "line": 109,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-109-instrumentationcatalog",
           "currentTags": [
             "@category",
             "@since"
@@ -530749,8 +530749,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Observability/Observability.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Observability/Observability.service.ts",
-          "line": 287,
-          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-287-instrumentationcataloglive",
+          "line": 361,
+          "anchor": "packages-tooling-tool-cli-src-commands-observability-observability-service-ts-361-instrumentationcataloglive",
           "currentTags": [
             "@category",
             "@since"

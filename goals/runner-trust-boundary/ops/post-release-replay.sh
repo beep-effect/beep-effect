@@ -1,7 +1,12 @@
 #!/usr/bin/env zsh
 # Operator side of Probe N (runner-trust-boundary P8, exception E1).
 #
-# Usage: post-release-replay.sh [ref] [INT|KILL]   (ref defaults to main; the
+# Usage: post-release-replay.sh [ref] [INT|KILL] [hold-minutes]
+#   hold-minutes (KILL only, 0 to 15): keep an accepted replay session open with
+#   Runner.Worker removed and, when the hold starts, dispatch one decoy
+#   fleet-shadow-check run (no inputs, no secrets) to see whether GitHub offers
+#   the hijacked session a job other than its original one.
+#   (ref defaults to main; the
 # runner group admits fleet-shadow-check.yml only at refs/heads/main. INT, the
 # default, stops the listener the orderly way; KILL kills it without releasing
 # its session and makes Probe N retry the same-host replay until the
@@ -45,6 +50,14 @@ readonly probe_subnet="${REPLAY_SUBNET_ID:-subnet-01bc446dbd3c68d84}"
 readonly probe_security_group="${REPLAY_SECURITY_GROUP_ID:-sg-0ec4816fcd2af2d4b}"
 readonly ref="${1:-main}"
 readonly stop_signal="${2:-INT}"
+[[ "${3:-0}" =~ ^[0-9]{1,2}$ ]] || { echo "hold-minutes must be 0 to 15" >&2; exit 64; }
+readonly hold_minutes="$(( 10#${3:-0} ))"
+(( hold_minutes <= 15 )) || { echo "hold-minutes must be 0 to 15" >&2; exit 64; }
+# KILL mode can spend about 35 minutes in replay attempts before an
+# acceptance, then the hold, then a 180 s console-capture pause; poll for all
+# of it with a 10-minute margin.
+readonly console_polls="$(( 200 + hold_minutes * 4 + 12 ))"
+[[ "${hold_minutes}" == 0 || "${stop_signal}" == KILL ]] || { echo "hold-minutes needs KILL" >&2; exit 64; }
 [[ "${stop_signal}" == INT || "${stop_signal}" == KILL ]] || { echo "stop signal must be INT or KILL" >&2; exit 64; }
 
 if ! aws sts get-caller-identity > /dev/null 2>&1; then
@@ -73,6 +86,7 @@ gh run list --workflow="${workflow}" --branch="${ref}" --limit 100 \
   --json databaseId --jq '.[].databaseId' > "${scratch}/before"
 gh workflow run "${workflow}" --ref "${ref}" \
   -f jit_post_release_replay=true -f "replay_stop_signal=${stop_signal}" \
+  -f "replay_hold_minutes=${hold_minutes}" \
   -f "replay_recipient_key=${recipient_key}"
 run_id=""
 for _ in {1..30}; do
@@ -84,6 +98,7 @@ done
 [[ -n "${run_id}" ]] || { echo "dispatched run not found" >&2; exit 1; }
 echo "run id: ${run_id}"
 
+decoy_run=""
 instance_id=""
 for _ in {1..90}; do
   runner_name="$(gh api "repos/${repo}/actions/runs/${run_id}/jobs" --jq '.jobs[0].runner_name // ""')"
@@ -98,15 +113,45 @@ echo "worker: beep-ci-${instance_id}"
 
 # Accumulate RTB- lines from the serial console until the probe reports DONE.
 : > "${scratch}/console"
-for _ in {1..200}; do
+for (( poll = 1; poll <= console_polls; poll++ )); do
   aws ec2 get-console-output --region "${region}" --instance-id "${instance_id}" --latest \
     --query Output --output text 2> /dev/null | tr -d '\r' \
     | sed -n 's/^.*\(RTB-[A-Z][A-Z-]*.*\)$/\1/p' >> "${scratch}/console" || true
+  if [[ -z "${decoy_run}" ]] && grep -q '^RTB-HOLD-START' "${scratch}/console"; then
+    gh run list --workflow="${workflow}" --branch="${ref}" --limit 100 \
+      --json databaseId --jq '.[].databaseId' > "${scratch}/before-decoy"
+    gh workflow run "${workflow}" --ref "${ref}"
+    for _ in {1..30}; do
+      decoy_run="$(gh run list --workflow="${workflow}" --branch="${ref}" --limit 100 \
+        --json databaseId --jq '.[].databaseId' | grep -Fvxf "${scratch}/before-decoy" | head -1 || true)"
+      [[ -n "${decoy_run}" ]] && break
+      sleep 2
+    done
+    echo "decoy run: ${decoy_run:-not found} dispatched at $(date -u +%FT%TZ)"
+  fi
   grep -q '^RTB-DONE' "${scratch}/console" && break
   sleep 15
 done
-sort -u -o "${scratch}/console.notes" <(grep -E '^RTB-(NOTE|LISTENER-ENDED|ATTEMPT|VERDICT|WRAPPED|DONE)' "${scratch}/console" || true)
-grep -E '^RTB-(NOTE|LISTENER-ENDED|ATTEMPT|VERDICT)' "${scratch}/console" | awk '!seen[$0]++'
+if [[ -n "${decoy_run}" ]]; then
+  for _ in {1..40}; do
+    decoy="$(gh api "repos/${repo}/actions/runs/${decoy_run}/jobs?filter=all" \
+      --jq '.jobs[0] | [.status, (.conclusion // "-"), (.runner_name // "-"), (.started_at // "-")] | @tsv')"
+    [[ "${decoy}" == completed* ]] && break
+    sleep 15
+  done
+  decoy_status="$(print -r -- "${decoy}" | cut -f1)"
+  decoy_runner="$(print -r -- "${decoy}" | cut -f3)"
+  echo "DECOY: run ${decoy_run}: ${decoy}"
+  if [[ "${decoy_runner}" == "beep-ci-${instance_id}" ]]; then
+    echo "DECOY-VERDICT: the hijacked registration received a different job"
+  elif [[ "${decoy_status}" != completed ]]; then
+    echo "DECOY-VERDICT: inconclusive (decoy ${decoy_status:-unread} after the wait; runner ${decoy_runner})"
+  else
+    echo "DECOY-VERDICT: the decoy ran elsewhere (${decoy_runner})"
+  fi
+fi
+sort -u -o "${scratch}/console.notes" <(grep -E '^RTB-(NOTE|LISTENER-ENDED|ATTEMPT|HOLD-START|HOLD-END|VERDICT|WRAPPED|DONE)' "${scratch}/console" || true)
+grep -E '^RTB-(NOTE|LISTENER-ENDED|ATTEMPT|HOLD-START|HOLD-END|VERDICT)' "${scratch}/console" | awk '!seen[$0]++'
 grep -q '^RTB-WRAPPED' "${scratch}/console" || { echo "SECOND-HOST: inconclusive (no wrapped configuration on the console)"; exit 1; }
 
 # Wrapped lines arrive in order within one console snapshot; keep first occurrences.

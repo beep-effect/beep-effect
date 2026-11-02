@@ -33,12 +33,20 @@ single-file catalog, `schema-catalog.generated.jsonc` at the root of
 changes with `bun run beep lint schema-catalog --write` and review the diff.
 Both generated catalogs (schema and instrumentation) are sharded per owning
 package so pull requests that touch different packages do not conflict; see
-`standards/generated-artifacts.policy.md`.
+`standards/generated-artifacts.policy.md`. The `schema-catalog` and
+`instrumentation-catalog` pre-commit hooks in `lefthook.yml` regenerate the
+shards of the packages owning the staged sources and stage them
+(`bun run beep lint schema-catalog --write --stage <paths...>`,
+`bun run beep observability catalog --write --stage <paths...>`), so a commit
+carries its own shard refresh before any gate runs; the hosted gate stays the
+proof for orphan shards and the standard's generated section, which only the
+full scan covers.
 
 Local `beep quality github-checks cheap-gates` also runs the schema catalog.
 It runs alone in the `heavy` scheduling wave **within the cheap-gates tier**,
-after the parallel preflight lanes. The generator has no package-scoped check:
-its whole-repository ownership and orphan-shard checks require the full scan.
+after the parallel preflight lanes. The check has no package scope: its
+whole-repository ownership and orphan-shard checks require the full scan
+(the path-scoped writer regenerates shards; it does not replace the check).
 The 2026-10-22 profile measured about 24 seconds and 12.6 GiB peak RSS, so keep
 it isolated and allow at least the existing 16 GiB runner envelope. This wave
 still gates publication before the head-install preflight. Root `lint:oxlint`
