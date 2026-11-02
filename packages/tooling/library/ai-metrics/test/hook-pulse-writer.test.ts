@@ -24,6 +24,7 @@ import {
   hookPulseDisarmSentinelPath,
   hookPulseDisarmWindowsPath,
   hookPulseLedgerDir,
+  hookPulseNamespace,
   makeAiMetricsConfigSnapshot,
   makeHarnessFingerprint,
 } from "@beep/repo-ai-metrics";
@@ -241,6 +242,7 @@ type WriterOptions = {
   readonly aiMetricsHashSalt?: string;
   readonly disarmSentinel?: string;
   readonly hashSalt?: string;
+  readonly namespaceProjection?: string;
   readonly viaXdgFallback?: boolean;
   readonly writerPath?: string;
   readonly writerCap?: string;
@@ -250,6 +252,23 @@ type WriterOptions = {
   readonly attemptUtc?: string;
   readonly executablePath?: string;
 };
+
+// Every salt rung is cleared unless a case sets one, so a developer who
+// exports a real ai-metrics salt cannot change what these digests are.
+// Cleared, they exercise the insecure-default fallback that keeps an
+// unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
+// The later rungs are settable so the codec-parity cases can prove both
+// halves walk the *same* chain rather than only its first link. The projection
+// rung sits between the two variables: cleared, the writer falls to its XDG
+// default under the temp HOME, where no projection exists, so an applied
+// workstation projection can never leak into these digests; a case that
+// exercises the rung names its fixture file explicitly.
+const saltEnvironment = (stateHome: string, options: WriterOptions) => ({
+  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
+  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+  BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: options.namespaceProjection ?? "",
+  XDG_CACHE_HOME: `${stateHome}/.cache`,
+});
 
 const writerEnvironment = (stateHome: string, evidenceRoot: string, options: WriterOptions) => ({
   HOME: stateHome,
@@ -278,14 +297,7 @@ const writerEnvironment = (stateHome: string, evidenceRoot: string, options: Wri
   BEEP_CURSOR_HOOK_PULSE_WRITER_CAP: "60s",
   BEEP_HOOK_PULSE_WRITER_CAP: options.writerCap ?? "60s",
   BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
-  // Both salt rungs are cleared unless a case sets one, so a developer who
-  // exports a real ai-metrics salt cannot change what these digests are.
-  // Cleared, they exercise the insecure-default fallback that keeps an
-  // unconfigured clone byte-identical to `hashPrivateIdentifier(value, O.none())`.
-  // The second rung is settable so the codec-parity cases can prove both
-  // halves walk the *same* chain rather than only its first link.
-  BEEP_HOOK_PULSE_HASH_SALT: options.hashSalt ?? "",
-  BEEP_AI_METRICS_HASH_SALT: options.aiMetricsHashSalt ?? "",
+  ...saltEnvironment(stateHome, options),
   BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
   ...(options.executablePath !== undefined ? { PATH: options.executablePath } : {}),
 });
@@ -1749,6 +1761,85 @@ fi
       })
     );
   });
+
+  // The global projection (issue #1865) is the writer's second rung. It must beat
+  // the repo-wide ai-metrics variable and lose only to the instrument override,
+  // and `hookPulseNamespace` must resolve the same salt from the same file.
+  const PROJECTION_SALT = "hook-pulse-writer-projection-salt";
+  const writeProjection = Effect.fnUntraced(function* (text: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dir = yield* fs.makeTempDirectoryScoped({ prefix: "hook-pulse-projection-" });
+    const file = path.join(dir, "namespace-projection.json");
+    yield* fs.writeFileString(file, text);
+    return { dir, file };
+  });
+  const projectionDocument = encodeJson({
+    version: 1,
+    cutoverUtc: "2026-11-02T04:00:00.000Z",
+    hashSalt: PROJECTION_SALT,
+    previousRegime: "library-default",
+  });
+
+  it.effect("reproduces the writer's private digests through the projection rung, above the ai-metrics rung", () =>
+    Effect.gen(function* () {
+      const { file } = yield* writeProjection(yield* projectionDocument);
+      const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+        namespaceProjection: file,
+        aiMetricsHashSalt: CODEC_PARITY_SALT,
+      });
+      const writerRow = yield* decodeHookPulseRow(expectSingleRow(run));
+      expect(writerRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(PROJECTION_SALT)));
+      expect(writerRow.cwd).toBe(yield* hashPrivateIdentifier(baseFields.cwd, O.some(PROJECTION_SALT)));
+      const namespace = yield* withSaltEnv(
+        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
+        hookPulseNamespace
+      );
+      expect(namespace.source).toBe("projection");
+      expect(yield* hashPrivateIdentifier(session, namespace.hashSalt)).toBe(writerRow.sessionId);
+      // The instrument override still wins over the projection on both halves.
+      const overridden = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+        namespaceProjection: file,
+        hashSalt: CODEC_PARITY_SALT,
+      });
+      const overriddenRow = yield* decodeHookPulseRow(expectSingleRow(overridden));
+      expect(overriddenRow.sessionId).toBe(yield* hashPrivateIdentifier(session, O.some(CODEC_PARITY_SALT)));
+      const overriddenNamespace = yield* withSaltEnv(
+        { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file, BEEP_HOOK_PULSE_HASH_SALT: CODEC_PARITY_SALT },
+        hookPulseNamespace
+      );
+      expect(overriddenNamespace.source).toBe("hook-pulse-env");
+    })
+  );
+
+  it.effect("refuses the row with namespace-projection-invalid when the projection cannot be trusted", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const malformed = yield* writeProjection("{not json");
+      const blank = yield* writeProjection(yield* encodeJson({ version: 1, hashSalt: "   " }));
+      const wrongVersion = yield* writeProjection(yield* encodeJson({ version: 2, hashSalt: PROJECTION_SALT }));
+      const linked = yield* writeProjection(yield* projectionDocument);
+      const link = path.join(linked.dir, "link.json");
+      yield* fs.symlink(linked.file, link);
+      for (const projection of [malformed.file, blank.file, wrongVersion.file, link]) {
+        const run = yield* runWriter(yield* encodeJson(preToolUsePayload), {
+          namespaceProjection: projection,
+          aiMetricsHashSalt: CODEC_PARITY_SALT,
+        });
+        expect(run.exitCode).toBe(0);
+        expect(run.rows).toHaveLength(0);
+        expect(run.refusals).toHaveLength(1);
+        const refusal = yield* decodeHookPulseRefusalJson(A.getUnsafe(run.refusals, 0));
+        expect(refusal.reason).toBe("namespace-projection-invalid");
+        const resolved = yield* withSaltEnv(
+          { BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: projection, BEEP_AI_METRICS_HASH_SALT: CODEC_PARITY_SALT },
+          hookPulseNamespace
+        ).pipe(Effect.flip);
+        expect(resolved._tag).toBe("HookPulseNamespaceError");
+      }
+    })
+  );
 });
 
 // The switch's two artifacts, stated as schemas rather than as inline object

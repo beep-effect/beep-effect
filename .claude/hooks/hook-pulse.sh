@@ -174,7 +174,43 @@ fi
 # `privateReference` through untouched, so nothing is ever double-hashed.
 # Rows written before the operator cutover are a separate namespace and are
 # never re-migrated.
-hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-${BEEP_AI_METRICS_HASH_SALT:-}}"
+#
+# The global projection (issue #1865, operator ruling 2026-11-02) is the second
+# rung, between the instrument override and the repo-wide variable:
+# `${BEEP_HOOK_PULSE_NAMESPACE_PROJECTION:-${XDG_CACHE_HOME:-$HOME/.cache}/beep/telemetry/namespace-projection.json}`
+# is an owned JSON file `{version:1, cutoverUtc, hashSalt, previousRegime}` that
+# every harness child reads regardless of what its launcher exported, so a
+# desktop-launched session and a shell-launched one land in one namespace. It
+# outranks `BEEP_AI_METRICS_HASH_SALT` on purpose: it IS this instrument's
+# projection, and only the explicit per-instrument override displaces it. A
+# projection that exists but is a symlink, unreadable, not `version` 1, or has
+# a blank `hashSalt` fails closed: the writer refuses the row with
+# `namespace-projection-invalid` rather than silently splitting the namespace
+# again. `hookPulseNamespace` in `hook-pulse-namespace.ts` walks the same four
+# rungs and fails on the same inputs; the writer parity test runs this script
+# against a fixture projection and recomputes its digests in TypeScript.
+hash_salt="${BEEP_HOOK_PULSE_HASH_SALT:-}"
+case "${hash_salt}" in
+  *[![:space:]]*) ;;
+  *)
+    hash_salt=""
+    namespace_projection="${BEEP_HOOK_PULSE_NAMESPACE_PROJECTION:-${XDG_CACHE_HOME:-${HOME:-/nonexistent}/.cache}/beep/telemetry/namespace-projection.json}"
+    if [ -e "${namespace_projection}" ] || [ -L "${namespace_projection}" ]; then
+      if [ -L "${namespace_projection}" ] || [ ! -f "${namespace_projection}" ]; then
+        refuse namespace-projection-invalid; exit 0
+      fi
+      hash_salt="$(jq -r 'select(type == "object" and .version == 1) | .hashSalt | strings' "${namespace_projection}" 2>/dev/null)" || hash_salt=""
+      case "${hash_salt}" in
+        *[![:space:]]*) ;;
+        *) refuse namespace-projection-invalid; exit 0 ;;
+      esac
+    fi
+    ;;
+esac
+case "${hash_salt}" in
+  *[![:space:]]*) ;;
+  *) hash_salt="${BEEP_AI_METRICS_HASH_SALT:-}" ;;
+esac
 case "${hash_salt}" in
   *[![:space:]]*) ;;
   *) hash_salt="beep-ai-metrics-local-smoke-insecure-salt" ;;

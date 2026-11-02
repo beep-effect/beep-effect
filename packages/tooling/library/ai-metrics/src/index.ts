@@ -177,6 +177,15 @@ export * from "./harness-ledger.ts";
  */
 export * from "./hook-pulse.ts";
 /**
+ * Hook-pulse hash namespace: the four-rung salt chain, the owned dated global
+ * projection file, and the per-regime salts readers join under. Examples live
+ * on the owning declarations in `./hook-pulse-namespace.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./hook-pulse-namespace.ts";
+/**
  * Clone, repository, worktree, revision, and source-instance identity, plus the
  * canonical-root registry persisted inside the data root. Examples live on the
  * owning declarations in `./identity-registry.ts`.
