@@ -1070,3 +1070,15 @@ and type check pass. Canonical inventory regeneration adds seven inherited
 completion exports and updates positions; finding totals and policy floors stay
 unchanged. No native run has yet used this implementation, and no qualification,
 protected producer or whole-goal acceptance is granted.
+
+
+### Resolve the admitted reusable producer workflow, 2026-11-02
+
+The [resolved Heavy approval checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)
+adds independent approval of the same-repository main Heavy leaf. The default
+continues to deny reusable execution. The caller and callee each bind their
+exact reviewed commit and file digest within the existing aggregate byte
+budget; metadata re-reading includes the callee. Focused producer tests and
+package lint/type checks cover this component, with hosted review still
+required. Private evidence transport and a real protected signed R2 run remain
+next. None of the nine whole-goal acceptance criteria is complete.

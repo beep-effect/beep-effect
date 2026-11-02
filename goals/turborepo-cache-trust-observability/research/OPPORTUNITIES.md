@@ -1673,3 +1673,20 @@ recognize a finite source-owned hint vocabulary and quote only its fixed member,
 never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
+
+
+### Resolve the admitted workflow before transporting producer evidence, 2026-11-02
+
+The actual inspection run reported `heavy.yml@main` and its resolved commit,
+while the hosted verifier accepted only an empty `referenced_workflows` list.
+A test with an independently approved Heavy leaf reproduced that refusal before
+implementation. Preserve default denial and add explicit same-repository main
+leaf approval, exact source reads and resolution-race controls. Keep the original
+aggregate 64 KiB workflow-text limit across both files. An earlier test-helper
+setup failure was retained separately and does not count as this regression.
+The working completion audit also carried an older SPEC digest. All nine
+acceptance requirements and eight implementation requirements still match SPEC
+verbatim after whitespace normalization; refresh only that working source
+binding and preserve both prior hashes. No requirement or acceptance status is
+relaxed. This removes a verification blocker, not the remaining private
+transport or real protected R2 acceptance gates.

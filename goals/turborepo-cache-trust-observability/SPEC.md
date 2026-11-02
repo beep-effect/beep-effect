@@ -957,3 +957,27 @@ untrusted diagnostic observation, not root-cause or qualification authority.
 Existing exit/truncation gates, input checks, deadlines and rollout policy stay
 intact. Reversal removes hint recognition from the same guard while retaining
 its existing bounded failure behavior.
+
+
+### Independently approve the resolved main Heavy leaf, 2026-11-02
+
+- The admitted runner path executes the same-repository `heavy.yml@main`
+  reusable workflow. Bind this leaf in the independently supplied hosted
+  approval to its exact resolved commit and reviewed file digest. The caller
+  keeps its own exact workflow revision and digest; they need not resolve to
+  the same commit. Never derive approval from the uploaded report.
+- The optional approval list defaults to empty and admits at most that one
+  Heavy leaf. GitHub metadata must contain exactly the approved path, protected
+  main ref and resolved revision. Refuse another repository, path, ref,
+  duplicate or additional callee before fetching workflow source. Read both
+  workflow files at their immutable commits and retain the original aggregate
+  sixty-four-KiB ASCII workflow-text budget, archive bound and receipt expiry.
+- Re-read the complete authenticated run and artifact metadata after inspection,
+  including the resolved callee. A changed resolution fails closed. Snapshot
+  independent approval before network effects so a mutable caller cannot change
+  the approval during verification.
+- Reverse by removing the optional callee approval; reusable producer runs then
+  fail closed. This component enables verification only. Private transport,
+  protected execution, credential controls, issuer/HMAC checks, real R2 replay,
+  tuple qualification, deployment and representative windows remain separate
+  gates. No runtime setting, cloud grant or acceptance criterion changes here.

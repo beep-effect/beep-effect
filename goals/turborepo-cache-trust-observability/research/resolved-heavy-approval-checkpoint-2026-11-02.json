@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "cache-resolved-heavy-approval-checkpoint/v1",
+  "authority": "Verification component only. No protected execution, signed R2 result, qualification or whole-goal acceptance.",
+  "decision": "SPEC.md#independently-approve-the-resolved-main-heavy-leaf-2026-11-02",
+  "sourceBindings": [
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+      "sha256": "a2f427699a68af9e0547724e402bc190dcd02102def1dd11145df0e8386158a4"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+      "sha256": "d627776fd93185c2acddcc55ab2bf91677649a2bfd0210bc13e08f71e4b49bfb"
+    },
+    {
+      "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+      "sha256": "1e3f4348b584981acfc7d8366425902973c7fb0105fb814447944949ffa6117c"
+    },
+    {
+      "path": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
+      "sha256": "672cb3c6bb9a98f488c2eec641eaf76ee55ae5a4aa14eafb5a930a5081615421"
+    }
+  ],
+  "observedRouting": {
+    "runId": 41413340460,
+    "runSourceRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
+    "path": "beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+    "ref": "refs/heads/main",
+    "resolvedRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
+    "scope": "Recorded queued-run metadata identifies the admitted callee; it proves neither execution nor success."
+  },
+  "independentApproval": {
+    "default": [],
+    "maximumCallees": 1,
+    "workflowPath": ".github/workflows/heavy.yml",
+    "repository": "Must equal the independently approved non-fork caller repository",
+    "ref": "refs/heads/main",
+    "source": "Each caller/callee must match its own independent exact revision and ASCII file digest."
+  },
+  "bounds": {
+    "workflowTextAggregateBytes": 65536,
+    "compressedArchiveBytes": 1048576,
+    "reportBytes": 65536,
+    "reportUploadRows": 64,
+    "reportMaximumAgeHours": 24,
+    "unchangedExternalTrial": "50 MiB / 200 Class A / 2000 Class B / ten minutes"
+  },
+  "controls": [
+    "caller and callee may have different resolved commits",
+    "legacy approval constructor and JSON default to no reusable workflows",
+    "unknown callee denied before source fetch",
+    "wrong repository/path/ref/tag/revision denied before source fetch",
+    "missing SHA, duplicate and additional callees denied",
+    "duplicate and non-Heavy independent approvals denied",
+    "callee bytes independently verified",
+    "lossy Unicode and oversized files denied even with matching approval digest",
+    "combined exact 64 KiB accepted and one-byte overflow denied",
+    "complete private observation publication uses the same verification",
+    "second metadata read detects changed or removed resolution",
+    "independent approval snapshotted before metadata effects"
+  ],
+  "regression": {
+    "before": "One intended failure: Run.referenced_workflows maximum length zero rejects the independently approved leaf.",
+    "setupFailure": "An earlier helper passed decoded optional fields to a decoder; corrected by schema encoding first. This is retained separately and is not regression proof."
+  },
+  "verification": {
+    "focused": {
+      "command": "bun x vitest run --config vitest.config.ts test/cache-hosted-producer.test.ts test/cache-producer.test.ts test/cache-workflow.test.ts --maxWorkers=1",
+      "workingDirectory": "packages/tooling/tool/cli",
+      "passed": 136,
+      "files": 3,
+      "exit": 0,
+      "elapsedSeconds": 9.979,
+      "finishedAt": "2026-11-02T15:30:14.141285+00:00"
+    },
+    "packageQuick": {
+      "command": "bun run beep quality package-verify @beep/repo-cli --quick",
+      "exit": 0,
+      "elapsedSeconds": 11.555,
+      "finishedAt": "2026-11-02T15:30:16.935905+00:00"
+    },
+    "docgen": {
+      "command": "bun run beep docgen local --package @beep/repo-cli",
+      "examples": 3684,
+      "scope": "Scoped example typechecking. Exported example/signature text is unchanged by the later aggregate byte-budget guard.",
+      "exit": 0,
+      "elapsedSeconds": 50.312,
+      "finishedAt": "2026-11-02T15:28:19.020562+00:00"
+    },
+    "hooks": "Normal source commit passed formatter, secrets scan, typos, JSDoc, instrumentation/schema catalog writers and commitlint.",
+    "inventory": {
+      "exit": 0,
+      "elapsedSeconds": 312.402,
+      "finishedAt": "2026-11-02T15:37:39.355159+00:00",
+      "packages": 184,
+      "openPackages": 15,
+      "openExports": 94,
+      "openModules": 115,
+      "rootPolicyOpen": 0,
+      "scope": "Canonical inventory; finding totals unchanged."
+    },
+    "packetDoctor": {
+      "exit": 0,
+      "elapsedSeconds": 2.527,
+      "finishedAt": "2026-11-02T15:37:13.019769+00:00",
+      "newBlockingFindings": 0,
+      "scope": "Packet hygiene only; existing historical completion advisories retained."
+    }
+  },
+  "remaining": [
+    "Fresh hosted component CI and review",
+    "Private complete-observation transport",
+    "Real protected main source/tool inspection and independent runtime approval",
+    "Bounded live signed R2 publication, replay and authenticated acceptance",
+    "Trust negative cases and representative windows",
+    "Tuple qualification and full adoption",
+    "Final whole-goal evidence, reflection and lifecycle"
+  ],
+  "wholeGoalAcceptanceChanged": false,
+  "runtimeSigningChanged": false,
+  "cloudChanges": false
+}
