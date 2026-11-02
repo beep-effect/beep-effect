@@ -1647,3 +1647,16 @@ in the owning producer PR; preserve it until the accepted-parent replay.
   confirmed absence distinct, preserve recovery, and bound repeated API failures.
 
 - 2026-10-31: An exact `gh pr checks` read reported the shared GraphQL quota exhausted while the live monitor displayed an available PR with no check census. Preserve decoded-empty versus unreadable counts: attach the existing typed `readFailure` to an unreadable all/required census, so the existing five-error monitor budget applies. Public `--poll-interval` keeps slower polling on the supported detached path; its absence preserves thirty seconds. Regression controls retain valid empty and confirmed-absent outcomes. No identity swap or proof acceptance follows from this repair.
+
+
+### 2026-11-02 — manual producer inspection never reaches the selected runner group
+
+The first actual credential-free inspection (`41403231584`) stayed queued for
+more than thirty minutes, with no runner assigned and no pending environment
+approval. The live runner-group read showed four selected `main` workflow paths;
+`cache-producer-inspect.yml` was absent. A matching runner label alone is
+insufficient. Check selected workflow routing before dispatch, and retain a
+regression proving the inspection leaf lives in an admitted reusable workflow.
+The queued run was cancelled without executing inspection; this is neither a
+passed inspection nor a signed-cache result. No runner-group permission or
+capacity was changed.

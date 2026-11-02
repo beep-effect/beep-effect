@@ -386,6 +386,7 @@
     "lint:native-runtime:roots": "beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology",
     "lint:oxlint": "oxlint --quiet --disable-nested-config",
     "lint:shadcn": "oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages",
+    "lint:deprecated-imports": "biome lint apps packages infra --only=suspicious/noDeprecatedImports --error-on-warnings --reporter=summary",
     "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check",
     "lint:policy-fingerprint:goals": "true",
     "lint:policy-fingerprint:goals-doctor": "true",

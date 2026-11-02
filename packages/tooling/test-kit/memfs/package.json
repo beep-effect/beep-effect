@@ -16,9 +16,7 @@
     "kind": "test-kit"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run lint:laws && bun run beep:docgen && bun run beep:lint",
     "beep:build": "tsrs -p tsconfig.json && bun run babel",
     "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit",
