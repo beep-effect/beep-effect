@@ -12,6 +12,8 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
+import * as Result from "effect/Result";
 
 // Build a TestLayer that provides FsUtils AND also passes through FileSystem/Path
 // so tests can use them directly (e.g. for makeTempDirectory)
@@ -19,6 +21,37 @@ const PlatformLayer = Layer.mergeAll(NodeServices.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
 const MemoryTestLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(MemoryFileSystem.layer, Path.layer)));
+
+/**
+ * A memory volume whose `readDirectory` of `/repo/locked` fails with the given
+ * system-error tag; every other call reaches the seeded volume.
+ */
+const deniedReadDirectoryLayer = (reason: "PermissionDenied" | "NotFound") =>
+  FsUtilsLive.pipe(
+    Layer.provideMerge(
+      Layer.mergeAll(
+        MemoryFileSystem.layerWith(
+          { "/repo/src/a.ts": "", "/repo/locked/b.ts": "" },
+          {
+            faults: {
+              readDirectory: (path: string) =>
+                path === "/repo/locked"
+                  ? Effect.fail(
+                      PlatformError.systemError({
+                        _tag: reason,
+                        module: "FileSystem",
+                        method: "readDirectory",
+                        pathOrDescriptor: path,
+                      })
+                    )
+                  : undefined,
+            },
+          }
+        ),
+        Path.layer
+      )
+    )
+  );
 
 describe("FsUtils", () => {
   rootIt.layer(TestLayer, { timeout: "10 seconds" })("globFiles patterns", (it) => {
@@ -454,10 +487,36 @@ describe("FsUtils", () => {
       );
     });
 
+    // Deterministic in every profile: the walk's readDirectory fault is injected, so the
+    // typed failure never depends on the process's uid or capabilities.
+    rootIt.layer(deniedReadDirectoryLayer("PermissionDenied"), { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "should fail with DomainError when readDirectory is denied mid-walk (injected fault)",
+        Effect.fn(function* () {
+          const utils = yield* FsUtils;
+
+          const error = yield* utils.globFiles("**/*.ts", { cwd: "/repo", ignore: ["locked/**"] }).pipe(Effect.flip);
+          expect(error._tag).toBe("DomainError");
+          expect(error.message).toBe('Glob failed for pattern "**/*.ts"');
+        })
+      );
+    });
+
+    // Contrast: a directory that vanishes mid-walk (NotFound) is a benign race, not a failure.
+    rootIt.layer(deniedReadDirectoryLayer("NotFound"), { timeout: "10 seconds" })((it) => {
+      it.effect(
+        "should skip a directory whose readDirectory fails NotFound (injected fault)",
+        Effect.fn(function* () {
+          const utils = yield* FsUtils;
+          expect(yield* utils.globFiles("**/*.ts", { cwd: "/repo" })).toEqual(["src/a.ts"]);
+        })
+      );
+    });
+
     rootIt.layer(TestLayer, { timeout: "10 seconds" })((it) => {
       it.effect(
         "should fail with DomainError when a directory mid-walk is unreadable",
-        Effect.fn(function* () {
+        Effect.fn(function* (ctx) {
           const utils = yield* FsUtils;
           const fs = yield* Fs.FileSystem;
           const tmpDir = yield* fs.makeTempDirectoryScoped();
@@ -465,6 +524,18 @@ describe("FsUtils", () => {
           yield* fs.makeDirectory(`${tmpDir}/locked`);
           yield* fs.writeFileString(`${tmpDir}/locked/a.ts`, "");
           yield* fs.chmod(`${tmpDir}/locked`, 0o000);
+
+          // Real OS permission enforcement is a property of the running process: uid 0 (or
+          // CAP_DAC_OVERRIDE) reads a mode-000 directory. When the probe read succeeds this
+          // case cannot qualify, so it is reported as skipped, never as passed; the injected
+          // fault cases above still cover the error branch.
+          const probe = yield* Effect.result(fs.readDirectory(`${tmpDir}/locked`));
+          if (Result.isSuccess(probe)) {
+            yield* fs.chmod(`${tmpDir}/locked`, 0o755);
+            return yield* Effect.sync(() =>
+              ctx.skip("OS does not enforce directory read permission for this process (uid 0 or CAP_DAC_OVERRIDE)")
+            );
+          }
 
           const error = yield* utils.globFiles("**/*.ts", { cwd: tmpDir, ignore: ["locked/**"] }).pipe(Effect.flip);
           expect(error._tag).toBe("DomainError");
