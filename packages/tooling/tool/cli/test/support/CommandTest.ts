@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { A, dual } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -12,7 +13,7 @@ import * as Runtime from "effect/Runtime";
 import * as Str from "effect/String";
 import { expect } from "vitest";
 
-export const NodeTestLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+export const NodeTestLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 /**
  * Supplies native platform services and cryptography for complete CLI command trees.

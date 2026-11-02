@@ -14,6 +14,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
@@ -1030,45 +1031,45 @@ const removeDirectoryCandidate = Effect.fnUntraced(function* (
   return { reaped: true, warnings: nestedWarnings };
 });
 
-const removeGitWorktreeCandidate = Effect.fnUntraced(function* (
-  candidate: DiscoveredCandidate
-): Effect.fn.Return<
-  ApplyOutcome,
-  never,
-  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const pathService = yield* Path.Path;
-  if (!(yield* candidatePathIsStillSafe(candidate))) {
-    return emptyApplyOutcome(`Skipped ${candidate.path}: worktree path changed or escaped its discovery root.`);
-  }
-  if (O.isNone(candidate.parentRepo)) {
-    return emptyApplyOutcome(`Skipped unclassified Git worktree ${candidate.path}.`);
-  }
-  const parentRepo = candidate.parentRepo.value;
-  const parentPresent = yield* fs.exists(pathService.join(parentRepo, ".git")).pipe(Effect.orElseSucceed(() => false));
-  if (!parentPresent) {
-    return yield* removeDirectoryCandidate(candidate);
-  }
-  const remove = yield* runRepoCommandCapture(
-    "git",
-    ["-C", parentRepo, "worktree", "remove", "--force", candidate.path],
-    parentRepo
-  ).pipe(Effect.option);
-  if (O.isNone(remove) || remove.value.exitCode !== 0) {
-    return emptyApplyOutcome(`Failed to remove Git worktree ${candidate.path} through ${parentRepo}.`);
-  }
-  const prune = yield* runRepoCommandCapture("git", ["-C", parentRepo, "worktree", "prune"], parentRepo).pipe(
-    Effect.option
-  );
-  return {
-    reaped: true,
-    warnings:
-      O.isSome(prune) && prune.value.exitCode === 0
-        ? []
-        : [`Removed ${candidate.path}, but Git worktree prune failed for ${parentRepo}.`],
-  };
-});
+// `Git` is provided at this leaf with `Git.make` (the @beep/git README trade-off): the reap runs under
+// Yeet's sweep and merge steps, whose requirement unions lift `Git` in the Yeet git-layer wave of
+// goals/repo-cli-gh-git-consolidation; until then the service is rebuilt per removal.
+const removeGitWorktreeCandidate = Effect.fnUntraced(
+  function* (
+    candidate: DiscoveredCandidate
+  ): Effect.fn.Return<
+    ApplyOutcome,
+    never,
+    FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
+  > {
+    const fs = yield* FileSystem.FileSystem;
+    const pathService = yield* Path.Path;
+    if (!(yield* candidatePathIsStillSafe(candidate))) {
+      return emptyApplyOutcome(`Skipped ${candidate.path}: worktree path changed or escaped its discovery root.`);
+    }
+    if (O.isNone(candidate.parentRepo)) {
+      return emptyApplyOutcome(`Skipped unclassified Git worktree ${candidate.path}.`);
+    }
+    const parentRepo = candidate.parentRepo.value;
+    const parentPresent = yield* fs
+      .exists(pathService.join(parentRepo, ".git"))
+      .pipe(Effect.orElseSucceed(() => false));
+    if (!parentPresent) {
+      return yield* removeDirectoryCandidate(candidate);
+    }
+    const git = yield* Git;
+    const removed = yield* git.worktreeRemove(parentRepo, candidate.path, { force: true }).pipe(Effect.isSuccess);
+    if (!removed) {
+      return emptyApplyOutcome(`Failed to remove Git worktree ${candidate.path} through ${parentRepo}.`);
+    }
+    const pruned = yield* git.worktreePrune(parentRepo).pipe(Effect.isSuccess);
+    return {
+      reaped: true,
+      warnings: pruned ? [] : [`Removed ${candidate.path}, but Git worktree prune failed for ${parentRepo}.`],
+    };
+  },
+  Effect.provideServiceEffect(Git, Git.make)
+);
 
 const candidatePathIsStillSafe = Effect.fnUntraced(function* (
   candidate: DiscoveredCandidate

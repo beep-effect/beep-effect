@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { qualityCommand } from "@beep/repo-cli/commands/Quality";
 import { runTsgoSmokeCheck } from "@beep/repo-cli/test/Quality";
 import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
@@ -30,6 +31,7 @@ const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
   FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
   FixedMemoryStatsLayer
 );
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
