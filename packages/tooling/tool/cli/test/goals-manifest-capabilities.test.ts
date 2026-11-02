@@ -100,11 +100,13 @@ const readTrackedManifests = Effect.fn("GoalsManifestCapabilitiesTest.readTracke
  * Runs an effect under a fresh TestConsole and returns its exit with the captured console lines.
  * Keeps the per-test console provide out of test bodies (EV002); the helper owns the layer.
  */
-const captureConsole = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.gen(function* () {
+const captureConsole = Effect.fn("GoalsManifestCapabilitiesTest.captureConsole")(
+  function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
     const exit = yield* Effect.exit(effect);
     return { exit, logs: yield* TestConsole.logLines, errors: yield* TestConsole.errorLines };
-  }).pipe(provideScopedLayer(Layer.fresh(TestConsole.layer)));
+  },
+  provideScopedLayer(Layer.fresh(TestConsole.layer))
+);
 
 const writeSyntheticPacket = Effect.fn("GoalsManifestCapabilitiesTest.writeSyntheticPacket")(function* (packet: {
   readonly slug: string;
