@@ -67,6 +67,8 @@ export const hashCitationRuntimePreimage = Effect.fn("Citation.pythonShaHash")(f
   );
   return BigInt(`0x${digest}`) % BigInt("2305843009213693951");
 });
+const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
+const unequalPointOrder = (left: number, right: number) => (left < right ? -1 : 1);
 /**
  * Python string ordering compares Unicode code points, including surrogate code points.
  * @internal
@@ -80,9 +82,9 @@ export const makeCitationRuntimeStringOrder = (): Order.Order<string> =>
     while (li < Str.length(left) && ri < Str.length(right)) {
       const l = O.getOrElse(Str.codePointAt(left, li), () => 0);
       const r = O.getOrElse(Str.codePointAt(right, ri), () => 0);
-      if (l !== r) return l < r ? -1 : 1;
-      li += l > 65535 ? 2 : 1;
-      ri += r > 65535 ? 2 : 1;
+      if (l !== r) return unequalPointOrder(l, r);
+      li += pointUnits(l);
+      ri += pointUnits(r);
     }
     return li < Str.length(left) ? 1 : ri < Str.length(right) ? -1 : 0;
   });

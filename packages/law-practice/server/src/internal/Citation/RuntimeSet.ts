@@ -82,6 +82,24 @@ export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(funct
     size = capacity;
     buckets = rebuilt;
   });
+  const sameKey = Effect.fn("Citation.setSameKey")(function* (
+    left: CitationRuntimeDictionaryKey,
+    right: CitationRuntimeDictionaryKey
+  ) {
+    // Set identity is nested under the cached-hash match, unlike dict.
+    if (left.hash !== right.hash) return false;
+    if (left.objectId === right.objectId) return true;
+    return yield* comparison.equal(left.objectId, right.objectId);
+  });
+  const tryBucket = Effect.fn("Citation.setTryBucket")(function* (key: CitationRuntimeDictionaryKey, bucket: number) {
+    const entry = HashMap.get(buckets, bucket);
+    if (O.isSome(entry)) return yield* sameKey(entry.value, key);
+    if (used >= limits.entries) return yield* failure("limit-exceeded");
+    buckets = HashMap.set(buckets, bucket, CitationRuntimeDictionaryKey.make({ ...key }));
+    used += 1;
+    if (used * 5 >= (size - 1) * 3) yield* grow();
+    return true;
+  });
   const add = Effect.fn("Citation.setAdd")(function* (inputKey: CitationRuntimeDictionaryKey) {
     const key = yield* S.decodeEffect(CitationRuntimeDictionaryKeyType)(inputKey).pipe(
       Effect.mapError(() => failure("invalid-input"))
@@ -92,20 +110,7 @@ export const makeCitationRuntimeSet = Effect.fn("Citation.makeRuntimeSet")(funct
       const probes = index + 9 <= size - 1 ? 9 : 0;
       for (let offset = 0; offset <= probes; offset += 1) {
         yield* step;
-        const entry = HashMap.get(buckets, index + offset);
-        if (O.isNone(entry)) {
-          if (used >= limits.entries) return yield* failure("limit-exceeded");
-          buckets = HashMap.set(buckets, index + offset, CitationRuntimeDictionaryKey.make({ ...key }));
-          used += 1;
-          if (used * 5 >= (size - 1) * 3) yield* grow();
-          return;
-        }
-        // Set identity is nested under the cached-hash match, unlike dict.
-        if (
-          entry.value.hash === key.hash &&
-          (entry.value.objectId === key.objectId || (yield* comparison.equal(entry.value.objectId, key.objectId)))
-        )
-          return;
+        if (yield* tryBucket(key, index + offset)) return;
       }
       perturb >>= BigInt(5);
       index = indexOf(BigInt(index) * BigInt(5) + BigInt(1) + perturb, size);

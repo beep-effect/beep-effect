@@ -12,6 +12,7 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -78,6 +79,67 @@ const readPoint = (bytes: Uint8Array, index: number, width: number) => {
     point += O.getOrElse(O.fromUndefinedOr(bytes[index + part]), () => 0) * 2 ** (8 * part);
   return point;
 };
+const pointUnits = (point: number) => (point > 65535 ? 2 : 1);
+const TextMeasure = S.Tuple([S.Natural, S.Natural]).pipe(
+  $I.annoteSchema("TextMeasure", {
+    description: "Private maximum source point and source point count before native allocation.",
+  })
+);
+const measureText = Effect.fnUntraced(function* (text: string) {
+  let largest = 0;
+  let points = 0;
+  for (let index = 0; index < Str.length(text); ) {
+    if (points % 4096 === 0) yield* Effect.yieldNow;
+    const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    largest = Num.max(largest, point);
+    index += pointUnits(point);
+    points++;
+  }
+  return TextMeasure.make([largest, points]);
+});
+const encodeText = Effect.fnUntraced(function* (text: string, width: 1 | 2 | 4, points: number) {
+  const bytes = new Uint8Array(points * width);
+  let cursor = 0;
+  for (let index = 0; index < Str.length(text); ) {
+    if (cursor % (width * 4096) === 0) yield* Effect.yieldNow;
+    let point = O.getOrElse(Str.codePointAt(text, index), () => 0);
+    index += pointUnits(point);
+    for (let part = 0; part < width; part++) {
+      bytes[cursor++] = point & 255;
+      point >>>= 8;
+    }
+  }
+  return bytes;
+});
+const validateStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 | 2 | 4, maximum: number) {
+  let largest = 0;
+  let units = 0;
+  for (let index = 0; index < bytes.length; index += width) {
+    if (index % (width * 4096) === 0) yield* Effect.yieldNow;
+    const point = readPoint(bytes, index, width);
+    if (point > 0x10ffff) return yield* fail("invalid-input");
+    largest = Num.max(largest, point);
+    units += pointUnits(point);
+    if (units > maximum) return yield* fail("limit-exceeded");
+  }
+  if (width !== widthOf(largest)) return yield* fail("invalid-input");
+  return units;
+});
+const projectStorage = Effect.fnUntraced(function* (bytes: Uint8Array, width: 1 | 2 | 4) {
+  const chunks = MutableList.make<string>();
+  let chunk = "";
+  for (let index = 0; index < bytes.length; index += width) {
+    if (index % (width * 4096) === 0) yield* Effect.yieldNow;
+    // This conversion preserves lone surrogate source points, unlike TextDecoder.
+    chunk += String.fromCodePoint(readPoint(bytes, index, width));
+    if (Str.length(chunk) >= 1024) {
+      MutableList.append(chunks, chunk);
+      chunk = "";
+    }
+  }
+  if (Str.length(chunk) > 0) MutableList.append(chunks, chunk);
+  return A.join(MutableList.takeAll(chunks), "");
+});
 /**
  * Capture the intermediate ceiling and minimum operation/clean deadline.
  * Storage input is copied before the first scan yield; output bytes belong to
@@ -103,33 +165,11 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     if (decoded.bytes.length % width !== 0) return yield* fail("invalid-input");
     if (decoded.bytes.length / width > maximum) return yield* fail("limit-exceeded");
     const bytes = new Uint8Array(decoded.bytes);
-    let largest = 0;
-    let units = 0;
-    for (let index = 0; index < bytes.length; index += width) {
-      if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-      const point = readPoint(bytes, index, width);
-      if (point > 0x10ffff) return yield* fail("invalid-input");
-      if (point > largest) largest = point;
-      units += point > 65535 ? 2 : 1;
-      if (units > maximum) return yield* fail("limit-exceeded");
-    }
-    if (width !== widthOf(largest)) return yield* fail("invalid-input");
-    const chunks = MutableList.make<string>();
-    let chunk = "";
-    for (let index = 0; index < bytes.length; index += width) {
-      if (index % (width * 4096) === 0) yield* Effect.yieldNow;
-      // Native code-point conversion is this representation boundary. Unlike
-      // TextDecoder it preserves lone surrogate code points in the projection.
-      chunk += String.fromCodePoint(readPoint(bytes, index, width));
-      if (Str.length(chunk) >= 1024) {
-        MutableList.append(chunks, chunk);
-        chunk = "";
-      }
-    }
-    if (Str.length(chunk) > 0) MutableList.append(chunks, chunk);
+    const units = yield* validateStorage(bytes, width, maximum);
+    const text = yield* projectStorage(bytes, width);
     return CitationPythonUnicodeValue.make({
       storage: CitationPythonUnicodeStorage.make({ width, bytes }),
-      text: A.join(MutableList.takeAll(chunks), ""),
+      text,
       pythonLength: bytes.length / width,
       utf16Units: units,
     });
@@ -138,27 +178,9 @@ export const makeCitationPythonUnicode = Effect.fn("Citation.makePythonUnicode")
     const text = yield* S.decodeUnknownEffect(Text)(input).pipe(Effect.mapError(() => fail("invalid-input")));
     const units = Str.length(text);
     if (units > maximum) return yield* fail("limit-exceeded");
-    let largest = 0;
-    let points = 0;
-    for (let index = 0; index < units; ) {
-      if (points % 4096 === 0) yield* Effect.yieldNow;
-      const point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-      if (point > largest) largest = point;
-      index += point > 65535 ? 2 : 1;
-      points++;
-    }
+    const [largest, points] = yield* measureText(text);
     const width = widthOf(largest);
-    const bytes = new Uint8Array(points * width);
-    let cursor = 0;
-    for (let index = 0; index < units; ) {
-      if (cursor % (width * 4096) === 0) yield* Effect.yieldNow;
-      let point = O.getOrElse(Str.codePointAt(text, index), () => 0);
-      index += point > 65535 ? 2 : 1;
-      for (let part = 0; part < width; part++) {
-        bytes[cursor++] = point & 255;
-        point >>>= 8;
-      }
-    }
+    const bytes = yield* encodeText(text, width, points);
     return CitationPythonUnicodeValue.make({
       storage: CitationPythonUnicodeStorage.make({ width, bytes }),
       text,
