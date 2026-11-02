@@ -54,9 +54,11 @@
 ## Status
 
 Lifecycle: `active`, with `proposedCloseout` to `completed-retained`; the
-closeout content merged in #2493 and the docs-only re-final PR #2532 is the
-final pull request that binds the publish verdict
-([why](history/2026-11-02-completion-refinal.md)); `goals completion refresh`
+closeout content merged in #2493; the docs-only re-finals #2532 and #2586
+follow, and #2586 is the final pull request, merged only after its own
+until-ready job reports merge-ready
+([first](history/2026-11-02-completion-refinal.md),
+[second](history/2026-11-02-completion-refinal-2.md)); `goals completion refresh`
 flips the derived status after the merge. P0a through P2 are complete; P3 closes in that PR. The 2026-11-02 scan
 reports 3,104 files, 447 findings, 0 open rows and `introduced=0`; every row is
 an owned exception that names its exit, which the operator's 2026-11-02 ruling on
