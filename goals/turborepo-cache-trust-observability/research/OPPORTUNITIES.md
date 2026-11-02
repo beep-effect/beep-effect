@@ -1751,3 +1751,16 @@ The review was reproduced before repair (one failed case, 44 skipped). Set an
 explicit 0755 initial mode, collect the baseline, then change to 0700. All 45
 workflow tests pass under 077 after the repair. Preserve the original failure;
 the collector implementation and its earlier real-tree evidence are unchanged.
+
+### 2026-11-02 — directory alias refusal coverage
+
+The completed hosted Coverage Regression job 125427032277 reported three uncovered
+lines, two branches and one function in `Cache.workflow.ts`, below its existing
+100% floors. The missing controls cover canonical directory replacement after stat,
+the independent 20,000-entry directory bound, and a tracked file replaced by a
+directory without an alias. The repair adds real filesystem controls and keeps the
+runtime implementation and coverage floors unchanged. Earlier race-fixture attempts
+are retained: another collected path won the concurrent failure, then native Git
+removal also removed empty parent directories. Those setup failures are separate
+from the final refusal evidence. A narrow coverage replay before publishing would
+have exposed these missing controls earlier.

@@ -311,5 +311,76 @@
     "testSourceSha256": "401b8bd485f04f858b11a3c058984a2256c0f4daf3e15342c9bc4cb438969b28",
     "runtimeCollectorSourceUnchanged": true,
     "priorObservationsRetainOriginalScope": true
+  },
+  "coverageRefusalRepair": {
+    "recordedAt": "2026-11-02T17:41:50.097699+00:00",
+    "publishedHeadBefore": "3d32d292eb86b6f498c5b934e40a7588ac56696b",
+    "sourceBindings": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts",
+        "sha256": "bd08e75eb231437e75bc7d6891769b8c6a103d2e706d019445f0ea4ad2133914"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts",
+        "sha256": "2cbf4b41a7aebe16a4341d027afb7d5e6e3ea2abe78a3a2c98ac84ec64d76e17"
+      },
+      {
+        "path": "packages/tooling/tool/cli/test/cache-workflow.test.ts",
+        "sha256": "56819eb14e35561c0500c7bbde5cd405c02c1c62b1078eddb362d705898cb078"
+      }
+    ],
+    "originalHostedFailure": {
+      "head": "422b4a6061586afb6d102e8e2849be57e955df54",
+      "job": 125427032277,
+      "workflowLines": 98.57,
+      "workflowStatements": 98.59,
+      "workflowBranches": 97.29,
+      "workflowFunctions": 97.29,
+      "uncovered": {
+        "lines": 3,
+        "statements": 3,
+        "branches": 2,
+        "functions": 1
+      }
+    },
+    "controls": [
+      "A real directory is replaced by an outside alias after stat; canonical recheck refuses before directory enumeration.",
+      "A real tree has 20,001 directory entries while its declared leaf inventory remains below 20,000; independent directory bound refuses.",
+      "A tracked regular source is replaced by a directory without an alias; collection refuses."
+    ],
+    "focused": {
+      "tests": 69,
+      "files": 2,
+      "workflowTests": 48,
+      "uploadRuntimeTests": 21,
+      "exit": 0,
+      "elapsedSeconds": 15.289,
+      "finishedAt": "2026-11-02T17:41:05.004107+00:00"
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 14.674,
+      "finishedAt": "2026-11-02T17:41:04.412818+00:00"
+    },
+    "coverage": {
+      "scope": "Cache.workflow.ts measured from workflow and producer-upload-runtime suites only; not whole-package coverage.",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "statementsCovered": 213,
+      "functionsCovered": 37,
+      "branchesCovered": 74,
+      "privateRawReportSha256": "7a76176b1235c52577781ff590c085462bd7f1fdfd3a160163011da8fe93db65"
+    },
+    "priorFailureReceiptsRetained": [
+      "Original hosted coverage failure.",
+      "First race fixture allowed another concurrently collected path to fail first.",
+      "Second race fixture did not recreate parents removed by native Git.",
+      "Initial package lint rejected formatting; canonical formatter applied."
+    ],
+    "runtimeSourceUnchanged": true,
+    "coverageFloorUnchanged": true,
+    "earlierProofsRetainOriginalSourceBindings": true
   }
 }

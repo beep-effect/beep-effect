@@ -919,6 +919,69 @@ it.layer(
       expect(error.message).toContain("unsupported filesystem entry");
     })
   );
+  it.effect("rejects a directory target replaced after its type was inspected", () =>
+    Effect.gen(function* () {
+      const { root, fs, path, git } = yield* fixture();
+      const target = path.join(root, "packages/fixture/src");
+      const outside = path.join(path.dirname(root), "outside-directory");
+      yield* git(["rm", "packages/fixture/src/main.ts"]);
+      yield* fs.makeDirectory(target, { recursive: true });
+      yield* fs.makeDirectory(outside);
+      yield* fs.writeFileString(path.join(outside, "private.txt"), "outside fixture bytes");
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      const readDirectory = vi.spyOn(fs, "readDirectory");
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(
+        Effect.provideService(FileSystem.FileSystem, {
+          ...fs,
+          stat: (file) =>
+            fs
+              .stat(file)
+              .pipe(
+                Effect.tap(() =>
+                  file === target
+                    ? fs
+                        .rename(target, path.join(root, "original-src"))
+                        .pipe(Effect.andThen(fs.symlink(outside, target)))
+                    : Effect.void
+                )
+              ),
+        }),
+        Effect.flip
+      );
+      expect(error.message).toContain("escaped its canonical checkout location");
+      expect(readDirectory).not.toHaveBeenCalled();
+    })
+  );
+  it.effect("bounds directory entries independently of the declared leaf inventory", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      yield* Effect.forEach(
+        A.range(0, 999),
+        (directory) =>
+          Effect.gen(function* () {
+            const nested = path.join(root, "packages/fixture/src", `directory-${directory}`);
+            yield* fs.makeDirectory(nested);
+            yield* Effect.forEach(A.range(0, 18), (file) => fs.writeFileString(path.join(nested, `${file}.ts`), ""), {
+              concurrency: 4,
+              discard: true,
+            });
+          }),
+        { concurrency: 8, discard: true }
+      );
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("Workflow directory alias exceeded its entry bound");
+    })
+  );
+  it.effect("rejects a tracked source replaced by a directory without a declared alias", () =>
+    Effect.gen(function* () {
+      const { root, fs, source } = yield* fixture();
+      yield* fs.remove(source);
+      yield* fs.makeDirectory(source);
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("Workflow source directory requires a declared relative alias");
+    })
+  );
   it.effect("rejects absolute source aliases even when the target stays inside the checkout", () =>
     Effect.gen(function* () {
       const { root, fs, path, source } = yield* fixture();
