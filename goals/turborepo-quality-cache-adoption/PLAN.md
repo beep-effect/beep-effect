@@ -505,3 +505,15 @@ assertion and corrected before the complete source-bound replay.
 This brings final feature decisions to 7 of 35; 28 remain open. The 2,423 pending
 current computation dispositions, ordinary stable/canary qualification, protected
 producer evidence, representative windows and both whole-goal gates remain.
+
+### Read-only generator prerequisite, 2026-11-02
+
+The [read-only checkpoint](research/codegen-readonly-drift-checkpoint-2026-11-02.json)
+records three pre-fix failures, all 43 passing package tests after the repair,
+separate passing lint/check and docgen, and an actual ACP generator
+clean/stale/clean sequence under network denial and a read-only repository.
+Diff staging now uses scoped temporary storage rather than installed source.
+The stale-output case reports `CodegenDriftError`, prints the unified diff and
+leaves source unchanged. The native probe's initial configuration-filename and
+stream-assertion mistakes remain recorded separately. This repairs a generator
+prerequisite; no computation disposition, qualification or cache policy changes.

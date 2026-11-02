@@ -98,7 +98,8 @@
     "research/current-fresh-disposition-review-2026-11-02.json",
     "research/population-before-refresh-2026-11-02.json",
     "research/native-setup-controls.json",
-    "research/setup-feature-review.json"
+    "research/setup-feature-review.json",
+    "research/codegen-readonly-drift-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [
     {
