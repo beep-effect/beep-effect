@@ -258,6 +258,7 @@ jobs:
           cache-write: "false"
           turbo-cache-key-suffix: -${{ matrix.id }}
           free-disk: "true"
+          free-disk-min-gib: "64"
           turbo-remote-cache: ${{ matrix.uses_turbo }}
           app-secrets: "true"
           turbo-api: ${{ vars.TURBO_API }}
@@ -748,6 +749,7 @@ jobs:
           cache-turbo: "false"
           cache-write: "false"
           free-disk: "true"
+          free-disk-min-gib: "64"
 
       # An unrelated verification matrix failure is advisory here, but the
       # latest Labs execution must succeed even when a partial rerun leaves an
@@ -1074,6 +1076,7 @@ jobs:
           cache-turbo: "false"
           cache-write: "false"
           free-disk: "true"
+          free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
@@ -1238,22 +1241,69 @@ jobs:
           echo "from_ref=$from_ref" >> "$GITHUB_OUTPUT"
           echo "to_ref=$to_ref" >> "$GITHUB_OUTPUT"
 
-      - name: Setup monorepo CI
-        uses: ./.github/actions/setup-monorepo-ci
+      # Tool-only install (quality audit K4). `commitlint.config.ts` is
+      # deliberately Effect-free and `@commitlint/load` resolves `extends`
+      # from the config file's own directory, so the job needs neither the
+      # Bun toolchain nor the monorepo `bun install` that `setup-monorepo-ci`
+      # performs. Exact pins are read from `bun.lock`, so a catalog bump in
+      # package.json moves this job with it. Node comes from `.nvmrc`
+      # (commitlint 21 needs Node >= 22.12).
+      #
+      # Fallback to the repo CLI if the tool-only path ever misbehaves:
+      # replace the three steps below with
+      #   - uses: ./.github/actions/setup-monorepo-ci
+      #     with: { cache-turbo: "false", cache-write: "false", use-node: "false" }
+      #   - run: bun run beep ci lane commitlint --from <from_ref> --to <to_ref>
+      #     (or `--last` when mode=last)
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          cache-turbo: "false"
-          cache-write: "false"
-          use-node: "false"
+          node-version-file: .nvmrc
 
-      - name: Run commitlint
+      - name: Install pinned commitlint
+        id: tool
         shell: bash
         run: |
           set -euo pipefail
 
-          if [[ "${{ steps.range.outputs.mode }}" == "range" ]]; then
-            bun run beep ci lane commitlint --from "${{ steps.range.outputs.from_ref }}" --to "${{ steps.range.outputs.to_ref }}"
+          pin() {
+            local version
+            version="$(sed -n "s|^ *\"$1\": \[\"$1@\([^\"]*\)\".*|\1|p" bun.lock | head -n 1)"
+            [[ -n "$version" ]] || { echo "::error::no locked version for $1 in bun.lock"; exit 1; }
+            printf '%s' "$version"
+          }
+          cli_version="$(pin @commitlint/cli)"
+          conventional_version="$(pin @commitlint/config-conventional)"
+
+          tool_dir="${RUNNER_TEMP}/commitlint-tool"
+          mkdir -p "$tool_dir"
+          # The config copy lives beside the tool install: resolve-extends walks
+          # node_modules upward from the config file, not from --cwd.
+          cp commitlint.config.ts "$tool_dir/"
+          printf '{"name":"commitlint-tool","private":true,"type":"module","dependencies":{"@commitlint/cli":"%s","@commitlint/config-conventional":"%s"}}\n' \
+            "$cli_version" "$conventional_version" > "$tool_dir/package.json"
+
+          node --version
+          SECONDS=0
+          npm install --prefix "$tool_dir" --no-audit --no-fund --no-package-lock --ignore-scripts
+          echo "installed @commitlint/cli@${cli_version} + @commitlint/config-conventional@${conventional_version} in ${SECONDS}s"
+          echo "tool_dir=$tool_dir" >> "$GITHUB_OUTPUT"
+
+      - name: Run commitlint
+        shell: bash
+        env:
+          MODE: ${{ steps.range.outputs.mode }}
+          FROM_REF: ${{ steps.range.outputs.from_ref }}
+          TO_REF: ${{ steps.range.outputs.to_ref }}
+          TOOL_DIR: ${{ steps.tool.outputs.tool_dir }}
+        run: |
+          set -euo pipefail
+
+          commitlint=(node "$TOOL_DIR/node_modules/@commitlint/cli/cli.js" --cwd "$PWD" --config "$TOOL_DIR/commitlint.config.ts" --verbose)
+          if [[ "$MODE" == "range" ]]; then
+            "${commitlint[@]}" --from "$FROM_REF" --to "$TO_REF"
           else
-            bun run beep ci lane commitlint --last
+            "${commitlint[@]}" --last
           fi
 
   secrets:
@@ -1266,7 +1316,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          # Blobless partial clone (quality audit G12): full history for the
+          # range arithmetic, blobs only for HEAD's checkout. The Gitleaks step
+          # prefetches the blobs its `git log -p` range needs; everything else
+          # (1.4 GiB of blobs at HEAD vs 48 MiB blobless) stays on the server.
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Fetch pull request base
@@ -1320,13 +1375,64 @@ jobs:
             log_opts="${BEFORE_SHA}..HEAD"
           fi
 
+          # The checkout is blobless. Gitleaks runs plain `git log -p -U0 <log_opts>`
+          # inside the container, which needs both sides of every non-merge diff
+          # in the range (merges print no patch). Prefetch exactly those blobs in
+          # one batch on the runner, in the form git's own lazy fetch uses, then
+          # run the scanner with lazy fetching disabled: a gap fails the scan
+          # loudly instead of pulling blobs one round trip at a time.
+          if [[ "$log_opts" == "-1" ]]; then
+            commits="$(git rev-parse HEAD)"
+          else
+            commits="$(git rev-list --no-merges $log_opts)"
+          fi
+          # Empty commits print no diff-tree rows; the awk filters (not grep -v,
+          # which exits 1 on no input under pipefail) keep that range alive.
+          missing="$(printf '%s\n' "$commits" \
+            | xargs -r -n 1 git diff-tree -r --root --no-commit-id \
+            | awk '{ print $3; print $4 }' | awk '!/^0+$/' | sort -u \
+            | GIT_NO_LAZY_FETCH=1 git cat-file --batch-check \
+            | awk '$2 == "missing" { print $1 }')"
+          if [[ -n "$missing" ]]; then
+            echo "Prefetching $(printf '%s\n' "$missing" | wc -l) blobs for ${log_opts}"
+            printf '%s\n' "$missing" | git -c fetch.negotiationAlgorithm=noop fetch --quiet --no-tags \
+              --no-write-fetch-head --recurse-submodules=no --filter=blob:none --stdin origin
+          fi
+
+          # gitleaks counts a commit only when it yields a fragment: added lines
+          # in its own `git log -p -U0 <log_opts>` view (binaries, pure renames,
+          # empty and delete-only commits yield none; merges print no patch).
+          # Read that same view here, after the prefetch, so the expectation
+          # matches what the scanner sees, rename detection included.
+          expected_commits="$(git log -p -U0 --no-color --no-ext-diff --format='::commit:: %H' $log_opts \
+            | awk '/^::commit:: / { commit = $2; header = 0; next }
+                   /^diff --git / { header = 1; next }
+                   /^@@ / { header = 0; next }
+                   !header && /^\+/ && commit != "" { seen[commit] = 1 }
+                   END { n = 0; for (c in seen) n++; print n }')"
+          echo "${expected_commits} commit(s) in ${log_opts} add text lines"
+
           # Global allowlists and targetRules require Gitleaks >= 8.25.0.
           # Pin v8.30.1, matching the verified local scanner.
+          scan_log="$(mktemp)"
           docker run --rm \
+            -e GIT_NO_LAZY_FETCH=1 \
             -v "$PWD:/repo" \
             -w /repo \
             zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
-            detect --source=/repo --config="/repo/${config_path}" --log-opts="$log_opts" --redact --no-banner
+            detect --source=/repo --config="/repo/${config_path}" --log-opts="$log_opts" --redact --no-banner --no-color \
+            2>&1 | tee "$scan_log"
+
+          # Gitleaks exits 0 with "0 commits scanned" when `git log` itself fails
+          # (it only logs "stderr is not empty"). Refuse that vacuous pass.
+          if grep -q 'stderr is not empty' "$scan_log"; then
+            echo "::error::git log failed inside the scanner; see the ERR line above"
+            exit 1
+          fi
+          if (( expected_commits > 0 )) && grep -Eq '(^|[^0-9])0 commits scanned' "$scan_log"; then
+            echo "::error::gitleaks scanned 0 commits but ${expected_commits} commit(s) in ${log_opts} add text lines"
+            exit 1
+          fi
 
   security:
     name: Security

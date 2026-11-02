@@ -1,0 +1,20 @@
+{
+  "previous": "e0dd37d80ffdd3cd724431eb5e3748aa9a6ad1b9f7ee4fd54345c8e52b77caab",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (perf-lane-dedupe)",
+    "reason": "Re-record the legacy cache posture of the root subject after turbo.json gained the cached //#lint:schema-catalog task and its generated fingerprint seal, and the root manifest gained the two matching scripts; every other root task drifts only through the root scripts digest. No command, input, output, cache flag or env key of existing tasks changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/perf-lane-dedupe-cache-review-2026-11-02.md",
+      "sha256": "be9bd6c8888db9cf747d256994631246a769558e3a7613bc4db0fa8b03f5428f"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "claim-v26-package-script-compatibility/v1",
+  "date": "2026-11-02",
+  "acceptedMain": "e0b14ca4131f9b8343520903845950b448ce3e46",
+  "integrationMerge": "88e8ae02ab83021df4de42c296659bd5f630185e",
+  "mainChanges": "Accepted #2535 package-script expectation repair and #2533 Effect.fn helper repair. #2526 changes only the pinned root script and affected consumer package script environment; all 21 algorithm files and the dependency lock are unchanged.",
+  "algorithmVersion": "v24",
+  "algorithmDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "implementationDigest": "7d44ed03efe8496cf3e42d6f145298c66699678dae28bf3f9b65d3b1279b201d",
+  "prePredictionSnapshotFiles": 29,
+  "algorithmSourceFilesUnchanged": 21,
+  "toolchain": {
+    "bun": "1.4.4",
+    "effect": "4.1.1"
+  },
+  "comparison": [
+    {
+      "lane": "positive",
+      "fullResultValuesIdenticalExcept": ["implementationDigest"],
+      "predictionReportsByteIdentical": 55,
+      "priorRawResultsSha256": "ad38d2550c9c8051978aa6467c44c1635dd62e0a4aead455d5651fb395102d1d",
+      "currentRawResultsSha256": "74fe84d3f64c72c2bdfb3b2034d26c7727c45e63be6701d1db00e1760532c280"
+    },
+    {
+      "lane": "allowed",
+      "fullResultValuesIdenticalExcept": ["implementationDigest"],
+      "predictionReportsByteIdentical": 196,
+      "priorRawResultsSha256": "58ecf1b40a47d9b62e0658cdf6be589719b7d6024bebcee209f00965133e6f61",
+      "currentRawResultsSha256": "33bbbd648dfc97a5e87eac54e318ef852a732d870310eb69935458b969379c0c"
+    }
+  ],
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "protectedRetained": 34,
+  "allPrevious37Retained": 37,
+  "lost": [],
+  "referenceAndHistoryPinsExact": 631,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "historicalReviewIdentity": "All 251 reports and all input-failure outcomes match v25, preserving the disclosed historical v24 115-question/605-quote identity. No fresh review claimed.",
+  "freshIndependentReviewClaimed": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "iprallySmoke": {
+    "result": {
+      "status": "checked",
+      "basis": "non-US-non-gold",
+      "sourceId": "KR-100380121-B1",
+      "country": "KR",
+      "ipcCodes": "F15",
+      "tokens": 523,
+      "sourceCommit": "51ba1e69b471021f225fe6787100b0f69d78da24",
+      "archiveSha256": "35307451747a8ae65d4d359aed23cff2f0d8ce02dfc8b8e3bfe6db7cbdadab0a",
+      "claims": 1,
+      "trees": 1,
+      "findings": 78,
+      "undecomposed": 0,
+      "manualReviewPatterns": 16
+    },
+    "identicalToV25": true,
+    "rawDataCommitted": false
+  },
+  "dependencyInstall": "No new install: dependency lock and Bun pin are byte-identical to v25. Consumer manifest changes remove audit scripts; the root adds a lint script.",
+  "hostedFailure": {
+    "jobId": 125174379019,
+    "runId": 41414031964,
+    "failedAssertions": 11,
+    "testFiles": [
+      "packages/tooling/tool/cli/test/create-package.test.ts",
+      "packages/tooling/tool/cli/test/architecture-operation-plan.test.ts"
+    ],
+    "acceptedFix": 2535,
+    "coverageUpload": "Failed prerequisite; not an independently measured coverage regression."
+  },
+  "hostedReadiness": "Pending exact final-head hosted verification and strict readiness/merge evidence."
+}
