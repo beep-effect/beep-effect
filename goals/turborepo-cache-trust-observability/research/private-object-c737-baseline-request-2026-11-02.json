@@ -1,0 +1,20 @@
+{
+  "previous": "9e0cc562cad751f75383ea472cbb931e761d556e734fbebb8d36a3d67d9435f3",
+  "review": {
+    "reviewer": "Codex (PR #2611, accepted c737 main integration)",
+    "reason": "Preserve accepted main policy and re-acknowledge only the owned private-storage module in the quality-seal closure.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/private-object-c737-baseline-review-2026-11-02.md",
+      "sha256": "3ed1d59f09a50f187ce736ff043c8d1ea13ff4ae55b0da11ccba8426a13d5dec"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

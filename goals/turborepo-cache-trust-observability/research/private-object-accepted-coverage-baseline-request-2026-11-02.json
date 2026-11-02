@@ -1,0 +1,20 @@
+{
+  "previous": "693f2ba5500e0c61926d01346a93dc358677de62335f21969947a9d128011074",
+  "review": {
+    "reviewer": "Codex (PR #2611, accepted-main integration of the reviewed storage input)",
+    "reason": "Retain accepted coverage/input-exclusion settings and re-acknowledge only the private storage module in the quality-seal closure.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
+      "sha256": "32fda797849dfdf1cecbf7043cb545da3b38061fd268fa768794262e70325a97"
+    }
+  },
+  "subjects": ["//"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

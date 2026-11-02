@@ -1,0 +1,20 @@
+{
+  "previous": "fa32b653a20314362762b985b59ecbfad2de3f99914a818247141e00e30ee1e6",
+  "review": {
+    "reviewer": "Codex (PR #2611, accepted a88d baseline conflict review)",
+    "reason": "Preserve accepted main configuration, record the accepted party-domain expansion once, and retain only the owned storage-module seal input. No qualification or enablement.",
+    "basis": {
+      "path": "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
+      "sha256": "3ee460b6c537dbaa1f1e130dd05ff017b1108c658391539ad1c68ac7c0600f7d"
+    }
+  },
+  "subjects": ["//", "@beep/party-domain"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
