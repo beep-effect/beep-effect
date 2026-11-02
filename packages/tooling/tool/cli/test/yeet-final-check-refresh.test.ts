@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   checkFinalCheckRefresh,
@@ -22,6 +23,9 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const SCHEMA_FIRST = "standards/schema-first.inventory.jsonc";
 const EFFECT_VITEST = "standards/effect-vitest.inventory.jsonc";
@@ -171,7 +175,7 @@ describe("decideFinalCheckRefresh", () => {
   });
 });
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "60 seconds" })(
   "checkFinalCheckRefresh against a real main merge",
   (it) => {
     it.effect("refuses an unreadable receipt on the head instead of falling back to an ancestor", () =>
@@ -557,7 +561,7 @@ const countBytes = <E>(stdout: Stream.Stream<Uint8Array, E>) =>
     Effect.map(String)
   );
 
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 seconds" })(
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
   "checkFinalCheckRefresh on a patch past the capture limit",
   (it) => {
     it.effect("passes the same large patch on a moved base without hitting the capture limit", () =>

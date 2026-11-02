@@ -70,6 +70,7 @@ import {
   PartitionedCiLane as PartitionedCiLaneSchema,
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
+import type { Git } from "@beep/git/Git";
 import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -90,7 +91,8 @@ type CiLaneEnvironment =
   | FileSystem.FileSystem
   | FsUtils
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 const STORYBOOK_PACKAGE_NAME = "@beep/storybook";

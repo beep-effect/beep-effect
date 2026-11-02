@@ -57,6 +57,7 @@ import {
   turboCachePlanNeedsSecretSession,
 } from "../../internal/cli/TurboCache.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
+import type { Git } from "@beep/git/Git";
 
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
@@ -220,7 +221,8 @@ type QualityTaskEnvironment =
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 type OptionalQualityTaskStep = {
   readonly enabled: boolean;
