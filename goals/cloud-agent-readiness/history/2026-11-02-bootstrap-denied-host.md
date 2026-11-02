@@ -79,6 +79,15 @@ The real `/usr/local/bin` links still carry their session-start timestamps.
 ## Checks and limits
 
 - `bash -n` on both scripts: clean.
+- `bun run beep quality package-verify @beep/repo-cli --quick`: exited `1`
+  the first time on Biome import order in the new test (introduced). Fixed,
+  then lint ok, check ok, exit `0`.
+- `bun run beep quality package-verify @beep/repo-cli` (full): exit `1` at
+  docgen. Example typechecking ended with `Failed to run 'tsc'` (a
+  `PlatformError` from `ChildProcess.exitCode`). Docgen reads only `src/`
+  JSDoc, and this change touches no `src/` file, so the failure was not
+  introduced here. Whether it is inherited from `main` or caused by this VM
+  was not proven. Hosted Docgen is the proof.
 - ShellCheck: **not run**. `shellcheck` is not on the VM `PATH`, not in
   `node_modules`, and not in the apt cache. Installing it would add a tool and
   need privileged access, both out of this lane's scope. Attribution:
