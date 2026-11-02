@@ -252,6 +252,18 @@ describe("Git parser edge contracts", () => {
     })
   );
 
+  it.effect("refuses a blank worktree record that opens no block", () =>
+    Effect.gen(function* () {
+      const worktrees = Effect.flatMap(Git, (git) => git.worktreeList(cwd));
+      // A second blank record after a whole block flushes a draft that never named anything.
+      assertUnparseable(
+        yield* run(worktrees, { stdout: "worktree /repo\0bare\0\0\0" }).pipe(Effect.result),
+        "worktree list",
+        /no `worktree <path>` line: ""/
+      );
+    })
+  );
+
   it.effect("quotes a long offending record truncated, JSON-escaped", () =>
     Effect.gen(function* () {
       const long = Str.repeat(200)("x");

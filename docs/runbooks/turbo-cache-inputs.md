@@ -146,6 +146,7 @@ maintained representation of the scanner's workspace discovery.
 | `jsdoc:ratchet:check` | Depends on `jsdoc:inventory:check` and the fingerprint; inputs are the committed totals baseline and every `{packages,apps}/**/src/**` TypeScript file, fixture trees included, because the zero-legacy gate reads every tracked `src` file (`isPackageSourceFile`). Turbo skips it when the inventory task is red. |
 | `lint:tsconfig-overlay` | Every `tsconfig*.json` under `apps`, `infra` and `packages` (overlays, owners and build configs), artifact directories excluded. |
 | `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
+| `lint:schema-catalog` | The schema-first source globs (`SchemaFirstIncludedGlobs`, `docs` trees excluded), every workspace manifest the owner resolver reads, the root `tsconfig.json`, and the committed per-package shards under `standards/schema-catalog/` plus the retired single-file catalog path. Added 2026-11-02 so the cheap-gates lane restores from cache instead of re-walking the tree (~25 s). The hosted Repo Sanity lane still calls the CLI directly. |
 | `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` excluded) plus the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
 | `fallow:audit:check`, `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Remain uncached with their baseline/environment/report contracts. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
@@ -171,7 +172,9 @@ zero seconds. Three decisions follow:
 - The overlay, test-typecheck, effect-vitest and JSDoc ratchet checks moved from
   repo-cli subprocess steps into cached root Turbo tasks inside the medium and
   state phases. `quality:test-tsgo` stays a repo-cli step because its Turbo task
-  (`package-test-typecheck`) is uncached by tripwire ruling. The root documentation
+  (`package-test-typecheck`) is uncached by tripwire ruling, and since 2026-11-02 the
+  lint-policy plan is its only owner: root `bun run check` no longer runs it a second
+  time. The root documentation
   program (`lint:jsdoc`) runs oxlint with `.oxlintrc.docs.json` and no persistent result cache.
   Turbo owns package and non-workspace documentation caching: inputs include the docs config,
   `tsdoc.json` and `@beep/lint-rules` source. The documentation input digest includes the
@@ -247,8 +250,14 @@ conceal files the scanner still checks.
 ## Extra work after a cached root check
 
 `bun run check` first runs Turbo's package check/build graph. An unscoped
-invocation then runs `quality:test-tsgo` and `quality:tsgo-smoke` as separate
-CLI steps. The graph's `FULL TURBO` result does not cover those steps.
+invocation then runs `quality:tsgo-smoke` as a separate CLI step. The graph's
+`FULL TURBO` result does not cover that step. The repo-wide test-typecheck
+step (`quality:test-tsgo`) runs once, at the end of the lint-policy plan
+(`bun run lint`, `bun run beep lint policy`, the `quality:lint-policy` pre-push
+lane and hosted Lint Policy); a check-only session that wants it runs
+`bun run beep quality test-tsgo` directly. Until 2026-11-02 root check ran it
+too, so `audit packages` and a check-then-lint session walked the test files
+twice against an uncached task.
 
 The test-typecheck step discovers packages whose normal check does not cover
 all tests, skips covered packages, and dispatches `package-test-typecheck` for

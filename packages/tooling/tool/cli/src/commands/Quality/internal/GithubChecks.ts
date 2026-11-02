@@ -361,8 +361,9 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
   ),
-  // Check retains test-file types and the smoke canary; the Effect rules run
-  // inside its patched tsrs typecheck.
+  // The lane body is `ci lane check` (the Turbo `check` graph only; the Effect
+  // rules run inside its patched tsrs typecheck). Test-file typecheck is owned
+  // by `quality:lint-policy` (`quality test-tsgo`), not by this lane.
   githubCheckLane(
     "quality:check",
     "pre-push",
@@ -370,14 +371,9 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
   ),
-  // Replays the hosted "Shadcn Lint" context (strict @shadcn/lint over apps and packages).
-  githubCheckLane(
-    "quality:shadcn-lint",
-    "pre-push",
-    "repo-quality",
-    "preflight",
-    ciLaneStep(repoRoot, "quality:shadcn-lint", "shadcn-lint")
-  ),
+  // The hosted "Shadcn Lint" context is replayed locally by the `lint:shadcn`
+  // state task inside `quality:lint-policy` (full-scope policy lint); a separate
+  // pre-push lane ran the same oxlint walk a second time (perf audit R6, 2026-11-02).
   githubCheckLane(
     "quality:jsdoc-ratchet",
     "pre-push",
@@ -582,13 +578,9 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
     "preflight",
     repoCliLane(repoRoot, "repo-sanity:bun-audit", ["bun-audit"])
   ),
-  githubCheckLane(
-    "quality:cache-policy",
-    "pre-push",
-    "repo-sanity",
-    "preflight",
-    repoCliLane(repoRoot, "quality:cache-policy", ["cache-policy"])
-  ),
+  // `quality:cache-policy` is owned by the cheap-gates tier (which `yeet publish`
+  // and every full verify already run); the pre-push copy made a full verify pay
+  // the ~9 s dry plan twice (perf audit G9, 2026-11-02).
 ];
 
 /**
@@ -912,7 +904,7 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-quality",
     "preflight",
-    bunRunLane(repoRoot, "lint:effect-vitest", ["beep", "lint", "effect-vitest"])
+    rootTaskLane(repoRoot, "lint:effect-vitest", "lint:effect-vitest")
   ),
   githubCheckLane(
     "lint:allowlist",
@@ -933,7 +925,7 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     "cheap-gates",
     "repo-sanity",
     "heavy",
-    bunRunLane(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"])
+    rootTaskLane(repoRoot, "lint:schema-catalog", "lint:schema-catalog")
   ),
   githubCheckLane(
     "lint:oxlint",

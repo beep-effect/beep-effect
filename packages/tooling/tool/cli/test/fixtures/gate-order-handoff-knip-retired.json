@@ -149,19 +149,6 @@
         "precisionBasis": "No environment-only or indirect A4 attribution is assigned to this terminal red."
       },
       {
-        "laneId": "quality:cache-policy",
-        "laneClass": "policy-preflight",
-        "laneClassBasis": "SPEC B3 policy/preflight partition; this lane is a preflight policy gate.",
-        "costP50Seconds": 183,
-        "redProbability": 0,
-        "precision": "precise",
-        "durationBasis": "A1 hosted Repo Sanity aggregate P50 proxy; the lane joined the group on 2026-09-10 (#1068), after the A1 window.",
-        "durationPointer": "/hosted/laneRows/7/p50DurationMs",
-        "firstRedBasis": "The lane postdates the A1 window; the share is 0 by absence, not by observation.",
-        "firstRedPointer": "/firstFailure/actionableLaneMix",
-        "precisionBasis": "No environment-only or indirect A4 attribution is assigned to this terminal red."
-      },
-      {
         "laneId": "quality:build",
         "laneClass": "heavy",
         "laneClassBasis": "SPEC B3 heavy partition; this lane performs build, test, or documentation work.",
@@ -212,19 +199,6 @@
         "firstRedBasis": "Exact A1 actionable-lane count divided by the 832 reconstructable first failures.",
         "firstRedPointer": "/firstFailure/actionableLaneMix/11",
         "precisionBasis": "Terminal reds occur after the established environment-only TS2589 quarantine."
-      },
-      {
-        "laneId": "quality:shadcn-lint",
-        "laneClass": "policy-preflight",
-        "laneClassBasis": "SPEC B3 policy/preflight partition; this lane is a preflight policy gate.",
-        "costP50Seconds": 20,
-        "redProbability": 0,
-        "precision": "precise",
-        "durationBasis": "Conservative hosted P50 for the Shadcn Lint context (added 2026-10-01): about 4 s local oxlint wall time scaled for a 4-vCPU runner plus Turbo start-up; A1 recorded no row for this non-required context.",
-        "durationPointer": "/hosted/laneRows",
-        "firstRedBasis": "The lane postdates the A1 window; the share is 0 by absence, not by observation.",
-        "firstRedPointer": "/firstFailure/actionableLaneMix",
-        "precisionBasis": "No environment-only or indirect A4 attribution is assigned to this terminal red."
       },
       {
         "laneId": "quality:jsdoc-ratchet",
@@ -453,7 +427,7 @@
     {
       "rank": 0,
       "laneId": "fallow:audit",
-      "declarationIndex": 26,
+      "declarationIndex": 24,
       "decidedBy": null,
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -465,7 +439,7 @@
     {
       "rank": 1,
       "laneId": "fallow:dead-code",
-      "declarationIndex": 27,
+      "declarationIndex": 25,
       "decidedBy": "first-red-share",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -477,7 +451,7 @@
     {
       "rank": 2,
       "laneId": "fallow:health",
-      "declarationIndex": 28,
+      "declarationIndex": 26,
       "decidedBy": "first-red-share",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -488,20 +462,8 @@
     },
     {
       "rank": 3,
-      "laneId": "quality:shadcn-lint",
-      "declarationIndex": 15,
-      "decidedBy": "cost-p50",
-      "redScheduling": "stop-after-red",
-      "costBasis": "external-run",
-      "durationSourceKey": null,
-      "durationP50Ms": null,
-      "durationP95Ms": null,
-      "firstRedSourceLane": null
-    },
-    {
-      "rank": 4,
       "laneId": "quality:security",
-      "declarationIndex": 30,
+      "declarationIndex": 28,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -511,9 +473,9 @@
       "firstRedSourceLane": "pre-push:security"
     },
     {
-      "rank": 5,
+      "rank": 4,
       "laneId": "quality:secrets",
-      "declarationIndex": 29,
+      "declarationIndex": 27,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -523,9 +485,9 @@
       "firstRedSourceLane": "pre-push:secrets"
     },
     {
-      "rank": 6,
+      "rank": 5,
       "laneId": "quality:commitlint",
-      "declarationIndex": 21,
+      "declarationIndex": 19,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -535,9 +497,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 7,
+      "rank": 6,
       "laneId": "quality:sast",
-      "declarationIndex": 31,
+      "declarationIndex": 29,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -547,7 +509,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 8,
+      "rank": 7,
       "laneId": "quality:changeset-status",
       "declarationIndex": 0,
       "decidedBy": "cost-p50",
@@ -559,9 +521,9 @@
       "firstRedSourceLane": "quality:changeset-status"
     },
     {
-      "rank": 9,
+      "rank": 8,
       "laneId": "quality:nix",
-      "declarationIndex": 32,
+      "declarationIndex": 30,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
@@ -571,9 +533,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 10,
+      "rank": 9,
       "laneId": "quality:codegen",
-      "declarationIndex": 20,
+      "declarationIndex": 18,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -583,7 +545,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 11,
+      "rank": 10,
       "laneId": "repo-sanity:fallow-boundaries-config",
       "declarationIndex": 3,
       "decidedBy": "cost-p50",
@@ -595,7 +557,7 @@
       "firstRedSourceLane": "repo-sanity:fallow-boundaries-config"
     },
     {
-      "rank": 12,
+      "rank": 11,
       "laneId": "repo-sanity:bun-audit",
       "declarationIndex": 9,
       "decidedBy": "first-red-share",
@@ -607,7 +569,7 @@
       "firstRedSourceLane": "repo-sanity:bun-audit"
     },
     {
-      "rank": 13,
+      "rank": 12,
       "laneId": "repo-sanity:tsconfig-sync",
       "declarationIndex": 2,
       "decidedBy": "first-red-share",
@@ -619,7 +581,7 @@
       "firstRedSourceLane": "repo-sanity:tsconfig-sync"
     },
     {
-      "rank": 14,
+      "rank": 13,
       "laneId": "repo-sanity:changeset-graph",
       "declarationIndex": 1,
       "decidedBy": "first-red-share",
@@ -631,7 +593,7 @@
       "firstRedSourceLane": "repo-sanity:changeset-graph"
     },
     {
-      "rank": 15,
+      "rank": 14,
       "laneId": "repo-sanity:versions",
       "declarationIndex": 4,
       "decidedBy": "first-red-share",
@@ -643,7 +605,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 16,
+      "rank": 15,
       "laneId": "repo-sanity:syncpack",
       "declarationIndex": 5,
       "decidedBy": "declaration-index",
@@ -655,7 +617,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 17,
+      "rank": 16,
       "laneId": "repo-sanity:sherif",
       "declarationIndex": 6,
       "decidedBy": "declaration-index",
@@ -667,7 +629,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 18,
+      "rank": 17,
       "laneId": "repo-sanity:config-typecheck",
       "declarationIndex": 7,
       "decidedBy": "declaration-index",
@@ -679,7 +641,7 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 19,
+      "rank": 18,
       "laneId": "repo-sanity:goals-ops-typecheck",
       "declarationIndex": 8,
       "decidedBy": "declaration-index",
@@ -691,21 +653,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 20,
-      "laneId": "quality:cache-policy",
-      "declarationIndex": 10,
-      "decidedBy": "declaration-index",
-      "redScheduling": "stop-after-red",
-      "costBasis": "a1-proxy-row",
-      "durationSourceKey": "Repo Sanity",
-      "durationP50Ms": 183000,
-      "durationP95Ms": 307000,
-      "firstRedSourceLane": null
-    },
-    {
-      "rank": 21,
+      "rank": 19,
       "laneId": "quality:build",
-      "declarationIndex": 11,
+      "declarationIndex": 10,
       "decidedBy": "lane-class",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -715,9 +665,9 @@
       "firstRedSourceLane": "quality:build"
     },
     {
-      "rank": 22,
+      "rank": 20,
       "laneId": "quality:desktop-ipc",
-      "declarationIndex": 22,
+      "declarationIndex": 20,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -727,9 +677,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 23,
+      "rank": 21,
       "laneId": "quality:jsdoc-ratchet",
-      "declarationIndex": 16,
+      "declarationIndex": 14,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-proxy-row",
@@ -739,9 +689,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 24,
+      "rank": 22,
       "laneId": "quality:doctest",
-      "declarationIndex": 18,
+      "declarationIndex": 16,
       "decidedBy": "declaration-index",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -751,9 +701,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 25,
+      "rank": 23,
       "laneId": "quality:docgen",
-      "declarationIndex": 17,
+      "declarationIndex": 15,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -763,9 +713,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 26,
+      "rank": 24,
       "laneId": "quality:test-integration",
-      "declarationIndex": 24,
+      "declarationIndex": 22,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -775,9 +725,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 27,
+      "rank": 25,
       "laneId": "quality:lint",
-      "declarationIndex": 12,
+      "declarationIndex": 11,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -787,9 +737,9 @@
       "firstRedSourceLane": "quality:lint"
     },
     {
-      "rank": 28,
+      "rank": 26,
       "laneId": "quality:lint-policy",
-      "declarationIndex": 13,
+      "declarationIndex": 12,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -799,9 +749,9 @@
       "firstRedSourceLane": "quality:lint-policy"
     },
     {
-      "rank": 29,
+      "rank": 27,
       "laneId": "quality:check",
-      "declarationIndex": 14,
+      "declarationIndex": 13,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -811,9 +761,9 @@
       "firstRedSourceLane": "quality:check"
     },
     {
-      "rank": 30,
+      "rank": 28,
       "laneId": "quality:test-unit",
-      "declarationIndex": 23,
+      "declarationIndex": 21,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "a1-lane-row",
@@ -823,9 +773,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 31,
+      "rank": 29,
       "laneId": "quality:storybook",
-      "declarationIndex": 25,
+      "declarationIndex": 23,
       "decidedBy": "cost-p50",
       "redScheduling": "stop-after-red",
       "costBasis": "external-run",
@@ -835,9 +785,9 @@
       "firstRedSourceLane": null
     },
     {
-      "rank": 32,
+      "rank": 30,
       "laneId": "quality:coverage",
-      "declarationIndex": 19,
+      "declarationIndex": 17,
       "decidedBy": "cost-p50",
       "redScheduling": "continue-after-imprecise-red",
       "costBasis": "a1-lane-row",
