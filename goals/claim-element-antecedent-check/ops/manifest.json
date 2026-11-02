@@ -33,7 +33,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_claim-element-readiness-recovery-744539fbc89e/verdict.json",
+        "ref": ".beep/yeet/runs/docs_claim-element-manual-merge-closeout-994405b54a14/verdict.json",
         "gating": true
       },
       {
@@ -112,7 +112,7 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Final PR #2609 binds the recovery after #2577 merged without a positive owner readiness verdict. All 15 required contexts at #2577 verify, but its canonical completion remains unknown. The retained incident report defines draft-first publication and the subsequent native ready transition without weakening completion rules. v27 remains 37/538, with all 34 protected and all 37 previous matches retained; no fresh measurement or attorney review is claimed. Frozen references, previous results, runtime scope and uncertainty remain unchanged. The initiative stays active until #2609 has current-head hosted verification, genuine pre-merge readiness and merge proof. Strict owner hold: no generic merge waiter or local full verification queue.",
+  "statusNote": "User-authorized follow-up after the manual merge of #2609. Its final Check and Policy retry passed after merge, but canonical completion remains unknown because no positive pre-merge monitor verdict was retained. The new incident and reflection preserve that history. This follow-up must bind its own final PR and branch verdict, earn current-head readiness before strict merge, and verify canonical completion afterward. Raw lifecycle stays active; 37/538, all 34 protected/all 37 previous matches, reference labels, prior results and v27 freeze remain intact. No fresh benchmark, attorney authority, S11 exception, verifier change or local full-proof queue is claimed.",
   "proposedCloseout": {
     "status": "completed-retained",
     "finalPullRequest": 2609

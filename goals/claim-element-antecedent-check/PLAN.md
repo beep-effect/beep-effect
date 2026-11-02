@@ -40,11 +40,11 @@ are fixed, never before.
 
 ## Current Blockers
 
-Final [PR #2609](https://github.com/beep-effect/beep-effect/pull/2609) owns the current readiness and closeout declaration and is ready for review. PR #2577 merged before a positive owner readiness result; [the recovery report](history/2026-11-02-premerge-readiness-recovery.md) retains its unknown completion receipt and recovery controls. Current-head verification, resolved review threads, the ordinary review window, and archived positive pre-merge readiness remain required. Canonical completed-retained remains unproven.
+PR #2609 merged manually before positive pre-merge readiness was retained. Its final Check and Policy retry passed after merge, while canonical completion remained unknown. [The retained incident](history/2026-11-02-manual-merge-2609.md) records user-confirmed attribution and exact verification timing without changing earlier receipts.
 
-- **Current pre-merge evidence hold (2026-11-02):** #2513 and #2577 merged before a retained positive readiness record and cannot supply the missing pre-merge proof. [Final #2609](https://github.com/beep-effect/beep-effect/pull/2609) must earn that proof under the strict owner hold before merge. The retained v27 replay remains 37/538 with all previous matches and results intact; its 29-file freeze identifies the measured environment and is not relabelled as a fresh measurement of later main revisions. Historical holds below are preserved.
+The user authorized a follow-up PR. Its own current-head hosted proof, resolved reviews, ordinary review window and positive monitor verdict must be archived before strict merge; canonical completion must verify afterward. P4/P5 remain in progress. The follow-up does not waive historical gaps, request S11, or change the completion verifier. Attorney attendance and local full-proof queues are not dependencies.
 
-No remaining attendance dependency. [The post-merge report](history/2026-11-01-post-merge-evaluation.md) records v24 at 37/538, all 34 protected/all 37 prior matches retained, the exact historical byte restoration, package proofs and bounded review uncertainty. Implementation PR #2411 merged under S11; its pending/cancelled jobs are not claimed green. Historical [final PR #2513](https://github.com/beep-effect/beep-effect/pull/2513) carries that measurement and closeout reflection. Current final #2609 still requires canonical readiness and merge evidence for operative completed-retained status. Historical holds below remain evidence.
+The retained v27 replay remains 37/538 with all 34 protected and all 37 previous matches. The 29-file freeze identifies its measured environment; later repository revisions are not silently relabelled as new benchmark environments. All prior human-gated notes below are historical, superseded by autonomous acceptance v1.
 
 ## Historical checkpoints and superseded holds
 
