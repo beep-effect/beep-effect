@@ -1992,5 +1992,14 @@ describe("knowledge clone-local attributes guard", () => {
         assert.include(failure.message, "fetch-depth: 0");
       })
     );
+
+    it.effect("fails the live refs census typed on an unresolvable tree", () =>
+      Effect.gen(function* () {
+        const knowledge = yield* KnowledgeService;
+        const failure = yield* Effect.flip(knowledge.refsTree("refs/beep/definitely-missing-tree"));
+        assert.strictEqual(failure._tag, "KnowledgeOperationalError");
+        assert.include(failure.message, 'census tree "refs/beep/definitely-missing-tree"');
+      })
+    );
   });
 });
