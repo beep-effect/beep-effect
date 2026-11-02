@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Codex (PR #2611, accepted a88d baseline conflict review)",
-      "reason": "Preserve accepted main configuration, record the accepted party-domain expansion once, and retain only the owned storage-module seal input. No qualification or enablement.",
+      "reviewer": "Claude Opus 5.5 (perf-fallow K2, perf/fallow-k2-cache-concurrency)",
+      "reason": "Record eight Fallow root tasks flipping to cache: true (quality audit K2) with one shared input set that adds the baselines, discovered code outside the source trees, .gitignore files and root plugin configs; fallow:audit:check stays uncached. Commands, outputs and dependency edges are unchanged; no qualification is granted.",
       "basis": {
-        "path": "goals/turborepo-cache-trust-observability/research/private-object-a88d-baseline-review-2026-11-02.md",
-        "sha256": "3ee460b6c537dbaa1f1e130dd05ff017b1108c658391539ad1c68ac7c0600f7d"
+        "path": "docs/reports/perf-fallow-k2-cache-review-2026-11-02.md",
+        "sha256": "5dfd1191a973bf2ab696ff59ea385c9f146bd989ec1ad91d00351397690332a4"
       }
     },
     "@beep/acp": {
@@ -1692,17 +1692,31 @@
         "configuration": {
           "cache": false,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1711,7 +1725,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -1738,19 +1752,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1759,7 +1787,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -1786,24 +1814,42 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
+            "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
+            ".claude/skills/**",
+            ".fallow/plugins/**",
             ".fallowrc.jsonc",
             "apps/**",
             "bun.lock",
             "infra/**",
             "packages/**",
-            "standards/fallow.boundaries.generated.jsonc"
+            "scripts/**",
+            "standards/fallow.*.jsonc"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -1825,19 +1871,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1846,7 +1906,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -1873,19 +1933,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1894,7 +1968,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -1921,19 +1995,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1942,7 +2030,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -1969,19 +2057,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -1990,7 +2092,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -2017,19 +2119,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -2038,7 +2154,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -2065,19 +2181,33 @@
           "//#lint:policy-fingerprint:quality-fallow"
         ],
         "configuration": {
-          "cache": false,
+          "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.next/**",
+            "!**/.turbo/**",
+            "!**/build/**",
+            "!**/coverage/**",
+            "!**/dist/**",
             "!**/node_modules/**",
+            "!**/src-tauri/gen/**",
             "!**/src-tauri/target/**",
+            "!**/storybook-static/**",
             "!.claude/worktrees/**",
+            "!{apps,packages,infra}/**/docs/**",
+            "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}",
+            "**/.gitignore",
             "**/package.json",
             "**/tsconfig*.json",
+            "*.{json,jsonc,yml,yaml,toml}",
+            ".*.{json,jsonc,toml}",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".changeset/config.json",
             ".claude/skills/**",
             ".fallow/plugins/**",
             ".fallowrc.jsonc",
@@ -2086,7 +2216,7 @@
             "infra/**",
             "packages/**",
             "scripts/**",
-            "standards/fallow.pilot.inventory.jsonc"
+            "standards/fallow.*.jsonc"
           ],
           "env": [
             "BEEP_PROOF_BASE"
@@ -122730,7 +122860,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "44c446d3cac904e1bcdb16feefd1b7b4f3509223066beb2f38ec0dfafb111d2e"
+        "sha256": "ed0003210851b8fed461386e678f06b6d8b604399546c43db2c630a96b4b8bbd"
       }
     ]
   }

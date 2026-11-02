@@ -3,6 +3,7 @@ import { fallowReportPathsForTesting } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -75,6 +76,17 @@ type FallowRow = {
   readonly rawPath: O.Option<string>;
 };
 
+const cachedEntries = Effect.fn("FallowTurboCacheTest.cachedEntries")(function* (
+  entries: ReadonlyArray<readonly [string, typeof RawTask.Type]>
+) {
+  return yield* Effect.filter(
+    entries,
+    Effect.fnUntraced(function* ([, task]) {
+      return (yield* decodeFallowTask(task)).cache;
+    })
+  );
+});
+
 const writeFile = Effect.fn("FallowTurboCacheTest.writeFile")(function* (root: string, file: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -121,12 +133,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repoRoot, "turbo.json")));
       const manifest = yield* decodeManifest(yield* fs.readFileString(path.join(repoRoot, "package.json")));
       const fallowEntries = A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#fallow:")(id));
-      const cached = yield* Effect.filter(
-        fallowEntries,
-        Effect.fnUntraced(function* ([, task]) {
-          return (yield* decodeFallowTask(task)).cache;
-        })
-      );
+      const cached = yield* cachedEntries(fallowEntries);
       // Audit diffs against BEEP_PROOF_BASE, a ref name whose commit can move under an
       // unchanged key, so it is the one Fallow row that must stay uncached.
       const uncached = A.filter(fallowEntries, ([id]) => !A.some(cached, ([cachedId]) => cachedId === id));
@@ -234,7 +241,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       for (const row of rows) {
         if (O.isSome(row.reportPath)) {
           const envelope = yield* decodeEnvelope(yield* fs.readFileString(path.join(root, row.reportPath.value)));
-          expect(O.some(envelope.rawOutputRef), row.id).toEqual(row.rawPath);
+          assertSome(row.rawPath, envelope.rawOutputRef);
           expect(yield* fs.exists(path.join(root, envelope.rawOutputRef)), row.id).toBe(true);
         }
       }
@@ -263,11 +270,9 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
       const configuration = yield* decodeConfiguration(yield* fs.readFileString(path.join(repoRoot, "turbo.json")));
-      const cached = yield* Effect.filter(
-        A.filter(R.keys(configuration.tasks), Str.startsWith("//#fallow:")),
-        Effect.fnUntraced(function* (id) {
-          return (yield* decodeFallowTask(O.getOrThrow(R.get(configuration.tasks, id)))).cache;
-        })
+      const cached = A.map(
+        yield* cachedEntries(A.filter(R.toEntries(configuration.tasks), ([id]) => Str.startsWith("//#fallow:")(id))),
+        ([id]) => id
       );
       const listed = yield* StepExec.runCaptured({
         command: path.join(repoRoot, "node_modules/.bin/fallow"),
