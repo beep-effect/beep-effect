@@ -51,6 +51,16 @@ export type PartyKey = typeof PartyKey.Type;
  * Identifier-kind token hashed as a basis `scheme`. `email`, `tel` and `x500`
  * are globally scoped; `user`, `native` and `ext` require a namespace.
  *
+ * **Example** (Check a scheme token)
+ *
+ * ```ts
+ * import { IdentifierScheme } from "@beep/party-domain/PartyKey"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IdentifierScheme)("tel")) // true
+ * console.log(S.is(IdentifierScheme)("fax")) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -70,6 +80,16 @@ const globallyScopedScheme = IdentifierScheme.pick(["email", "tel", "x500"]);
 
 /**
  * A basis authority: empty for a globally scoped scheme, otherwise a namespace.
+ *
+ * **Example** (Allow empty or trimmed authorities)
+ *
+ * ```ts
+ * import { BasisAuthority } from "@beep/party-domain/PartyKey"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BasisAuthority)("")) // true
+ * console.log(S.is(BasisAuthority)(" urn:example:directory")) // false
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -122,6 +142,17 @@ const SchemeCanonicalCheck = S.makeFilter(
 /**
  * Basis for an identifier anchor: `{ kind: "identifier", scheme, authority, value }`.
  *
+ * **Example** (Require the scheme canonical value)
+ *
+ * ```ts
+ * import { IdentifierBasis } from "@beep/party-domain/PartyKey"
+ * import * as S from "effect/Schema"
+ *
+ * const basis = { kind: "identifier", scheme: "user", authority: "https://chat.example.test", value: "dana" }
+ * console.log(S.is(IdentifierBasis)(basis)) // true
+ * console.log(S.is(IdentifierBasis)({ ...basis, value: "Dana" })) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -135,6 +166,17 @@ export class IdentifierBasis extends S.Opaque<IdentifierBasis, { readonly brand:
  * Basis for a record with no usable identifier: the stable source namespace and
  * native record id, never a display name.
  *
+ * **Example** (Require a source namespace)
+ *
+ * ```ts
+ * import { SourceRecordBasis } from "@beep/party-domain/PartyKey"
+ * import * as S from "effect/Schema"
+ *
+ * const basis = { kind: "source-record", authority: "urn:example:contacts", value: "Card-17" }
+ * console.log(S.is(SourceRecordBasis)(basis)) // true
+ * console.log(S.is(SourceRecordBasis)({ ...basis, authority: "" })) // false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,6 +188,19 @@ export class SourceRecordBasis extends S.Opaque<SourceRecordBasis, { readonly br
 
 /**
  * Any PartyKey v1 basis, discriminated by `kind`.
+ *
+ * **Example** (Read the basis kind)
+ *
+ * ```ts
+ * import { PartyKeyBasis } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const basis = Effect.runSync(
+ *   S.decodeUnknownEffect(PartyKeyBasis)({ kind: "source-record", authority: "urn:example:contacts", value: "Card-17" })
+ * )
+ * console.log(PartyKeyBasis.match(basis, { identifier: () => "identifier", "source-record": () => "fallback" })) // "fallback"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -165,6 +220,15 @@ export type PartyKeyBasis = typeof PartyKeyBasis.Type;
 
 /**
  * Stable source identity of an identifier-free record.
+ *
+ * **Example** (Build raw source-record input)
+ *
+ * ```ts
+ * import { SourceRecordInput } from "@beep/party-domain/PartyKey"
+ *
+ * const input = SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "Card-17" })
+ * console.log(input.recordId) // "Card-17"
+ * ```
  *
  * @category models
  * @since 0.0.0

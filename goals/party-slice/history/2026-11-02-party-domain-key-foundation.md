@@ -247,6 +247,44 @@ Review-wave proof, in the cloud lane on top of the frozen wave2 tree
 plus four review regressions). Lint, check and docgen are recorded in the PR
 handoff; audit is a tool-reported skip, not a pass.
 
+## JSDoc correction (hosted JSDoc Ratchet on #2588)
+
+The hosted JSDoc Ratchet failed at the parent's exact head. It reported:
+
+- `missingExportExamples` 39 (allowed 0);
+- `multiple-description-paragraphs` +5;
+- `packagesNeedingRemediation` +1.
+
+A read-only audit of this package's own docs attributed them:
+
+- 39 public runtime exports had no `**Example**`;
+- five module headers (`Identifier.model.ts`, `Identifier.behavior.ts`,
+  `PartyKey.behavior.ts`, and the `src/Identifier.ts` and `src/PartyKey.ts`
+  barrels) had two lead paragraphs.
+
+The fix is docs only, with no change to code or public API:
+
+- one titled, observable `**Example**` per public runtime export, through the
+  public `@beep/party-domain/Identifier` and `/PartyKey` subpaths, using
+  synthetic `example.test` data and dedicated Effect leaves;
+- each header's second paragraph moved under `**Details**`.
+
+The seven exports in private `src/internal/IdentifierCore.ts` have no examples.
+Docgen excludes `src/internal/**`, and 46 − 7 = 39 matches the hosted count, but
+the parent's filtered inventory is the authority on what the ratchet counts.
+
+Local results:
+
+| Check | Result |
+| --- | --- |
+| Docgen | ok; all examples typecheck |
+| `package-verify --quick` | lint ok, check ok |
+| Tests | 28/28 |
+| Audit | `skip`, not a pass |
+
+The repo-wide JSDoc inventory and ratchet were not run here, to avoid
+duplicating the parent's root scan.
+
 ## Remaining P1 work
 
 - `IdentifierId` and `KeyAssignment`.

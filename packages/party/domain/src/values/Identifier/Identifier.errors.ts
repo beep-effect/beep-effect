@@ -14,6 +14,16 @@ const $I = $PartyDomainId.create("values/Identifier/Identifier.errors");
 /**
  * Why an identifier or PartyKey basis was rejected as a data-quality issue.
  *
+ * **Example** (Check an issue reason)
+ *
+ * ```ts
+ * import { IdentifierIssueReason } from "@beep/party-domain/Identifier"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IdentifierIssueReason)("invalid-domain")) // true
+ * console.log(S.is(IdentifierIssueReason)("typo")) // false
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -44,6 +54,16 @@ export type IdentifierIssueReason = typeof IdentifierIssueReason.Type;
 
 /**
  * Which input field an issue concerns.
+ *
+ * **Example** (Check an issue field)
+ *
+ * ```ts
+ * import { IdentifierIssueField } from "@beep/party-domain/Identifier"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IdentifierIssueField)("country")) // true
+ * console.log(S.is(IdentifierIssueField)("display-name")) // false
+ * ```
  *
  * @category errors
  * @since 0.0.0

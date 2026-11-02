@@ -1,6 +1,8 @@
 /**
  * Shared identifier normalizers and graduating constructors.
  *
+ * **Details**
+ *
  * Identifier deduplication and PartyKey v1 generation call the same
  * normalizers, so every adapter (mail headers, contact cards, directories)
  * produces identical canonical values for the same identifier.
@@ -53,6 +55,15 @@ export const normalizeText = Effect.fn("PartyIdentifier.normalizeText")(function
  * Normalize a required namespace. A missing namespace is a `missing-authority`
  * issue.
  *
+ * **Example** (Trim a service namespace)
+ *
+ * ```ts
+ * import { normalizeNamespace } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(normalizeNamespace(" urn:example:directory "))) // "urn:example:directory"
+ * ```
+ *
  * @category normalization
  * @since 0.0.0
  */
@@ -95,6 +106,15 @@ export const normalizeEmail = Effect.fn("PartyIdentifier.normalizeEmail")(functi
  * Graduated Exchange DN normalizer: NFC/trim, locale-independent uppercase,
  * then NFC.
  *
+ * **Example** (Uppercase an Exchange DN)
+ *
+ * ```ts
+ * import { normalizeExchangeDn } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(normalizeExchangeDn("/o=ExampleOrg/cn=dana"))) // "/O=EXAMPLEORG/CN=DANA"
+ * ```
+ *
  * @category normalization
  * @since 0.0.0
  */
@@ -105,6 +125,15 @@ export const normalizeExchangeDn = Effect.fn("PartyIdentifier.normalizeExchangeD
 /**
  * Graduated username-handle normalizer: NFC/trim, locale-independent lowercase,
  * then NFC.
+ *
+ * **Example** (Lowercase a handle)
+ *
+ * ```ts
+ * import { normalizeUsernameHandle } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.runSync(normalizeUsernameHandle(" Dana.Example "))) // "dana.example"
+ * ```
  *
  * @category normalization
  * @since 0.0.0
@@ -158,6 +187,16 @@ const decodeExternalId = decodeCase(S.decodeUnknownEffect(ExternalId, { onExcess
 /**
  * Graduate a raw email spelling into an `EmailAddress` identifier.
  *
+ * **Example** (Graduate a mail header address)
+ *
+ * ```ts
+ * import { emailAddress } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * const id = Effect.runSync(emailAddress("Dana Example <Dana@EXAMPLE.test>"))
+ * console.log(id.normalized) // "dana@example.test"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -168,6 +207,17 @@ export const emailAddress = Effect.fn("PartyIdentifier.emailAddress")(function* 
 
 /**
  * Graduate a raw phone spelling into a `PhoneNumber` identifier.
+ *
+ * **Example** (Graduate an international number)
+ *
+ * ```ts
+ * import { PhoneNumberInput, phoneNumber } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const id = Effect.runSync(phoneNumber(PhoneNumberInput.make({ raw: "+1 201-555-0123", country: O.none() })))
+ * console.log(id.e164) // "+12015550123"
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -180,6 +230,16 @@ export const phoneNumber = Effect.fn("PartyIdentifier.phoneNumber")(function* (i
 /**
  * Graduate a raw X.500 / legacyExchangeDN spelling into an `ExchangeDn` identifier.
  *
+ * **Example** (Graduate an Exchange DN)
+ *
+ * ```ts
+ * import { exchangeDn } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * const id = Effect.runSync(exchangeDn(" /o=ExampleOrg/cn=dana "))
+ * console.log(id.normalized) // "/O=EXAMPLEORG/CN=DANA"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -190,6 +250,16 @@ export const exchangeDn = Effect.fn("PartyIdentifier.exchangeDn")(function* (raw
 
 /**
  * Graduate a handle within one service into a `Username` identifier.
+ *
+ * **Example** (Graduate a username within one service)
+ *
+ * ```ts
+ * import { UsernameInput, username } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * const id = Effect.runSync(username(UsernameInput.make({ service: "https://chat.example.test", handle: "Dana" })))
+ * console.log(id.handle) // "dana"
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -203,6 +273,16 @@ export const username = Effect.fn("PartyIdentifier.username")(function* (input: 
 /**
  * Graduate a service-native account id; case and internal whitespace are kept.
  *
+ * **Example** (Keep a native id case-sensitive)
+ *
+ * ```ts
+ * import { NativeAccountIdInput, nativeAccountId } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * const id = Effect.runSync(nativeAccountId(NativeAccountIdInput.make({ service: "urn:example:directory", value: " AbC-1 " })))
+ * console.log(id.value) // "AbC-1"
+ * ```
+ *
  * @category constructors
  * @since 0.0.0
  */
@@ -215,6 +295,16 @@ export const nativeAccountId = Effect.fn("PartyIdentifier.nativeAccountId")(func
 /**
  * Graduate an id issued under an external scheme namespace; case and internal
  * whitespace are kept.
+ *
+ * **Example** (Graduate an externally issued id)
+ *
+ * ```ts
+ * import { ExternalIdInput, externalId } from "@beep/party-domain/Identifier"
+ * import * as Effect from "effect/Effect"
+ *
+ * const id = Effect.runSync(externalId(ExternalIdInput.make({ scheme: "urn:example:bar-number", value: "AbC-1" })))
+ * console.log(id.scheme) // "urn:example:bar-number"
+ * ```
  *
  * @category constructors
  * @since 0.0.0

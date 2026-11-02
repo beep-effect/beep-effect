@@ -1,6 +1,8 @@
 /**
  * PartyKey v1: the deterministic key of one identity ingestion anchor.
  *
+ * **Details**
+ *
  * A PartyKey is `pk:v1:` followed by the lowercase hex SHA-256 of the UTF-8
  * canonical JSON bytes of one basis object. It names an anchor, not proof that
  * its users are one person: `KeyAssignment` claims map keys to a `PartyId`.
@@ -80,6 +82,18 @@ const decodeIdentifierBasis = S.decodeUnknownEffect(IdentifierBasis, { onExcessP
  * uppercase email, a non-E.164 `tel`, a lowercase `x500` or an uppercase `user`
  * handle) fail as an `invalid-basis` issue. The issue never echoes the basis.
  *
+ * **Example** (Reject a basis that skipped graduation)
+ *
+ * ```ts
+ * import { decodePartyKeyBasis } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ *
+ * const issue = Effect.runSync(
+ *   Effect.flip(decodePartyKeyBasis({ kind: "identifier", scheme: "email", authority: "", value: "Dana@EXAMPLE.test" }))
+ * )
+ * console.log(issue.reason, issue.field) // "invalid-basis" "basis"
+ * ```
+ *
  * @category decoding
  * @since 0.0.0
  */
@@ -120,6 +134,18 @@ export const canonicalJson = Effect.fn("PartyKey.canonicalJson")(function* (inpu
 /**
  * The UTF-8 canonical bytes that a PartyKey v1 hashes.
  *
+ * **Example** (Hash input is 81 UTF-8 bytes)
+ *
+ * ```ts
+ * import { canonicalBytes } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ *
+ * const bytes = Effect.runSync(
+ *   canonicalBytes({ kind: "identifier", scheme: "email", authority: "", value: "dana@example.test" })
+ * )
+ * console.log(bytes.length) // 81
+ * ```
+ *
  * @category serialization
  * @since 0.0.0
  */
@@ -129,6 +155,18 @@ export const canonicalBytes = Effect.fn("PartyKey.canonicalBytes")(function* (in
 
 /**
  * Compute the PartyKey v1 of a basis.
+ *
+ * **Example** (Key the pinned email basis)
+ *
+ * ```ts
+ * import { partyKeyOfBasis } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ *
+ * const key = Effect.runSync(
+ *   partyKeyOfBasis({ kind: "identifier", scheme: "email", authority: "", value: "dana@example.test" })
+ * )
+ * console.log(key) // "pk:v1:a390765977ccb1ea6062e33c4508f6847be63377c0c0057d726c99eac3a04d29"
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -143,6 +181,17 @@ export const partyKeyOfBasis = Effect.fn("PartyKey.partyKeyOfBasis")(function* (
  * token (`email`, `tel`, `x500`, `user`, `native`, `ext`); `authority` is the
  * required namespace, empty only for a globally scoped scheme; `value` is the
  * shared-normalized canonical value, never the raw spelling.
+ *
+ * **Example** (Derive the basis of an identifier)
+ *
+ * ```ts
+ * import { emailAddress } from "@beep/party-domain/Identifier"
+ * import { identifierBasis } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ *
+ * const basis = Effect.runSync(Effect.flatMap(emailAddress("Dana@EXAMPLE.test"), identifierBasis))
+ * console.log(basis.scheme, basis.value) // "email" "dana@example.test"
+ * ```
  *
  * @category serialization
  * @since 0.0.0
@@ -192,6 +241,19 @@ const sourceRecordPart = (field: IdentifierIssueField) => (failure: IdentifierIs
  * namespace or id is a data-quality issue whose `field` says which part failed;
  * display names are never a fallback. Such keys carry no cross-source equality
  * guarantee.
+ *
+ * **Example** (Key an identifier-free contact card)
+ *
+ * ```ts
+ * import { PartyKey, SourceRecordInput, sourceRecordPartyKey } from "@beep/party-domain/PartyKey"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const key = Effect.runSync(
+ *   sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: "Card-17" }))
+ * )
+ * console.log(S.is(PartyKey)(key)) // true
+ * ```
  *
  * @category constructors
  * @since 0.0.0
