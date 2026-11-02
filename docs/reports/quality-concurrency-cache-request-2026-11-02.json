@@ -1,0 +1,20 @@
+{
+  "previous": "2f26ed82be3123843852ed3afb43e66b3986df3582e166901230c789618b12c8",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (profile-derived quality concurrency, claude/perf-quality-concurrency-d42a27)",
+    "reason": "Record Quality.plan.ts, ProcessAttachment.ts and ProcessTable.ts added to the goals-doctor, knowledge and lint-deprecated-apis seal inputs, and ShardScope.ts added to the lint-schema-catalog seal (stale on main since #2563); commands, outputs and cache settings are unchanged and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/quality-concurrency-cache-review-2026-11-02.md",
+      "sha256": "c3f3eab8d5e5d2e54c63de644838baeb6c91312b071b5f1e2b027bbb335fafd9"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}

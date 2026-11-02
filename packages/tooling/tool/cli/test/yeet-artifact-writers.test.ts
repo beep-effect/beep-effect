@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -46,6 +47,9 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
+
+// `Git` rides beside the platform services: `currentCommitSha` takes it from the context (W1b).
+const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
 
@@ -118,7 +122,7 @@ const readVerdictArtifact = Effect.fnUntraced(function* (context: RepoRunContext
 // writer to a generic JSON render left every test green while `yeet status`
 // could no longer decode what the writer had emitted. These assert the bytes
 // that actually landed on disk.
-it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })("writeRunVerdict", (it) => {
+it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
   it.effect("writes a verdict file that decodes back through YeetVerdictJson", () =>
     Effect.gen(function* () {
       const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
