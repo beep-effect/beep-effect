@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
@@ -29,6 +30,9 @@ import type {
   turboEnvironmentHealthWarnings,
 } from "@beep/repo-cli/test/SharedInternals";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const selection = vi.hoisted(() => ({ root: "" }));
 vi.mock("@beep/repo-utils", (importOriginal) =>
   importOriginal<typeof import("@beep/repo-utils")>().then((original) => ({
@@ -56,7 +60,7 @@ vi.mock("../src/internal/cli/EnvConfig.ts", (importOriginal) =>
   }))
 );
 const platform = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive).pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))
 );
 const runCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const run = (args: ReadonlyArray<string>, env: Record<string, string> = {}) =>
