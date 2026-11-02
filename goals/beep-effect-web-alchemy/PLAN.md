@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`. P0–P5 done; https://beep-effect.com deploys from CI on every `main` push that touches the app (first green run 41244684210, 2026-10-31). Completion is derived from final PR #2523.
+Status: `active`. P0–P5 done; https://beep-effect.com deploys from CI on every `main` push that touches the app (first green run 41244684210, 2026-10-31). Completion is derived from final PR #2583.
 
 ## Phases
 

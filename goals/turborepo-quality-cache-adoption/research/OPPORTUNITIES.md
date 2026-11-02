@@ -1,5 +1,17 @@
 # Friction and opportunities
 
+## Global-input exclusion control, 2026-11-02
+
+The first native configuration experiment expected a child task to reuse after
+a synthetic shared file changed under the `globalConfiguration` layout. The
+pinned stable client recomputed it instead. The driver stopped at that assertion
+and wrote no passing report; original source and bounded logs are retained.
+Inspect the resolved task inputs before changing the expected result. Capturing
+the native run summary before assertions would have made this distinction
+visible in the first failure. No repository input exclusion or cache setting
+was changed.
+
+
 Record friction as it occurs: work, minimum command/error/file evidence,
 impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
@@ -8,6 +20,26 @@ in bounded artifacts.
 Historical leads remain in the [exploration ledger](../../../explorations/turborepo-quality-cache/research/OPPORTUNITIES.md)
 and [opportunity disposition](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md).
 Refresh historical claims before treating them as current.
+
+## 2026-11-02: default package verification skipped its removed audit wrapper
+
+After PR #2526 removed `beep:audit` from workspace manifests, default
+`beep quality package-verify` treated the missing script as a successful skip.
+The command could report success after docgen alone. Three regression cases
+reproduced that omission in `Quality/internal/PackageVerify.ts`.
+
+Delegate the audit to the existing root `audit` command with the selected
+workspace filter. Keep its execution plan and failure-capsule command together;
+a missing root command or a nonzero audit exit must fail verification. All 24
+focused tests pass, including real root-directory and argument forwarding.
+The actual default identity-package command now passes audit and docgen, and
+the edited CLI passes lint, type checks and bounded docgen.
+
+Default package-verification timings from the wrapper removal until this repair
+do not measure a complete audit. Exclude those samples from complete-verification
+and cache-savings claims. Earlier measurements retain their recorded command,
+source and time scope. This repair restores the existing composed audit without
+reintroducing per-package wrappers or granting task qualification.
 
 ## 2026-10-28: current population exceeds the retained handoff
 
@@ -584,3 +616,48 @@ source-binding representation with named `path` and `sha256` fields rather than
 filenames as property names. Preserve the failed hook and original report,
 re-execute the same cases against the revised driver, and keep scanner rules
 unchanged. Checksums are provenance metadata, not credentials.
+
+
+## Feature review counter missed an accepted status, 2026-11-02
+
+Before the global configuration decision, the existing cargo integrity test
+failed because its status mapping omitted `accepted-retain-current-default`,
+which was already present in the accepted feature matrix. The failure is
+inherited from main. Extend that explicit mapping for the existing default
+status and this retained enabled setting; keep exact count and known-status
+assertions. A shared status domain would prevent later feature decisions from
+leaving this integrity check stale. No runtime or cache policy changes.
+
+The full seven-case integrity suite also detected a stale SPEC digest in the
+current working completion audit. It was already stale against the accepted
+base SPEC before this decision. Every existing acceptance and implementation
+requirement still appears in the normative SPEC; preserve the prior digest,
+refresh the working audit binding and keep all nine acceptance criteria
+unproven. Historical runtime and qualification digests are unchanged.
+
+
+## Superseded queued workflows block current heads, 2026-11-02
+
+The old Check runs for [PR2562](https://github.com/beep-effect/beep-effect/actions/runs/41458892594)
+and [PR2596](https://github.com/beep-effect/beep-effect/actions/runs/41462399317)
+remained queued after their reviewed replacement heads were pushed. The current
+runs had zero jobs and stayed pending. In contrast, PR2576's old run was already
+cancelled and its current run had 28 queued jobs with no runner assigned. These
+are different waits; absent check contexts do not establish a missing workflow
+or a successful check. Verify the PR's current head and the obsolete run's exact
+head before requesting cancellation, then observe termination and current-run
+progress. Do not create a second workflow to work around the queue. Existing
+convergence should surface and clear an obsolete queued predecessor.
+
+Shared GraphQL quota also prevented the ready transition and a metadata read
+from 14:30 until the 14:36 reset. Same-account REST supplied supported metadata
+operations, and the ready transition succeeded after reset. Review state was
+unknown during failed reads. Longer bounded polling and a shared census would
+reduce duplicate API demand; no alternate identity or quota purchase was used.
+
+Both obsolete runs reached terminal `cancelled` after the normal cancellation
+requests; their current runs advanced from pending to queued. A later force
+request for the first run raced with its completion and returned HTTP409; the
+follow-up read confirmed cancellation, so no retry was needed. The requests
+were scoped to obsolete heads and no workflow was re-dispatched. This clears
+the stale predecessor without claiming the remaining runner queue has cleared.

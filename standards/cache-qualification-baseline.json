@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 sites, feat/gh-git-w3-sites)",
-      "reason": "Record the W3 sites drift: repo-cli adds @beep/commands as a dependency (manifest byte change for six @beep/repo-cli tasks), and GithubIdentity.ts imports Run, so the commands driver's Run.ts closure joins the goals-doctor, knowledge and quality root seals; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (perf-jsdoc-ratchet-turbo)",
+      "reason": "Re-record the legacy cache posture of the root subject after //#jsdoc:inventory:check widened its scratchpad glob to .tsx and dropped its test/fixtures exclusion, and //#jsdoc:ratchet:check dropped every directory exclusion but node_modules, so both follow the files their scanners read. No command, output, dependency, cache flag or env key changed; no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-sites.md",
-        "sha256": "9f015c487185677458af286a766541dcbafc123de172f4c368040c78f74605aa"
+        "path": "docs/reports/perf-jsdoc-ratchet-turbo-cache-review-2026-11-02.md",
+        "sha256": "91f4bc09115cfc630dfb97300d2345d156e95c299604915429feba1d37b98c63"
       }
     },
     "@beep/acp": {
@@ -1138,11 +1138,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 sites, feat/gh-git-w3-sites)",
-      "reason": "Record the W3 sites drift: repo-cli adds @beep/commands as a dependency (manifest byte change for six @beep/repo-cli tasks), and GithubIdentity.ts imports Run, so the commands driver's Run.ts closure joins the goals-doctor, knowledge and quality root seals; no qualification is granted.",
+      "reviewer": "Claude Fable 5.1 (perf-turbo-cache-hygiene, claude/perf-turbo-cache-hygiene-ece673)",
+      "reason": "Re-record the legacy cache posture of // and all 188 workspace packages after the 2026-11-02 Turbo input hygiene: doctest excludes nested node_modules, lint/check/build drop package-relative .env inputs (Vite/Next apps keep .env* in overrides), and six root policy scans flip to cache: true after a purity read (goals:doctor stays uncached). No command, output or env key changed; no qualification is granted.",
       "basis": {
-        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-sites.md",
-        "sha256": "9f015c487185677458af286a766541dcbafc123de172f4c368040c78f74605aa"
+        "path": "docs/reports/perf-turbo-cache-hygiene-cache-review-2026-11-02.md",
+        "sha256": "0dea5f72a6c9b4a9d9df8247786529bade90284c1fa38439c7f777e6a40d20a4"
       }
     },
     "@beep/repo-configs": {
@@ -2153,7 +2153,6 @@
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
-            "!**/test/fixtures/**",
             "!.claude/worktrees/**",
             "!scratchpad/.jsdoc-loop/**",
             "!scratchpad/docs/**",
@@ -2165,7 +2164,7 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "scratchpad/**/*.ts",
+            "scratchpad/**/*.{ts,tsx}",
             "tools/**/*.{ts,tsx}",
             "tsdoc.json",
             "{packages,apps,infra}/**/*.{ts,tsx}"
@@ -2195,14 +2194,7 @@
         "configuration": {
           "cache": true,
           "inputs": [
-            "!**/.beep/**",
-            "!**/.next/**",
-            "!**/.turbo/**",
-            "!**/build/**",
-            "!**/coverage/**",
-            "!**/dist/**",
             "!**/node_modules/**",
-            "!**/storybook-static/**",
             "./.bun-version",
             "./.nvmrc",
             "./package.json",
@@ -3082,7 +3074,6 @@
             "packages/drivers/box-provisioning/package.json",
             "packages/drivers/box/package.json",
             "packages/drivers/commands/package.json",
-            "packages/drivers/commands/src/**",
             "packages/drivers/cosmos/package.json",
             "packages/drivers/discord/package.json",
             "packages/drivers/doc-text/package.json",
@@ -3334,10 +3325,6 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "packages/drivers/commands/package.json",
-            "packages/drivers/commands/src/Redaction.ts",
-            "packages/drivers/commands/src/Run.ts",
-            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -3892,10 +3879,6 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "packages/drivers/commands/package.json",
-            "packages/drivers/commands/src/Redaction.ts",
-            "packages/drivers/commands/src/Run.ts",
-            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -6365,10 +6348,6 @@
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            "packages/drivers/commands/package.json",
-            "packages/drivers/commands/src/Redaction.ts",
-            "packages/drivers/commands/src/Run.ts",
-            "packages/drivers/commands/src/internal/capture.ts",
             "packages/drivers/github/package.json",
             "packages/drivers/github/src/GitHubApp.ts",
             "packages/drivers/github/src/GitHubClient.ts",
@@ -93070,7 +93049,6 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
-          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93179,7 +93157,6 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
-          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93275,7 +93252,6 @@
           "@beep/chalk#build",
           "@beep/cli-kit#build",
           "@beep/colors#build",
-          "@beep/commands#build",
           "@beep/config-file#build",
           "@beep/duckdb#build",
           "@beep/epistemics#build",
@@ -93422,7 +93398,6 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
-          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -93564,7 +93539,6 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
-          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -93825,7 +93799,6 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
-          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -93926,7 +93899,6 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
-          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -94051,7 +94023,6 @@
           "@beep/chalk#transit",
           "@beep/cli-kit#transit",
           "@beep/colors#transit",
-          "@beep/commands#transit",
           "@beep/config-file#transit",
           "@beep/duckdb#transit",
           "@beep/epistemics#transit",
@@ -121764,7 +121735,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "f997f3645ef757183203f5af7965f0fc0796d54274a70faff980439d38cfc084"
+        "sha256": "ca51beab147fd0adde9ac64f1f0e6b73815b7f3c91df8edce8b79b990c648bf1"
       }
     ]
   }
