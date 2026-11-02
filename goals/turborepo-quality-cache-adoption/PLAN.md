@@ -563,3 +563,23 @@ integrity check was missing the already accepted default status; the status
 mapping now also covers this retained enabled setting. Hosted acceptance remains
 required. The broader global/child family, actual computation qualification,
 production trust and every whole-goal acceptance criterion remain open.
+
+
+### Current-canary selection regression replay, 2026-11-02
+
+The [current-pin checkpoint](research/selection-current-canary-checkpoint.json)
+adds 44 asserted synthetic cases on stable 2.11.10 and current canary
+2.11.11-canary.1. The historical 2.11.9-canary.1 report and its immutable Git
+source remain byte-bound. A separate 44-case compatibility replay has the same
+semantic projection as that original report.
+
+The existing driver now accepts an explicit pin manifest and a new report path.
+It reuses the bounded streaming collector, preserves the ten-second process and
+three-minute total ceilings, refuses report overwrite, and keeps raw output in
+private unique directories. Seven negative controls pass, including an actual
+omitted dependency and both byte/time refusals with no surviving child.
+
+Four feature rows link the current-pair observation without changing their
+acceptance state. The 27 unfinished feature decisions, actual-root consumer
+review, real computation qualification and every whole-goal criterion remain
+open. No production flag, cache policy, credential or infrastructure changes.

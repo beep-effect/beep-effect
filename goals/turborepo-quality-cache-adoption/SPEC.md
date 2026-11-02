@@ -575,3 +575,19 @@ the newer evidence and change no runtime cache policy or qualification record.
   Any real input removal or client/layout change needs renewed evidence.
 - Reverse by reverting this research decision and registration, preserving the
   original failed and passing receipts. Runtime configuration is unchanged.
+
+
+### Preserve selection history while replaying current pins, 2026-11-02
+
+- Keep the original selection report and its immutable source/pin bindings.
+  Use the reviewed current client manifest for a separate 44-case replay, and
+  require a compatibility replay against the historical pair before replacing
+  the driver interface. Never relabel older-canary observations as current.
+- Reuse the existing streaming collector. An owned process wrapper preserves
+  the stricter ten-second process and three-minute experiment ceilings; new
+  reports use exclusive creation and raw output uses private unique directories.
+- A synthetic replay grants no actual-root review, feature acceptance or task
+  qualification. Preserve the 27 pending feature decisions and all production
+  settings. Real consumer and tuple evidence remain required.
+- Reverse by reverting this driver/registration change while retaining both
+  report generations and the historical Git source. Runtime policy is unchanged.

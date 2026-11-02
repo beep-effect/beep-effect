@@ -661,3 +661,15 @@ request for the first run raced with its completion and returned HTTP409; the
 follow-up read confirmed cancellation, so no retry was needed. The requests
 were scoped to obsolete heads and no workflow was re-dispatched. This clears
 the stale predecessor without claiming the remaining runner queue has cleared.
+
+### 2026-11-02 — selection evidence must follow the current native pin
+
+The retained selection report covers canary `2.11.9-canary.1`; the current
+trial uses `2.11.11-canary.1`. The driver also hardcoded the older cache path.
+Historical feature evidence cannot establish behavior on the new pin. Accept an
+explicit reviewed pin manifest and a new report destination, preserve the original
+report and its immutable Git source, and replay both the current and historical
+pairs. Reuse the existing streaming collector instead of checking output size
+after unbounded collection. Preserve the ten-second process and three-minute
+observation limits with an owned process wrapper, and refuse existing reports.
+This refresh grants no real computation qualification or production flag change.

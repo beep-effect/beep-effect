@@ -108,7 +108,11 @@
     "research/signature-key-feature-observation.json",
     "research/native-global-configuration-controls.py",
     "research/native-global-configuration-controls.json",
-    "research/global-configuration-feature-review.json"
+    "research/global-configuration-feature-review.json",
+    "research/native-selection-current-canary-controls.json",
+    "research/native-selection-historical-compatibility-controls.json",
+    "research/selection-current-driver-controls.json",
+    "research/selection-current-canary-checkpoint.json"
   ],
   "agentLaunchers": [
     {
