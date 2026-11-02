@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T10:06:22.186Z",
+  "generatedAt": "2026-11-02T10:18:28.943Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -468976,8 +468976,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-37-readcacheexperimentbytes",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-78-readcacheexperimentbytes",
           "currentTags": [
             "@internal",
             "@category",
@@ -468999,8 +468999,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 65,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-65-decodecacheexperimenttext",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-106-decodecacheexperimenttext",
           "currentTags": [
             "@internal",
             "@param",
@@ -469024,8 +469024,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-87-hashcacheexperimentexecutable",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-128-hashcacheexperimentexecutable",
           "currentTags": [
             "@internal",
             "@category",
@@ -469047,8 +469047,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-116-readcacheevidencebytes",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-157-readcacheevidencebytes",
           "currentTags": [
             "@category",
             "@since"
@@ -469069,8 +469069,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-146-requirecachelinuxx64",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-187-requirecachelinuxx64",
           "currentTags": [
             "@param",
             "@returns",
@@ -469094,8 +469094,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-170-requirecachesupervisorcapture",
+          "line": 217,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-217-requirecachesupervisorcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -469119,8 +469119,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-196-makeprivatesupervisorstorage",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-251-makeprivatesupervisorstorage",
           "currentTags": [
             "@internal",
             "@category",
@@ -500923,8 +500923,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 93,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-93-loadcapabilityprojection",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-92-loadcapabilityprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -500945,8 +500945,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 178,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-178-goalsnextcommand",
+          "line": 177,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-177-goalsnextcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -500967,8 +500967,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-210-goalsexplaincommand",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-209-goalsexplaincommand",
           "currentTags": [
             "@category",
             "@since"

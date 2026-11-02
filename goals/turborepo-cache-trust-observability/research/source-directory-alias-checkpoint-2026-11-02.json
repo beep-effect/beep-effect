@@ -7,8 +7,8 @@
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "2cbf4b41a7aebe16a4341d027afb7d5e6e3ea2abe78a3a2c98ac84ec64d76e17",
     "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "bd08e75eb231437e75bc7d6891769b8c6a103d2e706d019445f0ea4ad2133914",
     "packages/tooling/tool/cli/test/cache-workflow.test.ts": "70c94d486a194cf54f8f9c6e5a12c6946cbfa961ddcbabd67fac50242e4711eb",
-    "standards/jsdoc-documentation.inventory.jsonc": "44b65548593af33fa4c1d228a7c66521774957790bbf2c1bb6a4badc1d1e94f2",
-    "standards/jsdoc-documentation.inventory.md": "a111f987763576dda7f7bf682a64628d199b3e372dc87924636ee8e14f8c0df8",
+    "standards/jsdoc-documentation.inventory.jsonc": "add83ef446c593f88372d62f47d54643391540a966bb8d2504cb674052d5be14",
+    "standards/jsdoc-documentation.inventory.md": "078eea2a17e7105c4ef9498ff8a21bb2ea05e29258b968b66baa7b0d8c6d051b",
     "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "1097f9050c526b08aeae34e8ca54826efac09022326f21171db81500d05ada7e"
   },
   "actualFailure": {
@@ -111,5 +111,43 @@
     "Every remaining trust/adoption acceptance criterion and representative observation window."
   ],
   "productionConfigurationChanged": false,
-  "wholeGoalAcceptanceChanged": false
+  "wholeGoalAcceptanceChanged": false,
+  "mainIntegration": {
+    "acceptedMainRevision": "1cd70ec7d3efdd2345dcfb3c62508f581887f2a5",
+    "ownedSourceBytesUnchanged": true,
+    "checks": {
+      "workflow45Tests": {
+        "exit": 0,
+        "elapsedSeconds": 8.85,
+        "finishedAt": "2026-11-02T10:18:50.959674+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 12.439,
+        "finishedAt": "2026-11-02T10:18:54.604801+00:00"
+      },
+      "canonicalInventory": {
+        "exit": 0,
+        "elapsedSeconds": 400.697,
+        "finishedAt": "2026-11-02T10:25:08.487161+00:00"
+      },
+      "realSourceCollection": {
+        "exit": 0,
+        "elapsedSeconds": 13.195,
+        "finishedAt": "2026-11-02T10:23:03.038881+00:00"
+      }
+    },
+    "realTree": {
+      "files": 14992,
+      "relativeAliases": 1616,
+      "directoryAliases": 1500,
+      "v55rBound": true,
+      "nestedMus6Bound": true,
+      "authority": "Read-only source collection only; no frozen-profile approval, dependency qualification or protected producer grant."
+    },
+    "allInventoryTotalsEqualAcceptedMain": true,
+    "changedSourceExportPositionsVerified": 16,
+    "decisionBlocks": "Both independent append-only blocks retained; manifest references combined.",
+    "generatedConflicts": "Both previous versions retained privately; regenerated using the canonical writer."
+  }
 }

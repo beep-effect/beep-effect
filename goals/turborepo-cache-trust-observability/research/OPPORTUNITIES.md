@@ -1686,3 +1686,22 @@ The scoped native complexity review then reported cognitive complexity 23 in
 `hashDirectoryAlias`. Replace its nested entry-type branch chain with the
 existing Match handlers, retain all containment/inventory failures, and add an
 actual named-pipe refusal. Do not relax a complexity rule or baseline.
+### Preserve private supervisor output while diagnosing qualification failures, 2026-11-02
+
+An ordinary stable signed pilot ended after 967 seconds with only
+“Signed pilot supervisor exited with exit code 1.” The failed receipt is retained;
+a separate instrumented success cannot qualify that ordinary execution or
+identify its failing phase. Repeating the expensive matrix without a useful
+bounded diagnostic is poor feedback. Extend the existing supervisor guard to
+recognize a finite source-owned hint vocabulary and quote only its fixed member,
+never a captured substring or raw cause. Hints remain untrusted observations;
+exit status and truncation still decide failure, and no qualification gate is
+relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
+
+The subsequent ordinary stable attempt, using the published diagnostic parent
+and unchanged task/worker fixtures, ended at the existing twenty-minute limit
+without an observation. Its fixed error was `Signed pilot comparison exceeded
+its twenty-minute execution limit.` Capture interruption still discards phase
+attribution. Stop automatic retries; inspect the existing streaming-fold capture
+route for bounded fixed phase observations without raw output, injected hooks,
+a new capture subsystem or a weaker execution deadline.

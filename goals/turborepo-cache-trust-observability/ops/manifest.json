@@ -117,6 +117,7 @@
     "research/producer-quality-closure-baseline-review-2026-10-31.md",
     "research/producer-quality-closure-baseline-request-2026-10-31.json",
     "research/inspection-routing-checkpoint-2026-11-02.json",
+    "research/supervisor-safe-hints-checkpoint-2026-11-02.json",
     "research/source-directory-alias-checkpoint-2026-11-02.json"
   ],
   "agentLaunchers": [

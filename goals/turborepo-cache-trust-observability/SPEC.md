@@ -947,6 +947,18 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   before producer approval; this routing component alone proves none.
 
 
+### Safe supervisor failure hints, 2026-11-02
+
+Extend the existing capture guard with a finite annotated vocabulary of fixed
+hints. On a nonzero exit, recognize a member in private output and quote only
+that source literal; attach no captured substring or raw cause. Unknown output
+keeps the generic error, and truncation fails before recognition. A hint is an
+untrusted diagnostic observation, not root-cause or qualification authority.
+Existing exit/truncation gates, input checks, deadlines and rollout policy stay
+intact. Reversal removes hint recognition from the same guard while retaining
+its existing bounded failure behavior.
+
+
 ### Bind contained source directory aliases, 2026-11-02
 
 - Actual protected inspection reached the admitted Heavy runner, then failed when

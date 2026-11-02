@@ -602,6 +602,16 @@ These sources support routing and local guard behavior. A real post-fix hosted
 inspection and the broader trust/adoption obligations remain outstanding.
 
 
+### Safe supervisor hints, 2026-11-02
+
+The [source and focused-control checkpoint](supervisor-safe-hints-checkpoint-2026-11-02.json)
+binds the existing Cache evidence guard, privacy/status tests and canonical
+inventory output. Failure messages contain only fixed public literals. Raw
+streams and causes remain private, and a hint is not a trusted classification.
+The ordinary 967-second failure remains unclassified; the separately instrumented
+success is not reused as ordinary qualification. All full-goal gates remain.
+
+
 ### 2026-11-02 — actual inspection and contained directory-alias repair
 
 - Actual resolved workflow/source `8a17f413bb815a0a25896378e8ff56a788029a63`,

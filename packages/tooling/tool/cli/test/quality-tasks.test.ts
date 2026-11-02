@@ -29,6 +29,7 @@ import {
   readLintPolicySweeps,
   resolveCiCoverageArtifactPlan,
   resolveCoverageSelector,
+  runQualityTaskBufferedStepGroup,
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
@@ -8351,6 +8352,44 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         TestClock.withLive
       )
+    );
+
+    it.effect("buffers a step's output and replays it whole after the step ends", () =>
+      Effect.andThen(
+        temporaryRepository,
+        Effect.gen(function* () {
+          const exit = yield* Effect.exit(
+            runQualityTaskBufferedStepGroup("test:buffered", [
+              bunScriptStep("test:quiet", "process.exit(0)"),
+              bunScriptStep("test:loud", "console.log('buffered line one'); console.error('buffered line two')"),
+              bunScriptStep("test:broken", "console.log('buffered failure'); process.exit(5)"),
+            ])
+          );
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          // Captured stdout and stderr are replayed together, after the command line and before the outcome line.
+          const commandAt = O.getOrThrow(Str.indexOf("[beep-cli] test:loud: bun -e")(logText));
+          const outputAt = O.getOrThrow(Str.indexOf("buffered line one")(logText));
+          const outcomeAt = O.getOrThrow(Str.indexOf("[beep-cli] test:loud: ok in")(logText));
+          expect(outputAt).toBeGreaterThan(commandAt);
+          expect(outcomeAt).toBeGreaterThan(outputAt);
+          expect(logText).toContain("buffered line two");
+          // A step with no output replays nothing but still reports its outcome.
+          expect(logText).toContain("[beep-cli] test:quiet: ok in");
+          expect(logText).toContain("buffered failure");
+          expect(logText).toContain("[beep-cli] test:broken: failed in");
+
+          assertTrue(exit._tag === "Failure");
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.squash(exit.cause);
+            expect(failure).toBeInstanceOf(QualityTaskGroupFailed);
+            if (isQualityTaskGroupFailed(failure)) {
+              expect(failure.exitCode).toBe(5);
+              expect(A.map(failure.failures, (step) => step.label)).toEqual(["test:broken"]);
+            }
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
     );
 
     it.effect("streams grouped quality step failures and keeps running sibling steps", () =>
