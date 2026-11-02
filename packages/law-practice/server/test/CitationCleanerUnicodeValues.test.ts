@@ -184,3 +184,23 @@ it.effect("reports the captured operation deadline without issuing a partial han
     expect((yield* values.snapshot).issued).toBe(0);
   })
 );
+
+it.effect("admits original source independently from a smaller produced-value ceiling", () =>
+  Effect.gen(function* () {
+    const policy = { ...(yield* defaultCitationEnginePolicy).limits, sourceUtf16: 8, producedTextUtf16: 1 };
+    const values = yield* makeCitationCleanerValues(policy);
+    const source = yield* values.sourceText("__");
+    expect((yield* Effect.fromOption(yield* values.getUnicode(source))).utf16Units).toBe(2);
+    const native = yield* values.sourceUnicode({ width: 2, bytes: new Uint8Array([0x3d, 0xd8, 0, 0xde]) });
+    expect((yield* Effect.fromOption(yield* values.getUnicode(native))).pythonLength).toBe(2);
+    expect(yield* Effect.flip(values.text("__"))).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "producedTextUtf16",
+    });
+    expect(yield* Effect.flip(values.sourceText("123456789"))).toMatchObject({
+      _tag: "CitationSafetyLimitExceeded",
+      limit: "sourceUtf16",
+    });
+    expect((yield* values.snapshot).issued).toBe(2);
+  })
+);

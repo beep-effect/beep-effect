@@ -208,8 +208,12 @@ unchanged allocation that substitutes another native value with equal projected
 text. [Native literal composition](./history/evidence/2026-11-02-native-literal-composition.md)
 now carries it through the four primitive builtins and the real reservation
 ledger, matching all 1,068 non-HTML histories and 2,784 transitions. Hash/callback
-protocol dispatch, HTML transport and full registry semantics still need their
-integration; these proofs do not close target parity.
+protocol dispatch and full registry semantics still need their integration.
+[Native HTML transport](./history/evidence/2026-11-02-native-html-transport.md)
+now preserves source points through preparation and complete-frame preflight.
+All 6,412 snapshots pass local preparation/framing checks. The full 2,016-history
+worker replay is routed to hosted integration and remains pending; these proofs
+do not close target parity.
 
 ## Delivery Rule
 

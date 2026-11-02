@@ -13,17 +13,21 @@ import {
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import type { CitationSafetyBudget } from "@beep/law-practice-use-cases/server";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlInput");
 const Encoding = LiteralKit(["UTF-8", "ISO-8859-1", "UTF-16LE", "UTF-32LE", "AUTO"]).pipe(
@@ -80,34 +84,44 @@ export class CitationHtmlInputFailure extends S.TaggedError<
     description: "HTML preparation rejected without source text, native messages or causes.",
   })
 ) {}
-const whitespace = HashSet.fromIterable(citationPythonTextData.whitespace);
-const at = (text: string, index: number) => O.getOrElse(Str.charAt(text, index), () => "");
-const space = (text: string, index: number) => HashSet.has(whitespace, at(text, index));
-const skipSpace = Effect.fnUntraced(function* (text: string, start: number) {
+const whitespace = HashSet.fromIterable(
+  A.map(A.fromIterable(citationPythonTextData.whitespace), (char) => O.getOrElse(Str.codePointAt(char, 0), () => -1))
+);
+type ReadPoint = (index: number) => number;
+const xmlPrefix: ReadonlyArray<number> = [60, 63, 120, 109, 108];
+const encodingName: ReadonlyArray<number> = [101, 110, 99, 111, 100, 105, 110, 103];
+const htmlPrefix: ReadonlyArray<number> = [60, 104, 116, 109, 108];
+const doctypePrefix: ReadonlyArray<number> = [60, 33, 100, 111, 99, 116, 121, 112, 101];
+const matches = (read: ReadPoint, start: number, expected: ReadonlyArray<number>, lowercase = false) => {
+  for (let index = 0; index < expected.length; index++) {
+    const point = read(start + index);
+    if ((lowercase && point >= 65 && point <= 90 ? point + 32 : point) !== expected[index]) return false;
+  }
+  return true;
+};
+const skipSpace = Effect.fnUntraced(function* (read: ReadPoint, length: number, start: number) {
   let index = start;
-  while (space(text, index)) {
+  while (index < length && HashSet.has(whitespace, read(index))) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
     index++;
   }
   return index;
 });
-// Linear equivalent of lxml's anchored Unicode declaration detector. Its
-// quote classes accept either closing quote, and [^>]+ requires one prefix
-// character before the whitespace immediately preceding "encoding".
-const hasDeclaration = Effect.fnUntraced(function* (text: string) {
-  if (!Str.startsWith("<?xml")(text)) return false;
-  const length = Str.length(text);
+// The same linear declaration detector can read legacy UTF-16 units or exact
+// native Python points. No JavaScript projection is needed for native input.
+const hasDeclaration = Effect.fnUntraced(function* (read: ReadPoint, length: number) {
+  if (!matches(read, 0, xmlPrefix)) return false;
   for (let index = 5; index < length; index++) {
     if (index % 4096 === 0) yield* Effect.yieldNow;
-    if (at(text, index) === ">") return false;
-    if (index < 7 || !space(text, index - 1) || Str.slice(index, index + 8)(text) !== "encoding") continue;
-    let cursor = yield* skipSpace(text, index + 8);
-    if (at(text, cursor) !== "=") continue;
-    cursor = yield* skipSpace(text, cursor + 1);
-    if (at(text, cursor) !== '"' && at(text, cursor) !== "'") continue;
+    if (read(index) === 62) return false;
+    if (index < 7 || !HashSet.has(whitespace, read(index - 1)) || !matches(read, index, encodingName)) continue;
+    let cursor = yield* skipSpace(read, length, index + 8);
+    if (read(cursor) !== 61) continue;
+    cursor = yield* skipSpace(read, length, cursor + 1);
+    if (read(cursor) !== 34 && read(cursor) !== 39) continue;
     for (cursor++; cursor < length; cursor++) {
       if (cursor % 4096 === 0) yield* Effect.yieldNow;
-      if (at(text, cursor) === '"' || at(text, cursor) === "'") return true;
+      if (read(cursor) === 34 || read(cursor) === 39) return true;
     }
     return false;
   }
@@ -132,6 +146,9 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
     Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
   );
   const clock = yield* Clock.Clock;
+  const sourceCeiling = limits.sourceUtf16;
+  const messageCeiling = limits.processMessageBytes;
+  const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);
   const prepare = Effect.fn("Citation.prepareHtmlBuffer")(
     function* <E>(
       input: unknown,
@@ -145,11 +162,11 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       const length = Str.length(text);
       if (length > maximumInput) return yield* safety("sourceUtf16");
       return yield* Effect.gen(function* () {
-        if (yield* hasDeclaration(text))
+        const read = (index: number) => O.getOrElse(Str.charCodeAt(text, index), () => -1);
+        if (yield* hasDeclaration(read, length))
           return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
-        const start = yield* skipSpace(text, 0);
-        const prefix = Str.toLowerCase(Str.slice(start, start + 9)(text));
-        const fullHtml = Str.startsWith("<html")(prefix) || Str.startsWith("<!doctype")(prefix);
+        const start = yield* skipSpace(read, length, 0);
+        const fullHtml = matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
         let maximum = 0;
         let points = 0;
         let nextYield = 0;
@@ -167,7 +184,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
           maximum <= 0x7f ? "UTF-8" : maximum <= 0xff ? "ISO-8859-1" : maximum <= 0xffff ? "UTF-16LE" : "UTF-32LE";
         const width = maximum <= 0xff ? 1 : maximum <= 0xffff ? 2 : 4;
         const size = width === 4 ? points * 4 : length * width;
-        if (size > limits.processMessageBytes) return yield* safety("processMessageBytes");
+        if (size > messageCeiling) return yield* safety("processMessageBytes");
         yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
         const bytes = new Uint8Array(size);
         const view = new DataView(bytes.buffer);
@@ -186,9 +203,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
           index += point > 0xffff ? 2 : 1;
         }
         return CitationHtmlInput.make({ encoding, bytes, fullHtml });
-      }).pipe(
-        Effect.timeoutOrElse({ duration: limits.cleanDeadline, orElse: () => Effect.fail(safety("cleanDeadline")) })
-      );
+      }).pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) }));
     },
     Effect.provideService(Clock.Clock, clock)
   );
@@ -201,7 +216,7 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
         Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
       );
       const size = source.byteLength;
-      if (size > limits.processMessageBytes) return yield* safety("processMessageBytes");
+      if (size > messageCeiling) return yield* safety("processMessageBytes");
       let start = 0;
       while (start < size) {
         if (start % 4096 === 0) yield* Effect.yieldNow;
@@ -227,16 +242,63 @@ export const makeCitationHtmlInput = Effect.fn("Citation.makeHtmlInput")(functio
       return CitationHtmlInput.make({ encoding: "AUTO", fullHtml, bytes });
     },
     (body) =>
-      body.pipe(
-        Effect.timeoutOrElse({ duration: limits.cleanDeadline, orElse: () => Effect.fail(safety("cleanDeadline")) })
-      ),
+      body.pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) })),
+    Effect.provideService(Clock.Clock, clock)
+  );
+  const prepareUnicode = Effect.fn("Citation.prepareNativeHtmlInput")(
+    function* <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) {
+      // This private stage borrows immutable adapter-owned storage. Validation
+      // and complete-frame preflight precede allocation of transport memory.
+      const source = yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
+        Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+      );
+      const size = source.bytes.byteLength;
+      if (size % source.width !== 0) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+      if (size > messageCeiling) return yield* safety("processMessageBytes");
+      const length = size / source.width;
+      const read = (index: number) => {
+        if (index < 0 || index >= length) return -1;
+        let point = 0;
+        for (let part = 0; part < source.width; part++)
+          point += O.getOrElse(O.fromUndefinedOr(source.bytes[index * source.width + part]), () => 0) * 2 ** (8 * part);
+        return point;
+      };
+      let largest = 0;
+      let units = 0;
+      for (let index = 0; index < length; index++) {
+        if (index % 4096 === 0) yield* Effect.yieldNow;
+        const point = read(index);
+        if (point > 0x10ffff) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+        if (point > largest) largest = point;
+        units += point > 65535 ? 2 : 1;
+        if (units > CitationEngineAbsoluteMaxima.producedTextUtf16) return yield* safety("producedTextUtf16");
+      }
+      const width = largest <= 255 ? 1 : largest <= 65535 ? 2 : 4;
+      if (source.width !== width) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+      if (yield* hasDeclaration(read, length))
+        return yield* CitationHtmlInputFailure.make({ reason: "unicode-encoding-declaration" });
+      const start = yield* skipSpace(read, length, 0);
+      const fullHtml = matches(read, start, htmlPrefix, true) || matches(read, start, doctypePrefix, true);
+      const encoding = width === 1 ? (largest <= 127 ? "UTF-8" : "ISO-8859-1") : width === 2 ? "UTF-16LE" : "UTF-32LE";
+      yield* beforeAllocate(CitationHtmlInputLayout.make({ encoding, fullHtml, byteLength: size }));
+      const bytes = new Uint8Array(size);
+      for (let offset = 0; offset < size; offset += 4096) {
+        yield* Effect.yieldNow;
+        if (source.bytes.byteLength !== size) return yield* CitationHtmlInputFailure.make({ reason: "invalid-input" });
+        bytes.set(source.bytes.subarray(offset, Num.min(offset + 4096, size)), offset);
+      }
+      return CitationHtmlInput.make({ encoding, bytes, fullHtml });
+    },
+    (body) =>
+      body.pipe(Effect.timeoutOrElse({ duration: deadline, orElse: () => Effect.fail(safety("cleanDeadline")) })),
     Effect.provideService(Clock.Clock, clock)
   );
   return {
     prepare: Effect.fn("Citation.prepareHtmlInput")((input: unknown) =>
-      prepare(input, rawText, limits.sourceUtf16, () => Effect.void)
+      prepare(input, rawText, sourceCeiling, () => Effect.void)
     ),
     prepareBytes,
+    prepareUnicode,
     prepareStage: <E>(input: unknown, beforeAllocate: (layout: CitationHtmlInputLayout) => Effect.Effect<void, E>) =>
       prepare(input, stageText, CitationEngineAbsoluteMaxima.producedTextUtf16, beforeAllocate),
   };

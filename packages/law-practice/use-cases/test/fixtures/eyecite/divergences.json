@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "3b5524350dc0ddef072bcee7858e64972e70f21fbb83ad62f5771b31f0c26e66",
+  "planSha256": "c6f1012360af55382917059ef08af7a2c70072848fa6148066f48c5bba31d87e",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -357,7 +357,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlInput.ts",
-          "sha256": "6f25302fe5dc14885cbda440196fc8970e602473d34f895c72ca6b1c69185c26"
+          "sha256": "441bbf80da49f262d93c00d5819fa347ad7baf05ec37c16cee53f15c3546c1e4"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
@@ -425,7 +425,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/HtmlWorker.ts",
-          "sha256": "711b7d7c07756cdf610a51744f2c3c5fc08aea8676ceef0406ffe2f0a35bf190"
+          "sha256": "8516ac3b6c2569386b48c21d4c3938d56b45a03be3443726844c5c460c257fe4"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
@@ -573,7 +573,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/BuiltinCleaners.ts",
-          "sha256": "5cf077d7810abbad747b85b5eb2ea6a7fdc7879f66d57d82e1dc47d96c3bbb3c"
+          "sha256": "ec57f16b87a92439aadcfe8716c03a1d46821e63740721027b4e9438bf89e2c1"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts",
@@ -581,7 +581,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
-          "sha256": "e452748921e4e891f687e9207d770a4db140c9713d95b580796e31ff08e351ff"
+          "sha256": "0c7d58c0a076cf04a8a6e32cdfcf8cc0f9fe925303cbf44d1af704f339239038"
         },
         {
           "path": "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
@@ -673,7 +673,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
-          "sha256": "97efb72704423dc1ce038e9bbf18856f5d910f991e397994a4f0f5cee64ec8af"
+          "sha256": "e6cf06cf5f8b505dd259dfc68a71152fe5177aa0f8b5d94dddcfbf71db8eff39"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md",
@@ -681,11 +681,27 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts",
-          "sha256": "ed0ca5cfbe42cafca130398ab4b86800c1d5212a8601f758a5db59a1f0233a9c"
+          "sha256": "fa3e889e025a9b5b25957a4431a7dc596eb99e53eb77aaad294fb7c71b58b238"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-literal-composition.md",
           "sha256": "44c52c81715319d0d8e10cff9a016f52ff400bc03098cdbc34966ef1e76edf97"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationHtmlNativeInput.test.ts",
+          "sha256": "4c0793c5f4053f4ad104f301807c5f437156777932a810646d02bdae8154a953"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationUnicodePipeline.fixtures.ts",
+          "sha256": "b2bd09695892e73b2d4501d99505fc28012535664f5a18bf9f71a059f57f9b72"
+        },
+        {
+          "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
+          "sha256": "be3e576699c5e6cc778e844e4ee65dbb7b05e64657678541fa4a42527ef16148"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",
+          "sha256": "e77fd40b409878964bfa17e2bea597063c453f6a54a82841d9fb78f47154c55d"
         }
       ],
       "workflowState": "audit",

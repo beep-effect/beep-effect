@@ -42,10 +42,12 @@ import {
   preflightCitationHtmlJob,
   readCitationHtmlFrames,
 } from "./HtmlWorkerProtocol.ts";
+import { CitationPythonUnicodeStorage } from "./PythonHash.ts";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 import type { CitationCleanerWork } from "./CleanerPipeline.ts";
 
 const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 const NaturalJson = S.fromJsonString(S.Natural);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
@@ -128,9 +130,16 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
   policy: unknown,
   runtimeInput: unknown
 ) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
+  const decodedLimits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
     Effect.mapError(() => failure("invalid-runtime"))
   );
+  const limits = CitationEngineLimits.make({
+    ...decodedLimits,
+    cleanDeadline: decodedLimits.cleanDeadline.pipe(Duration.toMillis, Duration.millis),
+    operationDeadline: decodedLimits.operationDeadline.pipe(Duration.toMillis, Duration.millis),
+    queueDeadline: decodedLimits.queueDeadline.pipe(Duration.toMillis, Duration.millis),
+    cleanupDeadline: decodedLimits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis),
+  });
   const runtime = yield* S.decodeUnknownEffect(CitationHtmlWorkerRuntime)(runtimeInput).pipe(
     Effect.mapError(() => failure("invalid-runtime"))
   );
@@ -207,9 +216,13 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     })
   );
   const clean = Effect.fn("Citation.cleanHtmlProcess")(
-    function* (input: unknown, remaining: number, kind: "raw" | "text" | "bytes") {
+    function* (input: unknown, remaining: number, kind: "raw" | "text" | "bytes" | "unicode") {
       if (kind === "bytes") {
         yield* S.decodeUnknownEffect(S.Uint8Array)(input).pipe(
+          Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
+        );
+      } else if (kind === "unicode") {
+        yield* S.decodeUnknownEffect(NativeStorage)(input).pipe(
           Effect.mapError(() => CitationHtmlInputFailure.make({ reason: "invalid-input" }))
         );
       } else {
@@ -256,7 +269,12 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
           let lease = O.none<OwnedProcess>();
           const body = Effect.gen(function* () {
             yield* ensureOpen;
-            const prepare = kind === "bytes" ? preparation.prepareBytes : preparation.prepareStage;
+            const prepare =
+              kind === "bytes"
+                ? preparation.prepareBytes
+                : kind === "unicode"
+                  ? preparation.prepareUnicode
+                  : preparation.prepareStage;
             const prepared = yield* prepare(input, (layout) =>
               preflightCitationHtmlJob(layout, outputUtf16, limits.processMessageBytes).pipe(Effect.asVoid)
             );
@@ -390,10 +408,24 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     reap,
     clean: (input: unknown) => clean(input, limits.producedTextUtf16, "raw"),
     cleanBytes: (input: unknown) => clean(input, limits.producedTextUtf16, "bytes"),
+    cleanUnicode: (input: unknown) => clean(input, limits.producedTextUtf16, "unicode"),
     stageBytes: (input: unknown, work: CitationCleanerWork) =>
       work
         .withTextCapacity((remaining) =>
           clean(input, remaining, "bytes").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
+        )
+        .pipe(
+          Effect.map(({ value, charges }) =>
+            CitationHtmlCleanerStage.make({
+              ...citationCleanerHtmlTextOutput(value),
+              charges,
+            })
+          )
+        ),
+    stageUnicode: (input: unknown, work: CitationCleanerWork) =>
+      work
+        .withTextCapacity((remaining) =>
+          clean(input, remaining, "unicode").pipe(Effect.map((text) => ({ value: text, units: Str.length(text) })))
         )
         .pipe(
           Effect.map(({ value, charges }) =>

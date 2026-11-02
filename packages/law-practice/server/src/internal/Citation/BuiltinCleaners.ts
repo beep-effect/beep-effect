@@ -99,9 +99,9 @@ export const makeCitationBuiltinCleaners = Effect.fn("Citation.makeBuiltinCleane
       const result = yield* values.materializeUnicode(value, output, output.storage);
       return CitationCleanerProduced.make({ value: result, charges: output.charges });
     }
-    const text = yield* values.getText(value);
+    const text = yield* values.getUnicode(value);
     const output = O.isSome(text)
-      ? yield* html.stage(text.value.text, work)
+      ? yield* html.stageUnicode(text.value.storage, work)
       : yield* values
           .getBytes(value)
           .pipe(

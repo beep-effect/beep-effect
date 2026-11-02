@@ -206,7 +206,11 @@
         "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
         "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md",
         "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-literal-composition.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-literal-composition.md",
+        "packages/law-practice/server/test/CitationHtmlNativeInput.test.ts",
+        "packages/law-practice/server/test/CitationUnicodePipeline.fixtures.ts",
+        "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

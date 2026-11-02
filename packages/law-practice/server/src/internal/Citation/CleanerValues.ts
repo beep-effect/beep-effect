@@ -12,6 +12,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
@@ -44,6 +45,8 @@ export class CitationCleanerValueSnapshot extends S.Opaque<
  * text and return the original work tickets. Subclass payloads/host values are
  * retained without reading properties or invoking coercion. Every method has
  * R = never. Native storage is private; getUnicode returns a detached snapshot.
+ * sourceText/sourceUnicode admit original input under the source ceiling;
+ * text/unicode admit produced values under the intermediate ceiling.
  * getText is only a JavaScript projection. Native producers must use
  * materializeUnicode rather than reconstructing state from that projection.
  * This is value ownership, not a Python registry/protocol evaluator.
@@ -52,6 +55,8 @@ export class CitationCleanerValueSnapshot extends S.Opaque<
 export class CitationCleanerValues extends Context.Service<
   CitationCleanerValues,
   {
+    readonly sourceText: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
+    readonly sourceUnicode: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly text: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicode: (input: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
     readonly unicodeSubclass: (input: unknown, host: unknown) => Effect.Effect<CitationCleanerObject, Failure>;
@@ -111,13 +116,21 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
   const operationMillis = Duration.toMillis(limits.operationDeadline);
   const timeLimit = cleanMillis <= operationMillis ? "cleanDeadline" : "operationDeadline";
   const deadline = Duration.millis(cleanMillis <= operationMillis ? cleanMillis : operationMillis);
-  const safety = (limit: "producedTextUtf16" | "cleanDeadline" | "operationDeadline") =>
+  const safety = (limit: "sourceUtf16" | "producedTextUtf16" | "cleanDeadline" | "operationDeadline") =>
     CitationSafetyLimitExceeded.make({ operation: "clean", limit });
   const translate = (error: CitationPythonUnicodeFailure): Failure =>
     error.reason === "invalid-input"
       ? fail("invalid-input")
       : safety(error.reason === "limit-exceeded" ? "producedTextUtf16" : timeLimit);
   const unicode = yield* makeCitationPythonUnicode(limits).pipe(Effect.mapError(translate));
+  const sourceCeiling = limits.sourceUtf16;
+  const sourceUnicode = yield* makeCitationPythonUnicode({ ...limits, producedTextUtf16: sourceCeiling }).pipe(
+    Effect.mapError(translate)
+  );
+  const translateSource = (error: CitationPythonUnicodeFailure): Failure =>
+    error.reason === "invalid-input"
+      ? fail("invalid-input")
+      : safety(error.reason === "limit-exceeded" ? "sourceUtf16" : timeLimit);
   const emptyValue = yield* unicode.fromText("").pipe(Effect.mapError(translate));
   const spaceValue = yield* unicode.fromText(" ").pipe(Effect.mapError(translate));
   const bounded = <A>(body: Effect.Effect<A, Failure>) =>
@@ -234,6 +247,17 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
     );
   });
   return CitationCleanerValues.of({
+    sourceText: Effect.fn("Citation.issueSourceCleanerText")(function* (input) {
+      if (closed) return yield* fail("closed-owner");
+      if (P.isString(input) && Str.length(input) > sourceCeiling) return yield* safety("sourceUtf16");
+      return yield* sourceUnicode.fromText(input).pipe(Effect.mapError(translateSource), Effect.flatMap(freshUnicode));
+    }),
+    sourceUnicode: Effect.fn("Citation.issueSourceNativeCleanerText")(function* (input) {
+      if (closed) return yield* fail("closed-owner");
+      return yield* sourceUnicode
+        .fromStorage(input)
+        .pipe(Effect.mapError(translateSource), Effect.flatMap(freshUnicode));
+    }),
     text: Effect.fn("Citation.issueCleanerText")(function* (input) {
       if (closed) return yield* fail("closed-owner");
       return yield* unicode.fromText(input).pipe(Effect.mapError(translate), Effect.flatMap(freshUnicode));

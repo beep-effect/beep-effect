@@ -12,10 +12,9 @@
     "directory": "packages/law-practice/server"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx vitest run --coverage",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run beep:docgen",
     "doctest": "bun run beep:doctest",
     "lint": "bun run beep:lint",
@@ -25,14 +24,15 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+    "test:integration": "bun run beep:test:integration",
     "beep:build": "tsrs -p tsconfig.json",
     "beep:check": "tsrs -p tsconfig.check.json && bun run beep:check:tests",
     "beep:docgen": "bunx --bun --no-install docgen",
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
   },
   "exports": {
