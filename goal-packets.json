@@ -113,6 +113,7 @@
     "updated": "2026-10-09"
   },
   {
+    "closeout": "proposed completed-retained via #2578",
     "created": "2026-10-27",
     "mission": "Prove metadata identity, coverage and bounded durable delivery across roots and surfaces before live enrollment.",
     "phases": [
@@ -146,9 +147,9 @@
     "phasesTotal": 5,
     "slug": "agent-observability-foundation",
     "status": "active",
-    "statusNote": "Source implementation and bounded synthetic qualification supported; PR2364 remains the final delivery gate. Prospective closeout is declared, operative lifecycle stays active, and only exact-head readiness plus merge-time required-check verification can derive completion. Recovery hold intact.",
+    "statusNote": "Lifecycle active. Historical PR2364 and PR2508 completion results remain unsatisfied;2519/2534 are supporting source delivery. FinalPR2578 is the owner-held follow-up on main including coverage repair2568. Original870/40/73/44 executions remain historical; hosted51-test HarnessLedger proof covers appended cases at4afad5c6. Selected package comparison is244exact plus four script-only manifests and that test file. Root84/84 and stage88/90,87/89 applicability retain the reviewed two-helper explicit-pin bridge. New final-head hosted/review/readiness/merge and canonical completion pending; recovery hold intact.",
     "title": "Trustworthy agent observability foundation",
-    "updated": "2026-10-31"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-10-27",
@@ -786,15 +787,16 @@
       {
         "id": "P5",
         "name": "Close",
-        "status": "in-progress"
+        "status": "complete"
       }
     ],
-    "phasesComplete": 5,
+    "phasesComplete": 6,
     "phasesTotal": 6,
     "slug": "beep-effect-web-alchemy",
-    "status": "active",
+    "status": "completed-retained",
+    "statusNote": "P0 through P5 complete; beep-effect.com deploys from CI (run 41244684210). Closeout final PR #2583 merged as f21859a6f0 (2026-11-02T17:09:53Z): hosted-required-checks VERIFIED (15 green, rule suite pass); yeet-verdict UNKNOWN because no until-ready job reached merge-ready before the merge (monitors b8a861fc and ea2235a4 died on GraphQL RATE_LIMIT). The operator accepted the closeout with that residual (\"Accept as closed\", Decision Log 2026-11-02).",
     "title": "beep-effect.com web app on Alchemy",
-    "updated": "2026-11-01"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-05-22",
@@ -1524,6 +1526,7 @@
     "updated": "2026-10-05"
   },
   {
+    "closeout": "proposed completed-retained via #2609",
     "created": "2026-10-14",
     "mission": "Give patent claims a span-anchored element tree and an advisory, deterministic §112(b) antecedent-basis and dependency self-check whose findings reach the attorney as claim-finding review items, measured on public USPTO claims with strict structural equality.",
     "phases": [
@@ -1555,16 +1558,16 @@
       {
         "id": "P5",
         "name": "Close",
-        "status": "pending"
+        "status": "in-progress"
       }
     ],
     "phasesComplete": 4,
     "phasesTotal": 6,
     "slug": "claim-element-antecedent-check",
     "status": "active",
-    "statusNote": "Draft PR #2411: accepted main through #2423 is merged; v23 retains 37/538, all 34 protected and all 37 previous passes. Full fixed-result dependency replay and 251 reports match; equivalent callback changes only the implementation digest. All original labels/results and source-bound automated judgments remain intact. Six integrated-base audit/docgen proofs plus callback laws/lint/check/10 tests and three doctests pass. Canonical catalogs/tasks and scoped USPTO cache baseline are repaired with no qualification change. Direct hosted-first publication and P4 readiness remain active; P5 pending.",
+    "statusNote": "Final PR #2609 binds the recovery after #2577 merged without a positive owner readiness verdict. All 15 required contexts at #2577 verify, but its canonical completion remains unknown. The retained incident report defines draft-first publication and the subsequent native ready transition without weakening completion rules. v27 remains 37/538, with all 34 protected and all 37 previous matches retained; no fresh measurement or attorney review is claimed. Frozen references, previous results, runtime scope and uncertainty remain unchanged. The initiative stays active until #2609 has current-head hosted verification, genuine pre-merge readiness and merge proof. Strict owner hold: no generic merge waiter or local full verification queue.",
     "title": "Claim Element Antecedent Check",
-    "updated": "2026-10-31"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-10-01",
@@ -2753,6 +2756,7 @@
     "updated": "2026-10-14"
   },
   {
+    "closeout": "proposed completed-retained via #2488",
     "created": "2026-10-20",
     "mission": "Retain merged proof and verified closure for the eight original Cloud and 123 Dependabot IDs, with final reconciliation in PR #2488, retaining merged implementation PR #2389.",
     "phases": [
@@ -2810,12 +2814,13 @@
     "phasesComplete": 6,
     "phasesTotal": 10,
     "slug": "codex-security-findings-2026-10-20",
-    "status": "completed-retained",
+    "status": "active",
     "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
     "title": "Codex Security Findings (2026-10-20)",
     "updated": "2026-10-31"
   },
   {
+    "closeout": "proposed completed-retained via #2488",
     "created": "2026-10-28",
     "mission": "Retain closure of seven Cloud findings and resolve all 29 additional GitHub security alerts discovered on 2026-10-31.",
     "phases": [
@@ -2873,7 +2878,7 @@
     "phasesComplete": 6,
     "phasesTotal": 10,
     "slug": "codex-security-findings-2026-10-28",
-    "status": "completed-retained",
+    "status": "active",
     "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
     "title": "Codex Security Findings (2026-10-28)",
     "updated": "2026-10-31"
@@ -3672,6 +3677,7 @@
     "updated": "2026-10-01"
   },
   {
+    "closeout": "proposed completed-retained via #2324",
     "created": "2026-10-21",
     "mission": "Move native String method calls to effect/String so @effect/tsgo 0.55+ can arm preferEffectString at error",
     "phases": [
@@ -3704,7 +3710,7 @@
     "phasesComplete": 5,
     "phasesTotal": 5,
     "slug": "effect-string-migration",
-    "status": "completed-retained",
+    "status": "active",
     "title": "effect/String migration",
     "updated": "2026-11-02"
   },
@@ -3742,8 +3748,9 @@
     "updated": "2026-10-06"
   },
   {
+    "closeout": "proposed completed-retained via #2586",
     "created": "2026-09-08",
-    "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by an empty-baseline lint ratchet.",
+    "mission": "Canonical Effect Vitest idioms across every in-scope test, enforced by a lint ratchet whose baseline holds no open rows and no new exceptions.",
     "phases": [
       {
         "id": "P0a",
@@ -3788,28 +3795,29 @@
       {
         "id": "P1",
         "name": "Inventory",
-        "status": "in-progress"
+        "status": "complete"
       },
       {
         "id": "P2",
         "name": "Remediation waves",
-        "status": "in-progress"
+        "status": "complete"
       },
       {
         "id": "P3",
         "name": "Close",
-        "status": "pending"
+        "status": "in-progress"
       }
     ],
-    "phasesComplete": 8,
+    "phasesComplete": 10,
     "phasesTotal": 11,
     "slug": "effect-vitest-canon",
     "status": "active",
-    "statusNote": "Resumed by rsc-v-vitest-canon under Effect/Vitest 4.0.2. CLI-only integration PR #1575 is published and ready. The 16 unpublished continuation commits and detector-resources WIP are preserved and reconciled after #1506; 46 source worktrees remain untouched. Final-main inventory is 1,853 findings, 716 open and 1,137 exceptions, with all 15,513 historical IDs retained. Full repo-cli verification passes at 4be0599a18 (781.746 s), every local parity stage passes, independent source review is terminal zero, and both actionable hosted threads are resolved. Main document-only merge 7ef36e8020 preserves every reviewed source hash; owner inventory and linkage regenerated. Hosted readiness and fleet merge are separate pending gates. R105 RDF/Pacer repair preview requires its separate qualified PR after integration lands. R102 continues until the open baseline is empty, timing/reference evidence is complete and same-PR reflection/state closeout meets completed-retained acceptance. The fleet orchestrator owns conditional archive and retirement; no source lane was removed.",
+    "statusNote": "Closeout 2026-11-02: the operator amended D4 (#1875 ruling) so the closeout bar is a baseline with no open rows, owned exceptions with a named exit retained, and the ratchet forbidding new rows. The 2026-11-02 scan reports 3,104 files, 447 findings, 0 open, introduced=0; every row names an owner and an exit. Waves 1-21 on #1875 (#1908 to #2463) are merged. The closeout PR #2493 (merged 01cbf1a9b9) carries the reflection and this state; the docs-only re-finals #2532 (merged before its until-ready job reported) and #2586 follow; #2586 is the final pull request and merges only after its own until-ready job reports merge-ready (history/2026-11-02-completion-refinal.md, history/2026-11-02-completion-refinal-2.md); goals completion refresh derives the status after the fleet orchestrator merges. The 447 exceptions are handed to a successor burn-down goal. Earlier status notes are retained in README.md and PLAN.md banners.",
     "title": "Canonical Effect Vitest idioms",
-    "updated": "2026-10-09"
+    "updated": "2026-11-02"
   },
   {
+    "closeout": "proposed completed-retained via #2476",
     "created": "2026-10-21",
     "mission": "Promote the ported scratchpad/effected kit into dedicated @beep packages and retire the one-off code they replace",
     "phases": [
@@ -3831,20 +3839,20 @@
       {
         "id": "P3",
         "name": "Yeet: PR to mergeable",
-        "status": "in-progress"
+        "status": "complete"
       },
       {
         "id": "P4",
         "name": "Close",
-        "status": "in-progress"
+        "status": "complete"
       }
     ],
-    "phasesComplete": 3,
+    "phasesComplete": 5,
     "phasesTotal": 5,
     "slug": "effected-promotion",
     "status": "active",
     "title": "Effected kit promotion",
-    "updated": "2026-11-01"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-10-20",
@@ -4076,6 +4084,7 @@
     "updated": "2026-10-28"
   },
   {
+    "closeout": "proposed completed-retained via #2357",
     "created": "2026-10-28",
     "mission": "Produce reproducible offline retention calibration evidence and an approval-ready recommendation; keep production inert pending evidence and separate explicit approval.",
     "phases": [
@@ -4114,6 +4123,7 @@
     "updated": "2026-10-29"
   },
   {
+    "closeout": "proposed completed-retained via #2334",
     "created": "2026-10-21",
     "mission": "Move tenant-free epistemic vocabulary into foundation/modeling @beep/epistemics so party and other slices build claims on it",
     "phases": [
@@ -4140,15 +4150,15 @@
       {
         "id": "P4",
         "name": "Close",
-        "status": "in-progress"
+        "status": "complete"
       }
     ],
-    "phasesComplete": 4,
+    "phasesComplete": 5,
     "phasesTotal": 5,
     "slug": "epistemics-foundation-extraction",
     "status": "active",
     "title": "Epistemics Foundation Extraction",
-    "updated": "2026-10-28"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-10-15",
@@ -4188,6 +4198,7 @@
     "updated": "2026-10-15"
   },
   {
+    "closeout": "proposed completed-retained via #2326",
     "created": "2026-10-23",
     "mission": "Migrate S.optional, S.withDecodingDefault and S.OptionFromOptional fields to their exact *Key siblings with a tested codemod, and guard it with an EF-40 GritQL law",
     "phases": [
@@ -4209,7 +4220,7 @@
       {
         "id": "P3",
         "name": "Yeet: PR to mergeable",
-        "status": "in-progress"
+        "status": "complete"
       },
       {
         "id": "P4",
@@ -4217,12 +4228,12 @@
         "status": "complete"
       }
     ],
-    "phasesComplete": 4,
+    "phasesComplete": 5,
     "phasesTotal": 5,
     "slug": "exact-optional-keys",
-    "status": "completed-retained",
+    "status": "active",
     "title": "Exact optional schema keys",
-    "updated": "2026-10-28"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-06-11",
@@ -8138,6 +8149,7 @@
     "updated": "2026-06-18"
   },
   {
+    "closeout": "proposed completed-retained via #2319",
     "created": "2026-10-20",
     "mission": "Move the identity authority to the beep-effect.com/ns/ root, reserve the apex route table in @beep/public-site, and gate the retired hosts.",
     "phases": [
@@ -8312,12 +8324,12 @@
       {
         "id": "P0",
         "name": "Research",
-        "status": "pending"
+        "status": "complete"
       },
       {
         "id": "P1",
         "name": "Implement",
-        "status": "pending"
+        "status": "in-progress"
       },
       {
         "id": "P2",
@@ -8335,12 +8347,12 @@
         "status": "pending"
       }
     ],
-    "phasesComplete": 0,
+    "phasesComplete": 1,
     "phasesTotal": 5,
     "slug": "repo-cli-gh-git-consolidation",
-    "status": "paused",
+    "status": "active",
     "title": "repo-cli gh/git consolidation",
-    "updated": "2026-11-01"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-07-07",
@@ -8669,6 +8681,7 @@
     "updated": "2026-06-13"
   },
   {
+    "closeout": "proposed completed-retained via #2618",
     "created": "2026-08-24",
     "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
     "phases": [
@@ -8715,16 +8728,16 @@
       {
         "id": "P8",
         "name": "Post-release JIT containment",
-        "status": "pending"
+        "status": "complete"
       }
     ],
-    "phasesComplete": 8,
+    "phasesComplete": 9,
     "phasesTotal": 9,
     "slug": "runner-trust-boundary",
     "status": "active",
-    "statusNote": "P0 through P7 evidence and prior closures remain retained. P8 reactivated on 2026-08-30 because concurrent JIT replay rejection did not satisfy post-release replay or remove the readable argv/configuration credential. runner-trust-boundary now owns E1 directly and cannot close until live proof shows no recoverable handoff credential or server-side replay rejection after the original listener ends from both the original and a second host.",
+    "statusNote": "P0 through P8 complete. P8 closed 2026-11-02: A-L re-proved on main (run 41409672251); Probe N refused replay after an orderly stop from both hosts (run 41422745680), accepted it after a SIGKILL until the original job ended (run 41429667965), and a 12-minute held replay session started no job while a decoy and all 32 heavy jobs that started during the hold ran on other runners (run 41452707373). The operator accepted E1 as a residual. The closeout PR proposes completed-retained.",
     "title": "Runner Trust Boundary",
-    "updated": "2026-08-30"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-06-08",
@@ -9201,17 +9214,17 @@
       {
         "id": "P0",
         "name": "Research",
-        "status": "pending"
+        "status": "complete"
       },
       {
         "id": "P1",
         "name": "Implement",
-        "status": "pending"
+        "status": "complete"
       },
       {
         "id": "P2",
         "name": "Verify",
-        "status": "pending"
+        "status": "in-progress"
       },
       {
         "id": "P3",
@@ -9224,12 +9237,12 @@
         "status": "pending"
       }
     ],
-    "phasesComplete": 0,
+    "phasesComplete": 2,
     "phasesTotal": 5,
     "slug": "skill-contract-gate-certificates",
     "status": "active",
     "title": "Skill Contract Gate Certificates",
-    "updated": "2026-10-14"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-08-13",
@@ -9518,6 +9531,154 @@
     "statusNote": "legacy status: complete",
     "title": "Storybook App",
     "updated": "2026-06-07"
+  },
+  {
+    "created": "2026-11-01",
+    "mission": "Make T3 Code the only cross-session messaging route: delete beep's agent-to-agent stack and its packets, and rewrite the orchestrator, handoff, remote-worker and closeout guidance around T3's MCP tools.",
+    "phases": [
+      {
+        "id": "P0",
+        "name": "Research",
+        "status": "pending"
+      },
+      {
+        "id": "P1",
+        "name": "Implement",
+        "status": "pending"
+      },
+      {
+        "id": "P2",
+        "name": "Verify",
+        "status": "pending"
+      },
+      {
+        "id": "P3",
+        "name": "Yeet: PR to mergeable",
+        "status": "pending"
+      },
+      {
+        "id": "P4",
+        "name": "Close",
+        "status": "pending"
+      }
+    ],
+    "phasesComplete": 0,
+    "phasesTotal": 5,
+    "slug": "t3-native-orchestration",
+    "status": "active",
+    "title": "T3-Native Orchestration",
+    "updated": "2026-11-01"
+  },
+  {
+    "created": "2026-11-01",
+    "mission": "Run the fork build of T3 Code as a tailnet-only systemd service on every live worker host, distributed by a DankStation publish and a hash-verified host pull, linked hub-and-spoke to DankStation.",
+    "phases": [
+      {
+        "id": "P0",
+        "name": "Research",
+        "status": "pending"
+      },
+      {
+        "id": "P1",
+        "name": "Implement",
+        "status": "pending"
+      },
+      {
+        "id": "P2",
+        "name": "Verify",
+        "status": "pending"
+      },
+      {
+        "id": "P3",
+        "name": "Yeet: PR to mergeable",
+        "status": "pending"
+      },
+      {
+        "id": "P4",
+        "name": "Close",
+        "status": "pending"
+      }
+    ],
+    "phasesComplete": 0,
+    "phasesTotal": 5,
+    "slug": "t3code-fleet-rollout",
+    "status": "active",
+    "title": "T3 Code Fleet Rollout",
+    "updated": "2026-11-01"
+  },
+  {
+    "created": "2026-11-01",
+    "mission": "Register `t3-hub` (the DankStation T3 environment, Full-access OAuth) in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 30-day grants and links expire.",
+    "phases": [
+      {
+        "id": "P0",
+        "name": "Research",
+        "status": "pending"
+      },
+      {
+        "id": "P1",
+        "name": "Implement",
+        "status": "pending"
+      },
+      {
+        "id": "P2",
+        "name": "Verify",
+        "status": "pending"
+      },
+      {
+        "id": "P3",
+        "name": "Yeet: PR to mergeable",
+        "status": "pending"
+      },
+      {
+        "id": "P4",
+        "name": "Close",
+        "status": "pending"
+      }
+    ],
+    "phasesComplete": 0,
+    "phasesTotal": 5,
+    "slug": "t3code-harness-mcp",
+    "status": "active",
+    "title": "T3 Code Harness MCP",
+    "updated": "2026-11-01"
+  },
+  {
+    "created": "2026-11-01",
+    "mission": "Add an advisory rule to `orchestrate`: read DankStation host pressure before substantive work and, above baseline-derived thresholds, launch on the next host in spill order through T3.",
+    "phases": [
+      {
+        "id": "P0",
+        "name": "Research",
+        "status": "pending"
+      },
+      {
+        "id": "P1",
+        "name": "Implement",
+        "status": "pending"
+      },
+      {
+        "id": "P2",
+        "name": "Verify",
+        "status": "pending"
+      },
+      {
+        "id": "P3",
+        "name": "Yeet: PR to mergeable",
+        "status": "pending"
+      },
+      {
+        "id": "P4",
+        "name": "Close",
+        "status": "pending"
+      }
+    ],
+    "phasesComplete": 0,
+    "phasesTotal": 5,
+    "slug": "t3code-spill-routing",
+    "status": "active",
+    "title": "T3 Code Spill Routing",
+    "updated": "2026-11-01"
   },
   {
     "created": "2026-08-13",
@@ -9871,6 +10032,7 @@
     "updated": "2026-09-22"
   },
   {
+    "closeout": "proposed completed-retained via #2320",
     "created": "2026-10-27",
     "mission": "Replace tsc-rs with the Effect-patched tsrs that @effect/tsgo 0.59.0 ships, so one compiler gates TypeScript errors and every Effect rule, and the standalone Effect Diagnostics lane can fold into Check.",
     "phases": [
@@ -9903,7 +10065,7 @@
     "phasesComplete": 5,
     "phasesTotal": 5,
     "slug": "tsrs-gates",
-    "status": "completed-retained",
+    "status": "active",
     "title": "Run the typecheck and build gates on the Effect-patched tsrs",
     "updated": "2026-11-01"
   },
@@ -10001,7 +10163,7 @@
     "status": "active",
     "statusNote": "Completion resumed 2026-10-28. Retained PR1327/1389 producer and protocol mechanisms are reused under their original evidence scope; current native and deployed trust boundaries are being refreshed. All nine SPEC acceptance criteria remain unproven as a whole; no deployment, observation-window completion or production readiness is claimed.",
     "title": "Turborepo cache trust and observability",
-    "updated": "2026-10-31"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-09-08",
@@ -10047,9 +10209,9 @@
     "phasesTotal": 7,
     "slug": "turborepo-quality-cache-adoption",
     "status": "active",
-    "statusNote": "Active. Source review gives 199 keep-fresh whole-command dispositions: 186 lint fixers, 12 persistent services and one current external advisory verdict. Nine generator write boundaries have source-reviewed pure decomposition leads, not final exclusions. The other 2372 final dispositions, all qualification/adoption/observation and all whole-goal acceptance remain unfinished.",
+    "statusNote": "Active. The census at accepted source e274d3e619 contains 2,434 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The current source leaves 2,236 computation reviews pending. 8 of 35 feature decisions have final scoped reviews on this branch; 27 remain pending. The global-configuration component still requires hosted acceptance. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete.",
     "title": "Turborepo quality cache adoption",
-    "updated": "2026-10-28"
+    "updated": "2026-11-02"
   },
   {
     "created": "2026-09-08",
