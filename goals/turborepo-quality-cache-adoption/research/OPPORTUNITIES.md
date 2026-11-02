@@ -537,3 +537,22 @@ fixture lock preparation instead of invoking Turbo setup. The intended negative
 control rejected that false success. Bind every invocation to the shared
 collector's command slot, commit the correction and replay the complete matrix;
 the failed attempt is not setup evidence.
+
+### Read-only generator drift diagnostics, 2026-11-02
+
+The shared generator staged unified-diff input beside its installed source.
+Under a read-only checkout, changed or missing generated output therefore
+returned `CodegenFormatError` instead of the intended `CodegenDriftError`.
+Three focused cases reproduced that failure before the fix. Use the scoped
+system temporary directory for diff staging; preserve cleanup and output
+comparison. All 43 package tests, lint/check and docgen pass after the fix.
+An actual ACP check also passes with network access denied and all repository
+source read-only; a stale-output overlay reports drift without changing source.
+This removes a prerequisite defect, but does not qualify a Turbo task.
+
+The native probe initially named `biome.json` instead of the real
+`biome.jsonc` and stopped before executing the generator. Its next assertion
+looked for the typed error in stderr, while the actual Effect runtime logs it
+to stdout and prints the diff to stderr. Both original failures are retained;
+the corrected three-case probe checks each real stream and source integrity.
+The checkpoint records the successful behavior separately from those failures.
