@@ -124,10 +124,17 @@ export {
 export {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
+  CacheProducerStorageRuntime,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
 } from "../commands/Cache/Cache.workflow.schemas.ts";
+export {
+  downloadCacheProducerPrivateObservation,
+  readCacheProducerPrivateObservation,
+  removeCacheProducerPrivateObservation,
+  uploadCacheProducerPrivateObservation,
+} from "../commands/Cache/Cache.workflow.storage.ts";
 export {
   assertCacheProducerUploadRuntime,
   assertCacheProducerWorkflowLocation,
@@ -139,6 +146,7 @@ export {
   initializeCacheProducerExecution,
   inspectCacheProducerWorkflow,
   loadCacheProducerExecutionRuntime,
+  loadCacheProducerStorageRuntime,
   runCacheProducerWorkflow,
 } from "../commands/Cache/Cache.workflow.ts";
 export { CacheProducerUploadApproval } from "../commands/Cache/Cache.workflow.upload.schemas.ts";

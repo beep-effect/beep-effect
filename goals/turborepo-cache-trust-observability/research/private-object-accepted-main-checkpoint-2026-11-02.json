@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "cache-private-object-accepted-main/v1",
+  "recordedAt": "2026-11-02T19:34:26.816429+00:00",
+  "acceptedMain": "930758e06bf4442d721d818fcba6a40301471784",
+  "acceptedComponents": {
+    "coverageRepair": "04e4f245fe539243f7dacd6ff65135f99d313456",
+    "inputExclusions": "105975ac27b8c463fb7d6e0e9dbe503cbdf84829",
+    "githubReviewThread": "930758e06bf4442d721d818fcba6a40301471784"
+  },
+  "baselineReview": "research/private-object-accepted-coverage-baseline-review-2026-11-02.md",
+  "baselineRequest": "research/private-object-accepted-coverage-baseline-request-2026-11-02.json",
+  "baselinePostconditions": {
+    "changedNodes": ["//#lint:policy-fingerprint:quality"],
+    "changedSources": ["turbo.json"],
+    "nodeCount": 2436,
+    "noAddedOrRemovedNodes": true,
+    "nonRootReviewsPreserved": true,
+    "acceptedGlobalConfigurationPreserved": true,
+    "scopeProfileEpochPreserved": true,
+    "qualificationLedgerPreserved": true
+  },
+  "policyAudit": {
+    "exit": 0,
+    "blockingFindings": 0
+  },
+  "baselineSha256": "3e673f132eb8dabaf08df79d8bdfa83b11fe68c7c7904e6489af31daf64bbcae",
+  "qualificationLedgerSha256": "13067bf343f413b4cc99b4cefca3ce7d094a1f09247a54ffc20114e766d4d2bb",
+  "limits": [
+    "Earlier native ordinary observations remain bound to their original source and input configuration; accepted input exclusions do not renew them.",
+    "No signing activation, cloud mutation, new qualification, representative-window acceptance or whole-goal completion.",
+    "Fresh current-head hosted validation and real protected inspection/publication remain required."
+  ]
+}

@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "a85378087499c2e8eba52cd78baad4d1d28d77dfb521be0ab34d6239a68a9567",
+  "specSha256": "1acf203b579426293dc829a222777b00112a2dff2f327aaec20e3f5f13031783",
   "acceptance": [
     {
       "id": "AC-01",
@@ -24,7 +24,8 @@
       "nextProof": "Prove current reader/fork/writer/backend/storage capabilities, selector validation and direct invocation denials against the applicable deployed topology.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {
@@ -40,7 +41,10 @@
       "requirement": "Protected producer receipts and direct result classes preserve provenance/fault causes despite Turbo recomputation.",
       "status": "unproven",
       "nextProof": "Bind real protected workflow producer evidence and typed fault causes to the actual consumer; current producer/protocol unit tests alone are insufficient.",
-      "partialEvidence": ["research/closed-producer-upload-checkpoint.json"]
+      "partialEvidence": [
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
+      ]
     },
     {
       "id": "AC-05",
@@ -50,7 +54,8 @@
       "nextProof": "Exercise synthetic secrets, paths and artifact bytes against actual bounded backend/client receipts and labels; verify retention and volume caps.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {
@@ -68,7 +73,8 @@
       "nextProof": "Complete touched-package and protocol verification on the final implementation source; retain attribution of every failure.",
       "partialEvidence": [
         "research/private-pilot-storage-checkpoint.json",
-        "research/closed-producer-upload-checkpoint.json"
+        "research/closed-producer-upload-checkpoint.json",
+        "research/private-producer-object-checkpoint-2026-11-02.json"
       ]
     },
     {
@@ -466,7 +472,13 @@
   },
   "specNormalizationReview": "Source digest refreshed for the current producer SPEC. All nine acceptance obligations remain unproven; this is not an evidence promotion.",
   "priorSpecSha256BeforeWorkerObservation": "3de5e43c85fefd0d79c15cd23ceae94119ff4460d59536c8903c4c839f99c253",
+  "priorSpecSha256BeforePrivateObjectTransfer": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
+  "privateObjectTransferCheckpoint": "research/private-producer-object-checkpoint-2026-11-02.json",
+  "priorSpecSha256AtPrivateObjectHostedFollowup": "6fd3c4ab9fe16bfe95983569490705740219c29c6fddf7ceb936246fc086b9d7",
+  "privateObjectHostedFollowup": "research/private-producer-object-checkpoint-2026-11-02.json",
+  "privateObjectAcceptedMainCheckpoint": "research/private-object-accepted-main-checkpoint-2026-11-02.json",
   "priorSpecSha256BeforeResolvedHeavyApproval": "93f42ec17cb921f1665c1a18b1453fc0303a1251dade8289e83315728447c824",
   "priorActualSpecSha256BeforeResolvedHeavyApproval": "370a5fb0eff88ab9dbdb08a3c51e130f1630552c2ba67f8ce13ecfc834b74220",
-  "resolvedHeavyWorkflowApproval": "research/resolved-heavy-approval-checkpoint-2026-11-02.json"
+  "resolvedHeavyWorkflowApproval": "research/resolved-heavy-approval-checkpoint-2026-11-02.json",
+  "priorSpecSha256Before9adaConflictResolution": "2f1e6e90d99265abd4362a54524ec18d574f5d96cd5ba1bc889eb7084aceb3b1"
 }

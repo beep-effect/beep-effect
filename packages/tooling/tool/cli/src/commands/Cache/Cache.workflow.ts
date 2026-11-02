@@ -46,11 +46,11 @@ import { CacheActivationPreview, CacheCommandError } from "./Cache.schemas.ts";
 import {
   CacheProducerExecutionProfile,
   CacheProducerObservation,
+  CacheProducerStorageRuntime,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
   CacheProducerWorkflowFile,
 } from "./Cache.workflow.schemas.ts";
-import { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.workflow");
 const R2StorageEndpoint = S.String.check(S.isPattern(/^https:\/\/[a-f0-9]{32}\.r2\.cloudflarestorage\.com\/$/)).pipe(
@@ -335,6 +335,41 @@ export const hashCacheProducerUploadKey = Effect.fn("CacheWorkflow.hashUploadKey
   digest(new TextEncoder().encode(`beep/cache-producer-artifact-key/v1\0${Redacted.value(key)}`))
 );
 
+const assertCacheProducerStorageProfile = Effect.fn("CacheWorkflow.assertStorageProfile")(function* (
+  binding: CacheProducerBinding,
+  profile: CacheProducerExecutionProfile
+) {
+  const target = profile.target;
+  const approval = yield* binding.uploadApproval.pipe(
+    Effect.fromOption(() => CacheCommandError.new("The producer store has no independently approved upload."))
+  );
+  const storage = yield* target.storage.pipe(
+    Effect.fromOption(() =>
+      CacheCommandError.new("Producer upload requires approved storage and an owned adapter capability.")
+    )
+  );
+  if (
+    A.contains(
+      [
+        target.baseUrl.href === "http://127.0.0.1:19427/",
+        S.is(Sha256Hex)(target.backend.digest),
+        Str.startsWith("/")(profile.adapterExecutable),
+        isR2StorageEndpoint(storage.endpoint.href),
+        storage.bucket === "beep-turbo-r2-pilot",
+        target.namespace.teamId === "team_beep_signed_canary_v1",
+        target.namespace.teamId === binding.client.namespace,
+        target.namespace.teamId !== target.namespace.foreignTeamId,
+        target.policy.readerWriterSplit,
+        target.policy.tenantBinding,
+        (yield* hashCacheProducerUploadTarget(target)) === approval.targetSha256,
+      ],
+      false
+    )
+  )
+    return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
+  return approval;
+});
+
 const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.assertProvidedUploadRuntime")(function* (
   binding: CacheProducerBinding,
   runtime: CacheProducerUploadRuntime
@@ -375,32 +410,11 @@ const validateProvidedCacheProducerUploadRuntime = Effect.fn("CacheWorkflow.asse
     )
   )
     return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
-  const storage = target.storage.value;
-  const endpoint = storage.endpoint;
-  const url = target.baseUrl;
-  const targetDigest = yield* hashCacheProducerUploadTarget(target);
-  const keyDigest = yield* hashCacheProducerUploadKey(owned.signing);
-  if (
-    A.contains(
-      [
-        url.href === "http://127.0.0.1:19427/",
-        S.is(Sha256Hex)(target.backend.digest),
-        Str.startsWith("/")(owned.adapter.value.executable),
-        isR2StorageEndpoint(endpoint.href),
-        storage.bucket === "beep-turbo-r2-pilot",
-        target.namespace.teamId === "team_beep_signed_canary_v1",
-        target.namespace.teamId === binding.client.namespace,
-        target.namespace.teamId !== target.namespace.foreignTeamId,
-        target.policy.readerWriterSplit,
-        target.policy.tenantBinding,
-        O.containsWith(S.toEquivalence(CacheProducerUploadApproval))(
-          binding.uploadApproval,
-          CacheProducerUploadApproval.make({ targetSha256: targetDigest, artifactKeySha256: keyDigest })
-        ),
-      ],
-      false
-    )
-  )
+  const approval = yield* assertCacheProducerStorageProfile(
+    binding,
+    CacheProducerExecutionProfile.make({ target, adapterExecutable: owned.adapter.value.executable })
+  );
+  if ((yield* hashCacheProducerUploadKey(owned.signing)) !== approval.artifactKeySha256)
     return yield* CacheCommandError.new("Producer upload target differs from its approved bounded pilot profile.");
   return owned;
 });
@@ -498,6 +512,41 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
   const owned = yield* validateProvidedCacheProducerUploadRuntime(binding, runtime);
   return Tuple.make(binding, owned);
 }, CacheCommandError.mapError("Cannot load independently approved producer execution capabilities."));
+
+/**
+ * Load only the independently approved private-object storage capabilities.
+ *
+ * **Details**
+ * Validate private issuer/profile state and the bounded target before reading
+ * credentials. Reject either storage credential if its identity equals the
+ * approved artifact signing key. No signing key or adapter bearer is loaded.
+ *
+ * **Example** (Plan limited private-object access)
+ * ```ts
+ * import { loadCacheProducerStorageRuntime } from "@beep/repo-cli/test/Cache"
+ * import * as Effect from "effect/Effect"
+ * console.assert(Effect.isEffect(loadCacheProducerStorageRuntime("/private/cache-producer")))
+ * ```
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const loadCacheProducerStorageRuntime = Effect.fn("CacheWorkflow.loadStorageRuntime")(function* (
+  directory: string
+) {
+  const [binding, profile] = yield* readCacheProducerExecutionProfile(directory);
+  const approval = yield* assertCacheProducerStorageProfile(binding, profile);
+  const keys = yield* Config.all({
+    accessKey: Config.schema(CacheProducerStorageRuntime.fields.accessKey, "R2_ACCESS_KEY_ID"),
+    secretKey: Config.schema(CacheProducerStorageRuntime.fields.secretKey, "R2_SECRET_ACCESS_KEY"),
+  }).pipe(Effect.mapError(() => CacheCommandError.new("Approved producer storage capabilities are required.")));
+  for (const key of [keys.accessKey, keys.secretKey]) {
+    if ((yield* hashCacheProducerUploadKey(key)) === approval.artifactKeySha256)
+      return yield* CacheCommandError.new("Producer artifact signing must be distinct from backend capabilities.");
+  }
+  return Tuple.make(binding, CacheProducerStorageRuntime.make({ target: profile.target, ...keys }));
+}, CacheCommandError.mapError("Cannot load independently approved producer storage capabilities."));
 
 /**
  * Exclusively provision an execution store from separately approved source and target identities.

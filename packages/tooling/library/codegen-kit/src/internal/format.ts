@@ -93,7 +93,6 @@ export const makeFormatter = Effect.fn("CodegenKit.makeFormatter")(function* () 
       Effect.gen(function* () {
         const temporaryPath = yield* fs
           .makeTempFileScoped({
-            directory: import.meta.dirname,
             prefix: ".codegen-kit-diff-",
             suffix: ".generated.ts",
           })

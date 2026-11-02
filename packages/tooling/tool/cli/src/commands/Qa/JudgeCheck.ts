@@ -32,6 +32,7 @@ import {
   evaluateCitedEventIdExists,
   evaluateDeclaredRoundCoherent,
   evaluateEvidenceCrossCheckClean,
+  RoundCrossCheckSettlement,
 } from "./JudgeContract.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
@@ -364,19 +365,77 @@ export const crossCheckAgainstRound = Effect.fn("QaJudgeCheck.crossCheckAgainstR
   inventory: QaInventory,
   eventLog: QaEventLog
 ): Effect.fn.Return<EvidenceCrossCheck, never, FileSystem.FileSystem | Path.Path> {
-  const artifactVerdict = yield* evaluateCitedArtifactExists(
+  const settlement = yield* settleAgainstRound(layout, inventory, eventLog);
+  return evidenceCrossCheckVerdictToCrossCheck(settlement.crossCheck);
+});
+
+/**
+ * Settle an inventory's citations against a round as typed gate verdicts.
+ *
+ * **Details**
+ *
+ * This is the single settlement behind {@link crossCheckAgainstRound} and
+ * the QA judge gate certificate, so both see the same verdicts.
+ *
+ * **Example** (Settle an inventory without citations)
+ *
+ * ```ts
+ * import { RoundLayout } from "@beep/qa-capture"
+ * import { QaEventLog, QaInventory, QaJudgeRef, settleAgainstRound } from "@beep/repo-cli/commands/Qa"
+ * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
+ * import * as NodePath from "@effect/platform-node/NodePath"
+ * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
+ *
+ * const root = "/repo/.beep/qa/round-1"
+ * const layout = RoundLayout.make({
+ *   clipsDir: `${root}/clips`,
+ *   eventsPath: `${root}/events.ndjson`,
+ *   framesDir: `${root}/frames`,
+ *   reportPath: `${root}/report.md`,
+ *   root,
+ *   round: 1,
+ *   sessionPath: `${root}/session.json`,
+ *   sheetsDir: `${root}/sheets`,
+ *   videoDir: `${root}/video`
+ * })
+ * const inventory = QaInventory.make({
+ *   findings: [],
+ *   judge: QaJudgeRef.make({ effort: "inherited", model: "claude-opus-5-5" }),
+ *   requiredCount: 0,
+ *   round: 1,
+ *   schemaVersion: "qa-inventory/v1",
+ *   sessionRef: "session.json"
+ * })
+ * const settlement = await Effect.runPromise(
+ *   settleAgainstRound(layout, inventory, QaEventLog.make({ events: [], rejectedCount: 0 })).pipe(
+ *     Effect.provide(Layer.merge(NodeFileSystem.layer, NodePath.layer))
+ *   )
+ * )
+ * console.log(settlement.crossCheck.verdict) // "allowed"
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const settleAgainstRound = Effect.fn("QaJudgeCheck.settleAgainstRound")(function* (
+  layout: RoundLayout,
+  inventory: QaInventory,
+  eventLog: QaEventLog
+): Effect.fn.Return<RoundCrossCheckSettlement, never, FileSystem.FileSystem | Path.Path> {
+  const artifact = yield* evaluateCitedArtifactExists(
     CitedArtifactExistsInput.make({ citedPaths: citedPaths(inventory), roundRoot: layout.root })
   );
-  const eventIdVerdict = yield* evaluateCitedEventIdExists(
+  const eventId = yield* evaluateCitedEventIdExists(
     CitedEventIdExistsInput.make({
       citedEventIds: citedEventIds(inventory),
       knownEventIds: A.map(eventLog.events, (event) => event.seq),
     })
   );
-  const aggregateVerdict = yield* evaluateEvidenceCrossCheckClean(
-    EvidenceCrossCheckCleanInput.make({ artifactVerdict, eventIdVerdict })
+  const crossCheck = yield* evaluateEvidenceCrossCheckClean(
+    EvidenceCrossCheckCleanInput.make({ artifactVerdict: artifact, eventIdVerdict: eventId })
   );
-  return evidenceCrossCheckVerdictToCrossCheck(aggregateVerdict);
+  return RoundCrossCheckSettlement.make({ artifact, crossCheck, eventId });
 });
 
 /**
@@ -404,14 +463,40 @@ export const raiseCrossCheckFailure: {
       : Effect.fail(QaCommandError.make({ message: renderCrossCheckFailure(round, check) }))
 );
 
-const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound")(function* (
-  round: number,
-  inventory: QaInventory
-): Effect.fn.Return<void, QaCommandError> {
-  const verdict = yield* evaluateDeclaredRoundCoherent(
-    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: round })
-  );
-  return yield* DeclaredRoundCoherentVerdict.match(verdict, {
+/**
+ * Fail when a round-coherence verdict is denied.
+ *
+ * **Details**
+ *
+ * Callers that keep the verdict (the judge-lint certificate) evaluate the gate
+ * once and pass the verdict here; {@link requireInventoryRound} evaluates and
+ * delegates, so both report the same message.
+ *
+ * **Example** (Fail on a copied inventory round)
+ *
+ * ```ts
+ * import {
+ *   DeclaredRoundCoherentInput,
+ *   evaluateDeclaredRoundCoherent,
+ *   requireRoundCoherentVerdict
+ * } from "@beep/repo-cli/commands/Qa"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = evaluateDeclaredRoundCoherent(
+ *   DeclaredRoundCoherentInput.make({ declaredRound: 2, requestedRound: 1 })
+ * ).pipe(Effect.flatMap(requireRoundCoherentVerdict), Effect.flip)
+ * console.log(Effect.runSync(program).message) // "qa judge inventory declares round 2 but round 1 was requested."
+ * ```
+ *
+ * @param verdict - Evaluated round-coherence verdict.
+ * @returns Success when allowed, the operator-facing failure when denied.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const requireRoundCoherentVerdict = (
+  verdict: DeclaredRoundCoherentVerdict
+): Effect.Effect<void, QaCommandError> =>
+  DeclaredRoundCoherentVerdict.match(verdict, {
     allowed: () => Effect.void,
     denied: ({ audit }) =>
       Effect.fail(
@@ -420,6 +505,15 @@ const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound"
         })
       ),
   });
+
+const requireInventoryRoundImpl = Effect.fn("QaJudgeCheck.requireInventoryRound")(function* (
+  round: number,
+  inventory: QaInventory
+): Effect.fn.Return<void, QaCommandError> {
+  const verdict = yield* evaluateDeclaredRoundCoherent(
+    DeclaredRoundCoherentInput.make({ declaredRound: inventory.round, requestedRound: round })
+  );
+  return yield* requireRoundCoherentVerdict(verdict);
 });
 
 /**

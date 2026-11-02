@@ -1715,6 +1715,41 @@ compare every current entry to disk and every historical entry to that commit.
 Keep the original 136-case receipts bound to their original source; no native
 receipt, requirement or acceptance status is changed. Deep-copy retained arrays
 or reconstruct them from immutable blobs before changing current bindings.
+### Preserve issued observations and minimize private-transfer authority, 2026-11-02
+
+The protected digest report alone cannot transport the complete private matrices.
+Add an opt-in fixed-prefix R2 handoff rather than placing those matrices in public
+workflow artifacts. Initial reuse of the execution loader would also read the
+artifact signing key and four adapter bearers. Extract the existing destination
+check, load only the two storage capabilities and compare their identities to
+the independently approved artifact-key digest. Keep existing executor checks.
+
+Native probe setup first failed module resolution outside the package; running
+the same source from its package resolved that setup issue. A later large-body
+control reused a completed request's aborted signal. Its corrected independent
+request uses a fresh signal. These failures are retained as setup errors, not
+security controls. The actual native module then passed upload and interruption
+cleanup, with a separate six-MiB same-options size control. Two invalid JSDoc
+categories and new test/CLI boundary type errors were repaired before publication;
+no test, byte limit, baseline or trial budget was weakened.
+
+
+The new deadline control initially advanced TestClock before asynchronous
+private-store reads reached the timed exchange, so it hit the outer test limit.
+Synchronize on actual response creation before advancing the same thirty-one
+seconds. The production thirty-second deadline, byte bounds and expected
+timeout/cancellation assertions are unchanged. The synchronized control passes.
+A presentation-only doctor flag was unsupported; the canonical doctor command
+passes without changing its baseline.
+
+### 2026-11-02 — accepted-main command-service integration
+
+Private observation transport integration exposed three missing `Git` contexts in
+`cache-private-producer-object.test.ts` during package checking. Accepted-main Cache CLI
+fixtures already provide `Git.layer` over the Node platform. Reusing that composition
+repairs the tests; all 154 focused cases and package lint/type checks pass. The first
+failing receipt is retained separately. Checking new command fixtures against the
+accepted CLI service layer before integration would have prevented the extra cycle.
 
 ### 2026-11-02 — formatter rewrote sealed baseline during integration
 
@@ -1733,3 +1768,39 @@ projection. Review caught the omitted regeneration before current-head validatio
 `bun run beep cache profile --write` regenerates it; the freshness command then
 passes. Both configuration files remain a projection, without a cache qualification
 or runtime activation. Keep the generated profile in the same config-edit wave.
+
+### 2026-11-02 — hosted isolation census and generated quality closure
+
+Hosted unit shard 2 classified `typeof globalThis.fetch =>` in the new pure
+factory as a global assignment. A function declaration preserves the same typed
+factory without adding a state-isolated worker. The actual census and transport
+suite then pass together. Unit shard 5 and Property Laws found one missing
+quality-seal input: `Cache.workflow.storage.ts`. The canonical fingerprint writer
+adds exactly that path, with no removal or other setting change. A root-only
+reviewed baseline acknowledgement preserves the ledger, scope, profile and epoch.
+The combined 160 tests, package lint/type checks and cache policy audit pass.
+Keep the census and generated policy input check in the focused new-module
+replay so the first hosted run can find substantive defects instead of metadata
+omissions. Failed hosted receipts remain separate from passing local controls.
+
+
+### Reconcile accepted cache-input and baseline changes (2026-11-02)
+
+- Work: accepted-main integration for PR #2611.
+- Friction: independently reviewed root baselines and generated identity/documentation inventories conflict when shared changes merge.
+- Correction: retain the exact accepted-main baseline, re-acknowledge only this branch's storage input through root-scoped CAS, and regenerate derived inventories. Preserve immutable native observations rather than reusing their older input policy as current proof.
+- Prevention: batch accepted upstream changes into one repair wave and verify non-root reviews, global configuration and qualification bytes after the canonical writers.
+
+
+### 2026-11-02 — private-object policy and coverage wave
+
+Hosted PR #2611 found three inline schema-compilation errors and insufficient
+coverage in the private-object component. Hoist the existing encoders and add
+real refusal controls for approval, storage, credentials, archive bounds and an
+unexpected successful HTTP status. Exercise the existing optional-runtime default
+in the supervised workflow test. Focused Bun/Istanbul restores workflow coverage
+to 100% and raises the new storage file to 37/46 covered branches (80.43%).
+Keep the original red receipts and all baseline floors. Run the root policy
+scanner on touched test files: package lint alone does not include that rule.
+
+- 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
