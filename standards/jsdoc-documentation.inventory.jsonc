@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T18:47:55.446Z",
+  "generatedAt": "2026-11-02T21:00:11.716Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -136752,8 +136752,8 @@
           "exportKind": "const",
           "filePath": "src/ReviewThread.ts",
           "repoPath": "packages/drivers/github/src/ReviewThread.ts",
-          "line": 612,
-          "anchor": "packages-drivers-github-src-reviewthread-ts-612-isoutstanding",
+          "line": 620,
+          "anchor": "packages-drivers-github-src-reviewthread-ts-620-isoutstanding",
           "currentTags": [
             "@param",
             "@returns",
@@ -136777,8 +136777,8 @@
           "exportKind": "const",
           "filePath": "src/ReviewThread.ts",
           "repoPath": "packages/drivers/github/src/ReviewThread.ts",
-          "line": 639,
-          "anchor": "packages-drivers-github-src-reviewthread-ts-639-outstanding",
+          "line": 647,
+          "anchor": "packages-drivers-github-src-reviewthread-ts-647-outstanding",
           "currentTags": [
             "@param",
             "@returns",
@@ -136802,8 +136802,8 @@
           "exportKind": "interface",
           "filePath": "src/ReviewThread.ts",
           "repoPath": "packages/drivers/github/src/ReviewThread.ts",
-          "line": 651,
-          "anchor": "packages-drivers-github-src-reviewthread-ts-651-reviewthreadshape",
+          "line": 659,
+          "anchor": "packages-drivers-github-src-reviewthread-ts-659-reviewthreadshape",
           "currentTags": [
             "@public",
             "@category",
@@ -136825,8 +136825,8 @@
           "exportKind": "class",
           "filePath": "src/ReviewThread.ts",
           "repoPath": "packages/drivers/github/src/ReviewThread.ts",
-          "line": 732,
-          "anchor": "packages-drivers-github-src-reviewthread-ts-732-reviewthread",
+          "line": 740,
+          "anchor": "packages-drivers-github-src-reviewthread-ts-740-reviewthread",
           "currentTags": [
             "@public",
             "@category",

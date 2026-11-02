@@ -80,6 +80,7 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
@@ -669,6 +670,7 @@ describe("B7 settle contracts", () => {
             expect(yield* TestConsole.errorLines).toHaveLength(1);
           }
         }).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner(code, output))
         )
@@ -1074,6 +1076,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) =>
           return Effect.succeed(handle(0, "[]"));
         });
         const result = yield* collectYeetStatus(contextFor(root), true).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
@@ -1184,11 +1187,12 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
             const restReads = yield* Ref.make(0);
             const runner = selfLoopRunner(restRecoveryAvailable, pageReads, restReads);
             const failure = yield* collectYeetStatus(contextFor(root), true).pipe(
+              provideLegacyGh,
               Effect.provideServiceEffect(Git, Git.make),
               Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
               Effect.flip
             );
-            assertInclude(failure.message, "repeated the same GraphQL end cursor");
+            assertInclude(failure.message, "the same end cursor was reported twice");
             // The first page and its claimed successor were read; the third lap never ran.
             expect(yield* Ref.get(pageReads)).toBe(2);
             expect(yield* Ref.get(restReads)).toBe(0);
@@ -1258,6 +1262,7 @@ it.layer(platform, { timeout: "30 seconds" })((it) => {
           rulesetRead: () => Effect.succeedNone,
           pollInterval: Duration.zero,
         }).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );

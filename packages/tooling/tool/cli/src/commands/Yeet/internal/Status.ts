@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
@@ -20,7 +21,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GhActor, ghOutput } from "../../../internal/github/index.ts";
+import { GhActor, GithubRest, ghOutput } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -39,6 +40,7 @@ import type { Git } from "@beep/git/Git";
 
 export { deriveYeetMergeReady } from "./MergeReadiness.policy.ts";
 
+import { provideYeetGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import { yeetCommentExcerpt } from "./MonitorComments.ts";
 import { YeetHeadTimeline } from "./MonitorPolicy.ts";
@@ -46,6 +48,7 @@ import { YEET_STATUS_CHECK_FIELDS } from "./Planner.ts";
 import { findOpenPullRequestViaRest } from "./PullRequest.ts";
 import {
   deriveYeetReviewThreadState,
+  ghActorFromReviewThread,
   summarizeYeetReviewThreadStates,
   YeetReviewThreadNewestComment,
   YeetReviewThreadStateCounts,
@@ -72,6 +75,7 @@ import {
   yeetCheckRecordInstant,
   yeetCheckRecordText,
 } from "./WatchStream.ts";
+import type { ReviewThreadComment, ReviewThreadNode, ReviewThreads } from "@beep/github/ReviewThread";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -509,52 +513,6 @@ class GhStatusReviewThread extends S.Opaque<GhStatusReviewThread, { readonly bra
   )
 ) {}
 
-class GhStatusReviewThreadPageInfo extends S.Opaque<GhStatusReviewThreadPageInfo, { readonly brand: unique symbol }>()(
-  S.Struct({
-    hasNextPage: S.Boolean,
-    endCursor: S.NullOr(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(null)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(null))
-    ),
-  }).pipe(
-    $I.annoteSchema("GhStatusReviewThreadPageInfo", {
-      description: "Cursor metadata for one page of the Yeet review-thread status read.",
-    })
-  )
-) {}
-
-class GhStatusReviewThreadConnection extends S.Opaque<
-  GhStatusReviewThreadConnection,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({ nodes: S.Array(GhStatusReviewThread), pageInfo: GhStatusReviewThreadPageInfo }).pipe(
-    $I.annoteSchema("GhStatusReviewThreadConnection", {
-      description: "Review threads returned by the single-query Yeet remote status check.",
-    })
-  )
-) {}
-
-class GhStatusReviewThreadsNode extends S.Opaque<GhStatusReviewThreadsNode, { readonly brand: unique symbol }>()(
-  S.Struct({ author: GhActor.pipe(S.NullOr, S.optionalKey), reviewThreads: GhStatusReviewThreadConnection }).pipe(
-    $I.annoteSchema("GhStatusReviewThreadsNode", { description: "Pull request review-thread status node." })
-  )
-) {}
-
-class GhStatusReviewThreadsData extends S.Opaque<GhStatusReviewThreadsData, { readonly brand: unique symbol }>()(
-  S.Struct({ node: GhStatusReviewThreadsNode }).pipe(
-    $I.annoteSchema("GhStatusReviewThreadsData", { description: "GraphQL review-thread status data." })
-  )
-) {}
-
-class GhStatusReviewThreadsDocument extends S.Opaque<
-  GhStatusReviewThreadsDocument,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({ data: GhStatusReviewThreadsData }).pipe(
-    $I.annoteSchema("GhStatusReviewThreadsDocument", { description: "GraphQL review-thread status document." })
-  )
-) {}
-
 /**
  * A branch workflow run as returned by `gh run list`.
  *
@@ -620,12 +578,8 @@ export class GhStatusCheck extends S.Opaque<GhStatusCheck, { readonly brand: uni
 
 const decodeYeetVerdict = S.decodeUnknownEffect(S.fromJsonString(YeetVerdict));
 const decodePrCloseoutReport = PrCloseoutReportJson.decode;
-const decodeRestReviewComments = S.decodeEffect(S.Unknown.pipe(S.Array, S.fromJsonString));
 const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatusPullRequest));
-const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
 const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
-const reviewThreadsQuery =
-  "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100,after:$cursor){nodes{id isResolved isOutdated path line resolvedBy{login} comments(first:1){nodes{author{__typename login} body databaseId}} latest:comments(last:1){nodes{author{__typename login} body databaseId}}} pageInfo{hasNextPage endCursor}}}}}";
 const decodeGhStatusChecks = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusCheck)));
 
 // The same record the --watch collector builds (WatchMode), plus GitHub's
@@ -1044,94 +998,61 @@ interface GhStatusReviewThreadPages {
   readonly threads: ReadonlyArray<GhStatusReviewThread>;
 }
 
-const pullRequestAuthorLogin = (node: GhStatusReviewThreadsNode): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(node.author),
-    O.flatMap(O.fromNullishOr),
-    O.map((author) => author.login)
-  );
+const statusThreadComment = (comment: ReviewThreadComment): GhStatusThreadComment =>
+  GhStatusThreadComment.make({
+    author: O.getOrNull(O.map(comment.author, ghActorFromReviewThread)),
+    body: comment.body,
+    databaseId: O.getOrNull(comment.databaseId),
+  });
 
-// fallow-ignore-next-line complexity -- GraphQL cursor and page validity checks form one pagination loop (cognitive 14). Owner: @beep/repo-cli. Exit: move onto the internal/github `ghGraphqlPage` and `nextCursor` helpers that Reply uses.
+// The kit thread in the shape the triage reads: the opening comment (the
+// objection) and the newest comment (who spoke last).
+const statusThread = (thread: ReviewThreadNode): GhStatusReviewThread =>
+  GhStatusReviewThread.make({
+    id: thread.id,
+    isResolved: thread.isResolved,
+    isOutdated: thread.isOutdated,
+    path: thread.path,
+    line: O.getOrNull(thread.line),
+    resolvedBy: O.getOrNull(O.map(thread.resolvedBy, (login) => GhActor.make({ login }))),
+    comments: GhStatusThreadCommentConnection.make({ nodes: A.map(A.take(thread.comments, 1), statusThreadComment) }),
+    latest: GhStatusThreadCommentConnection.make({
+      nodes: A.map(O.toArray(thread.newestComment), statusThreadComment),
+    }),
+  });
+
+const statusThreadPages = (read: ReviewThreads): GhStatusReviewThreadPages => ({
+  pullRequestAuthor: read.pullRequestAuthor,
+  threads: A.map(read.threads, statusThread),
+});
+
+// Every page of the pull request's threads through the kit (which refuses a
+// page that claims a successor without a cursor, or names its own cursor).
+// REST may recover a failed read, but never a malformed answer: an empty
+// comments response cannot excuse a cursor cycle.
 const collectRemoteReviewThreads = Effect.fn("YeetStatus.collectRemoteReviewThreads")(function* (
-  context: RepoRunContext,
   pullRequestId: string,
   pullRequestNumber: number
-): Effect.fn.Return<
-  GhStatusReviewThreadPages,
-  YeetCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const threads: Array<GhStatusReviewThread> = [];
-  let pullRequestAuthor = O.none<string>();
-  let cursor = O.none<string>();
-  while (true) {
-    const result = yield* runRepoCommandCapture(
-      "gh",
-      [
-        "api",
-        "graphql",
-        "-f",
-        `query=${reviewThreadsQuery}`,
-        "-F",
-        `id=${pullRequestId}`,
-        ...O.match(cursor, { onNone: () => [], onSome: (value) => ["-F", `cursor=${value}`] }),
-      ],
-      context.repoRoot
-    ).pipe(
-      Effect.mapError(YeetCommandError.new("Failed to inspect PR review threads for yeet status.")),
-      Effect.filterOrFail(
-        (result) => result.exitCode === 0 && !result.truncated,
-        (result) =>
-          YeetCommandError.make({
-            message: "Failed to collect the paginated PR review-thread closeout gate.",
-            command: "gh api graphql",
-            exitCode: result.exitCode === 0 ? 1 : result.exitCode,
-          })
-      ),
-      Effect.result
-    );
-    if (Result.isFailure(result)) {
-      // REST may recover a failed command, but never invalid JSON or pagination.
-      // In particular, an empty comments response cannot excuse a cursor cycle.
-      yield* confirmNoReviewComments(context, pullRequestNumber).pipe(
-        Effect.mapError((fallback) =>
-          YeetCommandError.make({ message: `${result.failure.message}; REST fallback: ${fallback.message}` })
-        )
-      );
-      return { pullRequestAuthor: O.none<string>(), threads: A.empty<GhStatusReviewThread>() };
-    }
-    const node = yield* decodeGhStatusReviewThreads(result.success.output).pipe(
-      Effect.mapBoth({
-        onFailure: YeetCommandError.new("Failed to decode PR review threads for yeet status."),
-        onSuccess: (document) => document.data.node,
-      })
-    );
-    pullRequestAuthor = O.orElse(pullRequestAuthor, () => pullRequestAuthorLogin(node));
-    threads.push(...node.reviewThreads.nodes);
-    const pageInfo = node.reviewThreads.pageInfo;
-    if (!pageInfo.hasNextPage) {
-      return { pullRequestAuthor, threads };
-    }
-    // A page that claims a successor without naming one would loop forever on
-    // the same first hundred threads and under-report every thread past them.
-    if (pageInfo.endCursor === null || Str.isEmpty(pageInfo.endCursor)) {
-      return yield* YeetCommandError.make({
-        message: "PR review threads reported another GraphQL page without an end cursor.",
-        command: "gh api graphql",
-        exitCode: 1,
-      });
-    }
-    // A page that names itself as its own successor would re-read the same
-    // hundred threads forever and count each of them once per lap.
-    if (O.exists(cursor, (value) => value === pageInfo.endCursor)) {
-      return yield* YeetCommandError.make({
-        message: "PR review threads repeated the same GraphQL end cursor; refusing to re-read the same page.",
-        command: "gh api graphql",
-        exitCode: 1,
-      });
-    }
-    cursor = O.some(pageInfo.endCursor);
+): Effect.fn.Return<GhStatusReviewThreadPages, YeetCommandError, ReviewThread | GithubRest> {
+  const threads = yield* ReviewThread;
+  const read = yield* threads.listByNodeId(pullRequestId).pipe(Effect.result);
+  if (Result.isSuccess(read)) return statusThreadPages(read.success);
+  if (read.failure.kind === "decode") {
+    return yield* YeetCommandError.make({
+      message: `Failed to decode PR review threads for yeet status: ${read.failure.reason}.`,
+      command: "gh api graphql",
+      exitCode: 1,
+      cause: read.failure,
+    });
   }
+  yield* confirmNoReviewComments(pullRequestNumber).pipe(
+    Effect.mapError((fallback) =>
+      YeetCommandError.make({
+        message: `Failed to collect the paginated PR review-thread closeout gate.; REST fallback: ${fallback.message}`,
+      })
+    )
+  );
+  return { pullRequestAuthor: O.none<string>(), threads: A.empty<GhStatusReviewThread>() };
 });
 
 /**
@@ -1340,39 +1261,35 @@ const classifyReviewThreads = (
 };
 
 /**
- * Classify a raw review-thread GraphQL payload the way `yeet status` does.
+ * Classify a `ReviewThread` read the way `yeet status` does.
  *
  * **Details**
  *
- * The seam the thread gate is tested through: it takes the JSON one page of
- * the status thread query prints and returns the same partition
+ * The seam the thread gate is tested through: it takes what
+ * `ReviewThread.listByNodeId` returns and builds the same partition
  * `collectYeetStatus` builds the remote summary from, so a test can exercise
- * the rule against a real payload without a spawner.
+ * the rule against a real payload without a client.
  *
- * **Example** (Classify an empty page)
+ * **Example** (Classify a pull request with no threads)
  *
  * ```ts
+ * import { ReviewThreads } from "@beep/github/ReviewThread"
  * import { yeetStatusThreadTriageForTesting } from "@beep/repo-cli/test/Yeet"
- * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(yeetStatusThreadTriageForTesting("{}"))) // true
+ * import * as O from "effect/Option"
+ *
+ * const read = ReviewThreads.make({ pullRequestAuthor: O.some("octocat"), threads: [] })
+ * console.log(yeetStatusThreadTriageForTesting(read).counts.unresolved) // 0
  * ```
  *
- * @param payload - One `gh api graphql` review-thread response body.
- * @returns The classified partition of that page's threads.
+ * @param read - Every review thread of one pull request, with its author.
+ * @returns The classified partition of those threads.
  * @category diagnostics
  * @since 0.0.0
  */
-export const yeetStatusThreadTriageForTesting = Effect.fn("YeetStatus.yeetStatusThreadTriageForTesting")(function* (
-  payload: string
-): Effect.fn.Return<YeetStatusThreadTriage, YeetCommandError> {
-  const node = yield* decodeGhStatusReviewThreads(payload).pipe(
-    Effect.mapBoth({
-      onFailure: YeetCommandError.new("Failed to decode PR review threads for yeet status."),
-      onSuccess: (document) => document.data.node,
-    })
-  );
-  return classifyReviewThreads(node.reviewThreads.nodes, pullRequestAuthorLogin(node));
-});
+export const yeetStatusThreadTriageForTesting = (read: ReviewThreads): YeetStatusThreadTriage => {
+  const pages = statusThreadPages(read);
+  return classifyReviewThreads(pages.threads, pages.pullRequestAuthor);
+};
 
 const skippedRemote = YeetStatusRemote.make({
   available: false,
@@ -1495,19 +1412,16 @@ const readRemotePullRequest = Effect.fn("YeetStatus.readRemotePullRequest")(func
 // As in the REST merge gate, no inline comments proves zero review threads.
 // Existing comments cannot establish resolution state and must fail closed.
 const confirmNoReviewComments = Effect.fn("YeetStatus.confirmNoReviewComments")(function* (
-  context: RepoRunContext,
   number: number
-): Effect.fn.Return<void, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
-  const output = yield* ghOutput({
-    args: ["api", `repos/{owner}/{repo}/pulls/${number}/comments?per_page=1`],
-    cwd: context.repoRoot,
-    label: "gh api review comments",
-    onFailure: YeetCommandError.new("Could not read REST review comments."),
-  });
-  const comments = yield* decodeRestReviewComments(output).pipe(
-    Effect.mapError(YeetCommandError.new("Could not decode REST review comments."))
+): Effect.fn.Return<void, YeetCommandError, GithubRest> {
+  const hasComments = yield* GithubRest.use((rest) => rest.hasReviewComments(number)).pipe(
+    Effect.mapError((error) =>
+      YeetCommandError.new(
+        error.kind === "decode" ? "Could not decode REST review comments." : "Could not read REST review comments."
+      )(error)
+    )
   );
-  if (A.isReadonlyArrayNonEmpty(comments)) {
+  if (hasComments) {
     return yield* YeetCommandError.make({ message: "review comments exist; thread resolution is unknown" });
   }
 });
@@ -1549,7 +1463,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     GhStatusReviewThreadPages,
     YeetCommandError,
     SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-  > = collectRemoteReviewThreads(context, view.id, view.number);
+  > = collectRemoteReviewThreads(view.id, view.number).pipe(provideYeetGhLogin(context.repoRoot));
   const [checksResult, requiredChecksResult, threadPagesResult, workflowRunsResult] = yield* Effect.all(
     [
       collectRemoteChecks(context, false),

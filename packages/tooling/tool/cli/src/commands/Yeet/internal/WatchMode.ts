@@ -36,6 +36,7 @@
  * @since 0.0.0
  */
 
+import { ReviewThread, ReviewThreads } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -43,14 +44,13 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GhActor } from "../../../internal/github/index.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -58,6 +58,7 @@ import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
 import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
 import { convergeYeetInbox, YeetConvergeObservation } from "./Converge.ts";
+import { provideYeetGhLogin } from "./GhOps.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   acknowledgeYeetMonitorComments,
@@ -71,9 +72,7 @@ import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
 import { supersedeYeetDispatchState } from "./Remediation.ts";
 import {
   deriveYeetReviewThreadState,
-  YeetReviewThreadNewestComment,
-  YeetReviewThreadStateInput,
-  yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInputFromNode,
   yeetReviewThreadStateOutstanding,
 } from "./ReviewThreadState.ts";
 import { readYeetReviewWindow, yeetReviewWindowDue, yeetReviewWindowElapsed } from "./ReviewWindow.ts";
@@ -166,83 +165,8 @@ class WatchCheckRow extends S.Opaque<WatchCheckRow, { readonly brand: unique sym
   )
 ) {}
 
-class WatchThreadComment extends S.Opaque<WatchThreadComment, { readonly brand: unique symbol }>()(
-  S.Struct({ author: GhActor.pipe(S.NullOr, S.optionalKey), createdAt: S.optionalKey(S.String) }).pipe(
-    $I.annoteSchema("WatchThreadComment", {
-      description: "One review-thread comment reduced to its author and timestamp.",
-    })
-  )
-) {}
-
-const watchThreadCommentConnectionNodesDefault = A.empty<WatchThreadComment>();
-class WatchThreadCommentConnection extends S.Opaque<WatchThreadCommentConnection, { readonly brand: unique symbol }>()(
-  S.Struct({
-    nodes: S.Array(WatchThreadComment).pipe(
-      S.withConstructorDefault(Effect.succeed(watchThreadCommentConnectionNodesDefault)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(watchThreadCommentConnectionNodesDefault))
-    ),
-  }).pipe(
-    $I.annoteSchema("WatchThreadCommentConnection", {
-      description: "The newest-comment connection of one review thread.",
-    })
-  )
-) {}
-
-// `isOutdated`, `resolvedBy` and `latest` default rather than being required:
-// they are what the state rule reads, and a payload recorded before the watch
-// asked for them classifies as the conservative unresolved/answered pair
-// instead of failing the whole poll.
-class WatchThreadNode extends S.Opaque<WatchThreadNode, { readonly brand: unique symbol }>()(
-  S.Struct({
-    id: S.NonEmptyString,
-    isResolved: S.Boolean,
-    isOutdated: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(false))
-    ),
-    path: S.NullOr(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(null)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(null))
-    ),
-    line: S.NullOr(S.Finite).pipe(
-      S.withConstructorDefault(Effect.succeed(null)),
-      S.withDecodingDefaultTypeKey(Effect.succeed(null))
-    ),
-    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
-    latest: S.optionalKey(WatchThreadCommentConnection),
-  }).pipe(
-    $I.annoteSchema("WatchThreadNode", { description: "One review thread's identity, resolution, and newest comment." })
-  )
-) {}
-
-class WatchThreadPageInfo extends S.Opaque<WatchThreadPageInfo, { readonly brand: unique symbol }>()(
-  S.Struct({
-    endCursor: S.NullOr(S.String),
-    hasNextPage: S.Boolean,
-  }).pipe($I.annoteSchema("WatchThreadPageInfo", { description: "Cursor metadata for one review-thread page." }))
-) {}
-
-class WatchThreadsDocument extends S.Opaque<WatchThreadsDocument, { readonly brand: unique symbol }>()(
-  S.Struct({
-    data: S.Struct({
-      node: S.NullOr(
-        S.Struct({
-          author: GhActor.pipe(S.NullOr, S.optionalKey),
-          reviewThreads: S.Struct({ nodes: S.Array(WatchThreadNode), pageInfo: WatchThreadPageInfo }),
-        })
-      ),
-    }),
-  }).pipe(
-    $I.annoteSchema("WatchThreadsDocument", { description: "The GraphQL document shape of the watch's thread query." })
-  )
-) {}
-
 const decodePullRequestView = S.decodeUnknownEffect(S.fromJsonString(WatchPullRequestView));
 const decodeCheckRows = S.decodeUnknownEffect(S.fromJsonString(S.Array(WatchCheckRow)));
-const decodeThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(WatchThreadsDocument));
-
-const watchThreadsQuery =
-  "query($id:ID!,$cursor:String){node(id:$id){... on PullRequest{author{login} reviewThreads(first:100,after:$cursor){pageInfo{hasNextPage endCursor} nodes{id isResolved isOutdated path line resolvedBy{login} latest:comments(last:1){nodes{author{__typename login} createdAt}}}}}}}";
 
 const acceptableWatchMergeStates: ReadonlyArray<string> = ["BEHIND", "CLEAN", "HAS_HOOKS", "UNSTABLE"];
 
@@ -275,97 +199,29 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
 // The watch reads the same structural facts the status gate classifies on, so
 // both surfaces answer "is anything outstanding" with one rule rather than two
 // that can disagree about a resolved thread a reviewer has spoken on since.
-const watchThreadState = (node: WatchThreadNode, pullRequestAuthor: O.Option<string>) =>
-  deriveYeetReviewThreadState(
-    YeetReviewThreadStateInput.make({
-      threadId: node.id,
-      isResolved: node.isResolved,
-      isOutdated: node.isOutdated,
-      path: O.fromNullishOr(node.path),
-      line: O.fromNullishOr(node.line),
-      pullRequestAuthor,
-      resolvedBy: pipe(
-        O.fromUndefinedOr(node.resolvedBy),
-        O.flatMap(O.fromNullishOr),
-        O.map((actor) => actor.login)
-      ),
-      newestComment: pipe(
-        O.fromUndefinedOr(node.latest),
-        O.flatMap((latest) => A.last(latest.nodes)),
-        O.flatMap((comment) =>
-          O.map(O.fromNullishOr(comment.author), (author) =>
-            YeetReviewThreadNewestComment.make({
-              authorLogin: author.login,
-              authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(author.__typename)),
-              createdAt: O.fromUndefinedOr(comment.createdAt),
-            })
-          )
-        )
-      ),
-    })
+// Every page is read; a node that is not a pull request reads as no threads,
+// and any other failure fails the poll (an empty set would make the next good
+// poll re-report every existing thread as newly opened).
+const reviewThreadStatesRead = Effect.fn("Yeet.reviewThreadStatesRead")(function* (pullRequestId: string) {
+  const threads = yield* ReviewThread;
+  const read = yield* threads.listByNodeId(pullRequestId).pipe(
+    Effect.catchIf(
+      (error) => error.kind === "notFound",
+      () => Effect.succeed(ReviewThreads.make({ pullRequestAuthor: O.none(), threads: [] }))
+    ),
+    Effect.mapError((error) =>
+      error.kind === "decode"
+        ? YeetCommandError.new(`Failed to decode PR review threads JSON for yeet watch: ${error.reason}.`)(error)
+        : YeetCommandError.make({
+            message: `yeet watch could not read PR review threads: ${error.message}`,
+            exitCode: 1,
+          })
+    )
   );
-
-const pullRequestAuthorLogin = (author: GhActor | null | undefined): O.Option<string> =>
-  pipe(
-    O.fromUndefinedOr(author),
-    O.flatMap(O.fromNullishOr),
-    O.map((actor) => actor.login)
+  return A.map(
+    read.threads,
+    flow(yeetReviewThreadStateInputFromNode(read.pullRequestAuthor), deriveYeetReviewThreadState)
   );
-
-const nextReviewThreadsCursor = (pageInfo: WatchThreadPageInfo): Effect.Effect<O.Option<string>, YeetCommandError> => {
-  if (!pageInfo.hasNextPage) return Effect.succeedNone;
-  if (pageInfo.endCursor === null || Str.isEmpty(pageInfo.endCursor)) {
-    return Effect.fail(
-      YeetCommandError.make({
-        message: "PR review threads reported another GraphQL page without an end cursor.",
-        exitCode: 1,
-      })
-    );
-  }
-  return Effect.succeedSome(pageInfo.endCursor);
-};
-
-const reviewThreadsRead = Effect.fn("Yeet.reviewThreadsRead")(function* (
-  context: RepoRunContext,
-  pullRequestId: string
-) {
-  const nodes: Array<WatchThreadNode> = [];
-  let pullRequestAuthor = O.none<string>();
-  let cursor = O.none<string>();
-  while (true) {
-    const result = yield* runRepoCommandCapture(
-      "gh",
-      [
-        "api",
-        "graphql",
-        "-f",
-        `query=${watchThreadsQuery}`,
-        "-F",
-        `id=${pullRequestId}`,
-        ...O.match(cursor, { onNone: () => [], onSome: (value) => ["-F", `cursor=${value}`] }),
-      ],
-      context.repoRoot
-    ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR review threads for yeet watch.")));
-    if (result.exitCode !== 0) {
-      return yield* YeetCommandError.make({
-        message: `yeet watch could not read PR review threads: ${result.output}`,
-        exitCode: 1,
-      });
-    }
-    const node = yield* decodeThreadsDocument(result.output).pipe(
-      Effect.mapBoth({
-        onFailure: YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."),
-        onSuccess: (document) => document.data.node,
-      })
-    );
-    if (node === null) return { pullRequestAuthor, nodes };
-    pullRequestAuthor = O.orElse(pullRequestAuthor, () => pullRequestAuthorLogin(node.author));
-    const connection = node.reviewThreads;
-    nodes.push(...connection.nodes);
-    const nextCursor = yield* nextReviewThreadsCursor(connection.pageInfo);
-    if (O.isNone(nextCursor)) return { pullRequestAuthor, nodes };
-    cursor = nextCursor;
-  }
 });
 
 /**
@@ -447,8 +303,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 
   const [checkRows, requiredCheckRows] = yield* Effect.all([checksRead(context, false), checksRead(context, true)]);
 
-  const threadPages = yield* reviewThreadsRead(context, view.id);
-  const threadStates = A.map(threadPages.nodes, (node) => watchThreadState(node, threadPages.pullRequestAuthor));
+  const threadStates = yield* reviewThreadStatesRead(view.id).pipe(provideYeetGhLogin(context.repoRoot));
 
   const closeoutPath = yield* runArtifactPathForContext(context, "pr-closeout.json");
   const fs = yield* FileSystem.FileSystem;

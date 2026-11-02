@@ -65,6 +65,7 @@ import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
@@ -1072,6 +1073,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("recovers the ready read through REST while GraphQL is rate limited", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
       );
@@ -1092,6 +1094,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("keeps an unread REST review decision unknown and blocks merge readiness", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound))
       );
@@ -1112,6 +1115,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("reports absence only after REST successfully confirms no branch PR", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("[]"))
       );
@@ -1135,6 +1139,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("retains the read failure when the REST lookup fails too", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner("REST unavailable", 1))
       );
@@ -1158,6 +1163,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("blocks when the recovered PR has closed since the branch lookup", () =>
     Effect.gen(function* () {
       const snapshot = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[]", "CLOSED"))
       );
@@ -1175,6 +1181,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
   it.effect("refuses to treat existing review comments as resolved threads", () =>
     Effect.gen(function* () {
       const failure = yield* collectYeetStatus(context, true).pipe(
+        provideLegacyGh,
         Effect.provideServiceEffect(Git, Git.make),
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, fallbackRunner(restFound, 0, "[{}]")),
         Effect.flip
@@ -1198,6 +1205,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
             : base.spawn(command);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
@@ -1225,6 +1233,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
             : base.spawn(command);
         });
         const failure = yield* collectYeetStatus(context, true).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner),
           Effect.flip
@@ -1250,6 +1259,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
           return base.spawn(command);
         });
         const snapshot = yield* collectYeetStatus(context, true).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         );
@@ -1299,6 +1309,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
           recordInherited: () => Effect.void,
           markReady: () => Effect.void,
         }).pipe(
+          provideLegacyGh,
           Effect.provideServiceEffect(Git, Git.make),
           Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, runner)
         ))._tag

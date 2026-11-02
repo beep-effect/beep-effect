@@ -31,19 +31,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W2 in review (this PR). The G7 dirty-axis readers run through `Git`: `internal/repo-run/ChangedFiles.ts`
-(`unstagedChanges` / `stagedChanges` / `untrackedFiles` with `diffFilter`, `noRenames` and pathspecs; `changedFiles`
-for the base range, through the new `collectBaseRangeChangedFiles`), Yeet's `lockfileChangedSinceBase`, the `status`
-probes of `ResidueReap`, `TmpfsReap` and the fleet mirror, the Worktree listing (`Git.worktreeList` mapped by
-`worktreeListEntriesFromGit`; `parseWorktreePorcelain` and `parseStatusPorcelainZ` retired), Fleet's origin and
-common-dir probes, and the one-liners of `Codex/Security`, `Session/SessionLedger`, `Runners`, `Ci/CiLane`,
-`Quality/ChangesetStatus`, `PackageVerify`, `CoverageRegression` and `CoverageArtifacts` (SPEC D-10). The Knowledge
-path-removal log (#110) stays: `Git.log` has no starting ref. W2b carries the Yeet `Settle`/`ProofShadow` and
-probe-seam git halves, `Library.inventory.ts` and ai-metrics #107. W0 merged (#2514); the W1 kit merged (#2522);
-W1a (#2539) and W1b (#2546) in review. Next: W2b, then W3.
+P1 Implement, W4 sites in review (this PR). The Yeet review-thread reads and resolutions of `Status`, `WatchMode`,
+`MergeGate`, `Reply`, `closeout/GhCollect` and `GhOps` run on the kit's `ReviewThread`, and the merge gate's and squash
+reader's REST calls on `GithubRest`, `GitHubRepository` and `GitHubClient`, built once per command surface as the
+operator's gh login (SPEC D-13). `GhCall.ts` is deleted, `GithubGraphql.ts` keeps only the ready-flip document and
+`GhCommand.ts` only `ghOutput`. The current-branch `gh pr view` / `gh pr checks` reads stay (no kit member);
+`PullRequest`, `ProvenanceFooter`, `ReviewWindow`, `Merge` and `Monitor*` are deferred behind their capture seams.
+Earlier waves: W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546), the W4 kit (#2600) merged; W2b (#2606) and
+W3 (#2614) in review. Next: W5.
 
 ## Latest Evidence
 
+- 2026-11-02 W4 sites: `research/review-thread-differential-w4.json` (40 scenarios, 29 same, 11 classified, 0
+  unclassified); repo-cli typecheck clean, every `yeet-*` and `shared-internals` suite green (62 files, 1577 tests),
+  the `@beep/github` `ReviewThread` suite green with the cursor hardening.
 - 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
   repo-cli typecheck clean, the worktree, fleet, residue-reap, tmpfs-reap, quality-tasks, docgen, session-ledger,
   codex-security, package-verify, ci-lane, changeset-status, runners-bake, coverage-artifacts and step-git-exec
