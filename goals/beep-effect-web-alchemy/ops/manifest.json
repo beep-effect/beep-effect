@@ -6,7 +6,7 @@
     "title": "beep-effect.com web app on Alchemy",
     "status": "active",
     "created": "2026-10-28",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/beep-effect-web-alchemy",
@@ -18,7 +18,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PR #2444 merged over pending required checks (relaxed gate), so final PR #2447 re-finals the completion through the strict gate.",
+    "statement": "Implementation PR #2435 merged as 441c6d94de and its merge push deployed prod from CI (run 41244684210: apex 200, www 301). Closeout PRs #2444 and #2447 merged with required checks pending, so final PR #2523 closes the goal through a verdict-backed strict merge.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -31,6 +31,10 @@
       },
       {
         "number": 2447,
+        "role": "supporting"
+      },
+      {
+        "number": 2523,
         "role": "final"
       }
     ],
@@ -42,7 +46,7 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-5de23d4c0df7/verdict.json",
+        "ref": ".beep/yeet/runs/docs_beep-effect-web-alchemy-refinal-2-34f7d373ffcc/verdict.json",
         "gating": true
       }
     ]
@@ -101,7 +105,7 @@
     {
       "id": "P5",
       "name": "Close",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -118,6 +122,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2447
+    "finalPullRequest": 2523
   }
 }

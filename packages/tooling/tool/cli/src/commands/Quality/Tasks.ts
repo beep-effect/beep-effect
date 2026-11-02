@@ -2912,11 +2912,12 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
     flakeQuarantine: "ts2589-no-location",
   }),
   // `tsgo-rules` keeps its single owner in lint-policy (`lint:tsgo-rules`);
-  // standalone rule diagnostics have their own parallel heavy lane; Check owns test-file types and the smoke canary.
-  ...optionalQualityTaskStep({
-    enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
-  }),
+  // standalone rule diagnostics have their own parallel heavy lane. Test-file
+  // typecheck (`quality test-tsgo`) also has one owner, the lint-policy plan:
+  // its Turbo task is uncached, so a second copy here made `audit packages`
+  // and a check-then-lint session walk the test files twice (perf audit G8,
+  // 2026-11-02). Check owns only the smoke canary; run
+  // `bun run beep quality test-tsgo` directly for a check-only session.
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "quality:tsgo-smoke", ["quality", "tsgo-smoke"]),

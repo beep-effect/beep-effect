@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "observation-source-applicability/v1",
+  "comparisonHead": "d240a7da2ad3ae321e575e89869b0c4c7d68a888",
+  "integratedMain": "8d5745e33e2709e809d949c8eb9f71aaf9c4e5df",
+  "originalPackageExecutionHead": "e2d941a0e9046669fa3b5bd72b90127ad83a75b2",
+  "selectedPackageInputs": 249,
+  "identicalPackageInputs": 244,
+  "scriptOnlyManifestDeltas": 4,
+  "additionalTestFile": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+  "additionalTestScope": "One added import and appended diagnostic cases; original test bodies unchanged. The original44-test execution does not include additions.",
+  "preparationInputs": {
+    "selected": 84,
+    "identical": 84
+  },
+  "disposableInputs": {
+    "selected": 90,
+    "identical": 88
+  },
+  "liveInputs": {
+    "selected": 89,
+    "identical": 87
+  },
+  "stageDeltas": "Same two explicit-pin guard helpers independently reviewed in explicit-pin-proof-applicability-20261102.json.",
+  "newTestExecution": false,
+  "completeTransitiveClosure": false,
+  "requiredHostedChecks": "Final-head hosted tests, quality and review remain mandatory. Local final-check gate families explicitly skipped under operator hosted-first instruction, not passing local proof.",
+  "goalComplete": false,
+  "recoveryHoldReleased": false
+}

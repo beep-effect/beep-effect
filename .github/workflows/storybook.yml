@@ -67,6 +67,7 @@ jobs:
           cache-turbo: "true"
           cache-write: "false"
           free-disk: "true"
+          free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           turbo-api: ${{ vars.TURBO_API }}
           turbo-team: ${{ vars.TURBO_TEAM }}
