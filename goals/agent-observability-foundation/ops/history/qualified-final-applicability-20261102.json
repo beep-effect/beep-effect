@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "observation-source-applicability/v1",
+  "comparisonHead": "4587dc63b572e2c2262753697fc4fa5f49ea9bc9",
+  "originalPackageExecutionHead": "e2d941a0e9046669fa3b5bd72b90127ad83a75b2",
+  "selectedPackageInputCount": 249,
+  "identicalPackageInputCount": 244,
+  "manifestDeltas": [
+    {
+      "path": "package.json",
+      "changedScriptKeys": [
+        "lint:deprecated-imports",
+        "lint:policy-fingerprint:lint-schema-catalog",
+        "lint:schema-catalog"
+      ],
+      "nonScriptJsonIdentical": true,
+      "historicalDirectTestCommandsInvokeChangedKeys": false
+    },
+    {
+      "path": "packages/drivers/ai-provider-cli/package.json",
+      "changedScriptKeys": ["audit", "beep:audit"],
+      "nonScriptJsonIdentical": true,
+      "historicalDirectTestCommandsInvokeChangedKeys": false
+    },
+    {
+      "path": "packages/drivers/phoenix/package.json",
+      "changedScriptKeys": ["audit", "beep:audit"],
+      "nonScriptJsonIdentical": true,
+      "historicalDirectTestCommandsInvokeChangedKeys": false
+    },
+    {
+      "path": "packages/tooling/library/ai-metrics/package.json",
+      "changedScriptKeys": ["audit", "beep:audit"],
+      "nonScriptJsonIdentical": true,
+      "historicalDirectTestCommandsInvokeChangedKeys": false
+    }
+  ],
+  "additionalTestFile": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+  "currentHarnessLedgerProof": {
+    "head": "4afad5c6546b0be330ab89937aadd23831511673",
+    "workflowRun": 41435295021,
+    "jobId": 125244129446,
+    "passed": 51,
+    "scope": "Historical hosted execution, not a fresh finalPR2578 result."
+  },
+  "preparationInputs": {
+    "selected": 84,
+    "exact": 84
+  },
+  "disposableInputs": {
+    "selected": 90,
+    "exact": 88
+  },
+  "liveInputs": {
+    "selected": 89,
+    "exact": 87
+  },
+  "stageDelta": "The same two explicit-pin guard helpers and reviewed explicit-success-path applicability bridge. Original stage receipts and source hashes remain unchanged.",
+  "newBackendExecution": false,
+  "completeTransitiveClosure": false,
+  "goalComplete": false,
+  "requiresFinalHeadHostedReadinessAndCanonicalCompletion": true
+}

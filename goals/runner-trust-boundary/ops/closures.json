@@ -16,7 +16,7 @@
       },
       "openOutsideAllowlist": 0
     },
-    "exceptions": "SPEC.md exception ledger: E1 post-release JIT replay untested; E2 four IDs closed on 2026-08-24 before the P4 re-proof."
+    "exceptions": "SPEC.md exception ledger: E1 post-release JIT replay, confirmed for the SIGKILL stop and accepted as a residual by the operator on 2026-11-02 (runs 41422745680, 41429667965, 41452707373); E2 four IDs closed on 2026-08-24 before the P4 re-proof."
   },
   "closures": [
     {
