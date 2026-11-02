@@ -394,6 +394,7 @@
         "packages/ontology/server/package.json",
         "packages/ontology/ui/package.json",
         "packages/ontology/use-cases/package.json",
+        "packages/party/domain/package.json",
         "packages/shared/domain/package.json",
         "packages/shared/tables/package.json",
         "packages/shared/use-cases/package.json",
