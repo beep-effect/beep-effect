@@ -38,6 +38,7 @@ export {
   captureGitKitExit,
   currentCommitSha,
   currentYeetBranch,
+  GitKitExit,
   lockfileChangedSinceBase,
   optionFromNonEmpty,
   PATIENT_GIT_OPTIONS,
