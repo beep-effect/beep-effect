@@ -22,6 +22,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -38,14 +39,14 @@ import type { RepoWorkspacesError } from "../RepoWorkspaces.ts";
 const $I = $RepoCliId.create("internal/cli/ShardScope");
 
 /**
- * One owning package of a scoped run with the source globs that feed its shard.
+ * One owning package of a scoped run and its workspace directory.
  *
  * **Example** (Describe a scoped owner)
  *
  * ```ts
  * import { ShardScopeOwner } from "@beep/repo-cli/test/Cli"
  *
- * const owner = ShardScopeOwner.make({ owner: "@beep/git", globs: ["packages/drivers/git/**\/*.{ts,tsx}"] })
+ * const owner = ShardScopeOwner.make({ owner: "@beep/git", directory: "packages/drivers/git" })
  * console.log(owner.owner) // "@beep/git"
  * ```
  *
@@ -55,12 +56,10 @@ const $I = $RepoCliId.create("internal/cli/ShardScope");
 export class ShardScopeOwner extends S.Opaque<ShardScopeOwner, { readonly brand: unique symbol }>()(
   S.Struct({
     owner: S.String.annotateKey({ description: "Scoped package name that owns the shard." }),
-    globs: S.Array(S.String).annotateKey({
-      description: "Repo-relative source globs that feed this owner's shard.",
-    }),
+    directory: S.String.annotateKey({ description: "Repo-relative workspace directory of the owner." }),
   }).pipe(
     $I.annoteSchema("ShardScopeOwner", {
-      description: "One owning package of a scoped catalog run with the source globs that feed its shard.",
+      description: "One owning package of a scoped catalog run and its workspace directory.",
     })
   )
 ) {}
@@ -70,9 +69,9 @@ export class ShardScopeOwner extends S.Opaque<ShardScopeOwner, { readonly brand:
  *
  * **Details**
  *
- * `skipped` lists the input paths whose owner has no source directory (the
- * `@beep/root` fallback, for example); the hosted and cheap-gate checks stay
- * authoritative for those.
+ * `skipped` lists the input paths whose owner is not a workspace member inside
+ * the repository (the `@beep/root` fallback, for example); the cheap-gate and
+ * hosted checks stay authoritative for those.
  *
  * **Example** (Inspect an empty scope)
  *
@@ -90,7 +89,7 @@ export class ShardScope extends S.Opaque<ShardScope, { readonly brand: unique sy
   S.Struct({
     owners: S.Array(ShardScopeOwner).annotateKey({ description: "Owners to regenerate, sorted by package name." }),
     skipped: S.Array(S.String).annotateKey({
-      description: "Input paths whose owner has no source directory and so no shard to regenerate.",
+      description: "Input paths whose owner is not a workspace member and so has no shard to regenerate.",
     }),
   }).pipe(
     $I.annoteSchema("ShardScope", {
@@ -99,20 +98,6 @@ export class ShardScope extends S.Opaque<ShardScope, { readonly brand: unique sy
   )
 ) {}
 
-// Inputs of `resolveShardScope`: two members are functions, so this is a call contract, not data.
-type ShardScopeInput = {
-  /** Owners outside the workspace list that still own a shard, with their fixed globs. */
-  readonly fallbackOwners?: ReadonlyArray<ShardScopeOwner> | undefined;
-  /** Builds the source globs of one owner from its repo-relative directory. */
-  readonly globsForDirectory: (directory: string) => ReadonlyArray<string>;
-  /** Maps an absolute path to its owning package name. */
-  readonly ownerOf: (absolutePath: string) => string;
-  /** Paths (absolute or repo-relative) whose owners' shards should be regenerated. */
-  readonly paths: ReadonlyArray<string>;
-  /** Absolute repository root; relative `paths` resolve against it. */
-  readonly repoRoot: string;
-};
-
 const byOwner: Order.Order<ShardScopeOwner> = Order.mapInput(Order.String, (owner: ShardScopeOwner) => owner.owner);
 
 /**
@@ -120,13 +105,13 @@ const byOwner: Order.Order<ShardScopeOwner> = Order.mapInput(Order.String, (owne
  *
  * **Details**
  *
- * Every path is resolved against the repository root and mapped to its owner.
- * A workspace owner's globs come from `globsForDirectory` applied to its
- * repo-relative directory, so a scoped scan sees exactly the files a full scan
- * attributes to that owner. Fallback owners keep the globs they were given.
- * Paths whose owner is neither are reported in `skipped`. Deleted paths
- * resolve too, because ownership is a prefix match that never touches the
- * filesystem.
+ * Every path is resolved against the repository root and mapped to its owner
+ * with `ownerOf`, which must be the resolver the full scan uses. Paths whose
+ * owner is not a workspace member inside the repository are reported in
+ * `skipped`. Deleted paths resolve too, because ownership is a prefix match
+ * that never touches the filesystem. A scoped writer still globs with the full
+ * scan's globs and keeps only the files {@link shardScopeIncludes} accepts, so
+ * it parses exactly the files the full scan attributes to these owners.
  *
  * **Example** (Wrap the resolver Effect)
  *
@@ -138,31 +123,31 @@ const byOwner: Order.Order<ShardScopeOwner> = Order.mapInput(Order.String, (owne
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @param input - Repository root, paths, owner resolver and glob builder.
+ * @param repoRoot - Absolute repository root; relative `paths` resolve against it.
+ * @param paths - Paths (absolute or repo-relative) whose owners' shards should be regenerated.
+ * @param ownerOf - Maps an absolute path to its owning package name.
  * @returns The sorted owners to regenerate and the paths without a shard.
  * @category utilities
  * @since 0.0.0
  */
 export const resolveShardScope = Effect.fn("ShardScope.resolve")(function* (
-  input: ShardScopeInput
+  repoRoot: string,
+  paths: ReadonlyArray<string>,
+  ownerOf: (absolutePath: string) => string
 ): Effect.fn.Return<ShardScope, RepoWorkspacesError | PlatformError.PlatformError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = toPosixPath(yield* fs.realPath(input.repoRoot));
-  const workspaces = yield* workspaceDirectories(repoRoot);
-  const fallbacks = input.fallbackOwners ?? A.empty<ShardScopeOwner>();
+  const root = toPosixPath(yield* fs.realPath(repoRoot));
+  const workspaces = yield* workspaceDirectories(root);
   const resolveOwner = (candidate: string): O.Option<ShardScopeOwner> => {
-    const owner = input.ownerOf(path.resolve(repoRoot, candidate));
-    const directory = HashMap.get(workspaces, owner).pipe(
-      O.map((absolute) => toPosixPath(path.relative(repoRoot, absolute))),
-      O.filter((relative) => !Str.startsWith("..")(relative))
+    const owner = ownerOf(path.resolve(root, candidate));
+    return HashMap.get(workspaces, owner).pipe(
+      O.map((absolute) => toPosixPath(path.relative(root, absolute))),
+      O.filter((relative) => !Str.startsWith("..")(relative)),
+      O.map((directory) => ShardScopeOwner.make({ owner, directory }))
     );
-    return O.match(directory, {
-      onSome: (relative) => O.some(ShardScopeOwner.make({ owner, globs: input.globsForDirectory(relative) })),
-      onNone: () => A.findFirst(fallbacks, (fallback) => fallback.owner === owner),
-    });
   };
-  const resolved = A.map(input.paths, (candidate) => [candidate, resolveOwner(candidate)] as const);
+  const resolved = A.map(paths, (candidate) => [candidate, resolveOwner(candidate)] as const);
   const owners = A.dedupeWith(
     A.getSomes(A.map(resolved, ([, owner]) => owner)),
     (left, right) => left.owner === right.owner
@@ -173,6 +158,43 @@ export const resolveShardScope = Effect.fn("ShardScope.resolve")(function* (
       O.isNone(owner) ? Result.succeed(candidate) : Result.failVoid
     ),
   });
+});
+
+/**
+ * Whether a scanned file belongs to one of a scope's owners.
+ *
+ * **Details**
+ *
+ * Pass the same `ownerOf` the full scan uses. Filtering the full scan's file
+ * list with this predicate keeps a scoped shard byte-identical to the full
+ * run's, including for owners whose directory holds files the full scan's
+ * globs leave out, and for nested workspaces.
+ *
+ * **Example** (Filter scanned files)
+ *
+ * ```ts
+ * import { ShardScope, ShardScopeOwner, shardScopeIncludes } from "@beep/repo-cli/test/Cli"
+ *
+ * const scope = ShardScope.make({
+ *   owners: [ShardScopeOwner.make({ owner: "@beep/git", directory: "packages/drivers/git" })],
+ *   skipped: []
+ * })
+ * const includes = shardScopeIncludes(scope, () => "@beep/git")
+ * console.log(includes("/repo/packages/drivers/git/src/Git.ts")) // true
+ * ```
+ *
+ * @param scope - Resolved scope.
+ * @param ownerOf - Maps an absolute path to its owning package name.
+ * @returns A predicate over absolute file paths.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const shardScopeIncludes: {
+  (ownerOf: (absolutePath: string) => string): (scope: ShardScope) => (absolutePath: string) => boolean;
+  (scope: ShardScope, ownerOf: (absolutePath: string) => string): (absolutePath: string) => boolean;
+} = dual(2, (scope: ShardScope, ownerOf: (absolutePath: string) => string) => {
+  const owners = A.map(scope.owners, (owner) => owner.owner);
+  return (absolutePath: string): boolean => A.contains(owners, ownerOf(absolutePath));
 });
 
 const INDEX_LOCK_RETRIES = 30;

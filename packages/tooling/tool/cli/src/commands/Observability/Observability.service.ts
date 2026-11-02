@@ -25,7 +25,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Project } from "ts-morph";
-import { resolveShardScope } from "../../internal/cli/ShardScope.ts";
+import { resolveShardScope, shardScopeIncludes } from "../../internal/cli/ShardScope.ts";
 import { createWorkspaceOwnerResolver } from "../../internal/tsmorph/index.ts";
 import { ObservabilityCommandError } from "./Observability.errors.ts";
 import { combineHarvests, harvestSourceFile } from "./Observability.harvest.ts";
@@ -120,10 +120,16 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     Effect.mapError(failure(repoRoot, "Failed to resolve workspace packages."))
   );
 
-  const harvestGlobs = Effect.fn("InstrumentationCatalog.harvestGlobs")(function* (globs: ReadonlyArray<string>) {
+  // Both loaders glob with the full scan's globs; a scoped run narrows the matched files with
+  // `includes`, so a scoped shard is parsed from exactly the files the full scan attributes to it.
+  const harvestFiles = Effect.fn("InstrumentationCatalog.harvestFiles")(function* (
+    includes: (absolutePath: string) => boolean
+  ) {
     const files = yield* fsUtils
-      .globFiles(globs, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
-      .pipe(Effect.mapError(failure(repoRoot, "Failed to list source files.")));
+      .globFiles(SOURCE_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
+      .pipe(
+        Effect.mapBoth({ onSuccess: A.filter(includes), onFailure: failure(repoRoot, "Failed to list source files.") })
+      );
     const project = new Project({ skipAddingFilesFromTsConfig: true });
     const harvests = yield* Effect.forEach(
       A.filter(A.sort(files, Str.Order), (file) => !isExcludedTypeScriptSourcePath(relative(file))),
@@ -148,14 +154,21 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     return combineHarvests(harvests);
   });
 
-  const harvest = harvestGlobs(SOURCE_GLOBS).pipe(Effect.withSpan("InstrumentationCatalog.harvest"));
+  const everyFile = (): boolean => true;
 
-  const loadDeclarationsGlobs = Effect.fn("InstrumentationCatalog.loadDeclarationsGlobs")(function* (
-    globs: ReadonlyArray<string>
+  const harvest = harvestFiles(everyFile).pipe(Effect.withSpan("InstrumentationCatalog.harvest"));
+
+  const loadDeclarationsFiles = Effect.fn("InstrumentationCatalog.loadDeclarationsFiles")(function* (
+    includes: (absolutePath: string) => boolean
   ) {
     const files = yield* fsUtils
-      .globFiles(globs, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
-      .pipe(Effect.mapError(failure(repoRoot, "Failed to list instruments files.")));
+      .globFiles(DECLARATION_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
+      .pipe(
+        Effect.mapBoth({
+          onSuccess: A.filter(includes),
+          onFailure: failure(repoRoot, "Failed to list instruments files."),
+        })
+      );
     return yield* Effect.forEach(A.sort(files, Str.Order), (file) =>
       Effect.tryPromise({
         try: (): Promise<Record<string, unknown>> => import(file),
@@ -176,7 +189,7 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     );
   });
 
-  const loadDeclarations = loadDeclarationsGlobs(DECLARATION_GLOBS).pipe(
+  const loadDeclarations = loadDeclarationsFiles(everyFile).pipe(
     Effect.withSpan("InstrumentationCatalog.loadDeclarations")
   );
 
@@ -231,22 +244,14 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
   // the standard's generated section and orphan retirement need the whole
   // catalog and are left to the full run.
   const resolveScope = Effect.fn("InstrumentationCatalog.resolveScope")(function* (paths: ReadonlyArray<string>) {
-    const scope = yield* resolveShardScope({
-      repoRoot,
-      paths,
-      ownerOf,
-      globsForDirectory: (directory) => [`${directory}/src/**/*.{ts,tsx}`],
-    }).pipe(
+    const scope = yield* resolveShardScope(repoRoot, paths, ownerOf).pipe(
       Effect.mapError(failure(repoRoot, "Failed to resolve the owning packages of the scoped paths.")),
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path)
     );
     return {
       owners: A.getSomes(A.map(scope.owners, (owner) => decodePackageName(owner.owner))),
-      sourceGlobs: A.flatMap(scope.owners, (owner) => owner.globs),
-      declarationGlobs: A.flatMap(scope.owners, (owner) =>
-        A.map(owner.globs, (glob) => Str.replace("*.{ts,tsx}", "*.instruments.ts")(glob))
-      ),
+      includes: shardScopeIncludes(scope, ownerOf),
     };
   });
 
@@ -258,11 +263,11 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     const scoped = O.isSome(scope) ? O.some(yield* resolveScope(scope.value)) : O.none();
     const harvested = yield* O.match(scoped, {
       onNone: () => harvest,
-      onSome: ({ sourceGlobs }) => harvestGlobs(sourceGlobs),
+      onSome: ({ includes }) => harvestFiles(includes),
     });
     const files = yield* O.match(scoped, {
       onNone: () => loadDeclarations,
-      onSome: ({ declarationGlobs }) => loadDeclarationsGlobs(declarationGlobs),
+      onSome: ({ includes }) => loadDeclarationsFiles(includes),
     });
     const build = buildCatalog(
       harvested,

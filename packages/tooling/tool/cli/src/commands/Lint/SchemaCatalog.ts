@@ -28,7 +28,7 @@ import * as SchemaGetter from "effect/SchemaGetter";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { optionalProp } from "../../internal/cli/OptionRecord.ts";
-import { resolveShardScope, ShardScopeOwner, stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
+import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "../../internal/cli/ShardScope.ts";
 import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,
@@ -728,9 +728,10 @@ const collectCatalogEntriesFromSourceFile = (
  *
  * **Details**
  *
- * `globs` narrows the scan to a subset of the schema-first source globs; a
- * scoped run passes the owning packages' directories so the document holds
- * exactly their entries. Omitted, the whole scan scope is read.
+ * `includes` narrows the scan to the files it accepts, out of the files the
+ * schema-first globs match. A scoped run passes the owning packages' filter
+ * (`shardScopeIncludes`), so the document holds exactly the entries the full
+ * scan attributes to them. Omitted, every matched file is read.
  *
  * **Example** (Wrap document generator Effect)
  *
@@ -745,7 +746,7 @@ const collectCatalogEntriesFromSourceFile = (
  * @since 0.0.0
  */
 export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDocument")(function* (
-  globs: ReadonlyArray<string> = SchemaFirstIncludedGlobs
+  includes: (absolutePath: string) => boolean = () => true
 ) {
   return yield* Effect.gen(function* () {
     const path = yield* Path.Path;
@@ -755,13 +756,16 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
     // Enumerate through FsUtils so the scan is anchored at the repo root even
     // when the command runs from a workspace subdirectory (ts-morph resolves
     // relative globs against the process cwd).
-    const sourcePaths = yield* fsUtils.globFiles(
-      globs,
-      GlobOptions.make({
-        absolute: true,
-        cwd: repoRoot,
-        ignore: "**/docs/**",
-      })
+    const sourcePaths = A.filter(
+      yield* fsUtils.globFiles(
+        SchemaFirstIncludedGlobs,
+        GlobOptions.make({
+          absolute: true,
+          cwd: repoRoot,
+          ignore: "**/docs/**",
+        })
+      ),
+      includes
     );
     const project = new Project({
       skipAddingFilesFromTsConfig: true,
@@ -1005,16 +1009,6 @@ const finishSchemaCatalogRun = Effect.fn("SchemaCatalog.finishRun")(function* (
   return summary;
 });
 
-// The `infra/` tree is not a workspace member, so the owner resolver's prefix
-// fallback names it; its scoped globs are the schema-first ones verbatim so a
-// scoped shard matches the full scan byte for byte.
-const INFRA_SCOPE_OWNER = ShardScopeOwner.make({
-  owner: "@beep/infra",
-  globs: A.filter(SchemaFirstIncludedGlobs, Str.startsWith("infra/")),
-});
-
-const scopedGlobsForDirectory = (directory: string): ReadonlyArray<string> => [`${directory}/**/*.{ts,tsx}`];
-
 /**
  * Regenerate only the shards owned by the packages that own `paths`.
  *
@@ -1032,19 +1026,13 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
   repoRoot: string
 ) {
   const ownerResolver = yield* makeSchemaFirstOwnerResolver(repoRoot);
-  const scope = yield* resolveShardScope({
-    repoRoot,
-    paths: options.paths,
-    ownerOf: ownerResolver,
-    globsForDirectory: scopedGlobsForDirectory,
-    fallbackOwners: [INFRA_SCOPE_OWNER],
-  });
+  const scope = yield* resolveShardScope(repoRoot, options.paths, ownerResolver);
   const owners = A.map(scope.owners, (owner) => owner.owner);
   if (A.isReadonlyArrayEmpty(owners)) {
     yield* Console.log(`[schema-catalog] no owning package for the given paths; nothing to regenerate`);
     return SchemaCatalogSummary.make({ entries: 0, shards: 0, wroteCatalog: options.write, changed: [] });
   }
-  const document = yield* generateSchemaCatalogDocument(A.flatMap(scope.owners, (owner) => owner.globs));
+  const document = yield* generateSchemaCatalogDocument(shardScopeIncludes(scope, ownerResolver));
   const shards = A.filter(yield* generateSchemaCatalogShards(document), (shard) =>
     A.some(owners, (owner) => shard.path === schemaCatalogShardPath(owner))
   );
