@@ -10,11 +10,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (shared goal completion receipts, feat/shared-completion-receipts)",
-      "reason": "Record the repo-cli source paths of the shared completion receipt store added to the //#lint:policy-fingerprint:goals-doctor and //#lint:policy-fingerprint:knowledge seal inputs after merging origin/main (3ceb6833db); commands, outputs and cache settings are unchanged and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W3 kit, feat/gh-git-w3-github-kit)",
+      "reason": "Record the W3 kit root re-seal: GitHubApp.ts imports TokenPermissions.ts for assertPermissions, so that module enters the goals-doctor, knowledge and quality policy closures; no manifest or dependency changes; no qualification is granted.",
       "basis": {
-        "path": "goals/repository-simplification-residue/research/cache-baseline-review-shared-completion-receipts.md",
-        "sha256": "1580e7c20144f469acf556ac020259da947ad85b806e0943e4e8411a1a5d95c2"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w3-kit.md",
+        "sha256": "58cc1d9ee7a6c287e1129676ed3af4ad9b70a6825554d766b77c8b6656e0d737"
       }
     },
     "@beep/acp": {
@@ -3330,6 +3330,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -3881,6 +3882,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -6195,6 +6197,7 @@
             "packages/drivers/github/src/GraphQL.ts",
             "packages/drivers/github/src/Repo.ts",
             "packages/drivers/github/src/Resilience.ts",
+            "packages/drivers/github/src/TokenPermissions.ts",
             "packages/drivers/github/src/internal/headers.ts",
             "packages/drivers/github/src/internal/ids.ts",
             "packages/drivers/github/src/internal/octokit.ts",
@@ -122601,7 +122604,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "06e2768d54b8b9dc453fdbb4d1d74a049eea999c8e23c8ae5f6886bc0a4fe645"
+        "sha256": "0d1101b10d5d81930b7fb6f315d0e6f219cfa849814fff4aec3b1ef467e5cf9e"
       }
     ]
   }
