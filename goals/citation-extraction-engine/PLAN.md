@@ -240,6 +240,14 @@ counters. Public Layer composition and the additional regex concurrency bound
 remain implementation obligations; hosted full-corpus qualification is pending
 for this changed head.
 
+The [regex admission and compile survey](./history/evidence/2026-11-02-regex-admission-compile-survey.md)
+now enforces the separate regex concurrency bound atomically with total native
+capacity. All 39 focused tests pass. A source-bound compile-only survey covers
+every captured extractor on both installed runtimes: renaming groups alone
+rejects 10,926 instances; the lexical syntax candidate compiles all 13,610.
+These results do not qualify matching, Unicode semantics, source families or
+safety scaling. The production translator and regex worker remain open.
+
 The [admitted named-cleaner replay](./history/evidence/2026-11-02-admitted-named-cleaners.md)
 now matches all 600 non-HTML named/official outcomes in the original 1,155-case
 cleaner corpus, including 599 result/identity observations and the invalid-name

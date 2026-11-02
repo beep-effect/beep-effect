@@ -141,7 +141,13 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           expect(totals.failures).toBe(482);
           expect(totals.children).toBe(1025);
           expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, closed: false });
-          expect(yield* nativeAdmission.snapshot).toEqual({ active: 0, queued: 0, quarantined: 0, closed: false });
+          expect(yield* nativeAdmission.snapshot).toEqual({
+            active: 0,
+            regexActive: 0,
+            queued: 0,
+            quarantined: 0,
+            closed: false,
+          });
         }),
       { timeout: 1_200_000 }
     );

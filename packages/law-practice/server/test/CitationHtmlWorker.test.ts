@@ -315,14 +315,26 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         yield* timer.trigger;
         expect(yield* Fiber.join(firstCall).pipe(Effect.flip)).toMatchObject({ limit: "cleanupDeadline" });
         expect(yield* Fiber.join(secondCall).pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
-        expect(yield* admission.snapshot).toEqual({ active: 1, queued: 0, quarantined: 1, closed: false });
+        expect(yield* admission.snapshot).toEqual({
+          active: 1,
+          regexActive: 0,
+          queued: 0,
+          quarantined: 1,
+          closed: false,
+        });
         expect(yield* second.clean("replacement").pipe(Effect.flip)).toMatchObject({ reason: "quarantined" });
         expect(spawned).toBe(1);
         yield* Deferred.succeed(acknowledgement, undefined);
         yield* waitFor(admission.snapshot.pipe(Effect.map((state) => state.active === 0)));
         const recovered = yield* admission.acquire("clean");
         yield* recovered.release;
-        expect(yield* admission.snapshot).toEqual({ active: 0, queued: 0, quarantined: 0, closed: false });
+        expect(yield* admission.snapshot).toEqual({
+          active: 0,
+          regexActive: 0,
+          queued: 0,
+          quarantined: 0,
+          closed: false,
+        });
         expect((yield* first.snapshot).processes).toBe(0);
         expect((yield* second.snapshot).active).toBe(0);
       }),

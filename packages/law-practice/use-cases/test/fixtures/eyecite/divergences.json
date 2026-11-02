@@ -433,7 +433,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "50fcad9241fa783372f46bc580ae43c9f514cd434a9d4a4ff4f48d7cdaad4835"
+          "sha256": "79ec065eace443462bd98806169e3246037f8a010ff32a2bee0e8384dd149845"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-owned-html-worker.md",
@@ -697,7 +697,7 @@
         },
         {
           "path": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-          "sha256": "e58c6a8bfeab21c30ecac0d0303ee424678c675098196824e548f79fdffb8a42"
+          "sha256": "1614549fc72c662dab7bcd60d95bd8b86c9ff745022d0ed4569f78df4fd07c51"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-native-html-transport.md",
@@ -822,15 +822,15 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts",
-          "sha256": "4d74f2cca9bf755f0c1cb3950b9eed4214daaead72a0009bec9c55c64a33d188"
+          "sha256": "37e17cd46dd1a0633cb281f85ed3a513a190083afbd84f6de8038456cf5a035e"
         },
         {
           "path": "packages/law-practice/server/test/CitationNativeAdmission.test.ts",
-          "sha256": "2a6d308f8d9ea4070959074363c4b1d7d2c6730dccbff57c2c6f574e5c6df24d"
+          "sha256": "0145ad6257692e4d19fff02b2f45754bb41045f259e8cbf183873ebb7071655b"
         },
         {
           "path": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-          "sha256": "50fcad9241fa783372f46bc580ae43c9f514cd434a9d4a4ff4f48d7cdaad4835"
+          "sha256": "79ec065eace443462bd98806169e3246037f8a010ff32a2bee0e8384dd149845"
         }
       ],
       "workflowState": "audit",

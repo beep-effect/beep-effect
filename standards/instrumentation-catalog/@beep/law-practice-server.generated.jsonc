@@ -24,6 +24,8 @@
     {"name":"CandorRecord.recordEvent","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"CandorRecord.recordSubmissionFact","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.acquireNativeProcess","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.acquireNativeProcessKind","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.acquireRegexProcess","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.admitOperation","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.allocateCleanerText","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.appendCleanedRange","owner":"@beep/law-practice-server","family":"slice","conforms":true},
