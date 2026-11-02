@@ -43,6 +43,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
+import { legacyGhGithubLayer } from "./support/YeetGithub.ts";
 
 const isStoppedPollMessage = S.is(
   S.String.check(
@@ -755,8 +756,11 @@ const statusCommandStub = (commandLine: string): CommandStub =>
 describe("yeet status comment replay", () => {
   it.layer(
     Layer.provideMerge(
-      Git.layer,
-      Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(statusCommandStub))
+      legacyGhGithubLayer,
+      Layer.provideMerge(
+        Git.layer,
+        Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(statusCommandStub))
+      )
     ),
     {
       timeout: "30 seconds",

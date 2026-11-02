@@ -183,6 +183,11 @@ export declare namespace RetryableFailure {
  * means a transport failure or a rate limit. A 404, a validation rejection and
  * an authorization failure fail on the first attempt.
  *
+ * A write GitHub may already have applied (a REST `POST` or `PATCH`, or a
+ * GraphQL mutation) is retried only after a rate limit, which GitHub answers
+ * before doing anything. An ambiguous transport failure on such a write fails
+ * at once, so a lost response never posts a second comment or reply.
+ *
  * **Example** (Configure retry limits for a token-authenticated client)
  *
  * ```ts

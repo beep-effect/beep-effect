@@ -413,3 +413,84 @@ describe("transport cancellation", () => {
     );
   }
 });
+
+// A write GitHub may already have applied is not repeated on an ambiguous failure: the 502 stands for a
+// request that reached GitHub and lost its response. Reads, and writes GitHub refused by rate limit,
+// still retry.
+describe("transport write retry safety", () => {
+  const twoRetries = RetryPolicy.make({
+    ...RetryPolicy.none,
+    maxRetries: 2,
+    baseDelay: Duration.zero,
+    maxDelay: Duration.zero,
+  });
+  const lostResponse: Reply = { status: 502, body: { message: "Bad Gateway" } };
+  const replyMutation = `mutation ($threadId: ID!, $body: String!) {
+  addPullRequestReviewThreadReply(input: { pullRequestReviewThreadId: $threadId, body: $body }) { comment { id } }
+}`;
+
+  for (const route of ["POST /repos/acme/widget/issues/7/comments", "PATCH /repos/acme/widget/issues/comments/9"]) {
+    it.effect(`sends ${route} once when the response is lost`, () =>
+      Effect.gen(function* () {
+        const script = scriptedFetch([lostResponse, { status: 201, body: { id: 1 } }]);
+        const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+        const error = yield* transport.request("write", route, { body: "hello" }).pipe(Effect.flip);
+        assert.strictEqual(error.kind, "transport");
+        assert.strictEqual(script.count(), 1);
+      })
+    );
+  }
+
+  it.effect("retries a read after a server error", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([lostResponse, { status: 200, body: { id: 1 } }]);
+      const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+      yield* transport.request("read", "GET /repos/acme/widget/issues/7", {});
+      assert.strictEqual(script.count(), 2);
+    })
+  );
+
+  it.effect("retries a write GitHub refused by rate limit", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        { status: 429, body: { message: "slow down" }, headers: { "retry-after": "0" } },
+        { status: 201, body: { id: 1 } },
+      ]);
+      const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+      yield* transport.request("write", "POST /repos/acme/widget/issues/7/comments", { body: "hello" });
+      assert.strictEqual(script.count(), 2);
+    })
+  );
+
+  it.effect("posts a review-thread reply once when the response is lost", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([lostResponse, { status: 200, body: { data: { ok: true } } }]);
+      const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+      const error = yield* transport
+        .graphql("reply", replyMutation, { threadId: "PRRT_1", body: "Fixed." })
+        .pipe(Effect.flip, Effect.orDie);
+      assert.strictEqual(error.kind, "transport");
+      assert.strictEqual(script.count(), 1);
+    })
+  );
+
+  it.effect("treats a mutation after a fragment as a write", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([lostResponse, { status: 200, body: { data: { ok: true } } }]);
+      const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+      const document = `fragment Id on Node { id }\n${replyMutation}`;
+      const error = yield* transport.graphql("reply", document, {}).pipe(Effect.flip, Effect.orDie);
+      assert.strictEqual(error.kind, "transport");
+      assert.strictEqual(script.count(), 1);
+    })
+  );
+
+  it.effect("retries a GraphQL query after a server error", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([lostResponse, { status: 200, body: { data: { ok: true } } }]);
+      const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
+      yield* transport.graphql("read", "query { viewer { login } }", {});
+      assert.strictEqual(script.count(), 2);
+    })
+  );
+});

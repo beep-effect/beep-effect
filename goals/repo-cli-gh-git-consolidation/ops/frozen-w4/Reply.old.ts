@@ -1,0 +1,1385 @@
+/**
+ * Frozen pre-W4 body for `ops/review-thread-differential-w4.ts`: `packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.ts`, verbatim from
+ * main 930758e06b except for import paths and the identity namespace.
+ */
+
+import { $RepoCliId } from "@beep/identity/packages";
+import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import { artifactDirForContext } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts";
+import { decodeGhRepoView } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts";
+import { RESOLVE_THREAD_MUTATION } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/WritePlan.ts";
+import { writeTextFile } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts";
+import {
+  failedReplyOutcomes,
+  ReplyDraft,
+  ReplyDraftOutcome,
+  ReplyDraftsJson,
+  ReplyOutcomeStatus,
+  ReplyPullRequestNumber,
+  ReplyReport,
+  ReplyReportJson,
+  replyOutcomesWithStatus,
+  replyOutcomeTarget,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts";
+import {
+  ReviewLaneDispositionRow,
+  YEET_REVIEW_LANE_SCHEMA_VERSION,
+  YeetReviewerIdentity,
+  YeetThreadDisposition,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.schemas.ts";
+import {
+  recordYeetReviewLaneRows,
+  yeetReviewerIdentity,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewLane.ts";
+import {
+  deriveYeetReviewThreadState,
+  YeetReviewThreadNewestComment,
+  YeetReviewThreadStateSource,
+  YeetReviewThreadStateTag,
+  yeetReviewCommentAuthorKind,
+  yeetReviewThreadStateInput,
+} from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
+import { YeetCommandError } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts";
+import { GhActor, GhPageInfo, ghOutput } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
+import { collectTruncatableThreadPages, ghGraphqlPage, nextCursor } from "./GhCommand.old.ts";
+import { REPLY_THREAD_MUTATION } from "./WritePlan.old.ts";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GhRepoView } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts";
+import type { ReplyDrafts } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts";
+import type { YeetReviewThreadStateInput } from "../../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewThreadState.ts";
+import type { GhCommandFailure } from "../../../../packages/tooling/tool/cli/src/internal/github/index.ts";
+import type { RepoRunContext } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/index.ts";
+
+const $I = $RepoCliId.create("goals/repo-cli-gh-git-consolidation/ops/frozen-w4/Reply.old");
+
+const REPLY_FAILURE_DETAIL_MAX_CHARS = 240;
+
+/**
+ * File name of the reply drafts artifact inside the Yeet packet directory.
+ *
+ * **Example** (Name the drafts artifact)
+ *
+ * ```ts
+ * import { REPLY_DRAFTS_FILE_NAME } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(`.beep/yeet/${REPLY_DRAFTS_FILE_NAME}`)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const REPLY_DRAFTS_FILE_NAME = "reply-drafts.json";
+
+/**
+ * File name of the reply report artifact inside the Yeet packet directory.
+ *
+ * **Example** (Name the report artifact)
+ *
+ * ```ts
+ * import { REPLY_REPORT_FILE_NAME } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(`.beep/yeet/${REPLY_REPORT_FILE_NAME}`)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const REPLY_REPORT_FILE_NAME = "reply-report.json";
+
+/**
+ * Command that re-runs the whole reply pass.
+ *
+ * **Details**
+ *
+ * Quoted in `failed` details for drafts where nothing was written, because the
+ * drafts file is untouched by a failed run: re-running it is the retry. It is
+ * deliberately *not* quoted when a reply posted and only the resolve failed —
+ * re-running would post the body a second time.
+ *
+ * **Example** (Print the retry command)
+ *
+ * ```ts
+ * import { REPLY_RERUN_COMMAND } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(REPLY_RERUN_COMMAND)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const REPLY_RERUN_COMMAND = "bun run beep yeet reply";
+
+/**
+ * GraphQL query paginating a pull request's review threads with the numeric
+ * `databaseId` of every thread comment.
+ *
+ * **Details**
+ *
+ * `databaseId` is the REST comment id, and it is the only field that joins the
+ * two id surfaces a draft may use. Requesting it here is what lets one query
+ * per pull request serve both validation and comment-id resolution.
+ *
+ * **Example** (Confirm the join field is requested)
+ *
+ * ```ts
+ * import { replyReviewThreadsPageQuery } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(replyReviewThreadsPageQuery.includes("databaseId")) // true
+ * ```
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export const replyReviewThreadsPageQuery = `
+query YeetReplyReviewThreads($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      author { login }
+      reviewThreads(first: 100, after: $cursor) {
+        pageInfo { hasNextPage endCursor }
+        nodes {
+          id
+          isResolved
+          isOutdated
+          path
+          line
+          resolvedBy { login }
+          comments(first: 100) {
+            pageInfo { hasNextPage endCursor }
+            nodes { id databaseId author { __typename login } }
+          }
+          latest: comments(last: 1) {
+            nodes { author { __typename login } }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+/**
+ * One comment inside a live review thread, carrying both id surfaces.
+ *
+ * **Example** (Describe a thread comment)
+ *
+ * ```ts
+ * import { ReplyThreadComment } from "@beep/repo-cli/test/Yeet"
+ *
+ * const comment = ReplyThreadComment.make({ databaseId: 2284119001, id: "PRRC_kwDOA" })
+ * console.log(comment.databaseId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadComment extends S.Opaque<ReplyThreadComment, { readonly brand: unique symbol }>()(
+  S.Struct({
+    databaseId: S.NullOr(S.Finite),
+    id: S.String,
+    author: GhActor.pipe(S.NullOr, S.optionalKey),
+  }).pipe(
+    $I.annoteSchema("ReplyThreadComment", {
+      description: "Review thread comment carrying the GraphQL node id and the numeric REST database id.",
+    })
+  )
+) {}
+
+/**
+ * Paginated comments nested under a live review thread.
+ *
+ * **Example** (Describe an empty comment page)
+ *
+ * ```ts
+ * import { ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ *
+ * const connection = ReplyThreadCommentConnection.make({
+ *   nodes: [],
+ *   pageInfo: { endCursor: null, hasNextPage: false },
+ * })
+ * console.log(connection.nodes.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadCommentConnection extends S.Opaque<
+  ReplyThreadCommentConnection,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    nodes: S.Array(ReplyThreadComment),
+    pageInfo: GhPageInfo,
+  }).pipe(
+    $I.annoteSchema("ReplyThreadCommentConnection", {
+      description: "Comment connection nested under a live pull request review thread.",
+    })
+  )
+) {}
+
+/**
+ * The newest comment of a review thread, fetched as `comments(last: 1)` so a
+ * thread longer than one page still reports who spoke last.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestComment extends S.Opaque<ReplyThreadLatestComment, { readonly brand: unique symbol }>()(
+  S.Struct({ author: GhActor.pipe(S.NullOr, S.optionalKey) }).pipe(
+    $I.annoteSchema("ReplyThreadLatestComment", {
+      description: "Author of a review thread's newest comment.",
+    })
+  )
+) {}
+
+/**
+ * Single-node connection carrying a thread's newest comment.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyThreadLatestConnection extends S.Opaque<
+  ReplyThreadLatestConnection,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ nodes: S.Array(ReplyThreadLatestComment) }).pipe(
+    $I.annoteSchema("ReplyThreadLatestConnection", {
+      description: "`comments(last: 1)` connection of a review thread.",
+    })
+  )
+) {}
+
+/**
+ * A live pull request review thread as the reply engine sees it.
+ *
+ * **Details**
+ *
+ * `id` stays a plain string rather than `ReplyThreadId`: it is GitHub's own
+ * value, not human-typed draft input, so re-validating its prefix would only
+ * add a construction-time throw on a payload the engine cannot influence. The
+ * `PRRT_` check belongs on the drafts side, where a paste error is real.
+ *
+ * **Example** (Describe an unresolved thread)
+ *
+ * ```ts
+ * import { ReplyLiveThread, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   id: "PRRT_kwDOA",
+ *   isOutdated: false,
+ *   isResolved: false,
+ *   line: 42,
+ *   path: "src/file.ts",
+ * })
+ * console.log(thread.isResolved)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyLiveThread extends S.Opaque<ReplyLiveThread, { readonly brand: unique symbol }>()(
+  S.Struct({
+    comments: ReplyThreadCommentConnection,
+    // The thread's newest comment regardless of how many pages it spans.
+    latest: S.optionalKey(ReplyThreadLatestConnection),
+    id: S.String,
+    isOutdated: S.Boolean,
+    isResolved: S.Boolean,
+    line: S.NullOr(S.Finite),
+    path: S.NullOr(S.String),
+    // Who closed the thread; only the pull request author closing it can leave
+    // a reviewer follow-up behind.
+    resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
+    // What the thread still owes, under the one rule the merge gate, the watch
+    // and closeout also read. Stamped by `markReplyThreadStates`, which is why
+    // it defaults to `unresolved`: a thread nobody classified is treated as
+    // open, never silently waved through as answered.
+    state: YeetReviewThreadStateTag.pipe(
+      S.withConstructorDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved")),
+      S.withDecodingDefaultKey(Effect.succeed<YeetReviewThreadStateTag>("unresolved"))
+    ),
+  }).pipe(
+    $I.annoteSchema("ReplyLiveThread", {
+      description: "Live pull request review thread inspected before a drafted reply is written.",
+    })
+  )
+) {}
+
+const ReplyLiveThreadConnection = S.Struct({
+  nodes: S.Array(ReplyLiveThread),
+  pageInfo: GhPageInfo,
+});
+
+const ReplyReviewThreadsDocument = S.Struct({
+  data: S.Struct({
+    repository: S.Struct({
+      pullRequest: S.Struct({
+        author: GhActor.pipe(S.NullOr, S.optionalKey),
+        reviewThreads: ReplyLiveThreadConnection,
+      }),
+    }),
+  }),
+});
+
+// Prefer the `comments(last: 1)` node; the last node of the first page is only
+// the newest comment when the thread fits in that page.
+const newestCommentActor = (thread: ReplyLiveThread): O.Option<GhActor> =>
+  pipe(
+    O.fromUndefinedOr(thread.latest),
+    O.flatMap((latest) => A.last(latest.nodes)),
+    O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.orElse(() =>
+      thread.comments.pageInfo.hasNextPage
+        ? O.none<GhActor>()
+        : pipe(
+            A.last(thread.comments.nodes),
+            O.flatMap((comment) => O.fromNullishOr(comment.author))
+          )
+    )
+  );
+
+// The newest comment reduced to the two structural facts the rule reads; a
+// comment GitHub no longer attributes yields None, and unknown never gates.
+const newestReplyComment = (thread: ReplyLiveThread): O.Option<YeetReviewThreadNewestComment> =>
+  pipe(
+    newestCommentActor(thread),
+    O.map((actor) =>
+      YeetReviewThreadNewestComment.make({
+        authorLogin: actor.login,
+        authorKind: yeetReviewCommentAuthorKind(O.fromUndefinedOr(actor.__typename)),
+      })
+    )
+  );
+
+const replyThreadStateInput = (
+  thread: ReplyLiveThread,
+  pullRequestAuthor: O.Option<string>
+): YeetReviewThreadStateInput =>
+  yeetReviewThreadStateInput(YeetReviewThreadStateSource.make(thread), pullRequestAuthor, newestReplyComment(thread));
+
+/**
+ * Stamp each live thread with the state the merge gate classifies it as.
+ *
+ * **Details**
+ *
+ * The reply engine does not own a second opinion about what a thread owes: it
+ * feeds the same {@link YeetReviewThreadStateInput} `yeet status`, the watch
+ * and closeout feed, so a thread this engine posts on is exactly a thread the
+ * gate is still holding the pull request open for.
+ *
+ * **Example** (A resolved thread the reviewer answered after the author)
+ *
+ * ```ts
+ * import { markReplyThreadStates, ReplyLiveThread, ReplyThreadLatestComment, ReplyThreadLatestConnection, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   latest: ReplyThreadLatestConnection.make({
+ *     nodes: [ReplyThreadLatestComment.make({ author: { login: "reviewer" } })],
+ *   }),
+ *   id: "PRRT_1",
+ *   isOutdated: false,
+ *   isResolved: true,
+ *   line: null,
+ *   path: null,
+ *   resolvedBy: { login: "octocat" },
+ * })
+ * console.log(markReplyThreadStates([thread], O.some("octocat"))[0]?.state) // "resolved-follow-up"
+ * ```
+ *
+ * @param threads - Live review threads as decoded from GitHub.
+ * @param pullRequestAuthor - The pull request author's login when known.
+ * @returns The same threads with `state` computed.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const markReplyThreadStates: {
+  (pullRequestAuthor: O.Option<string>): (threads: ReadonlyArray<ReplyLiveThread>) => ReadonlyArray<ReplyLiveThread>;
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread>;
+} = dual(
+  2,
+  (threads: ReadonlyArray<ReplyLiveThread>, pullRequestAuthor: O.Option<string>): ReadonlyArray<ReplyLiveThread> =>
+    A.map(threads, (thread) =>
+      ReplyLiveThread.make({
+        ...thread,
+        state: deriveYeetReviewThreadState(replyThreadStateInput(thread, pullRequestAuthor)).state,
+      })
+    )
+);
+
+// The two states that still owe the reviewer a sentence: exactly the states
+// `yeetReviewThreadStateOutstanding` gates on, read off the carried tag.
+const replyThreadIsOutstanding = (thread: ReplyLiveThread): boolean =>
+  YeetReviewThreadStateTag.is.unresolved(thread.state) ||
+  YeetReviewThreadStateTag.is["resolved-follow-up"](thread.state);
+
+const decodeReplyReviewThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(ReplyReviewThreadsDocument));
+
+/**
+ * A drafted reply that survived validation and is ready to write.
+ *
+ * **Example** (Describe a ready reply)
+ *
+ * ```ts
+ * import { ReplyDraft, ReplyPostAction } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const action = ReplyPostAction.make({
+ *   draft: ReplyDraft.make({ threadId: O.some("PRRT_kwDOA"), body: "Fixed in 0123456." }),
+ *   threadId: "PRRT_kwDOA",
+ * })
+ * console.log(action.threadId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyPostAction extends S.Opaque<ReplyPostAction, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("post", {
+    draft: ReplyDraft,
+    threadId: S.NonEmptyString,
+    // Why this thread is postable, which is also what decides whether the
+    // write resolves it: only an `unresolved` thread is resolved afterwards.
+    state: YeetReviewThreadStateTag.pipe(
+      S.withConstructorDefault(Effect.succeed<YeetReviewThreadStateTag>("unresolved")),
+      S.withDecodingDefaultKey(Effect.succeed<YeetReviewThreadStateTag>("unresolved"))
+    ),
+    // Who opened the thread: the reviewer the recorded disposition is
+    // attributed to (ruling 81); absent when GitHub no longer attributes it.
+    reviewer: YeetReviewerIdentity.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("ReplyPostAction", {
+      description: "Drafted reply resolved to a live, unresolved review thread and ready to write.",
+    })
+  )
+) {}
+
+/**
+ * A drafted reply decided without touching GitHub.
+ *
+ * **Example** (Describe a stale draft)
+ *
+ * ```ts
+ * import { ReplyDraftOutcome, ReplySettledAction } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const action = ReplySettledAction.make({
+ *   outcome: ReplyDraftOutcome.make({
+ *     threadId: O.some("PRRT_kwDOA"),
+ *     status: "stale",
+ *     detail: "thread was already resolved upstream",
+ *   }),
+ * })
+ * console.log(action.outcome.status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplySettledAction extends S.Opaque<ReplySettledAction, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("settled", {
+    outcome: ReplyDraftOutcome,
+  }).pipe(
+    $I.annoteSchema("ReplySettledAction", {
+      description: "Drafted reply whose outcome was decided during validation, before any write.",
+    })
+  )
+) {}
+
+/**
+ * What the reply run will do about one drafted reply.
+ *
+ * **Example** (Decode a settled action)
+ *
+ * ```ts
+ * import { ReplyAction } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownOption(ReplyAction)({
+ *   _tag: "settled",
+ *   outcome: { threadId: "PRRT_kwDOA", status: "stale", detail: "already resolved" },
+ * })
+ * console.log(decoded)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ReplyAction = S.Union([ReplyPostAction, ReplySettledAction]).pipe(
+  $I.annoteSchema("ReplyAction", {
+    description: "Write or settled decision taken for one drafted review-thread reply.",
+  })
+);
+
+/**
+ * What the reply run will do about one drafted reply.
+ *
+ * @see {@link ReplyAction} for the runtime schema and its variants.
+ * @category models
+ * @since 0.0.0
+ */
+export type ReplyAction = typeof ReplyAction.Type;
+
+const compactWhitespace: (value: string) => string = flow(Str.replace(/\s+/gu, " "), Str.trim);
+
+const excerpt = (value: string): string => {
+  const normalized = compactWhitespace(value);
+  return Str.length(normalized) <= REPLY_FAILURE_DETAIL_MAX_CHARS
+    ? normalized
+    : `${pipe(normalized, Str.takeLeft(REPLY_FAILURE_DETAIL_MAX_CHARS))}…`;
+};
+
+const threadLocation = (thread: ReplyLiveThread): string =>
+  pipe(
+    O.fromNullishOr(thread.path),
+    O.map((path) =>
+      pipe(
+        O.fromNullishOr(thread.line),
+        O.match({
+          onNone: () => path,
+          onSome: (line) => `${path}:${line}`,
+        })
+      )
+    ),
+    O.getOrElse(() => "unknown file")
+  );
+
+const draftTargetLabel = (draft: ReplyDraft): string =>
+  pipe(
+    [
+      ...pipe(
+        draft.threadId,
+        O.map((threadId) => `thread id ${threadId}`),
+        O.toArray
+      ),
+      ...pipe(
+        draft.commentId,
+        O.map((commentId) => `comment id ${commentId}`),
+        O.toArray
+      ),
+    ],
+    A.join(" / ")
+  );
+
+// The disposition an outcome carries is the draft's declaration or `unknown`;
+// a body is never read to supply one (ruling 81).
+const draftDisposition = (draft: ReplyDraft): YeetThreadDisposition =>
+  O.getOrElse(draft.disposition, (): YeetThreadDisposition => YeetThreadDisposition.Enum.unknown);
+
+// The thread's opening comment names its reviewer: `comments(first: 100)`
+// lists oldest first, so the head of the page is the finding, whoever spoke
+// last. A comment GitHub no longer attributes leaves the reviewer unknown.
+const replyThreadOpener = (thread: ReplyLiveThread): O.Option<YeetReviewerIdentity> =>
+  pipe(
+    A.head(thread.comments.nodes),
+    O.flatMap((comment) => O.fromNullishOr(comment.author)),
+    O.map((actor) => yeetReviewerIdentity(actor.login, O.fromUndefinedOr(actor.__typename)))
+  );
+
+const settledAction = (
+  draft: ReplyDraft,
+  threadId: O.Option<string>,
+  status: ReplyOutcomeStatus,
+  detail: string
+): ReplySettledAction =>
+  ReplySettledAction.make({
+    outcome: ReplyDraftOutcome.make({
+      commentId: draft.commentId,
+      detail,
+      disposition: draftDisposition(draft),
+      status,
+      threadId: O.orElse(threadId, () => draft.threadId),
+    }),
+  });
+
+/**
+ * Resolve one draft against a snapshot of live review threads, by GraphQL
+ * thread id first and by numeric REST comment id second.
+ *
+ * **Details**
+ *
+ * The comment-id path is the mapping this engine owns: GitHub exposes the REST
+ * comment id as `databaseId` on the thread's comments, so a draft written
+ * straight off a review-comment URL resolves without the caller ever seeing a
+ * `PRRT_` id. A draft carrying both handles prefers the thread id and falls
+ * back to the comment id, so one stale handle does not sink a locatable draft.
+ *
+ * **Example** (Resolve a draft by its REST comment id)
+ *
+ * ```ts
+ * import { findReplyThread, ReplyDraft, ReplyLiveThread, ReplyThreadComment, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [ReplyThreadComment.make({ databaseId: 2284119001, id: "PRRC_kwDOA" })],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   id: "PRRT_kwDOA",
+ *   isOutdated: false,
+ *   isResolved: false,
+ *   line: 42,
+ *   path: "src/file.ts",
+ * })
+ * const draft = ReplyDraft.make({ commentId: O.some(2284119001), body: "Fixed." })
+ * console.log(O.map(findReplyThread([thread], draft), (found) => found.id))
+ * ```
+ *
+ * @param threads - Live review threads collected for the pull request.
+ * @param draft - Drafted reply naming a thread id, a comment id, or both.
+ * @returns The matching live thread, or `None` when no thread carries either handle.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const findReplyThread: {
+  (draft: ReplyDraft): (threads: ReadonlyArray<ReplyLiveThread>) => O.Option<ReplyLiveThread>;
+  (threads: ReadonlyArray<ReplyLiveThread>, draft: ReplyDraft): O.Option<ReplyLiveThread>;
+} = dual(
+  2,
+  (threads: ReadonlyArray<ReplyLiveThread>, draft: ReplyDraft): O.Option<ReplyLiveThread> =>
+    pipe(
+      draft.threadId,
+      O.flatMap((threadId) => A.findFirst(threads, (thread) => thread.id === threadId)),
+      O.orElse(() =>
+        pipe(
+          draft.commentId,
+          O.flatMap((commentId) =>
+            A.findFirst(threads, (thread) =>
+              A.some(thread.comments.nodes, (comment) => comment.databaseId === commentId)
+            )
+          )
+        )
+      )
+    )
+);
+
+const classifyReplyDraft = (
+  prNumber: number,
+  threads: ReadonlyArray<ReplyLiveThread>,
+  claimedThreadIds: HashSet.HashSet<string>,
+  draft: ReplyDraft
+): ReplyAction =>
+  pipe(
+    findReplyThread(threads, draft),
+    O.match({
+      onNone: () =>
+        settledAction(
+          draft,
+          O.none(),
+          "failed",
+          `no live review thread on pull request #${prNumber} matches ${draftTargetLabel(draft)}; thread ids come from "yeet status" and comment ids from the review comment URL (#discussion_r<id>)`
+        ),
+      onSome: (thread) => {
+        if (HashSet.has(claimedThreadIds, thread.id)) {
+          return settledAction(
+            draft,
+            O.some(thread.id),
+            "failed",
+            `review thread ${thread.id} (${threadLocation(thread)}) is already targeted by an earlier draft in this file; merge the two bodies into one draft`
+          );
+        }
+        if (!replyThreadIsOutstanding(thread)) {
+          return settledAction(
+            draft,
+            O.some(thread.id),
+            "stale",
+            `review thread ${thread.id} (${threadLocation(thread)}) is already resolved upstream; nothing was posted`
+          );
+        }
+        return ReplyPostAction.make({
+          draft,
+          reviewer: replyThreadOpener(thread),
+          state: thread.state,
+          threadId: thread.id,
+        });
+      },
+    })
+  );
+
+/**
+ * Classify every drafted reply against a snapshot of live review threads.
+ *
+ * **Details**
+ *
+ * Pure and total: each draft yields exactly one action in file order, so the
+ * report always accounts for every line the human wrote. A thread already
+ * resolved upstream settles as `stale`, an unmatched handle settles as
+ * `failed`, and a thread already claimed by an earlier draft in the same file
+ * settles as `failed` too — posting twice to one thread is the failure mode a
+ * hand-written drafts file actually produces, and a single live snapshot
+ * cannot see the first write.
+ *
+ * **Example** (Plan a drafts file against one open thread)
+ *
+ * ```ts
+ * import { planReplyActions, ReplyDraft, ReplyDrafts, ReplyLiveThread, ReplyThreadCommentConnection } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const thread = ReplyLiveThread.make({
+ *   comments: ReplyThreadCommentConnection.make({
+ *     nodes: [],
+ *     pageInfo: { endCursor: null, hasNextPage: false },
+ *   }),
+ *   id: "PRRT_kwDOA",
+ *   isOutdated: false,
+ *   isResolved: false,
+ *   line: 42,
+ *   path: "src/file.ts",
+ * })
+ * const drafts = ReplyDrafts.make({
+ *   schemaVersion: "yeet-reply-drafts/v1",
+ *   prNumber: 558,
+ *   drafts: [ReplyDraft.make({ threadId: O.some("PRRT_kwDOA"), body: "Fixed." })],
+ * })
+ * console.log(A.map(planReplyActions(drafts, [thread]), (action) => action._tag))
+ * ```
+ *
+ * @param drafts - Decoded drafts artifact for one pull request.
+ * @param threads - Live review threads collected for that pull request.
+ * @returns One action per draft, in drafts-file order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const planReplyActions: {
+  (threads: ReadonlyArray<ReplyLiveThread>): (drafts: ReplyDrafts) => ReadonlyArray<ReplyAction>;
+  (drafts: ReplyDrafts, threads: ReadonlyArray<ReplyLiveThread>): ReadonlyArray<ReplyAction>;
+} = dual(
+  2,
+  (drafts: ReplyDrafts, threads: ReadonlyArray<ReplyLiveThread>): ReadonlyArray<ReplyAction> =>
+    A.reduce(drafts.drafts, { actions: A.empty<ReplyAction>(), claimed: HashSet.empty<string>() }, (state, draft) => {
+      const action = classifyReplyDraft(drafts.prNumber, threads, state.claimed, draft);
+      return {
+        actions: [...state.actions, action],
+        claimed: action._tag === "post" ? HashSet.add(state.claimed, action.threadId) : state.claimed,
+      };
+    }).actions
+);
+
+/**
+ * The single `gh` command that resolves one review thread.
+ *
+ * **Details**
+ *
+ * Quoted in the report whenever a reply posted but resolving it did not — the
+ * body is already on GitHub, so the retry must be resolve-only. Being
+ * body-free it stays a one-line copy-paste for whoever holds the write scope.
+ *
+ * **Example** (Render the resolve retry)
+ *
+ * ```ts
+ * import { replyResolveRetryCommand } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(replyResolveRetryCommand("PRRT_kwDOA").includes("resolveReviewThread")) // true
+ * ```
+ *
+ * @param threadId - GraphQL id of the thread left open.
+ * @returns A copy-pasteable `gh api graphql` resolve command.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyResolveRetryCommand = (threadId: string): string =>
+  `gh api graphql -f 'query=${RESOLVE_THREAD_MUTATION}' -f threadId=${threadId}`;
+
+const replyGhFailure = (failure: GhCommandFailure): YeetCommandError =>
+  Match.value(failure).pipe(
+    Match.tag("spawn", (spawnFailure) =>
+      YeetCommandError.make({
+        cause: spawnFailure.cause,
+        command: spawnFailure.command,
+        exitCode: 1,
+        message: `${spawnFailure.label} could not be started; check that the GitHub CLI is installed and authenticated.`,
+      })
+    ),
+    Match.tag("nonzero-exit", (exitFailure) =>
+      YeetCommandError.make({
+        command: exitFailure.command,
+        exitCode: exitFailure.exitCode,
+        message: `${exitFailure.label} failed with exit code ${exitFailure.exitCode}: ${excerpt(exitFailure.output)}`,
+      })
+    ),
+    Match.tag("truncated", (truncatedFailure) =>
+      YeetCommandError.make({
+        command: truncatedFailure.command,
+        exitCode: 1,
+        message: `${truncatedFailure.label} output exceeded the repo-run capture limit.`,
+      })
+    ),
+    Match.exhaustive
+  );
+
+const replyGhOutput = (
+  context: RepoRunContext,
+  args: ReadonlyArray<string>,
+  label: string
+): Effect.Effect<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+  ghOutput({ args, cwd: context.repoRoot, label, onFailure: replyGhFailure });
+
+/**
+ * Resolve the reply drafts artifact path for a repo run context.
+ *
+ * **Example** (Locate the drafts artifact)
+ *
+ * ```ts
+ * import { replyDraftsPathForContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(Effect.succeed(replyDraftsPathForContext))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the Yeet packet directory.
+ * @returns Absolute path to `reply-drafts.json`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyDraftsPathForContext = Effect.fn("Yeet.replyDraftsPathForContext")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  const artifactDir = yield* artifactDirForContext(context);
+  return path.join(artifactDir, REPLY_DRAFTS_FILE_NAME);
+});
+
+/**
+ * Resolve the reply report artifact path for a repo run context.
+ *
+ * **Example** (Locate the report artifact)
+ *
+ * ```ts
+ * import { replyReportPathForContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(Effect.succeed(replyReportPathForContext))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the Yeet packet directory.
+ * @returns Absolute path to `reply-report.json`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyReportPathForContext = Effect.fn("Yeet.replyReportPathForContext")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<string, never, Path.Path> {
+  const path = yield* Path.Path;
+  const artifactDir = yield* artifactDirForContext(context);
+  return path.join(artifactDir, REPLY_REPORT_FILE_NAME);
+});
+
+/**
+ * Load and decode the reply drafts artifact.
+ *
+ * **Details**
+ *
+ * A missing file and a malformed file are different operator mistakes, so they
+ * fail with different messages; both name the absolute path, since the party
+ * running the command is often not the party that wrote the drafts.
+ *
+ * **Example** (Build the drafts loader effect)
+ *
+ * ```ts
+ * import { loadReplyDrafts, RepoRunContext } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feat/merge-loop",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+ * })
+ * console.log(Effect.isEffect(loadReplyDrafts(context))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the Yeet packet directory.
+ * @returns The decoded drafts artifact.
+ * @category queries
+ * @since 0.0.0
+ */
+export const loadReplyDrafts = Effect.fn("Yeet.loadReplyDrafts")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<ReplyDrafts, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const draftsPath = yield* replyDraftsPathForContext(context);
+  const exists = yield* fs.exists(draftsPath).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return yield* YeetCommandError.make({
+      file: draftsPath,
+      message: `No reply drafts at "${draftsPath}". Write one drafts file with schemaVersion "yeet-reply-drafts/v1", the pull request number, and a body per review thread.`,
+    });
+  }
+  const text = yield* fs
+    .readFileString(draftsPath)
+    .pipe(Effect.mapError(YeetCommandError.new(`Failed to read "${draftsPath}".`, { file: draftsPath })));
+  return yield* ReplyDraftsJson.decode(text).pipe(
+    Effect.mapError(
+      YeetCommandError.new(
+        `Failed to decode "${draftsPath}"; every draft needs a non-empty body and either a PRRT_ thread id or a numeric comment id.`,
+        { file: draftsPath }
+      )
+    )
+  );
+});
+
+const collectReplyThreads = (
+  context: RepoRunContext,
+  repo: GhRepoView,
+  prNumber: number
+): Effect.Effect<
+  ReadonlyArray<ReplyLiveThread>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> =>
+  collectTruncatableThreadPages({
+    advance: (pageInfo) =>
+      nextCursor({
+        label: "pull request review threads",
+        onMissingCursor: (missingLabel) =>
+          YeetCommandError.make({
+            command: "gh api graphql",
+            exitCode: 1,
+            message: `${missingLabel} reported another GraphQL page without an end cursor.`,
+          }),
+        pageInfo,
+      }),
+    fetchPage: (cursor) =>
+      ghGraphqlPage({
+        cursor,
+        cwd: context.repoRoot,
+        label: "gh api graphql reply review threads",
+        name: repo.name,
+        number: prNumber,
+        onFailure: replyGhFailure,
+        owner: repo.owner.login,
+        query: replyReviewThreadsPageQuery,
+      }).pipe(
+        Effect.flatMap((output) =>
+          decodeReplyReviewThreadsDocument(output).pipe(
+            Effect.mapError(YeetCommandError.new("Failed to decode the reply review threads GraphQL JSON."))
+          )
+        ),
+        Effect.map((document) => {
+          const pullRequest = document.data.repository.pullRequest;
+          const author = pipe(
+            O.fromUndefinedOr(pullRequest.author),
+            O.flatMap(O.fromNullishOr),
+            O.map((actor) => actor.login)
+          );
+          return ReplyLiveThreadConnection.make({
+            ...pullRequest.reviewThreads,
+            nodes: markReplyThreadStates(pullRequest.reviewThreads.nodes, author),
+          });
+        })
+      ),
+    truncationWarning: (threadIds) =>
+      `Review thread(s) ${A.join(threadIds, ", ")} have more than 100 comments; yeet reply reads only the first 100 per thread, so a comment id beyond that page will not resolve. Target those threads by PRRT_ thread id.`,
+  });
+
+const performReplyPost = Effect.fnUntraced(function* (
+  context: RepoRunContext,
+  action: ReplyPostAction
+): Effect.fn.Return<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  const target = {
+    commentId: action.draft.commentId,
+    disposition: draftDisposition(action.draft),
+    threadId: O.some(action.threadId),
+  };
+  const posted = yield* Effect.result(
+    replyGhOutput(
+      context,
+      [
+        "api",
+        "graphql",
+        "-f",
+        `query=${REPLY_THREAD_MUTATION}`,
+        "-f",
+        `threadId=${action.threadId}`,
+        "-f",
+        `body=${action.draft.body}`,
+      ],
+      "gh api graphql (reply)"
+    )
+  );
+  if (Result.isFailure(posted)) {
+    return ReplyDraftOutcome.make({
+      ...target,
+      detail: `${posted.failure.message} Nothing was posted; retry with: ${REPLY_RERUN_COMMAND}`,
+      status: "failed",
+    });
+  }
+  if (YeetReviewThreadStateTag.is["resolved-follow-up"](action.state)) {
+    return ReplyDraftOutcome.make({
+      ...target,
+      detail:
+        "reply posted; answered a reviewer follow-up on a resolved thread, so the thread was left resolved and nothing was re-resolved",
+      status: "posted",
+    });
+  }
+  if (!action.draft.resolve) {
+    return ReplyDraftOutcome.make({
+      ...target,
+      detail: "reply posted; the draft opted out of resolving the thread",
+      status: "posted",
+    });
+  }
+  const resolved = yield* Effect.result(
+    replyGhOutput(
+      context,
+      ["api", "graphql", "-f", `query=${RESOLVE_THREAD_MUTATION}`, "-f", `threadId=${action.threadId}`],
+      "gh api graphql (resolve)"
+    )
+  );
+  if (Result.isFailure(resolved)) {
+    return ReplyDraftOutcome.make({
+      ...target,
+      detail: `reply posted, but resolving the thread failed: ${resolved.failure.message} Do not re-run "${REPLY_RERUN_COMMAND}" — it would post the body again; resolve with: ${replyResolveRetryCommand(action.threadId)}`,
+      status: "failed",
+    });
+  }
+  return ReplyDraftOutcome.make({
+    ...target,
+    detail: "reply posted and thread resolved",
+    status: "resolved",
+  });
+});
+
+const executeReplyAction = (
+  context: RepoRunContext,
+  action: ReplyAction
+): Effect.Effect<ReplyDraftOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+  Match.value(action).pipe(
+    Match.tag("post", (post) => performReplyPost(context, post)),
+    Match.tag("settled", (settled) => Effect.succeed(settled.outcome)),
+    Match.exhaustive
+  );
+
+const countStatus = (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): number =>
+  A.length(replyOutcomesWithStatus(outcomes, status));
+
+const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
+  context: RepoRunContext,
+  prNumber: number
+): Effect.fn.Return<
+  ReadonlyArray<ReplyLiveThread>,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
+  const repo = yield* replyGhOutput(context, ["repo", "view", "--json", "owner,name"], "gh repo view").pipe(
+    Effect.flatMap((output) =>
+      decodeGhRepoView(output).pipe(Effect.mapError(YeetCommandError.new("Failed to decode gh repo view JSON.")))
+    )
+  );
+  return yield* collectReplyThreads(context, repo, prNumber);
+});
+
+/**
+ * Settle every loaded draft against a preflight failure, so a wall hit before
+ * the first write is reported exactly like a wall hit during one.
+ *
+ * @param drafts - The loaded drafts artifact whose drafts get failure outcomes.
+ * @param failure - The preflight failure carried into every outcome's detail.
+ * @returns One `failed` outcome per draft, each naming the whole-run retry.
+ */
+const preflightFailureOutcomes = (drafts: ReplyDrafts, failure: YeetCommandError): ReadonlyArray<ReplyDraftOutcome> =>
+  A.map(drafts.drafts, (draft) =>
+    ReplyDraftOutcome.make({
+      commentId: draft.commentId,
+      detail: `${failure.message} Nothing was posted for any draft; retry the whole run with: ${REPLY_RERUN_COMMAND}`,
+      disposition: draftDisposition(draft),
+      status: "failed",
+      threadId: draft.threadId,
+    })
+  );
+
+const isWrittenOutcome = (outcome: ReplyDraftOutcome): boolean =>
+  ReplyOutcomeStatus.is.posted(outcome.status) || ReplyOutcomeStatus.is.resolved(outcome.status);
+
+/**
+ * What one reply pass produced, paired for the review lane: the planned
+ * actions and their outcomes in drafts-file order, and where and when the
+ * pass ran.
+ *
+ * **Example** (Describe an empty pass)
+ *
+ * ```ts
+ * import { ReplyPassFacts } from "@beep/repo-cli/test/Yeet"
+ *
+ * const facts = ReplyPassFacts.make({
+ *   branch: "feat/review-lane",
+ *   prNumber: 2300,
+ *   recordedAt: "2026-10-27T10:30:00.000Z",
+ *   actions: [],
+ *   outcomes: [],
+ * })
+ * console.log(facts.actions.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReplyPassFacts extends S.Opaque<ReplyPassFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    // The planned actions in drafts-file order, and their outcomes in the same order.
+    actions: S.Array(ReplyAction),
+    outcomes: S.Array(ReplyDraftOutcome),
+    // The branch of the checkout the pass ran in; it stamps every row.
+    branch: S.String,
+    // The pull request the drafts belong to.
+    prNumber: ReplyPullRequestNumber,
+    // The pass's report instant.
+    recordedAt: S.String,
+  }).pipe(
+    $I.annoteSchema("ReplyPassFacts", {
+      description:
+        "One reply pass's planned actions and their outcomes, paired in drafts-file order, with the branch and instant it ran.",
+    })
+  )
+) {}
+
+/**
+ * The review lane rows one reply pass records: one disposition per thread a
+ * reply was written on (ruling 81).
+ *
+ * **Details**
+ *
+ * Actions and outcomes pair positionally, as the pass produced them. Only a
+ * `post` action whose outcome is `posted` or `resolved` records a row: a
+ * stale or failed draft wrote nothing on the thread, so its declaration is
+ * reported but not measured. The row's disposition is the outcome's, which
+ * is the draft's declaration or `unknown`.
+ *
+ * **Example** (A resolved thread records its disposition)
+ *
+ * ```ts
+ * import { ReplyDraft, ReplyDraftOutcome, ReplyPassFacts, ReplyPostAction, replyDispositionRows } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const draft = ReplyDraft.make({ threadId: O.some("PRRT_kwDOA"), body: "Fixed.", disposition: O.some("fixed") })
+ * const rows = replyDispositionRows(ReplyPassFacts.make({
+ *   branch: "feat/review-lane",
+ *   prNumber: 2300,
+ *   recordedAt: "2026-10-27T10:30:00.000Z",
+ *   actions: [ReplyPostAction.make({ draft, threadId: "PRRT_kwDOA" })],
+ *   outcomes: [
+ *     ReplyDraftOutcome.make({ threadId: O.some("PRRT_kwDOA"), status: "resolved", detail: "done", disposition: "fixed" }),
+ *   ],
+ * }))
+ * console.log(rows.length) // 1
+ * ```
+ *
+ * @param pass - The pass's actions and outcomes, and where and when it ran.
+ * @returns One disposition row per written thread.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyDispositionRows = (pass: ReplyPassFacts): ReadonlyArray<ReviewLaneDispositionRow> =>
+  A.getSomes(
+    A.map(A.zip(pass.actions, pass.outcomes), ([action, outcome]) =>
+      action._tag === "post" && isWrittenOutcome(outcome)
+        ? O.some(
+            ReviewLaneDispositionRow.make({
+              schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+              prNumber: pass.prNumber,
+              branch: pass.branch,
+              recordedAt: pass.recordedAt,
+              threadId: action.threadId,
+              reviewer: action.reviewer,
+              disposition: outcome.disposition,
+            })
+          )
+        : O.none<ReviewLaneDispositionRow>()
+    )
+  );
+
+/**
+ * Run one reply pass: load the drafts, validate them against live review
+ * threads, write the survivors, and record every outcome.
+ *
+ * **Details**
+ *
+ * The pull request number comes from the drafts artifact rather than the
+ * checked-out branch, so the operator can execute an agent's drafts from any
+ * worktree. Writes run one at a time and never fail the run: a denied scope,
+ * a deleted thread, or a rate limit becomes that draft's `failed` outcome with
+ * the retry command, and the remaining drafts still get their turn. The report
+ * is written through {@link ReplyReportJson} so `Option` fields encode as
+ * omitted keys rather than runtime objects.
+ *
+ * The preflight — `gh repo view` plus the paginated `reviewThreads` query — is
+ * held to a stronger contract. A denied repo read, a denied thread page, or a
+ * page that reports another page without a cursor settles *every* loaded draft
+ * as `failed` carrying that failure's text and the whole-run retry command,
+ * writes the report, and then fails the run. A drafts file is a batch of work
+ * someone did; losing the whole batch to a thrown error with no artifact is the
+ * failure mode this command exists to remove — but a pass that posted nothing
+ * is not a success either. The report is the accounting; the exit code is the
+ * verdict, so a `beep yeet reply && ...` chain never proceeds past a run that
+ * wrote zero replies.
+ *
+ * **Gotchas**
+ *
+ * This engine returns the report for every pass that attempted work; the
+ * *command* turns a report carrying `failed` outcomes into a non-zero exit
+ * (`failedReplyOutcomes` at the `yeet reply` seam). Splitting it that way
+ * keeps the batch semantics — every remaining draft still gets its turn — while
+ * denying a `yeet reply && ...` chain the false green it used to get from a
+ * pass whose replies were all rejected. Only the preflight (nothing attempted)
+ * fails here, and with no drafts loaded it fails without a report: there is no
+ * outcome to attach the failure to, so an exit-0 empty report would be a silent
+ * green.
+ *
+ * **Example** (Build the reply run effect)
+ *
+ * ```ts
+ * import { RepoRunContext, runYeetReply } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect";
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feat/merge-loop",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
+ * })
+ * console.log(Effect.isEffect(runYeetReply(context))) // true
+ * ```
+ *
+ * @param context - Repo run context carrying the repo root and packet directory.
+ * @returns The written reply report.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
+  context: RepoRunContext
+): Effect.fn.Return<
+  ReplyReport,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+> {
+  const drafts = yield* loadReplyDrafts(context);
+  const preflight = yield* Effect.result(replyPreflight(context, drafts.prNumber));
+  if (Result.isFailure(preflight) && A.isReadonlyArrayEmpty(drafts.drafts)) {
+    return yield* preflight.failure;
+  }
+  const actions = Result.isSuccess(preflight) ? planReplyActions(drafts, preflight.success) : A.empty<ReplyAction>();
+  const outcomes = Result.isSuccess(preflight)
+    ? yield* Effect.forEach(actions, (action) => executeReplyAction(context, action), { concurrency: 1 })
+    : preflightFailureOutcomes(drafts, preflight.failure);
+  yield* Effect.forEach(
+    outcomes,
+    (outcome) => Console.log(`[yeet] reply ${outcome.status} ${replyOutcomeTarget(outcome)}: ${outcome.detail}`),
+    { concurrency: 1 }
+  );
+
+  const createdAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const report = ReplyReport.make({
+    createdAt,
+    outcomes,
+    prNumber: drafts.prNumber,
+    schemaVersion: "yeet-reply-report/v1",
+  });
+  const reportPath = yield* replyReportPathForContext(context);
+  const reportJson = yield* ReplyReportJson.encode(report).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode the yeet reply report artifact."))
+  );
+  yield* writeTextFile(reportPath, `${reportJson}\n`);
+  yield* Console.log(
+    `[yeet] reply report written to ${reportPath} (${countStatus(outcomes, "resolved")} resolved, ${countStatus(outcomes, "posted")} posted, ${countStatus(outcomes, "stale")} stale, ${countStatus(outcomes, "failed")} failed)`
+  );
+  // The measurement rides after the report, best effort: a lost row is one
+  // warning, never a failed pass (ruling 81).
+  const dispositions = replyDispositionRows(
+    ReplyPassFacts.make({ branch: context.branch, prNumber: drafts.prNumber, recordedAt: createdAt, actions, outcomes })
+  );
+  if (A.isReadonlyArrayNonEmpty(dispositions)) {
+    yield* recordYeetReviewLaneRows(context.repoRoot, dispositions);
+    yield* Console.log(
+      `[yeet] reply recorded ${A.length(dispositions)} thread disposition(s) in the review lane ledger (${A.length(
+        A.filter(dispositions, (row) => YeetThreadDisposition.is.unknown(row.disposition))
+      )} unknown: declare "disposition" on the draft to measure the reviewer)`
+    );
+  }
+  if (Result.isFailure(preflight)) {
+    return yield* YeetCommandError.make({
+      cause: preflight.failure,
+      exitCode: 1,
+      file: reportPath,
+      message: `yeet reply preflight failed before any draft could be posted; every draft is settled as failed in ${reportPath}. ${preflight.failure.message}`,
+    });
+  }
+
+  return report;
+});
+
+/**
+ * The operator verdict for a reply pass that could not write every draft.
+ *
+ * **Details**
+ *
+ * `None` is the whole contract for a clean pass: nothing failed, so there is
+ * nothing to say and nothing to exit non-zero over. `Some` names how many
+ * drafts failed out of how many ran and which handles they were, then points at
+ * the report — deliberately *not* at a retry command. Failures do not share one
+ * retry: a draft whose post was rejected is retried by re-running the pass,
+ * while a draft that posted and only failed to resolve must never be re-run
+ * that way or the body posts twice. Each outcome's own `detail` already carries
+ * the correct instruction, so the verdict routes the operator to them instead
+ * of overwriting them with a wrong one.
+ *
+ * **Example** (A clean pass has no verdict)
+ *
+ * ```ts
+ * import { renderYeetReplyFailureVerdict, ReplyReport } from "@beep/repo-cli/test/Yeet"
+ *
+ * const report = ReplyReport.make({
+ *   schemaVersion: "yeet-reply-report/v1",
+ *   prNumber: 558,
+ *   createdAt: "2026-08-16T00:00:00.000Z",
+ *   outcomes: [],
+ * })
+ * console.log(renderYeetReplyFailureVerdict(report, ".beep/yeet/reply-report.json"))
+ * ```
+ *
+ * @param report - The report written by one reply pass.
+ * @param reportPath - Where that report was written, quoted in the verdict.
+ * @returns The verdict line when any draft failed, else `None`.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetReplyFailureVerdict: {
+  (reportPath: string): (report: ReplyReport) => O.Option<string>;
+  (report: ReplyReport, reportPath: string): O.Option<string>;
+} = dual(
+  2,
+  (report: ReplyReport, reportPath: string): O.Option<string> =>
+    pipe(
+      failedReplyOutcomes(report),
+      O.liftPredicate(A.isReadonlyArrayNonEmpty),
+      O.map(
+        (failed) =>
+          `[yeet] reply failed for ${A.length(failed)} of ${A.length(report.outcomes)} drafts (${A.join(A.map(failed, replyOutcomeTarget), ", ")}); those review threads are still open. Each failed outcome in ${reportPath} carries its own retry.`
+      )
+    )
+);
