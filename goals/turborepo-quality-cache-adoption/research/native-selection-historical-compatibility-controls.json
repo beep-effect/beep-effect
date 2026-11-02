@@ -1,0 +1,2216 @@
+{
+  "schemaVersion": "cache-native-selection-controls/v1",
+  "recordedAt": "2026-11-02T19:15:50.182360+00:00",
+  "authority": "Asserted native synthetic selection behavior only; no repository-task qualification or production activation.",
+  "driver": {
+    "path": "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py",
+    "sha256": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1"
+  },
+  "sourceBindings": {
+    "goals/turborepo-quality-cache-adoption/research/native-selection-controls.py": "25a1b8766ba91883d761c5942b07fc4011b5ea6329c3d1eed83f758f97a98ce1",
+    "goals/turborepo-quality-cache-adoption/research/current-client-pins.json": "daf3cd0b53edf45e209a7be2f8eea93981a56d133d95ed81b7f929ed82683ae3",
+    "goals/turborepo-quality-cache-adoption/research/native-future-flag-availability.py": "e2e51ecc6b3a3ca2e0553a13a061ebfc9b39d6239c8d935bbdbd411296c54736",
+    ".bun-version": "d03d8b268b4171328ac2458ce8ca82d69a1fde38469d4e4faae4f8fa8d8a5e35"
+  },
+  "rawDirectory": ".beep/native-selection-controls/raw-3p85sgdt",
+  "processWrapper": {
+    "name": "GNU timeout",
+    "sha256": "3af64f366c2422870723a787b3912c0546927d16ed07ae2059431178e5ec503f"
+  },
+  "clients": {
+    "stable": {
+      "reportedVersion": "2.11.10",
+      "sha256": "67a5ccd624ecc38bd84ba70cc23a23a4ba215700361cf22d2907c761457e6ab6"
+    },
+    "canary": {
+      "reportedVersion": "2.11.9-canary.1",
+      "sha256": "f0686d3818ff00361d89919ec5e09d151aa6d9641cb5ddfda8fa734bf906cbbb"
+    }
+  },
+  "bun": {
+    "version": "1.4.4",
+    "sha256": "10702245766b225e70bbf6235fd6b47214fd94b4760d00ffaed8ab0df57ac235"
+  },
+  "fixedFutureFlags": {
+    "globalConfiguration": true,
+    "affectedUsingTaskInputs": true,
+    "filterUsingTasks": true
+  },
+  "changedFlag": "strictTaskEntrypointSelection",
+  "assertedCases": 44,
+  "dryAndExecutionInvocations": 88,
+  "completed": true,
+  "fixturesRemoved": true,
+  "results": [
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "real",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["app#prepare", "base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": ["base#prepare"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": ["app", "base", "phantom"],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-real-dry.stdout",
+          "sha256": "1a31d0d14e9bb9b373301dd0913e5cf8b143e52cf65d70e6a2b275d226a7778e",
+          "bytes": 12836
+        },
+        "dry.stderr": {
+          "file": "stable-false-real-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-real-run.stdout",
+          "sha256": "49c1f87c340eee7709a02365aa147ccdfdb4f696c9fa3a79fc241d96ce240857",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "stable-false-real-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-false-real-summary.json",
+          "sha256": "ff6ad691ce9d66e118f1df1911f01c6265aaa5517eba96138a585d0eee70c16f",
+          "bytes": 11109
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-missing-command-dry.stdout",
+          "sha256": "79e9d9319a8824a2139015124d5aa698cc9511cda12345ff2cf1501d6aa69d1a",
+          "bytes": 6793
+        },
+        "dry.stderr": {
+          "file": "stable-false-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-missing-command-run.stdout",
+          "sha256": "605e4842dd85e7609a8fa0f63126d0c8755855b41a73c8c3e19549e8c5c41bfb",
+          "bytes": 311
+        },
+        "run.stderr": {
+          "file": "stable-false-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-false-missing-command-summary.json",
+          "sha256": "53c302bcc8f3251efd39bd4d69d3ce02bd969c1fce6cfddf786e51a45b8ba39f",
+          "bytes": 4351
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "explicit-missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-explicit-missing-command-dry.stdout",
+          "sha256": "5f1739457575ea5ae720b62f4b57c66f042a04c9c1c253de2738098ebb881c76",
+          "bytes": 6793
+        },
+        "dry.stderr": {
+          "file": "stable-false-explicit-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-explicit-missing-command-run.stdout",
+          "sha256": "a02ac603a7b88f610fd853e04b07373cb8d0ad69613c476df5ce376c1703938d",
+          "bytes": 317
+        },
+        "run.stderr": {
+          "file": "stable-false-explicit-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-false-explicit-missing-command-summary.json",
+          "sha256": "949422b56a5390e180f03e7cb2f82f03578b3bcb8a785e28dc12a5330ebb0fa0",
+          "bytes": 4342
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "graph-only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#collect",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-graph-only-dry.stdout",
+          "sha256": "cf80071ec37a35d796e3d3ff43c969a2eefbcfadeeaece425bc5c1017df85e3d",
+          "bytes": 8094
+        },
+        "dry.stderr": {
+          "file": "stable-false-graph-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-graph-only-run.stdout",
+          "sha256": "98d080651895f5148d8d82a3d238555a809cc56de580b27613ccab998709e573",
+          "bytes": 313
+        },
+        "run.stderr": {
+          "file": "stable-false-graph-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-false-graph-only-summary.json",
+          "sha256": "4b80b211451da64b5c555ac44908a177a3d170e055a6a5035427f8fe5d3470ad",
+          "bytes": 4378
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": []
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-only-dry.stdout",
+          "sha256": "fe1bf857bf2fa8c1daab85b5732ae61974cbbee4c3de597684146711e5051c35",
+          "bytes": 6955
+        },
+        "dry.stderr": {
+          "file": "stable-false-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-only-run.stdout",
+          "sha256": "f1e27591c5cc890220714318288bee262d79411d219feb37415bd8c087584e03",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "stable-false-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-false-only-summary.json",
+          "sha256": "f7f8659ac81d751096f0df84705200c47717bca5ce75ce52b22c4c87980be65a",
+          "bytes": 6066
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-task",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-missing-task-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-false-missing-task-dry.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        },
+        "run.stdout": {
+          "file": "stable-false-missing-task-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-false-missing-task-run.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-package",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-missing-package-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-false-missing-package-dry.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        },
+        "run.stdout": {
+          "file": "stable-false-missing-package-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-false-missing-package-run.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "empty-glob",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-empty-glob-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-false-empty-glob-dry.stderr",
+          "sha256": "48d6ffdeee7a65f7df9b0f3325af55ec8c515d6824a120fdcb80b82e20d2a48c",
+          "bytes": 140
+        },
+        "run.stdout": {
+          "file": "stable-false-empty-glob-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-false-empty-glob-run.stderr",
+          "sha256": "48d6ffdeee7a65f7df9b0f3325af55ec8c515d6824a120fdcb80b82e20d2a48c",
+          "bytes": 140
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "empty-selection",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-empty-selection-dry.stdout",
+          "sha256": "ad4b2268f3bbfd794e6cd8f9f05968923332916585b8dd296625dc45e0aae313",
+          "bytes": 690
+        },
+        "dry.stderr": {
+          "file": "stable-false-empty-selection-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-false-empty-selection-run.stdout",
+          "sha256": "03564efb77679b9473aba4954eb8428508f8ac5dfea0cd350f4b16e88dfa9c89",
+          "bytes": 306
+        },
+        "run.stderr": {
+          "file": "stable-false-empty-selection-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "stable-false-empty-selection-summary.json",
+          "sha256": "098cffe72bfbd309a85af5f2797a7cf9bc308d28a464d834427b9af6dc270353",
+          "bytes": 980
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "unknown-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-unknown-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-false-unknown-selector-dry.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        },
+        "run.stdout": {
+          "file": "stable-false-unknown-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-false-unknown-selector-run.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": false,
+      "case": "invalid-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-false-invalid-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-false-invalid-selector-dry.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        },
+        "run.stdout": {
+          "file": "stable-false-invalid-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-false-invalid-selector-run.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "real",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["app#prepare", "base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": ["base#prepare"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": ["app", "base", "phantom"],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-real-dry.stdout",
+          "sha256": "b819ef5254bb5633f7c45649bc431c4faab5a6fabbe16a28ade9debe3f130944",
+          "bytes": 12836
+        },
+        "dry.stderr": {
+          "file": "stable-true-real-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-real-run.stdout",
+          "sha256": "1be99ecfa44dbde5ab063ede2a24230e3efad5f43ff535bc0055e4b6d732a146",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "stable-true-real-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-true-real-summary.json",
+          "sha256": "c195b50b7c9b77b5b3584ced6ef02f40eb01a3f81ec359e3d49d04d856ad74ee",
+          "bytes": 11109
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-missing-command-dry.stdout",
+          "sha256": "b751ae715d905db641f9fe596632b1cb28df45b86f960db535d6761b62f45e24",
+          "bytes": 705
+        },
+        "dry.stderr": {
+          "file": "stable-true-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-missing-command-run.stdout",
+          "sha256": "f799141272228bc0a6d0755b6ea413031cda21d05e32b8d35970d7d064344cff",
+          "bytes": 310
+        },
+        "run.stderr": {
+          "file": "stable-true-missing-command-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "stable-true-missing-command-summary.json",
+          "sha256": "e5aa95002e1b3a2e648dc88d4d916553bbf7c5ee70df269bb7db386bd98ed41f",
+          "bytes": 947
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "explicit-missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-explicit-missing-command-dry.stdout",
+          "sha256": "8f5fee1cad37d1392bebb1c74d2d0e60b846eccfd66d0cd950d61b90d96e15fe",
+          "bytes": 6537
+        },
+        "dry.stderr": {
+          "file": "stable-true-explicit-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-explicit-missing-command-run.stdout",
+          "sha256": "36d317f611482a50a03082bb84b24eb464919d8ac5b1b2357871496519cfd99c",
+          "bytes": 317
+        },
+        "run.stderr": {
+          "file": "stable-true-explicit-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-true-explicit-missing-command-summary.json",
+          "sha256": "0b95ba844b8bf6fbe018ad69e88a789de25449526de22ae010c51a9621d84a1c",
+          "bytes": 4342
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "graph-only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#collect",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-graph-only-dry.stdout",
+          "sha256": "abc2d95491f0c2b76ee551a71b7560e537cb4e83a4d2d3d0b82f43f6aa479849",
+          "bytes": 5399
+        },
+        "dry.stderr": {
+          "file": "stable-true-graph-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-graph-only-run.stdout",
+          "sha256": "178167651e21b8382b683ebd73c6681ed94bbe17f10fdd8e4dbacbb37b83ea15",
+          "bytes": 313
+        },
+        "run.stderr": {
+          "file": "stable-true-graph-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-true-graph-only-summary.json",
+          "sha256": "39e03cc37c86f1c0381b271d8f135dbd4838d4adb2cdae5dd73a4b31bb6b2d73",
+          "bytes": 4355
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": []
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-only-dry.stdout",
+          "sha256": "c992c1034ce6420a03d66a64c6502c3ceceb6147eba49268ced1b9331927be1e",
+          "bytes": 6955
+        },
+        "dry.stderr": {
+          "file": "stable-true-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-only-run.stdout",
+          "sha256": "cc88ebf976cbd6df9f4488e2710cd335df29c7f97b91a4ee78b73bf9a8fc76b5",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "stable-true-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "stable-true-only-summary.json",
+          "sha256": "910e1cdecf0ebd4ba8013b4337db721592523c640c113b05bfb996f4f14eeef8",
+          "bytes": 6066
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-task",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-missing-task-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-true-missing-task-dry.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        },
+        "run.stdout": {
+          "file": "stable-true-missing-task-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-true-missing-task-run.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-package",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-missing-package-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-true-missing-package-dry.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        },
+        "run.stdout": {
+          "file": "stable-true-missing-package-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-true-missing-package-run.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "empty-glob",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-empty-glob-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-true-empty-glob-dry.stderr",
+          "sha256": "48d6ffdeee7a65f7df9b0f3325af55ec8c515d6824a120fdcb80b82e20d2a48c",
+          "bytes": 140
+        },
+        "run.stdout": {
+          "file": "stable-true-empty-glob-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-true-empty-glob-run.stderr",
+          "sha256": "48d6ffdeee7a65f7df9b0f3325af55ec8c515d6824a120fdcb80b82e20d2a48c",
+          "bytes": 140
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "empty-selection",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-empty-selection-dry.stdout",
+          "sha256": "3507b2ebd76c5c6abee7a652fd4cbac4fcc0a814db9bf56265ffa249c608c351",
+          "bytes": 690
+        },
+        "dry.stderr": {
+          "file": "stable-true-empty-selection-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "stable-true-empty-selection-run.stdout",
+          "sha256": "c1f8b430b5d4cbbccc466fc5e49862f8a66f4fb4622a6205b917a59a8e9bd85b",
+          "bytes": 306
+        },
+        "run.stderr": {
+          "file": "stable-true-empty-selection-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "stable-true-empty-selection-summary.json",
+          "sha256": "dcd6ad7dfeba144ec5fe97d6f839ff190a7b58d07b4c709dac083d7e90954e47",
+          "bytes": 980
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "unknown-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-unknown-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-true-unknown-selector-dry.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        },
+        "run.stdout": {
+          "file": "stable-true-unknown-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-true-unknown-selector-run.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        }
+      }
+    },
+    {
+      "channel": "stable",
+      "strictTaskEntrypointSelection": true,
+      "case": "invalid-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "stable-true-invalid-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "stable-true-invalid-selector-dry.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        },
+        "run.stdout": {
+          "file": "stable-true-invalid-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "stable-true-invalid-selector-run.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "real",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["app#prepare", "base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": ["base#prepare"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": ["app", "base", "phantom"],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-real-dry.stdout",
+          "sha256": "70b26a0f93085f4662dd1e2b2dd67770f2334a9894f045f8b294cf3430a372b2",
+          "bytes": 12844
+        },
+        "dry.stderr": {
+          "file": "canary-false-real-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-real-run.stdout",
+          "sha256": "cb469253abbf8b0d4d83c3eccafb857db516461535b5b192d86c76324d742ad8",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "canary-false-real-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-false-real-summary.json",
+          "sha256": "cb17956518a599355293e931e128c54bfe7d460e0a939d50481940351febf0dd",
+          "bytes": 11117
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-missing-command-dry.stdout",
+          "sha256": "03321f808a29b2d6576b3728b6b3ecb3ed31bdbef59cf00a9013a1f11fe2ea2b",
+          "bytes": 6801
+        },
+        "dry.stderr": {
+          "file": "canary-false-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-missing-command-run.stdout",
+          "sha256": "91a63b4952d20e13bfb73bdc5d1ac229f7d8f85e6c7e1e0dd345f58bd8377e07",
+          "bytes": 311
+        },
+        "run.stderr": {
+          "file": "canary-false-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-false-missing-command-summary.json",
+          "sha256": "89b715a01d83c06eb11bf0df6bf705ee7eda49275c8fbab2752a4913ba2d71cd",
+          "bytes": 4359
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "explicit-missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-explicit-missing-command-dry.stdout",
+          "sha256": "ec51d7933999184483b119888fd3b8871e574ff6d9b145a1b28d4d52ac3ac5f5",
+          "bytes": 6801
+        },
+        "dry.stderr": {
+          "file": "canary-false-explicit-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-explicit-missing-command-run.stdout",
+          "sha256": "2f8ba61542aee933fb11ce071a770ab40a4a851a12dcc0f343976d6e32fe82f4",
+          "bytes": 317
+        },
+        "run.stderr": {
+          "file": "canary-false-explicit-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-false-explicit-missing-command-summary.json",
+          "sha256": "121066768362c59b95851ab95d0297b1941e24e15990ab75e07e9d4a2bc0d5e2",
+          "bytes": 4350
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "graph-only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#collect",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-graph-only-dry.stdout",
+          "sha256": "acf4c4b8977ea460b2204e360e19cd6a1803e0e44fad7f2f40a3db1d7438e37a",
+          "bytes": 8102
+        },
+        "dry.stderr": {
+          "file": "canary-false-graph-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-graph-only-run.stdout",
+          "sha256": "619c062ed99449e0e7df66727c4fb9e223617f87e9e4f373d9b3ab88b6e3af74",
+          "bytes": 313
+        },
+        "run.stderr": {
+          "file": "canary-false-graph-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-false-graph-only-summary.json",
+          "sha256": "5e37bee3e981dc1251eb0ad7c97eafa9c1f45f1094eb459b2850a430d3a0619c",
+          "bytes": 4386
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": []
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-only-dry.stdout",
+          "sha256": "1f5782af2494e26609c8e61d3392e78c1f131397a1091d9f25ae81d74570f70e",
+          "bytes": 6963
+        },
+        "dry.stderr": {
+          "file": "canary-false-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-only-run.stdout",
+          "sha256": "f7f47be0ea313e6a5b015a9a91edf75edc211c9c93394137e33b2d183f404ea5",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "canary-false-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-false-only-summary.json",
+          "sha256": "9bfb8ca29e2cdbbf1c8b1a85594fa2dd41bb73853e46a9d329c0f1d8521a592c",
+          "bytes": 6074
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-task",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-missing-task-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-false-missing-task-dry.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        },
+        "run.stdout": {
+          "file": "canary-false-missing-task-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-false-missing-task-run.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "missing-package",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-missing-package-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-false-missing-package-dry.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        },
+        "run.stdout": {
+          "file": "canary-false-missing-package-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-false-missing-package-run.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "empty-glob",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-empty-glob-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-false-empty-glob-dry.stderr",
+          "sha256": "4f2a2b5eaffbf37b0aa5d99f7e7bbe149df78091236e5449a0400b2ffc4508c3",
+          "bytes": 140
+        },
+        "run.stdout": {
+          "file": "canary-false-empty-glob-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-false-empty-glob-run.stderr",
+          "sha256": "4f2a2b5eaffbf37b0aa5d99f7e7bbe149df78091236e5449a0400b2ffc4508c3",
+          "bytes": 140
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "empty-selection",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-empty-selection-dry.stdout",
+          "sha256": "6dec332d901ba5c2ff4fb4cb0c2434c10e395c4b879e6259d50ee964b424c6c6",
+          "bytes": 698
+        },
+        "dry.stderr": {
+          "file": "canary-false-empty-selection-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-false-empty-selection-run.stdout",
+          "sha256": "89a92e611667579771fcc5378f978a4beadb0d18adcc4cd334a7172a1b5ec156",
+          "bytes": 306
+        },
+        "run.stderr": {
+          "file": "canary-false-empty-selection-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "canary-false-empty-selection-summary.json",
+          "sha256": "e005d6e288e31fca06d79f7ad4db539f96e6c2d2de78583bb169dfe8c534f1f0",
+          "bytes": 988
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "unknown-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-unknown-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-false-unknown-selector-dry.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        },
+        "run.stdout": {
+          "file": "canary-false-unknown-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-false-unknown-selector-run.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": false,
+      "case": "invalid-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-false-invalid-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-false-invalid-selector-dry.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        },
+        "run.stdout": {
+          "file": "canary-false-invalid-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-false-invalid-selector-run.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "real",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["app#prepare", "base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": ["base#prepare"]
+        },
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": ["app", "base", "phantom"],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-real-dry.stdout",
+          "sha256": "5125a38b85a5eb2d5f67c16a8b7b2e5e4e745f85f93cde7b40214615577b61f3",
+          "bytes": 12844
+        },
+        "dry.stderr": {
+          "file": "canary-true-real-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-real-run.stdout",
+          "sha256": "cce28413db6233fa4514eae2bfb4d5ee1504f742666f67477f89c8ba810c6603",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "canary-true-real-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-true-real-summary.json",
+          "sha256": "914efd2cca68111dd8fb20bb33dbc1b3cd96eff4300ffae9dbc4de3f2f30b239",
+          "bytes": 11117
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-missing-command-dry.stdout",
+          "sha256": "e893f08c13666d45f1ec045b3f95cdf26da407908e465cab5110a5d90db31d1f",
+          "bytes": 713
+        },
+        "dry.stderr": {
+          "file": "canary-true-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-missing-command-run.stdout",
+          "sha256": "30df1b110476ae314502d6e49f0e75271c5fdec13da1c4f259588fc258f6ab9d",
+          "bytes": 310
+        },
+        "run.stderr": {
+          "file": "canary-true-missing-command-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "canary-true-missing-command-summary.json",
+          "sha256": "3d7bb9faf359233a77a46aa5e0bdadd8ce07c872c2152e5f61151a76b82b3d20",
+          "bytes": 955
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "explicit-missing-command",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#prepare",
+          "hasCommand": false,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["empty#prepare", "phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-explicit-missing-command-dry.stdout",
+          "sha256": "bcfc65bdb0349f7ae6ed85bf32be3fcace9ddda3fa341d29ca037de85c9894bd",
+          "bytes": 6545
+        },
+        "dry.stderr": {
+          "file": "canary-true-explicit-missing-command-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-explicit-missing-command-run.stdout",
+          "sha256": "77d76cfcdfac697df8ce1ea1e50ff76618cf7bf8f2a9c516c84fb02d3367791d",
+          "bytes": 317
+        },
+        "run.stderr": {
+          "file": "canary-true-explicit-missing-command-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-true-explicit-missing-command-summary.json",
+          "sha256": "36a7a329fd227cce416827e8a8ee5727cfeb9767b1d8d3d6b3b2cb5210536b39",
+          "bytes": 4350
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "graph-only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "empty#collect",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#prepare",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": ["phantom#prepare"]
+        }
+      ],
+      "executedProbePackages": ["phantom"],
+      "executedPreparePackages": ["phantom"],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-graph-only-dry.stdout",
+          "sha256": "45313caf1d3f1fd371d60bbb08bc85f179a6eb9f0bca73209d4e79a055e30cc8",
+          "bytes": 5407
+        },
+        "dry.stderr": {
+          "file": "canary-true-graph-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-graph-only-run.stdout",
+          "sha256": "9aa5be9e2a2ca61dd1f105682ea4dfa918b8eb9807b3825370a8eb25acbf5225",
+          "bytes": 313
+        },
+        "run.stderr": {
+          "file": "canary-true-graph-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-true-graph-only-summary.json",
+          "sha256": "a6a8ebb2d5910285e1e343cb93a5635fa710a960da408e7b6e371d256159fb66",
+          "bytes": 4363
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "only",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [
+        {
+          "id": "app#probe",
+          "hasCommand": true,
+          "dependencies": ["base#probe", "empty#probe"]
+        },
+        {
+          "id": "base#probe",
+          "hasCommand": true,
+          "dependencies": []
+        },
+        {
+          "id": "empty#probe",
+          "hasCommand": false,
+          "dependencies": ["phantom#probe"]
+        },
+        {
+          "id": "phantom#probe",
+          "hasCommand": true,
+          "dependencies": []
+        }
+      ],
+      "executedProbePackages": ["app", "base", "phantom"],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": true,
+      "selectedNativeExecutionRecord": true,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-only-dry.stdout",
+          "sha256": "48f314a09661c1f31288bd144fcc943fff64510bb3241b12a3e47258583e0159",
+          "bytes": 6963
+        },
+        "dry.stderr": {
+          "file": "canary-true-only-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-only-run.stdout",
+          "sha256": "b28f403b9be866606df8f5c48581404905544a8c8b74d475445751f1c8952e6e",
+          "bytes": 309
+        },
+        "run.stderr": {
+          "file": "canary-true-only-run.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "summary": {
+          "file": "canary-true-only-summary.json",
+          "sha256": "e6873da6bf070c2be31116ac7907929812c8c0ddc31707f90e359b1bfe86904e",
+          "bytes": 6074
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-task",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-missing-task-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-true-missing-task-dry.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        },
+        "run.stdout": {
+          "file": "canary-true-missing-task-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-true-missing-task-run.stderr",
+          "sha256": "7a635e12e59b167e30f81fc9050ccb4edd5e551b97bb83c15be13d09d2b84cc0",
+          "bytes": 85
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "missing-package",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-missing-package-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-true-missing-package-dry.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        },
+        "run.stdout": {
+          "file": "canary-true-missing-package-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-true-missing-package-run.stderr",
+          "sha256": "80cf5760df93704d435de4fc68adfda06e63389bfa08a25636a2e1ae584e3d71",
+          "bytes": 55
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "empty-glob",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-empty-glob-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-true-empty-glob-dry.stderr",
+          "sha256": "4f2a2b5eaffbf37b0aa5d99f7e7bbe149df78091236e5449a0400b2ffc4508c3",
+          "bytes": 140
+        },
+        "run.stdout": {
+          "file": "canary-true-empty-glob-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-true-empty-glob-run.stderr",
+          "sha256": "4f2a2b5eaffbf37b0aa5d99f7e7bbe149df78091236e5449a0400b2ffc4508c3",
+          "bytes": 140
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "empty-selection",
+      "dryExit": 0,
+      "executionExit": 0,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 1,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-empty-selection-dry.stdout",
+          "sha256": "632f79297719b45ef26361f9923d22ffde6b92eb05b625d53359e8ced7467598",
+          "bytes": 698
+        },
+        "dry.stderr": {
+          "file": "canary-true-empty-selection-dry.stderr",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stdout": {
+          "file": "canary-true-empty-selection-run.stdout",
+          "sha256": "46d94ef1ab62bcaefd5c834cc3e4fdc76b3d5eb6c05c467db579479f1a76505d",
+          "bytes": 306
+        },
+        "run.stderr": {
+          "file": "canary-true-empty-selection-run.stderr",
+          "sha256": "3db8364888feea837d2e8e67a0a9e8d3134662ed196b1ea0f17e7ab0dbb1d7c0",
+          "bytes": 54
+        },
+        "summary": {
+          "file": "canary-true-empty-selection-summary.json",
+          "sha256": "94ab3ec7c88441310bd3b94775061f70d7ebaa1581223c4c3d5280b82a40e878",
+          "bytes": 988
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "unknown-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-unknown-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-true-unknown-selector-dry.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        },
+        "run.stdout": {
+          "file": "canary-true-unknown-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-true-unknown-selector-run.stderr",
+          "sha256": "3b11058a01169d770ceaa819ac016ee943858209568d77fbf9ee0ad4bf84f95b",
+          "bytes": 49
+        }
+      }
+    },
+    {
+      "channel": "canary",
+      "strictTaskEntrypointSelection": true,
+      "case": "invalid-selector",
+      "dryExit": 1,
+      "executionExit": 1,
+      "assertionsPassed": true,
+      "tasks": [],
+      "executedProbePackages": [],
+      "executedPreparePackages": [],
+      "selectedCommandPresent": false,
+      "selectedNativeExecutionRecord": false,
+      "nativeExecutionSummaries": 0,
+      "logs": {
+        "dry.stdout": {
+          "file": "canary-true-invalid-selector-dry.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "dry.stderr": {
+          "file": "canary-true-invalid-selector-dry.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        },
+        "run.stdout": {
+          "file": "canary-true-invalid-selector-run.stdout",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0
+        },
+        "run.stderr": {
+          "file": "canary-true-invalid-selector-run.stderr",
+          "sha256": "cab67f2a1473c6554760d0ed9a8f82e54ecac9abe67b48693d14659fcf6185ec",
+          "bytes": 152
+        }
+      }
+    }
+  ],
+  "limits": [
+    "Linux synthetic four-workspace profile; current repository task/entrypoint and cohort review remains necessary.",
+    "Only strictTaskEntrypointSelection changes; all tasks disable cache and executions allow local transport only.",
+    "Finite environment, private homes, offline lockfile setup with lifecycle scripts disabled; no credentials or remote cache.",
+    "Streaming collection bounds stdout to one MiB and stderr to 64 KiB; ten seconds per owned process group and three minutes total.",
+    "A zero exit with no selected command is not execution evidence. Explicit task and graph-only requests intentionally retain commandless graph nodes.",
+    "No repository configuration, qualification, infrastructure or production setting is changed."
+  ]
+}

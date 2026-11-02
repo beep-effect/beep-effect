@@ -320,19 +320,24 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
       )
   );
 
-  const withRetry: {
-    <A, E extends RetryableFailure.Encoded>(operation: string, effect: Effect.Effect<A, E>): Effect.Effect<A, E>;
-    <A, E extends RetryableFailure.Encoded>(effect: Effect.Effect<A, E>): (operation: string) => Effect.Effect<A, E>;
-  } = dual(
-    2,
-    <A, E extends RetryableFailure.Encoded>(operation: string, effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
-      effect.pipe(
-        Effect.tapError((error) =>
-          policy.retries(error) ? Effect.logDebug("github.retry").pipe(Effect.annotateLogs({ operation })) : Effect.void
-        ),
-        Effect.retry(policy.schedule<E>())
-      )
-  );
+  // A write GitHub may already have applied (a POST or PATCH, or a GraphQL mutation) is retried only
+  // when GitHub refused it before doing anything, a rate limit; an ambiguous transport failure fails
+  // at once instead of risking a second comment, reply or object. Reads and idempotent writes keep
+  // the full policy.
+  const withRetry = <A, E extends RetryableFailure.Encoded & { readonly kind: string }>(
+    operation: string,
+    write: WriteSafety,
+    effect: Effect.Effect<A, E>
+  ): Effect.Effect<A, E> => {
+    const retriable = (error: E): boolean =>
+      policy.retries(error) && (write === WriteSafety.Enum.idempotent || error.kind === "rateLimited");
+    return effect.pipe(
+      Effect.tapError((error) =>
+        retriable(error) ? Effect.logDebug("github.retry").pipe(Effect.annotateLogs({ operation })) : Effect.void
+      ),
+      Effect.retry({ schedule: policy.schedule<E>(), while: retriable })
+    );
+  };
 
   const request: Transport["request"] = dual(
     3,
@@ -343,6 +348,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
     ): Effect.Effect<OctokitResponse<A>, GitHubError> =>
       withRetry(
         operation,
+        writeSafetyOfRoute(route),
         attempt(
           (signal) => octokit.request<A>({ ...routeOptions(route), ...withSignal(params, signal) }),
           (error, now) => GitHubError.fromOctokit(operation, error, now)
@@ -386,6 +392,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
             ? Effect.succeedNone
             : withRetry(
                 operation,
+                WriteSafety.Enum.idempotent,
                 attempt(
                   (signal) => {
                     currentSignal = signal;
@@ -417,6 +424,7 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
     ): Effect.Effect<unknown, GitHubGraphQLError> =>
       withRetry(
         operation,
+        writeSafetyOfDocument(document),
         attempt(
           (signal) => octokit.graphql<unknown>(document, withSignal(variables, signal)),
           (error, now) => GitHubGraphQLError.fromThrowable(operation, error, now)
@@ -426,6 +434,29 @@ export const makeTransport = Effect.fn("OctokitTransport.make")(function* (
 
   return { request, pageSource, graphql, rateLimit: Ref.get(snapshot) };
 });
+
+/** Whether a request may be repeated without repeating its effect on GitHub. */
+const WriteSafety = LiteralKit(["idempotent", "non-idempotent"]);
+type WriteSafety = typeof WriteSafety.Type;
+
+const NonIdempotentMethod = LiteralKit(["POST", "PATCH"]);
+
+/** A REST route's write safety, from the method Octokit would send (GET when the route names none). */
+const writeSafetyOfRoute = (route: string): WriteSafety => {
+  const options = routeOptions(route);
+  return "method" in options && S.is(NonIdempotentMethod)(Str.toUpperCase(options.method))
+    ? WriteSafety.Enum["non-idempotent"]
+    : WriteSafety.Enum.idempotent;
+};
+
+/**
+ * A GraphQL document's write safety: a mutation operation, first or after a fragment, is not
+ * idempotent; a query is.
+ */
+const writeSafetyOfDocument = (document: string): WriteSafety =>
+  /(?:^|\})(?:\s|#[^\n]*\n)*mutation\b/u.test(document)
+    ? WriteSafety.Enum["non-idempotent"]
+    : WriteSafety.Enum.idempotent;
 
 /** Keep Octokit's first-two-space-separated-token route parsing and GET defaults. */
 const routeOptions = (route: string) => {
