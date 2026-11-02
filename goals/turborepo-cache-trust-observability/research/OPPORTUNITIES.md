@@ -1660,3 +1660,29 @@ regression proving the inspection leaf lives in an admitted reusable workflow.
 The queued run was cancelled without executing inspection; this is neither a
 passed inspection nor a signed-cache result. No runner-group permission or
 capacity was changed.
+
+
+### 2026-11-02 — protected inspection misreads a directory alias
+
+Actual inspection job `125171205116` reached the intended Heavy runner but
+reported a missing bounded artifact for YAML fixture directory `V55R`. The
+source collector resolved a declared relative alias and unconditionally read
+its target as a file. The fixture population also contains nested-directory
+aliases, so a leaf-only workaround would preserve the next failure. Add
+contained recursive manifests and positive nested/cycle controls, with explicit
+refusals for escaping aliases, ignored members and undeclared directories.
+Every leaf remains independently inventoried; no fixture exclusion is added.
+
+The initial edit used an outdated Array predicate and underconstrained tuple
+projection; package checking and focused runtime controls rejected it. Use the
+installed `Array.isArrayNonEmpty` and tuple order directly. A subsequent check
+caught nested Option assertion calls; use the canonical pipe form. Preserve
+these failed receipts and require the corrected package result before handoff.
+The first real-tree summary also matched a fixture ID against the alias name
+rather than its relative target; retain that receipt and correct only the
+summary predicate before replay.
+
+The scoped native complexity review then reported cognitive complexity 23 in
+`hashDirectoryAlias`. Replace its nested entry-type branch chain with the
+existing Match handlers, retain all containment/inventory failures, and add an
+actual named-pipe refusal. Do not relax a complexity rule or baseline.

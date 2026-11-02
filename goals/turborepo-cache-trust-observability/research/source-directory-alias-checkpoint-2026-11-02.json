@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "cache-source-directory-alias/v1",
+  "recordedAt": "2026-11-02T10:15:22.027628+00:00",
+  "sourceBaseRevision": "be80899ddb",
+  "authority": "Focused source/runtime controls and read-only real-tree collection; no protected approval, signed publication, rollout or whole-goal acceptance.",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts": "2cbf4b41a7aebe16a4341d027afb7d5e6e3ea2abe78a3a2c98ac84ec64d76e17",
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.schemas.ts": "bd08e75eb231437e75bc7d6891769b8c6a103d2e706d019445f0ea4ad2133914",
+    "packages/tooling/tool/cli/test/cache-workflow.test.ts": "70c94d486a194cf54f8f9c6e5a12c6946cbfa961ddcbabd67fac50242e4711eb",
+    "standards/jsdoc-documentation.inventory.jsonc": "44b65548593af33fa4c1d228a7c66521774957790bbf2c1bb6a4badc1d1e94f2",
+    "standards/jsdoc-documentation.inventory.md": "a111f987763576dda7f7bf682a64628d199b3e372dc87924636ee8e14f8c0df8",
+    "standards/schema-catalog/@beep/repo-cli.generated.jsonc": "1097f9050c526b08aeae34e8ca54826efac09022326f21171db81500d05ada7e"
+  },
+  "actualFailure": {
+    "run": 41413340460,
+    "job": 125171205116,
+    "sourceRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
+    "result": "Failed after successful runner routing and setup; a declared relative alias resolved to fixture directory V55R, which the collector treated as a file."
+  },
+  "contract": {
+    "directoryManifestDomain": "beep/cache-producer-directory/v1",
+    "manifestEntryLimit": 20000,
+    "declaredSourceLimit": 20000,
+    "fileReadByteLimit": 8388608,
+    "canonicalTargetAndTreeBound": true,
+    "leafContentsBoundByCompleteIndependentInventory": true,
+    "completePosixModesIncludeType": true,
+    "childAliasesTraversedRecursively": false,
+    "absoluteAndOutsideAliasesRejected": true,
+    "ignoredUndeclaredAndSpecialMembersRejected": true,
+    "inventoryStabilityAndFrozenExecutionProfileRetained": true,
+    "priorApprovalReused": false
+  },
+  "controls": {
+    "workflow45Tests": {
+      "exit": 0,
+      "elapsedSeconds": 11.78,
+      "finishedAt": "2026-11-02T10:09:20.057217+00:00"
+    },
+    "packageQuick": {
+      "exit": 0,
+      "elapsedSeconds": 18.859,
+      "finishedAt": "2026-11-02T10:09:26.886914+00:00"
+    },
+    "scopedComplexity": {
+      "exit": 0,
+      "elapsedSeconds": 4.984,
+      "finishedAt": "2026-11-02T10:07:40.511817+00:00"
+    },
+    "canonicalInventory": {
+      "exit": 0,
+      "elapsedSeconds": 411.72,
+      "finishedAt": "2026-11-02T10:13:12.727018+00:00"
+    },
+    "canonicalSchemaCatalog": {
+      "exit": 0,
+      "elapsedSeconds": 38.967,
+      "finishedAt": "2026-11-02T10:04:19.250676+00:00"
+    },
+    "realSourceCollection": {
+      "exit": 0,
+      "elapsedSeconds": 17.171,
+      "finishedAt": "2026-11-02T10:14:17.935746+00:00"
+    }
+  },
+  "controlCases": [
+    "Contained nested directory tree and independently inventoried file-content changes.",
+    "Tree membership and nested directory permission changes alter identity.",
+    "Complete mode separates directory alias from regular-file type.",
+    "Declared file aliases and directory cycles remain finite without recursive alias following.",
+    "Outside directory alias rejected before directory enumeration.",
+    "Ignored file and undeclared empty directory rejected.",
+    "Escaping declared child alias rejected.",
+    "Real named pipe rejected without payload read.",
+    "Existing revision, profile, issuer, interruption, source drift, entry-bound and inventory-stability controls preserved."
+  ],
+  "realTree": {
+    "files": 14992,
+    "relativeAliases": 1616,
+    "directoryAliases": 1500,
+    "v55rBound": true,
+    "nestedMus6Bound": true,
+    "authority": "Read-only source collection only; no frozen-profile approval, dependency qualification or protected producer grant.",
+    "independentGitInventoryCount": 14992,
+    "independentGitInventorySha256": "1a6989074c4b8b38e26a0a61a84c89c5dcbd21e8ce7d13d4912c3ab4b88b41d6",
+    "independentRelativeAliasCount": 1616,
+    "independentDirectoryAliasCount": 1500
+  },
+  "generatedMetadata": {
+    "inventoryFindingTotalsUnchanged": true,
+    "inventoryTotalsDelta": {
+      "publicExports": {
+        "base": 25381,
+        "current": 25383
+      }
+    },
+    "inheritedExports": ["CiLaneTimingDayPeak", "ciLaneTimingDayPeaks"],
+    "schemaCatalogDelta": "One annotation description; no catalog baseline or rule change.",
+    "changedSourceExportPositionsVerified": 16
+  },
+  "retainedFailedAttempts": [
+    "Initial package check rejected the obsolete Array predicate and tuple projection; four new runtime tests failed at that predicate.",
+    "Second package check rejected nested Option assertion syntax.",
+    "First real-tree summary matched nested fixture ID against alias name; corrected only the summary predicate and retained both executions.",
+    "Scoped complexity rejected cognitive23, then9; matching and Effect boundary validation bring the final scoped check to exit0 without an exception."
+  ],
+  "remaining": [
+    "Hosted component checks and reviews; primary orchestrator alone merges.",
+    "Fresh main protected inspection and independent implementation approval.",
+    "Ordinary stable/canary qualification and actual protected signed producer execution.",
+    "Every remaining trust/adoption acceptance criterion and representative observation window."
+  ],
+  "productionConfigurationChanged": false,
+  "wholeGoalAcceptanceChanged": false
+}

@@ -15,6 +15,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
@@ -90,23 +91,30 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
   while (A.isArrayNonEmpty(remaining)) {
     const [directory, ...rest] = remaining;
     remaining = rest;
-    if (
-      (yield* fs.realPath(directory)) !== directory ||
-      !isResolvedPathWithinRoot(path, { root, candidate: directory })
-    )
-      return yield* CacheCommandError.new("Workflow directory alias escaped its canonical checkout location.");
+    yield* fs.realPath(directory).pipe(
+      Effect.filterOrFail(
+        (resolved) => resolved === directory && isResolvedPathWithinRoot(path, { root, candidate: resolved }),
+        () => CacheCommandError.new("Workflow directory alias escaped its canonical checkout location.")
+      )
+    );
     for (const name of A.sort(yield* fs.readDirectory(directory), Order.String)) {
       const child = path.join(directory, name);
       const relative = path.relative(root, child);
       const info = yield* fs.lstat(child);
-      if (info.type === "Directory") {
-        if (!HashSet.some(declared, Str.startsWith(`${relative}/`)))
-          return yield* CacheCommandError.new("Workflow directory alias contains an undeclared directory.");
-        remaining = A.append(remaining, child);
-      } else if (info.type === "File" || info.type === "SymbolicLink") {
-        if (!HashSet.has(declared, relative))
-          return yield* CacheCommandError.new("Workflow directory alias contains an undeclared source entry.");
-      } else return yield* CacheCommandError.new("Workflow directory alias contains an unsupported filesystem entry.");
+      yield* Match.value(info.type).pipe(
+        Match.when("Directory", () => {
+          if (!HashSet.some(declared, Str.startsWith(`${relative}/`)))
+            return CacheCommandError.new("Workflow directory alias contains an undeclared directory.");
+          remaining = A.append(remaining, child);
+          return Effect.void;
+        }),
+        Match.whenOr("File", "SymbolicLink", () =>
+          HashSet.has(declared, relative)
+            ? Effect.void
+            : CacheCommandError.new("Workflow directory alias contains an undeclared source entry.")
+        ),
+        Match.orElse(() => CacheCommandError.new("Workflow directory alias contains an unsupported filesystem entry."))
+      );
       entries = A.append(entries, Tuple.make(relative, S.Natural.make(info.mode)));
       if (entries.length > 20000)
         return yield* CacheCommandError.new("Workflow directory alias exceeded its entry bound.");

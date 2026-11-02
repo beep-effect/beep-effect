@@ -1058,3 +1058,19 @@ retains the actual blocked run, source comparison, 41 passing security controls,
 the intended old-workflow negative, and the restored route/inventory replay.
 Obtain hosted component review and a real new main inspection next. This does
 not enable signing or complete any whole-goal acceptance criterion.
+
+
+### Contained source directory aliases, 2026-11-02
+
+Protected inspection run `41413340460`, job `125171205116`, reached its admitted
+runner and failed in source collection. The declared YAML fixture alias
+`tags/alias/V55R` resolves to a directory, and other declared fixture aliases
+cover nested trees. Bind those complete contained trees with a bounded,
+domain-separated structure/mode manifest while keeping every leaf in the
+independent declared inventory. Keep absolute/outside aliases, ignored entries,
+unsupported filesystem objects and changed inventories refused.
+
+The [collector checkpoint](research/source-directory-alias-checkpoint-2026-11-02.json)
+records focused controls and real-tree replay separately from actual protected
+inspection. A new main inspection and independent approval remain required; no
+whole-goal criterion or production configuration is changed.

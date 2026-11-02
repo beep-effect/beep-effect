@@ -900,6 +900,23 @@ it.layer(
       expect(error.message).toContain("must stay inside its canonical checkout");
     })
   );
+  it.effect("rejects a named pipe under a directory alias without reading its payload", () =>
+    Effect.gen(function* () {
+      const { root, fs, path } = yield* fixture();
+      yield* fs.symlink("src", path.join(root, "packages/fixture/alias"));
+      const created = yield* StepExec.runCaptured({
+        command: "/usr/bin/mkfifo",
+        args: [path.join(root, "packages/fixture/src/pipe")],
+        cwd: root,
+        extendEnv: false,
+        env: { PATH: "/usr/bin" },
+        source: "all",
+      });
+      expect(created.exitCode).toBe(0);
+      const error = yield* collectCacheProducerWorkflowFiles(root).pipe(Effect.flip);
+      expect(error.message).toContain("unsupported filesystem entry");
+    })
+  );
   it.effect("rejects absolute source aliases even when the target stays inside the checkout", () =>
     Effect.gen(function* () {
       const { root, fs, path, source } = yield* fixture();
