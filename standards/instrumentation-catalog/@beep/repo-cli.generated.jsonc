@@ -1284,6 +1284,8 @@
     {"name":"EffectImports.discoverFilesWithGlob","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.foundationMappingsForFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectImports.runEffectImportRules","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"EffectResolver.fetchEffectReleaseCommit","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"EffectResolver.withEffectReleaseCommit","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectSchemaInventory.command","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectSchemaInventoryExtract.extract","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"EffectSchemaInventoryExtract.parse","owner":"@beep/repo-cli","family":"tooling","conforms":true},

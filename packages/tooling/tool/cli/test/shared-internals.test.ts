@@ -54,7 +54,7 @@ import {
   readOptionalRedactedConfigString,
   readTurboCacheEnvironment,
   renderSchemaFirstPolicyFindingLine,
-  renderTurboEnvironmentHealthWarning,
+  renderTurboEnvironmentHealthWarnings,
   resolveTurboCachePlan,
   resolveTurboCacheStep,
   SchemaFirstPolicyFinding,
@@ -62,6 +62,7 @@ import {
   SchemaFirstPolicySeverity,
   TurboCacheEnvironment,
   TurboCacheMode,
+  TurboEnvironmentHealthWarning,
   turboCachePlanArgs,
   turboCacheSecretSessionEnvironment,
   turboEnvExtendsAmbient,
@@ -794,7 +795,7 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(result.cachedWarnings).toBe(result.warnings);
         expect(turboCachePlanArgs(result.plan)).toEqual(["--cache=local:rw,remote:r"]);
         expect(A.map(result.warnings, (warning) => warning.variableName)).toEqual(["STALE_DATABASE_URL"]);
-        const warningText = renderTurboEnvironmentHealthWarning(A.head(result.warnings).pipe(O.getOrThrow));
+        const warningText = renderTurboEnvironmentHealthWarnings(result.warnings).pipe(O.getOrThrow);
         expect(warningText).toContain("STALE_DATABASE_URL");
         expect(warningText).not.toContain(staleReference);
 
@@ -808,6 +809,23 @@ it.layer(Layer.merge(BunCrypto.layer, Path.layer), { timeout: "10 seconds" })((i
         expect(wholeFileProbe.args).toEqual(["run", "--env-file=/repo/correct-quad/.env", "--", "true"]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
+
+    it("summarizes many environment-health warnings on one value-free line", () => {
+      const warningsFor = A.map((variableName: string) => TurboEnvironmentHealthWarning.make({ variableName }));
+      const names = ["ONE_KEY", "TWO_KEY", "THREE_KEY", "FOUR_KEY", "FIVE_KEY", "SIX_KEY", "SEVEN_KEY"];
+
+      assertNone(renderTurboEnvironmentHealthWarnings([]));
+
+      const many = renderTurboEnvironmentHealthWarnings(warningsFor(names)).pipe(O.getOrThrow);
+      expect(Str.split(many, "\n")).toHaveLength(1);
+      expect(many).toContain("7 .env variables have unavailable 1Password references");
+      expect(many).toContain("ONE_KEY, TWO_KEY, THREE_KEY, FOUR_KEY, FIVE_KEY, and 2 more");
+      expect(many).not.toContain("SIX_KEY");
+      expect(many).toContain("TURBO_API, TURBO_TOKEN, TURBO_TEAM, and TURBO_CACHE");
+
+      const few = renderTurboEnvironmentHealthWarnings(warningsFor(A.take(names, 2))).pipe(O.getOrThrow);
+      expect(few).toContain("2 .env variables have unavailable 1Password references (ONE_KEY, TWO_KEY)");
+    });
 
     it.effect("keeps environment-health file fallbacks and healthy references non-blocking", () =>
       Effect.gen(function* () {
