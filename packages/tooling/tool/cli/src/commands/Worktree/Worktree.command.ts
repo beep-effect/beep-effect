@@ -36,7 +36,6 @@ import { worktreeReapCommand } from "./Reap.command.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import {
-  parseWorktreePorcelain,
   WorktreeInvokerExemption,
   WorktreeListEntry,
   WorktreeRemovalRequest,
@@ -48,11 +47,13 @@ import {
 import {
   branchDeleteCommand,
   installRegenerateMergeDriver,
+  listRepositoryWorktrees,
   restoreBeepMaterial,
   runWorktreeGitCapture,
   WorktreeRemovalService,
   WorktreeRemovalServiceLive,
 } from "./Worktree.service.ts";
+import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
@@ -452,20 +453,10 @@ export const resolveWorktreeContext = Effect.fn("Worktree.resolveWorktreeContext
 ): Effect.fn.Return<
   WorktreeContext,
   WorktreeCommandError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const path = yield* Path.Path;
-  const currentRoot = yield* findRepoRoot(startFrom).pipe(
-    Effect.mapError(WorktreeCommandError.new("Failed to locate the current repository root."))
-  );
-  const porcelain = yield* runWorktreeGitCapture(
-    currentRoot,
-    ["worktree", "list", "--porcelain", "-z"],
-    "Failed to list git worktrees."
-  );
-  const entries = yield* parseWorktreePorcelain(porcelain).pipe(
-    Effect.mapError(WorktreeCommandError.new("Git worktree listing must use NUL delimiters."))
-  );
+  const { currentRoot, entries } = yield* listRepositoryWorktrees(startFrom, "Failed to list git worktrees.");
   const mainCheckout = O.match(A.head(entries), {
     onNone: () => currentRoot,
     onSome: (entry) => entry.path,
@@ -628,6 +619,7 @@ const inspectWorktreeEntry = Effect.fn("Worktree.inspectWorktreeEntry")(function
   | Path.Path
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
@@ -693,6 +685,7 @@ export const worktreeDoctorReportForContext = Effect.fn("Worktree.worktreeDoctor
   | Path.Path
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeRemovalService
 > {
   const path = yield* Path.Path;
@@ -886,7 +879,7 @@ const runWorktreeNew = Effect.fn("Worktree.runWorktreeNew")(function* (options: 
 }): Effect.fn.Return<
   void,
   WorktreeCommandError | WorktreeExistsError,
-  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const context = yield* resolveWorktreeContext();
   const branch = O.getOrElse(options.branch, () => defaultWorktreeBranch(options.name));
@@ -1066,6 +1059,7 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
   | Path.Path
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeRemovalService
 > {
   const fs = yield* FileSystem.FileSystem;
@@ -1135,6 +1129,7 @@ const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): 
   | Path.Path
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | WorktreeRemovalService
 > {
   const context = yield* resolveWorktreeContext();

@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   CacheActivationPreview,
@@ -175,7 +176,8 @@ const testLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  Git.layer.pipe(Layer.provide(NodeServices.layer))
 );
 
 const memoryFsLayer = Layer.effect(
@@ -195,7 +197,11 @@ const memoryPlatform = Layer.mergeAll(
   NodeStdio.layer,
   NodeTerminal.layer
 );
-const memoryLayer = Layer.merge(memoryPlatform, FsUtilsLive.pipe(Layer.provide(memoryPlatform)));
+const memoryLayer = Layer.mergeAll(
+  memoryPlatform,
+  FsUtilsLive.pipe(Layer.provide(memoryPlatform)),
+  Git.layer.pipe(Layer.provide(memoryPlatform))
+);
 
 const defaultBaselineRequest = CacheBaselineRequest.make({
   review,
