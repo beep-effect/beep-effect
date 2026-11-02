@@ -28,12 +28,15 @@ Only on an explicit implementation launch, use:
 
 ## Current phase
 
-Incoming main changes require an expanded source refresh. Supporting
-[PR2519](https://github.com/beep-effect/beep-effect/pull/2519) repairs independently
-identified namespace parity and historical-alias defects. The proof helper now
-checks complete canonical membership, with ten passing filesystem controls.
-Earlier package/canary receipts retain their `7ae3f01401` checkpoint scope; fresh
-qualification follows source integration. See the [active refresh](./research/POST-MERGE-QUALIFICATION.md).
+The namespace repair [PR2519](https://github.com/beep-effect/beep-effect/pull/2519)
+is merged and integrated. Fresh qualification passed 870 AI-metrics,40 Phoenix,
+73 managed-provider and all 44 reconciliation tests, with 249 selected inputs stable.
+Independent review accepted the 84-input root and same-root90/89-input disposable/live
+pair. All thirteen domain criteria retain support at their explicit scopes.
+See the [active qualification](./research/POST-MERGE-QUALIFICATION.md).
+Required final-head hosted/review/merge proof and canonical completion remain open;
+one scanner false positive in a public test-file digest is being corrected through
+the base-reviewed policy lane.
 
 The foundation remains **active**. [PR2364](https://github.com/beep-effect/beep-effect/pull/2364)
 merged before its readiness gates completed. Canonical completion refresh records
@@ -80,14 +83,13 @@ that later public derivatives retain the original bytes.
 
 ## Current verification
 
-- [November 2 qualification](./research/POST-MERGE-QUALIFICATION.md): fresh Node
-  package suites passed 855 AI-metrics, 40 Phoenix and 73 managed-provider tests.
-  Both current-source declared synthetic stages passed and were independently
-  reviewed, with 88 disposable / 87 live input hashes, two exact event and visibility
-  sets per stage, private metadata, local alert proof and owned rollback.
-  [Stage receipt](./ops/history/post-merge-declared-stages-20261102.json) retains
-  the stopped and declined attempts separately. Required final-head delivery
-  and canonical lifecycle completion remain open.
+- [November2 integrated qualification](./research/POST-MERGE-QUALIFICATION.md):
+  fresh suites passed 870/40/73/44 tests with 249 selected inputs stable. Independent
+  review accepted 84 preparation inputs and 90/89 disposable/live stage inputs,
+  two exact event/attempt/visibility sets per stage, privacy, backup/queue digests,
+  actual local alert proof and owned rollback. See the [integrated stage receipt](./ops/history/integrated-declared-stages-20261102.json).
+  The first November2 checkpoint and declined/stopped attempts remain historical;
+  neither narrower passes nor source merges replace final repository gates.
 
 - [October 31 PR repair](./research/PR2364-REPAIR.md): current-main integration,
   documentation and fixture-ownership corrections, passing package audit/docgen,
