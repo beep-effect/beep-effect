@@ -17,7 +17,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until final reconciliation PR #2416 is merged through repository gates with genuine final-head canonical readiness, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence; implementation PR #2389 remains supporting.",
+    "statement": "Not achieved until final closeout PR #2488 is merged through repository gates with genuine final-head canonical readiness, all seven Cloud findings remain resolved, and all 20 dependency, four code-scanning and five secret-scanning alerts are resolved with evidence; implementation PR #2389 and reconciliation PR #2416 remain supporting.",
     "grandfathered": false,
     "pullRequests": [
       {
@@ -34,6 +34,10 @@
       },
       {
         "number": 2416,
+        "role": "supporting"
+      },
+      {
+        "number": 2488,
         "role": "final"
       }
     ],
@@ -45,12 +49,12 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/codex_security-closeout-receipts-20261031-51040364d53a/verdict.json",
+        "ref": ".beep/yeet/runs/chore_security-findings-closeout-2c19f79cbffa/verdict.json",
         "gating": true
       }
     ]
   },
-  "branch": "codex/security-closeout-receipts-20261031",
+  "branch": "chore/security-findings-closeout",
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
@@ -58,7 +62,8 @@
     "goals/codex-security-findings-2026-10-28/SPEC.md",
     "goals/codex-security-findings-2026-10-28/PLAN.md",
     "goals/codex-security-findings-2026-10-28/GOAL.md",
-    "goals/codex-security-findings-2026-10-28/research/SOURCES.md"
+    "goals/codex-security-findings-2026-10-28/research/SOURCES.md",
+    "goals/codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md"
   ],
   "researchReports": [
     "research/SOURCES.md",
@@ -67,7 +72,8 @@
     "research/2026-10-31-dependencies.md",
     "research/2026-10-31-review.md",
     "research/2026-10-31-scanning.md",
-    "research/2026-10-31-accepted-closeout.md"
+    "research/2026-10-31-accepted-closeout.md",
+    "research/2026-11-01-final-closeout.md"
   ],
   "agentLaunchers": [
     {
@@ -193,9 +199,9 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2416
+    "finalPullRequest": 2488
   },
-  "statusNote": "Implementation PR #2389 is merged and its 35 hosted checks pass. Final closeout PR #2416 must preserve genuine pre-merge canonical readiness; external dependency-alert closure and verified completion receipts remain required. Original Cloud findings and scanning dispositions are retained.",
+  "statusNote": "Implementation PR #2389 and reconciliation PR #2416 are merged; #2416's retained verdict is closeout-mode and bound to a pre-merge head, so it cannot qualify completion. Final closeout PR #2488 carries a publish verdict at its exact final head. External dependency, code-scanning and secret-scanning inventories were zero-open on 2026-11-01.",
   "supplementalDependencies": {
     "catalog": "ops/dependabot.json",
     "expectedCount": 20,

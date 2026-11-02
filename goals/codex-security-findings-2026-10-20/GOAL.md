@@ -4,7 +4,7 @@ Repo root: the current working directory. Do not assume an absolute path.
 
 Outcome: fix and close the 8 Codex security findings captured on
 2026-10-20 for `kriegcloud/beep-effect`: 3 Low, 5 Informational.
-Retain merged implementation and exact closure; finish final receipt PR #2416
+Retain merged implementation and exact closure; finish final receipt PR #2488
 with genuine pre-merge readiness and verified post-merge completion evidence.
 
 The original implementation also covers 123 Dependabot IDs (63 advisories) in
@@ -44,7 +44,7 @@ Rules:
 4. Keep raw report bodies ignored under `raw/`. Tracked records may contain only
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
-   repair/verify. Qualify #2416 and preserve its authentic final-head readiness before merge.
+   repair/verify. Qualify #2488 and preserve its authentic final-head readiness before merge.
 6. After merge, close only the exact 8-ID allowlist in Codex as Fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
 
@@ -63,10 +63,10 @@ Code and secret scanning show zero open alerts. Read the linked
 ## Final receipt reconciliation — October 31
 
 #2389 merged before this lane captured positive canonical readiness; later
-green checks cannot replace it. Hold #2416 until its genuine final-head
+green checks cannot replace it. Hold #2488 until its genuine final-head
 `merge-ready: yes` is recorded while open. Preserve the verdict, then obtain the
 owning security session’s explicit merge release to the designated coordinator.
-After #2416 merges and exact dependency closure is verified, run
+After #2488 merges and exact dependency closure is verified, run
 `bun run beep goals completion refresh --slug codex-security-findings-2026-10-20`.
 Refresh the linked packet too. Keep declared lifecycle active and prospective
 `completed-retained` until verified receipts derive completion. See the
