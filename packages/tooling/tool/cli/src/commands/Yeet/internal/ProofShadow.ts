@@ -2,6 +2,7 @@ import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
+import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
@@ -758,6 +759,7 @@ type ShadowableLane = {
   readonly lane: QualityTaskLaneRun;
   readonly observed: ProofOutcome;
   readonly commandText: string;
+  readonly parentLaneId: O.Option<string>;
 };
 
 const observedOutcome = (lane: QualityTaskLaneRun): O.Option<ProofOutcome> =>
@@ -768,12 +770,15 @@ const observedOutcome = (lane: QualityTaskLaneRun): O.Option<ProofOutcome> =>
     "not-run-early-stop": O.none<ProofOutcome>,
   });
 
-const shadowableLane = (lane: QualityTaskLaneRun): O.Option<ShadowableLane> =>
-  O.all({
-    lane: O.some(lane),
-    observed: observedOutcome(lane),
-    commandText: O.filter(lane.commandText, Str.isNonEmpty),
-  });
+const shadowableLane =
+  (parentLaneId: O.Option<string>) =>
+  (lane: QualityTaskLaneRun): O.Option<ShadowableLane> =>
+    O.all({
+      lane: O.some(lane),
+      observed: observedOutcome(lane),
+      commandText: O.filter(lane.commandText, Str.isNonEmpty),
+      parentLaneId: O.some(parentLaneId),
+    });
 
 /**
  * Select the inner lanes an attempt can shadow: lanes that ran to `passed` or
@@ -792,25 +797,14 @@ const shadowableLane = (lane: QualityTaskLaneRun): O.Option<ShadowableLane> =>
  * @category utilities
  * @since 0.0.0
  */
-export const shadowableLaneRuns = (
-  reports: ReadonlyArray<QualityTaskLaneRunReport>
-): ReadonlyArray<{
-  readonly lane: QualityTaskLaneRun;
-  readonly observed: ProofOutcome;
-  readonly commandText: string;
-}> =>
-  A.getSomes(
-    pipe(
-      reports,
-      A.flatMap((report) => report.lanes),
-      A.map(shadowableLane)
-    )
-  );
+export const shadowableLaneRuns = (reports: ReadonlyArray<QualityTaskLaneRunReport>): ReadonlyArray<ShadowableLane> =>
+  A.getSomes(A.flatMap(reports, (report) => A.map(report.lanes, shadowableLane(report.parentLaneId))));
 
 const shadowInputDigest = Effect.fn("Yeet.ProofShadow.inputDigest")(function* (
   candidate: ShadowableLane,
   facts: ProofShadowAttemptFacts,
-  epoch: ProofEpoch
+  epoch: ProofEpoch,
+  environmentDigests: HashMap.HashMap<string, string>
 ): Effect.fn.Return<ProofInputDigest, YeetCommandError, Digest.Digest> {
   const commandDigest = yield* proofCommandDigest(candidate.commandText);
   const declared = O.filter(candidate.lane.inputDigest, Str.isNonEmpty);
@@ -828,6 +822,11 @@ const shadowInputDigest = Effect.fn("Yeet.ProofShadow.inputDigest")(function* (
     laneClass: "cli-runnable",
     inputSource: O.isSome(declared) ? "turbo-task-hash" : "undeclared",
     key,
+    ...OptionUtils.getSomesStruct({
+      environmentDigest: O.flatMap(candidate.parentLaneId, (parentLaneId) =>
+        HashMap.get(environmentDigests, parentLaneId)
+      ),
+    }),
   });
 });
 
@@ -927,6 +926,8 @@ const isTripwireMiss = (row: ProofLedgerShadowRow): boolean =>
  * @param facts - Attempt identity, branch, head, tier, stage and env profile.
  * @param reports - Durable inner-lane reports the wrappers wrote for this attempt.
  * @param changed - What the attempt knows about the packages its change touches.
+ * @param environmentDigests - Environment identity digest per proof step id
+ * (the reports' `parentLaneId`), recorded on each fact beside its command digest.
  * @returns Counts of what the pass recorded.
  * @category services
  * @since 0.0.0
@@ -935,7 +936,8 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
   repoRoot: string,
   facts: ProofShadowAttemptFacts,
   reports: ReadonlyArray<QualityTaskLaneRunReport>,
-  changed: ProofChangedPackages
+  changed: ProofChangedPackages,
+  environmentDigests: HashMap.HashMap<string, string> = HashMap.empty()
 ): Effect.fn.Return<ProofShadowAttemptSummary, YeetCommandError, FileSystem.FileSystem | Path.Path | Digest.Digest> {
   const candidates = shadowableLaneRuns(reports);
   if (A.isReadonlyArrayEmpty(candidates)) {
@@ -950,7 +952,9 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
   const epoch = yield* collectProofEpoch(repoRoot);
   const ledger = yield* ProofLedger.make(repoRoot, changedPackageTripwireFor(reports, changed));
   const now = yield* DateTime.now;
-  const keys = yield* Effect.forEach(candidates, (candidate) => shadowInputDigest(candidate, facts, epoch));
+  const keys = yield* Effect.forEach(candidates, (candidate) =>
+    shadowInputDigest(candidate, facts, epoch, environmentDigests)
+  );
   const decisions = yield* ledger.lookupAll(keys, now);
   const rows = A.map(A.zip(A.zip(candidates, keys), decisions), ([[candidate, key], decision]) => ({
     row: shadowRow(decision, candidate, facts, now),

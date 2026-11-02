@@ -2561,7 +2561,21 @@ export const ciLaneCommand = Command.make(
   }
 ).pipe(Command.withDescription("Run one check.yml CI lane body exactly as hosted CI does"));
 
-const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
+/**
+ * The lanes `beep ci local` runs when no `--lanes` selection is given.
+ *
+ * **Example** (Count the default battery)
+ *
+ * ```ts
+ * import { CI_LOCAL_DEFAULT_LANES } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CI_LOCAL_DEFAULT_LANES.includes("coverage")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "commitlint",
   "repo-sanity",
   "lint-policy",

@@ -43,6 +43,7 @@ import {
 } from "../../../internal/repo-run/index.ts";
 import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { UUID } from "../../../internal/schema/Uuid.ts";
+import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import {
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
   FlakeQuarantineArtifactJson,
@@ -74,11 +75,13 @@ import {
   currentCommitSha,
   currentYeetBranch,
   lockfileChangedSinceBase,
+  refreshAndPinBaseRef,
   refreshBaseRef,
   runGitOutput,
 } from "./GitExec.ts";
 import { validateCommitMessage, validateMonitorGuards, validateRequiredMessage } from "./Guards.ts";
 import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { renderHeadInstallReceiptRefusals } from "./HeadInstallReceipt.ts";
 import { INNER_LANE_REPORT_FILE_NAME, readInnerLaneReports } from "./InnerLaneReports.ts";
 import {
   emptyPlanResult,
@@ -99,6 +102,18 @@ import {
 } from "./MonitorChecks.ts";
 import { replayYeetMonitorComments, runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS } from "./MonitorPolicy.ts";
+import {
+  ciParityLaneCandidates,
+  clearProofEnvironments,
+  collectProofEnvironment,
+  decideParityLaneReuse,
+  effectiveStepEnvironment,
+  proofEnvironmentDigests,
+  provenLanesForAttempt,
+  readProofEnvironments,
+  recordProofEnvironment,
+  renderParityLaneDecision,
+} from "./ParityReuse.ts";
 import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
@@ -127,6 +142,7 @@ import {
   proofLockPathForContext,
   releaseProofLock,
   retireFullProofLockOrObserveAtPath,
+  verifiedHeadInstallReceiptRefusals,
   writeVerifiedState,
 } from "./ProofState.ts";
 import { recordMonitoredPrSession } from "./ProvenanceFooter.ts";
@@ -156,6 +172,7 @@ import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessId
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
+import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
 import type { YeetStatusReviewThread, YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
@@ -318,15 +335,14 @@ export const hydrateYeetRunContext = Effect.fn("Yeet.hydrateYeetRunContext")(fun
     return readOnlyRunContext(repoRoot, branch, options);
   }
 
-  if (!options.plan) {
-    yield* refreshBaseRef(repoRoot, options.base);
-  }
+  const baseSha = options.plan ? O.none<string>() : yield* refreshAndPinBaseRef(repoRoot, options.base);
   const turbo = yield* collectTurboPlanSnapshot(repoRoot, options);
 
   return RepoRunContext.make({
     repoRoot,
     cwd: process.cwd(),
     base: options.base,
+    ...O.getSomesStruct({ baseSha }),
     head: options.head,
     branch,
     packetDir: options.packetDir,
@@ -396,6 +412,37 @@ const runPhaseStep = Effect.fn("Yeet.runPhaseStep")(function* (
   return timedResult;
 });
 
+// The base the run pinned, else the ref resolved now (plan-only contexts).
+const proofBaseSha = (context: RepoRunContext) =>
+  O.match(O.fromUndefinedOr(context.baseSha), {
+    onNone: () => runGitOutput(context.repoRoot, ["rev-parse", context.base]),
+    onSome: Effect.succeed,
+  });
+
+// Same-attempt parity reuse (perf audit M12): decide which parity lanes a
+// pre-push lane of this attempt already proved under the same command and
+// environment identity. Any failure to decide runs the whole battery.
+const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  previewRoot: string,
+  previewBaseSha: string
+) {
+  const parity = yield* collectProofEnvironment(step.id, previewRoot, effectiveStepEnvironment(step), previewBaseSha);
+  yield* recordProofEnvironment(context, parity);
+  const proven = provenLanesForAttempt(yield* readInnerLaneReports(context), yield* readProofEnvironments(context));
+  const decisions = yield* decideParityLaneReuse(
+    ciParityLaneCandidates(
+      previewRoot,
+      CiLocalStepPlan.make({ affected: true, base: context.base, onMainBranch: context.branch === "main" })
+    ),
+    proven,
+    parity
+  );
+  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, { discard: true });
+  return decisions;
+});
+
 const runCiParityStep = Effect.fn("Yeet.runCiParityStep")(function* (
   context: RepoRunContext,
   step: RepoPlanStep,
@@ -408,9 +455,49 @@ const runCiParityStep = Effect.fn("Yeet.runCiParityStep")(function* (
         `[yeet] CI parity on merge preview ${Str.takeLeft(12)(preview.commitSha)} against ${Str.takeLeft(12)(preview.baseSha)}`
       );
       yield* installYeetMergePreview(context, preview.worktreePath);
-      const previewStep = RepoPlanStep.make({ ...step, cwd: preview.worktreePath });
+      const decisions = yield* decideCiParityReuse(context, step, preview.worktreePath, preview.baseSha).pipe(
+        Effect.tapError((error) =>
+          Console.log(`[yeet] ci-parity: reuse unavailable, running every lane (${error.message})`)
+        ),
+        Effect.orElseSucceed(A.empty<ParityLaneDecision>)
+      );
+      const reused = A.filter(decisions, (decision) => decision.reuse);
+      const remaining = A.map(
+        A.filter(decisions, (decision) => !decision.reuse),
+        (decision) => decision.laneId
+      );
+      if (A.isReadonlyArrayNonEmpty(reused) && A.isReadonlyArrayEmpty(remaining)) {
+        const output = `skipped: every CI parity lane was proven in this attempt (${A.length(reused)} lanes)`;
+        yield* recordSkippedSteps(recorder, [step], output);
+        return RepoStepRunResult.make({ stepId: step.id, commandText: commandTextForStep(step), exitCode: 0, output });
+      }
+      const previewStep = RepoPlanStep.make({
+        ...step,
+        cwd: preview.worktreePath,
+        args: A.isReadonlyArrayNonEmpty(reused) ? [...step.args, "--lanes", A.join(remaining, ",")] : step.args,
+      });
       return yield* runPhaseStep(context, previewStep, recorder);
     })
+  );
+});
+
+// Record the environment each non-parity proof step runs its lanes under, so
+// the parity battery and the proof ledger can compare like with like. One
+// virtual-tree hash serves every step: proof steps never change the tree.
+const recordProofStepEnvironments = Effect.fn("Yeet.recordProofStepEnvironments")(function* (
+  context: RepoRunContext,
+  steps: ReadonlyArray<RepoPlanStep>
+) {
+  const proofSteps = A.filter(steps, (step) => step.id !== CI_PARITY_STEP_ID);
+  if (A.isReadonlyArrayEmpty(proofSteps)) return;
+  const baseSha = yield* proofBaseSha(context);
+  yield* Effect.forEach(
+    proofSteps,
+    (step) =>
+      collectProofEnvironment(step.id, context.repoRoot, effectiveStepEnvironment(step), baseSha).pipe(
+        Effect.flatMap((environment) => recordProofEnvironment(context, environment))
+      ),
+    { discard: true }
   );
 });
 
@@ -428,6 +515,9 @@ const runProofPhase = Effect.fn("Yeet.runProofPhase")(function* (
   | Digest.Digest
   | Git
 > {
+  yield* recordProofStepEnvironments(context, steps).pipe(
+    Effect.catch((error) => Console.log(`[yeet] proof environments not recorded: ${error.message}`))
+  );
   let results = A.empty<RepoStepRunResult>();
   for (const step of steps) {
     const result = yield* step.id === CI_PARITY_STEP_ID
@@ -859,6 +949,47 @@ const preparePublishCommit = Effect.fn("Yeet.preparePublishCommit")(function* (
   return yield* stageAndCommitPublishIntent(plan, message, options, commitSteps, recorder, extras, publishIntent);
 });
 
+// A verified-proof reuse also reuses the clean-HEAD install its verify run
+// proved, while the receipt still matches the commit's lockfile, manifests and
+// Bun build and has not expired; otherwise it says why and installs again.
+const reuseVerifiedHeadInstall = Effect.fn("Yeet.reuseVerifiedHeadInstall")(function* (
+  context: RepoRunContext,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  preflightSteps: ReadonlyArray<RepoPlanStep>
+) {
+  const decision = yield* verifiedHeadInstallReceiptRefusals(context).pipe(Effect.option);
+  if (O.isNone(decision) || A.isReadonlyArrayNonEmpty(decision.value.refusals) || O.isNone(decision.value.receipt)) {
+    const reasons = O.match(decision, {
+      onNone: () => "the verified state could not be read",
+      onSome: ({ refusals }) => renderHeadInstallReceiptRefusals(refusals),
+    });
+    yield* Console.log(`[yeet] running clean-HEAD install preflight: install receipt not reused (${reasons})`);
+    return false;
+  }
+  const { inputs, installedAt, expiresAt } = decision.value.receipt.value;
+  const summary = `install receipt from ${installedAt} matches commit ${Str.takeLeft(12)(inputs.commitSha)} (bun.lock ${Str.takeLeft(12)(inputs.lockfileDigest)}, manifests ${Str.takeLeft(12)(inputs.manifestsDigest)}, bun ${inputs.bunVersion}), valid until ${expiresAt}`;
+  yield* Console.log(`[yeet] skipped clean-HEAD install preflight: ${summary}`);
+  yield* recordSkippedSteps(recorder, preflightSteps, `skipped: ${summary}`);
+  return true;
+});
+
+/**
+ * Decide, log and record whether a verified-proof reuse skips its clean-HEAD
+ * install preflight.
+ *
+ * **Example** (Reference the decision for a wiring test)
+ *
+ * ```ts
+ * import { reuseVerifiedHeadInstallForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof reuseVerifiedHeadInstallForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const reuseVerifiedHeadInstallForTesting = reuseVerifiedHeadInstall;
+
 const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
@@ -876,12 +1007,17 @@ const runStandardPublishPhases = Effect.fn("Yeet.runStandardPublishPhases")(func
     fullSteps,
     Effect.gen(function* () {
       const preflightSteps = A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
-      yield* runRequiredPhase(
-        plan.context,
-        preflightSteps,
-        recorder,
-        "yeet clean-HEAD install preflight failed before proof and push."
-      );
+      const reusedInstall = options.reuseVerified
+        ? yield* reuseVerifiedHeadInstall(plan.context, recorder, preflightSteps)
+        : false;
+      if (!reusedInstall) {
+        yield* runRequiredPhase(
+          plan.context,
+          preflightSteps,
+          recorder,
+          "yeet clean-HEAD install preflight failed before proof and push."
+        );
+      }
       if (options.reuseVerified) {
         yield* Console.log("[yeet] skipped local full proof after exact reusable proof-state match");
       } else {
@@ -1120,6 +1256,31 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
  */
 export const finishPublishWithPullRequestForTesting = finishPublishWithPullRequest;
 
+// A planned step that a reuse decision did not run is still recorded, as
+// skipped, so the verdict and the attempt journal show why it did not run.
+const recordSkippedSteps = (
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  steps: ReadonlyArray<RepoPlanStep>,
+  output: string
+) =>
+  Ref.update(
+    recorder,
+    A.appendAll(
+      A.map(steps, (step) =>
+        YeetExecutedStep.make({
+          result: RepoStepRunResult.make({
+            stepId: step.id,
+            commandText: `${step.command} ${A.join(step.args, " ")}`,
+            exitCode: 0,
+            output,
+          }),
+          status: "skipped",
+          step,
+        })
+      )
+    )
+  );
+
 // The submit step is planned but not run: record it as skipped so the verdict
 // and the attempt journal show which job the publish handed back.
 const recordReusedReadyMonitor = (
@@ -1127,22 +1288,10 @@ const recordReusedReadyMonitor = (
   submitSteps: ReadonlyArray<RepoPlanStep>,
   record: ProofJobRecord
 ) =>
-  Ref.update(
+  recordSkippedSteps(
     recorder,
-    A.appendAll(
-      A.map(submitSteps, (step) =>
-        YeetExecutedStep.make({
-          result: RepoStepRunResult.make({
-            stepId: step.id,
-            commandText: `${step.command} ${A.join(step.args, " ")}`,
-            exitCode: 0,
-            output: `skipped: readiness monitor job ${record.jobId} is already ${record.phase} for this pull request`,
-          }),
-          status: "skipped",
-          step,
-        })
-      )
-    )
+    submitSteps,
+    `skipped: readiness monitor job ${record.jobId} is already ${record.phase} for this pull request`
   );
 
 const PUSH_PHASE_EXCLUDED_STEP_IDS: ReadonlyArray<string> = [
@@ -2074,11 +2223,15 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   // changed-package tripwire (rulings 69, 70); it never fails.
   const changedPackages = yield* changedPackagesForAttempt(plan.context);
   yield* Console.log(`[yeet] ${renderProofChangedPackages(changedPackages)}`);
+  const environmentDigests = proofEnvironmentDigests(
+    yield* readProofEnvironments(plan.context).pipe(Effect.orElseSucceed(A.empty<ProofEnvironment>))
+  );
   yield* recordProofShadowForAttempt(
     plan.context.repoRoot,
     proofShadowAttemptFacts(reached),
     innerLaneReports,
-    changedPackages
+    changedPackages,
+    environmentDigests
   ).pipe(
     Effect.flatMap((summary) => Console.log(`[yeet] ${renderProofShadowAttemptSummary(summary)}`)),
     Effect.catch((error) => Console.error(`[yeet] proof shadow skipped: ${error.message}`))
@@ -2425,6 +2578,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const fs = yield* FileSystem.FileSystem;
   const innerLaneReportPath = yield* runOutputPathForContext(plan.context, INNER_LANE_REPORT_FILE_NAME);
   yield* fs.remove(innerLaneReportPath, { force: true }).pipe(Effect.ignore);
+  yield* clearProofEnvironments(plan.context);
   const executionSteps = A.map(plan.steps, (originalStep) =>
     attachInnerLaneReportSideChannel(
       originalStep.id === "advisory:01-fallow-feedback"
