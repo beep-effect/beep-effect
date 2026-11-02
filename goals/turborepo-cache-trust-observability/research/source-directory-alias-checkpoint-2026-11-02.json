@@ -294,7 +294,7 @@
   "reviewModePortabilityRepair": {
     "recordedAt": "2026-11-02T13:12:57.068912+00:00",
     "thread": "https://github.com/beep-effect/beep-effect/pull/2562#discussion_r4442693739",
-    "change": "Set the nested directory to0755 before collecting its baseline, then change it to0700. The assertion no longer depends on the process umask.",
+    "change": "Set the nested directory to 0755 before collecting its baseline, then change it to 0700. The assertion no longer depends on the process umask.",
     "before": {
       "umask": "077",
       "exit": 1,

@@ -1746,8 +1746,8 @@ receipts; this integration does not create protected inspection evidence.
 ### Directory-mode test portability, 2026-11-02
 
 PR2562's mode-change assertion assumed a newly created directory was not already
-0700. Under a restrictive077 umask it compared identical manifests and failed.
-The review was reproduced before repair (one failed case,44 skipped). Set an
-explicit0755 initial mode, collect the baseline, then change to0700. All45
-workflow tests pass under077 after the repair. Preserve the original failure;
+0700. Under a restrictive 077 umask it compared identical manifests and failed.
+The review was reproduced before repair (one failed case, 44 skipped). Set an
+explicit 0755 initial mode, collect the baseline, then change to 0700. All 45
+workflow tests pass under 077 after the repair. Preserve the original failure;
 the collector implementation and its earlier real-tree evidence are unchanged.
