@@ -20,6 +20,7 @@ const EXPECTED_COVERAGE_INPUTS: ReadonlyArray<string> = [
   "server/**",
   "src/**",
   "src-tauri/**",
+  "!**/src-tauri/target/**",
   "test/**",
   "tsconfig*.json",
   "vitest.config.ts",
@@ -181,6 +182,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("coverage Turbo inputs",
       expect(yield* coverageHashFromSummary(root, turboBinary)).toBe(baselineHash);
 
       yield* writeFixtureFile(root, "packages/coverage/README.md", "# Docs-only edit\n");
+      expect(yield* coverageHashFromSummary(root, turboBinary)).toBe(baselineHash);
+
+      // Cargo build artifacts never reach the tests (quality audit M8).
+      yield* writeFixtureFile(root, "packages/coverage/src-tauri/target/debug/build.rs", "fn main() {}\n");
       expect(yield* coverageHashFromSummary(root, turboBinary)).toBe(baselineHash);
 
       yield* writeFixtureFile(root, "packages/coverage/src/index.ts", "export const value = 2;\n");
