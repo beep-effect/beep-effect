@@ -1762,3 +1762,5 @@ in the supervised workflow test. Focused Bun/Istanbul restores workflow coverage
 to 100% and raises the new storage file to 37/46 covered branches (80.43%).
 Keep the original red receipts and all baseline floors. Run the root policy
 scanner on touched test files: package lint alone does not include that rule.
+
+- 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.

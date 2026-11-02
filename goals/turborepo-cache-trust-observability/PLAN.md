@@ -1139,3 +1139,8 @@ controls pass in the 90-test focused Bun/Istanbul replay. Workflow functions,
 statements and branches reach 100%; storage branches reach 80.43%, with all
 production source and coverage floors unchanged. Fresh exact-head hosted checks
 and accepted-main integration remain required; this is no rollout or qualification.
+
+
+### Accepted-main a88d baseline conflict resolution, 2026-11-02
+
+The [configuration review](research/private-object-a88d-baseline-review-2026-11-02.md) and [canonical CAS request](research/private-object-a88d-baseline-request-2026-11-02.json) retain the accepted main package expansion and the owned storage quality-seal input. The canonical census has 2,448 executable nodes: twelve new party-domain commands, with eight existing inherited cache settings. Only the two named root fingerprint input lists change among previous nodes; every other existing configuration and non-root review is preserved. Scope, profile, epoch and qualification ledger bytes are unchanged. No runtime setting, task eligibility, tuple qualification or whole-goal acceptance is granted. The earlier hosted new-file coverage identity failure remains open for a separate source-bound repair.

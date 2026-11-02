@@ -1001,3 +1001,6 @@ that one path; a reviewed compare-and-swap request stamps only root subject
 This records a conservative implementation input, not task qualification or a
 cached security verdict. Reverse through a fresh reviewed request after restoring
 the prior closure, never by overwriting a newer baseline or the ledger.
+
+
+- 2026-11-02: Resolve the accepted a88d baseline conflict using the canonical CAS writer and the [named configuration review](research/private-object-a88d-baseline-review-2026-11-02.md). Preserve main's party-domain expansion and all unrelated reviews, add only the owned storage policy input, and leave scope/profile/epoch/qualification unchanged. This is configuration provenance, not computation qualification or production activation. Reverse only with the corresponding owned input removal; never discard accepted package definitions.
