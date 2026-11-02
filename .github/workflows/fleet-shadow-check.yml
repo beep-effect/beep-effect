@@ -385,6 +385,7 @@ jobs:
           # cannot pass as a server-side rejection; an unanticipated rejection phrase fails
           # inconclusive, which is the safe direction for this gate.
           error_line="$(grep -Em1 \
+            -e 'Failed to create (a )?session' \
             -e 'already (been )?(registered|used|configured|exists)' \
             -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
             -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
@@ -410,7 +411,7 @@ jobs:
           fi
 
           unset jit_value
-          if grep -Eq 'Listening for Jobs|Connected to GitHub' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
+          if grep -Eq 'Listening for Jobs' "${listener_log}" || [[ "${listener_status}" -eq 124 ]]; then
             echo "JIT replay: accepted"
             [[ -z "${replay_runner_name}" ]] || echo "JIT replay runner: ${replay_runner_name}"
             exit 1
@@ -750,12 +751,13 @@ jobs:
           note "same-host replay started"
           verdict=""
           for _ in $(seq 1 125); do
-            if grep -Eq 'Listening for Jobs|Connected to GitHub' "${dir}/listener.log"; then
+            if grep -Eq 'Listening for Jobs' "${dir}/listener.log"; then
               pkill -KILL -f "${scratch}/bin/Runner" || true
               verdict="accepted"; break
             fi
             line="$(grep -Em1 \
               -e 'A session for this runner already exists' \
+              -e 'Failed to create (a )?session' \
               -e 'already (been )?(registered|used|configured|exists)' \
               -e '[Ii]nvalid (JIT|jit|runner) ?(config|configuration|token)' \
               -e '(token|configuration|JIT config|jitconfig) (has )?expired' \
