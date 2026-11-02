@@ -44,11 +44,11 @@
     }
   },
   "observations": [
-    "With a remote-cache configuration and synthetic bearer/team settings, true rejects supplied keys shorter than32UTF8bytes before task execution, including empty and31bytekeys.",
-    "Absent/false retains warning-only behavior for short supplied keys.",
-    "Sixteen nonASCIIcharacters encoded as32UTF8bytes pass the length check; fifteen plus one ASCIIcharacter are31bytes and fail when enforced.",
-    "A missing key still permits task execution and a later artifact-signature warning. Native length enforcement does not replace Beep missing-key role policy.",
-    "Local-only or signature-disabled execution does not enforce this remote-signature key minimum."
+    "With remote caching, signing and longerSignatureKey enabled, supplied keys shorter than 32 UTF-8 bytes are rejected before task execution. Empty and 31-byte keys are included in the test cases. Bearer and team settings are synthetic.",
+    "When longerSignatureKey is absent or false, short supplied keys produce a warning and the task executes.",
+    "Sixteen non-ASCII characters encoded as 32 UTF-8 bytes pass the length check. Fifteen of those characters plus one ASCII character are 31 bytes and fail when enforcement is enabled.",
+    "A missing key still permits task execution and a later artifact signature warning. Native length enforcement does not replace the Beep role policy for missing keys.",
+    "Local execution and execution with signing disabled do not enforce the minimum remote signature key length."
   ],
   "pending": [
     "Choose and qualify the signed rollout configuration, including this native safeguard.",
@@ -61,6 +61,6 @@
   "retainedCalibrationFailures": [
     "Initial --force and --cache combination was refused before task execution; no signature conclusion was drawn.",
     "Local-only calibration correctly performed no key-length enforcement; this was not treated as remote behavior.",
-    "First commit hook rejected a source checksum under a filename-as-map-property; use explicit path/sha256 source bindings and rerun the same168cases, without scanner changes."
+    "The first commit hook rejected a source checksum stored under a filename used as a map property. The driver now uses explicit path and sha256 source bindings. The same 168 cases were rerun without changing scanner rules."
   ]
 }
