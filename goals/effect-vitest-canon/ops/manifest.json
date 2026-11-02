@@ -15,7 +15,7 @@
   "reflectionRequired": true,
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2532
+    "finalPullRequest": 2586
   },
   "completionGate": {
     "operator": "yeet",
@@ -26,7 +26,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/claude_effect-vitest-canon-refinal-dbfa7a021e93/verdict.json",
+        "ref": ".beep/yeet/runs/claude_effect-vitest-canon-refinal-2-4132ebea04f9/verdict.json",
         "gating": true
       }
     ],
@@ -37,6 +37,10 @@
       },
       {
         "number": 2532,
+        "role": "supporting"
+      },
+      {
+        "number": 2586,
         "role": "final"
       }
     ]
@@ -138,5 +142,5 @@
     "The fleet orchestrator owns merges at the complete gate; lane workers never merge.",
     "Do not write untouched-package coverage baselines."
   ],
-  "statusNote": "Closeout 2026-11-02: the operator amended D4 (#1875 ruling) so the closeout bar is a baseline with no open rows, owned exceptions with a named exit retained, and the ratchet forbidding new rows. The 2026-11-02 scan reports 3,104 files, 447 findings, 0 open, introduced=0; every row names an owner and an exit. Waves 1-21 on #1875 (#1908 to #2463) are merged. The closeout PR #2493 (merged 01cbf1a9b9) carries the reflection and this state; the docs-only re-final PR #2532 is the final pull request that binds the publish verdict (history/2026-11-02-completion-refinal.md); goals completion refresh derives the status after the fleet orchestrator merges. The 447 exceptions are handed to a successor burn-down goal. Earlier status notes are retained in README.md and PLAN.md banners."
+  "statusNote": "Closeout 2026-11-02: the operator amended D4 (#1875 ruling) so the closeout bar is a baseline with no open rows, owned exceptions with a named exit retained, and the ratchet forbidding new rows. The 2026-11-02 scan reports 3,104 files, 447 findings, 0 open, introduced=0; every row names an owner and an exit. Waves 1-21 on #1875 (#1908 to #2463) are merged. The closeout PR #2493 (merged 01cbf1a9b9) carries the reflection and this state; the docs-only re-finals #2532 (merged before its until-ready job reported) and #2586 follow; #2586 is the final pull request and merges only after its own until-ready job reports merge-ready (history/2026-11-02-completion-refinal.md, history/2026-11-02-completion-refinal-2.md); goals completion refresh derives the status after the fleet orchestrator merges. The 447 exceptions are handed to a successor burn-down goal. Earlier status notes are retained in README.md and PLAN.md banners."
 }
