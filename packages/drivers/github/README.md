@@ -201,7 +201,7 @@ const AppClient = GitHubApp.clientLayer({
 
 ### Down-scoped installation tokens
 
-An installation token holds everything the installation was granted unless the request narrows it. `TokenRequest.permissions`, `repositories` and `repositoryIds` become the JSON body of `POST /app/installations/{id}/access_tokens`, spelled as GitHub spells them (`repository_ids`); a request that sets none of them sends no body at all. Repositories go by name without owner or by id, never both — a request naming both fails with `GitHubAppError { kind: "request" }` before a JWT is signed, as does an owner-qualified name or a permission key GitHub would not recognize:
+An installation token holds everything the installation was granted unless the request narrows it. `TokenRequest.permissions`, `repositories` and `repositoryIds` become the JSON body of `POST /app/installations/{id}/access_tokens`, spelled as GitHub spells them (`repository_ids`); a request that sets none of them sends no body at all. Repositories go by name without owner or by id, never both — a request naming both fails with `GitHubAppError { kind: "request" }` before a JWT is signed, as does an owner-qualified name or a malformed permission key (anything but lowercase snake_case). Well-formed names are accepted even when GitHub has not published them, so the schema keeps working as GitHub adds permissions; GitHub itself rejects a name it does not know when the token is minted:
 
 ```ts
 import { assertPermissions, GitHubApp } from "@beep/github/GitHubApp";
