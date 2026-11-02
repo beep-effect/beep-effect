@@ -8,9 +8,7 @@
       "sha256": "eba7a9836911fba7832b2062a5bee0fe9234ffc63a6388d8e68a4add73e35675"
     }
   },
-  "subjects": [
-    "//"
-  ],
+  "subjects": ["//"],
   "scope": [
     "@beep/identity#lint",
     "@beep/types#lint",
