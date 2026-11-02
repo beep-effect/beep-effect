@@ -431,7 +431,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
               approval
             )
             .pipe(Effect.result);
-          expect(Result.isSuccess(result)).toBe(extra === 0);
+          result.pipe(
+            Result.match({
+              onFailure: () => expect(extra).toBe(1),
+              onSuccess: () => expect(extra).toBe(0),
+            })
+          );
         }
       })
     );

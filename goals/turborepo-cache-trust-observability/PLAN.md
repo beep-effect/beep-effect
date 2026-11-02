@@ -1082,3 +1082,21 @@ budget; metadata re-reading includes the callee. Focused producer tests and
 package lint/type checks cover this component, with hosted review still
 required. Private evidence transport and a real protected signed R2 run remain
 next. None of the nine whole-goal acceptance criteria is complete.
+
+
+### Resolved-workflow hosted gate repairs, 2026-11-02
+
+The hosted Fallow audit attributed cognitive complexity twelve above the floor
+eight to the new workflow verification loop. Move that complete inspection into
+one private effect helper without changing source order, immutable digests or
+the aggregate byte budget. The hosted policy job also identified an introduced
+EV006 boolean assertion; a Result match now preserves the exact boundary outcome.
+The inherited GitHubApp schema-test defect is consumed from accepted main
+`389b01a327`, with no competing shared fix or baseline relaxation.
+
+The updated [checkpoint](research/resolved-heavy-approval-checkpoint-2026-11-02.json)
+preserves original source bindings and records 146 focused passing tests, quick
+lint/type checks, Fallow audit and health with no findings, and the complete
+effect-vitest ratchet. The canonical inventory retains the same finding totals.
+These remain component checks; protected R2 execution and whole-goal acceptance
+are still outstanding.

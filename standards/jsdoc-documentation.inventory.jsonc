@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T15:32:27.882Z",
+  "generatedAt": "2026-11-02T16:09:21.591Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -473175,8 +473175,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 408,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-408-verifycachehostedproducerupload",
+          "line": 433,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-433-verifycachehostedproducerupload",
           "currentTags": [
             "@internal",
             "@category",
@@ -473198,8 +473198,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 486,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-486-buildcachehostedproducercompletereport",
+          "line": 493,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-493-buildcachehostedproducercompletereport",
           "currentTags": [
             "@internal",
             "@category",
@@ -473221,8 +473221,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.workflow.github.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-          "line": 534,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-534-verifycachehostedproducerobservation",
+          "line": 541,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-workflow-github-ts-541-verifycachehostedproducerobservation",
           "currentTags": [
             "@internal",
             "@category",

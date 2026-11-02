@@ -9,7 +9,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
-      "sha256": "d627776fd93185c2acddcc55ab2bf91677649a2bfd0210bc13e08f71e4b49bfb"
+      "sha256": "682d0ea3d00ea19ea7e7f9cb607cedb0d5b8a7494cffe3269e76f76de4c89c4d"
     },
     {
       "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
@@ -17,7 +17,7 @@
     },
     {
       "path": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
-      "sha256": "672cb3c6bb9a98f488c2eec641eaf76ee55ae5a4aa14eafb5a930a5081615421"
+      "sha256": "6715b8740befe6207b1d33592413aa06f164629ea4f40a221a6ad84018ccdf48"
     }
   ],
   "observedRouting": {
@@ -104,6 +104,48 @@
       "finishedAt": "2026-11-02T15:37:13.019769+00:00",
       "newBlockingFindings": 0,
       "scope": "Packet hygiene only; existing historical completion advisories retained."
+    },
+    "hostedGateRepair": {
+      "focused": {
+        "exit": 0,
+        "elapsedSeconds": 24.75,
+        "finishedAt": "2026-11-02T16:35:41.643242+00:00"
+      },
+      "packageQuick": {
+        "exit": 0,
+        "elapsedSeconds": 12.776,
+        "finishedAt": "2026-11-02T16:36:22.927826+00:00"
+      },
+      "fallowAudit": {
+        "exit": 0,
+        "elapsedSeconds": 10.763,
+        "finishedAt": "2026-11-02T16:07:29.063426+00:00"
+      },
+      "fallowHealth": {
+        "exit": 0,
+        "elapsedSeconds": 100.466,
+        "finishedAt": "2026-11-02T16:11:00.100392+00:00"
+      },
+      "effectVitestRatchet": {
+        "exit": 0,
+        "elapsedSeconds": 50.397,
+        "finishedAt": "2026-11-02T16:26:58.575012+00:00"
+      },
+      "inventory": {
+        "exit": 0,
+        "elapsedSeconds": 285.971,
+        "finishedAt": "2026-11-02T16:14:06.800591+00:00"
+      },
+      "focusedPassed": 146,
+      "focusedFiles": 4,
+      "effectVitestFindings": 442,
+      "fallowFindings": 0,
+      "changes": [
+        "Moved the unchanged combined workflow-source inspection into one private effect helper to fix introduced cognitive complexity 12 above 8.",
+        "Replaced the aggregate-bound boolean shape assertion with Result.match, preserving exact zero/one-byte polarity and fixing introduced EV006.",
+        "Consumed accepted main 389b01a327 tests; GitHubApp SFV4 was inherited. The accepted ShardScope tests alone reached all-counter 100 percent in the retained coverage replay."
+      ],
+      "scope": "Focused component evidence only. Original 136-case and native receipts remain source-specific. No acceptance, budget, workflow authority or signing change."
     }
   },
   "remaining": [
@@ -117,5 +159,28 @@
   ],
   "wholeGoalAcceptanceChanged": false,
   "runtimeSigningChanged": false,
-  "cloudChanges": false
+  "cloudChanges": false,
+  "priorSourceBindings": [
+    {
+      "scope": "Published 3afde77309 before hosted gate repair; original receipts remain bound to that source.",
+      "bindings": [
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.schemas.ts",
+          "sha256": "a2f427699a68af9e0547724e402bc190dcd02102def1dd11145df0e8386158a4"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts",
+          "sha256": "682d0ea3d00ea19ea7e7f9cb607cedb0d5b8a7494cffe3269e76f76de4c89c4d"
+        },
+        {
+          "path": "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",
+          "sha256": "1e3f4348b584981acfc7d8366425902973c7fb0105fb814447944949ffa6117c"
+        },
+        {
+          "path": "packages/tooling/tool/cli/test/cache-hosted-producer.test.ts",
+          "sha256": "6715b8740befe6207b1d33592413aa06f164629ea4f40a221a6ad84018ccdf48"
+        }
+      ]
+    }
+  ]
 }

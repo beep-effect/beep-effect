@@ -377,6 +377,31 @@ const assertHostedReport = Effect.fn("CacheWorkflow.assertHostedReport")(functio
     return yield* CacheCommandError.new("Producer report identity, binding or unique upload set is invalid.");
 });
 
+const inspectHostedWorkflows = Effect.fn("CacheWorkflow.inspectHostedWorkflows")(function* (
+  approval: CacheHostedProducerApproval,
+  callerRevision: GitObjectId
+) {
+  const content = yield* GitHubContent;
+  let inspectedWorkflowBytes = 0;
+  for (const approvedWorkflow of [
+    { workflowPath: approval.workflowPath, revision: callerRevision, workflowSha256: approval.workflowSha256 },
+    ...approval.reusableWorkflows,
+  ]) {
+    const workflow = yield* content
+      .getFile(approvedWorkflow.workflowPath, { ref: approvedWorkflow.revision })
+      .pipe(Repo.provide(approval.repository));
+    if (!isAsciiWorkflow(workflow))
+      return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    const workflowBytes = new TextEncoder().encode(workflow);
+    if (
+      workflowBytes.byteLength > 64 * 1024 - inspectedWorkflowBytes ||
+      (yield* hashBytes(workflowBytes)) !== approvedWorkflow.workflowSha256
+    )
+      return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
+    inspectedWorkflowBytes += workflowBytes.byteLength;
+  }
+});
+
 /**
  * Join exact archived bytes to authenticated GitHub metadata and independent approval.
  *
@@ -418,30 +443,12 @@ export const verifyCacheHostedProducerUpload = Effect.fn("CacheWorkflow.verifyHo
     const selected = yield* S.encodeEffect(CacheHostedProducerReference)(reference).pipe(
       Effect.flatMap(S.decodeUnknownEffect(CacheHostedProducerReference))
     );
-    const content = yield* GitHubContent;
     const { run, artifact, readRun, readArtifact } = yield* inspectHostedMetadata(approval, selected);
     yield* assertFreshArtifact(artifact);
     const artifactSha256 = yield* hashBytes(archive);
     if (archive.byteLength !== artifact.size_in_bytes || `sha256:${artifactSha256}` !== artifact.digest)
       return yield* CacheCommandError.new("Transported producer archive differs from GitHub's immutable digest.");
-    let inspectedWorkflowBytes = 0;
-    for (const approvedWorkflow of [
-      { workflowPath: approval.workflowPath, revision: run.head_sha, workflowSha256: approval.workflowSha256 },
-      ...approval.reusableWorkflows,
-    ]) {
-      const workflow = yield* content
-        .getFile(approvedWorkflow.workflowPath, { ref: approvedWorkflow.revision })
-        .pipe(Repo.provide(approval.repository));
-      if (!isAsciiWorkflow(workflow))
-        return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
-      const workflowBytes = new TextEncoder().encode(workflow);
-      if (
-        workflowBytes.byteLength > 64 * 1024 - inspectedWorkflowBytes ||
-        (yield* hashBytes(workflowBytes)) !== approvedWorkflow.workflowSha256
-      )
-        return yield* CacheCommandError.new("Producer workflow bytes differ from independent approval.");
-      inspectedWorkflowBytes += workflowBytes.byteLength;
-    }
+    yield* inspectHostedWorkflows(approval, run.head_sha);
     const decoded = yield* readReport(archive);
     yield* assertHostedReport(decoded.report, approval, selected);
     if (!sameRun(run, yield* readRun) || !sameArtifact(artifact, yield* readArtifact))

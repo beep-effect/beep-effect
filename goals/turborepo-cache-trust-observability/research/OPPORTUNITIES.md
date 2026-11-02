@@ -1690,3 +1690,16 @@ verbatim after whitespace normalization; refresh only that working source
 binding and preserve both prior hashes. No requirement or acceptance status is
 relaxed. This removes a verification blocker, not the remaining private
 transport or real protected R2 acceptance gates.
+
+
+### Attribute introduced gates before consolidating main repairs, 2026-11-02
+
+PR2603's completed hosted audit identifies the new verifier's cognitive
+complexity as twelve above eight. Its policy job reports an introduced EV006
+boolean assertion alongside the inherited GitHubApp SFV4 test defect. Reading
+the exact audit artifact and job log prevents incorrectly classifying the
+entire failure as inherited. Keep one coherent source-inspection helper, use
+the existing Result assertion vocabulary, and consume the shared test repair
+from accepted main. Preserve original failed receipts and all policy floors.
+The final focused replay passes 146 cases; both Fallow views and the full
+effect-vitest ratchet pass after the owned repairs.
