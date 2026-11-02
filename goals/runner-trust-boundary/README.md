@@ -98,7 +98,7 @@ red team on `main` (run `41409672251`). Probe N showed that a leaked one-use
 JIT configuration is refused from the original and a second host after an
 orderly listener stop (run `41422745680`), and accepted after a SIGKILL stop
 until the original job ends (run `41429667965`). A 12-minute hold of such a
-session was offered no job (run `41452707373`). The operator accepted that
+session started no job (run `41452707373`). The operator accepted that
 residual (SPEC Decision Log). Evidence: [`history/`](./history/).
 
 ## Latest Evidence
@@ -111,15 +111,15 @@ JIT configuration from the original host and from a disposable second host
 the same-host replay was **accepted** about three minutes later while the
 registration stayed busy until the job timed out (run `41429667965`). E1 is
 confirmed for that stop; P8 is stopped for an operator decision (options in
-[`PLAN.md`](./PLAN.md#p8-operator-decision-open-since-2026-11-02)). Receipts:
+[`PLAN.md`](./PLAN.md#p8-operator-decision-decided-2026-11-02-accept-e1-as-a-residual)). Receipts:
 [`history/`](./history/).
 
 The operator chose to measure the exposure first. In run `41452707373` the
-replayed session was held for 12 minutes and GitHub offered it no job: a
+replayed session was held for 12 minutes and no job started on it: a
 decoy and all 32 real heavy jobs that started during the hold went to other
 runners, and the session ended
-when the original job was cancelled. The remediation choice stays with the
-operator.
+when the original job was cancelled. The operator then accepted E1 as a
+residual (SPEC Decision Log).
 
 On 2026-11-02 run `41409672251` re-passed Gates A through J and L,
 `AMI_PIN`, live `METADATA_DISABLED`, deregistration and teardown on `main`,

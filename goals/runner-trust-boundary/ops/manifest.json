@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 through P8 complete. P8 closed 2026-11-02: A-L re-proved on main (run 41409672251); Probe N refused replay after an orderly stop from both hosts (run 41422745680), accepted it after a SIGKILL until the original job ended (run 41429667965), and a 12-minute held replay session was offered no job while a decoy and all 32 heavy jobs that started during the hold ran on other runners (run 41452707373). The operator accepted E1 as a residual. The closeout PR proposes completed-retained.",
+  "statusNote": "P0 through P8 complete. P8 closed 2026-11-02: A-L re-proved on main (run 41409672251); Probe N refused replay after an orderly stop from both hosts (run 41422745680), accepted it after a SIGKILL until the original job ended (run 41429667965), and a 12-minute held replay session started no job while a decoy and all 32 heavy jobs that started during the hold ran on other runners (run 41452707373). The operator accepted E1 as a residual. The closeout PR proposes completed-retained.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
