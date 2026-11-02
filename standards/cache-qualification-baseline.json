@@ -1130,11 +1130,11 @@
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Fable 5.1 (perf-turbo-cache-hygiene, claude/perf-turbo-cache-hygiene-ece673)",
-      "reason": "Re-record the legacy cache posture of // and all 188 workspace packages after the 2026-11-02 Turbo input hygiene: doctest excludes nested node_modules, lint/check/build drop package-relative .env inputs (Vite/Next apps keep .env* in overrides), and six root policy scans flip to cache: true after a purity read (goals:doctor stays uncached). No command, output or env key changed; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (repo-cli-gh-git-consolidation W2b, feat/gh-git-w2b)",
+      "reason": "Record the five @beep/repo-ai-metrics computations after the package takes a @beep/git workspace dependency for its config-snapshot git reads; only the manifest input and the dependency edge change, and no qualification is granted.",
       "basis": {
-        "path": "docs/reports/perf-turbo-cache-hygiene-cache-review-2026-11-02.md",
-        "sha256": "0dea5f72a6c9b4a9d9df8247786529bade90284c1fa38439c7f777e6a40d20a4"
+        "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w2b.md",
+        "sha256": "3898fb0aa2d7b1980c386d88e4c6c5ca0557c6b0539faa01a7747a06f2fb04e8"
       }
     },
     "@beep/repo-cli": {
@@ -92415,6 +92415,7 @@
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/identity#build",
           "@beep/jsonl#build",
           "@beep/memfs#build",
@@ -92479,6 +92480,7 @@
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/identity#build",
           "@beep/jsonl#build",
           "@beep/memfs#build",
@@ -92530,6 +92532,7 @@
           "@beep/duckdb#build",
           "@beep/fc-runs#build",
           "@beep/file-processing#build",
+          "@beep/git#build",
           "@beep/identity#build",
           "@beep/jsonl#build",
           "@beep/memfs#build",
@@ -92666,6 +92669,7 @@
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/identity#transit",
           "@beep/jsonl#transit",
           "@beep/memfs#transit",
@@ -92882,6 +92886,7 @@
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/identity#transit",
           "@beep/jsonl#transit",
           "@beep/memfs#transit",
@@ -92938,6 +92943,7 @@
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/identity#transit",
           "@beep/jsonl#transit",
           "@beep/memfs#transit",
@@ -93000,6 +93006,7 @@
           "@beep/duckdb#transit",
           "@beep/fc-runs#transit",
           "@beep/file-processing#transit",
+          "@beep/git#transit",
           "@beep/identity#transit",
           "@beep/jsonl#transit",
           "@beep/memfs#transit",

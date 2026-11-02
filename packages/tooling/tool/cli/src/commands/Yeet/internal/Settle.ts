@@ -59,6 +59,7 @@ import {
 } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { YeetCheckOutcome, YeetSettleReason } from "./CheckOutcome.ts";
+import { yeetGitErrorAdapter } from "./GitExec.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -388,21 +389,13 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
   );
 });
 
-const strictGitKitAdapter = (onSpawnFailure: string): GitCommandErrorAdapter<YeetCommandError> => ({
-  onSpawnFailure: () => YeetCommandError.new(onSpawnFailure),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    YeetCommandError.make({
-      message: `${commandLine} exited with code ${exitCode}.`,
-      command: commandLine,
-      exitCode,
-    }),
-  onTruncated: O.some((commandLine) =>
-    YeetCommandError.make({
-      message: `${commandLine} produced more output than the capture bound.`,
-      command: commandLine,
-    })
-  ),
-});
+const strictGitKitAdapter = (onSpawnFailure: string): GitCommandErrorAdapter<YeetCommandError> =>
+  yeetGitErrorAdapter({
+    spawnFailure: () => onSpawnFailure,
+    nonZeroExit: "exited with code",
+    truncated: "produced more output than the capture bound.",
+    truncatedExitCode: O.none(),
+  });
 
 /**
  * Fold a `Git` read's typed error into the strict reader's `YeetCommandError`, so a read that
