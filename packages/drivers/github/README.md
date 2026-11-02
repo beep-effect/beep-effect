@@ -197,6 +197,35 @@ const AppClient = GitHubApp.clientLayer({
 // Layer<GitHubClient, GitHubAppError> — provide it wherever a GitHubClient is needed
 ```
 
+`refreshSkew` in the options moves the re-mint earlier (`GitHubApp.clientLayer(request, { refreshSkew: Duration.minutes(5) })`), and refreshes are serialized behind one permit: concurrent requests that find the token spent mint one replacement and share it.
+
+### Down-scoped installation tokens
+
+An installation token holds everything the installation was granted unless the request narrows it. `TokenRequest.permissions`, `repositories` and `repositoryIds` become the JSON body of `POST /app/installations/{id}/access_tokens`, spelled as GitHub spells them (`repository_ids`); a request that sets none of them sends no body at all. Repositories go by name without owner or by id, never both — a request naming both fails with `GitHubAppError { kind: "request" }` before a JWT is signed, as does an owner-qualified name or a permission key GitHub would not recognize:
+
+```ts
+import { assertPermissions, GitHubApp } from "@beep/github/GitHubApp";
+import * as Effect from "effect/Effect";
+import * as Redacted from "effect/Redacted";
+
+const required = { checks: "write", pull_requests: "write", contents: "read", metadata: "read" } as const;
+
+const reviewerToken = Effect.gen(function* () {
+  const app = yield* GitHubApp;
+  const token = yield* app.token({
+    appId: "123456",
+    privateKey: Redacted.make(process.env.GITHUB_APP_PRIVATE_KEY as string),
+    installationId: 42,
+    repositories: ["beep-effect"],
+    permissions: required,
+  });
+  // GitHub intersects the request with the installation's grant; fail closed on a shortfall.
+  return yield* assertPermissions(token, required);
+});
+```
+
+`assertPermissions(token, required)` reads `InstallationToken.permissions` through `TokenPermissions.fromGitHub` and fails with `TokenPermissionError { kind: "insufficient" }` unless every required permission is held at least at the level asked for; it passes the token through on success so it composes after `token`. Use `TokenPermissions.assertExact` when a broader grant is also a misconfiguration. `scopedToken` and `clientLayer` take the same request shape, so the down-scope applies to a scope-bound token and to every token the client layer mints and re-mints; the layer itself does not check the grant, so a program that must fail closed asserts once through `token` before building it.
+
 Only `GitHubApp` and its statics import the JWT signer — a consumer authenticating with a plain token never reaches it.
 
 ## Errors

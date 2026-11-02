@@ -40,11 +40,13 @@ import { GitHubError } from "./GitHubError.ts";
 import { GitHubGraphQLError } from "./GraphQL.ts";
 import { numericId } from "./internal/ids.ts";
 import { FetchFunction, RetryPolicySchema } from "./internal/octokit.ts";
+import { PermissionLevel, TokenPermissions } from "./TokenPermissions.ts";
 import type * as Scope from "effect/Scope";
 import type { GitHubClientShape } from "./GitHubClient.ts";
 import type { GraphQLDocument } from "./GraphQL.ts";
 import type * as Rest from "./Rest.ts";
 import type { PageOptions } from "./Rest.ts";
+import type { TokenPermissionError } from "./TokenPermissions.ts";
 
 const $I = $GithubId.create("GitHubApp");
 
@@ -56,7 +58,9 @@ const $I = $GithubId.create("GitHubApp");
  * Distinct from `GitHubError` because "I could not obtain credentials" and "the
  * API call failed" are different problems with different fixes: the first is a
  * misconfigured app, a wrong private key or a missing installation; the second
- * is the request that used the credentials.
+ * is the request that used the credentials. `kind: "request"` is raised before
+ * any call is made: the {@link TokenRequest} itself was invalid, such as naming
+ * repositories by both name and id.
  *
  * **Example** (Describe a credential failure)
  *
@@ -77,7 +81,7 @@ export class GitHubAppError extends S.TaggedError<GitHubAppError, { readonly bra
   "GitHubAppError",
   {
     /** Which step failed. */
-    kind: S.Literals(["jwt", "token", "revoke", "identity", "installation"]).pipe(
+    kind: S.Literals(["jwt", "request", "token", "revoke", "identity", "installation"]).pipe(
       $I.annoteKey("GitHubAppError.kind", { description: "Which step failed." })
     ),
     /** Human-readable cause. */
@@ -195,6 +199,115 @@ export declare namespace AppCredentials {
 }
 
 /**
+ * A permission name as GitHub spells it in an installation token request.
+ *
+ * **Details**
+ *
+ * Lowercase snake_case, such as `contents`, `pull_requests` or `checks`. Any
+ * well-formed name is accepted rather than a closed list, because GitHub adds
+ * permissions over time and the app's own settings, not this package, decide
+ * which ones an installation can be narrowed to.
+ *
+ * **Example** (Validate a permission name)
+ *
+ * ```ts
+ * import { PermissionName } from "@beep/github/GitHubApp";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(PermissionName)("pull_requests")) // true
+ * console.log(S.is(PermissionName)("Pull-Requests")) // false
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PermissionName = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_]*$/u)).pipe(
+  $I.annoteSchema("PermissionName", {
+    description: "A permission name as GitHub spells it in an installation token request.",
+  })
+);
+
+/**
+ * A permission name as GitHub spells it in an installation token request.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PermissionName = typeof PermissionName.Type;
+
+const isPermissionName = S.is(PermissionName);
+
+/**
+ * The permissions a token request narrows to, keyed as GitHub spells them.
+ *
+ * **Details**
+ *
+ * `S.Record` does not run a refined key schema against incoming keys, so the
+ * spelling rule is a filter over the whole map that reports each offending
+ * key at its own path.
+ */
+const RequestedPermissions = S.Record(S.String, PermissionLevel)
+  .check(
+    S.makeFilter(
+      (permissions) =>
+        pipe(
+          R.keys(permissions),
+          A.filter((name) => !isPermissionName(name)),
+          A.map((name) => ({ path: [name], issue: `${name} is not a permission name as GitHub spells it` }))
+        ),
+      $I.annote("RequestedPermissionsNameCheck", {
+        title: "Requested permission names",
+        description: "Every key is a lowercase snake_case permission name as GitHub spells it.",
+      })
+    )
+  )
+  .pipe(
+    $I.annoteSchema("RequestedPermissions", {
+      description: "The permissions a token request narrows to, keyed as GitHub spells them.",
+    })
+  );
+
+/**
+ * A repository name without its owner, as the `access_tokens` body wants it.
+ *
+ * **Details**
+ *
+ * The owner is implied by the installation, so `repositories: ["beep-effect"]`
+ * is right and `["beep-effect/beep-effect"]` is rejected here instead of as a
+ * 422 from GitHub.
+ *
+ * **Example** (Reject an owner-qualified name)
+ *
+ * ```ts
+ * import { RepositoryName } from "@beep/github/GitHubApp";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(RepositoryName)("beep-effect")) // true
+ * console.log(S.is(RepositoryName)("beep-effect/beep-effect")) // false
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RepositoryName = S.NonEmptyString.check(S.isPattern(/^[^/\s]+$/u)).pipe(
+  $I.annoteSchema("RepositoryName", {
+    description: "A repository name without its owner, as the `access_tokens` body wants it.",
+  })
+);
+
+/**
+ * A repository name without its owner.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RepositoryName = typeof RepositoryName.Type;
+
+/**
  * What to mint an installation token for.
  *
  * **Details**
@@ -205,7 +318,16 @@ export declare namespace AppCredentials {
  * the app has exactly one installation, that one is used; with several, the
  * failure names them.
  *
- * **Example** (Request a token for a known installation)
+ * `permissions`, `repositories` and `repositoryIds` narrow the token below
+ * what the installation holds. They become the JSON body of the
+ * `access_tokens` request, spelled as GitHub spells them (`repository_ids`);
+ * when none is given no body is sent at all. GitHub accepts repositories by
+ * name or by id but not both, so a request naming both fails before any call
+ * is made. GitHub may still grant less than asked; compare
+ * `InstallationToken.permissions` with {@link assertPermissions} to fail
+ * closed.
+ *
+ * **Example** (Request a token narrowed to one repository)
  *
  * ```ts
  * import { TokenRequest } from "@beep/github/GitHubApp";
@@ -215,8 +337,10 @@ export declare namespace AppCredentials {
  *   appId: "12345",
  *   privateKey: Redacted.make("example PEM"),
  *   installationId: 42,
+ *   repositories: ["beep-effect"],
+ *   permissions: { checks: "write", contents: "read" },
  * });
- * console.log(request.installationId) // 42
+ * console.log(request.repositories) // [ "beep-effect" ]
  * ```
  *
  * @public
@@ -238,7 +362,40 @@ export class TokenRequest extends S.Opaque<TokenRequest, { readonly brand: uniqu
         description: "The account whose installation to use, when `installationId` is omitted.",
       })
     ),
-  }).pipe($I.annoteSchema("TokenRequest", { description: "What to mint an installation token for." }))
+    /** Permissions to narrow the token to, by GitHub's names. GitHub may grant less. */
+    permissions: S.optionalKey(RequestedPermissions).pipe(
+      $I.annoteKey("TokenRequest.permissions", {
+        description: "Permissions to narrow the token to, by GitHub's names. GitHub may grant less.",
+      })
+    ),
+    /** Repositories to narrow the token to, by name without owner. Exclusive with `repositoryIds`. */
+    repositories: RepositoryName.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("TokenRequest.repositories", {
+        description: "Repositories to narrow the token to, by name without owner. Exclusive with `repositoryIds`.",
+      })
+    ),
+    /** Repositories to narrow the token to, by numeric id. Exclusive with `repositories`. */
+    repositoryIds: S.Int.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("TokenRequest.repositoryIds", {
+        description: "Repositories to narrow the token to, by numeric id. Exclusive with `repositories`.",
+      })
+    ),
+  })
+    .check(
+      S.makeFilter(
+        (request) => request.repositories === undefined || request.repositoryIds === undefined,
+        $I.annote("TokenRequestRepositorySelectorCheck", {
+          title: "Token request repository selector",
+          description: "GitHub accepts repositories by name or by id in one request, never both.",
+          message: "pass repositories or repositoryIds, not both",
+        })
+      )
+    )
+    .pipe($I.annoteSchema("TokenRequest", { description: "What to mint an installation token for." }))
 ) {}
 
 /**
@@ -386,6 +543,59 @@ export class InstallationToken extends S.Class<InstallationToken, { readonly bra
 
 /** Re-mint a minute before GitHub would start refusing the token. */
 const DEFAULT_SKEW = Duration.seconds(60);
+
+/**
+ * Fail closed when GitHub granted less than `required`.
+ *
+ * **Details**
+ *
+ * A down-scoped {@link TokenRequest} is a ceiling, not a floor: GitHub silently
+ * intersects what was asked with what the installation holds, and the result
+ * lands in `InstallationToken.permissions`. This reads that map through
+ * `TokenPermissions.fromGitHub` and fails with `TokenPermissionError
+ * { kind: "insufficient" }` unless every required permission is held at least
+ * at the level asked for. It passes the token through on success so it
+ * composes after `GitHubApp.token`. Use `TokenPermissions.assertExact` directly
+ * when a broader grant is also a misconfiguration.
+ *
+ * **Example** (Reject a token GitHub narrowed below what was required)
+ *
+ * ```ts
+ * import { assertPermissions, InstallationToken } from "@beep/github/GitHubApp";
+ * import * as DateTime from "effect/DateTime";
+ * import * as Effect from "effect/Effect";
+ * import * as Redacted from "effect/Redacted";
+ *
+ * const token = InstallationToken.make({
+ *   token: Redacted.make("example-token"),
+ *   expiresAt: DateTime.makeUnsafe("2030-01-01T00:00:00.000Z"),
+ *   installationId: 42,
+ *   permissions: { contents: "read" },
+ * });
+ * const checked = assertPermissions(token, { contents: "write" }).pipe(Effect.flip);
+ * console.log(Effect.runSync(checked).message) // token is missing contents:write
+ * ```
+ *
+ * @public
+ * @category assertions
+ * @since 0.0.0
+ */
+export const assertPermissions: {
+  (
+    token: InstallationToken,
+    required: Readonly<Record<string, PermissionLevel>>
+  ): Effect.Effect<InstallationToken, TokenPermissionError>;
+  (
+    required: Readonly<Record<string, PermissionLevel>>
+  ): (token: InstallationToken) => Effect.Effect<InstallationToken, TokenPermissionError>;
+} = dual(
+  2,
+  (
+    token: InstallationToken,
+    required: Readonly<Record<string, PermissionLevel>>
+  ): Effect.Effect<InstallationToken, TokenPermissionError> =>
+    TokenPermissions.fromGitHub(token.permissions).assertSufficient(required).pipe(Effect.as(token))
+);
 
 /** A git author address: one `@`, a dotted domain, and no whitespace. */
 const CommitEmail = S.String.check(S.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)).pipe(
@@ -622,6 +832,12 @@ export class GitHubAppOptions extends S.Opaque<GitHubAppOptions, { readonly bran
     userAgent: S.optionalKey(S.String).pipe(
       $I.annoteKey("GitHubAppOptions.userAgent", { description: "Appended to octokit's user agent." })
     ),
+    /** How long before expiry `clientLayer` re-mints its token. Defaults to one minute. */
+    refreshSkew: S.optionalKey(S.Duration).pipe(
+      $I.annoteKey("GitHubAppOptions.refreshSkew", {
+        description: "How long before expiry `clientLayer` re-mints its token. Defaults to one minute.",
+      })
+    ),
   }).pipe($I.annoteSchema("GitHubAppOptions", { description: "Transport settings for the app's own API calls." }))
 ) {}
 
@@ -715,23 +931,28 @@ const makeApp: {
               );
             });
 
-      const token = Effect.fn("GitHubApp.token")((request: TokenRequest.Encoded) =>
+      const token = Effect.fn("GitHubApp.token")((raw: TokenRequest.Encoded) =>
         Effect.uninterruptibleMask(
           Effect.fnUntraced(function* (restore) {
+            const request = yield* restore(validateRequest(raw));
             const installationId = yield* restore(resolveInstallationId(request));
             const client = yield* restore(asApp(request, options));
             const minted = yield* restore(
               client
-                .request("POST /app/installations/{installation_id}/access_tokens", { installation_id: installationId })
+                .requestDecoded(
+                  "POST /app/installations/{installation_id}/access_tokens",
+                  { installation_id: installationId, ...accessTokenBody(request) },
+                  S.Unknown
+                )
                 .pipe(Effect.catch(appFailure("token")))
             );
             // Only the HTTP wait is restored above. Own a received string credential
             // while masked, even if its other fields fail decoding or decoding yields.
-            const observed = S.decodeOption(ObservedCredential)(minted);
+            const observed = S.decodeUnknownOption(ObservedCredential)(minted);
             if (O.isSome(observed)) yield* observe(Redacted.make(observed.value.token));
             return yield* restore(
               Effect.gen(function* () {
-                const wire = yield* S.decodeEffect(TokenResponse)(minted);
+                const wire = yield* S.decodeUnknownEffect(TokenResponse)(minted);
                 return yield* S.decodeEffect(InstallationToken)({
                   token: wire.token,
                   expiresAt: wire.expires_at,
@@ -887,9 +1108,17 @@ export class GitHubApp extends Context.Service<GitHubApp, GitHubAppShape>()($I`G
    *
    * The token's lifetime is the layer's scope: it is minted on build and
    * **revoked on release**, best-effort, so a workflow does not leave live
-   * credentials behind. It is also **re-minted automatically** a minute before
-   * it expires, so a long-running program does not start answering 401 when
-   * the hour ends.
+   * credentials behind. It is also **re-minted automatically** before it
+   * expires (`options.refreshSkew` ahead, one minute by default), so a
+   * long-running program does not start answering 401 when the hour ends.
+   * Refreshes are serialized behind one permit: concurrent requests that find
+   * the token spent mint one replacement and share it.
+   *
+   * The request's `permissions`, `repositories` and `repositoryIds` narrow
+   * every token the layer mints, the first and each refresh alike. The layer
+   * does not check what GitHub granted back; a program that must fail closed
+   * mints once through `GitHubApp.token` and {@link assertPermissions} before
+   * building the layer.
    *
    * Building the layer mints the first token, so a misconfigured app fails
    * construction with `GitHubAppError`. After that, a failure to obtain
@@ -1025,6 +1254,9 @@ export interface GitHubAppShape {
    *
    * `installationId` is used when given; otherwise the installation is
    * discovered from `owner`, or from the app's only installation.
+   * `permissions`, `repositories` and `repositoryIds` are sent as the
+   * `access_tokens` body; the request is validated first and an invalid one
+   * fails with `kind: "request"` before any call is made.
    */
   readonly token: (request: TokenRequest.Encoded) => Effect.Effect<InstallationToken, GitHubAppError>;
 }
@@ -1096,6 +1328,28 @@ const TokenResponse = S.Struct({
 const decodeFailure = (kind: GitHubAppError["kind"]) => (error: S.SchemaError) =>
   GitHubAppError.of(kind, `GitHub returned an unexpected ${kind} payload`, error);
 
+/** Check a token request against its schema before any JWT is signed or call made. */
+const validateRequest = (raw: TokenRequest.Encoded): Effect.Effect<TokenRequest, GitHubAppError> =>
+  S.decodeEffect(TokenRequest)(raw).pipe(
+    Effect.mapError((error) => GitHubAppError.of("request", `invalid token request: ${error.message}`, error))
+  );
+
+/**
+ * The `access_tokens` JSON body, in GitHub's spelling.
+ *
+ * **Details**
+ *
+ * Empty when the request narrows nothing, so octokit sends no body and the
+ * wire stays identical to a plain mint. Shared by `token` and, through it,
+ * `scopedToken` and `clientLayer`.
+ */
+const accessTokenBody = (request: TokenRequest.Encoded) =>
+  O.getSomesStruct({
+    permissions: O.fromUndefinedOr(request.permissions),
+    repositories: O.fromUndefinedOr(request.repositories),
+    repository_ids: O.fromUndefinedOr(request.repositoryIds),
+  });
+
 /** GitHub's permission values are strings; anything else is not a permission. */
 const normalizePermissions = (raw: unknown): Record<string, string> => {
   if (!P.isObjectOrArray(raw)) return {};
@@ -1133,6 +1387,7 @@ const makeRotatingClient: {
     const inFlight = yield* Ref.make(O.none<Fiber.Fiber<GitHubClientShape, GitHubAppError>>());
     const closed = yield* Ref.make(false);
     const rotation = yield* Semaphore.make(1);
+    const skew = options.refreshSkew ?? DEFAULT_SKEW;
 
     const revokeHeld = Effect.flatMap(Ref.get(owned), (current) =>
       O.isSome(current) ? Effect.ignore(app.revoke(current.value)) : Effect.void
@@ -1155,7 +1410,7 @@ const makeRotatingClient: {
     const refresh = Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis;
       const state = yield* Ref.get(held);
-      if (O.isSome(state) && !state.value.token.isExpired(now)) return state.value.client;
+      if (O.isSome(state) && !state.value.token.isExpired(now, skew)) return state.value.client;
       return yield* rotate;
     });
     const fresh = Effect.uninterruptibleMask(

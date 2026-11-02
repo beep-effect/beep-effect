@@ -1,4 +1,4 @@
-import { AppIdentity, BotIdentity, GitHubApp, InstallationToken } from "@beep/github/GitHubApp";
+import { AppIdentity, assertPermissions, BotIdentity, GitHubApp, InstallationToken } from "@beep/github/GitHubApp";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
@@ -42,6 +42,15 @@ const pemBanner = (edge: "BEGIN" | "END"): string => `-----${edge} PRIVATE KEY--
 const privateKey = `${pemBanner("BEGIN")}\n${Base64.encode(keyBytes)}\n${pemBanner("END")}`;
 
 const CREDENTIALS = { appId: "Iv1.test", privateKey: Redacted.make(privateKey) };
+
+/** The recorded JSON body of a scripted call. */
+const JsonObject = S.fromJsonString(S.Record(S.String, S.Unknown));
+
+/** The reviewer's down-scope: one repository, five permissions. */
+const REVIEWER_SCOPE = {
+  repositories: ["beep-effect"],
+  permissions: { checks: "write", pull_requests: "write", issues: "write", contents: "read", metadata: "read" },
+} as const;
 
 const NO_RETRY = RetryPolicy.none;
 
@@ -710,6 +719,216 @@ describe("GitHubApp.clientLayer", () => {
       );
     });
   }
+});
+
+describe("GitHubApp.token down-scope", () => {
+  withApp("sends no body when the request narrows nothing", [tokenReply()], (app, script) =>
+    Effect.gen(function* () {
+      yield* app.token({ ...CREDENTIALS, installationId: 42 });
+      // The plain mint stays byte-identical to the wire before down-scoping existed.
+      assert.strictEqual(script.calls[0]?.body, undefined);
+    })
+  );
+
+  withApp(
+    "sends permissions and repositories as the access_tokens body",
+    [
+      {
+        status: 201,
+        body: {
+          token: "ghs_scoped",
+          expires_at: "2099-01-01T00:00:00Z",
+          permissions: { ...REVIEWER_SCOPE.permissions },
+          repository_selection: "selected",
+        },
+      },
+    ],
+    (app, script) =>
+      Effect.gen(function* () {
+        const token = yield* app.token({ ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE });
+        assert.strictEqual(Redacted.value(token.token), "ghs_scoped");
+        assert.strictEqual(script.count(), 1);
+        assert.strictEqual(script.calls[0]?.method, "POST");
+        assert.include(script.calls[0]?.url ?? "", "/app/installations/42/access_tokens");
+        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+          repositories: ["beep-effect"],
+          permissions: { ...REVIEWER_SCOPE.permissions },
+        });
+        yield* assertPermissions(token, REVIEWER_SCOPE.permissions);
+      })
+  );
+
+  withApp("sends repository ids under GitHub's spelling", [tokenReply()], (app, script) =>
+    Effect.gen(function* () {
+      yield* app.token({ ...CREDENTIALS, installationId: 42, repositoryIds: [1, 2] });
+      assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+        repository_ids: [1, 2],
+      });
+    })
+  );
+
+  withApp(
+    "fails closed when GitHub grants less than was required",
+    [
+      {
+        status: 201,
+        body: {
+          token: "ghs_narrowed",
+          expires_at: "2099-01-01T00:00:00Z",
+          // GitHub intersects the request with the installation: no checks, contents only read.
+          permissions: { pull_requests: "write", issues: "write", contents: "read", metadata: "read" },
+        },
+      },
+    ],
+    (app) =>
+      Effect.gen(function* () {
+        const token = yield* app.token({ ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE });
+        const error = yield* Effect.flip(
+          assertPermissions(token, { ...REVIEWER_SCOPE.permissions, contents: "write" })
+        );
+        assert.strictEqual(error._tag, "TokenPermissionError");
+        assert.strictEqual(error.kind, "insufficient");
+        assert.deepStrictEqual(
+          A.map(error.result.missing, (gap) => `${gap.permission}:${gap.required}`),
+          ["checks:write", "contents:write"]
+        );
+        // Narrower than asked is accepted when the caller only needs what was granted.
+        const kept = yield* assertPermissions({ contents: "read" })(token);
+        assert.strictEqual(kept, token);
+      })
+  );
+
+  withApp("refuses repositories by both name and id before any call", [tokenReply()], (app, script) =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        app.token({ ...CREDENTIALS, installationId: 42, repositories: ["beep-effect"], repositoryIds: [1] })
+      );
+      assert.strictEqual(error._tag, "GitHubAppError");
+      assert.strictEqual(error.kind, "request");
+      assert.include(error.reason, "pass repositories or repositoryIds, not both");
+      assert.strictEqual(script.count(), 0, "an invalid request never signs a JWT or reaches GitHub");
+    })
+  );
+
+  for (const [field, request] of [
+    ["an owner-qualified repository name", { repositories: ["beep-effect/beep-effect"] }],
+    ["an empty repository name", { repositories: [""] }],
+    ["a permission name GitHub would not spell that way", { permissions: { "Pull-Requests": "write" } }],
+    ["a fractional repository id", { repositoryIds: [1.5] }],
+  ] as const) {
+    withApp(`refuses ${field}`, [tokenReply()], (app, script) =>
+      Effect.gen(function* () {
+        const error = yield* Effect.flip(app.token({ ...CREDENTIALS, installationId: 42, ...request }));
+        assert.strictEqual(error.kind, "request");
+        assert.include(error.reason, "invalid token request");
+        assert.strictEqual(script.count(), 0);
+      })
+    );
+  }
+
+  withApp("scopedToken mints through the same body builder", [tokenReply(), { status: 204 }], (app, script) =>
+    Effect.gen(function* () {
+      yield* Effect.scoped(app.scopedToken({ ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE }));
+      assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), {
+        repositories: ["beep-effect"],
+        permissions: { ...REVIEWER_SCOPE.permissions },
+      });
+      assert.strictEqual(script.calls[1]?.method, "DELETE");
+    })
+  );
+});
+
+describe("GitHubApp.clientLayer down-scope and refresh", () => {
+  it.effect(
+    "threads the down-scope into every mint and refreshes refreshSkew before expiry",
+    () => {
+      const script = scriptedFetch([
+        tokenReply({ expiresAt: "1970-01-01T00:10:00Z", token: "ghs_first" }),
+        { status: 200, body: { default_branch: "main" } },
+        { status: 200, body: { default_branch: "main" } },
+        { status: 204 }, // revoke of the first, five minutes ahead of its expiry
+        tokenReply({ expiresAt: "2099-01-01T00:00:00Z", token: "ghs_second" }),
+        { status: 200, body: { default_branch: "main" } },
+        { status: 204 }, // revoke on scope close
+      ]);
+      return Effect.gen(function* () {
+        const context = yield* Layer.build(
+          GitHubApp.clientLayer(
+            { ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE },
+            { fetch: script.fetch, retry: NO_RETRY, refreshSkew: Duration.minutes(5) }
+          )
+        );
+        const client = Context.get(context, GitHubClient);
+        const read = client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+        yield* read;
+        yield* TestClock.adjust(Duration.minutes(4));
+        yield* read;
+        assert.strictEqual(script.count(), 3, "four minutes in, the token has six minutes left and is kept");
+        yield* TestClock.adjust(Duration.minutes(2));
+        yield* read;
+        assert.deepStrictEqual(
+          A.map(script.calls, (call) => call.method),
+          ["POST", "GET", "GET", "DELETE", "POST", "GET"]
+        );
+        assert.strictEqual(script.calls[2]?.headers.authorization, "token ghs_first");
+        assert.strictEqual(script.calls[3]?.headers.authorization, "token ghs_first");
+        assert.strictEqual(script.calls[5]?.headers.authorization, "token ghs_second");
+        const scopedBody = { repositories: ["beep-effect"], permissions: { ...REVIEWER_SCOPE.permissions } };
+        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[0]?.body ?? "{}"), scopedBody);
+        assert.deepStrictEqual(yield* S.decodeEffect(JsonObject)(script.calls[4]?.body ?? "{}"), scopedBody);
+      });
+    },
+    30_000
+  );
+
+  it.effect("keeps the one-minute default skew when refreshSkew is omitted", () => {
+    const script = scriptedFetch([
+      tokenReply({ expiresAt: "1970-01-01T00:10:00Z", token: "ghs_first" }),
+      { status: 200, body: { default_branch: "main" } },
+    ]);
+    return Effect.gen(function* () {
+      const context = yield* Layer.build(
+        GitHubApp.clientLayer({ ...CREDENTIALS, installationId: 42 }, { fetch: script.fetch, retry: NO_RETRY })
+      );
+      const client = Context.get(context, GitHubClient);
+      yield* TestClock.adjust(Duration.minutes(6));
+      yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+      assert.deepStrictEqual(
+        A.map(script.calls, (call) => call.method),
+        ["POST", "GET"],
+        "a five-minute skew would have rotated here; the default does not"
+      );
+    });
+  });
+
+  it.effect("concurrent requests on a live token mint once", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        tokenReply({ token: "ghs_shared" }),
+        { status: 200, body: { default_branch: "main" } },
+        { status: 200, body: { default_branch: "main" } },
+        { status: 200, body: { default_branch: "main" } },
+      ]);
+      const context = yield* Layer.build(
+        GitHubApp.clientLayer(
+          { ...CREDENTIALS, installationId: 42, ...REVIEWER_SCOPE },
+          { fetch: script.fetch, retry: NO_RETRY }
+        )
+      );
+      const client = Context.get(context, GitHubClient);
+      const read = client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+      yield* Effect.all([read, read, read], { concurrency: "unbounded" });
+      assert.deepStrictEqual(
+        A.map(script.calls, (call) => call.method),
+        ["POST", "GET", "GET", "GET"]
+      );
+      assert.lengthOf(
+        A.filter(script.calls, (call) => call.method === "POST"),
+        1,
+        "the permit serializes refresh checks, so a live token is never re-minted"
+      );
+    })
+  );
 });
 
 describe("InstallationToken", () => {
