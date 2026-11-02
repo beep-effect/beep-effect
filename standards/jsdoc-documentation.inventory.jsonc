@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T09:42:16.413Z",
+  "generatedAt": "2026-11-02T09:35:28.584Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3573,
-    "publicExports": 25389,
+    "publicExports": 25383,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -48584,7 +48584,7 @@
         "srcDir": "src",
         "sourceFileCount": 7,
         "publicModuleCount": 7,
-        "publicExportCount": 53
+        "publicExportCount": 47
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -48708,7 +48708,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -49013,8 +49013,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 236,
-          "anchor": "packages-drivers-git-src-git-models-ts-236-commitlogentry",
+          "line": 212,
+          "anchor": "packages-drivers-git-src-git-models-ts-212-commitlogentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49036,8 +49036,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 315,
-          "anchor": "packages-drivers-git-src-git-models-ts-315-statusrenderoptions",
+          "line": 276,
+          "anchor": "packages-drivers-git-src-git-models-ts-276-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -49059,8 +49059,8 @@
           "exportKind": "namespace",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 346,
-          "anchor": "packages-drivers-git-src-git-models-ts-346-statusrenderoptions",
+          "line": 307,
+          "anchor": "packages-drivers-git-src-git-models-ts-307-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -49082,8 +49082,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 371,
-          "anchor": "packages-drivers-git-src-git-models-ts-371-statusentry",
+          "line": 332,
+          "anchor": "packages-drivers-git-src-git-models-ts-332-statusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49105,8 +49105,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 493,
-          "anchor": "packages-drivers-git-src-git-models-ts-493-submodulestatusentry",
+          "line": 454,
+          "anchor": "packages-drivers-git-src-git-models-ts-454-submodulestatusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49128,8 +49128,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 543,
-          "anchor": "packages-drivers-git-src-git-models-ts-543-lsremoteentry",
+          "line": 504,
+          "anchor": "packages-drivers-git-src-git-models-ts-504-lsremoteentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49151,8 +49151,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 638,
-          "anchor": "packages-drivers-git-src-git-models-ts-638-stashentry",
+          "line": 599,
+          "anchor": "packages-drivers-git-src-git-models-ts-599-stashentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49174,8 +49174,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 673,
-          "anchor": "packages-drivers-git-src-git-models-ts-673-branchentry",
+          "line": 634,
+          "anchor": "packages-drivers-git-src-git-models-ts-634-branchentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49197,8 +49197,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 710,
-          "anchor": "packages-drivers-git-src-git-models-ts-710-refentry",
+          "line": 671,
+          "anchor": "packages-drivers-git-src-git-models-ts-671-refentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49220,8 +49220,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 745,
-          "anchor": "packages-drivers-git-src-git-models-ts-745-configlistentry",
+          "line": 706,
+          "anchor": "packages-drivers-git-src-git-models-ts-706-configlistentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49243,8 +49243,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 781,
-          "anchor": "packages-drivers-git-src-git-models-ts-781-worktreeentry",
+          "line": 742,
+          "anchor": "packages-drivers-git-src-git-models-ts-742-worktreeentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49266,8 +49266,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 846,
-          "anchor": "packages-drivers-git-src-git-models-ts-846-lsfilesentry",
+          "line": 807,
+          "anchor": "packages-drivers-git-src-git-models-ts-807-lsfilesentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49289,8 +49289,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 924,
-          "anchor": "packages-drivers-git-src-git-models-ts-924-gitoptions",
+          "line": 885,
+          "anchor": "packages-drivers-git-src-git-models-ts-885-gitoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -49312,8 +49312,8 @@
           "exportKind": "re-export",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 82,
-          "anchor": "packages-drivers-git-src-git-ts-82-export-dirtyworktreeerror-gitcommanderror-mergeconflicterror-nonfastforwarderror-notarepositoryerror-notstubbederror-unknownreferror-from-git-errors-ts",
+          "line": 75,
+          "anchor": "packages-drivers-git-src-git-ts-75-export-dirtyworktreeerror-gitcommanderror-mergeconflicterror-nonfastforwarderror-notarepositoryerror-notstubbederror-unknownreferror-from-git-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -49334,8 +49334,8 @@
           "exportKind": "re-export",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 97,
-          "anchor": "packages-drivers-git-src-git-ts-97-export-branchentry-commitinfo-commitlogentry-configlistentry-gitoptions-lsfilesentry-lsremoteentry-lstreeentry-namestatusentry-refentry-stashentry-statusentry-statusrenderoptions-submodulestatusentry-worktreeentry-from-git-models-ts",
+          "line": 90,
+          "anchor": "packages-drivers-git-src-git-ts-90-export-branchentry-commitinfo-commitlogentry-configlistentry-gitoptions-lsfilesentry-lsremoteentry-lstreeentry-namestatusentry-refentry-stashentry-statusentry-statusrenderoptions-submodulestatusentry-worktreeentry-from-git-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -49356,8 +49356,8 @@
           "exportKind": "interface",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 2180,
-          "anchor": "packages-drivers-git-src-git-ts-2180-gitshape",
+          "line": 2021,
+          "anchor": "packages-drivers-git-src-git-ts-2021-gitshape",
           "currentTags": [
             "@public",
             "@category",
@@ -49379,8 +49379,8 @@
           "exportKind": "type",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 3902,
-          "anchor": "packages-drivers-git-src-git-ts-3902-gitstubs",
+          "line": 3607,
+          "anchor": "packages-drivers-git-src-git-ts-3607-gitstubs",
           "currentTags": [
             "@public",
             "@category",
@@ -49402,8 +49402,8 @@
           "exportKind": "class",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 4003,
-          "anchor": "packages-drivers-git-src-git-ts-4003-git",
+          "line": 3708,
+          "anchor": "packages-drivers-git-src-git-ts-3708-git",
           "currentTags": [
             "@public",
             "@category",
@@ -49444,58 +49444,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "CurrentBranchMode",
-          "exportKind": "const",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 509,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-509-currentbranchmode",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "CurrentBranchMode",
-          "exportKind": "type",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 519,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-519-currentbranchmode",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
           "symbolName": "GitConfigScope",
           "exportKind": "const",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 616,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-616-gitconfigscope",
+          "line": 491,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-491-gitconfigscope",
           "currentTags": [
             "@public",
             "@category",
@@ -49517,100 +49471,8 @@
           "exportKind": "type",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 626,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-626-gitconfigscope",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StatusUntrackedFiles",
-          "exportKind": "const",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 659,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-659-statusuntrackedfiles",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StatusUntrackedFiles",
-          "exportKind": "type",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 669,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-669-statusuntrackedfiles",
-          "currentTags": [
-            "@see",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StatusIgnoreSubmodules",
-          "exportKind": "const",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 691,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-691-statusignoresubmodules",
-          "currentTags": [
-            "@public",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "StatusIgnoreSubmodules",
-          "exportKind": "type",
-          "filePath": "src/GitCommand.ts",
-          "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 701,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-701-statusignoresubmodules",
+          "line": 501,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-501-gitconfigscope",
           "currentTags": [
             "@see",
             "@category",
@@ -49632,8 +49494,8 @@
           "exportKind": "class",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 1079,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-1079-gitcommand",
+          "line": 867,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-867-gitcommand",
           "currentTags": [
             "@public",
             "@category",
@@ -49926,12 +49788,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  CurrentBranchMode,\n  GitCommand,\n  GitConfigScope,\n  GitInvocation,\n  StatusIgnoreSubmodules,\n  StatusUntrackedFiles,\n} from \"./GitCommand.ts\";",
+          "symbolName": "export { GitCommand, GitConfigScope, GitInvocation } from \"./GitCommand.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/git/src/index.ts",
           "line": 40,
-          "anchor": "packages-drivers-git-src-index-ts-40-export-currentbranchmode-gitcommand-gitconfigscope-gitinvocation-statusignoresubmodules-statusuntrackedfiles-from-gitcommand-ts",
+          "anchor": "packages-drivers-git-src-index-ts-40-export-gitcommand-gitconfigscope-gitinvocation-from-gitcommand-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -49949,8 +49811,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/git/src/index.ts",
-          "line": 48,
-          "anchor": "packages-drivers-git-src-index-ts-48-export-gitconfig-gitconfigdiagnostic-gitconfigediterror-gitconfigentry-gitconfiginclude-gitconfigparseerror-gitconfigsection-from-gitconfig-ts",
+          "line": 41,
+          "anchor": "packages-drivers-git-src-index-ts-41-export-gitconfig-gitconfigdiagnostic-gitconfigediterror-gitconfigentry-gitconfiginclude-gitconfigparseerror-gitconfigsection-from-gitconfig-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -49968,8 +49830,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/git/src/index.ts",
-          "line": 57,
-          "anchor": "packages-drivers-git-src-index-ts-57-export-gitmodules-gitmodulesdecodeerror-gitmodulesentry-type-gitmodulesparseerror-from-gitmodules-ts",
+          "line": 50,
+          "anchor": "packages-drivers-git-src-index-ts-50-export-gitmodules-gitmodulesdecodeerror-gitmodulesentry-type-gitmodulesparseerror-from-gitmodules-ts",
           "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -469114,8 +468976,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-37-readcacheexperimentbytes",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-78-readcacheexperimentbytes",
           "currentTags": [
             "@internal",
             "@category",
@@ -469137,8 +468999,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 65,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-65-decodecacheexperimenttext",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-106-decodecacheexperimenttext",
           "currentTags": [
             "@internal",
             "@param",
@@ -469162,8 +469024,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-87-hashcacheexperimentexecutable",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-128-hashcacheexperimentexecutable",
           "currentTags": [
             "@internal",
             "@category",
@@ -469185,8 +469047,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-116-readcacheevidencebytes",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-157-readcacheevidencebytes",
           "currentTags": [
             "@category",
             "@since"
@@ -469207,8 +469069,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-146-requirecachelinuxx64",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-187-requirecachelinuxx64",
           "currentTags": [
             "@param",
             "@returns",
@@ -469232,8 +469094,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-170-requirecachesupervisorcapture",
+          "line": 217,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-217-requirecachesupervisorcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -469257,8 +469119,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-196-makeprivatesupervisorstorage",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-251-makeprivatesupervisorstorage",
           "currentTags": [
             "@internal",
             "@category",
@@ -474447,8 +474309,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-393-cicoverageplan",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-392-cicoverageplan",
           "currentTags": [
             "@category",
             "@since"
@@ -474469,8 +474331,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 415,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-415-runcicoveragepartition",
+          "line": 414,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-414-runcicoveragepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -474491,8 +474353,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 581,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-581-runcilabscoverage",
+          "line": 574,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-574-runcilabscoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -474513,8 +474375,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 623,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-623-runcicoveragecomparison",
+          "line": 616,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-616-runcicoveragecomparison",
           "currentTags": [
             "@category",
             "@since"
@@ -474535,8 +474397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 699,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-699-cicoveragetestargs",
+          "line": 692,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-692-cicoveragetestargs",
           "currentTags": [
             "@category",
             "@since"
@@ -475627,8 +475489,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 126,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-126-cilanepartitionid",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-122-cilanepartitionid",
           "currentTags": [
             "@category",
             "@since"
@@ -475649,8 +475511,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-150-cilanepartitionshard",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-146-cilanepartitionshard",
           "currentTags": [
             "@category",
             "@since"
@@ -475671,8 +475533,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 192,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-192-cilanepartition",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-188-cilanepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -475693,8 +475555,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 240,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-240-ci-lane-partitions",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-234-ci-lane-partitions",
           "currentTags": [
             "@category",
             "@since"
@@ -475715,8 +475577,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 668,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-668-cilanedefaultplacement",
+          "line": 585,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-585-cilanedefaultplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -475737,8 +475599,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 721,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-721-cilanedefaultplacements",
+          "line": 638,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-638-cilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -475761,8 +475623,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 778,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-778-withcilanedefaultplacements",
+          "line": 695,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-695-withcilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -478387,8 +478249,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1957,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1957-cilanetiminggithubclientshape",
+          "line": 1925,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1925-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -478409,8 +478271,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1980,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1980-cilanetiminggithubclient",
+          "line": 1948,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1948-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -478431,8 +478293,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2160,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2160-collectrequiredcontexts",
+          "line": 2127,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2127-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -478455,8 +478317,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2743,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2743-buildcilanetimingwindowreport",
+          "line": 2708,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2708-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -478479,8 +478341,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2835,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2835-collectcilanetimingwindow",
+          "line": 2800,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2800-collectcilanetimingwindow",
           "currentTags": [
             "@param",
             "@returns",
@@ -478503,8 +478365,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3115,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3115-cilanetimingdaypeaks",
+          "line": 3080,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3080-cilanetimingdaypeaks",
           "currentTags": [
             "@param",
             "@returns",
@@ -478527,8 +478389,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3224,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3224-rendercilanetimingwindowmarkdown",
+          "line": 3189,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3189-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -478551,8 +478413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3261,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3261-rendercilanetimingwindowsummary",
+          "line": 3226,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3226-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -478575,8 +478437,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3374,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3374-rendercilanetimingwindowtsv",
+          "line": 3339,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3339-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -478599,8 +478461,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3476,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3476-assesscilanetimingwindowbounds",
+          "line": 3441,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3441-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478623,8 +478485,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3524,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3524-assesscilanetimingwindowpopulation",
+          "line": 3489,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3489-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -478647,8 +478509,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3562,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3562-rendercilanetimingwindowpreviewbanner",
+          "line": 3527,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3527-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -478671,8 +478533,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3597,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3597-guardcilanetimingwindowbounds",
+          "line": 3562,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3562-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478695,8 +478557,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3747,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3747-cilanetimingscommand",
+          "line": 3712,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3712-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
