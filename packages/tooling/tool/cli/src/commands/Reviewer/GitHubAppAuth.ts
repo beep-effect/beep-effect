@@ -153,7 +153,6 @@ const secretRead = Effect.fn("Reviewer.secretRead")(function* (field: string, ho
  * ```ts
  * import { loadReviewerCredentials } from "@beep/repo-cli/commands/Reviewer";
  * import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
  * console.log(Effect.isEffect(loadReviewerCredentials));
  * ```
  *
@@ -205,7 +204,6 @@ interface GitHubAppAuthShape {
  * ```ts
  * import { GitHubAppAuth } from "@beep/repo-cli/commands/Reviewer";
  * import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
  * const program = GitHubAppAuth.use((auth) => Effect.succeed(auth.appId));
  * console.log(Effect.isEffect(program));
  * ```
@@ -238,7 +236,6 @@ const tokenFailure = (error: GitHubAppError | TokenPermissionError) =>
  * ```ts
  * import { mintReviewerToken, ReviewerCredentials } from "@beep/repo-cli/commands/Reviewer";
  * import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
  * import * as Redacted from "effect/Redacted";
  * const credentials = ReviewerCredentials.make({
  *   appId: 42, clientId: "Iv.example", installationId: 7, privateKey: Redacted.make("example PEM"),
