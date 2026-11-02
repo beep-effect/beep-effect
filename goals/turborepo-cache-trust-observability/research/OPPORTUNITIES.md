@@ -1804,3 +1804,14 @@ Keep the original red receipts and all baseline floors. Run the root policy
 scanner on touched test files: package lint alone does not include that rule.
 
 - 2026-11-02: The accepted party-domain expansion added twelve executable nodes without recording its cache baseline. Merging main produced a baseline conflict and eight expansion blockers plus root policy drift. A generator-integrated configuration review would prevent this; the touched baseline is reconciled once through the named CAS review, preserving qualification bytes.
+
+
+### 2026-11-02 — source bindings after accepted-main integration
+
+PR #2603 review found that the accepted producer test-kit exports changed the
+shared helper digest while its checkpoint retained the earlier value. The three
+other bindings still matched. Preserve the entire prior binding set, record the
+current helper bytes and replay all 136 focused component cases on Node 24.
+A post-merge comparison of every declared binding would have caught this before
+push. Historical receipts remain source-bound; the new replay grants no native
+or production acceptance.
