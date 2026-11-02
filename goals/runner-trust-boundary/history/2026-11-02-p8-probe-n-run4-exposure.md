@@ -24,9 +24,13 @@ are instance ids. No credential or host address appears here.
 
 ## Result
 
-- For the full 12 minutes the replayed session stayed connected, GitHub
-  offered it no job. The decoy and all 32 real heavy jobs that started during
-  the hold went to other runners, each on its own new runner.
+- For the full 12 minutes the replayed session stayed connected, its listener
+  printed no "Running job" line, the line the runner prints when it takes a
+  job, and no job record names its runner. The probe watched for that line and
+  for the listener's exit only; it did not retain the rest of the listener
+  log, so an offer that failed before that line cannot be ruled out. The
+  decoy and all 32 real heavy jobs that started during the hold went to other
+  runners, each on its own new runner.
 - The replayed session ended 13 seconds after GitHub cancelled the original
   job, when the registration was deleted. A later replay from a second host
   was refused.

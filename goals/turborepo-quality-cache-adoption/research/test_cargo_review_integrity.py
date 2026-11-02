@@ -148,6 +148,8 @@ class CargoReviewIntegrityTests(unittest.TestCase):
         names = {
             "accepted-not-applicable": "acceptedNotApplicable",
             "accepted-retain-current-absence": "acceptedRetainCurrentAbsence",
+            "accepted-retain-current-default": "acceptedRetainCurrentDefault",
+            "accepted-retain-current-setting": "acceptedRetainCurrentSetting",
             "pending": "pending",
         }
         statuses = Counter(row["acceptanceStatus"] for row in matrix["rows"])

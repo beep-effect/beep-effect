@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-02T15:24:48.156Z
+Generated: 2026-11-02T18:47:55.446Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 167 |
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
-| publicModules | 3574 |
-| publicExports | 25425 |
+| publicModules | 3575 |
+| publicExports | 25438 |
 | openModules | 115 |
 | openExports | 94 |
 | missingExportExamples | 0 |
@@ -105,7 +105,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 47 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 48 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 13 | 73 | 1 | 8 |
 | 49 | `@beep/exiftool` | `packages/drivers/exiftool` | clean | 5 | 55 | 0 | 0 |
-| 50 | `@beep/github` | `packages/drivers/github` | clean | 29 | 197 | 0 | 0 |
+| 50 | `@beep/github` | `packages/drivers/github` | clean | 30 | 210 | 0 | 0 |
 | 51 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 52 | `@beep/hubspot` | `packages/drivers/hubspot` | clean | 4 | 23 | 0 | 0 |
 | 53 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
