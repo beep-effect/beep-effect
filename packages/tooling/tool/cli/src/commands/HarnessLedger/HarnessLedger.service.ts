@@ -46,6 +46,7 @@ import {
   withLedgerWriteFence,
 } from "./internal/LedgerFiles.ts";
 import { enumeratePruneCandidates, observeSessionWindow, reconcileTranscripts } from "./internal/PruneWindow.ts";
+import type { Git } from "@beep/git/Git";
 import type { HarnessFingerprint, HarnessHash, HookPulseAgentKind } from "@beep/repo-ai-metrics";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -446,7 +447,8 @@ const pruneProposalsImpl = Effect.fn("HarnessLedger.pruneProposals")(function* (
 export type HarnessLedgerServiceRequirements =
   | FileSystem.FileSystem
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const makeHarnessLedgerService = Effect.fn("HarnessLedgerService.make")(function* () {
   const context = yield* Effect.context<HarnessLedgerServiceRequirements>();

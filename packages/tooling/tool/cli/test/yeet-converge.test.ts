@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   appendYeetInboxRow,
   appendYeetInboxRowOnce,
@@ -181,7 +182,11 @@ const handle = (output: string) =>
 
 // The failed-job triage behind a red reads `gh run list`; an empty run list
 // keeps these cases about convergence rather than rerun classification.
+// The loop's once-per-head merge-base diff runs through `Git.changedFiles` (W2b); a code-bearing
+// answer keeps the heavy-admission verdict these fixtures were written against.
+const mergeBaseDiffGit = Git.layerTest({ changedFiles: () => Effect.succeed(["packages/a/src/index.ts"]) });
 const platform = Layer.mergeAll(
+  mergeBaseDiffGit,
   NodeFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
