@@ -988,30 +988,27 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
       it.effect("log --name-status types c2's rename, delete, modify and add, with the subject and derived paths", () =>
         Effect.gen(function* () {
           const git = yield* Git;
-          const entries = yield* git.log(dirD, { nameStatus: true, limit: 1 });
-          const c2 = entries[0];
-          assert.strictEqual(c2?.sha, c2Sha);
-          assert.strictEqual(c2?.subject, "c2: rename, delete, modify, add");
-          const byPath = (path: string) =>
-            O.getOrUndefined(A.findFirst(c2?.changes ?? [], (change) => change.path === path));
-          assert.deepStrictEqual(
+          // One head lookup per log keeps the optional chains out of the assertions below.
+          const c2 = O.getOrThrow(A.head(yield* git.log(dirD, { nameStatus: true, limit: 1 })));
+          assert.strictEqual(c2.sha, c2Sha);
+          assert.strictEqual(c2.subject, "c2: rename, delete, modify, add");
+          const changes = c2.changes ?? [];
+          const byPath = (path: string) => A.findFirst(changes, (change) => change.path === path);
+          const statusOf = (path: string) => O.map(byPath(path), (change) => change.status);
+          assertSome(
             byPath("src/new.ts"),
             NameStatusEntry.make({ status: "renamed", oldPath: "src/old.ts", path: "src/new.ts", score: 100 })
           );
-          assert.strictEqual(byPath("docs/gone.md")?.status, "deleted");
-          assert.strictEqual(byPath("README.md")?.status, "modified");
-          assert.strictEqual(byPath("src/added.ts")?.status, "added");
-          assert.deepStrictEqual([...(c2?.paths ?? [])].sort(), [
-            "README.md",
-            "docs/gone.md",
-            "src/added.ts",
-            "src/new.ts",
-          ]);
+          assertSome(statusOf("docs/gone.md"), "deleted");
+          assertSome(statusOf("README.md"), "modified");
+          assertSome(statusOf("src/added.ts"), "added");
+          const sortedPaths = [...c2.paths].sort();
+          assert.deepStrictEqual(sortedPaths, ["README.md", "docs/gone.md", "src/added.ts", "src/new.ts"]);
           // The same commit through --name-only: subject present, changes absent, the same paths.
-          const nameOnly = yield* git.log(dirD, { limit: 1 });
-          assert.strictEqual(nameOnly[0]?.subject, "c2: rename, delete, modify, add");
-          assert.isUndefined(nameOnly[0]?.changes);
-          assert.deepStrictEqual([...(nameOnly[0]?.paths ?? [])].sort(), [...(c2?.paths ?? [])].sort());
+          const nameOnly = O.getOrThrow(A.head(yield* git.log(dirD, { limit: 1 })));
+          assert.strictEqual(nameOnly.subject, "c2: rename, delete, modify, add");
+          assert.isUndefined(nameOnly.changes);
+          assert.deepStrictEqual([...nameOnly.paths].sort(), sortedPaths);
         })
       );
 
