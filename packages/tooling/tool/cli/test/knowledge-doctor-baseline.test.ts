@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   checkKnowledgeDoctorReport,
   classifyKnowledgeBaselineGroup,
@@ -63,7 +64,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 import type { KnowledgeDoctorReport, KnowledgeDoctorTree } from "@beep/repo-cli/commands/Knowledge";
 
-const platformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 const testLayer = Layer.provideMerge(KnowledgeDoctorLive, platformLayer);
 
 const MINTED = "0000000000000000000000000000000000000000";

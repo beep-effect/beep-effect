@@ -201,6 +201,15 @@ const mergeBase: {
   (b: string): (a: string) => GitInvocation;
 } = dual(2, (a: string, b: string): GitInvocation => git(["merge-base", a, b]));
 
+// Implementation of GitCommand.isAncestor; the public contract lives on the static.
+const isAncestor: {
+  (ancestor: string, descendant: string): GitInvocation;
+  (descendant: string): (ancestor: string) => GitInvocation;
+} = dual(
+  2,
+  (ancestor: string, descendant: string): GitInvocation => git(["merge-base", "--is-ancestor", ancestor, descendant])
+);
+
 // Implementation of GitCommand.changedFiles; the public contract lives on the static.
 const changedFiles = (base: string, head: string, relative = false): GitInvocation =>
   git(["diff", "--name-only", "-z", relative ? "--relative" : "--no-relative", `${base}...${head}`]);
@@ -802,6 +811,9 @@ const worktreeAdd = (path: string, ref?: string, detach = false, force = false):
 // Implementation of GitCommand.worktreeList; the public contract lives on the static.
 const worktreeList = (): GitInvocation => git(["worktree", "list", "--porcelain", "-z"]);
 
+// Implementation of GitCommand.worktreePrune; the public contract lives on the static.
+const worktreePrune = (): GitInvocation => git(["worktree", "prune"]);
+
 // Implementation of GitCommand.worktreeRemove; the public contract lives on the static.
 const worktreeRemove: {
   (path: string, force?: boolean): GitInvocation;
@@ -960,6 +972,37 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly mergeBase = mergeBase;
+
+  /**
+   * Builds an invocation to ask whether one commit is an ancestor of another.
+   *
+   * **Details**
+   *
+   * `git merge-base --is-ancestor <ancestor> <descendant>` — prints nothing
+   * and answers through its exit code: 0 when `ancestor` is reachable from
+   * `descendant` (a commit is its own ancestor), 1 when it is not.
+   *
+   * **Gotchas**
+   *
+   * The negative answer is a SILENT exit 1, the same shape `merge-base` uses
+   * for disjoint histories. `Git.isAncestor` reads it as `false`; an unknown
+   * object still exits 128 with a `Not a valid object name` stderr and stays
+   * an `UnknownRefError`.
+   *
+   * **Example** (Inspect is-ancestor argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.isAncestor("main", "feature");
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // merge-base --is-ancestor main feature
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly isAncestor = isAncestor;
 
   /**
    * Builds an invocation to list paths changed since a merge base.
@@ -2838,6 +2881,30 @@ export class GitCommand {
    * @since 0.0.0
    */
   static readonly worktreeRemove = worktreeRemove;
+
+  /**
+   * Builds an invocation to drop worktree registrations whose directory is gone.
+   *
+   * **Details**
+   *
+   * Mutating: `git worktree prune` — removes `$GIT_DIR/worktrees` entries
+   * whose working tree no longer exists on disk. It never touches a
+   * directory that is still present.
+   *
+   * **Example** (Inspect worktree prune argv)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const invocation = GitCommand.worktreePrune();
+   *
+   * console.log(invocation.redactedArgs.join(" ")) // worktree prune
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly worktreePrune = worktreePrune;
 
   /**
    * Builds an invocation to list staged index entries.

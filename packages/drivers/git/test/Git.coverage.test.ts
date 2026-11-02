@@ -54,6 +54,7 @@ const operations: ReadonlyArray<readonly [string, (git: GitModule.GitShape) => E
   ["refExists", (git) => git.refExists(cwd, "HEAD")],
   ["mergeBase", (git) => git.mergeBase(cwd, "a", "b")],
   ["mergeBaseOption", (git) => git.mergeBaseOption(cwd, "a", "b")],
+  ["isAncestor", (git) => git.isAncestor(cwd, "a", "b")],
   ["changedFiles", (git) => git.changedFiles(cwd, { base: "a", head: "b" })],
   ["workingChanges", (git) => git.workingChanges(cwd)],
   ["unstagedChanges", (git) => git.unstagedChanges(cwd)],
@@ -118,6 +119,7 @@ const operations: ReadonlyArray<readonly [string, (git: GitModule.GitShape) => E
   ["worktreeAdd", (git) => git.worktreeAdd(cwd, "/other")],
   ["worktreeList", (git) => git.worktreeList(cwd)],
   ["worktreeRemove", (git) => git.worktreeRemove(cwd, "/other")],
+  ["worktreePrune", (git) => git.worktreePrune(cwd)],
   ["lsFiles", (git) => git.lsFiles(cwd)],
 ];
 

@@ -1,0 +1,20 @@
+{
+  "previous": "5eae400b284cf6d5cf2b900349bd3debdd3358773f7ba3a91f58e77e37b10e6d",
+  "review": {
+    "reviewer": "Claude Fable 5.1 (repo-cli-gh-git-consolidation W0, claude/goal-effected-consolidation-a150f0)",
+    "reason": "Record the W0 root re-seal: Dispatch.manifest.ts names Git from @beep/git/Git for the runtime-edge Git.layer, so the ten @beep/git inputs move from six per-command policy-fingerprint seals into the shared seal; no manifest or dependency changes; no qualification is granted.",
+    "basis": {
+      "path": "goals/repo-cli-gh-git-consolidation/research/cache-baseline-review-w0.md",
+      "sha256": "edbf14e47f948a9773e71dfe73d7be6e8d2efde5e55596b9129cabb16f422a6d"
+    }
+  },
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//"]
+}

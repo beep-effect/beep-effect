@@ -6,6 +6,7 @@
  */
 
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
+import { Git } from "@beep/git/Git";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { thunkFalse } from "@beep/utils";
 import * as A from "effect/Array";
@@ -71,6 +72,7 @@ type ProbeRequirements =
   | ChildProcessSpawner.ChildProcessSpawner
   | FileSystem.FileSystem
   | Path.Path
+  | Git
   | SessionLedger;
 
 // Trimmed stdout of a clean, untruncated zero-exit git run; a NoSuchElementError otherwise.
@@ -128,8 +130,7 @@ const liveSessionRowCount = Effect.fnUntraced(function* (checkout: string) {
 });
 
 const ancestorOf = (checkout: string, head: string) => (pullRequest: WorktreeMergedPullRequest) =>
-  runRepoCommandCapture("git", ["merge-base", "--is-ancestor", head, pullRequest.headRefOid], checkout).pipe(
-    Effect.map((capture) => N.Equivalence(capture.exitCode, 0)),
+  Effect.flatMap(Git, (git) => git.isAncestor(checkout, head, pullRequest.headRefOid)).pipe(
     Effect.orElseSucceed(thunkFalse)
   );
 
@@ -242,4 +243,5 @@ export const ResidueTerminalLaneProbeLive: Layer.Layer<
   | ChildProcessSpawner.ChildProcessSpawner
   | FileSystem.FileSystem
   | Path.Path
+  | Git
 > = Layer.effect(ResidueTerminalLaneProbe, makeResidueTerminalLaneProbe()).pipe(Layer.provide(layerSessionLedgerLive));
