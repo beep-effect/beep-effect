@@ -41,3 +41,19 @@ The next final PR follows the verdict route:
 3. Run `yeet monitor --until-ready` until it prints `merge-ready: yes`.
 4. Merge without bypass, only after every required check is green.
 5. Run `goals completion refresh --readiness-job <job>` from the clone that ran the monitor.
+
+## Third re-final (2026-11-02)
+
+#2523 merged as `1947c1209d` at head `64f1d05803` with no bypass. All 15 required contexts were
+green and the merge-push rule suite passed, so the refresh verified `hosted-required-checks`. It
+was merged by hand before any `yeet monitor --until-ready` job reported merge-ready, though. The
+publish verdict for `64f1d05803` (`publish`/`success`) carries no `mergeReady`, so `yeet-verdict`
+stays unknown.
+
+The operator ruled for a third re-final rather than accepting post-merge proof. The final PR is
+merged only by the orchestrator's strict gate, after its until-ready job prints
+`merge-ready: yes`.
+
+A later failed `yeet publish` on an unpushed head overwrites
+`.beep/yeet/runs/<run-id>/verdict.json`. The genuine verdict survives in that run's
+`attempts.ndjson` (the `attempt-finished` row's `verdict`).
