@@ -153,3 +153,37 @@ They are redacted: no secrets, no absolute home paths, no session ids.
 - **Prevention:** distinguish partial inventories from complete run state.
   A first-page result may support a positive observation about listed jobs,
   but cannot establish that no failure exists anywhere in the run.
+
+## 2026-11-02 — Check companion summaries when correcting an evidence claim
+
+- **Doing:** addressing review of the dependency-compatibility closeout in
+  PR #2513. Review comments `4440155210` and `4440195710` identified the same
+  stale unchanged-dependency statement in the hold note and its README index.
+- **Evidence:** #2507 changed the lockfile; the v25 replay already records that
+  environment change and verifies the 21 unchanged algorithm files. Fixing only
+  the hold note in `25a5dd1082` left its README summary inconsistent, requiring
+  a second review round and push in `ae4c9eeece`.
+- **Resolution:** correct both current descriptions, resolve both threads and
+  acknowledge their typed inbox rows. Check current PLAN, SPEC and manifest
+  descriptions too. All 24 frozen inputs and 631 protected reference/history
+  pins remain exact; no measurement or reference label changes.
+- **Prevention:** search the current PR's companion summaries for the disputed
+  claim before publishing its repair. Distinguish current assertions from
+  dated historical receipts; preserve frozen results and their original bytes.
+
+## 2026-11-02 — Superseded workflow tails can hold the next run's slot
+
+- **Doing:** publishing accepted shared fixes and review corrections promptly,
+  then following hosted verification instead of queuing local full proof.
+- **Evidence:** superseded Check run `41407034057` kept queuing its test
+  aggregate and Coverage Regression after an accepted normal cancellation;
+  replacement run `41409707941` remained pending with no jobs registered.
+- **Resolution:** force-cancel that obsolete owner run after confirming the
+  normal cancellation had not ended it. Observe terminal `cancelled` and the
+  replacement's job registration. Retain the completed lint-failure log and
+  distinguish cancelled prerequisites from passing proof. Later superseded
+  runs ended after normal cancellation, without another force-cancel.
+- **Prevention:** after a corrective push, check both the superseded run's
+  terminal state and the replacement's registration. A cancellation request is
+  not completion; cancel only this lane's obsolete run, preserve its evidence,
+  and keep following the existing readiness monitor.
