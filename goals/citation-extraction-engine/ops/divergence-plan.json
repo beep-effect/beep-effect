@@ -202,7 +202,9 @@
         "goals/citation-extraction-engine/ops/check-cleaner-unicode.ts",
         "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
         "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
-        "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md"
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",
+        "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
+        "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md"
       ],
       "targetTest": {
         "path": "packages/law-practice/server/test/CitationNormalizationLaws.test.ts",

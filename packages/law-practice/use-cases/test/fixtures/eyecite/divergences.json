@@ -5,7 +5,7 @@
   "tree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
   "license": "BSD-2-Clause",
   "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
-  "planSha256": "d2e7c51dd050d951da4a162b69dfef005367a3e1e36459c31eea8e07b6f631d0",
+  "planSha256": "d3e2433f35a3b0a0e343389c46dd0ea8e1395a56bab940301021bfb8af27c6a6",
   "exporterSha256": "722eb4ca5d00367cffc08b498ea3e1df4d340e1def1a7d82bb76a0b880e1e9de",
   "supplementalSha256": "4f462b83f10b124db4768743b0131b30954a085a0c93197be7232e0de0f0abc9",
   "normalizations": [
@@ -581,15 +581,15 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
-          "sha256": "f2e53bd9e21278a79cc2b95f6c95ecc5cbabcc5dc7c3e66960189f00882a48df"
+          "sha256": "e452748921e4e891f687e9207d770a4db140c9713d95b580796e31ff08e351ff"
         },
         {
           "path": "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
-          "sha256": "ff78d0b6daea6fdb27aa58eed13da9709098a5b116e9e15a4153593ca0966ec7"
+          "sha256": "54b3d521e5cafe178cb1f93173e4ba73de68bfdd11dd90e63bbca6c6061ee8d9"
         },
         {
           "path": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
-          "sha256": "6ec7d19f53c5e4141bbb9b98544a974cf2f3f22693b798d94cd16bea7b916e30"
+          "sha256": "0387ec06587fec77fdfc767aa9cc502842daf6e07d1312258763532605f92faf"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-10-31-unicode-dictionary.md",
@@ -670,6 +670,14 @@
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-python-unicode-representation.md",
           "sha256": "c7fbef37c38c7e84ab08de17a17839ee89567a9f34b876916f959b93dbc63b36"
+        },
+        {
+          "path": "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
+          "sha256": "97efb72704423dc1ce038e9bbf18856f5d910f991e397994a4f0f5cee64ec8af"
+        },
+        {
+          "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-owned-unicode-state.md",
+          "sha256": "c4c3c20ed93a89842863cce41acbfd9218070e79b958bba4c1320b8e59e81b90"
         }
       ],
       "workflowState": "audit",

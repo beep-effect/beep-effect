@@ -60,7 +60,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("scoped cleaner valu
         expect(data.cases).toHaveLength(340);
         expect(data.artifacts).toHaveLength(40);
         const strings = HashMap.fromIterable(A.map(data.artifacts, (row) => [row.sha256, row.value] as const));
-        const values = yield* makeCitationCleanerValues();
+        const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const literal = yield* makeCitationLiteralCleaners(limits);
         const preparation = yield* makeCitationHtmlInput(limits);
@@ -152,8 +152,8 @@ it.effect(
   "owns original references, rejects restored/foreign values and inconsistent allocation without coercion",
   () =>
     Effect.gen(function* () {
-      const values = yield* makeCitationCleanerValues();
-      const other = yield* makeCitationCleanerValues();
+      const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
+      const other = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits);
       const ref = yield* values.text("A");
       expect(Object.isFrozen(ref)).toBe(true);
       const clone = CitationCleanerObject.make({ slot: ref.slot });
@@ -209,7 +209,9 @@ it.effect(
 it.effect("captures owner lifetime and clears all arena-held values and caches on scope closure", () =>
   Effect.gen(function* () {
     const scope = yield* Scope.make();
-    const values = yield* makeCitationCleanerValues().pipe(Effect.provideService(Scope.Scope, scope));
+    const values = yield* makeCitationCleanerValues((yield* defaultCitationEnginePolicy).limits).pipe(
+      Effect.provideService(Scope.Scope, scope)
+    );
     const ref = yield* values.text("");
     const host = yield* values.retainHost({ private: "value" });
     yield* values.materialize(ref, { text: " ", allocation: "space" });

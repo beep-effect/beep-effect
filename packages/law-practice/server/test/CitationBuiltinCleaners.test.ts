@@ -70,12 +70,12 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const corpus = yield* S.decodeEffect(CorpusJson)(raw);
         expect(corpus.nonTextCases).toHaveLength(45);
         const strings = HashMap.fromIterable(A.map(corpus.artifacts, (row) => [row.sha256, row.value] as const));
-        const values = yield* makeCitationCleanerValues();
         const policy = {
           ...(yield* defaultCitationEnginePolicy).limits,
           cleanDeadline: Duration.seconds(30),
           operationDeadline: Duration.seconds(60),
         };
+        const values = yield* makeCitationCleanerValues(policy);
         const real = yield* ChildProcessSpawner;
         let spawned = 0;
         let retired = 0;

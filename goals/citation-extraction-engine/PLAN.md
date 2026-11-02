@@ -202,9 +202,12 @@ The [lossless representation adapter](./history/evidence/2026-11-02-python-unico
 now preserves all 6,412 source snapshots, including 1,208 whose JavaScript
 projection cannot reconstruct the source state. It validates canonical native
 layout and lengths under captured limits/timing; its data is not an issued
-capability. Next, retain this state through value ownership, literal composition,
-hashing, callbacks and HTML transport; representation proof does not close that
-integration or target parity.
+capability. The [scoped value owner](./history/evidence/2026-11-02-owned-unicode-state.md)
+now retains native state, returns detached storage reads and rejects an
+unchanged allocation that substitutes another native value with equal projected
+text. Builtin literal composition, hash/callback dispatch and HTML transport
+still need to carry that state; ownership proof does not close their integration
+or target parity.
 
 ## Delivery Rule
 
