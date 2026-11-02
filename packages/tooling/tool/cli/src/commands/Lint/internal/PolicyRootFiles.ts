@@ -31,25 +31,10 @@ import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import { ts } from "ts-morph";
+import { PolicyRootFileRoute } from "../PolicyFingerprint.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./LintPackage.ts";
 import type { PolicyClosure, PolicyFingerprintError } from "../PolicyFingerprint.schemas.ts";
 import type { PolicySourceTree } from "./PolicyFingerprintGraph.ts";
-
-/**
- * One family of root files and the literals that mark a module as its reader.
- *
- * @internal
- * @category models
- * @since 0.0.0
- */
-export interface PolicyRootFileRoute {
-  /** Root-relative files a reader may open. */
-  readonly files: ReadonlyArray<string>;
-  /** A literal containing one of these names a family file. */
-  readonly names: ReadonlyArray<string>;
-  /** A literal equal to one of these runs a tool that discovers a family file without being told. */
-  readonly tools: ReadonlyArray<string>;
-}
 
 /**
  * The root files every policy command loads: the root manifest and the
@@ -75,7 +60,7 @@ export const POLICY_SHARED_ROOT_FILES: ReadonlyArray<string> = ["package.json", 
  * @since 0.0.0
  */
 export const POLICY_ROOT_FILE_ROUTES: ReadonlyArray<PolicyRootFileRoute> = [
-  {
+  PolicyRootFileRoute.make({
     files: [
       OXLINT_CIRCULAR_CONFIG,
       OXLINT_DEPRECATED_APIS_CONFIG,
@@ -85,17 +70,21 @@ export const POLICY_ROOT_FILE_ROUTES: ReadonlyArray<PolicyRootFileRoute> = [
     ],
     names: [".oxlintrc", "tsdoc.json"],
     tools: ["oxlint"],
-  },
-  { files: ["biome.jsonc"], names: ["biome.json"], tools: ["biome", "@biomejs/biome"] },
-  { files: ["_typos.toml"], names: ["_typos.toml"], tools: ["typos"] },
-  {
+  }),
+  PolicyRootFileRoute.make({ files: ["biome.jsonc"], names: ["biome.json"], tools: ["biome", "@biomejs/biome"] }),
+  PolicyRootFileRoute.make({ files: ["_typos.toml"], names: ["_typos.toml"], tools: ["typos"] }),
+  PolicyRootFileRoute.make({
     files: [".fallowrc.jsonc", "fallow-plugin-manual-development-tools.json"],
     names: [".fallowrc", "fallow-plugin-"],
     tools: ["fallow"],
-  },
-  { files: ["standards/lint-policy.sweeps.jsonc"], names: ["lint-policy.sweeps"], tools: [] },
-  { files: ["standards/policy-tools.fingerprint.json"], names: ["policy-tools.fingerprint"], tools: [] },
-  { files: ["turbo.json"], names: ["turbo.json"], tools: [] },
+  }),
+  PolicyRootFileRoute.make({ files: ["standards/lint-policy.sweeps.jsonc"], names: ["lint-policy.sweeps"], tools: [] }),
+  PolicyRootFileRoute.make({
+    files: ["standards/policy-tools.fingerprint.json"],
+    names: ["policy-tools.fingerprint"],
+    tools: [],
+  }),
+  PolicyRootFileRoute.make({ files: ["turbo.json"], names: ["turbo.json"], tools: [] }),
 ];
 
 const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;

@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
@@ -5,6 +6,7 @@ import { workspaceDirectories } from "@beep/repo-cli/test/SharedInternals";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -55,6 +57,9 @@ const Tsconfig = S.Struct({
 const Summary = S.Struct({ tasks: S.Array(S.Struct({ taskId: S.String, hash: S.String })) });
 
 const decodeRoot = S.decodeEffect(S.fromJsonString(RootConfiguration));
+const encodeRoleTask = S.encodeEffect(S.fromJsonString(RoleTask));
+const decodeRoleTask = S.decodeEffect(S.fromJsonString(RoleTask));
+const roleTaskEquivalent = S.toEquivalence(RoleTask);
 const decodeOverlay = S.decodeUnknownEffect(Overlay);
 const decodeManifest = S.decodeEffect(S.fromJsonString(Manifest));
 const decodeTsconfig = S.decodeUnknownEffect(Tsconfig);
@@ -114,6 +119,18 @@ const effectiveBuildInputs = Effect.fnUntraced(function* (directory: string, roo
 });
 
 describe("package role task inputs", () => {
+  it.effect.prop(
+    "round-trips schema-derived role task declarations through JSON",
+    [Arbitrary.schema(RoleTask)],
+    Effect.fnUntraced(function* ([task]) {
+      const encoded = yield* encodeRoleTask(task);
+      const decoded = yield* decodeRoleTask(encoded);
+      expect(roleTaskEquivalent(decoded, task)).toBe(true);
+      expect(yield* encodeRoleTask(decoded)).toBe(encoded);
+    }),
+    { arbitrary: fcRuns() }
+  );
+
   it.layer(PlatformLayer)("live configuration", (it) => {
     it.effect(
       "drops package prose from every role and test sources from build and transit only",
