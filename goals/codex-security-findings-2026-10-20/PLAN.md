@@ -6,9 +6,9 @@ Status: `active`.
 
 The original fifteen Cloud findings and historical 123 dependency IDs are
 resolved. Implementation PR #2389 is merged, with all 35 hosted check jobs
-ultimately green. Its twenty dependency fixes appear in the graph, while
-IDs #450–#469 remain externally open. Code and secret scanning show zero open
-alerts. #2416 is the final reconciliation PR: capture genuine final-head
+ultimately green. Its twenty dependency fixes appear in the graph, and
+IDs #450–#469 were all Fixed on 2026-11-01. Code and secret scanning show zero open
+alerts. #2488 is the final reconciliation PR: capture genuine final-head
 canonical readiness before merge, then verify external closure and completion
 receipts for both packets.
 
@@ -22,9 +22,9 @@ receipts for both packets.
 | P3 lane-partition | complete | Group shared root causes and disjoint paths. | Lanes recorded without overlapping file ownership. |
 | P4 remediate | complete | Fix all real findings with focused checks. | Changed files and passing targeted proof recorded per finding. |
 | P5 repo-proof | in-progress | Validate the final receipt scope and retained implementation evidence. | No packet drift; local proof green. |
-| P6 publish | complete | Publish final receipt PR #2416 through Yeet. | Exact branch head pushed and PR opened. |
-| P7 monitor | in-progress | Close #2416 hosted checks and reviews; preserve genuine readiness before merge. | Genuine final-head canonical readiness true before #2416 merge; review window elapsed. |
-| P8 merge-and-close | pending | Merge and close captured findings. | Final #2416 merged; original IDs remain resolved and supplemental dependency IDs close. |
+| P6 publish | complete | Publish final receipt PR #2488 through Yeet. | Exact branch head pushed and PR opened. |
+| P7 monitor | in-progress | Close #2488 hosted checks and reviews; preserve genuine readiness before merge. | Genuine final-head canonical readiness true before #2488 merge; review window elapsed. |
+| P8 merge-and-close | pending | Merge and close captured findings. | Final #2488 merged; original IDs remain resolved and supplemental dependency IDs close. |
 | P9 close | pending | Record evidence, reflection, and lifecycle. | Final addendum and derived `completed-retained` receipt recorded only after merge and exact-ID closure. |
 
 ## Execution Rules
@@ -51,14 +51,14 @@ git diff --check -- goals/codex-security-findings-2026-10-20
 All 123 captured alert IDs in `ops/dependabot.json` have been revalidated as
 resolved, separately from the eight Cloud identities. Twenty additional
 dependency alerts (#450–#469) are tracked in the October 28 packet. Their fixes
-merged in #2389; their external closure remains pending despite fixed graph versions.
+merged in #2389, and all twenty alerts were Fixed on 2026-11-01.
 
 ## Closeout ordering
 
 The original implementation and finding closure remain supporting proof.
-P5/P7 cover final reconciliation PR #2416. Preserve its genuine canonical
+P5/P7 cover final reconciliation PR #2488. Preserve its genuine canonical
 readiness before merge; publication or later green checks do not substitute.
-P8 requires #2416 merge and exact supplemental dependency closure. P9 refreshes
+P8 requires #2488 merge and exact supplemental dependency closure. P9 refreshes
 both completion receipts after those conditions hold. Keep declared lifecycle
 active until the verified receipt derives `completed-retained`.
 
@@ -70,14 +70,15 @@ optional Vercel statuses report deployment rate limits. The merge preceded this
 lane's positive canonical readiness capture. Later green checks do not supply
 that missing historical observation.
 
-Final closeout PR [#2416](https://github.com/beep-effect/beep-effect/pull/2416)
+Final closeout PR [#2488](https://github.com/beep-effect/beep-effect/pull/2488)
 retains the merged implementation and must obtain genuine final-head canonical
 `merge-ready: yes` while it is still open. Preserve that evidence before merge.
-After #2416 merges and all exact external statuses are verified, run
+After #2488 merges and all exact external statuses are verified, run
 `goals completion refresh` for both packets. Their declared lifecycle remains
 `active` with prospective `completed-retained` until verified receipts derive
 completion. No gate is weakened and no readiness receipt is fabricated.
 
-Dependency IDs #450–#469 still require exact closure and a zero-open inventory;
-fixed versions in the dependency graph alone do not establish closure. See the
+Dependency IDs #450–#469 are Fixed (GitHub REST, observed 2026-11-01) and the
+Dependabot, code-scanning and secret-scanning open inventories are zero. See the
+[final closeout evidence](../codex-security-findings-2026-10-28/research/2026-11-01-final-closeout.md) and the earlier
 [accepted closeout evidence](../codex-security-findings-2026-10-28/research/2026-10-31-accepted-closeout.md).

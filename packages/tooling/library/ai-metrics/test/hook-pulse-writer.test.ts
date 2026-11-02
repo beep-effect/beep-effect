@@ -251,6 +251,9 @@ type WriterOptions = {
   readonly writerArgs?: ReadonlyArray<string>;
   readonly attemptUtc?: string;
   readonly executablePath?: string;
+  // Host and notifier knobs for the D3 host-guard cases; spread last so a case
+  // can opt into the desktop notifier revision the legacy fixtures pin off.
+  readonly extraEnv?: Readonly<Record<string, string>>;
 };
 
 // Every salt rung is cleared unless a case sets one, so a developer who
@@ -299,7 +302,11 @@ const writerEnvironment = (stateHome: string, evidenceRoot: string, options: Wri
   BEEP_HOOK_PULSE_STAMP_CAP: options.stampCap ?? "60s",
   ...saltEnvironment(stateHome, options),
   BEEP_HOOK_PULSE_ATTEMPT_UTC: options.attemptUtc ?? "",
+  // Cleared so an ambient cloud container's `BEEP_AGENT_HOST=cloud` cannot
+  // change which writer branch a case exercises.
+  BEEP_AGENT_HOST: "",
   ...(options.executablePath !== undefined ? { PATH: options.executablePath } : {}),
+  ...options.extraEnv,
 });
 
 const runWriter = Effect.fnUntraced(function* (stdin: string, options: WriterOptions = {}) {
@@ -638,6 +645,34 @@ const expectSilentRefusal = (run: WriterRun): void => {
   expect(run.stdout).toBe("");
   expect(run.rows).toEqual([]);
 };
+
+// The notifier knobs a D3 case varies. Foreground keeps the stub call synchronous,
+// so the call log is complete when the writer exits instead of racing `setsid -f`.
+const notifierHostEnv = (host: string, notifierRev: string) => ({
+  BEEP_AGENT_HOST: host,
+  BEEP_HOOK_PULSE_NOTIFIER_REV: notifierRev,
+  BEEP_SEQUENCE_BREAK_FOREGROUND: "1",
+});
+
+// A temp copy of the real writer beside a stub `sequence-break-notifier.sh` that
+// appends one line per call to a log in the same scoped directory.
+const makeNotifierStubWriter = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-hook-pulse-notifier-stub-" });
+  const stubWriterPath = path.join(directory, "hook-pulse.sh");
+  const stubNotifierPath = path.join(directory, "sequence-break-notifier.sh");
+  const callLog = path.join(directory, "notifier-calls.log");
+  yield* fs.copyFile(writerPath, stubWriterPath);
+  yield* fs.writeFileString(stubNotifierPath, `#!/usr/bin/env bash\nprintf 'call %s\\n' "$#" >>'${callLog}'\n`);
+  yield* fs.chmod(stubWriterPath, 0o755);
+  yield* fs.chmod(stubNotifierPath, 0o755);
+  // An absent log means no call; any other read failure fails the case.
+  const calls = Effect.gen(function* () {
+    return (yield* fs.exists(callLog)) ? yield* readWriterLines(directory, ["notifier-calls.log"]) : A.empty<string>();
+  });
+  return { calls, writerPath: stubWriterPath };
+});
 
 // A repo root shaped to hit every rule the shell harness-hash walk mirrors from
 // `makeAiMetricsConfigSnapshot`: a root `AGENTS.md` with `CLAUDE.md` symlinked to
@@ -1618,6 +1653,77 @@ fi
       const refusal = yield* decodeHookPulseRefusalJson(pipe(A.head(run.refusals), O.getOrThrow));
       expect(refusal.reason).toBe("disabled");
     })
+  );
+
+  // cloud-agent-readiness D3: `BEEP_AGENT_HOST=cloud` suppresses only the desktop
+  // notifier; the privacy-safe row still lands. The writer resolves the notifier as
+  // its own sibling, so each case runs a temp copy of the real writer beside a stub
+  // that records each call and touches nothing else: no notification, no network.
+  // The non-cloud cases are the controls that prove the stub is reachable, so a
+  // silent stub under cloud means the guard held rather than that nothing ran.
+  A.forEach(
+    [
+      { label: "cloud host, desktop notifier", host: "cloud", notifierRev: "desktop-ntfy-1", notified: false },
+      { label: "unset host, desktop notifier", host: "", notifierRev: "desktop-ntfy-1", notified: true },
+      { label: "a non-cloud host value", host: "workstation", notifierRev: "desktop-ntfy-1", notified: true },
+      { label: "cloud host, log-only opt-out", host: "cloud", notifierRev: "log-only-0", notified: false },
+      { label: "unset host, log-only opt-out", host: "", notifierRev: "log-only-0", notified: false },
+    ],
+    ({ label, host, notifierRev, notified }) => {
+      it.effect(`writes one row and ${notified ? "runs" : "skips"} the notifier for ${label}`, () =>
+        Effect.gen(function* () {
+          const stub = yield* makeNotifierStubWriter();
+          const run = yield* runWriter(yield* encodeJson(permissionRequestToolPayload), {
+            writerPath: stub.writerPath,
+            extraEnv: notifierHostEnv(host, notifierRev),
+          });
+
+          const decoded = yield* decodeHookPulseRow(expectSingleRow(run));
+          expect(decoded.hookEvent).toBe(HookPulseEvent.Enum.PermissionRequest);
+          expect(decoded.waitReason).toBe(HookPulseWaitReason.Enum["tool-permission"]);
+          expect(decoded.notifierRev).toBe(notifierRev);
+          expect(yield* stub.calls).toHaveLength(notified ? 1 : 0);
+        })
+      );
+    }
+  );
+
+  A.forEach(
+    [
+      {
+        label: "a disarmed writer",
+        stdin: encodeJson(permissionRequestToolPayload),
+        disarmed: true,
+        reason: "disabled",
+      },
+      {
+        label: "malformed stdin",
+        stdin: Effect.succeed("not json at all {{{"),
+        disarmed: false,
+        reason: "encode-failed",
+      },
+    ],
+    ({ label, stdin, disarmed, reason }) => {
+      it.effect(`writes no row and never notifies under the cloud host for ${label}`, () =>
+        Effect.gen(function* () {
+          const stub = yield* makeNotifierStubWriter();
+          const run = yield* runWriter(yield* stdin, {
+            writerPath: stub.writerPath,
+            extraEnv: notifierHostEnv("cloud", "desktop-ntfy-1"),
+            ...(disarmed
+              ? { disarmSentinel: '{"disarmedAt":"2026-11-01T00:00:00Z","reason":"test","evidenceTier":"unknown"}' }
+              : {}),
+          });
+
+          expectSilentRefusal(run);
+          expect(run.stderr).toBe("");
+          // The payload-free refusal row is the only trace either path leaves.
+          const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row));
+          expect(A.map(refusals, (refusal) => refusal.reason)).toEqual([reason]);
+          expect(yield* stub.calls).toHaveLength(0);
+        })
+      );
+    }
   );
 
   A.forEach(
