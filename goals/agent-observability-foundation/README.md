@@ -1,5 +1,7 @@
 # Trustworthy agent observability foundation
 
+Current delivery: owner-held draft PR2578. Historical PR2364 and PR2508 completion receipts remain unsatisfied; the active goal requires verified pre-merge readiness and canonical closeout for the new final head. The recovery hold remains intact.
+
 ## Status
 
 Lifecycle: `active`
@@ -51,10 +53,10 @@ that historical result as unsatisfied; a merge alone cannot complete this packet
 The [post-merge qualification](./research/POST-MERGE-QUALIFICATION.md) preserves
 that history and refreshes current source, package and synthetic-route evidence.
 
-[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) is the final
+[PR2508](https://github.com/beep-effect/beep-effect/pull/2508) was the previous final
 follow-up and must retain its own exact-head readiness and complete merge-time
 required-check evidence. The manifest now records PR2364 as supporting delivery
-and synchronizes PR2508's final role, prospective closeout and verdict reference.
+Its historical result is retained; PR2578 now synchronizes the final role, prospective closeout and verdict reference.
 The existing prospective declaration is not achievement. The canonical
 `beep goals completion refresh` writer remains the only completion derivation;
 local passes and synthetic proof do not replace it.

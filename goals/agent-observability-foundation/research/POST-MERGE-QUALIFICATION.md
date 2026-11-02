@@ -6,7 +6,7 @@ Recorded on November 2 UTC (November 1 in America/Chicago). The operative lifecy
 
 PR2508 was externally merged at 2026-11-02T12:28:52Z, accepted head `4afad5c6546b0be330ab89937aadd23831511673`, merge `4644f914b39c931658ef89529b1d673b7fdb5095`. The canonical writer records all fifteen required contexts green with complete merge-time inventory, but the overall result is **unsatisfied**: its declared verdict still refers to `636fe38e…`. The observer finished after merge at12:36:49Z with `mergeReady.ready=false`; command success after merge is not pre-merge readiness. The non-required coverage comparison also failed eleven inherited CLI floors. Its exact rows are retained privately; shared repair PR2568 subsequently landed as `3ff2d6768eb5f72032aea4bc9c1ce8d848383606` with six added tests and unchanged runtime code/floors.
 
-The [canonical historical receipt](../ops/history/pr2508-completion-unsatisfied-20261102.json) preserves that outcome. A new final follow-up is being prepared from current main. It must earn its own current-head hosted, review, positive readiness-verdict and merge evidence, then canonical completion. No completion rule or historical result is rewritten. The goal remains active and the recovery hold intact.
+The [canonical historical receipt](../ops/history/pr2508-completion-unsatisfied-20261102.json) preserves that outcome. Final follow-up PR2578 is published as an owner-held draft from main1947c120, which includes coverage repair2568. It must earn its own current-head hosted, review, positive readiness-verdict and merge evidence, then canonical completion. No completion rule or historical result is rewritten. The goal remains active and the recovery hold intact.
 
 ## Historical delivery and actual completion result
 
