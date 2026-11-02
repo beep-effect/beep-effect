@@ -1784,7 +1784,8 @@ const CI_LANE_TIMING_RATIFIED_POPULATIONS: ReadonlyArray<CiLaneTimingRatifiedPop
   CiLaneTimingRatifiedPopulation.make({ contextCount: 16, ratifiedOn: "2026-10-01", versionId: 50_918_272 }),
   // Knip removed 2026-10-14T17:55:21.339Z; beep-reviewer (2026-10-14 to 2026-10-27) and Heavy / Effect Diagnostics
   // (2026-10-15 to 2026-10-27) came and went in between. Version 54940515 is effective 2026-10-27T09:49:40.844Z;
-  // ratified for the window-4 census (goals/ci-lane-economics/research/admission-week-4-p95.md).
+  // ratified 2026-11-02 for the window-4 census: goals/ci-lane-economics/PLAN.md (Population ratification
+  // 2026-11-02) and SPEC.md Decision Log D2; the census itself lands as research/admission-week-4-p95.md.
   CiLaneTimingRatifiedPopulation.make({ contextCount: 15, ratifiedOn: "2026-11-02", versionId: 54_940_515 }),
 ];
 
@@ -2964,15 +2965,22 @@ const utcMidnightsBetween = (startMillis: number, endMillis: number): ReadonlyAr
   );
 };
 
+// Starts before ticks before ends at equal instants: a run that ends exactly when another starts is still
+// counted alongside it, matching the inclusive sampling repair decision 3 used. The literal order is the rank.
+const InFlightEventKind = LiteralKit(["start", "tick", "end"]);
+type InFlightEventKind = typeof InFlightEventKind.Type;
+
 type InFlightEvent = {
   readonly millis: number;
-  readonly kind: "start" | "end" | "tick";
+  readonly kind: InFlightEventKind;
   readonly branch: O.Option<string>;
 };
 
-// Starts before ticks before ends at equal instants: a run that ends exactly when another starts is still
-// counted alongside it, matching the inclusive sampling repair decision 3 used.
-const inFlightEventRank = (kind: InFlightEvent["kind"]): number => (kind === "start" ? 0 : kind === "tick" ? 1 : 2);
+const inFlightEventRank = (kind: InFlightEventKind): number =>
+  O.getOrElse(
+    A.findFirstIndex(InFlightEventKind.literals, (literal) => literal === kind),
+    () => 0
+  );
 const inFlightEventOrder = Order.combine(
   Order.mapInput(Order.Number, (event: InFlightEvent) => event.millis),
   Order.mapInput(Order.Number, (event: InFlightEvent) => inFlightEventRank(event.kind))
@@ -3002,19 +3010,18 @@ const observeDayPeak = (state: DayPeakState, millis: number): DayPeakState => {
   };
 };
 
-const applyInFlightEvent = (state: DayPeakState, event: InFlightEvent): DayPeakState => {
-  switch (event.kind) {
-    case "tick":
-      return observeDayPeak(state, event.millis);
-    case "start": {
+const applyInFlightEvent = (state: DayPeakState, event: InFlightEvent): DayPeakState =>
+  InFlightEventKind.match(event.kind, {
+    tick: () => observeDayPeak(state, event.millis),
+    start: () => {
       const branch = O.getOrThrow(event.branch);
       const count = O.getOrElse(HashMap.get(state.live, branch), () => 0);
       return observeDayPeak(
         { ...state, live: HashMap.set(state.live, branch, count + 1), liveRuns: state.liveRuns + 1 },
         event.millis
       );
-    }
-    case "end": {
+    },
+    end: () => {
       const branch = O.getOrThrow(event.branch);
       const count = O.getOrElse(HashMap.get(state.live, branch), () => 1);
       return {
@@ -3022,9 +3029,8 @@ const applyInFlightEvent = (state: DayPeakState, event: InFlightEvent): DayPeakS
         live: count <= 1 ? HashMap.remove(state.live, branch) : HashMap.set(state.live, branch, count - 1),
         liveRuns: Math.max(0, state.liveRuns - 1),
       };
-    }
-  }
-};
+    },
+  });
 
 /**
  * Sweep a window's runs into per-UTC-day peak CI-active run and branch counts.
