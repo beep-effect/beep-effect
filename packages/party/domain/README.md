@@ -11,8 +11,18 @@ bun add @beep/party-domain
 ## Usage
 
 ```ts
-import * as Package from "@beep/party-domain"
+import { emailAddress } from "@beep/party-domain/Identifier"
+import { partyKeyOf } from "@beep/party-domain/PartyKey"
+import * as Effect from "effect/Effect"
+
+const key = Effect.runSync(Effect.flatMap(emailAddress("Dana Example <Dana@EXAMPLE.test>"), partyKeyOf))
+// pk:v1:<64 lowercase hex digits>, the same key as " dana@example.test "
 ```
+
+- `@beep/party-domain/Identifier`: graduated identifier schemas, the
+  shared normalizers and the graduating constructors.
+- `@beep/party-domain/PartyKey`: PartyKey v1 bases, canonical bytes and
+  keys.
 
 ## Development
 

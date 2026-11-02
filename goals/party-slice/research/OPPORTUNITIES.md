@@ -61,6 +61,8 @@
 - **Prevention:** make skipped package stages and their reasons explicit in
   command summaries and task handoffs. Check the current command owner before
   admitting a repair; this receipt does not authorize a second implementation.
-- **Owner/status:** cloud-readiness parent retains the evidence. Local replay
-  is pending; the cloud results remain worker-reported until independently
-  verified.
+- **Owner/status:** cloud-readiness parent retains the evidence. The parent independently replayed the recovered package: default verification
+  exited 0 with docgen passing and audit explicitly skipped. Separate lint,
+  typecheck and 24 initial tests passed; after the review correction, 28 tests
+  and separate lint/typecheck passed. These are scoped results, not an audit
+  pass or a complete repository receipt.

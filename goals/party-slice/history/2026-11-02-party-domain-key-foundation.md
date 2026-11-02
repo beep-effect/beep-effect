@@ -27,9 +27,9 @@ flipped. Base: `origin/main` at `560195af`, in a Claude cloud session.
 - `src/Identifier.ts`:
   - `Identifier` tagged union (EmailAddress, PhoneNumber, ExchangeDn, Username,
     NativeAccountId, ExternalId) holding canonical values;
-  - shared normalizers (`normalizeText`, `normalizeNamespace`, `parseMailbox`,
+  - shared normalizers (`normalizeText`, `normalizeNamespace`,
     `normalizeEmail`, `normalizeExchangeDn`, `normalizeUsernameHandle`,
-    `normalizePhone`);
+    `normalizePhone`); mailbox parsing is private to `normalizeEmail`;
   - graduating constructors and one typed `IdentifierIssue` with a `LiteralKit`
     reason.
 - `src/PartyKey.ts`:
@@ -189,6 +189,62 @@ Initial failures this wave: one typecheck finding in the new test
 (`TS377152 mapConstToAs`), fixed with `Effect.as`. Biome reformatted three
 files.
 
+## Review fix wave (PR #2588 independent review)
+
+The independent review of head `829ceb5f` had seven actionable findings.
+Finding 5, the stale ledger status line, is the parent's as single ledger
+writer and is not edited here. The other six are fixed:
+
+1. **Scheme-specific canonical basis values.** `IdentifierBasis` now requires
+   `value` to be the scheme's graduated value: `email` → `NormalizedEmail`,
+   `tel` → `E164Phone`, `x500` → `NormalizedExchangeDn`, `user` →
+   `NormalizedHandle`. This sits next to the existing authority rule, so the
+   public `canonicalJson`, `canonicalBytes` and `partyKeyOfBasis` reject an
+   uppercase email, a non-E.164 `tel`, a lowercase `x500` or an uppercase `user`
+   value as `invalid-basis`. The pinned bytes and digest are unchanged.
+2. **Phone: structural decode versus graduation.** The SPEC hashes "validated
+   `.e164`" and requires schema validation to reject malformed values.
+   Validation now happens once, at graduation (`normalizePhone` keeps
+   `isValid()` under the pinned metadata). Decoding a stored `PhoneNumber` or
+   `tel` basis checks the E.164 shape only, so a metadata update cannot make
+   stored identifiers undecodable. No scope was added.
+3. **Topology.** I ran `bun run beep architecture plan --slice party --concept
+   {PartyKey,Identifier} --domain-kind values --stage core` before deciding.
+   Its layout, `src/values/<Concept>/{index,<Concept>.model,<Concept>.behavior}.ts`
+   with a `src/values/index.ts` barrel, was adopted. `Identifier.errors.ts`
+   holds the issue type, and the shared pure normalizer core moved to private
+   `src/internal/IdentifierCore.ts`. Explicit `./values/*` exports would need
+   root alias regeneration (`tsconfig-sync --check` reported changes to
+   `tsconfig.json` and `vitest.aliases.generated.json`), which is outside this
+   wave's scope. So the package keeps its wildcard export, and thin
+   `src/Identifier.ts` and `src/PartyKey.ts` barrels keep the published
+   `@beep/party-domain/Identifier` and `/PartyKey` subpaths unchanged. No root
+   config changed.
+4. **History note:** removed the nonexistent `parseMailbox` export from the
+   list above.
+6. **Issue privacy and precision.**
+   - `IdentifierIssue` gains an optional `field` (`value`, `namespace`,
+     `handle`, `record-id`, `country`, `basis`).
+   - Basis failures no longer copy a schema message: `input` is empty and
+     `field` is `basis`.
+   - The source-record fallback reports which part failed.
+   - A new `unsupported-country` reason separates a non-supported country from
+     missing context (`ambiguous-phone`).
+   - The JSDoc and the package `AGENTS.md` state that `input` can hold raw
+     identifier text and must not be logged verbatim.
+7. **Package docs.**
+   - The README shows the two real entry points.
+   - `AGENTS.md` records the determinism inputs: `tr46` 7.0.0,
+     `libphonenumber-js` 1.13.15, and the runtime Unicode tables (Node 24.22.1
+     reports Unicode 17.0).
+   - A bump of any of them re-runs the pinned fixtures and needs a `pk:v2`
+     assessment.
+
+Review-wave proof, in the cloud lane on top of the frozen wave2 tree
+`6c3b54f3e5a0e0bf9473a6a353549a313fe51776`: 28/28 tests (the 24 existing cases
+plus four review regressions). Lint, check and docgen are recorded in the PR
+handoff; audit is a tool-reported skip, not a pass.
+
 ## Remaining P1 work
 
 - `IdentifierId` and `KeyAssignment`.
@@ -225,3 +281,18 @@ cloud commit hooks ran, or a complete repository final-check receipt.
 The parent's package-wrapper friction receipt is retained in the goal ledger.
 PR #2582 owns the separate cloud publication-tool repair; this Party foundation
 does not modify bootstrap or remove its required security checks.
+
+
+## Parent incremental review replay
+
+The original author exported the correction relative to the frozen wave2 tree,
+not a replacement of the parent main merge. The 93,041-byte incremental patch
+has SHA-256
+`68d070c492592be74c6dbccb30c67e190da50a96e7828d244243d71e9f70b359`.
+It applied cleanly to the published parent head and preserved the earlier
+recovery section. The parent independently ran all 28 tests successfully,
+then quick package verification (lint and check). Default package verification
+exited 0 with docgen passing and audit explicitly skipped. No aggregate
+repository final-check is claimed. Independent delta acceptance and eventual
+head proof remain separate gates. The parent corrected the stale ledger replay
+status as its single writer.

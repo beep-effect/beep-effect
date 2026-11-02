@@ -1,4 +1,5 @@
 import {
+  E164Phone,
   EmailAddress,
   ExternalIdInput,
   emailAddress,
@@ -8,6 +9,7 @@ import {
   NativeAccountIdInput,
   nativeAccountId,
   normalizeEmail,
+  PhoneNumber,
   PhoneNumberInput,
   phoneNumber,
   UsernameInput,
@@ -354,6 +356,84 @@ describe("normalization boundaries cannot be bypassed", () => {
         "invalid-basis"
       );
       expect(S.is(IdentifierBasis)(yield* identifierBasis(yield* emailAddress("dana@example.test")))).toBe(true);
+    })
+  );
+});
+
+describe("review findings (PR 2588)", () => {
+  it.effect("rejects basis values that are not the scheme's graduated canonical value", () =>
+    Effect.gen(function* () {
+      const basis = (scheme: string, authority: string, value: string) => ({
+        kind: "identifier",
+        scheme,
+        authority,
+        value,
+      });
+      expect(yield* issueReason(canonicalJson(basis("email", "", "Dana@EXAMPLE.test")))).toBe("invalid-basis");
+      expect(yield* issueReason(canonicalJson(basis("email", "", "dana@b\u00fccher.example")))).toBe("invalid-basis");
+      expect(yield* issueReason(canonicalJson(basis("tel", "", "(201) 555-0123")))).toBe("invalid-basis");
+      expect(yield* issueReason(canonicalJson(basis("tel", "", "12015550123")))).toBe("invalid-basis");
+      expect(yield* issueReason(canonicalJson(basis("x500", "", "/o=ExampleOrg/cn=dana")))).toBe("invalid-basis");
+      expect(yield* issueReason(canonicalJson(basis("user", "https://chat.example.test", "Dana")))).toBe(
+        "invalid-basis"
+      );
+      expect(yield* issueReason(canonicalBytes(basis("email", "", "Dana@EXAMPLE.test")))).toBe("invalid-basis");
+      // The graduated spellings of the same identifiers are accepted, and the pinned bytes are unchanged.
+      expect(yield* canonicalJson(basis("email", "", "dana@example.test"))).toBe(PINNED_EMAIL_BYTES);
+      expect(yield* canonicalJson(basis("tel", "", "+12015550123"))).toBe(
+        '{"authority":"","kind":"identifier","scheme":"tel","value":"+12015550123"}'
+      );
+      expect(yield* canonicalJson(basis("x500", "", "/O=EXAMPLEORG/CN=DANA"))).toContain(
+        '"value":"/O=EXAMPLEORG/CN=DANA"'
+      );
+      expect(yield* canonicalJson(basis("user", "https://chat.example.test", "dana"))).toContain('"value":"dana"');
+    })
+  );
+
+  it.effect("decodes stored E.164 values structurally; validity is checked only at graduation", () =>
+    Effect.gen(function* () {
+      // Shape-valid but not an assigned number under the pinned metadata.
+      const stored = "+10000000000";
+      expect(S.is(E164Phone)(stored)).toBe(true);
+      const decoded = yield* S.decodeEffect(PhoneNumber)({ _tag: "PhoneNumber", e164: stored, raw: stored });
+      expect(decoded.e164).toBe(stored);
+      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: stored, country: O.none() })))).toBe(
+        "invalid-phone"
+      );
+      expect(S.is(E164Phone)("+1 201 555 0123")).toBe(false);
+      expect(S.is(E164Phone)("2015550123")).toBe(false);
+    })
+  );
+
+  it.effect("reports unsupported country context separately from missing context", () =>
+    Effect.gen(function* () {
+      expect(
+        yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.some("AQ") })))
+      ).toBe("unsupported-country");
+      expect(yield* issueReason(phoneNumber(PhoneNumberInput.make({ raw: "(201) 555-0123", country: O.none() })))).toBe(
+        "ambiguous-phone"
+      );
+    })
+  );
+
+  it.effect("keeps issue fields precise and never echoes a basis", () =>
+    Effect.gen(function* () {
+      const namespace = yield* Effect.flip(
+        sourceRecordPartyKey(SourceRecordInput.make({ namespace: " ", recordId: "Card-17" }))
+      );
+      expect(namespace.reason).toBe("missing-source-record-identity");
+      expect(namespace.field).toBe("namespace");
+      const record = yield* Effect.flip(
+        sourceRecordPartyKey(SourceRecordInput.make({ namespace: "urn:example:contacts", recordId: " " }))
+      );
+      expect(record.field).toBe("record-id");
+      const basis = yield* Effect.flip(
+        canonicalJson({ kind: "identifier", scheme: "email", authority: "", value: "Dana@EXAMPLE.test" })
+      );
+      expect(basis.field).toBe("basis");
+      expect(basis.input).toBe("");
+      const email = yield* Effect.flip(normalizeEmail("a@@example.test"));
+      expect(email.field).toBe("value");
     })
   );
 });
