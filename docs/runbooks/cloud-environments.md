@@ -54,7 +54,8 @@ nothing here can be shared or exported.
 1. Open [claude.ai/code](https://claude.ai/code) → environment selector → **Add
    cloud environment**. Name it `beep-effect`.
 2. **Network access**: `Custom`, keep the defaults, and add these hosts. The
-   Trusted list already covers `github.com` release assets (Bun download),
+   Trusted list already covers `github.com` release assets (the Bun download
+   and the optional typos and gitleaks publication-hook downloads),
    `nodejs.org`, `registry.npmjs.org`, and `*.amazonaws.com` (the Turbo remote
    cache API); it does not cover the `@buf` registry scope in `bunfig.toml` or
    the 1Password CLI download.
@@ -143,7 +144,7 @@ Known gotchas:
   consulted, so a direct failure to a host it exempts conservatively exits `1`. The host named is the one curl was fetching when it stopped, so a
   refused redirect hop (for example a release-asset host) is named instead of
   `github.com`. An unreachable proxy, an origin `403`, a timeout, `404`, `5xx`
-  or checksum mismatch stays a plain exit `1`. The optional 1Password CLI host only warns. Install
+  or checksum mismatch stays a plain exit `1`. The optional 1Password CLI host only warns. The optional typos and gitleaks downloads (also from `github.com` release assets) only warn too, naming the denied host, and the bootstrap's last line then reports `publication tools: NOT ready`. Install
   registries (`registry.npmjs.org`, `buf.build`) are not classified yet: their
   denial still surfaces as the `bun install` failure above.
 - The `enabledPlugins` and `extraKnownMarketplaces` blocks in
