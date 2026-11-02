@@ -1,5 +1,5 @@
 {
-  "previous": "c029d74cc4fb2314464baa9d7c9e0a924b4083b1f32bb989fb2a83c24a4f7949",
+  "previous": "fa32b653a20314362762b985b59ecbfad2de3f99914a818247141e00e30ee1e6",
   "review": {
     "reviewer": "Claude Fable 5.1 (t3-native-orchestration)",
     "reason": "Re-record the legacy cache posture of the four subjects that drifted when the agent-message CLI, the AiProviderCliSession adapters and @beep/t3-code were deleted: manifest bytes and tsconfig references changed; no command, output, cache flag or env key changed; no qualification is granted.",
