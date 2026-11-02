@@ -45,6 +45,10 @@ const isNoSuchFileError = S.is(NoSuchFileError);
 const decodeUnknownJsonString = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
+
+// Walk a decoded JSON value by object keys and array indexes; a missing step yields undefined.
+const childAt = (value: unknown, ...path: ReadonlyArray<string | number>): unknown =>
+  A.reduce(path, value, (current, step) => (P.hasProperty(current, step) ? current[step] : undefined));
 const decodeJsonPointerSegment = (segment: string): string =>
   pipe(segment, Str.replaceAll("~1", "/"), Str.replaceAll("~0", "~"));
 const PackageJsonNameArbitrary = Arbitrary.schema(PackageJson.fields.name);
@@ -813,6 +817,112 @@ describe("PackageJson schema", () => {
         expect(objectKeys(normalized.exports)).toEqual([".", "./a", "./z"]);
         expect(Struct.keys(normalized.dependencies ?? {})).toEqual(["effect", "zod"]);
         expect(Struct.keys(normalized.catalog ?? {})).toEqual(["effect", "zod"]);
+      })
+    );
+
+    // Node matches export/import condition keys in object order ("default" last) and TypeScript takes the
+    // first matching typesVersions range, so canonicalization may sort only the order-free specifier keys.
+    it.effect(
+      "keeps export and import condition order while sorting only subpath and specifier keys",
+      Effect.fn(function* () {
+        const normalized = yield* normalizePackageJsonEffect({
+          name: "pkg",
+          exports: {
+            "./z": { types: "./dist/z.d.ts", default: "./dist/z.js" },
+            ".": {
+              import: { types: "./dist/index.d.mts", default: "./dist/index.mjs" },
+              require: ["./dist/index.cjs", { node: "./dist/node.cjs", default: "./dist/fallback.cjs" }],
+              default: "./dist/index.js",
+            },
+            "./a": "./dist/a.js",
+          },
+          imports: {
+            "#z": { node: "./src/z-node.ts", default: "./src/z.ts" },
+            "#a": "./src/a.ts",
+          },
+        });
+
+        expect(objectKeys(normalized.exports)).toEqual([".", "./a", "./z"]);
+        expect(objectKeys(childAt(normalized.exports, "."))).toEqual(["import", "require", "default"]);
+        expect(objectKeys(childAt(normalized.exports, ".", "import"))).toEqual(["types", "default"]);
+        expect(childAt(normalized.exports, ".", "require", 0)).toBe("./dist/index.cjs");
+        expect(objectKeys(childAt(normalized.exports, ".", "require", 1))).toEqual(["node", "default"]);
+        expect(objectKeys(childAt(normalized.exports, "./z"))).toEqual(["types", "default"]);
+        expect(objectKeys(normalized.imports)).toEqual(["#a", "#z"]);
+        expect(objectKeys(childAt(normalized.imports, "#z"))).toEqual(["node", "default"]);
+      })
+    );
+
+    it.effect(
+      "keeps a top-level condition-map export (exports sugar) in condition order",
+      Effect.fn(function* () {
+        const normalized = yield* normalizePackageJsonEffect({
+          name: "pkg",
+          exports: { types: "./dist/index.d.ts", import: "./dist/index.mjs", default: "./dist/index.js" },
+        });
+
+        expect(objectKeys(normalized.exports)).toEqual(["types", "import", "default"]);
+      })
+    );
+
+    it.effect(
+      "keeps publishConfig.exports condition order (types before default)",
+      Effect.fn(function* () {
+        const normalized = yield* normalizePackageJsonEffect({
+          name: "pkg",
+          publishConfig: {
+            access: "public",
+            exports: {
+              "./package.json": "./package.json",
+              ".": { types: "./dist/index.d.ts", default: "./dist/index.js" },
+              "./internal/*": null,
+            },
+          },
+        });
+
+        const publishExports = childAt(normalized.publishConfig, "exports");
+        expect(objectKeys(publishExports)).toEqual([".", "./internal/*", "./package.json"]);
+        expect(objectKeys(childAt(publishExports, "."))).toEqual(["types", "default"]);
+      })
+    );
+
+    it.effect(
+      "keeps typesVersions range priority, inner pattern order and fallback order",
+      Effect.fn(function* () {
+        const normalized = yield* normalizePackageJsonEffect({
+          name: "pkg",
+          typesVersions: {
+            ">=4.2": { "z/*": ["ts4.2/z/*"], "*": ["ts4.2/*", "ts4.2-fallback/*"] },
+            "*": { "*": ["ts-old/*"] },
+          },
+        });
+
+        expect(objectKeys(normalized.typesVersions)).toEqual([">=4.2", "*"]);
+        expect(objectKeys(childAt(normalized.typesVersions, ">=4.2"))).toEqual(["z/*", "*"]);
+        expect(childAt(normalized.typesVersions, ">=4.2", "*")).toEqual(["ts4.2/*", "ts4.2-fallback/*"]);
+      })
+    );
+
+    it.effect(
+      "is idempotent for order-sensitive manifests",
+      Effect.fn(function* () {
+        const manifest = {
+          name: "pkg",
+          exports: {
+            "./b": { types: "./dist/b.d.ts", default: "./dist/b.js" },
+            ".": { types: "./dist/index.d.ts", default: "./dist/index.js" },
+          },
+          typesVersions: { ">=5.0": { "*": ["ts5/*"] }, "*": { "*": ["old/*"] } },
+        };
+        const normalized = yield* normalizePackageJsonEffect(manifest);
+        const renormalized = yield* normalizePackageJsonEffect(normalized);
+        const once = yield* encodePackageJsonCanonicalPrettyEffect(manifest);
+        const twice = yield* encodePackageJsonCanonicalPrettyEffect(normalized);
+
+        expect(twice).toBe(once);
+        expect(objectKeys(renormalized.exports)).toEqual([".", "./b"]);
+        expect(objectKeys(childAt(renormalized.exports, "./b"))).toEqual(["types", "default"]);
+        expect(objectKeys(renormalized.typesVersions)).toEqual([">=5.0", "*"]);
       })
     );
 
