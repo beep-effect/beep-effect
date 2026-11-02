@@ -1673,3 +1673,5 @@ recognize a finite source-owned hint vocabulary and quote only its fixed member,
 never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
+
+- 2026-11-02: Two current hosted cache branches failed inherited `yeet-merged-preview.test.ts:285` because separately minted synthetic commits were compared by SHA. Git commit metadata includes time, so crossing a clock second changes identity without changing the proved merge tree. A deterministic identity-only metadata change reproduces the failure; the repaired test verifies tree, parents, detached checkout and removal of a stale preview sentinel. Runtime code and proof gates are unchanged.

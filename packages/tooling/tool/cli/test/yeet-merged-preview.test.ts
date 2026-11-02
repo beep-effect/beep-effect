@@ -280,12 +280,25 @@ it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCr
       const path = yield* Path.Path;
       const repoContext = yield* scratchRepo(false);
       const first = yield* createYeetMergePreview(repoContext);
+      yield* fs.writeFileString(path.join(first.worktreePath, "leftover-only.txt"), "stale preview\n");
+      // Synthetic commit metadata may change between materializations.
+      yield* scratchGit(repoContext.repoRoot, ["config", "user.name", "Preview recreated"]);
       // A second run removes the first run's preview before adding its own.
       const preview = yield* createYeetMergePreview(repoContext);
-      expect(preview.commitSha).toBe(first.commitSha);
+      expect(preview.commitSha).not.toBe(first.commitSha);
+      expect(preview.treeSha).toBe(first.treeSha);
+      expect(preview.baseSha).toBe(first.baseSha);
+      expect(preview.headSha).toBe(first.headSha);
+      expect(preview.worktreePath).toBe(first.worktreePath);
+      expect(yield* fs.exists(path.join(preview.worktreePath, "leftover-only.txt"))).toBe(false);
       expect(yield* fs.exists(path.join(preview.worktreePath, "feature.md"))).toBe(true);
       expect(yield* fs.exists(path.join(preview.worktreePath, "main.md"))).toBe(true);
       expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD"])).toBe(preview.commitSha);
+      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "HEAD^{tree}"])).toBe(preview.treeSha);
+      expect(yield* scratchGit(preview.worktreePath, ["show", "--no-patch", "--format=%P", "HEAD"])).toBe(
+        `${preview.baseSha} ${preview.headSha}`
+      );
+      expect(yield* scratchGit(preview.worktreePath, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("HEAD");
     })
   );
 
