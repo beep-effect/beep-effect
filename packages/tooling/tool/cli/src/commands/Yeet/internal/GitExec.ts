@@ -91,10 +91,10 @@ export class YeetGitErrorWording extends S.Opaque<YeetGitErrorWording, { readonl
  *
  * **Details**
  *
- * Yeet keeps two historical wordings: the bounded capture (`<command line> failed with exit code
- * <n>.`) and the strict readers in Settle (`<command line> exited with code <n>.`). Both share this
- * shape and differ only in their {@link YeetGitErrorWording} (repo-cli-gh-git-consolidation W2b,
- * SPEC D-11).
+ * Yeet keeps two historical wordings. The bounded capture renders
+ * `<command line> failed with exit code <n>.`, and the strict readers in Settle render
+ * `<command line> exited with code <n>.`. Both share this shape and differ only in their
+ * {@link YeetGitErrorWording} (repo-cli-gh-git-consolidation W2b, SPEC D-11).
  *
  * **Example** (Build the strict reader adapter)
  *
