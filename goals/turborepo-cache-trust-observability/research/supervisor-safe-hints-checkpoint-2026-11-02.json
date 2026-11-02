@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "cache-supervisor-safe-hints/v1",
+  "recordedAt": "2026-11-02T09:19:10.778007+00:00",
+  "authority": "Source implementation and focused local privacy/status/runner controls; no new native qualification, protected execution, signing activation or full goal acceptance.",
+  "sourceBaseRevision": "e0b14ca4131f9b8343520903845950b448ce3e46",
+  "sourceSha256": {
+    "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts": "94ecadab93b321e10ac0a13551ae027570321d6bc81d8c355f6bd721f9c4fc86",
+    "packages/tooling/tool/cli/test/cache-evidence.test.ts": "d9a71fc188cb2b1bc8d1ef3e5eae132c411116be526ca12d50a64cd567580cad",
+    "standards/jsdoc-documentation.inventory.jsonc": "48672725b6ed23d4b2f9c47a42cf66d3588f057bbb26458cfda6ae91e1ed3ca4",
+    "standards/jsdoc-documentation.inventory.md": "20456724793b69c3d2a3e83839b52d6c2fa7dc9e837bfc63d755d3cb68bf423e"
+  },
+  "failureThatMotivatedChange": {
+    "ordinaryStableSeconds": 967.409,
+    "exit": 1,
+    "priorDiagnostic": "Signed pilot supervisor exited with exit code 1.",
+    "phase": "unknown; no retroactive classification",
+    "instrumentedCompletePass": "Separate diagnostic evidence only; does not qualify the ordinary failed run."
+  },
+  "contract": {
+    "fixedHintMembers": 29,
+    "capturedSubstringEmitted": false,
+    "rawCauseAttached": false,
+    "successConditions": "Existing zero exit and non-truncated capture only. Unknown output stays private; truncation fails before hint recognition.",
+    "hintAuthority": "Untrusted diagnostic observation. A matching fixed string cannot grant qualification, establish a root cause or authorize an environment-only waiver.",
+    "api": "Existing data-first and curried supervisor guard retained; no new public export or runtime setting."
+  },
+  "controls": {
+    "focusedEvidence": {
+      "tests": 8,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 6.03,
+        "finishedAt": "2026-11-02T09:08:18.689625+00:00"
+      }
+    },
+    "relatedRunners": {
+      "tests": 45,
+      "files": 2,
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 3.024,
+        "finishedAt": "2026-11-02T09:09:45.890483+00:00"
+      }
+    },
+    "packageQuick": {
+      "lint": "passed",
+      "check": "passed",
+      "result": {
+        "exit": 0,
+        "elapsedSeconds": 16.969,
+        "finishedAt": "2026-11-02T09:08:29.606511+00:00"
+      }
+    },
+    "privacyCases": [
+      "Successful status ignores failure-like private output.",
+      "Failure quotes a canonical fixed literal, excluding private prefix/suffix, terminal control and raw cause.",
+      "Curried protocol guard recognizes fixed stderr hint without private package name.",
+      "Unknown or partial output preserves the generic error.",
+      "Truncated success still fails and emits no hint."
+    ]
+  },
+  "canonicalInventory": {
+    "result": {
+      "exit": 0,
+      "elapsedSeconds": 297.022,
+      "finishedAt": "2026-11-02T09:14:39.864701+00:00"
+    },
+    "findingTotalsUnchanged": true,
+    "publicExportsDelta": 7,
+    "inheritedExports": [
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
+        "symbol": "goalCloseoutView",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
+        "symbol": "readGoalCloseoutView",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+        "symbol": "GoalCloseoutVerification",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+        "symbol": "GoalCloseoutVerification",
+        "kind": "type"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+        "symbol": "goalCloseoutVerification",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+        "symbol": "renderGoalCloseoutView",
+        "kind": "const"
+      },
+      {
+        "path": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+        "symbol": "renderGoalProposedCloseout",
+        "kind": "const"
+      }
+    ],
+    "inheritedSourceFilesUnchanged": true,
+    "explanation": "Canonical refresh includes inherited Goals completion exports and position changes already present in the accepted base. Finding totals, thresholds and exceptions are unchanged."
+  },
+  "remaining": [
+    "Publish and obtain exact-head hosted checks/review; primary orchestrator alone merges.",
+    "Use the ordinary CLI with the reviewed implementation to diagnose a subsequent native failure without injected instrumentation.",
+    "Complete ordinary current stable/canary qualification, actual protected producer proof, all adoption reviews, rollback/role/key controls and representative windows."
+  ],
+  "qualificationGranted": false,
+  "productionConfigurationChanged": false,
+  "wholeGoalAcceptanceChanged": false
+}

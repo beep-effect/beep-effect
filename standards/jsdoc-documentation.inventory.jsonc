@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T07:28:36.534Z",
+  "generatedAt": "2026-11-02T09:09:43.661Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3573,
-    "publicExports": 25374,
+    "publicExports": 25381,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -48990,8 +48990,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 142,
-          "anchor": "packages-drivers-git-src-git-models-ts-142-commitinfo",
+          "line": 148,
+          "anchor": "packages-drivers-git-src-git-models-ts-148-commitinfo",
           "currentTags": [
             "@public",
             "@category",
@@ -49013,8 +49013,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 206,
-          "anchor": "packages-drivers-git-src-git-models-ts-206-commitlogentry",
+          "line": 212,
+          "anchor": "packages-drivers-git-src-git-models-ts-212-commitlogentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49036,8 +49036,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 270,
-          "anchor": "packages-drivers-git-src-git-models-ts-270-statusrenderoptions",
+          "line": 276,
+          "anchor": "packages-drivers-git-src-git-models-ts-276-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -49059,8 +49059,8 @@
           "exportKind": "namespace",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 301,
-          "anchor": "packages-drivers-git-src-git-models-ts-301-statusrenderoptions",
+          "line": 307,
+          "anchor": "packages-drivers-git-src-git-models-ts-307-statusrenderoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -49082,8 +49082,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 326,
-          "anchor": "packages-drivers-git-src-git-models-ts-326-statusentry",
+          "line": 332,
+          "anchor": "packages-drivers-git-src-git-models-ts-332-statusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49105,8 +49105,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 448,
-          "anchor": "packages-drivers-git-src-git-models-ts-448-submodulestatusentry",
+          "line": 454,
+          "anchor": "packages-drivers-git-src-git-models-ts-454-submodulestatusentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49128,8 +49128,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 498,
-          "anchor": "packages-drivers-git-src-git-models-ts-498-lsremoteentry",
+          "line": 504,
+          "anchor": "packages-drivers-git-src-git-models-ts-504-lsremoteentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49151,8 +49151,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 593,
-          "anchor": "packages-drivers-git-src-git-models-ts-593-stashentry",
+          "line": 599,
+          "anchor": "packages-drivers-git-src-git-models-ts-599-stashentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49174,8 +49174,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 628,
-          "anchor": "packages-drivers-git-src-git-models-ts-628-branchentry",
+          "line": 634,
+          "anchor": "packages-drivers-git-src-git-models-ts-634-branchentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49197,8 +49197,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 665,
-          "anchor": "packages-drivers-git-src-git-models-ts-665-refentry",
+          "line": 671,
+          "anchor": "packages-drivers-git-src-git-models-ts-671-refentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49220,8 +49220,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 700,
-          "anchor": "packages-drivers-git-src-git-models-ts-700-configlistentry",
+          "line": 706,
+          "anchor": "packages-drivers-git-src-git-models-ts-706-configlistentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49243,8 +49243,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 736,
-          "anchor": "packages-drivers-git-src-git-models-ts-736-worktreeentry",
+          "line": 742,
+          "anchor": "packages-drivers-git-src-git-models-ts-742-worktreeentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49266,8 +49266,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 801,
-          "anchor": "packages-drivers-git-src-git-models-ts-801-lsfilesentry",
+          "line": 807,
+          "anchor": "packages-drivers-git-src-git-models-ts-807-lsfilesentry",
           "currentTags": [
             "@public",
             "@category",
@@ -49289,8 +49289,8 @@
           "exportKind": "class",
           "filePath": "src/Git.models.ts",
           "repoPath": "packages/drivers/git/src/Git.models.ts",
-          "line": 879,
-          "anchor": "packages-drivers-git-src-git-models-ts-879-gitoptions",
+          "line": 885,
+          "anchor": "packages-drivers-git-src-git-models-ts-885-gitoptions",
           "currentTags": [
             "@public",
             "@category",
@@ -362740,8 +362740,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 58,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-58-hookpulsenamespaceregime",
+          "line": 59,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-59-hookpulsenamespaceregime",
           "currentTags": [
             "@category",
             "@since"
@@ -362762,8 +362762,8 @@
           "exportKind": "type",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 68,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-68-hookpulsenamespaceregime",
+          "line": 69,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-69-hookpulsenamespaceregime",
           "currentTags": [
             "@category",
             "@since"
@@ -362784,8 +362784,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 85,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-85-hookpulsenamespacesource",
+          "line": 86,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-86-hookpulsenamespacesource",
           "currentTags": [
             "@category",
             "@since"
@@ -362806,8 +362806,8 @@
           "exportKind": "type",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 100,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-100-hookpulsenamespacesource",
+          "line": 101,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-101-hookpulsenamespacesource",
           "currentTags": [
             "@category",
             "@since"
@@ -362828,8 +362828,8 @@
           "exportKind": "class",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 134,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-134-hookpulsenamespaceprojection",
+          "line": 166,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-166-hookpulsenamespaceprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -362850,8 +362850,8 @@
           "exportKind": "class",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 170,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-170-hookpulsenamespaceerror",
+          "line": 202,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-202-hookpulsenamespaceerror",
           "currentTags": [
             "@category",
             "@since"
@@ -362872,8 +362872,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 220,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-220-hookpulsenamespaceprojectionpath",
+          "line": 252,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-252-hookpulsenamespaceprojectionpath",
           "currentTags": [
             "@category",
             "@since"
@@ -362894,8 +362894,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 261,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-261-readhookpulsenamespaceprojection",
+          "line": 293,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-293-readhookpulsenamespaceprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -362916,8 +362916,8 @@
           "exportKind": "class",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 319,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-319-hookpulsenamespacesalt",
+          "line": 349,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-349-hookpulsenamespacesalt",
           "currentTags": [
             "@category",
             "@since"
@@ -362938,8 +362938,8 @@
           "exportKind": "class",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 354,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-354-hookpulsenamespace",
+          "line": 384,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-384-hookpulsenamespace",
           "currentTags": [
             "@category",
             "@since"
@@ -362960,8 +362960,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 391,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-391-hookpulsenamespacesalts",
+          "line": 421,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-421-hookpulsenamespacesalts",
           "currentTags": [
             "@param",
             "@returns",
@@ -362984,8 +362984,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 425,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-425-hookpulsenamespacecutovermillis",
+          "line": 455,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-455-hookpulsenamespacecutovermillis",
           "currentTags": [
             "@param",
             "@returns",
@@ -363008,8 +363008,8 @@
           "exportKind": "const",
           "filePath": "src/hook-pulse-namespace.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/hook-pulse-namespace.ts",
-          "line": 472,
-          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-472-hookpulsenamespace",
+          "line": 503,
+          "anchor": "packages-tooling-library-ai-metrics-src-hook-pulse-namespace-ts-503-hookpulsenamespace",
           "currentTags": [
             "@category",
             "@since"
@@ -448139,7 +448139,7 @@
         "srcDir": "src",
         "sourceFileCount": 500,
         "publicModuleCount": 497,
-        "publicExportCount": 4641
+        "publicExportCount": 4648
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -452498,7 +452498,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 13,
           "remediationStatus": "resolved"
         },
         {
@@ -452660,7 +452660,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 61,
+          "exportCount": 66,
           "remediationStatus": "resolved"
         },
         {
@@ -468976,8 +468976,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-37-readcacheexperimentbytes",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-78-readcacheexperimentbytes",
           "currentTags": [
             "@internal",
             "@category",
@@ -468999,8 +468999,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 65,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-65-decodecacheexperimenttext",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-106-decodecacheexperimenttext",
           "currentTags": [
             "@internal",
             "@param",
@@ -469024,8 +469024,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-87-hashcacheexperimentexecutable",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-128-hashcacheexperimentexecutable",
           "currentTags": [
             "@internal",
             "@category",
@@ -469047,8 +469047,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-116-readcacheevidencebytes",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-157-readcacheevidencebytes",
           "currentTags": [
             "@category",
             "@since"
@@ -469069,8 +469069,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-146-requirecachelinuxx64",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-187-requirecachelinuxx64",
           "currentTags": [
             "@param",
             "@returns",
@@ -469094,8 +469094,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-170-requirecachesupervisorcapture",
+          "line": 217,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-217-requirecachesupervisorcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -469119,8 +469119,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-196-makeprivatesupervisorstorage",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-251-makeprivatesupervisorstorage",
           "currentTags": [
             "@internal",
             "@category",
@@ -497392,8 +497392,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 80,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-80-goalcompletionobservation",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-81-goalcompletionobservation",
           "currentTags": [
             "@category",
             "@since"
@@ -497414,8 +497414,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 127,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-127-goalcompletionverdict",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-128-goalcompletionverdict",
           "currentTags": [
             "@param",
             "@returns",
@@ -497438,8 +497438,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-171-goalcompletionunknownreasons",
+          "line": 172,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-172-goalcompletionunknownreasons",
           "currentTags": [
             "@param",
             "@returns",
@@ -497462,8 +497462,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 227,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-227-goalcompletionverifier",
+          "line": 228,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-228-goalcompletionverifier",
           "currentTags": [
             "@category",
             "@since"
@@ -497484,8 +497484,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 302,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-302-goalcompletiondeclarationdigest",
+          "line": 303,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-303-goalcompletiondeclarationdigest",
           "currentTags": [
             "@category",
             "@since"
@@ -497506,8 +497506,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 639,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-639-observegoalcompletion",
+          "line": 640,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-640-observegoalcompletion",
           "currentTags": [
             "@category",
             "@since"
@@ -497528,8 +497528,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 933,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-933-storedgoalcompletion",
+          "line": 934,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-934-storedgoalcompletion",
           "currentTags": [
             "@category",
             "@since"
@@ -497550,8 +497550,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 1005,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1005-projectgoallifecycle",
+          "line": 1006,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1006-projectgoallifecycle",
           "currentTags": [
             "@category",
             "@since"
@@ -497572,8 +497572,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 1076,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1076-readgoallifecycle",
+          "line": 1077,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1077-readgoallifecycle",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalCloseoutView",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Completion.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
+          "line": 1115,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1115-goalcloseoutview",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readGoalCloseoutView",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Completion.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
+          "line": 1148,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1148-readgoalcloseoutview",
           "currentTags": [
             "@category",
             "@since"
@@ -497594,8 +497640,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 1102,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1102-readgoalcloseoutviews",
+          "line": 1174,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1174-readgoalcloseoutviews",
           "currentTags": [
             "@category",
             "@since"
@@ -497616,8 +497662,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Completion.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Completion.ts",
-          "line": 1195,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1195-goalscompletioncommand",
+          "line": 1261,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-completion-ts-1261-goalscompletioncommand",
           "currentTags": [
             "@category",
             "@since"
@@ -497972,8 +498018,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 79,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-79-goals-doctor-baseline-path",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-85-goals-doctor-baseline-path",
           "currentTags": [
             "@category",
             "@since"
@@ -497994,8 +498040,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 95,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-95-goal-md-max-chars",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-101-goal-md-max-chars",
           "currentTags": [
             "@category",
             "@since"
@@ -498016,8 +498062,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-113-goaldoctorfindingkind",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-119-goaldoctorfindingkind",
           "currentTags": [
             "@category",
             "@since"
@@ -498038,8 +498084,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-169-goaldoctorfindingkind",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-175-goaldoctorfindingkind",
           "currentTags": [
             "@category",
             "@since"
@@ -498060,8 +498106,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 203,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-203-goaldoctorfinding",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-209-goaldoctorfinding",
           "currentTags": [
             "@category",
             "@since"
@@ -498082,8 +498128,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-263-goaldoctorclassification",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-269-goaldoctorclassification",
           "currentTags": [
             "@category",
             "@since"
@@ -498104,8 +498150,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 306,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-306-classifygoaldoctorfindings",
+          "line": 312,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-312-classifygoaldoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -498128,8 +498174,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 353,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-353-goalexplorationpathstate",
+          "line": 359,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-359-goalexplorationpathstate",
           "currentTags": [
             "@category",
             "@since"
@@ -498150,8 +498196,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 365,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-365-goalexplorationpathstate",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-371-goalexplorationpathstate",
           "currentTags": [
             "@category",
             "@since"
@@ -498172,8 +498218,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 383,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-383-goalpacketreader",
+          "line": 389,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-389-goalpacketreader",
           "currentTags": [
             "@category",
             "@since"
@@ -498194,8 +498240,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 471,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-471-makegoalpacketfilesystemreader",
+          "line": 477,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-477-makegoalpacketfilesystemreader",
           "currentTags": [
             "@returns",
             "@category",
@@ -498217,8 +498263,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 754,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-754-goalpacketfindings",
+          "line": 760,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-760-goalpacketfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -498241,8 +498287,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1081,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1081-capabilitydoctorfindings",
+          "line": 1087,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1087-capabilitydoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -498265,8 +498311,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1147,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1147-capabilitypacketfindings",
+          "line": 1153,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1153-capabilitypacketfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -498289,8 +498335,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1353,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1353-rungoalsdoctor",
+          "line": 1371,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1371-rungoalsdoctor",
           "currentTags": [
             "@category",
             "@since"
@@ -498311,8 +498357,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Doctor.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
-          "line": 1434,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1434-goalsdoctorcommand",
+          "line": 1456,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1456-goalsdoctorcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -499759,13 +499805,129 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "GoalCloseoutVerification",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1325,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1325-goalcloseoutverification",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalCloseoutVerification",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1337,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1337-goalcloseoutverification",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "GoalCloseoutView",
           "exportKind": "class",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1318,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1318-goalcloseoutview",
+          "line": 1359,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1359-goalcloseoutview",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalCloseoutVerification",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1391,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1391-goalcloseoutverification",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderGoalCloseoutView",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1432,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1432-rendergoalcloseoutview",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderGoalProposedCloseout",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1460,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1460-rendergoalproposedcloseout",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -499785,8 +499947,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1376,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1376-goalopsscriptpath",
+          "line": 1509,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1509-goalopsscriptpath",
           "currentTags": [
             "@category",
             "@since"
@@ -499807,8 +499969,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1419,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1419-goalopsscript",
+          "line": 1552,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1552-goalopsscript",
           "currentTags": [
             "@category",
             "@since"
@@ -499829,8 +499991,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1462,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1462-goalmanifest",
+          "line": 1595,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1595-goalmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -499851,8 +500013,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1509,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1509-decodegoalmanifest",
+          "line": 1642,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1642-decodegoalmanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -499873,8 +500035,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Goals.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
-          "line": 1529,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1529-goalpullrequestrefs",
+          "line": 1662,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1662-goalpullrequestrefs",
           "currentTags": [
             "@param",
             "@returns",
@@ -499921,8 +500083,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-64-buildable-provider-statuses",
+          "line": 65,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-65-buildable-provider-statuses",
           "currentTags": [
             "@category",
             "@since"
@@ -499943,8 +500105,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 81,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-81-candidate-provider-statuses",
+          "line": 82,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-82-candidate-provider-statuses",
           "currentTags": [
             "@category",
             "@since"
@@ -499965,8 +500127,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-170-compilecapabilityprojection",
+          "line": 171,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-171-compilecapabilityprojection",
           "currentTags": [
             "@param",
             "@returns",
@@ -499989,8 +500151,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-246-groupcycles",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-247-groupcycles",
           "currentTags": [
             "@param",
             "@returns",
@@ -500013,8 +500175,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 318,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-318-evaluatecapabilitygraph",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-319-evaluatecapabilitygraph",
           "currentTags": [
             "@param",
             "@returns",
@@ -500037,8 +500199,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 419,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-419-capabilityproviderrows",
+          "line": 420,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-420-capabilityproviderrows",
           "currentTags": [
             "@param",
             "@returns",
@@ -500061,8 +500223,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 467,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-467-isstrandedproviderset",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-468-isstrandedproviderset",
           "currentTags": [
             "@param",
             "@returns",
@@ -500085,8 +500247,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 513,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-513-buildfrontierreport",
+          "line": 514,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-514-buildfrontierreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -500109,8 +500271,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 564,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-564-buildexplainreport",
+          "line": 565,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-565-buildexplainreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -500133,8 +500295,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 641,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-641-buildcatalogreport",
+          "line": 642,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-642-buildcatalogreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -500157,8 +500319,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 706,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-706-renderfrontierhuman",
+          "line": 707,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-707-renderfrontierhuman",
           "currentTags": [
             "@param",
             "@returns",
@@ -500181,8 +500343,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 752,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-752-renderexplainhuman",
+          "line": 753,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-753-renderexplainhuman",
           "currentTags": [
             "@param",
             "@returns",
@@ -500205,8 +500367,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.projection.ts",
-          "line": 815,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-815-rendercataloghuman",
+          "line": 817,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-projection-ts-817-rendercataloghuman",
           "currentTags": [
             "@param",
             "@returns",
@@ -500603,8 +500765,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Graph.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.schemas.ts",
-          "line": 624,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-schemas-ts-624-capabilitycatalogentry",
+          "line": 625,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-schemas-ts-625-capabilitycatalogentry",
           "currentTags": [
             "@category",
             "@since"
@@ -500625,8 +500787,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Graph.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.schemas.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-schemas-ts-657-capabilitycatalogreport",
+          "line": 658,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-schemas-ts-658-capabilitycatalogreport",
           "currentTags": [
             "@category",
             "@since"
@@ -500715,8 +500877,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 90,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-90-loadcapabilityprojection",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-93-loadcapabilityprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -500737,8 +500899,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-169-goalsnextcommand",
+          "line": 178,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-178-goalsnextcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -500759,8 +500921,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-201-goalsexplaincommand",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-210-goalsexplaincommand",
           "currentTags": [
             "@category",
             "@since"
@@ -500781,8 +500943,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Graph.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Graph.ts",
-          "line": 242,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-242-goalscatalogcommand",
+          "line": 262,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-graph-ts-262-goalscatalogcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -503637,8 +503799,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 54,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-54-portfolio-index-path",
+          "line": 61,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-61-portfolio-index-path",
           "currentTags": [
             "@category",
             "@since"
@@ -503659,8 +503821,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 86,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-86-portfolioindexrow",
+          "line": 93,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-93-portfolioindexrow",
           "currentTags": [
             "@category",
             "@since"
@@ -503681,8 +503843,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 128,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-128-portfolioindexreport",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-136-portfolioindexreport",
           "currentTags": [
             "@category",
             "@since"
@@ -503703,8 +503865,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 174,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-174-renderportfolioindex",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-223-renderportfolioindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -503727,8 +503889,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 294,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-294-buildportfolioindexreport",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-327-buildportfolioindexreport",
           "currentTags": [
             "@category",
             "@since"
@@ -503749,8 +503911,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 319,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-319-buildportfolioindexcontent",
+          "line": 352,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-352-buildportfolioindexcontent",
           "currentTags": [
             "@category",
             "@since"
@@ -503771,8 +503933,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 351,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-351-writeportfolioindex",
+          "line": 385,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-385-writeportfolioindex",
           "currentTags": [
             "@effects",
             "@category",
@@ -503794,8 +503956,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/PortfolioIndex.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
-          "line": 455,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-455-goalsindexcommand",
+          "line": 489,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-489-goalsindexcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -547898,8 +548060,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/Session.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/Session.command.ts",
-          "line": 60,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-60-rendersessionorchestrator",
+          "line": 61,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-61-rendersessionorchestrator",
           "currentTags": [
             "@param",
             "@returns",
@@ -547922,8 +548084,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/Session.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/Session.command.ts",
-          "line": 100,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-100-rendersessionrow",
+          "line": 101,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-101-rendersessionrow",
           "currentTags": [
             "@param",
             "@returns",
@@ -547946,8 +548108,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/Session.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/Session.command.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-140-sessionnotecommand",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-141-sessionnotecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -547968,8 +548130,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/Session.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/Session.command.ts",
-          "line": 203,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-203-sessionopencommand",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-session-command-ts-204-sessionopencommand",
           "currentTags": [
             "@category",
             "@since"
