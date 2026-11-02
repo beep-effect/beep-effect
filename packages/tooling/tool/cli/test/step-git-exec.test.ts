@@ -1,3 +1,5 @@
+import { Git, GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { KnowledgeCloneAttributesError, KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge";
 import {
   BoundedOutput,
@@ -11,6 +13,12 @@ import {
   runCapturedStreams,
 } from "@beep/repo-cli/test/Process";
 import {
+  adaptGitKitError,
+  collectStagedPaths,
+  collectUnstagedPaths,
+  collectUntrackedPaths,
+  currentBranch,
+  GitRenameEntry,
   gitArchiveArgs,
   gitArchiveEnv,
   gitLinesFromOutput,
@@ -18,6 +26,10 @@ import {
   guardCloneLocalGitAttributes,
   isSafeOriginBranch,
   originBranchFromBase,
+  readGitRenames,
+  readGitTree,
+  resolveGitCommit,
+  resolveGitMergeBase,
   runGitOutput,
   runGitPathList,
   safeOriginBranchFromBase,
@@ -41,10 +53,14 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import { commandArgs, commandEnv } from "./support/commandArgs.ts";
 import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
 
@@ -754,5 +770,190 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "5 second
         })
       );
     }
+  }
+);
+
+// W1a (repo-cli-gh-git-consolidation D-08): the typed readers run through `Git`, and one fold maps
+// every kit error back onto the caller's adapter.
+describe("GitExec kit error fold", () => {
+  type Folded =
+    | { readonly kind: "spawn"; readonly commandLine: string; readonly cause: unknown }
+    | { readonly kind: "exit"; readonly commandLine: string; readonly exitCode: number; readonly output: string }
+    | { readonly kind: "truncated"; readonly commandLine: string }
+    | { readonly kind: "malformed" };
+  const recording = (truncated: boolean): GitCommandErrorAdapter<Folded> => ({
+    onSpawnFailure: (commandLine) => (cause) => ({ kind: "spawn", commandLine, cause }),
+    onNonZeroExit: ({ commandLine, exitCode, output }) => ({ kind: "exit", commandLine, exitCode, output }),
+    onTruncated: truncated ? O.some((commandLine) => ({ kind: "truncated", commandLine })) : O.none(),
+  });
+  const malformed = (): Folded => ({ kind: "malformed" });
+  const invocation = GitCommand.revParse("nope", { peel: "commit" });
+  const commandLine = "git rev-parse --verify --end-of-options nope^{commit}";
+  type CommandFields = Parameters<typeof GitCommandError.make>[0];
+  const command = (fields: Omit<CommandFields, "args" | "cwd" | "stderr"> & { readonly stderr?: string }) =>
+    GitCommandError.make({ args: ["rev-parse"], cwd: "/repo", stderr: "", ...fields });
+
+  it("maps the typed ref and repository errors onto exit 128 with the kit's message", () => {
+    const fold = adaptGitKitError(invocation, recording(false));
+    expect(fold(UnknownRefError.make({ ref: "nope", cwd: "/repo" }))).toEqual({
+      kind: "exit",
+      commandLine,
+      exitCode: 128,
+      output: "unknown ref 'nope' in /repo",
+    });
+    expect(fold(NotARepositoryError.make({ cwd: "/outside" }))).toEqual({
+      kind: "exit",
+      commandLine,
+      exitCode: 128,
+      output: "not a git repository: /outside",
+    });
+  });
+
+  it("maps a nonzero exit onto onNonZeroExit with the kit's stderr", () => {
+    const failure = command({ kind: "failed", exitCode: 1, stderr: "fatal: nope" });
+    expect(adaptGitKitError(failure, invocation, recording(false))).toEqual({
+      kind: "exit",
+      commandLine,
+      exitCode: 1,
+      output: "fatal: nope",
+    });
+  });
+
+  it("maps a refusal, a spawn failure and a timeout (no exit code) onto onSpawnFailure with the error as cause", () => {
+    const refused = command({ kind: "refused", detail: "refused a ref argument git would parse as an option" });
+    const folded = adaptGitKitError(refused, invocation, recording(false));
+    expect(folded.kind).toBe("spawn");
+    if (folded.kind === "spawn") {
+      expect(folded.commandLine).toBe(commandLine);
+      expect(folded.cause).toBe(refused);
+    }
+    const spawn = command({ kind: "failed", detail: "git is not installed (or the working directory does not exist)" });
+    expect(adaptGitKitError(spawn, invocation, recording(false)).kind).toBe("spawn");
+  });
+
+  it("routes truncation to onTruncated when set, otherwise to exit 1 with the kit's detail", () => {
+    const truncated = command({
+      kind: "truncated",
+      detail: "stdout exceeded the 16 byte output limit (maxOutputBytes)",
+    });
+    expect(adaptGitKitError(truncated, invocation, recording(true))).toEqual({ kind: "truncated", commandLine });
+    expect(adaptGitKitError(truncated, invocation, recording(false))).toEqual({
+      kind: "exit",
+      commandLine,
+      exitCode: 1,
+      output: "stdout exceeded the 16 byte output limit (maxOutputBytes)",
+    });
+  });
+
+  it("routes a kit parser refusal to onMalformed when the reader supplies one, else to onSpawnFailure", () => {
+    const unparseable = command({ kind: "failed", detail: "unparseable ls-tree output: a record was odd" });
+    expect(adaptGitKitError(unparseable, invocation, recording(false), O.some(malformed))).toEqual({
+      kind: "malformed",
+    });
+    expect(adaptGitKitError(unparseable, invocation, recording(false)).kind).toBe("spawn");
+  });
+
+  it("offers the fold data-first and data-last", () => {
+    const error = UnknownRefError.make({ ref: "nope", cwd: "/repo" });
+    expect(adaptGitKitError(error, invocation, recording(false))).toEqual(
+      adaptGitKitError(invocation, recording(false))(error)
+    );
+  });
+});
+
+layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "30 seconds" })(
+  "GitExec typed readers over a real repository",
+  (it) => {
+    type Folded =
+      | { readonly exitCode: number; readonly output: string }
+      | { readonly spawn: string }
+      | "truncated"
+      | "malformed";
+    const adapter: GitCommandErrorAdapter<Folded> = {
+      onSpawnFailure: (commandLine) => () => ({ spawn: commandLine }),
+      onNonZeroExit: ({ exitCode, output }) => ({ exitCode, output }),
+      onTruncated: O.some(() => "truncated" as const),
+    };
+    const malformed = (): Folded => "malformed";
+    const runGit = (cwd: string, args: ReadonlyArray<string>): string => {
+      const result = Bun.spawnSync(["git", ...args], {
+        cwd,
+        env: {
+          ...process.env,
+          GIT_AUTHOR_NAME: "W1a",
+          GIT_AUTHOR_EMAIL: "w1a@example.com",
+          GIT_COMMITTER_NAME: "W1a",
+          GIT_COMMITTER_EMAIL: "w1a@example.com",
+        },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      if (result.exitCode !== 0) {
+        throw new Error(`git ${A.join(args, " ")} failed: ${result.stderr.toString()}`);
+      }
+      return Str.trim(result.stdout.toString());
+    };
+
+    it.effect(
+      "reads commits, merge bases, trees, renames, dirty paths and the branch through Git",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* fs.makeTempDirectoryScoped({ prefix: "beep-git-readers-" });
+        runGit(repo, ["-c", "init.defaultBranch=main", "init", "--quiet"]);
+        yield* fs.makeDirectory(path.join(repo, "src"));
+        yield* fs.writeFileString(
+          path.join(repo, "src/a.ts"),
+          A.join(
+            A.makeBy(20, (i) => `line ${i}`),
+            "\n"
+          )
+        );
+        yield* fs.writeFileString(path.join(repo, "src/b with space.ts"), "b\n");
+        runGit(repo, ["add", "-A"]);
+        runGit(repo, ["-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "c1"]);
+        const c1 = runGit(repo, ["rev-parse", "HEAD"]);
+        runGit(repo, ["mv", "src/a.ts", "src/moved.ts"]);
+        runGit(repo, ["-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "c2"]);
+        const c2 = runGit(repo, ["rev-parse", "HEAD"]);
+
+        expect(yield* resolveGitCommit(repo, "HEAD", adapter)).toBe(c2);
+        expect(yield* resolveGitCommit(repo, "nope", adapter).pipe(Effect.flip)).toEqual({
+          exitCode: 128,
+          output: `unknown ref 'nope' in ${repo}`,
+        });
+        expect(yield* resolveGitMergeBase(repo, c1, c2, adapter)).toBe(c1);
+
+        const tree = yield* readGitTree(repo, c2, adapter, malformed);
+        expect(A.map(tree, (entry) => entry.path)).toEqual(["src/b with space.ts", "src/moved.ts"]);
+        expect(A.every(tree, (entry) => entry.objectType === "blob" && entry.mode === "100644")).toBe(true);
+        // A subdirectory cwd still lists the whole tree, as `--full-tree` did.
+        expect(yield* readGitTree(path.join(repo, "src"), c2, adapter, malformed)).toEqual(tree);
+
+        expect(yield* readGitRenames(repo, c1, c2, [], adapter, malformed)).toEqual([
+          GitRenameEntry.make({ sourcePath: "src/a.ts", targetPath: "src/moved.ts", score: S.Natural.make(100) }),
+        ]);
+        expect(yield* readGitRenames(repo, c1, c2, ["docs/"], adapter, malformed)).toEqual([]);
+
+        yield* fs.writeFileString(path.join(repo, "src/moved.ts"), "changed\n");
+        yield* fs.writeFileString(path.join(repo, "src/b with space.ts"), "changed\n");
+        runGit(repo, ["add", "src/moved.ts"]);
+        yield* fs.writeFileString(path.join(repo, "untracked.txt"), "u\n");
+        expect(yield* collectStagedPaths(repo, adapter)).toEqual(["src/moved.ts"]);
+        expect(yield* collectUnstagedPaths(repo, adapter)).toEqual(["src/b with space.ts"]);
+        expect(yield* collectUntrackedPaths(repo, adapter)).toEqual(["untracked.txt"]);
+
+        expect(yield* currentBranch(repo, adapter)).toBe("main");
+        runGit(repo, ["checkout", "--quiet", "--detach", "HEAD"]);
+        expect(yield* currentBranch(repo, adapter, "abbrev-ref")).toBe("HEAD");
+        expect(yield* currentBranch(repo, adapter, "show-current")).toBe("");
+
+        const outside = yield* fs.makeTempDirectoryScoped({ prefix: "beep-git-readers-outside-" });
+        expect(yield* collectUntrackedPaths(outside, adapter).pipe(Effect.flip)).toEqual({
+          exitCode: 128,
+          output: `not a git repository: ${outside}`,
+        });
+      })
+    );
   }
 );
