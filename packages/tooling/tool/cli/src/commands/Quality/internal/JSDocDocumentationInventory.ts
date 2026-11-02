@@ -1640,7 +1640,11 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const candidatePaths = hasGitMetadata
     ? O.some(
         MutableHashSet.fromIterable(
-          yield* runGitLines(repoRoot, ["ls-files", "--cached", "--others", "--exclude-standard"], gitCommandErrorAdapter)
+          yield* runGitLines(
+            repoRoot,
+            ["ls-files", "--cached", "--others", "--exclude-standard"],
+            gitCommandErrorAdapter
+          )
         )
       )
     : O.none<MutableHashSet.MutableHashSet<string>>();
