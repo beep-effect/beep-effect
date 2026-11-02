@@ -48,6 +48,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:effect-imports",
   "//#lint:tsgo-rules",
   "//#lint:oxlint",
+  "//#lint:deprecated-imports",
   "//#lint:shadcn",
   "//#lint:allowlist",
   "//#lint:jsdoc-module-tags",

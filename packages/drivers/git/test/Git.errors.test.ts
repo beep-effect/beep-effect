@@ -14,6 +14,25 @@ const cases = A.make(
   { name: "NotStubbedError", facade: Facade.NotStubbedError, owner: Errors.NotStubbedError }
 );
 
+describe("GitCommandError.kind", () => {
+  it("admits the three kinds and renders a truncated detail verbatim", () => {
+    const isKind = S.is(Facade.GitCommandError.fields.kind);
+    expect(A.map(["refused", "failed", "truncated", "tooLarge"], isKind)).toEqual([true, true, true, false]);
+    const truncated = Facade.GitCommandError.make({
+      kind: "truncated",
+      args: ["show", "HEAD:big.txt"],
+      cwd: "/repo",
+      stderr: "",
+      detail: "stdout exceeded the 65536 byte output limit (maxOutputBytes)",
+    });
+    expect(truncated.kind).toBe("truncated");
+    expect(truncated.exitCode).toBeUndefined();
+    expect(truncated.message).toBe(
+      "git show HEAD:big.txt in /repo: stdout exceeded the 65536 byte output limit (maxOutputBytes)"
+    );
+  });
+});
+
 describe.each(cases)("$name import compatibility", ({ name, facade, owner }) => {
   it("retains one constructor and its original Git identity", () => {
     expect(facade).toBe(owner);

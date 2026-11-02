@@ -12,7 +12,6 @@
     "directory": "apps/professional-desktop"
   },
   "scripts": {
-    "audit": "bun run --if-present beep:audit",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "codegen": "bun run scripts/sync-migration-bundle.ts --write",
@@ -28,7 +27,6 @@
     "test:integration": "bun run beep:test:integration",
     "test:integration:parallel": "bun run beep:test:integration",
     "test:property": "bun run beep:test",
-    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "vite build",
     "beep:check": "tsrs -p tsconfig.check.json && tsrs -p tsconfig.scripts.json --noEmit && bun run codegen:check",
     "beep:docgen": "bunx --bun --no-install docgen",

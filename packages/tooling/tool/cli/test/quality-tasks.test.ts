@@ -1090,67 +1090,64 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       });
     });
 
-    it("builds package-only audit steps by default and keeps turbo filters", () =>
+    it("composes the package audit from the cached build, check and lint graphs", () =>
       withoutCi(() => {
         const steps = rootQualityStepsForTesting(
           "/repo",
           getInvocation(["audit", "--filter=@beep/schema", "--summarize"])
         );
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]).toMatchObject({
-          label: "audit:packages",
-          command: "bunx",
-          args: expectedRootTurboArgs("audit", ["--filter=@beep/schema", "--summarize"]),
-          cwd: "/repo",
-        });
+        expect(A.map(steps, (step) => step.label)).toEqual(["build", "check", "lint"]);
+        for (const [index, task] of ["build", "check", "lint"].entries()) {
+          expect(steps[index]).toMatchObject({
+            label: task,
+            command: "bunx",
+            args: expectedRootTurboArgs(task, ["--filter=@beep/schema", "--summarize"]),
+            cwd: "/repo",
+          });
+        }
       }));
 
-    it.each(["op://vault/item/field", "postgres://user:op://vault/item/password@host/db"])(
-      "clears unresolved SQL test references for package audit: %s",
-      (value) =>
-        withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
-          const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
+    it("adds the repo-wide check and lint policy steps to an unscoped package audit", () =>
+      withoutCi(() => {
+        const labels = A.map(
+          rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"])),
+          (step) => step.label
+        );
 
-          expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBe("");
-        })
-    );
-
-    it.each([undefined, "", "postgres://localhost/beep_test", "postgresql://localhost/beep_test"])(
-      "preserves ordinary SQL test configuration for package audit: %s",
-      (value) =>
-        withEnvVar("BEEP_TEST_DATABASE_URL", value, () => {
-          const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "packages"]));
-
-          expect(steps[0]?.env?.BEEP_TEST_DATABASE_URL).toBeUndefined();
-        })
-    );
+        expect(A.take(labels, 2)).toEqual(["build", "check"]);
+        expect(labels).toContain("quality:test-tsgo");
+        expect(labels).toContain("lint");
+        expect(labels).toContain("lint:policy:cheap");
+      }));
 
     it("keeps package audit cacheable by default for local runs", () =>
       withoutCi(() => {
         const steps = rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]));
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]?.args).toEqual(expectedRootTurboArgs("audit", ["--filter=@beep/schema"]));
+        expect(steps).toHaveLength(3);
+        expect(steps[0]?.args).toEqual(expectedRootTurboArgs("build", ["--filter=@beep/schema"]));
       }));
 
-    it("forces package audit execution in CI unless cache behavior is explicit", () =>
+    it("forces every package audit graph in CI unless cache behavior is explicit", () =>
       withEnvVar("CI", "true", () => {
         const steps = rootQualityStepsForTesting(
           "/repo",
           getInvocation(["audit", "--filter=@beep/schema", "--dry=json"])
         );
 
-        expect(steps).toHaveLength(1);
-        expect(steps[0]?.args).toEqual([
-          "turbo",
-          "run",
-          "audit",
-          "--concurrency=4",
-          "--force",
-          "--filter=@beep/schema",
-          "--dry=json",
-        ]);
+        expect(steps).toHaveLength(3);
+        for (const [index, task] of ["build", "check", "lint"].entries()) {
+          expect(steps[index]?.args).toEqual([
+            "turbo",
+            "run",
+            task,
+            "--concurrency=4",
+            "--force",
+            "--filter=@beep/schema",
+            "--dry=json",
+          ]);
+        }
       }));
 
     it("honors explicit audit cache-control args in CI", () =>
@@ -1160,11 +1157,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           getInvocation(["audit", "--cache=local:rw", "--filter=@beep/schema"])
         );
 
-        expect(steps).toHaveLength(1);
+        expect(steps).toHaveLength(3);
         expect(steps[0]?.args).toEqual([
           "turbo",
           "run",
-          "audit",
+          "build",
           "--concurrency=4",
           "--cache=local:rw",
           "--filter=@beep/schema",
@@ -4037,6 +4034,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         A.takeWhile(A.drop(step.args, 2), (arg) => !Str.startsWith("--")(arg));
       expect(taskNames(O.getOrThrow(A.get(local, 0)))).toEqual([
         "lint:package-scripts",
+        "lint:deprecated-imports",
         "lint:policy-fingerprint",
         "lint:tsgo-rules",
         "lint:ecosystem-polarity",
@@ -4200,6 +4198,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         // Residual tasks expand the existing laws/JSDoc checks; the other three
         // checks are the new aggregate contract, not hidden losses or aliases.
         const additions = [
+          "lint:deprecated-imports",
           "lint:native-runtime:roots",
           "lint:jsdoc:root",
           "jsdoc:inventory:check",

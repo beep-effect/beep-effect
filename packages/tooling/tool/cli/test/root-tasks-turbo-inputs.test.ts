@@ -124,6 +124,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",
   "lint:oxlint": "scripts/c3-probe.ts",
+  "lint:deprecated-imports": "packages/fixture/src/c3-probe.ts",
   "lint:shadcn": ".oxlintrc.shadcn.json",
   "lint:ecosystem-polarity": "packages/ecosystem/fixture/src/c3-probe.mts",
   "lint:allowlist": "standards/effect-laws.allowlist.jsonc",
