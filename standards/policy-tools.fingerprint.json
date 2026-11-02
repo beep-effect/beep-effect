@@ -924,6 +924,7 @@
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -1021,6 +1022,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.schemas.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
+        "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
         "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
       ]
     },
@@ -1448,6 +1451,7 @@
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/CompletionEvidence.ts",
+        "packages/tooling/tool/cli/src/commands/Goals/CompletionReceiptStore.service.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
         "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
@@ -1614,6 +1618,8 @@
         "packages/tooling/tool/cli/src/internal/repo-run/TmpfsReap.ts",
         "packages/tooling/tool/cli/src/internal/repo-run/index.ts",
         "packages/tooling/tool/cli/src/internal/schema/TextCodec.ts",
+        "packages/tooling/tool/cli/src/internal/state/JsonLinesStore.ts",
+        "packages/tooling/tool/cli/src/internal/state/WorkstationState.ts",
         "packages/tooling/tool/cli/src/internal/stats/NearestRank.ts"
       ]
     },

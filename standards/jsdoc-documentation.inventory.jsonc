@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T09:01:34.325Z",
+  "generatedAt": "2026-11-02T09:35:28.584Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3573,
-    "publicExports": 25381,
+    "publicExports": 25383,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -448139,7 +448139,7 @@
         "srcDir": "src",
         "sourceFileCount": 500,
         "publicModuleCount": 497,
-        "publicExportCount": 4648
+        "publicExportCount": 4650
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -450494,7 +450494,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 46,
+          "exportCount": 48,
           "remediationStatus": "resolved"
         },
         {
@@ -468976,8 +468976,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 37,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-37-readcacheexperimentbytes",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-78-readcacheexperimentbytes",
           "currentTags": [
             "@internal",
             "@category",
@@ -468999,8 +468999,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 65,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-65-decodecacheexperimenttext",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-106-decodecacheexperimenttext",
           "currentTags": [
             "@internal",
             "@param",
@@ -469024,8 +469024,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-87-hashcacheexperimentexecutable",
+          "line": 128,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-128-hashcacheexperimentexecutable",
           "currentTags": [
             "@internal",
             "@category",
@@ -469047,8 +469047,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-116-readcacheevidencebytes",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-157-readcacheevidencebytes",
           "currentTags": [
             "@category",
             "@since"
@@ -469069,8 +469069,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-146-requirecachelinuxx64",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-187-requirecachelinuxx64",
           "currentTags": [
             "@param",
             "@returns",
@@ -469094,8 +469094,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-170-requirecachesupervisorcapture",
+          "line": 217,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-217-requirecachesupervisorcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -469119,8 +469119,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Cache/Cache.evidence.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Cache/Cache.evidence.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-196-makeprivatesupervisorstorage",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-cache-cache-evidence-ts-251-makeprivatesupervisorstorage",
           "currentTags": [
             "@internal",
             "@category",
@@ -477849,8 +477849,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 930,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-930-ghapijson",
+          "line": 931,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-931-ghapijson",
           "currentTags": [
             "@param",
             "@returns",
@@ -477873,8 +477873,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1036,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1036-collectcilanetimings",
+          "line": 1037,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1037-collectcilanetimings",
           "currentTags": [
             "@param",
             "@returns",
@@ -477897,8 +477897,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1078,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1078-cilanetimingwindowevent",
+          "line": 1079,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1079-cilanetimingwindowevent",
           "currentTags": [
             "@category",
             "@since"
@@ -477919,8 +477919,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1099,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1099-cilanetimingwindowevent",
+          "line": 1100,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1100-cilanetimingwindowevent",
           "currentTags": [
             "@category",
             "@since"
@@ -477941,8 +477941,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1143,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1143-cilanetimingwindowoptions",
+          "line": 1144,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1144-cilanetimingwindowoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -477963,8 +477963,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1183,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1183-cirulesethistoryversion",
+          "line": 1184,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1184-cirulesethistoryversion",
           "currentTags": [
             "@category",
             "@since"
@@ -477985,8 +477985,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1235,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1235-cirulesetpopulationchange",
+          "line": 1236,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1236-cirulesetpopulationchange",
           "currentTags": [
             "@category",
             "@since"
@@ -478007,8 +478007,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1275,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1275-cilanetimingwindowguardreason",
+          "line": 1276,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1276-cilanetimingwindowguardreason",
           "currentTags": [
             "@category",
             "@since"
@@ -478029,8 +478029,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1303,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1303-cilanetimingwindowguardreason",
+          "line": 1304,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1304-cilanetimingwindowguardreason",
           "currentTags": [
             "@category",
             "@since"
@@ -478051,8 +478051,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1336,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1336-cilanetimingwindowguardverdict",
+          "line": 1337,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1337-cilanetimingwindowguardverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -478073,8 +478073,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1377,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1377-ciworkflowwindowrun",
+          "line": 1378,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1378-ciworkflowwindowrun",
           "currentTags": [
             "@category",
             "@since"
@@ -478095,8 +478095,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1413,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1413-ciworkflowwindowrunjobs",
+          "line": 1418,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1418-ciworkflowwindowrunjobs",
           "currentTags": [
             "@category",
             "@since"
@@ -478117,8 +478117,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1527,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1527-cilanetimingwindowstat",
+          "line": 1532,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1532-cilanetimingwindowstat",
           "currentTags": [
             "@category",
             "@since"
@@ -478139,8 +478139,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1569,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1569-cilanetimingattributionstat",
+          "line": 1574,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1574-cilanetimingattributionstat",
           "currentTags": [
             "@category",
             "@since"
@@ -478161,8 +478161,30 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1613,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1613-cilanetimingpickupstat",
+          "line": 1618,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1618-cilanetimingpickupstat",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiLaneTimingDayPeak",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/LaneTimings.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "line": 1660,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1660-cilanetimingdaypeak",
           "currentTags": [
             "@category",
             "@since"
@@ -478183,8 +478205,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1652,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1652-cilanetimingwindowreport",
+          "line": 1699,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1699-cilanetimingwindowreport",
           "currentTags": [
             "@category",
             "@since"
@@ -478205,8 +478227,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1710,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1710-cilanetimingratifiedpopulation",
+          "line": 1763,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1763-cilanetimingratifiedpopulation",
           "currentTags": [
             "@category",
             "@since"
@@ -478227,8 +478249,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1867,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1867-cilanetiminggithubclientshape",
+          "line": 1925,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1925-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -478249,8 +478271,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 1890,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1890-cilanetiminggithubclient",
+          "line": 1948,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-1948-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -478271,8 +478293,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2050,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2050-collectrequiredcontexts",
+          "line": 2127,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2127-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -478295,8 +478317,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2629,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2629-buildcilanetimingwindowreport",
+          "line": 2708,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2708-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -478319,8 +478341,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2707,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2707-collectcilanetimingwindow",
+          "line": 2800,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2800-collectcilanetimingwindow",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciLaneTimingDayPeaks",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/LaneTimings.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
+          "line": 3080,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3080-cilanetimingdaypeaks",
           "currentTags": [
             "@param",
             "@returns",
@@ -478343,8 +478389,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2874,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2874-rendercilanetimingwindowmarkdown",
+          "line": 3189,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3189-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -478367,8 +478413,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2909,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2909-rendercilanetimingwindowsummary",
+          "line": 3226,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3226-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -478391,8 +478437,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3021,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3021-rendercilanetimingwindowtsv",
+          "line": 3339,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3339-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -478415,8 +478461,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3123,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3123-assesscilanetimingwindowbounds",
+          "line": 3441,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3441-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478439,8 +478485,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3171,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3171-assesscilanetimingwindowpopulation",
+          "line": 3489,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3489-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -478463,8 +478509,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3209,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3209-rendercilanetimingwindowpreviewbanner",
+          "line": 3527,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3527-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -478487,8 +478533,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3244,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3244-guardcilanetimingwindowbounds",
+          "line": 3562,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3562-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -478511,8 +478557,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3394,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3394-cilanetimingscommand",
+          "line": 3712,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3712-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"

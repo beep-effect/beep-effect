@@ -36,6 +36,10 @@ const runCiLaneCommand = Command.runWith(ciLaneCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 const isString = (value: unknown): value is string => typeof value === "string";
 
+// Hosted runners export `GITHUB_STEP_SUMMARY` to every process, test workers included; the
+// off-runner branch is a configuration under test, never the host's ambient environment.
+const offRunner = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
+
 const withTempRepo = <A, E, R>(use: (root: string) => Effect.Effect<A, E, R>) =>
   Effect.scoped(
     Effect.gen(function* () {
@@ -175,7 +179,7 @@ describe("CI commands", () => {
           );
 
           const recording = ActionOutputs.recording();
-          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer));
+          yield* appendTurboSummary(O.some(summaryPath)).pipe(provideScopedLayer(recording.layer), offRunner);
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(output).toContain("## Turbo Summary");
@@ -233,7 +237,10 @@ describe("CI commands", () => {
             )
           );
 
-          yield* appendTurboSummary(O.none(), true).pipe(provideScopedLayer(ActionOutputs.recording().layer));
+          yield* appendTurboSummary(O.none(), true).pipe(
+            provideScopedLayer(ActionOutputs.recording().layer),
+            offRunner
+          );
 
           const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
           expect(O.getOrNull(Str.match(/## Turbo Summary/gu)(output)) ?? []).toHaveLength(2);

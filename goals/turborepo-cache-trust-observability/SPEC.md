@@ -945,3 +945,15 @@ coverage floor is unchanged and met. The failed publication pushed nothing.
   ordinary Heavy callers, storage roles, bucket and cache services remain owned
   by their existing authorities. Obtain a real post-merge inspection receipt
   before producer approval; this routing component alone proves none.
+
+
+### Safe supervisor failure hints, 2026-11-02
+
+Extend the existing capture guard with a finite annotated vocabulary of fixed
+hints. On a nonzero exit, recognize a member in private output and quote only
+that source literal; attach no captured substring or raw cause. Unknown output
+keeps the generic error, and truncation fails before recognition. A hint is an
+untrusted diagnostic observation, not root-cause or qualification authority.
+Existing exit/truncation gates, input checks, deadlines and rollout policy stay
+intact. Reversal removes hint recognition from the same guard while retaining
+its existing bounded failure behavior.
