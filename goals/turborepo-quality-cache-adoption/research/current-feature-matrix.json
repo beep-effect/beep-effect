@@ -815,11 +815,11 @@
         "Exact-client regression evidence",
         "Change only one experimental flag at a time"
       ],
-      "beepUseCase": "Review against the declared Bun workspace, trust controls and current root settings.",
-      "expectedBenefit": "Must be measured for the specific named consumer; no generic percentage claimed.",
-      "correctnessCase": "Run the feature-specific positive/negative matrix on both pinned native clients; do not inherit another flag's result.",
-      "disposition": "disabled; determine applicability before proposing activation",
-      "acceptanceStatus": "pending",
+      "beepUseCase": "Review repository toolchain preparation without duplicating the cloud, CI and worktree bootstrap owners.",
+      "expectedBenefit": "No measured production critical-path benefit for the current consumers; keep the existing preparation owners.",
+      "correctnessCase": "36 exact native offline controls:24 flag refusals,6 managed-policy prerequisites and6 successful explicit-skip controls, plus3 exact driver refusals; no task execution or fixture-file mutation.",
+      "disposition": "Retain absent experimentalSetup and setup policy; reopen for a named bootstrap consumer and a measured benefit.",
+      "acceptanceStatus": "accepted-retain-current-absence",
       "nativeConfigurationObservation": {
         "report": "native-future-flag-availability.json",
         "stable": {
@@ -831,6 +831,12 @@
           "true": "dry-run-accepted"
         },
         "scope": "Isolated single-package dry-run configuration parsing only; feature semantics and adoption are not proven."
+      },
+      "finalReview": {
+        "report": "setup-feature-review.json",
+        "nativeReport": "native-setup-controls.json",
+        "sourceBaseRevision": "8a17f413bb815a0a25896378e8ff56a788029a63",
+        "scope": "Final feature applicability only; no task qualification, production activation or performance attribution."
       }
     },
     {

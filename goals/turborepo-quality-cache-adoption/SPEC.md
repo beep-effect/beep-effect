@@ -529,3 +529,16 @@ this documentation join deploys nothing and satisfies no whole-goal criterion.
   target, source, lockfile, vendored ABI patch, C/sidecar and external inputs.
   Reverse this decision by returning its matrix row to pending and removing the
   report links together. Runtime settings and qualification state are unchanged.
+
+
+### Retain current setup ownership, 2026-11-02
+
+Keep `experimentalSetup` and the root `setup` policy absent. Exact stable and
+current-canary controls show real native skip-policy behavior despite stale
+parsing-only help/schema text. Managed setup still requires its lock/resolution
+prerequisites; it is not classified as unimplemented. The current cloud, CI and
+worktree preparation owners already provide the named consumers, and no measured
+quality critical-path benefit justifies another toolchain/lock owner. Reopen for
+a concrete owner-proposed consumer, evidence of benefit, compatible frozen
+profiles and rollback. This no-change feature decision removes no eligible task
+obligation and grants no task qualification or production rollout.

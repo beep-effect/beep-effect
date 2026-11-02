@@ -490,3 +490,18 @@ commit advances subsequent resolved-source facts, while starting identity and
 diff fingerprint remain unchanged. This documentation amendment adds no new
 writer, qualification, workflow status or production activation. All 29 remaining
 feature reviews and both full goals' acceptance gates remain open.
+
+
+### Native setup applicability, 2026-11-02
+
+[Current review](research/setup-feature-review.json) retains absent setup policy
+and the existing bootstrap owners. The committed
+[driver](research/native-setup-controls.py) passed all
+[36 controls](research/native-setup-controls.json), with three exact driver
+refusals. No Beep task ran and no fixture file changed during setup cases.
+The earlier portable-driver command-slot error was caught by its negative
+assertion and corrected before the complete source-bound replay.
+
+This brings final feature decisions to 7 of 35; 28 remain open. The 2,423 pending
+current computation dispositions, ordinary stable/canary qualification, protected
+producer evidence, representative windows and both whole-goal gates remain.
