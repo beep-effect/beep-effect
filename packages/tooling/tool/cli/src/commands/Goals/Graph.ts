@@ -41,7 +41,6 @@ import { CapabilityCatalogReport, GoalExplainReport, GoalFrontierReport } from "
 import { runCapabilityGraph } from "./Graph.sqlite.ts";
 import { listGoalPacketsStrict, parseGoalManifestText } from "./Inventory.ts";
 import { canonicalJsonTextPretty } from "./PacketCore/PacketDigest.ts";
-import type { GoalCloseoutView } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
 const decodeGoalSlug = S.decodeEffect(GoalSlug);
@@ -228,11 +227,12 @@ export const goalsExplainCommand = Command.make(
         )
       );
       // The projection already carries the derived lifecycle; the view adds the
-      // proposal and whether this clone's receipt verified it.
+      // proposal and whether this clone's receipt verified it. A report exists only
+      // for a slug the manifests carry, so the manifest is always found here.
       const manifest = A.findFirst(manifests, (candidate) => candidate.initiative.id === slug);
-      const closeout = O.isSome(manifest)
-        ? yield* readGoalCloseoutView(".", slug, manifest.value)
-        : O.none<GoalCloseoutView>();
+      const closeout = O.flatten(
+        yield* Effect.transposeOption(O.map(manifest, (found) => readGoalCloseoutView(".", slug, found)))
+      );
       yield* printReport(
         GoalExplainReport,
         GoalExplainReport.make({ ...report, ...optionalProp("closeout", closeout) }),
