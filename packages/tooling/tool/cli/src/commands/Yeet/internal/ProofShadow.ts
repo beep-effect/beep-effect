@@ -1,3 +1,5 @@
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -15,7 +17,6 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/index.ts";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { changedPackageNamesForPaths, collectWorkspaces } from "../../Quality/internal/PackageVerify.ts";
@@ -37,12 +38,11 @@ import {
   ProofReuseMiss,
 } from "./ProofFact.ts";
 import { ProofLedger } from "./ProofLedger.ts";
-import { captureRepoCommandStrict, readYeetChangedPathsStrict } from "./Settle.ts";
+import { readYeetChangedPathsStrict, strictGitKitError } from "./Settle.ts";
+import type { StatusEntry } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
-import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { RepoRunContext, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRun, QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetAttemptStarted } from "./AttemptJournal.ts";
 import type { ProofEpoch, ProofReuseDecision } from "./ProofFact.ts";
@@ -494,94 +494,32 @@ export const ProofChangedPackages = S.Union([ProofChangedPackagesKnown, ProofCha
  */
 export type ProofChangedPackages = typeof ProofChangedPackages.Type;
 
-// `git status --porcelain=v1 -z` writes `XY <path>\0` per entry, and for a rename
-// or copy the original path follows as the next NUL-separated token.
-const PORCELAIN_RENAME_CODES = ["R", "C"];
-
-const porcelainEntryPath = (entry: string): string => Str.slice(3)(entry);
-
-const isPorcelainEntry = (entry: string): boolean =>
-  Str.length(entry) > 3 && Str.Equivalence(Str.slice(2, 3)(entry), " ");
-
-const isPorcelainRenameEntry = (entry: string): boolean =>
-  A.some(PORCELAIN_RENAME_CODES, (code) => pipe(Str.slice(0, 2)(entry), Str.includes(code)));
-
-type PorcelainScan = {
-  readonly paths: ReadonlyArray<string>;
-  readonly expectOriginalPath: boolean;
-};
-
-const scanPorcelainToken = (scan: PorcelainScan, token: string): PorcelainScan => {
-  if (scan.expectOriginalPath) {
-    return { paths: A.append(scan.paths, token), expectOriginalPath: false };
-  }
-  return isPorcelainEntry(token)
-    ? { paths: A.append(scan.paths, porcelainEntryPath(token)), expectOriginalPath: isPorcelainRenameEntry(token) }
-    : { paths: scan.paths, expectOriginalPath: false };
-};
-
-/**
- * Every path `git status --porcelain=v1 -z --untracked-files=all` reports.
- *
- * **Details**
- *
- * Entries are NUL-separated rather than newline-separated, so a path carrying
- * a space, a quote or a newline survives verbatim. A rename or copy entry is
- * followed by its original path as the next token, and both sides are kept:
- * the attempt verified the tree where the new path exists and the old one does
- * not, and both may belong to packages the lanes covered. Ignored files never
- * appear, because the read does not pass `--ignored`.
- *
- * **Example** (A modified file and a staged rename)
- *
- * ```ts
- * import { porcelainChangedPaths } from "@beep/repo-cli/test/Yeet"
- *
- * console.log(
- *   porcelainChangedPaths(" M packages/x/src/a.ts\0R  packages/x/src/c.ts\0packages/x/src/b.ts\0")
- * ) // [ 'packages/x/src/a.ts', 'packages/x/src/c.ts', 'packages/x/src/b.ts' ]
- * ```
- *
- * @param output - The raw `git status --porcelain=v1 -z` capture.
- * @returns The repo-relative paths the status reports, in entry order, both sides of a rename.
- * @category utilities
- * @since 0.0.0
- */
-export const porcelainChangedPaths = (output: string): ReadonlyArray<string> =>
-  A.reduce(
-    A.filter(Str.split(output, "\0"), Str.isNonEmpty),
-    { paths: A.empty<string>(), expectOriginalPath: false },
-    scanPorcelainToken
-  ).paths;
-
-const WORKTREE_STATUS_ARGS = ["status", "--porcelain=v1", "-z", "--untracked-files=all"];
+// Every path one status entry names: the entry's own path and, for a rename or copy, the
+// original path too. The attempt verified the tree where the new path exists and the old one
+// does not, and both may belong to packages the lanes covered.
+const statusEntryPaths = (entry: StatusEntry): ReadonlyArray<string> =>
+  A.prepend(A.fromOption(O.fromUndefinedOr(entry.origPath)), entry.path);
 
 const readWorktreeChangedPaths = Effect.fn("Yeet.ProofShadow.readWorktreeChangedPaths")(function* (
-  context: RepoRunContext,
-  capture: typeof runRepoCommandCapture
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
-> {
-  const output = yield* captureRepoCommandStrict({
-    repoRoot: context.repoRoot,
-    command: "git",
-    args: WORKTREE_STATUS_ARGS,
-    onSpawnFailure: `Failed to read the working-tree status of ${context.repoRoot}.`,
-    capture,
-  });
-  return porcelainChangedPaths(output);
+  context: RepoRunContext
+): Effect.fn.Return<ReadonlyArray<string>, YeetCommandError, Git> {
+  const git = yield* Git;
+  const entries = yield* git
+    .status(context.repoRoot, { untrackedFiles: "all" })
+    .pipe(
+      Effect.mapError(
+        strictGitKitError(
+          GitCommand.status({ untrackedFiles: "all" }),
+          `Failed to read the working-tree status of ${context.repoRoot}.`
+        )
+      )
+    );
+  return A.flatMap(entries, statusEntryPaths);
 });
 
 const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(function* (
-  context: RepoRunContext,
-  capture: typeof runRepoCommandCapture
-): Effect.fn.Return<
-  ProofChangedPackages,
-  YeetCommandError,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
-> {
+  context: RepoRunContext
+): Effect.fn.Return<ProofChangedPackages, YeetCommandError, FileSystem.FileSystem | Path.Path | Git> {
   const fs = yield* FileSystem.FileSystem;
   // The workspace reader canonicalises every directory it returns, so the root
   // the changed paths resolve against has to be canonical too: a checkout
@@ -607,8 +545,8 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
   if (A.isReadonlyArrayEmpty(workspaces)) {
     return ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: "workspace list was empty" });
   }
-  const committed = yield* readYeetChangedPathsStrict(context, capture);
-  const worktree = yield* readWorktreeChangedPaths(context, capture);
+  const committed = yield* readYeetChangedPathsStrict(context);
+  const worktree = yield* readWorktreeChangedPaths(context);
   const paths = A.dedupe([...committed, ...worktree]);
   return ProofChangedPackagesKnown.make({
     kind: "known",
@@ -667,20 +605,14 @@ const readChangedPackages = Effect.fn("Yeet.ProofShadow.readChangedPackages")(fu
  * ```
  *
  * @param context - Repo context naming the checkout and its base ref.
- * @param capture - The command capture to run `git` through; the untrimmed stdout capture by default.
  * @returns The changed package set, or why it could not be read.
  * @category services
  * @since 0.0.0
  */
 export const changedPackagesForAttempt = Effect.fn("Yeet.changedPackagesForAttempt")(function* (
-  context: RepoRunContext,
-  capture: typeof runRepoCommandCapture = runRepoCommandCaptureRaw
-): Effect.fn.Return<
-  ProofChangedPackages,
-  never,
-  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
-> {
-  return yield* readChangedPackages(context, capture).pipe(
+  context: RepoRunContext
+): Effect.fn.Return<ProofChangedPackages, never, FileSystem.FileSystem | Path.Path | Git> {
+  return yield* readChangedPackages(context).pipe(
     Effect.catch((error) =>
       Effect.succeed(ProofChangedPackagesUnavailable.make({ kind: "unavailable", reason: error.message }))
     )

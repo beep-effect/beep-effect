@@ -31,6 +31,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -53,7 +55,7 @@ import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
 import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
 import { flipPullRequestReady, recordInheritedRedsInPullRequestBody, withYeetGh } from "./GhOps.ts";
-import { runGitOutput } from "./GitExec.ts";
+import { currentCommitSha, patientGit, yeetGitKitError } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
@@ -65,7 +67,6 @@ import { YEET_REVIEW_WINDOW_DEFAULT } from "./ReviewWindow.ts";
 import { readSquashCommitlintForPullRequest, renderSquashCommitlintVerdict } from "./SquashCommitlint.ts";
 import { collectYeetStatus, YeetStatusRemote } from "./Status.ts";
 import { mergeReadyCriterionHolds, YeetMergeReady } from "./Verdict.ts";
-import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -621,7 +622,11 @@ interface YeetReadyGateDependencies {
     context: RepoRunContext,
     prNumber: number,
     confirmedHead: string
-  ) => Effect.Effect<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
+  ) => Effect.Effect<
+    string,
+    YeetCommandError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+  >;
   readonly squashCommitlint?: (
     context: RepoRunContext,
     prNumber: number
@@ -698,20 +703,34 @@ const pushReviewerRequest = Effect.fn("Yeet.pushReviewerRequest")(function* (
   prNumber: number,
   confirmedHead: string
 ) {
-  const localHead = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"]).pipe(Effect.map(Str.trim));
+  const localHead = yield* currentCommitSha(context);
   if (!reviewerRequestPushable(localHead, confirmedHead)) {
     return `[yeet] note: the checkout is at ${localHead}, not the flipped head ${confirmedHead}, so nothing was pushed; ${reviewerRequestManual(confirmedHead, context.branch)}`;
   }
-  yield* runGitOutput(context.repoRoot, [
-    "commit",
-    "--allow-empty",
-    "--only",
-    "--no-verify",
-    "-m",
-    YEET_REVIEWER_REQUEST_SUBJECT,
-  ]);
-  const request = yield* runGitOutput(context.repoRoot, ["rev-parse", "HEAD"]).pipe(Effect.map(Str.trim));
-  return yield* runGitOutput(context.repoRoot, ["push", "origin", `HEAD:refs/heads/${context.branch}`]).pipe(
+  const git = yield* Git;
+  yield* git
+    .commit(context.repoRoot, YEET_REVIEWER_REQUEST_SUBJECT, { allowEmpty: true, only: true, noVerify: true })
+    .pipe(
+      Effect.mapError(
+        yeetGitKitError(GitCommand.commit(YEET_REVIEWER_REQUEST_SUBJECT, false, true, false, undefined, true, true))
+      )
+    );
+  const request = yield* currentCommitSha(context);
+  const refspec = `HEAD:refs/heads/${context.branch}`;
+  // A push may outlive the edge instance's 30 s timeout (SPEC D-09), so it runs on the patient one.
+  const pushing = yield* patientGit;
+  const pushInvocation = GitCommand.push("origin", refspec);
+  return yield* pushing.push(context.repoRoot, { remote: "origin", refspec }).pipe(
+    // A rejected non-fast-forward push is git's exit 1, worded as the capture worded it.
+    Effect.mapError((error) =>
+      P.isTagged(error, "NonFastForwardError")
+        ? YeetCommandError.make({
+            message: `git ${A.join(pushInvocation.redactedArgs, " ")} failed with exit code 1.`,
+            command: `git ${A.join(pushInvocation.redactedArgs, " ")}`,
+            exitCode: 1,
+          })
+        : yeetGitKitError(pushInvocation)(error)
+    ),
     Effect.as(
       `[yeet] pushed ${request} (${YEET_REVIEWER_REQUEST_SUBJECT}) so beep-reviewer reviews #${prNumber} on a head pushed while ready; send this sha as the final`
     ),
