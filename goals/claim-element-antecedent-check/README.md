@@ -55,7 +55,7 @@ Sibling goals:
 
 ## Current Phase
 
-P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 remain in progress: #2513 merged without retained pre-merge readiness and cannot yet establish completion. A new prospective draft final binds accepted source and v27 evidence; operative lifecycle stays active until canonical readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
+P0–P3 are complete under autonomous acceptance v1. Implementation [PR #2411](https://github.com/beep-effect/beep-effect/pull/2411) merged as `3057999b33` under S11, with cancelled hosted outcomes explicitly retained. P4/P5 remain in progress: #2513 merged without retained pre-merge readiness and cannot yet establish completion. [Draft final PR #2577](https://github.com/beep-effect/beep-effect/pull/2577) binds accepted source and v27 evidence; operative lifecycle stays active until canonical readiness and merge receipts verify completion. The post-merge v24 benchmark remains **37/538**, retaining all 34 protected and all 37 previous matches. Structural recovery and alert noise remain poor; attorney attendance is optional.
 
 ## Current Acceptance Authority
 
@@ -64,7 +64,7 @@ The user explicitly requires autonomous completion without attorney presence. [A
 ## Latest Evidence
 
 - [v27 accepted-main replay](history/2026-11-02-v27-accepted-main-compatibility.json): the root manifest adds schema-catalog lint commands; all 21 algorithm files and other 28 pins remain exact. Fresh full results match v26 except the environment digest, and all 251 prediction reports match byte-for-byte. All 37 passes and all prior evidence are retained.
-- [Final PR #2513 evidence hold](history/2026-11-02-2513-premerge-evidence-hold.json): it merged at 12:29:09 UTC without a retained successful pre-merge readiness job; canonical completion remains unverified. The next prospective final stays draft while its proof is prepared.
+- [Final PR #2513 evidence hold](history/2026-11-02-2513-premerge-evidence-hold.json): it merged at 12:29:09 UTC without a retained successful pre-merge readiness job; canonical completion remains unverified. [Draft #2577](https://github.com/beep-effect/beep-effect/pull/2577) stays draft while its proof is prepared.
 
 - [Accepted coverage-repair integration](history/2026-11-02-v26-coverage-repair-integration.json): main #2548 and #2553 supply the shared CLI repairs. All 29 v26 pins remain exact. Fresh positive and allowed replays reproduce the complete v26 result bytes and all 251 prediction reports exactly, retaining 37/538 and every previous pass. The helper's focused coverage proof is scoped separately; its exception merge does not supply final-PR hosted readiness.
 
