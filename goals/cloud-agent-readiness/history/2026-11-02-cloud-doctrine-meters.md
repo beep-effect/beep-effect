@@ -76,15 +76,27 @@ account's automatic cloud-session bonus credit. Branch
   dependencies. The cause is still unmeasured; the P2 owner holds it.
 - The older 2026-11-01 admission capture under this packet is retained
   unchanged as history.
-
 - The first `yeet final-check`, run at the first head (`2d42a18b`), wrote no
   receipt. Its `cheap-gates` went red on `observability:catalog-check`
   (`standards/instrumentation-catalog/@beep/repo-cli.generated.jsonc: stale`)
-  and was then stopped by a 25-minute session ceiling (exit 124). The PR
-  touches no source or catalog file, and hosted `Repo Sanity` and
-  `Codegen Drift` passed on that head, so the red is attributed to the VM's
-  local state, not to this PR. Kept on record in a PR comment; that run says
-  nothing about later heads.
+  and was then stopped by a 25-minute session ceiling (exit 124). The later
+  gates (`lint-policy`, `lint`, `repo-sanity`, `check`, `docgen`, `fallow`,
+  `coverage`) never ran. That red is kept on record.
+- Attribution correction. The first PR comment and the first version of this
+  note called the red VM-local because the diff touches only Markdown and
+  hosted `Repo Sanity` and `Codegen Drift` were green. That inference was
+  wrong: green checks that may not run the catalog check say nothing about its
+  cause. The actual base comparison: on a detached checkout of the merge base
+  `14a4596d`, `beep observability catalog --check` exits 1 with the same
+  stale shard. `--write` there adds exactly one entry,
+  `QualityTasks.runRootAuditPackagesTask` (`@beep/repo-cli`), the span
+  source-verified missing in #2490. The red is therefore **inherited from
+  `main`**, not introduced here and not shown to be VM-specific. The
+  regenerated file was discarded. Its fix belongs to the open #2537; this PR
+  neither regenerates nor copies it, and changes no baseline.
+- A second `final-check` at `fbfa78a5` (with `cheap-gates` parked for the
+  inherited red) was stopped by its owner during `lint-policy`, because this
+  correction makes that head stale. It wrote no receipt.
 
 ## Verification
 
