@@ -28,3 +28,13 @@ flags and dependency edges are unchanged. The only change is the added input
 paths. No qualification is granted, no exception rows are added, and no other
 subject changes. `standards/cache-qualification-baseline.json` equals
 `origin/main` (6bb8584b6d) before this request.
+
+## Main merge (2026-11-02, origin/main 2020889561)
+
+Merging `origin/main` brought #2559 (Turbo cache hygiene), #2561 (lane dedupe),
+#2551 and others, each with its own stamp. The baseline was taken from `main`
+and the fingerprint regenerated with `bun run beep lint policy-fingerprint
+--write`. The audit reported the same three `//#lint:policy-fingerprint:*`
+configuration-drift tasks for the same five added input paths in the table
+above; nothing else drifted. The re-recorded request binds `previous` to
+main's baseline bytes.

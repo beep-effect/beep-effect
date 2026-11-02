@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "claim-v26-coverage-integration/v1",
+  "date": "2026-11-02",
+  "acceptedMain": "15acb3a7896850c4bdd200cc731acb5aae323549",
+  "integrationMerge": "a4bbe32ce2f17f2065e7883d23ccd08c66982308",
+  "acceptedCoverageRepairs": [2548, 2553],
+  "implementationDigest": "7d44ed03efe8496cf3e42d6f145298c66699678dae28bf3f9b65d3b1279b201d",
+  "algorithmDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "algorithmFilesUnchanged": 21,
+  "all29V26PinsExact": true,
+  "referenceAndHistoryPinsExact": 631,
+  "comparison": [
+    {
+      "lane": "positive",
+      "fullResultBytesIdentical": true,
+      "resultSha256": "74fe84d3f64c72c2bdfb3b2034d26c7727c45e63be6701d1db00e1760532c280",
+      "predictionReportsByteIdentical": 55
+    },
+    {
+      "lane": "allowed",
+      "fullResultBytesIdentical": true,
+      "resultSha256": "33bbbd648dfc97a5e87eac54e318ef852a732d870310eb69935458b969379c0c",
+      "predictionReportsByteIdentical": 196
+    }
+  ],
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "protectedRetained": 34,
+  "allPrevious37Retained": 37,
+  "lost": [],
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "freshIndependentReviewClaimed": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "sourceRepairProof": {
+    "pullRequest": 2553,
+    "focusedTestsPassed": 22,
+    "canonicalScaffoldConfigurationsIdentical": 33,
+    "beforeAfterScaffoldsSha256": "ae535269d0ca73cbe3cadfb2ad179a52668fa6ffae329a3853ca0ca6ef77d778",
+    "observedFocusedFileCoveragePercent": {
+      "lines": 100,
+      "statements": 100,
+      "functions": 100,
+      "branches": 100
+    },
+    "proofScope": "Observed focused local result for PackageScripts only; original nested raw counter file was not retained by retirement. Root test log and before/after snapshots are archived. Full hosted comparison remains authoritative.",
+    "mergedUnderStandingException": true,
+    "allGreenHostedProofClaimed": false
+  },
+  "hostedReadiness": "Fresh exact-head checks and pre-merge canonical readiness remain required.",
+  "allPriorHistoryAndFixtureFilesExact": 1103
+}

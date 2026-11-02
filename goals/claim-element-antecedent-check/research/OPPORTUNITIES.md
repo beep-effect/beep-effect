@@ -136,3 +136,112 @@ They are redacted: no secrets, no absolute home paths, no session ids.
   retained process ownership as separate current-head facts. Check immutable
   evidence hashes after broad formatter changes; never infer completion from
   a merge or an aggregate job whose prerequisites were cancelled.
+
+## 2026-11-02 — First-page job counts hid a completed coverage failure
+
+- **Doing:** observing hosted verification for strict final PR #2513 without
+  starting local verify/publish work.
+- **Evidence:** the connected workflow-job tool returns only the first page.
+  Its 30-row response omitted the later Coverage Regression job. A fully
+  paginated read found 33 jobs, including failed job `125137146190`; the
+  earlier count therefore did not prove that the full run had no failures.
+- **Resolution:** use full pagination with page size 100 for complete job
+  counts, inspect the actual failed step, and consume accepted main unblocker
+  #2517. Keep the separate PruneWindow row visible until the new hosted
+  comparison resolves it. The dependency compatibility replay is versioned
+  separately as v25; all 251 reports match v24 exactly and all 37 passes remain.
+- **Prevention:** distinguish partial inventories from complete run state.
+  A first-page result may support a positive observation about listed jobs,
+  but cannot establish that no failure exists anywhere in the run.
+
+## 2026-11-02 — Check companion summaries when correcting an evidence claim
+
+- **Doing:** addressing review of the dependency-compatibility closeout in
+  PR #2513. Review comments `4440155210` and `4440195710` identified the same
+  stale unchanged-dependency statement in the hold note and its README index.
+- **Evidence:** #2507 changed the lockfile; the v25 replay already records that
+  environment change and verifies the 21 unchanged algorithm files. Fixing only
+  the hold note in `25a5dd1082` left its README summary inconsistent, requiring
+  a second review round and push in `ae4c9eeece`.
+- **Resolution:** correct both current descriptions, resolve both threads and
+  acknowledge their typed inbox rows. Check current PLAN, SPEC and manifest
+  descriptions too. All 24 frozen inputs and 631 protected reference/history
+  pins remain exact; no measurement or reference label changes.
+- **Prevention:** search the current PR's companion summaries for the disputed
+  claim before publishing its repair. Distinguish current assertions from
+  dated historical receipts; preserve frozen results and their original bytes.
+
+## 2026-11-02 — Superseded workflow tails can hold the next run's slot
+
+- **Doing:** publishing accepted shared fixes and review corrections promptly,
+  then following hosted verification instead of queuing local full proof.
+- **Evidence:** superseded Check run `41407034057` kept queuing its test
+  aggregate and Coverage Regression after an accepted normal cancellation;
+  replacement run `41409707941` remained pending with no jobs registered.
+- **Resolution:** force-cancel that obsolete owner run after confirming the
+  normal cancellation had not ended it. Observe terminal `cancelled` and the
+  replacement's job registration. Retain the completed lint-failure log and
+  distinguish cancelled prerequisites from passing proof. Later superseded
+  runs ended after normal cancellation, without another force-cancel.
+- **Prevention:** after a corrective push, check both the superseded run's
+  terminal state and the replacement's registration. A cancellation request is
+  not completion; cancel only this lane's obsolete run, preserve its evidence,
+  and keep following the existing readiness monitor.
+
+## 2026-11-02 — Shared script removal invalidated generator expectations
+
+- **Doing:** waiting for final-head hosted verification of PR #2513.
+- **Evidence:** job `125174379019` in run `41414031964` reports 11 failed
+  assertions in `create-package.test.ts` and `architecture-operation-plan.test.ts`:
+  generated script objects omit `audit` and `beep:audit`, while the expectations
+  still include them. Coverage upload then fails because its prerequisite failed.
+- **Resolution:** consume accepted main #2535, which updates the expectations
+  after the intentional #2526 script removal, rather than duplicate its fix.
+  The same main integration includes #2533's shared Effect.fn helper correction.
+  Preserve the failed job log and publish the integration before compatibility
+  measurement. The 21 algorithm files remain unchanged; the v26 freeze/replay
+  binds 29 source/environment files, retains all 37 matches and verifies all 251
+  report bytes against v25 without altering its results.
+- **Prevention:** validate generated output and its literal contract expectations
+  in the same script-removal change. Reproduce the failing inner assertion and
+  distinguish a missing coverage artifact caused by test failure from an
+  independent coverage regression.
+
+## 2026-11-02 — Current hosted comparison exposes eight shared coverage floors
+
+- **Doing:** qualifying PR #2513 at `00df3c4673` after all unit-test groups and
+  their aggregate passed.
+- **Evidence:** Coverage Regression job `125196400218` in run `41418121455`
+  downloaded producer evidence and failed its comparison on eight rows:
+  `Ci/RouteCensus.ts` branches 91.11 < 93.02, functions 94.53 < 95.23,
+  lines 95.86 < 96.25 and statements 96.37 < 96.7;
+  `Goals/Graph.ts` branches 90.9 < 100; and
+  `PackageScripts.schemas.ts` branches 88.46 < 96.15, lines 98.3 < 100 and
+  statements 98.5 < 100. These are shared repo-cli source paths; the claim
+  algorithm remains unchanged. The earlier PruneWindow row is absent from
+  this completed comparison.
+- **Accepted repairs:** retain the failed log and all eight rows. Main #2548
+  supplies the RouteCensus/Graph/PruneWindow repair; separate #2553 supplies the
+  PackageScripts repair. The latter removes an obsolete audit backfill,
+  preserves the defensive rule cases through a documented testing export,
+  passes 22 focused tests with 100% file coverage, and preserves all 33
+  canonical scaffold configurations byte for byte. Both repairs are merged;
+  a fresh hosted comparison remains authoritative. No floor is lowered and
+  no failed row is counted as passing. The exact claim result remains 37/538.
+- **Verification scope:** #2553 merged under the standing exception with
+  cancelled hosted jobs, not an all-green proof. Its Fallow health report names
+  `health-not-applicable-complexity-findings-1`, with zero introduced findings
+  and one not-applicable finding; that shared main-health issue has a separate
+  owner. An optional local documentation inventory scan was stopped in favor
+  of hosted verification after the PR was already published. Its incomplete
+  result is retained, not reported as a pass.
+- **Archive boundary:** retirement retained the root `.beep` test log and
+  before/after scaffold snapshots, but the package-local coverage counter file
+  was outside that material archive. Preserve the observed terminal summary
+  with that limitation explicit; do not claim the original counter file was
+  recovered. Write future focused reports into root `.beep` or durable external
+  evidence storage before retiring a lane. All claim results remain intact.
+- **Prevention:** route the complete paginated run and inner comparison to
+  the owner, including additional failing paths beyond the first reported
+  upstream regression. Validate all affected rows before declaring the shared
+  repair complete.

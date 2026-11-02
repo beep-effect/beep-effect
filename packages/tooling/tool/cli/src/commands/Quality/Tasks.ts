@@ -2988,11 +2988,12 @@ const rootCheckSteps = (
     flakeQuarantine: "ts2589-no-location",
   }),
   // `tsgo-rules` keeps its single owner in lint-policy (`lint:tsgo-rules`);
-  // standalone rule diagnostics have their own parallel heavy lane; Check owns test-file types and the smoke canary.
-  ...optionalQualityTaskStep({
-    enabled: shouldRunRepoWideSteps(args),
-    step: () => repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]),
-  }),
+  // standalone rule diagnostics have their own parallel heavy lane. Test-file
+  // typecheck (`quality test-tsgo`) also has one owner, the lint-policy plan:
+  // its Turbo task is uncached, so a second copy here made `audit packages`
+  // and a check-then-lint session walk the test files twice (perf audit G8,
+  // 2026-11-02). Check owns only the smoke canary; run
+  // `bun run beep quality test-tsgo` directly for a check-only session.
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "quality:tsgo-smoke", ["quality", "tsgo-smoke"]),
@@ -3627,7 +3628,10 @@ const coverageFullSteps = (
     packageNames,
     coverageFullPassthroughArgs(args),
     A.some(args, isCoverageWriteBaselineArg),
-    A.empty<string>()
+    // Build only the coverage owners (turbo adds their `^build` closure). An
+    // unfiltered prebuild also built @beep/storybook, which owns no coverage
+    // task and sits in no owner's build closure (quality audit A2, 2026-11-02).
+    packageFilterArgs(packageNames)
   );
 
 const packageFilterArgs: (packageNames: ReadonlyArray<string>) => ReadonlyArray<string> = A.map(
