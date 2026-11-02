@@ -333,4 +333,12 @@ Everything above is the as-of snapshot at `cfdddd1d`. Since then:
 - #2485 (instrumentation catalog) merged as `ba171c64`, which removes the
   catalog-overlap conflict noted under T3.
 - T2 is held on owner confirmation and T6 on operator review, as recorded
-  above. No candidate has been selected or launched.
+  above.
+- Selection after the snapshot, as reported by the parent session: T1
+  (skill-contract-gate-certificates) was selected and launched as a separate
+  cloud job. T2 and T3 are not selected or launched. T8's minimal notifier
+  guard is owned by a separate cloud job and is in flight there, not in this
+  PR. This review session launched nothing.
+- P3 is now complete in the packet on #2486 (SPEC D42). Current per-vendor
+  setup state and blockers live in
+  [`2026-11-01-fleet-cloud-setup.md`](./2026-11-01-fleet-cloud-setup.md).
