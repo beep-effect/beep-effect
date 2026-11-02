@@ -163,5 +163,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. The census at accepted source68834a997e contains 2,621 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The changed external advisory and 2,422 other current dispositions remain pending. Six of 35 feature decisions are accepted; 29 remain pending. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
+  "statusNote": "Active. The census at accepted source e274d3e619 contains 2,434 executable computations across 191 workspaces. All 199 prior source reviews are retained byte-identically; current literal-source review re-establishes 186 source-mutating fixers and 12 persistent services as whole-command keep-fresh. The current source leaves 2,236 computation reviews pending. 7 of 35 feature decisions are accepted; 28 remain pending. Qualification, supported adoption, actual observation windows and every whole-goal acceptance criterion remain incomplete."
 }

@@ -555,3 +555,14 @@ outputs and profile per member. All 198 retained fresh-operation rows have new
 workspace-map digests after the audit-wrapper removal, but their exact literal
 operation and disabled-cache policy still match. The new review proves only that
 whole-task freshness; all pure counterparts and 2,236 other reviews remain open.
+
+
+### Keep summary views synchronized with refreshed evidence, 2026-11-02
+
+PR2572 refreshed the source census and report index but left the manifest status
+note and README on older counts. The review caught the stale summary. Derive the
+source revision, executable/review counts and accepted/pending feature totals
+from the current population and feature rows, and check both entry views before
+publication. Preserve versioned native evidence rather than calling an older
+shared pin observation current. No acceptance or qualification is inferred from
+this documentation repair.
