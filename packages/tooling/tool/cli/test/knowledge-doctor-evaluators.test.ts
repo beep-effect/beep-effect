@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { listGoalPackets } from "@beep/repo-cli/commands/Goals/Inventory";
 import {
   ExportWitness,
@@ -42,7 +43,7 @@ import type {
 } from "@beep/repo-cli/commands/Knowledge";
 import type * as HttpClient from "effect/http/HttpClient";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const testLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
 const doc = (...lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 

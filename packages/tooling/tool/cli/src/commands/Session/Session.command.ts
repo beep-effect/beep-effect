@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { readGoalCloseoutViews } from "../Goals/Completion.ts";
+import { renderGoalCloseoutView } from "../Goals/Goals.schemas.ts";
 import { HOT_PARCELS_TIMEOUT, printHotParcels } from "../Palantiri/Palantiri.hot.ts";
 import { layerPalantiriRuntime } from "../Palantiri/Palantiri.runtime.ts";
 import { layerPalantiriSourcesLive } from "../Palantiri/Palantiri.service.ts";
@@ -226,12 +227,11 @@ export const sessionOpenCommand = Command.make(
         yield* Console.log(encoded);
         return;
       }
+      // The derived lifecycle reads as the operative status; a packet without a
+      // verified receipt in this clone says so instead of showing the raw field.
       yield* Effect.forEach(
         goalCloseouts,
-        (view) =>
-          Console.log(
-            `[session:goal] ${view.packet}: operative=${view.operativeStatus}; proposed=${view.proposedCloseout.status} via #${view.proposedCloseout.finalPullRequest}`
-          ),
+        (view) => Console.log(`[session:goal] ${view.packet}: ${renderGoalCloseoutView(view)}`),
         { discard: true }
       );
       if (!A.isReadonlyArrayNonEmpty(rows)) {

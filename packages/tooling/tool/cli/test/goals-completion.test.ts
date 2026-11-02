@@ -17,15 +17,18 @@ import {
   GoalPullRequestRef,
   GoalRequiredCheckFact,
   GoalRequiredCheckSnapshot,
+  goalCloseoutVerification,
+  goalCloseoutView,
   goalCompletionDeclarationDigest,
   goalPullRequestRefs,
   projectGoalLifecycle,
   readGoalCloseoutViews,
+  renderGoalCloseoutView,
 } from "@beep/repo-cli/test/Goals";
 import { it } from "@beep/test-runner";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -527,8 +530,39 @@ it.layer(
           packet: "unmentioned-packet",
           operativeStatus: "active",
           proposedCloseout: proposal,
+          verification: "unverified",
         },
       ]);
+      expect(A.map(views, renderGoalCloseoutView)).toEqual(["completed-retained (proposed via #1429, unverified)"]);
+    })
+  );
+
+  it.effect("derives the operative status from the proposal once a matching receipt verifies", () =>
+    Effect.gen(function* () {
+      const value = manifest();
+      const unverified = O.getOrThrow(yield* goalCloseoutView("unmentioned-packet", value, O.none()));
+      expect(unverified.operativeStatus).toBe("active");
+      expect(unverified.verification).toBe("unverified");
+      expect(renderGoalCloseoutView(unverified)).toBe("completed-retained (proposed via #1429, unverified)");
+
+      const verified = O.getOrThrow(yield* goalCloseoutView("unmentioned-packet", value, O.some(yield* receipt())));
+      expect(verified.operativeStatus).toBe("completed-retained");
+      expect(verified.verification).toBe("verified");
+      expect(renderGoalCloseoutView(verified)).toBe("completed-retained (verified via #1429)");
+      expect(goalCloseoutVerification(proposal, "completed-retained")).toBe("verified");
+      expect(goalCloseoutVerification(proposal, "paused")).toBe("unverified");
+      // The manifest itself never moves: completion stays derived.
+      expect(value.initiative.status).toBe("active");
+    })
+  );
+
+  it.effect("has no closeout view for a manifest without a proposal", () =>
+    Effect.gen(function* () {
+      const value = GoalManifest.make({
+        initiative: { id: "unmentioned-packet", status: "active" },
+        completionGate: proposalGate,
+      });
+      assertNone(yield* goalCloseoutView("unmentioned-packet", value, O.none()));
     })
   );
 

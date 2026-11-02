@@ -13,6 +13,7 @@
  *
  * @since 0.0.0
  */
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { ChangeDetector } from "@beep/repo-workspaces/ChangeDetector";
 import * as A from "effect/Array";
@@ -49,6 +50,7 @@ import {
 } from "./Route.schemas.ts";
 import { ChangeClassifier, ClassifyInput, RouteCensusReader, VerificationRoute } from "./Route.service.ts";
 import { requiredLanes, routeFootprintCanonicalJson, skippedLanes } from "./RouteFootprints.ts";
+import type { GitCommandError, NotARepositoryError, UnknownRefError } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -614,6 +616,16 @@ export interface RouteGitShape {
  */
 export class RouteGit extends Context.Service<RouteGit, RouteGitShape>()($I`RouteGit`) {}
 
+// The failed-run wording the route error carries for a `Git` failure: the exit code when git ran,
+// the refusal or unknown-object reason otherwise.
+const describeGitFailure = (error: GitCommandError | NotARepositoryError | UnknownRefError): string =>
+  Match.valueTags(error, {
+    GitCommandError: (failure) =>
+      failure.exitCode === undefined ? `before spawning (${failure.message})` : String(failure.exitCode),
+    NotARepositoryError: () => "outside a repository",
+    UnknownRefError: (failure) => `with an unknown object (${failure.ref})`,
+  });
+
 /**
  * The production {@link RouteGitShape} over the repo command capture.
  *
@@ -645,11 +657,12 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
 ): Effect.fn.Return<
   RouteGitShape,
   never,
-  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   const context = yield* Effect.context<
     Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
   >();
+  const kit = yield* Git;
   const spawnFailed = (args: ReadonlyArray<string>) =>
     RouteError.mapError("git", `Failed to spawn git ${A.join(args, " ")}.`);
   const git = (args: ReadonlyArray<string>) =>
@@ -681,16 +694,16 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
       return sha;
     }),
     isAncestor: Effect.fn("RouteGit.isAncestor")(function* (ancestor: string, descendant: string) {
-      const result = yield* git(["merge-base", "--is-ancestor", ancestor, descendant]);
-      return yield* Match.value(result.exitCode).pipe(
-        Match.when(0, () => Effect.succeed(true)),
-        Match.when(1, () => Effect.succeed(false)),
-        Match.orElse((exitCode) =>
-          Effect.fail(
-            RouteError.new("git", `git merge-base --is-ancestor ${ancestor} ${descendant} exited ${exitCode}.`)
+      return yield* kit
+        .isAncestor(repoRoot, ancestor, descendant)
+        .pipe(
+          Effect.mapError((error) =>
+            RouteError.new(
+              "git",
+              `git merge-base --is-ancestor ${ancestor} ${descendant} exited ${describeGitFailure(error)}.`
+            )
           )
-        )
-      );
+        );
     }),
     ensureHeads: ensureRouteHeads({
       fetchCommit: Effect.fn("RouteGit.fetchCommit")(function* (sha: string) {
@@ -736,8 +749,11 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
  */
 export const routeGitLayer = (
   repoRoot: string
-): Layer.Layer<RouteGit, never, Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
-  Layer.effect(RouteGit, makeRouteGit(repoRoot));
+): Layer.Layer<
+  RouteGit,
+  never,
+  Digest.Digest | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
+> => Layer.effect(RouteGit, makeRouteGit(repoRoot));
 
 const isPullRequestRun = (run: HostedRun): boolean => Str.Equivalence(run.event, "pull_request");
 const isMainPushRun = (run: HostedRun): boolean =>

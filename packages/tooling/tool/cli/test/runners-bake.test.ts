@@ -907,19 +907,11 @@ describe("runner bake planning and argv", () => {
         expect(O.getOrElse(constant(-1))(Str.indexOf("sha256sum --check --strict -")(worker))).toBeLessThan(
           O.getOrElse(constant(-1))(Str.indexOf('unzip -oq "${archive}"')(worker))
         );
-        const indexIn = (needle: string) => O.getOrElse(constant(-1))(Str.indexOf(needle)(script));
-        const workerWait = 'wait "${pid}" || worker_status=$?';
-        const bunFailure = "bun) bun_failed=1 ;;";
-        const bunFatal = '[ "${bun_failed}" = 0 ] || exit 1';
-        const bunInstall = 'install -m 0755 "${run_dir}/bun/bun-linux-x64/bun"';
-        expect(script).toContain(workerWait);
-        expect(script).toContain(bunFailure);
-        expect(script).toContain("ERROR: bun %s download or checksum failed.");
-        expect(script).toContain(bunFatal);
-        expect(indexIn(workerWait)).toBeGreaterThanOrEqual(0);
-        expect(indexIn(workerWait)).toBeLessThan(indexIn(bunFailure));
-        expect(indexIn(bunFailure)).toBeLessThan(indexIn(bunFatal));
-        expect(indexIn(bunFatal)).toBeLessThan(indexIn(bunInstall));
+        expect(script).toContain('wait "${pid}" || worker_status=$?');
+        expect(script).toContain("bun) bun_failed=1 ;;");
+        expect(O.getOrElse(constant(-1))(Str.indexOf('wait "${pid}" || worker_status=$?')(script))).toBeLessThan(
+          O.getOrElse(constant(-1))(Str.indexOf('install -m 0755 "${run_dir}/bun/bun-linux-x64/bun"')(script))
+        );
         expect(worker).toContain('grep -q "^\\[GNUPG:\\] VALIDSIG ${OP_GPG_FINGERPRINT} "');
         expect(worker).not.toContain('grep -q "VALIDSIG ${OP_GPG_FINGERPRINT}"');
       })

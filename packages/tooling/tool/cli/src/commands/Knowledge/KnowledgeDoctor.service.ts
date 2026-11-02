@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
@@ -1529,31 +1530,23 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
 
 const COMMAND_ROOT_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 
-// `git merge-base --is-ancestor` exits 0 for an ancestor and 1 for a non-ancestor. Any other exit
-// (an unknown object) is a non-ancestor in a full clone and an operational failure in a shallow one,
-// where missing history cannot be told apart from a bad citation.
+// `Git.isAncestor` answers true for an ancestor and false for a non-ancestor (git's silent exit 1).
+// Any failed run (an unknown object, most often) is a non-ancestor in a full clone and an operational
+// failure in a shallow one, where missing history cannot be told apart from a bad citation.
 const isAncestorLive = Effect.fn("KnowledgeDoctor.isAncestor")(function* (
   repoRoot: string,
   treeCommit: string,
   cited: KnowledgeCommitSha
 ) {
-  const result = yield* runCapturedStreams({
-    command: "git",
-    args: ["merge-base", "--is-ancestor", cited, treeCommit],
-    cwd: repoRoot,
-    extendEnv: true,
-  }).pipe(KnowledgeOperationalError.mapError("Failed to spawn git merge-base --is-ancestor."));
-  if (result.exitCode === 0 || result.exitCode === 1) {
-    return result.exitCode === 0;
+  const git = yield* Git;
+  const answer = yield* git.isAncestor(repoRoot, cited, treeCommit).pipe(Effect.option);
+  if (O.isSome(answer)) {
+    return answer.value;
   }
-  const shallow = yield* runCapturedStreams({
-    command: "git",
-    args: ["rev-parse", "--is-shallow-repository"],
-    cwd: repoRoot,
-    extendEnv: true,
-    trim: true,
-  }).pipe(KnowledgeOperationalError.mapError("Failed to spawn git rev-parse --is-shallow-repository."));
-  return Str.equivalence(shallow.stdout, "true")
+  const shallow = yield* git
+    .isShallow(repoRoot)
+    .pipe(KnowledgeOperationalError.mapError("Failed to spawn git rev-parse --is-shallow-repository."));
+  return shallow
     ? yield* KnowledgeOperationalError.make({
         message: `Cannot verify historical citation ${cited} in a shallow clone. ${KNOWLEDGE_HISTORY_REMEDIATION}`,
       })
@@ -1587,6 +1580,7 @@ type LiveTreeRequirements =
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
+  | Git
   | Scope.Scope;
 
 const liveCommandTree = (materialized: KnowledgeMaterializedTree) =>
@@ -2200,7 +2194,8 @@ type KnowledgeDoctorRequirements =
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner;
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git;
 
 const makeKnowledgeDoctor = Effect.fn("KnowledgeDoctor.make")(function* () {
   const runtime = yield* Effect.context<KnowledgeDoctorRequirements>();

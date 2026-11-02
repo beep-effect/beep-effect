@@ -4,13 +4,13 @@
     "id": "repo-cli-gh-git-consolidation",
     "packetId": "goal-packet/v1:676200a5a873b8b0c1e94aa4e1a2a3cc4fc0faf54dbc51a12181fc3781a76ed0",
     "title": "repo-cli gh/git consolidation",
-    "status": "paused",
+    "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-01",
+    "updated": "2026-11-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-gh-git-consolidation",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Move repo-cli and its tests off hand-rolled gh and git spawning onto @beep/github, @beep/git and @beep/commands, extending the kits where they lack the feature",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -28,9 +28,14 @@
     "goals/repo-cli-gh-git-consolidation/SPEC.md",
     "goals/repo-cli-gh-git-consolidation/PLAN.md",
     "goals/repo-cli-gh-git-consolidation/GOAL.md",
-    "goals/repo-cli-gh-git-consolidation/research/SOURCES.md"
+    "goals/repo-cli-gh-git-consolidation/research/SOURCES.md",
+    "goals/repo-cli-gh-git-consolidation/research/p0-site-inventory-2026-11-02.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/p0-site-inventory-2026-11-02.md",
+    "research/is-ancestor-prune-differential-w0.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -46,12 +51,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -80,5 +85,11 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
+  ],
+  "opsScripts": [
+    {
+      "path": "ops/is-ancestor-prune-differential.ts",
+      "purpose": "W0 differential: the frozen merge-base --is-ancestor probes and worktree prune/remove captures compared with Git.isAncestor, Git.worktreePrune and Git.worktreeRemove over scratch repositories, including a shallow clone and a non-repository."
+    }
   ]
 }
