@@ -11,7 +11,7 @@ import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { collectDirtyWorktreeFiles, runGitLines } from "../../../../internal/repo-run/ChangedFiles.ts";
+import { collectBaseRangeChangedFiles, collectDirtyWorktreeFiles } from "../../../../internal/repo-run/ChangedFiles.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
@@ -21,21 +21,13 @@ import { byPackagePathAscending } from "./Quality.schemas.ts";
 import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 import type { DocgenQualityScopeMode } from "./Quality.schemas.ts";
 
-const REPO_BASE_CHANGED_FILE_COMMAND = [
-  "diff",
-  "--name-only",
-  "--diff-filter=ACMR",
-  "origin/main...HEAD",
-  "--",
-  "*.ts",
-  "*.tsx",
-] as const;
+const DOCGEN_SCOPE_PATHSPECS = ["*.ts", "*.tsx"];
 
 // Docgen quality tolerates broken worktree probes: `--changed-files` must still resolve a
 // scope in repositories without a HEAD commit, where the `git diff HEAD` probe fails.
 const WORKING_TREE_CHANGED_FILE_SCAN = {
-  diffArgs: ["--diff-filter=ACMR"],
-  pathspecs: ["*.ts", "*.tsx"],
+  diffFilter: "ACMR",
+  pathspecs: DOCGEN_SCOPE_PATHSPECS,
   onProbeFailure: "ignore",
 } as const;
 
@@ -50,7 +42,12 @@ const collectChangedFiles = Effect.fn("DocgenQuality.collectChangedFiles")(funct
     return yield* collectWorkingTreeChangedFiles(repoRoot);
   }
 
-  const baseChanged = yield* runGitLines(repoRoot, REPO_BASE_CHANGED_FILE_COMMAND).pipe(
+  const baseChanged = yield* collectBaseRangeChangedFiles(repoRoot, {
+    base: "origin/main",
+    head: "HEAD",
+    diffFilter: "ACMR",
+    pathspecs: DOCGEN_SCOPE_PATHSPECS,
+  }).pipe(
     Effect.mapError(
       DomainError.newCause(
         "Unable to resolve affected docgen quality scope from origin/main...HEAD. Use --changed-files, --all, or --package explicitly, or refresh origin/main."

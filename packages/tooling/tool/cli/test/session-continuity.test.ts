@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   ClaudeContinuityInput,
@@ -93,25 +94,28 @@ const fixture = Effect.fn("ContinuityTest.fixture")(function* (
 });
 // Command.runWith requires the CLI environment even for this non-interactive subcommand.
 // Files stay virtual; unexpected terminal input or process execution fails the test.
-const commandEnvironment = Layer.mergeAll(
-  MemoryFileSystem.layer,
-  Path.layer,
-  NodeCrypto.layer,
-  Stdio.layerTest({}),
-  Layer.succeed(
-    Terminal.Terminal,
-    Terminal.make({
-      columns: Effect.succeed(80),
-      rows: Effect.succeed(24),
-      size: Effect.die("Unexpected terminal input"),
-      readInput: Effect.die("Unexpected terminal input"),
-      readLine: Effect.die("Unexpected terminal input"),
-      display: () => Effect.void,
-    })
-  ),
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.die("Unexpected process execution"))
+const commandEnvironment = Layer.provideMerge(
+  Git.layer,
+  Layer.mergeAll(
+    MemoryFileSystem.layer,
+    Path.layer,
+    NodeCrypto.layer,
+    Stdio.layerTest({}),
+    Layer.succeed(
+      Terminal.Terminal,
+      Terminal.make({
+        columns: Effect.succeed(80),
+        rows: Effect.succeed(24),
+        size: Effect.die("Unexpected terminal input"),
+        readInput: Effect.die("Unexpected terminal input"),
+        readLine: Effect.die("Unexpected terminal input"),
+        display: () => Effect.void,
+      })
+    ),
+    Layer.succeed(
+      ChildProcessSpawner.ChildProcessSpawner,
+      ChildProcessSpawner.make(() => Effect.die("Unexpected process execution"))
+    )
   )
 );
 it.layer(PermissionContinuityLive.pipe(Layer.provideMerge(commandEnvironment)), {

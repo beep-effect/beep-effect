@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/runner-trust-boundary",
   "lifecycle": "active",
-  "statusNote": "P0 through P7 evidence and prior closures remain retained. P8 reactivated on 2026-08-30 for exception E1. 2026-11-02: A-L re-proved on main (run 41409672251). Probe N: orderly SIGINT stop refused from both hosts (run 41422745680); SIGKILL stop had the same-host replay accepted about three minutes after the kill while the registration stayed busy until the job timed out (run 41429667965). E1 is confirmed for the SIGKILL stop and P8 is stopped under the stop condition 'a credential path reachable by job privilege' pending the operator's remediation choice (PLAN.md P8 operator decision). Exposure measured 2026-11-02 (run 41452707373): the replayed session was held 12 minutes and offered no job; a decoy and all 32 heavy jobs that started during the hold ran on other runners; the session ended when the original job was cancelled. Remediation choice remains with the operator.",
+  "statusNote": "P0 through P8 complete. P8 closed 2026-11-02: A-L re-proved on main (run 41409672251); Probe N refused replay after an orderly stop from both hosts (run 41422745680), accepted it after a SIGKILL until the original job ended (run 41429667965), and a 12-minute held replay session started no job while a decoy and all 32 heavy jobs that started during the hold ran on other runners (run 41452707373). The operator accepted E1 as a residual. The closeout PR proposes completed-retained.",
   "mission": "Keep heavy pull-request lanes on EC2 while removing ambient fleet privilege and proving runner admission plus workload-identity boundaries.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -20,7 +20,14 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until the deployed runner class has no usable ambient instance-role credentials, the remediation PR is merge-ready and merged, and every transferred Codex ID is then closed with exact proof.",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_rtb-p8-closeout-final-26a2dce12c8f/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -118,7 +125,7 @@
     {
       "id": "P8",
       "name": "Post-release JIT containment",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -139,5 +146,9 @@
     "Required GitHub or AWS authority is unavailable for deployed proof.",
     "Work crosses into fleet performance or architecture ownership without an explicit handoff.",
     "Tracked evidence contains raw findings, secrets, email addresses, machine IDs, or developer-local absolute paths."
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2590
+  }
 }

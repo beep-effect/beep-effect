@@ -43,6 +43,7 @@ import {
   loadDocgenConfigDocument,
   resolveDocgenWorkspacePackage,
 } from "./Operations.ts";
+import type { Git } from "@beep/git/Git";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
@@ -162,7 +163,8 @@ type DocgenLocalEnvironment =
   | FileSystem.FileSystem
   | Path.Path
   | FsUtils
-  | ChildProcessSpawner;
+  | ChildProcessSpawner
+  | Git;
 type DocgenLocalOptions = {
   readonly allowFull: boolean;
   readonly base: string;
@@ -1427,7 +1429,7 @@ export const buildDocgenLocalPlan: (
 ) => Effect.Effect<
   DocgenLocalPlan,
   DomainError | NoSuchFileError,
-  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner | Git
 > = Effect.fn("DocgenLocal.buildDocgenLocalPlan")(function* (options) {
   const repoRoot = yield* findRepoRoot();
   return yield* buildDocgenLocalPlanWithRepoRoot(options, repoRoot);

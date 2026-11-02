@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-02T15:24:21.896Z",
+  "generatedAt": "2026-11-02T17:24:50.414Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3574,
-    "publicExports": 25424,
+    "publicExports": 25427,
     "openModules": 115,
     "openExports": 94,
     "missingExportExamples": 0,
@@ -448392,7 +448392,7 @@
         "srcDir": "src",
         "sourceFileCount": 501,
         "publicModuleCount": 498,
-        "publicExportCount": 4680
+        "publicExportCount": 4683
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -459373,7 +459373,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 47,
+          "exportCount": 48,
           "remediationStatus": "open"
         },
         {
@@ -459399,7 +459399,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 19,
+          "exportCount": 21,
           "remediationStatus": "open"
         },
         {
@@ -475032,8 +475032,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 118,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-118-ci-lane-class-values",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-120-ci-lane-class-values",
           "currentTags": [
             "@category",
             "@since"
@@ -475054,8 +475054,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-134-cilaneclass",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-136-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -475076,8 +475076,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 155,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-155-cilaneclass",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-157-cilaneclass",
           "currentTags": [
             "@category",
             "@since"
@@ -475098,8 +475098,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-171-ci-lane-replay-values",
+          "line": 173,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-173-ci-lane-replay-values",
           "currentTags": [
             "@category",
             "@since"
@@ -475120,8 +475120,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 187,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-187-cilanereplay",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-189-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -475142,8 +475142,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 208,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-208-cilanereplay",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-210-cilanereplay",
           "currentTags": [
             "@category",
             "@since"
@@ -475164,8 +475164,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 224,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-224-ci-lane-id-values",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-226-ci-lane-id-values",
           "currentTags": [
             "@category",
             "@since"
@@ -475186,8 +475186,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 265,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-265-cilaneid",
+          "line": 267,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-267-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -475208,8 +475208,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 286,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-286-cilaneid",
+          "line": 288,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-288-cilaneid",
           "currentTags": [
             "@category",
             "@since"
@@ -475230,8 +475230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 304,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-304-docgen-lane-mode-values",
+          "line": 306,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-306-docgen-lane-mode-values",
           "currentTags": [
             "@category",
             "@since"
@@ -475252,8 +475252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 320,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-320-docgenlanemode",
+          "line": 322,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-322-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -475274,8 +475274,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 341,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-341-docgenlanemode",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-343-docgenlanemode",
           "currentTags": [
             "@category",
             "@since"
@@ -475296,8 +475296,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 369,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-369-cilanedescriptor",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-371-cilanedescriptor",
           "currentTags": [
             "@category",
             "@since"
@@ -475318,8 +475318,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 409,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-409-ci-lane-descriptors",
+          "line": 411,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-411-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -475344,8 +475344,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 711,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-711-cilanerunoptions",
+          "line": 713,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-713-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -475366,8 +475366,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 902,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-902-cilanepartitionproof",
+          "line": 904,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-904-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -475388,8 +475388,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1150,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1150-provecilanepartition",
+          "line": 1152,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1152-provecilanepartition",
           "currentTags": [
             "@param",
             "@returns",
@@ -475412,8 +475412,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1271,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1271-cilanepartitionargs",
+          "line": 1273,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1273-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -475434,8 +475434,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1303,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1303-cilanedefaultplacementlinesfortesting",
+          "line": 1305,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1305-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -475458,8 +475458,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1350,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1350-cilanepartitionargsfortesting",
+          "line": 1352,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1352-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -475482,8 +475482,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1557,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1557-cilanestepsfortesting",
+          "line": 1559,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1559-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -475510,8 +475510,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1890,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1890-docgenlanemodeforchangedpaths",
+          "line": 1892,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1892-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -475534,8 +475534,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2340,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2340-runcilane",
+          "line": 2335,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2335-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -475558,8 +475558,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2418,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2418-cilanecommand",
+          "line": 2413,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2413-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -475580,8 +475580,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2663,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2663-cilocalstepplan",
+          "line": 2659,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2659-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -475602,8 +475602,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2745,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2745-cilanedispatchstep",
+          "line": 2741,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2741-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -475626,8 +475626,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2783,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2783-cilocalstepsfortesting",
+          "line": 2779,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2779-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -475650,8 +475650,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2819,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2819-cilocallaneinputsfortesting",
+          "line": 2815,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2815-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -475674,8 +475674,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2850,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2850-runcilocal",
+          "line": 2846,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2846-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -475698,8 +475698,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2886,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2886-cilocalcommand",
+          "line": 2882,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2882-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -476208,8 +476208,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts",
-          "line": 82,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-82-cioperational",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-83-cioperational",
           "currentTags": [
             "@category",
             "@since"
@@ -476230,8 +476230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts",
-          "line": 109,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-109-cioperationallive",
+          "line": 110,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-110-cioperationallive",
           "currentTags": [
             "@category",
             "@since"
@@ -484250,8 +484250,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 63,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-63-resolvescantarget",
+          "line": 61,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-61-resolvescantarget",
           "currentTags": [
             "@param",
             "@returns",
@@ -484274,8 +484274,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 97,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-97-assertprivateoutputdirectory",
+          "line": 95,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-95-assertprivateoutputdirectory",
           "currentTags": [
             "@param",
             "@category",
@@ -484297,8 +484297,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-313-decodescanoptions",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-310-decodescanoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -484319,8 +484319,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Security.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Security.command.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-339-securitycommand",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-security-command-ts-336-securitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -531950,8 +531950,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 85,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-85-palantiristatedir",
+          "line": 86,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-86-palantiristatedir",
           "currentTags": [
             "@category",
             "@since"
@@ -531972,8 +531972,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 115,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-115-writeprivatefile",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-116-writeprivatefile",
           "currentTags": [
             "@param",
             "@returns",
@@ -531996,8 +531996,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-167-makeaccountheadroomsourcelive",
+          "line": 168,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-168-makeaccountheadroomsourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -532018,8 +532018,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-266-layeraccountheadroomsourcelive",
+          "line": 267,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-267-layeraccountheadroomsourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -532040,8 +532040,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 302,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-302-layerpalantiritelemetryfor",
+          "line": 303,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-303-layerpalantiritelemetryfor",
           "currentTags": [
             "@param",
             "@returns",
@@ -532064,8 +532064,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 346,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-346-layerpalantiritelemetry",
+          "line": 347,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-347-layerpalantiritelemetry",
           "currentTags": [
             "@category",
             "@since"
@@ -532086,8 +532086,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 377,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-377-layerpalantirimcptelemetry",
+          "line": 378,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-378-layerpalantirimcptelemetry",
           "currentTags": [
             "@param",
             "@returns",
@@ -532110,8 +532110,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 452,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-452-inboxrowinput",
+          "line": 453,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-453-inboxrowinput",
           "currentTags": [
             "@param",
             "@returns",
@@ -532134,8 +532134,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 489,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-489-proofjobinput",
+          "line": 490,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-490-proofjobinput",
           "currentTags": [
             "@param",
             "@returns",
@@ -532158,8 +532158,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 527,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-527-checkoutfactsprobe",
+          "line": 528,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-528-checkoutfactsprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -532180,8 +532180,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 561,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-561-makelaneredssource",
+          "line": 562,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-562-makelaneredssource",
           "currentTags": [
             "@param",
             "@returns",
@@ -532204,8 +532204,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 630,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-630-layerlaneredssourcelive",
+          "line": 632,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-632-layerlaneredssourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -532226,8 +532226,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 657,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-657-liveadmissionslots",
+          "line": 659,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-659-liveadmissionslots",
           "currentTags": [
             "@category",
             "@since"
@@ -532248,8 +532248,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 677,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-677-hostpressurereaders",
+          "line": 679,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-679-hostpressurereaders",
           "currentTags": [
             "@category",
             "@since"
@@ -532270,8 +532270,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 708,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-708-makehostpressuresource",
+          "line": 710,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-710-makehostpressuresource",
           "currentTags": [
             "@param",
             "@returns",
@@ -532294,8 +532294,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 764,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-764-layerhostpressuresourcelive",
+          "line": 766,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-766-layerhostpressuresourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -532316,8 +532316,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 801,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-801-makesincelastchecksource",
+          "line": 803,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-803-makesincelastchecksource",
           "currentTags": [
             "@param",
             "@returns",
@@ -532340,8 +532340,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 894,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-894-layersincelastchecksourcelive",
+          "line": 897,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-897-layersincelastchecksourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -532362,8 +532362,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Palantiri/Palantiri.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Palantiri/Palantiri.service.ts",
-          "line": 927,
-          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-927-layerpalantirisourceslive",
+          "line": 930,
+          "anchor": "packages-tooling-tool-cli-src-commands-palantiri-palantiri-service-ts-930-layerpalantirisourceslive",
           "currentTags": [
             "@category",
             "@since"
@@ -537388,8 +537388,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 47,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-47-export-changesetstatuserror-from-quality-errors-ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-50-export-changesetstatuserror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -537410,8 +537410,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-71-changeset-status-neutral-path-prefixes",
+          "line": 73,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-73-changeset-status-neutral-path-prefixes",
           "currentTags": [
             "@category",
             "@since"
@@ -537432,8 +537432,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 100,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-100-lab-exempt-companion-paths",
+          "line": 102,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-102-lab-exempt-companion-paths",
           "currentTags": [
             "@category",
             "@since"
@@ -537454,8 +537454,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 136,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-136-changeset-status-neutral-basenames",
+          "line": 138,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-138-changeset-status-neutral-basenames",
           "currentTags": [
             "@category",
             "@since"
@@ -537476,8 +537476,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 158,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-158-changesetstatuspartition",
+          "line": 160,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-160-changesetstatuspartition",
           "currentTags": [
             "@category",
             "@since"
@@ -537498,8 +537498,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-186-changesetstatusverdict",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-188-changesetstatusverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -537520,8 +537520,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 198,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-198-changesetstatusverdict",
+          "line": 200,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-200-changesetstatusverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -537542,8 +537542,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 221,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-221-changesetstatusworkspacepackage",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-223-changesetstatusworkspacepackage",
           "currentTags": [
             "@category",
             "@since"
@@ -537564,8 +537564,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-325-partitionchangedfilesforstatus",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-320-partitionchangedfilesforstatus",
           "currentTags": [
             "@param",
             "@returns",
@@ -537588,8 +537588,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 351,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-351-changesetstatusverdict",
+          "line": 346,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-346-changesetstatusverdict",
           "currentTags": [
             "@param",
             "@returns",
@@ -537612,8 +537612,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 406,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-406-uncoveredworkspacepackagenames",
+          "line": 401,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-401-uncoveredworkspacepackagenames",
           "currentTags": [
             "@param",
             "@returns",
@@ -537636,8 +537636,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 543,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-543-readchangesetstatusworkspacepackage",
+          "line": 534,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-534-readchangesetstatusworkspacepackage",
           "currentTags": [
             "@param",
             "@returns",
@@ -537660,8 +537660,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 646,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-646-runchangesetstatus",
+          "line": 637,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-637-runchangesetstatus",
           "currentTags": [
             "@param",
             "@returns",
@@ -537684,8 +537684,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/ChangesetStatus.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
-          "line": 692,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-692-changesetstatuscommand",
+          "line": 683,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-changesetstatus-ts-683-changesetstatuscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -539090,8 +539090,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-163-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-165-export-testtsgosyntheticconfigtemplate-from-internal-testtsgosyntheticconfig-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539112,8 +539112,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 170,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-170-export-qualityscriptcommanderror-from-quality-errors-ts",
+          "line": 172,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-172-export-qualityscriptcommanderror-from-quality-errors-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539134,8 +539134,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 177,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-177-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
+          "line": 179,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-179-export-githubchecklanespec-githubchecklanestage-githubcheckmode-githubchecksfallowfeaturematrix-qualityhardwareprofile-qualityprofileconfig-qualityprofiledetection-from-quality-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539156,8 +539156,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-201-qualityprofiledetectioninput",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-203-qualityprofiledetectioninput",
           "currentTags": [
             "@category",
             "@since"
@@ -539178,8 +539178,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 217,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-217-githubchecklanesformodefortesting",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-219-githubchecklanesformodefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539200,8 +539200,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-233-githubcheckprepushexternallanesfortesting",
+          "line": 235,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-235-githubcheckprepushexternallanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539222,8 +539222,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-249-githubcheckpromotedfallowlanediagnosticsfortesting",
+          "line": 251,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-251-githubcheckpromotedfallowlanediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539244,8 +539244,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 266,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-266-githubcheckqualitylanesfortesting",
+          "line": 268,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-268-githubcheckqualitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539266,8 +539266,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 282,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-282-githubcheckreposanitylanesfortesting",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-284-githubcheckreposanitylanesfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539288,8 +539288,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-298-promotedfallowgithubchecklaneidsfortesting",
+          "line": 300,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-300-promotedfallowgithubchecklaneidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539310,8 +539310,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-314-detectqualityprofilefortesting",
+          "line": 316,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-316-detectqualityprofilefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539332,8 +539332,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 330,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-330-qualityprofileconfigfortesting",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-332-qualityprofileconfigfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539354,8 +539354,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 346,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-346-activeosvignoreidsfortesting",
+          "line": 348,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-348-activeosvignoreidsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539376,8 +539376,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 396,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-396-iseffectdiagnosticsdirectivefortesting",
+          "line": 398,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-398-iseffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539400,8 +539400,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 434,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-434-effectdiagnosticsdirectiveexemption",
+          "line": 436,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-436-effectdiagnosticsdirectiveexemption",
           "currentTags": [
             "@category",
             "@since"
@@ -539422,8 +539422,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 475,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-475-effectdiagnosticsdirectiveexemptions",
+          "line": 477,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-477-effectdiagnosticsdirectiveexemptions",
           "currentTags": [
             "@category",
             "@since"
@@ -539444,8 +539444,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 525,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-525-tsgodisabledrule",
+          "line": 527,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-527-tsgodisabledrule",
           "currentTags": [
             "@category",
             "@since"
@@ -539466,8 +539466,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 567,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-567-tsgodisabledrules",
+          "line": 569,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-569-tsgodisabledrules",
           "currentTags": [
             "@category",
             "@since"
@@ -539488,8 +539488,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 641,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-641-isrejectedeffectdiagnosticsdirectivefortesting",
+          "line": 643,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-643-isrejectedeffectdiagnosticsdirectivefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539512,8 +539512,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 890,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-890-qualitycommandprimitivehelpersfortesting",
+          "line": 892,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-892-qualitycommandprimitivehelpersfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539534,8 +539534,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1092,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1092-runbunaudit",
+          "line": 1094,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1094-runbunaudit",
           "currentTags": [
             "@param",
             "@returns",
@@ -539562,8 +539562,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1230,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1230-devqualitystepsfortesting",
+          "line": 1232,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1232-devqualitystepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539586,8 +539586,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1302,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1302-reviewfixdocgenlocalargsfortesting",
+          "line": 1304,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1304-reviewfixdocgenlocalargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539610,8 +539610,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1568,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1568-rungithubchecks",
+          "line": 1574,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1574-rungithubchecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -539634,8 +539634,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1820,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1820-testtsgoplanningfortesting",
+          "line": 1826,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1826-testtsgoplanningfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539656,8 +539656,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1965,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1965-collecteffecttsgodiagnosticlines",
+          "line": 1971,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1971-collecteffecttsgodiagnosticlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -539680,8 +539680,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 1998,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-1998-missingtesttsgotaskmessagefortesting",
+          "line": 2004,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2004-missingtesttsgotaskmessagefortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539704,8 +539704,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2110,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2110-extracteffecttsgoreadmepluginoptionnamesfortesting",
+          "line": 2116,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2116-extracteffecttsgoreadmepluginoptionnamesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539728,8 +539728,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2180,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2180-collecttsgopluginoptionparitydiagnosticsfortesting",
+          "line": 2186,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2186-collecttsgopluginoptionparitydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539752,8 +539752,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2308,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2308-collecttsgoseveritydiagnosticsfortesting",
+          "line": 2314,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2314-collecttsgoseveritydiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539776,8 +539776,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2596,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2596-collecttsgopluginprofilediagnosticsfortesting",
+          "line": 2602,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2602-collecttsgopluginprofilediagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539800,8 +539800,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2618,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2618-collecttsconfiginheritancediagnosticsfortesting",
+          "line": 2624,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2624-collecttsconfiginheritancediagnosticsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -539822,8 +539822,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2813,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2813-collecttsgoworkspacescandiagnosticsfortesting",
+          "line": 2819,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2819-collecttsgoworkspacescandiagnosticsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539846,8 +539846,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 2883,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2883-runtsgorulescheck",
+          "line": 2889,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-2889-runtsgorulescheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539869,8 +539869,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3006,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3006-runtesttsgochecks",
+          "line": 3012,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3012-runtesttsgochecks",
           "currentTags": [
             "@param",
             "@returns",
@@ -539893,8 +539893,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3108,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3108-runtesttsgochecksat",
+          "line": 3114,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3114-runtesttsgochecksat",
           "currentTags": [
             "@param",
             "@returns",
@@ -539917,8 +539917,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3154,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3154-runtsgosmokecheck",
+          "line": 3160,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3160-runtsgosmokecheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539940,8 +539940,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3267,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3267-ismoduletagscannedpathfortesting",
+          "line": 3273,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3273-ismoduletagscannedpathfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -539964,8 +539964,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3288,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3288-runjsdocmoduletagscheck",
+          "line": 3294,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3294-runjsdocmoduletagscheck",
           "currentTags": [
             "@returns",
             "@category",
@@ -539987,8 +539987,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3361,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3361-runjsdocinventory",
+          "line": 3367,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3367-runjsdocinventory",
           "currentTags": [
             "@returns",
             "@category",
@@ -540010,8 +540010,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3428,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3428-runjsdocquality",
+          "line": 3434,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3434-runjsdocquality",
           "currentTags": [
             "@category",
             "@since"
@@ -540032,8 +540032,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 3866,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3866-renderadmissionsnapshotlinesfortesting",
+          "line": 3872,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-3872-renderadmissionsnapshotlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -540056,8 +540056,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4033,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4033-rendertmpfsreportlinesfortesting",
+          "line": 4039,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4039-rendertmpfsreportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -540080,8 +540080,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4186,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4186-renderresiduereportlinesfortesting",
+          "line": 4192,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4192-renderresiduereportlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -540104,8 +540104,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-          "line": 4317,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4317-qualitycommand",
+          "line": 4323,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-command-ts-4323-qualitycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -547827,8 +547827,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-134-awsresourcepending",
+          "line": 137,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-137-awsresourcepending",
           "currentTags": [
             "@category",
             "@since"
@@ -547849,8 +547849,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-179-bakelocalinputs",
+          "line": 182,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-182-bakelocalinputs",
           "currentTags": [
             "@category",
             "@since"
@@ -547877,8 +547877,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 208,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-208-runnersserviceshape",
+          "line": 211,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-211-runnersserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -547899,8 +547899,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 229,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-229-runnersservice",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-232-runnersservice",
           "currentTags": [
             "@category",
             "@since"
@@ -547921,8 +547921,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 917,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-917-runnersservicelive",
+          "line": 918,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-918-runnersservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -547943,8 +547943,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 933,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-933-writebakereportfortesting",
+          "line": 934,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-934-writebakereportfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -547965,8 +547965,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 949,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-949-makebakescriptfortesting",
+          "line": 950,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-950-makebakescriptfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -547987,8 +547987,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 967,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-967-pendingwhilenotfoundfortesting",
+          "line": 968,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-968-pendingwhilenotfoundfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -548011,8 +548011,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 988,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-988-readpostedconsolefortesting",
+          "line": 989,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-989-readpostedconsolefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -548033,8 +548033,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 1004,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-1004-runawsfortesting",
+          "line": 1005,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-1005-runawsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -549533,8 +549533,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 58,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-58-sessionledgershape",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-59-sessionledgershape",
           "currentTags": [
             "@category",
             "@since"
@@ -549555,8 +549555,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 78,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-78-sessionledger",
+          "line": 79,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-79-sessionledger",
           "currentTags": [
             "@category",
             "@since"
@@ -549577,8 +549577,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-105-decodesessionledger",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-106-decodesessionledger",
           "currentTags": [
             "@param",
             "@returns",
@@ -549601,8 +549601,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 125,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-125-sessionledgerfilename",
+          "line": 126,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-126-sessionledgerfilename",
           "currentTags": [
             "@param",
             "@returns",
@@ -549625,8 +549625,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 142,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-142-makesessionledgerlive",
+          "line": 143,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-143-makesessionledgerlive",
           "currentTags": [
             "@category",
             "@since"
@@ -549647,8 +549647,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 176,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-176-layersessionledgerlive",
+          "line": 177,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-177-layersessionledgerlive",
           "currentTags": [
             "@category",
             "@since"
@@ -549669,8 +549669,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 194,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-194-layersessionledgermemory",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-195-layersessionledgermemory",
           "currentTags": [
             "@category",
             "@since"
@@ -549691,8 +549691,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 242,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-242-sessioncheckoutfacts",
+          "line": 239,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-239-sessioncheckoutfacts",
           "currentTags": [
             "@category",
             "@since"
@@ -549713,8 +549713,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-256-sessioncheckoutfacts",
+          "line": 253,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-253-sessioncheckoutfacts",
           "currentTags": [
             "@category",
             "@since"
@@ -549735,8 +549735,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-276-sessioncheckoutfacts",
+          "line": 273,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-273-sessioncheckoutfacts",
           "currentTags": [
             "@param",
             "@returns",
@@ -549759,8 +549759,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-313-sessionharness",
+          "line": 319,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-319-sessionharness",
           "currentTags": [
             "@category",
             "@since"
@@ -549781,8 +549781,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-340-sessionnoteinput",
+          "line": 346,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-346-sessionnoteinput",
           "currentTags": [
             "@category",
             "@since"
@@ -549803,8 +549803,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-358-sessionnoteinput",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-364-sessionnoteinput",
           "currentTags": [
             "@category",
             "@since"
@@ -549825,8 +549825,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 380,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-380-buildsessionrow",
+          "line": 386,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-386-buildsessionrow",
           "currentTags": [
             "@param",
             "@returns",
@@ -549849,8 +549849,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 422,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-422-notesession",
+          "line": 428,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-428-notesession",
           "currentTags": [
             "@param",
             "@returns",
@@ -549873,8 +549873,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Session/SessionLedger.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Session/SessionLedger.service.ts",
-          "line": 462,
-          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-462-recordsweepdone",
+          "line": 468,
+          "anchor": "packages-tooling-tool-cli-src-commands-session-sessionledger-service-ts-468-recordsweepdone",
           "currentTags": [
             "@param",
             "@category",
@@ -560310,8 +560310,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-89-fleet-surface-exclude-prefixes",
+          "line": 91,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-91-fleet-surface-exclude-prefixes",
           "currentTags": [
             "@category",
             "@since"
@@ -560332,32 +560332,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 131,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-131-classifyfleetliveness",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "parseStatusPorcelainZ",
-          "exportKind": "const",
-          "filePath": "src/commands/Worktree/Fleet.service.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 216,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-216-parsestatusporcelainz",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-133-classifyfleetliveness",
           "currentTags": [
             "@param",
             "@returns",
@@ -560380,8 +560356,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 256,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-256-parsemergetreeconflictnames",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-188-parsemergetreeconflictnames",
           "currentTags": [
             "@param",
             "@returns",
@@ -560404,8 +560380,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-297-transcriptprojectdirname",
+          "line": 229,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-229-transcriptprojectdirname",
           "currentTags": [
             "@param",
             "@returns",
@@ -560428,8 +560404,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 327,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-327-parseprocstatstarttime",
+          "line": 259,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-259-parseprocstatstarttime",
           "currentTags": [
             "@param",
             "@returns",
@@ -560458,8 +560434,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 385,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-385-buildcontestedindex",
+          "line": 317,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-317-buildcontestedindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -560482,8 +560458,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 403,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-403-fleetmirrorserviceshape",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-335-fleetmirrorserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -560504,9 +560480,33 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 444,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-444-fleetmirrorservice",
+          "line": 377,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-377-fleetmirrorservice",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "statusFactsFromEntries",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Fleet.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
+          "line": 920,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-920-statusfactsfromentries",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -560526,8 +560526,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Fleet.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Fleet.service.ts",
-          "line": 1376,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1376-fleetmirrorservicelive",
+          "line": 1346,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-fleet-service-ts-1346-fleetmirrorservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -560774,8 +560774,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 121,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-121-invokerexemption",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-122-invokerexemption",
           "currentTags": [
             "@param",
             "@returns",
@@ -560798,8 +560798,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 152,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-152-describeinotifywatcher",
+          "line": 153,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-153-describeinotifywatcher",
           "currentTags": [
             "@param",
             "@returns",
@@ -560822,8 +560822,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 175,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-175-worktree-local-file-entries",
+          "line": 176,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-176-worktree-local-file-entries",
           "currentTags": [
             "@category",
             "@since"
@@ -560844,8 +560844,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 199,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-199-defaultworktreebranch",
+          "line": 200,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-200-defaultworktreebranch",
           "currentTags": [
             "@param",
             "@returns",
@@ -560868,8 +560868,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 220,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-220-worktreeaddargs",
+          "line": 221,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-221-worktreeaddargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -560892,8 +560892,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 253,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-253-worktreecontext",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-254-worktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -560914,8 +560914,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-293-worktreecopyoutcome",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-294-worktreecopyoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -560936,8 +560936,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 337,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-337-worktreedoctorentry",
+          "line": 338,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-338-worktreedoctorentry",
           "currentTags": [
             "@category",
             "@since"
@@ -560958,8 +560958,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 386,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-386-worktreedoctorreport",
+          "line": 387,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-387-worktreedoctorreport",
           "currentTags": [
             "@category",
             "@since"
@@ -560980,8 +560980,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 450,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-450-resolveworktreecontext",
+          "line": 451,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-451-resolveworktreecontext",
           "currentTags": [
             "@category",
             "@since"
@@ -561002,8 +561002,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 509,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-509-addworktree",
+          "line": 500,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-500-addworktree",
           "currentTags": [
             "@category",
             "@since"
@@ -561024,8 +561024,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 586,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-586-copylocalfiles",
+          "line": 577,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-577-copylocalfiles",
           "currentTags": [
             "@category",
             "@since"
@@ -561046,8 +561046,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 687,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-687-worktreedoctorreportforcontext",
+          "line": 679,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-679-worktreedoctorreportforcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -561068,8 +561068,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 808,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-808-worktreedoctorentrylines",
+          "line": 801,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-801-worktreedoctorentrylines",
           "currentTags": [
             "@param",
             "@returns",
@@ -561092,8 +561092,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 861,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-861-linkreferences",
+          "line": 854,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-854-linkreferences",
           "currentTags": [
             "@category",
             "@since"
@@ -561114,8 +561114,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 1053,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1053-renderworktreeremovalreceipt",
+          "line": 1046,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1046-renderworktreeremovalreceipt",
           "currentTags": [
             "@param",
             "@category",
@@ -561137,8 +561137,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts",
-          "line": 1295,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1295-worktreecommand",
+          "line": 1290,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-command-ts-1290-worktreecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -561291,8 +561291,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 54,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-54-worktreelistentry",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-56-worktreelistentry",
           "currentTags": [
             "@category",
             "@since"
@@ -561313,8 +561313,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-83-worktreeresiduereason",
+          "line": 85,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-85-worktreeresiduereason",
           "currentTags": [
             "@category",
             "@since"
@@ -561335,8 +561335,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 96,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-96-worktreeresiduereason",
+          "line": 98,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-98-worktreeresiduereason",
           "currentTags": [
             "@see",
             "@category",
@@ -561358,8 +561358,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 112,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-112-worktreepreservationstep",
+          "line": 114,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-114-worktreepreservationstep",
           "currentTags": [
             "@category",
             "@since"
@@ -561380,8 +561380,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-139-worktreepreservationstep",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-141-worktreepreservationstep",
           "currentTags": [
             "@see",
             "@category",
@@ -561403,8 +561403,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 158,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-158-worktreerepositoryhash",
+          "line": 160,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-160-worktreerepositoryhash",
           "currentTags": [
             "@category",
             "@since"
@@ -561425,8 +561425,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 181,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-181-worktreerepositoryhash",
+          "line": 183,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-183-worktreerepositoryhash",
           "currentTags": [
             "@see",
             "@category",
@@ -561448,8 +561448,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 215,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-215-worktreeupstreamverdict",
+          "line": 217,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-217-worktreeupstreamverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -561470,8 +561470,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 232,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-232-worktreeupstreamverdict",
+          "line": 234,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-234-worktreeupstreamverdict",
           "currentTags": [
             "@see",
             "@category",
@@ -561493,8 +561493,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 263,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-263-worktreeupstreamstate",
+          "line": 265,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-265-worktreeupstreamstate",
           "currentTags": [
             "@category",
             "@since"
@@ -561515,8 +561515,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 281,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-281-worktreeupstreamstate",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-283-worktreeupstreamstate",
           "currentTags": [
             "@see",
             "@category",
@@ -561538,8 +561538,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 311,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-311-worktreebeepmaterialentry",
+          "line": 313,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-313-worktreebeepmaterialentry",
           "currentTags": [
             "@category",
             "@since"
@@ -561560,8 +561560,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 362,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-362-worktreeresiduemanifest",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-364-worktreeresiduemanifest",
           "currentTags": [
             "@category",
             "@since"
@@ -561582,8 +561582,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 411,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-411-worktreearchiveplan",
+          "line": 413,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-413-worktreearchiveplan",
           "currentTags": [
             "@category",
             "@since"
@@ -561604,8 +561604,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 450,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-450-worktreesessionmarker",
+          "line": 452,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-452-worktreesessionmarker",
           "currentTags": [
             "@category",
             "@since"
@@ -561626,8 +561626,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 496,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-496-worktreeinvokerexemption",
+          "line": 498,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-498-worktreeinvokerexemption",
           "currentTags": [
             "@category",
             "@since"
@@ -561648,8 +561648,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 561,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-561-worktreeremovalrequest",
+          "line": 563,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-563-worktreeremovalrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -561670,8 +561670,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 619,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-619-worktreeunpushedinspection",
+          "line": 621,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-621-worktreeunpushedinspection",
           "currentTags": [
             "@category",
             "@since"
@@ -561692,8 +561692,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 659,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-659-worktreeinotifywatcher",
+          "line": 661,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-661-worktreeinotifywatcher",
           "currentTags": [
             "@category",
             "@since"
@@ -561714,8 +561714,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 695,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-695-worktreefencesettlepolicy",
+          "line": 697,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-697-worktreefencesettlepolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -561736,8 +561736,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 742,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-742-worktreeremovalreceipt",
+          "line": 744,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-744-worktreeremovalreceipt",
           "currentTags": [
             "@category",
             "@since"
@@ -561754,12 +561754,36 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "parseWorktreePorcelain",
+          "symbolName": "worktreeListEntryFromGit",
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 866,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-866-parseworktreeporcelain",
+          "line": 806,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-806-worktreelistentryfromgit",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "worktreeListEntriesFromGit",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
+          "line": 839,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-839-worktreelistentriesfromgit",
           "currentTags": [
             "@param",
             "@returns",
@@ -561782,8 +561806,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 895,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-895-fleet-liveness-window-seconds",
+          "line": 863,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-863-fleet-liveness-window-seconds",
           "currentTags": [
             "@category",
             "@since"
@@ -561804,8 +561828,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 928,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-928-fleet-policy-surface",
+          "line": 896,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-896-fleet-policy-surface",
           "currentTags": [
             "@category",
             "@since"
@@ -561826,8 +561850,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 968,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-968-fleetliveness",
+          "line": 936,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-936-fleetliveness",
           "currentTags": [
             "@category",
             "@since"
@@ -561848,8 +561872,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 980,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-980-fleetliveness",
+          "line": 948,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-948-fleetliveness",
           "currentTags": [
             "@category",
             "@since"
@@ -561870,8 +561894,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1005,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1005-fleetlivenessprobe",
+          "line": 973,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-973-fleetlivenessprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -561892,8 +561916,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1022,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1022-fleetlivenessprobe",
+          "line": 990,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-990-fleetlivenessprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -561914,8 +561938,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1057,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1057-fleetsessionregistryentry",
+          "line": 1025,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1025-fleetsessionregistryentry",
           "currentTags": [
             "@category",
             "@since"
@@ -561936,8 +561960,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1092,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1092-fleetprobereading",
+          "line": 1060,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1060-fleetprobereading",
           "currentTags": [
             "@category",
             "@since"
@@ -561958,8 +561982,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1109,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1109-fleetprobereading",
+          "line": 1077,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1077-fleetprobereading",
           "currentTags": [
             "@category",
             "@since"
@@ -561980,8 +562004,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1143,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1143-fleetlivenessreadings",
+          "line": 1111,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1111-fleetlivenessreadings",
           "currentTags": [
             "@category",
             "@since"
@@ -562002,8 +562026,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1177,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1177-fleetlivenessverdict",
+          "line": 1145,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1145-fleetlivenessverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -562024,8 +562048,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1210,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1210-fleetscanoptions",
+          "line": 1178,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1178-fleetscanoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -562046,8 +562070,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1246,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1246-fleetconflictstatus",
+          "line": 1214,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1214-fleetconflictstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -562068,8 +562092,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1258,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1258-fleetconflictstatus",
+          "line": 1226,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1226-fleetconflictstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -562090,8 +562114,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1281,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1281-fleetpolicymovement",
+          "line": 1249,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1249-fleetpolicymovement",
           "currentTags": [
             "@category",
             "@since"
@@ -562112,8 +562136,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1293,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1293-fleetpolicymovement",
+          "line": 1261,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1261-fleetpolicymovement",
           "currentTags": [
             "@category",
             "@since"
@@ -562134,8 +562158,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1309,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1309-fleetunknownreason",
+          "line": 1277,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1277-fleetunknownreason",
           "currentTags": [
             "@category",
             "@since"
@@ -562156,8 +562180,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1326,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1326-fleetunknownreason",
+          "line": 1294,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1294-fleetunknownreason",
           "currentTags": [
             "@category",
             "@since"
@@ -562178,8 +562202,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1342,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1342-fleetcheckoutkind",
+          "line": 1310,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1310-fleetcheckoutkind",
           "currentTags": [
             "@category",
             "@since"
@@ -562200,8 +562224,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1354,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1354-fleetcheckoutkind",
+          "line": 1322,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1322-fleetcheckoutkind",
           "currentTags": [
             "@category",
             "@since"
@@ -562222,8 +562246,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1397,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1397-fleetcheckout",
+          "line": 1365,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1365-fleetcheckout",
           "currentTags": [
             "@category",
             "@since"
@@ -562244,8 +562268,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1442,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1442-fleetcontestedpath",
+          "line": 1410,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1410-fleetcontestedpath",
           "currentTags": [
             "@category",
             "@since"
@@ -562266,8 +562290,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1475,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1475-fleetepochtarget",
+          "line": 1443,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1443-fleetepochtarget",
           "currentTags": [
             "@category",
             "@since"
@@ -562288,8 +562312,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1509,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1509-fleetscancoverage",
+          "line": 1477,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1477-fleetscancoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -562310,8 +562334,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.schemas.ts",
-          "line": 1559,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1559-fleetsnapshot",
+          "line": 1527,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-schemas-ts-1527-fleetsnapshot",
           "currentTags": [
             "@category",
             "@since"
@@ -562332,8 +562356,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-139-worktreemergedpullrequest",
+          "line": 143,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-143-worktreemergedpullrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -562354,8 +562378,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-182-mergedpullrequestsforbranch",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-186-mergedpullrequestsforbranch",
           "currentTags": [
             "@param",
             "@returns",
@@ -562378,8 +562402,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 206,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-206-worktreemergedpullrequestprobeshape",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-210-worktreemergedpullrequestprobeshape",
           "currentTags": [
             "@category",
             "@since"
@@ -562400,8 +562424,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 250,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-250-worktreemergedpullrequestprobe",
+          "line": 254,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-254-worktreemergedpullrequestprobe",
           "currentTags": [
             "@category",
             "@since"
@@ -562422,8 +562446,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 290,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-290-worktreemergedpullrequestprobelive",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-294-worktreemergedpullrequestprobelive",
           "currentTags": [
             "@category",
             "@since"
@@ -562444,8 +562468,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 314,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-314-worktreeremoveargs",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-318-worktreeremoveargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -562468,8 +562492,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-339-branchdeletecommand",
+          "line": 343,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-343-branchdeletecommand",
           "currentTags": [
             "@param",
             "@returns",
@@ -562492,8 +562516,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 367,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-367-worktreearchiverefargs",
+          "line": 371,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-371-worktreearchiverefargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -562516,8 +562540,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 405,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-405-worktreebranchdeleteargs",
+          "line": 409,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-409-worktreebranchdeleteargs",
           "currentTags": [
             "@param",
             "@returns",
@@ -562540,8 +562564,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 445,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-445-worktreearchiveplan",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-449-worktreearchiveplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -562564,8 +562588,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 518,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-518-worktreeresiduereason",
+          "line": 522,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-522-worktreeresiduereason",
           "currentTags": [
             "@param",
             "@returns",
@@ -562588,8 +562612,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 532,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-532-worktreeremovalserviceshape",
+          "line": 536,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-536-worktreeremovalserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -562610,9 +562634,57 @@
           "exportKind": "class",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 572,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-572-worktreeremovalservice",
+          "line": 576,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-576-worktreeremovalservice",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "worktreeGitErrorAdapter",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "line": 620,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-620-worktreegiterroradapter",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "listRepositoryWorktrees",
+          "exportKind": "const",
+          "filePath": "src/commands/Worktree/Worktree.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
+          "line": 652,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-652-listrepositoryworktrees",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -562632,8 +562704,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 634,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-634-runworktreegitcapture",
+          "line": 713,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-713-runworktreegitcapture",
           "currentTags": [
             "@param",
             "@returns",
@@ -562656,8 +562728,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 1255,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-1255-restorebeepmaterial",
+          "line": 1334,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-1334-restorebeepmaterial",
           "currentTags": [
             "@param",
             "@returns",
@@ -562680,8 +562752,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2082,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2082-worktreefencesettle",
+          "line": 2166,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2166-worktreefencesettle",
           "currentTags": [
             "@category",
             "@since"
@@ -562702,8 +562774,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2362,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2362-installregeneratemergedriver",
+          "line": 2446,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2446-installregeneratemergedriver",
           "currentTags": [
             "@category",
             "@since"
@@ -562724,8 +562796,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2414,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2414-worktreeremovalservicelayer",
+          "line": 2498,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2498-worktreeremovalservicelayer",
           "currentTags": [
             "@category",
             "@since"
@@ -562746,8 +562818,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Worktree/Worktree.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts",
-          "line": 2434,
-          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2434-worktreeremovalservicelive",
+          "line": 2518,
+          "anchor": "packages-tooling-tool-cli-src-commands-worktree-worktree-service-ts-2518-worktreeremovalservicelive",
           "currentTags": [
             "@category",
             "@since"
