@@ -37,6 +37,16 @@ import type { AdmissionSnapshot } from "../../internal/repo-run/QualityScheduler
 
 const $I = $RepoCliId.create("commands/Quality/Quality.plan");
 
+/**
+ * The part of an admission snapshot the concurrency plan reads.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type QualityAdmissionSnapshotView = Pick<AdmissionSnapshot, "capacityTokens"> & {
+  readonly leases: ReadonlyArray<{ readonly pid: number; readonly weightTokens: number }>;
+};
+
 const gibibytes = (bytes: number): number => Math.round((bytes / 1024 / 1024 / 1024) * 10) / 10;
 
 /**
@@ -431,13 +441,49 @@ export const localQualityConcurrencyPlan = (): QualityConcurrencyPlan => {
   return plan;
 };
 
-const admissionLoadOf = (snapshot: AdmissionSnapshot, ownPids: HashSet.HashSet<number>): QualityAdmissionLoad =>
-  QualityAdmissionLoad.make({
-    activeTokens: A.reduce(snapshot.leases, 0, (total, lease) =>
-      HashSet.has(ownPids, lease.pid) ? total : total + lease.weightTokens
-    ),
-    capacityTokens: snapshot.capacityTokens,
-  });
+/**
+ * Fold an admission snapshot into the load other runs put on the host.
+ *
+ * **Details**
+ *
+ * Leases whose pid is in `ownPids` (this process and its ancestors, so the
+ * proof that admitted this lane) do not count against the width.
+ *
+ * **Example** (Exclude this run's own lease)
+ *
+ * ```ts
+ * import { qualityAdmissionLoadOf } from "@beep/repo-cli/test/Quality"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const snapshot = {
+ *   capacityTokens: 8,
+ *   leases: [
+ *     { pid: 10, weightTokens: 3 },
+ *     { pid: 20, weightTokens: 3 }
+ *   ]
+ * }
+ * console.log(qualityAdmissionLoadOf(snapshot, HashSet.make(10)).activeTokens) // 3
+ * ```
+ *
+ * @param snapshot - Lease pids, lease weights and the host capacity.
+ * @param ownPids - Pids of this process and its ancestors.
+ * @returns Tokens other runs hold and the host capacity.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const qualityAdmissionLoadOf: {
+  (snapshot: QualityAdmissionSnapshotView, ownPids: HashSet.HashSet<number>): QualityAdmissionLoad;
+  (ownPids: HashSet.HashSet<number>): (snapshot: QualityAdmissionSnapshotView) => QualityAdmissionLoad;
+} = dual(
+  2,
+  (snapshot: QualityAdmissionSnapshotView, ownPids: HashSet.HashSet<number>): QualityAdmissionLoad =>
+    QualityAdmissionLoad.make({
+      activeTokens: A.reduce(snapshot.leases, 0, (total, lease) =>
+        HashSet.has(ownPids, lease.pid) ? total : total + lease.weightTokens
+      ),
+      capacityTokens: snapshot.capacityTokens,
+    })
+);
 
 /**
  * Resolve the admission-aware plan from the live host.
@@ -489,7 +535,7 @@ export const resolveLiveQualityConcurrencyPlan = Effect.fn("QualityPlan.resolveL
                 O.match({
                   onNone: () => Effect.succeedNone,
                   onSome: (snapshot) =>
-                    Effect.map(invokerAncestryPids(), (ownPids) => O.some(admissionLoadOf(snapshot, ownPids))),
+                    Effect.map(invokerAncestryPids(), (ownPids) => O.some(qualityAdmissionLoadOf(snapshot, ownPids))),
                 })
               )
             ),

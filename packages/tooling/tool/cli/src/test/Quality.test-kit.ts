@@ -33,6 +33,7 @@ export {
   QUALITY_CHEAP_GATE_CONCURRENCY_ENV,
   QUALITY_CHECK_CONCURRENCY_ENV,
   QualityConcurrency,
+  qualityAdmissionLoadOf,
   qualityConcurrencyPlan,
   resolveLiveQualityConcurrencyPlan,
   resolveQualityConcurrencyPlan,

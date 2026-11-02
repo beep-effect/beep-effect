@@ -13,6 +13,7 @@ import {
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
   QualityAdmissionLoad,
+  QualityConcurrencyPlan,
   QualityProfileDetectionInput,
 } from "@beep/repo-cli/commands/Quality";
 import {
@@ -112,13 +113,17 @@ import {
   planWorkspaceCoverageAffectedScope,
   prepareLaneProofSession,
   promotedFallowGithubCheckLaneIdsForTesting,
+  provideQualityConcurrency,
   QUALITY_TASK_LANE_RUN_REPORT_PREFIX,
+  QualityConcurrency,
   QualityTaskFailed,
   QualityTaskGroupFailed,
   QualityTaskLaneRun,
   QualityTaskLaneRunReport,
   QualityTaskStep,
+  qualityAdmissionLoadOf,
   qualityCommandPrimitiveHelpersForTesting,
+  qualityConcurrencyPlan,
   qualityProfileConfigForTesting,
   readCoverageComparisonBaselineForTesting,
   readTurboLaneLedger,
@@ -127,6 +132,7 @@ import {
   renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
   resolveLaneInputDigestForTesting,
+  resolveLiveQualityConcurrencyPlan,
   resolveQualityConcurrencyPlan,
   reviewFixDocgenLocalArgsForTesting,
   rootDocsCacheKey,
@@ -157,6 +163,7 @@ import {
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
+import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
 import {
   clearTurboCacheSecretSessionVerdictsForTesting,
   hasRemoteTurboCacheArgs,
@@ -189,6 +196,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, flow, identity, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -9502,6 +9510,97 @@ describe("documentation input digest", () => {
         }
         expect(yield* rootDocsCacheKey(yield* fs.makeTempDirectoryScoped())).toBe("unkeyed");
       })
+    );
+  });
+});
+
+it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+  describe("quality concurrency plan service", () => {
+    const fixedPlan = QualityConcurrencyPlan.make({
+      profile: "current",
+      rootTurbo: 2,
+      policyLint: 2,
+      cheapGates: 2,
+      prePushLanes: 1,
+      oxlintThreads: 2,
+      notes: [],
+    });
+    const idleStats = MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) });
+
+    it("folds an admission snapshot into the tokens other runs hold", () => {
+      const snapshot = {
+        capacityTokens: 8,
+        leases: [
+          { pid: 10, weightTokens: 3 },
+          { pid: 20, weightTokens: 3 },
+          { pid: 30, weightTokens: 2 },
+        ],
+      };
+      const load = qualityAdmissionLoadOf(snapshot, HashSet.make(10));
+      expect(load.activeTokens).toBe(5);
+      expect(load.capacityTokens).toBe(8);
+      expect(qualityAdmissionLoadOf(HashSet.empty<number>())(snapshot).activeTokens).toBe(8);
+    });
+
+    it.effect("reads the provided plan, else resolves the unscaled local plan", () =>
+      Effect.gen(function* () {
+        const provided = yield* qualityConcurrencyPlan.pipe(
+          Effect.provideServiceEffect(QualityConcurrency, QualityConcurrency.make(fixedPlan))
+        );
+        expect(provided.rootTurbo).toBe(2);
+        const local = yield* withoutCiEffect(qualityConcurrencyPlan);
+        expect(local.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+        const live = yield* qualityConcurrencyPlan.pipe(provideQualityConcurrency, withoutCiEffect);
+        expect(live.rootTurbo).toBe(local.rootTurbo);
+      })
+    );
+
+    it.effect("keeps the hosted plan unscaled and skips admission under CI", () =>
+      Effect.gen(function* () {
+        const plan = yield* withEnvVarEffect(
+          "CI",
+          "true",
+          resolveLiveQualityConcurrencyPlan().pipe(Effect.provideService(MemoryStats, idleStats))
+        );
+        expect(plan.profile).toBe("ci");
+        expect(plan.rootTurbo).toBe(4);
+        assertNone(plan.admission);
+      })
+    );
+
+    it.effect("scales by the live admission snapshot when MemoryStats is provided", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-admission-" }), "runtime");
+        const plan = yield* withoutCiEffect(
+          resolveLiveQualityConcurrencyPlan().pipe(
+            Effect.provideService(MemoryStats, idleStats),
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root }))
+          )
+        );
+        const load = O.getOrThrow(plan.admission);
+        expect(load.activeTokens).toBe(0);
+        expect(load.capacityTokens).toBe(8);
+        expect(plan.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+      })
+    );
+
+    it.effect("falls back to the unscaled plan when the admission snapshot cannot be read", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const blocker = path.join(yield* fs.makeTempDirectoryScoped({ prefix: "quality-plan-blocked-" }), "runtime");
+        yield* fs.writeFileString(blocker, "not a directory");
+        const plan = yield* withoutCiEffect(
+          resolveLiveQualityConcurrencyPlan().pipe(
+            Effect.provideService(MemoryStats, idleStats),
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: blocker }))
+          )
+        );
+        assertNone(plan.admission);
+        expect(plan.rootTurbo).toBe(withoutCi(localQualityConcurrencyPlan).rootTurbo);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
 });
