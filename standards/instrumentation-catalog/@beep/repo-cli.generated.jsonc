@@ -3412,6 +3412,7 @@
     {"name":"Yeet.createPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.createPullRequestViaRest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.createYeetMergePreview","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.currentCommitSha","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.currentYeetBranch","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.decodeGhOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.decodeTurboPlanTasksFromQueryJson","owner":"@beep/repo-cli","family":"tooling","conforms":true},
