@@ -516,3 +516,24 @@ defect. Publish/prove the new source and answer the review before acceptance.
   and re-execute the corrected source rather than relabeling the old run.
 
 - 2026-11-02: The existing population refresh would replace199 reviewed dispositions with pending rows without retaining their evidence. Require an exclusive sibling archive, verify the bounded prior-history digest chain, and keep changed-source review separate from historical facts. Eleven isolated controls include the reproduced old replacement and altered-ancestor refusal. The actual199-row archive is byte-identical; the qualification ledger remains unchanged.
+
+
+### Native setup metadata and runtime front door, 2026-11-02
+
+The exact stable and current canary help/schema describe setup as parsing-only,
+but isolated invocations reach managed storage, lockfile and offline resolution
+checks; explicit schema-defined skip policies execute successfully. Do not mark
+the feature unavailable from descriptive text alone. The new setup control
+driver reuses the existing bounded capture and freezes actual native binaries.
+An initial disposable fixture accidentally mounted the Vite-plus front door,
+which tried to fetch CLI metadata and was denied by the empty network namespace.
+Use the already installed Bun runtime reported by `process.execPath`, check its
+version inside the sandbox, and retain the failed fixture receipt separately.
+No production setup flag, bootstrap owner or cache policy changed.
+
+The first portable replay stopped at its flag-refusal assertion: one multiline
+case assignment still targeted the old collector namespace, so it repeated
+fixture lock preparation instead of invoking Turbo setup. The intended negative
+control rejected that false success. Bind every invocation to the shared
+collector's command slot, commit the correction and replay the complete matrix;
+the failed attempt is not setup evidence.
