@@ -14,6 +14,7 @@ import { GitObjectId } from "@beep/schema/Conformance";
 import { HostProcessArchitecture, HostProcessPlatform, O } from "@beep/utils";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -76,6 +77,7 @@ import {
   CacheSignedPilotMutation,
   CacheSignedPilotNonExecution,
   CacheSignedPilotPair,
+  CacheSignedPilotPhase,
   CacheSignedPilotPolicyRefusal,
   CacheSignedPilotProtection,
   CacheSignedPilotReceipt,
@@ -1543,6 +1545,7 @@ const runPilot = Effect.fn("CachePilot.run")(
       );
       const signedRootConfiguration = yield* hashText(signedConfig);
       const executeOwnedUpload = Effect.fn("CachePilot.executeOwnedUpload")(function* (transport: PilotTransport) {
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:owned-upload"]);
         const fixture = yield* prepare(sourceRootA, "root-a", "owned-producer-upload").pipe(
           Effect.flatMap((fixture) => overlayRootFile(fixture, "turbo.json", signedConfig))
         );
@@ -1557,10 +1560,12 @@ const runPilot = Effect.fn("CachePilot.run")(
         ).pipe(Effect.flatMap(decodeSignedPilotRun));
         if (uploaded.graphExitCode !== 0 || uploaded.outcome.selected.origin !== "fresh")
           return yield* CacheCommandError.new("Owned producer upload requires a successful fresh graph.");
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:final-integrity"]);
         yield* verifyFinalIntegrity();
         return uploaded;
       });
       const executeSignedMatrix = Effect.fn("CachePilot.executeSignedMatrix")(function* () {
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:capture-controls"]);
         const captureControls = yield* Effect.forEach(
           CacheSignedPilotCaptureControl.fields.case.literals,
           Effect.fn("CachePilot.captureControl")(function* (control) {
@@ -1646,6 +1651,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           }),
           { concurrency: 1 }
         );
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:fresh-comparisons"]);
         const freshPairs = yield* Effect.forEach(
           A.range(0, 2),
           Effect.fn("CachePilot.signedFreshPair")(function* (pair) {
@@ -1898,10 +1904,12 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           } else yield* validateCacheSignedPilotPair(comparison, current.source.key, request.client);
           return comparison;
         }, Effect.scoped);
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:baseline-comparisons"]);
         const pairs = yield* Effect.forEach(A.range(0, 2), (pair) => runSignedPair(pair, unchanged), {
           concurrency: 1,
         });
         const baselinePair = O.getOrThrow(A.head(pairs));
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:shadows"]);
         const shadows = yield* Effect.forEach(
           scenarios,
           Effect.fn("CachePilot.signedShadow")(function* (scenario, index) {
@@ -1911,13 +1919,16 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
           }),
           { concurrency: 1 }
         );
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:mutations"]);
         yield* Effect.forEach(
           CacheSignedPilotMutation.fields.case.literals,
           (id, index) => runSignedPair(index + 13, unchanged, O.some(id)),
           { concurrency: 1, discard: true }
         );
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:non-execution-controls"]);
         const nonExecutions = yield* collectNonExecutionControls(O.some(signedConfig));
         const policyRefusal = yield* observeMissingChildRefusal(signedConfig);
+        yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:final-integrity"]);
         yield* verifyFinalIntegrity();
         return CacheSignedPilotReceipt.make({
           key: CacheQualificationKey.make({
@@ -2313,6 +2324,7 @@ export const runCacheSignedPilotWorker = Effect.fn("CachePilot.runSignedWorker")
   request: CachePilotRequest,
   protectedIssuerMaterial: O.Option<string> = O.none()
 ) {
+  yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:preflight"]);
   return yield* runPilot(root, request, "signed", protectedIssuerMaterial, O.none()).pipe(
     Effect.filterOrFail(S.is(CacheSignedPilotReceipt), () => CacheCommandError.new("Expected a signed pilot receipt."))
   );

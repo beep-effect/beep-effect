@@ -11,16 +11,27 @@ import { CacheClientPin } from "@beep/repo-configs/cache";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as NetAddress from "effect/net/NetAddress";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { writeContainedFileString } from "../../internal/cli/FsGuards.ts";
-import { OutputBound, runCapturedStreams } from "../../internal/process/index.ts";
+import {
+  boundedChunkReducer,
+  CapturedStreams,
+  emptyBoundedOutput,
+  OutputBound,
+  runCapturedStreams,
+  runFoldedStdout,
+} from "../../internal/process/index.ts";
 import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
 import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
 import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
@@ -36,11 +47,17 @@ import {
   requireCacheLinuxX64,
   requireCacheSupervisorCapture,
 } from "./Cache.evidence.ts";
-import { CacheSignedPilotReceipt, CacheSignedPilotRequest, CacheSignedPilotRun } from "./Cache.pilot.signed.schemas.ts";
+import {
+  CacheSignedPilotPhase,
+  CacheSignedPilotReceipt,
+  CacheSignedPilotRequest,
+  CacheSignedPilotRun,
+} from "./Cache.pilot.signed.schemas.ts";
 import { validateCacheSignedPilotReceipt } from "./Cache.pilot.signed.ts";
 import { CacheCommandError } from "./Cache.schemas.ts";
 import { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
 import { joinCacheProducerUpload } from "./Cache.workflow.upload.ts";
+import type { BoundedOutput } from "../../internal/process/index.ts";
 import type { CacheProducerBinding } from "./Cache.producer.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Cache/Cache.pilot.runner");
@@ -59,6 +76,17 @@ class UploadSupervisor extends S.Opaque<UploadSupervisor, { readonly brand: uniq
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
 const isSignedPilotReceipt = S.is(CacheSignedPilotReceipt);
 const bound = OutputBound.make({ maxChars: 64 * 1024, truncatedNotice: "signed pilot capture exceeded bound" });
+const appendSignedPilotOutput = boundedChunkReducer(bound);
+const isSignedPilotPhase = S.is(CacheSignedPilotPhase);
+const lastSignedPilotPhase = (capture: BoundedOutput) =>
+  capture.truncated
+    ? O.none<CacheSignedPilotPhase>()
+    : pipe(
+        Str.split(capture.text, "\n"),
+        A.dropRight(1),
+        A.findLast(isSignedPilotPhase),
+        O.map((phase) => CacheSignedPilotPhase.Enum[phase])
+      );
 
 const renderSignedPilotWorker = Effect.fn("CachePilot.renderSignedWorker")(function* (
   root: string,
@@ -93,19 +121,22 @@ const renderSignedPilotWorker = Effect.fn("CachePilot.renderSignedWorker")(funct
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { BunRuntime } from "@effect/platform-bun";
 import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { CacheSignedPilotRequest, ${reportType}, runCacheSignedPilotWorker } from ${module};
+import { CacheSignedPilotPhase, CacheSignedPilotRequest, ${reportType}, runCacheSignedPilotWorker } from ${module};
 ${O.isSome(upload) ? `import { runCacheSignedPilotUploadWorker } from ${uploadModule};\nimport { CacheConformanceTarget } from ${targetModule};` : ""}
 import { CacheQualificationLive } from ${service};
 BunRuntime.runMain(Effect.gen(function* () {
+  yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:request"]);
   const fs = yield* FileSystem.FileSystem;
   const request = yield* S.decodeUnknownEffect(S.fromJsonString(CacheSignedPilotRequest))(yield* fs.readFileString(${input}));
   const issuerProbe = yield* S.decodeUnknownEffect(S.OptionFromNullOr(S.String))(${issuerProbe});
   const report = yield* ${execute};
   yield* fs.writeFileString(${output}, yield* S.encodeEffect(S.fromJsonString(${reportType}))(report));
+  yield* Console.log(CacheSignedPilotPhase.Enum["signed-pilot:complete"]);
 }).pipe(Effect.scoped, Effect.provide(CacheQualificationLive), Effect.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer))))));
 `;
 });
@@ -226,7 +257,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
         }
       });
       yield* verifyIssuerMountIsolation();
-      const captured = yield* runCapturedStreams({
+      const stdout = yield* Ref.make(emptyBoundedOutput);
+      const folded = yield* runFoldedStdout({
         command: "/usr/bin/bwrap",
         args: [
           "--unshare-all",
@@ -286,20 +318,40 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
             BEEP_CACHE_UPLOAD_SIGNING: O.map(upload, ({ runtime }) => Redacted.value(runtime.signing)),
           }),
         },
-        bound,
+        fold: (output) =>
+          output.pipe(
+            Stream.decodeText(),
+            Stream.runForEach((chunk) => Ref.update(stdout, (capture) => appendSignedPilotOutput(capture, chunk))),
+            Effect.andThen(Ref.get(stdout)),
+            Effect.map(({ text }) => text)
+          ),
+        stderrBound: bound,
       }).pipe(
         Effect.timeoutOrElse({
           duration: O.isSome(upload) ? Duration.minutes(10) : Duration.minutes(20),
           orElse: () =>
-            Effect.fail(
-              CacheCommandError.new(
-                O.isSome(upload)
-                  ? "Signed pilot upload exceeded its ten-minute execution limit."
-                  : "Signed pilot comparison exceeded its twenty-minute execution limit."
+            Ref.get(stdout).pipe(
+              Effect.flatMap((capture) =>
+                Effect.fail(
+                  CacheCommandError.new(
+                    `${O.isSome(upload) ? "Signed pilot upload exceeded its ten-minute execution limit." : "Signed pilot comparison exceeded its twenty-minute execution limit."}${lastSignedPilotPhase(
+                      capture
+                    ).pipe(
+                      O.map((phase) => ` Last observed phase: ${phase}.`),
+                      O.getOrElse(() => "")
+                    )}`
+                  )
+                )
               )
             ),
         })
       );
+      const captured = CapturedStreams.make({
+        exitCode: folded.exitCode,
+        stdout: folded.value,
+        stderr: folded.stderr,
+        truncated: Bool.or(folded.truncated, (yield* Ref.get(stdout)).truncated),
+      });
       yield* requireCacheSupervisorCapture(captured, "Signed pilot");
       const text = yield* readCacheExperimentBytes(directory, "report.json", 256 * 1024).pipe(
         Effect.flatMap(decodeCacheExperimentText)

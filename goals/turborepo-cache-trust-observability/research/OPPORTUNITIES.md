@@ -1673,3 +1673,22 @@ recognize a finite source-owned hint vocabulary and quote only its fixed member,
 never a captured substring or raw cause. Hints remain untrusted observations;
 exit status and truncation still decide failure, and no qualification gate is
 relaxed. Test private-prefix/suffix and unknown-output controls before reuse.
+
+### Preserve bounded progress when a supervisor times out, 2026-11-02
+
+The next ordinary signed comparison reached its twenty-minute execution limit
+after 1,221.589 seconds without a report or an exposed phase. Completed capture
+alone cannot explain an interrupted child. Reuse the existing streaming fold
+and bounded accumulator; retain only complete fixed phase lines, outside native
+task intervals. Preserve the failed ordinary receipt and the original deadline.
+Do not repeat an unchanged expensive matrix or promote instrumented diagnostics
+to qualification.
+
+The first focused replay passed 31 of 32 runner cases; its overflow expectation
+used the wrong existing error text. Correct the assertion to the capture-bound
+contract. Two real-child cases initially provided their platform layer inside
+the test body, triggering strictEffectProvide; move that layer to their isolated
+test group. An introduced runner callback exceeded the cognitive limit by one;
+use the existing Effect Boolean helper. The subsequent 60-case replay, package
+quick lint/type check and scoped complexity check all pass. Retain the failed
+receipts; no floor, rule, timeout or production setting was changed.

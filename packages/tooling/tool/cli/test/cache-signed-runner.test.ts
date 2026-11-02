@@ -33,6 +33,7 @@ import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { HostProcessPlatform } from "@beep/utils";
 import { NodeCrypto, NodeFileSystem, NodePath } from "@effect/platform-node";
+import * as NodeChildProcessSpawner from "@effect/platform-node/NodeChildProcessSpawner";
 import { afterEach, expect, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
@@ -49,6 +50,7 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
@@ -67,6 +69,7 @@ const encodeDependencies = S.encodeEffect(S.fromJsonString(CacheDependencyMateri
 const decodeReport = S.decodeUnknownEffect(CacheSignedPilotReceipt);
 const encodeReport = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
 const encodePilotRun = S.encodeEffect(S.fromJsonString(CacheSignedPilotRun));
+const nativeFoldedStdout = CacheRuntimeProcess.runFoldedStdout;
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -191,7 +194,19 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       });
     }, Effect.orDie)
   );
-  return { root, issuer, request, admission, process: capturedProcess };
+  const foldedProcess = vi.spyOn(CacheRuntimeProcess, "runFoldedStdout").mockImplementation(
+    Effect.fn("SignedRunnerTest.foldedProcess")(function* (options) {
+      const captured = yield* CacheRuntimeProcess.runCapturedStreams(options);
+      const value = yield* options.fold(Stream.make(new TextEncoder().encode(captured.stdout)));
+      return CacheRuntimeProcess.FoldedStdout.make({
+        exitCode: captured.exitCode,
+        value,
+        stderr: captured.stderr,
+        truncated: captured.truncated,
+      });
+    })
+  );
+  return { root, issuer, request, admission, process: capturedProcess, foldedProcess };
 });
 
 const UploadFault = LiteralKit(["none", "exit", "truncated", "missing-summary", "foreign-read", "issuer-change"]);
@@ -422,6 +437,98 @@ it.layer(
         });
         expect(f.adapterStarted).toHaveBeenCalledOnce();
         expect(yield* fs.exists(path.dirname(script))).toBe(false);
+      })
+    );
+  });
+  for (const [name, chunks, suffix] of [
+    Tuple.make(
+      "last complete phase across split chunks",
+      ["synthetic-private-prefix\nsigned-pilot:mut", "ations\nsigned-pilot:shadows\nsynthetic-private-suffix\n"],
+      " Last observed phase: signed-pilot:shadows."
+    ),
+    Tuple.make("unknown or incomplete phase", ["signed-pilot:unknown\nsigned-pilot:fresh-comparisons"], ""),
+    Tuple.make(
+      "private prefix or suffix on a phase line",
+      ["synthetic-private-prefix signed-pilot:preflight\nsigned-pilot:shadows synthetic-private-suffix\n"],
+      ""
+    ),
+    Tuple.make(
+      "complete phase before an incomplete later marker",
+      ["signed-pilot:preflight\nsigned-pilot:shadows"],
+      " Last observed phase: signed-pilot:preflight."
+    ),
+    Tuple.make("truncated capture", ["signed-pilot:preflight\n", Str.repeat(65537)("x")], ""),
+  ])
+    it.layer(TestClock.layer(), { timeout: "30 seconds" })(`isolated phase clock: ${name}`, (it) => {
+      it.effect("reports only a complete fixed phase and retains the execution deadline", () =>
+        Effect.gen(function* () {
+          const f = yield* fixture("none");
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const started = yield* Deferred.make<string>();
+          f.foldedProcess.mockImplementation((options) =>
+            options
+              .fold(Stream.fromIterable(A.map(chunks, (chunk) => new TextEncoder().encode(chunk))))
+              .pipe(
+                Effect.andThen(Deferred.succeed(started, O.getOrThrow(A.last(options.args)))),
+                Effect.andThen(Effect.never)
+              )
+          );
+          const worker = yield* runCacheSignedPilotExperiment(f.root, f.request).pipe(Effect.result, Effect.forkScoped);
+          const script = yield* Deferred.await(started);
+          yield* TestClock.adjust("21 minutes");
+          const error = yield* Fiber.join(worker).pipe(
+            Effect.flatMap(
+              Result.match({ onFailure: Effect.succeed, onSuccess: () => Effect.die("Accepted expired worker") })
+            )
+          );
+          expect(error.message).toBe(`Signed pilot comparison exceeded its twenty-minute execution limit.${suffix}`);
+          expect(error.message).not.toContain("synthetic-private");
+          expect(error.cause).toBeUndefined();
+          expect(yield* fs.exists(path.dirname(script))).toBe(false);
+        })
+      );
+    });
+  it.layer(NodeChildProcessSpawner.layer)("real folded child capture", (it) => {
+    it.effect("keeps fixed failure hints private through a real folded child capture", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture("none");
+        f.foldedProcess.mockImplementation((options) =>
+          nativeFoldedStdout({
+            ...options,
+            command: process.execPath,
+            args: [
+              "-e",
+              'process.stdout.write("synthetic-private-prefix\\nSigned fresh comparisons lack positive native selected-task overlap.\\nsynthetic-private-suffix\\n"); process.exitCode = 1;',
+            ],
+            cwd: f.root,
+            extendEnv: false,
+            env: { PATH: "/usr/bin" },
+          })
+        );
+        const error = yield* runCacheSignedPilotExperiment(f.root, f.request).pipe(Effect.flip);
+        expect(error.message).toContain("Hint: Signed fresh comparisons lack positive native selected-task overlap.");
+        expect(error.message).not.toContain("synthetic-private");
+        expect(error.cause).toBeUndefined();
+      })
+    );
+    it.effect("rejects real stdout overflow even when the folded child exits successfully", () =>
+      Effect.gen(function* () {
+        const f = yield* fixture("none");
+        f.foldedProcess.mockImplementation((options) =>
+          nativeFoldedStdout({
+            ...options,
+            command: process.execPath,
+            args: ["-e", 'process.stdout.write("x".repeat(65537));'],
+            cwd: f.root,
+            extendEnv: false,
+            env: { PATH: "/usr/bin" },
+          })
+        );
+        const error = yield* runCacheSignedPilotExperiment(f.root, f.request).pipe(Effect.flip);
+        expect(error.message).toBe("Signed pilot supervisor exceeded its capture bound.");
+        expect(error.message).not.toContain("Last observed phase:");
+        expect(error.cause).toBeUndefined();
       })
     );
   });

@@ -1070,3 +1070,26 @@ and type check pass. Canonical inventory regeneration adds seven inherited
 completion exports and updates positions; finding totals and policy floors stay
 unchanged. No native run has yet used this implementation, and no qualification,
 protected producer or whole-goal acceptance is granted.
+
+
+### Live signed-supervisor phase feedback, 2026-11-02
+
+The [phase checkpoint](research/supervisor-phase-checkpoint-2026-11-02.json)
+retains the subsequent ordinary twenty-minute timeout without assigning a
+historical phase. Current worker orchestration emits eleven fixed schema-owned
+markers. Its parent reuses folded stdout and the existing 64-KiB accumulator to
+retain the last complete exact marker for timeout diagnostics. Unknown, decorated,
+partial and truncated lines cannot supply a phase; no private output or raw cause
+is emitted. Marker order follows observation order, including repeated phases.
+
+All 60 focused runner/protocol/evidence tests pass, including two real short child
+process controls. Package quick lint/type checking and scoped runner complexity
+pass. Scoped Docgen compiles all 3,670 CLI examples. The initial assertion,
+layer-placement and complexity failures remain in the private receipt set and
+are described in OPPORTUNITIES. Canonical schema and JSDoc writers completed;
+finding totals are unchanged. The inventory adds the schema/type and refreshes
+ten inherited completion-store exports whose source is identical to accepted
+main. All 52 owned-file export positions are verified. This component
+retains deadlines, selected-task overlap, report/issuer validation and existing
+cache configuration. Hosted review, an ordinary frozen-source stable/canary run,
+actual protected publication and all whole-goal gates remain required.

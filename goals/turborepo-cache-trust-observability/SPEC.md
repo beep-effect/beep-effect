@@ -957,3 +957,21 @@ untrusted diagnostic observation, not root-cause or qualification authority.
 Existing exit/truncation gates, input checks, deadlines and rollout policy stay
 intact. Reversal removes hint recognition from the same guard while retaining
 its existing bounded failure behavior.
+
+### Bounded signed-supervisor phase feedback, 2026-11-02
+
+The next ordinary comparison also reached its existing twenty-minute limit,
+without a completed observation or an exposed phase. Reuse the existing folded
+stdout runner and bounded accumulator to retain progress while the child is
+alive. Emit only eleven schema-owned literal markers at orchestration boundaries,
+outside selected native task intervals and paired dispatch. A timeout may name
+the last complete exact marker line only when stdout has not overflowed.
+Unknown, decorated, partial and truncated observations supply no phase hint;
+never quote a private substring or attach a raw cause.
+
+Keep the existing twenty-minute comparison and ten-minute upload bounds,
+successful-exit and capture-bound guards, report validation, actual selected-task
+overlap requirement, isolation and issuer policy. Markers are untrusted diagnostic
+observations: they grant no success, provenance, qualification or rollout
+authority. Reversal restores the previous capture call and removes markers;
+the existing failure gates and ordinary cache service remain unchanged.
