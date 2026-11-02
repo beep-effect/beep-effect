@@ -281,12 +281,60 @@ export const inventoryEvidenceSubject = (
  * Gates that did not run are certified `untested`; the certificate never
  * states `passed` for them. Legacy outputs are not touched.
  *
- * **Example** (Inspect the writer)
+ * **Example** (Write a certificate and read back its bound subject)
  *
  * ```ts
  * import { writeQaJudgeCertificate } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import { RoundLayout } from "@beep/qa-capture"
+ * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
+ * import * as NodePath from "@effect/platform-node/NodePath"
+ * import * as Effect from "effect/Effect"
+ * import * as FileSystem from "effect/FileSystem"
+ * import * as Layer from "effect/Layer"
+ * import * as O from "effect/Option"
+ * import * as Path from "effect/Path"
  *
- * console.log(writeQaJudgeCertificate.length) // 2
+ * const layoutFor = (root: string) =>
+ *   RoundLayout.make({
+ *     clipsDir: `${root}/clips`,
+ *     eventsPath: `${root}/events.ndjson`,
+ *     framesDir: `${root}/frames`,
+ *     reportPath: `${root}/report.md`,
+ *     root,
+ *     round: 1,
+ *     sessionPath: `${root}/session.json`,
+ *     sheetsDir: `${root}/sheets`,
+ *     videoDir: `${root}/video`
+ *   })
+ * // A settlement whose gates never ran: every check is certified "untested".
+ * const settlement = QaJudgeSettlement.make({
+ *   artifact: O.none(),
+ *   crossCheck: O.none(),
+ *   decode: O.none(),
+ *   eventId: O.none(),
+ *   inventory: EvidenceSubject.make({
+ *     digest: EvidenceDigest.make({
+ *       sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *     }),
+ *     name: "inventory.json"
+ *   }),
+ *   round: O.none()
+ * })
+ * const platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, BunCrypto.layer)
+ *
+ * const written = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const fs = yield* FileSystem.FileSystem
+ *     return yield* writeQaJudgeCertificate(layoutFor(yield* fs.makeTempDirectoryScoped()), settlement)
+ *   }).pipe(Effect.scoped, Effect.provide(platform))
+ * )
+ * console.log(written.receipt.predicate.outcome) // "untested"
+ * console.log(written.subject.name) // "gate-certificate.json"
+ * console.log(written.subject.digest.sha256.length) // 64
  * ```
  *
  * @param layout - Round whose root receives the certificate.
@@ -322,12 +370,77 @@ export const writeQaJudgeCertificate = Effect.fn("QaJudgeIngest.writeQaJudgeCert
  * `bytes`, never a caller-supplied value. Any change to the certificate,
  * including a re-certified run, refuses the plan as `stale-digest`.
  *
- * **Example** (Inspect the consumer)
+ * **Example** (Apply a plan, then refuse it once the certificate bytes change)
  *
  * ```ts
- * import { applyQaJudgeCertificatePlan } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import {
+ *   applyQaJudgeCertificatePlan,
+ *   GATE_CERTIFICATE_FILE,
+ *   writeQaJudgeCertificate
+ * } from "@beep/repo-cli/commands/Qa/JudgeIngest"
+ * import { GateId } from "@beep/skill-contract/Gate"
+ * import { GateCertificateApplyPlan } from "@beep/skill-contract/GateCertificate"
+ * import { RoundLayout } from "@beep/qa-capture"
+ * import { QaJudgeSettlement } from "@beep/repo-cli/commands/Qa/JudgeContract"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import { EvidenceDigest, EvidenceSubject } from "@beep/skill-contract/EvidenceReceipt"
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
+ * import * as NodePath from "@effect/platform-node/NodePath"
+ * import * as Effect from "effect/Effect"
+ * import * as FileSystem from "effect/FileSystem"
+ * import * as Layer from "effect/Layer"
+ * import * as O from "effect/Option"
+ * import * as Path from "effect/Path"
  *
- * console.log(applyQaJudgeCertificatePlan.length) // 2
+ * const layoutFor = (root: string) =>
+ *   RoundLayout.make({
+ *     clipsDir: `${root}/clips`,
+ *     eventsPath: `${root}/events.ndjson`,
+ *     framesDir: `${root}/frames`,
+ *     reportPath: `${root}/report.md`,
+ *     root,
+ *     round: 1,
+ *     sessionPath: `${root}/session.json`,
+ *     sheetsDir: `${root}/sheets`,
+ *     videoDir: `${root}/video`
+ *   })
+ * // A settlement whose gates never ran: every check is certified "untested".
+ * const settlement = QaJudgeSettlement.make({
+ *   artifact: O.none(),
+ *   crossCheck: O.none(),
+ *   decode: O.none(),
+ *   eventId: O.none(),
+ *   inventory: EvidenceSubject.make({
+ *     digest: EvidenceDigest.make({
+ *       sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ *     }),
+ *     name: "inventory.json"
+ *   }),
+ *   round: O.none()
+ * })
+ * const platform = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, BunCrypto.layer)
+ *
+ * const { applied, stale } = await Effect.runPromise(
+ *   Effect.gen(function* () {
+ *     const fs = yield* FileSystem.FileSystem
+ *     const path = yield* Path.Path
+ *     const root = yield* fs.makeTempDirectoryScoped()
+ *     const written = yield* writeQaJudgeCertificate(layoutFor(root), settlement)
+ *     const bytes = yield* fs.readFile(path.join(root, GATE_CERTIFICATE_FILE))
+ *     const plan = GateCertificateApplyPlan.make({
+ *       certificate: written.subject,
+ *       checkIds: [GateId.make("judge-output-inventory-decodes")]
+ *     })
+ *     const changed = Uint8Array.from([...bytes, 10]) // same receipt, one more byte
+ *     return {
+ *       applied: yield* applyQaJudgeCertificatePlan(plan, bytes),
+ *       stale: yield* applyQaJudgeCertificatePlan(plan, changed)
+ *     }
+ *   }).pipe(Effect.scoped, Effect.provide(platform))
+ * )
+ * console.log(applied.verdict) // "applied"
+ * console.log(stale.verdict === "refused" && stale.reason) // "stale-digest"
  * ```
  *
  * @param plan - Digest-bound apply-by-id plan.
