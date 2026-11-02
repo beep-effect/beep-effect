@@ -28,6 +28,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
@@ -398,8 +399,7 @@ const issuedSessions = new WeakMap<object, typeof Issued.Type>();
  * @since 0.0.0
  */
 export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSession")(function* (input: unknown) {
-  if (typeof input !== "object" || input === null)
-    return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
+  if (!P.isObjectOrArray(input)) return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
   const sealed = issuedSessions.get(input);
   if (sealed === undefined) return yield* CitationCallbackFailure.make({ reason: "identity-failed" });
   const data = yield* S.decodeEffect(CapturedJson)(sealed.json).pipe(
