@@ -31,21 +31,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, W1 in review in two halves. W1a (#2539): the typed readers of `internal/repo-run/GitExec.ts`
-run through `Git` behind one adapter fold, with `Git` widened into the Knowledge, Quality, Ci, Worktree and Yeet
-requirement unions that reach them (SPEC D-08). W1b (this PR): Yeet's own git spawns run through `Git`
-(`refreshBaseRef` -> `fetch` / `revParse`, `currentCommitSha` -> `revParse`, the `FinalCheckRefresh` and `Sweep`
-is-ancestor probes -> `isAncestor`, the head-install preflight's `worktreeAdd` / `worktreeRemove` /
-`worktreePrune` read back through `captureGitKitExit`), `Git` lifted into the Yeet unions, and the leaf
-`Git.make` provisions dropped from `GitWorktree.ts` and `TmpfsReap.ts` (SPEC D-09); `lockfileChangedSinceBase`
-waits for the G7 pathspec. W0 merged (#2514); the W1 kit merged (#2522). Next: W2.
-W2b (this PR): the remaining Yeet git halves, the Library inventory read and ai-metrics' `ls-files` run
-through `Git`, with Sweep's probes behind the `sweepProbeFromGit` CommandProbe adapter (SPEC D-11).
+P1 Implement. W0 (#2514), the W1 kit (#2522), W1a (#2539), W1b (#2546) and W2 (#2593, SPEC D-10) merged. W2b
+(this PR): the remaining Yeet git halves, the Library inventory read and ai-metrics' `ls-files` run through `Git`,
+with Sweep's probes behind the `sweepProbeFromGit` CommandProbe adapter (SPEC D-11). W3 sites (#2614, SPEC D-12) in
+review. Next: W4 sites, then W5.
 
 ## Latest Evidence
 
 - 2026-11-02 W2b: `research/yeet-remainder-differential-w2b.json` (66 scenarios, 55 same, 11 classified, 0
   unclassified); repo-cli and ai-metrics `check` clean, touched suites green on Node and Bun.
+- 2026-11-02 W2: `research/dirty-axis-differential-w2.json` (66 scenarios, 61 same, 5 classified, 0 unclassified);
+  repo-cli typecheck clean, the worktree, fleet, residue-reap, tmpfs-reap, quality-tasks, docgen, session-ledger,
+  codex-security, package-verify, ci-lane, changeset-status, runners-bake, coverage-artifacts and step-git-exec
+  suites green (23 files, 1137 tests); `lint policy-fingerprint --write` leaves the seals byte-identical.
 - 2026-11-02 W1b: `research/yeet-git-differential-w1b.json` (31 scenarios, 27 same, 4 classified, 0
   unclassified); repo-cli typecheck clean, every `yeet-*`, `step-git-exec`, `tmpfs-reap`, `residue-reap`,
   `git-worktree` and `git-adoption-sites` suite green (64 files, 1640 tests).

@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
+import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
@@ -26,6 +28,7 @@ import { manifestParser } from "../../../internal/ManifestRead.ts";
 import { QualityTaskStep, runCaptured } from "../../../internal/process/index.ts";
 import { workspaceDirectories } from "../../../internal/RepoWorkspaces.ts";
 import { collectDirtyWorktreeFiles } from "../../../internal/repo-run/ChangedFiles.ts";
+import { adaptGitKitError } from "../../../internal/repo-run/GitExec.ts";
 import { renderDocgenIssueText } from "../../Docgen/internal/Local.ts";
 import {
   analyzePackageDocumentation,
@@ -38,6 +41,7 @@ import type { FsUtils } from "@beep/repo-utils";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GitCommandErrorAdapter } from "../../../internal/repo-run/GitExec.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/PackageVerify");
 
@@ -226,9 +230,6 @@ const byWorkspacePathLengthDescending = Order.flip(
 
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
-const linesFromText = (text: string): ReadonlyArray<string> =>
-  pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
-
 const normalizedRootPath = (root: string): string => {
   const normalized = normalizePath(root);
   return Str.endsWith("/")(normalized) ? Str.slice(0, -1)(normalized) : normalized;
@@ -371,39 +372,24 @@ export const changedPackageNamesForPaths: {
 const fail = (message: string): Effect.Effect<never, QualityScriptCommandError> =>
   Effect.fail(QualityScriptCommandError.make({ message, exitCode: 2 }));
 
-const runGitLines = Effect.fn("PackageVerify.runGitLines")(function* (
-  repoRoot: string,
-  args: ReadonlyArray<string>
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runCaptured({
-    command: "git",
-    args,
-    cwd: repoRoot,
-    source: "stdout",
-  }).pipe(
-    QualityScriptCommandError.mapError(`Failed to spawn git ${A.join(args, " ")}.`, {
-      command: commandText("git", args),
-    })
-  );
-  if (result.exitCode !== 0) {
-    return yield* QualityScriptCommandError.new(`git ${A.join(args, " ")} failed with exit code ${result.exitCode}.`, {
-      command: commandText("git", args),
-      exitCode: result.exitCode,
-    })(`git ${A.join(args, " ")} failed`);
-  }
-
-  return linesFromText(result.output);
-});
+// The wording of the bounded line capture the `HEAD` read ran before W2 (SPEC D-10); the kit's
+// command line stands in for the frozen argv.
+const packageVerifyGitErrorAdapter: GitCommandErrorAdapter<QualityScriptCommandError> = {
+  onSpawnFailure: (commandLine) =>
+    QualityScriptCommandError.new(`Failed to spawn ${commandLine}.`, { command: commandLine }),
+  onNonZeroExit: ({ commandLine, exitCode }) =>
+    QualityScriptCommandError.new(`${commandLine} failed with exit code ${exitCode}.`, {
+      command: commandLine,
+      exitCode,
+    })(`${commandLine} failed`),
+  onTruncated: O.none(),
+};
 
 const collectPackageVerifyChangedFiles = Effect.fn("PackageVerify.collectPackageVerifyChangedFiles")(function* (
   repoRoot: string
 ) {
   const files = yield* collectDirtyWorktreeFiles(repoRoot, {
-    diffArgs: [`--diff-filter=${PACKAGE_TARGET_DIFF_FILTER}`],
+    diffFilter: PACKAGE_TARGET_DIFF_FILTER,
     pathspecs: A.empty(),
     onProbeFailure: "ignore",
   }).pipe(QualityScriptCommandError.mapError("Failed to resolve package-verify dirty worktree files."));
@@ -417,7 +403,7 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
         PackageVerifyStepSpec.make({ step: "check", script: "beep:check" }),
       ]
     : [
-        PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" }),
+        PackageVerifyStepSpec.make({ step: "audit", script: "audit" }),
         PackageVerifyStepSpec.make({ step: "docgen", script: "docgen" }),
       ];
 
@@ -627,25 +613,28 @@ const collectStepOutput = Effect.fn("PackageVerify.collectStepOutput")(function*
   );
 });
 
-// Both scripts typecheck against the dependencies' built declarations, which Turbo's own
-// `check` and `audit` tasks build first (`^build`). Running the bare script against a stale
-// or missing dependency build reports errors hosted Check never sees. The step plan and the
-// inbox capsule read this one rule, so the recorded command is the command that ran.
-const buildsUpstreamClosure = (step: PackageVerifyStepName): boolean =>
-  PackageVerifyStepName.is.audit(step) || PackageVerifyStepName.is.check(step);
-
 const packageVerifyStepPlan = (
   repoRoot: string,
   workspace: PackageVerifyWorkspace,
   spec: PackageVerifyStepSpec
 ): ReadonlyArray<QualityTaskStep> => {
+  if (PackageVerifyStepName.is.audit(spec.step)) {
+    return [
+      QualityTaskStep.make({
+        label: spec.step,
+        command: "bun",
+        args: ["run", spec.script, `--filter=${workspace.name}`],
+        cwd: repoRoot,
+      }),
+    ];
+  }
   const packageStep = QualityTaskStep.make({
     label: spec.step,
     command: "bun",
     args: ["run", spec.script],
     cwd: workspace.dir,
   });
-  return buildsUpstreamClosure(spec.step)
+  return PackageVerifyStepName.is.check(spec.step)
     ? [
         QualityTaskStep.make({
           label: `${spec.step}:build-closure`,
@@ -693,7 +682,7 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
   QualityScriptCommandError,
   FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
-  if (O.isNone(R.get(workspace.scripts, spec.script))) {
+  if (!PackageVerifyStepName.is.audit(spec.step) && O.isNone(R.get(workspace.scripts, spec.script))) {
     return PackageVerifyStepResult.make({
       step: spec.step,
       script: spec.script,
@@ -754,7 +743,12 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
 ): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  | FsUtils
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const workspaces = yield* collectWorkspaces(repoRoot);
   const changedFiles = O.isSome(packageName) ? A.empty<string>() : yield* collectPackageVerifyChangedFiles(repoRoot);
@@ -766,11 +760,10 @@ const runPackageVerifyAtRoot = Effect.fn("PackageVerify.runPackageVerifyAtRoot")
       concurrency: quick ? PACKAGE_VERIFY_STEP_CONCURRENCY : 1,
     }
   );
-  const headLines = yield* runGitLines(repoRoot, ["rev-parse", "HEAD"]);
-  const headSha = yield* O.match(A.head(headLines), {
-    onNone: () => fail("pkg-verify: git rev-parse HEAD returned no commit SHA."),
-    onSome: Effect.succeed,
-  });
+  const git = yield* Git;
+  const headSha = yield* git
+    .revParse(repoRoot, "HEAD")
+    .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), packageVerifyGitErrorAdapter)));
 
   return PackageVerifyReport.make({
     headSha,
@@ -810,7 +803,12 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 }): Effect.fn.Return<
   PackageVerifyReport,
   QualityScriptCommandError,
-  FsUtils | FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  | FsUtils
+  | FileSystem.FileSystem
+  | Path.Path
+  | SecureRandom.SecureRandom
+  | ChildProcessSpawner.ChildProcessSpawner
+  | Git
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot(path.resolve(process.cwd())).pipe(
@@ -840,13 +838,20 @@ export const runPackageVerify = Effect.fn("PackageVerify.runPackageVerify")(func
 export const recordPackageVerifyInboxForTesting = Effect.fn("PackageVerify.recordInbox")(function* (
   report: PackageVerifyReport
 ) {
+  const workspace = PackageVerifyWorkspace.make({
+    name: report.packageName,
+    dir: report.packageDir,
+    scripts: R.empty<string>(),
+  });
   const recordStep = (result: PackageVerifyStepResult, shardStep: PackageVerifyStepName = result.step) =>
     recordYeetLocalShardOutcome(
       report.repoRoot,
       YeetLocalShardOutcome.make({
-        command: buildsUpstreamClosure(result.step)
-          ? `bun x turbo run build --filter=${report.packageName}^... && bun run ${result.script}`
-          : `bun run ${result.script}`,
+        command: pipe(
+          packageVerifyStepPlan(report.repoRoot, workspace, PackageVerifyStepSpec.make(result)),
+          A.map(({ command, args }) => commandText(command, args)),
+          A.join(" && ")
+        ),
         exitCode: O.getOrElse(result.exitCode, () => (result.ok ? 0 : 1)),
         headSha: report.headSha,
         shard: `package:${report.packageName}:${shardStep}`,
@@ -955,6 +960,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | Digest.Digest
+  | Git
 > {
   if (A.length(packageArgs) > 1) {
     return yield* fail(`pkg-verify: expected at most one package argument, received ${A.length(packageArgs)}.`);
@@ -999,10 +1005,10 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  *
  * **Details**
  *
- * Audit and check plans refresh the selected package's upstream Turbo build
- * closure without rebuilding the package itself before invoking its
- * package-local script, as Turbo's own `audit` and `check` tasks do. Lint and
- * docgen remain direct package script invocations.
+ * Audit invokes the repository's composed audit command with the selected
+ * workspace filter. That command owns build, check, test and lint ordering.
+ * Check refreshes the upstream Turbo build closure before the package script.
+ * Lint and docgen remain direct package script invocations.
  *
  * **Example** (Inspect an audit plan)
  *
@@ -1016,9 +1022,9 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  * const plan = packageVerifyStepPlanForTesting(
  *   "/repo",
  *   PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} }),
- *   PackageVerifyStepSpec.make({ step: "audit", script: "beep:audit" })
+ *   PackageVerifyStepSpec.make({ step: "audit", script: "audit" })
  * )
- * console.log(plan[0]?.label) // "audit:build-closure"
+ * console.log(plan[0]?.label) // "audit"
  * ```
  *
  * @category testing

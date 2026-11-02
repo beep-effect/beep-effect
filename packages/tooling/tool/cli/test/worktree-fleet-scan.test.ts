@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   FleetMirrorService,
@@ -32,11 +33,9 @@ const README_MAIN = "# fleet fixture\n\nshared line (main)\n";
 const TURBO_BASE = '{ "tasks": {} }\n';
 const TURBO_MOVED = '{ "tasks": { "check": {} } }\n';
 
-const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
-  FleetMirrorServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
-);
+// `Git` rides beside the platform services: the fleet's typed git probes take it from the context (W2).
+const platformLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
+const testLayer = Layer.mergeAll(platformLayer, FleetMirrorServiceLive.pipe(Layer.provide(platformLayer)));
 
 const $I = $RepoCliId.create("test/worktree-fleet-scan");
 
@@ -68,7 +67,11 @@ const legacyListingSpawnerLayer = Layer.effect(
   })
 ).pipe(Layer.provideMerge(legacyListingTargetLayer));
 
-const legacyListingLayer = Layer.fresh(FleetMirrorServiceLive).pipe(Layer.provideMerge(legacyListingSpawnerLayer));
+// The interposed spawner must sit under `Git` too, so the kit reads the legacy listing it serves.
+const legacyListingLayer = Layer.fresh(FleetMirrorServiceLive).pipe(
+  Layer.provideMerge(Layer.fresh(Git.layer)),
+  Layer.provideMerge(legacyListingSpawnerLayer)
+);
 
 /** A scratch fleet: a bare origin, two sibling clones under one fleet root, and hermetic scanner/home directories. */
 type FleetFixture = {

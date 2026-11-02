@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "claim-v27-accepted-main-compatibility/v1",
+  "date": "2026-11-02",
+  "acceptedMain": "20208895611ad7a7abda5c827d3219f3579e8a4a",
+  "implementationDigest": "b9fc272155e90227a7ca17f8f8837a26c5f1793f9abbbd2e07fb1990aedf30ff",
+  "algorithmDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "algorithmFilesUnchanged": 21,
+  "sourceEnvironmentFilesArchivedBeforePredictions": 29,
+  "environmentFilesChangedFromV26": ["package.json"],
+  "environmentChange": "Adds schema-catalog lint command and its policy-fingerprint script. Lock, Bun pin and 21 algorithm files unchanged.",
+  "comparison": [
+    {
+      "cohort": "positive",
+      "fullResultValuesIdenticalExceptImplementationDigest": true,
+      "predictionReportsByteIdentical": 55
+    },
+    {
+      "cohort": "allowed",
+      "fullResultValuesIdenticalExceptImplementationDigest": true,
+      "predictionReportsByteIdentical": 196
+    }
+  ],
+  "strictMatches": 37,
+  "selectedClaims": 538,
+  "protectedRetained": 34,
+  "allPrior37Retained": 37,
+  "lost": [],
+  "stageCounts": {
+    "structural-mismatch": 443,
+    "strict-match": 37,
+    "input-failed": 58
+  },
+  "originalPreservationPinsExact": 631,
+  "allAcceptedPriorHistoryFixtureFilesExact": 1126,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "freshIndependentReviewClaimed": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "coverageRepair": {
+    "pullRequest": 2568,
+    "acceptedMerge": "3ff2d6768eb5f72032aea4bc9c1ce8d848383606",
+    "hostedCoverageJob": 125272330986,
+    "hostedCoverageConclusion": "success",
+    "otherHeavyJobsAtMerge": "pending; not claimed green"
+  },
+  "finalAcceptance": "Unverified; new prospective draft final declaration and exact-head pre-merge readiness required."
+}

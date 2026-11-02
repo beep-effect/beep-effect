@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   CodexSecurityError,
   runSecurityCli,
@@ -97,9 +98,9 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
           Match.when("remote get-url origin", () =>
             Effect.succeed(handle(options.remote ?? "git@github.com:example/project.git\n"))
           ),
-          Match.when("rev-parse HEAD", () => Effect.succeed(handle(`${revision}\n`))),
-          Match.when("status --porcelain", () =>
-            Effect.succeed(handle(options.dirty === true ? " M src/example.ts\n" : ""))
+          Match.when("rev-parse --verify HEAD", () => Effect.succeed(handle(`${revision}\n`))),
+          Match.when("status --porcelain -z", () =>
+            Effect.succeed(handle(options.dirty === true ? " M src/example.ts\0" : ""))
           ),
           Match.orElse(() => Effect.die(`Unexpected git request: ${key}`))
         );
@@ -119,6 +120,8 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
         ConfigProvider.ConfigProvider,
         ConfigProvider.fromUnknown({ HOME: home, PATH: "/fixture/bin" })
       ),
+      // `Git` is built over the stub spawner, so the kit's reads reach the scripted answers (W2).
+      Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
     );
   return { fs, path, repo, home, output, cli, packageRoot, calls, provide };
