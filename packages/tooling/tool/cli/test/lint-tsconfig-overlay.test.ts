@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { lintCommand } from "@beep/repo-cli";
 import { collectTsconfigOverlayViolations } from "@beep/repo-cli/commands/Lint/TsconfigOverlay";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
@@ -15,10 +16,13 @@ import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 
 const testLayer = Layer.mergeAll(FsUtilsLive, TSMorphServiceLive, TestConsole.layer).pipe(
-  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
+  Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer))
 );
 
 // A reference-free package: its tsconfig.json has no references, so the

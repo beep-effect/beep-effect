@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import {
   applyKnowledgeRefsCheck,
   classifyKnowledgeRef,
@@ -48,6 +49,9 @@ import type {
   KnowledgeRefsReport,
   KnowledgeTreeOracle,
 } from "@beep/repo-cli/commands/Knowledge";
+
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const textEncoder = new TextEncoder();
 const FIXTURE_COMMIT = "0123456789abcdef0123456789abcdef01234567";
@@ -1045,9 +1049,9 @@ const hostObservations = (report: KnowledgeRefsReport): ReadonlyArray<KnowledgeR
 const anchorCount = (observations: ReadonlyArray<KnowledgeRefObservation>, anchor: string): number =>
   A.length(A.filter(anchorsOf(observations), (value) => value === anchor));
 
-const baselineLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const baselineLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
-it.layer(baselineLayer)("knowledge refs baseline agreement", (it) => {
+it.layer(baselineLayer, { timeout: "30 seconds" })("knowledge refs baseline agreement", (it) => {
   it.effect(
     "the census reconciles with the published clone-agnosticism inventory",
     () =>

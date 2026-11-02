@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { Git } from "@beep/git/Git";
 import {
   CLAUDE_WORKTREES_RELATIVE_ROOT,
   invokerExemption,
@@ -40,16 +41,19 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { spawnInotifyWatcher } from "./support/InotifyWatcher.ts";
 import type { ProcessTableShape } from "@beep/repo-cli/test/RepoRun";
 
+// `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+
 // The same fence `yeet sweep --retire` runs behind, reached through
 // `worktree remove --archive --delete-branch`: the invoker's ancestry and its
 // proven session are exempt, an idle desktop Terminal panel shell is set aside
 // only when the command starts inside the lane, and every other holder refuses.
 
+const platformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 const testLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
+  platformLayer,
   TestConsole.layer,
-  WorktreeRemovalServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
+  WorktreeRemovalServiceLive.pipe(Layer.provide(platformLayer))
 );
 
 const runGit = Effect.fn("WorktreeRemoveFenceTest.runGit")(function* (cwd: string, args: ReadonlyArray<string>) {
